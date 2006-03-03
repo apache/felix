@@ -10,11 +10,12 @@
 
 package org.osgi.framework;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.*;
 import java.util.*;
-import org.apache.felix.framework.FilterImpl;
+
 
 /**
  * Indicates the caller's authority to perform specific privileged administrative 
@@ -622,7 +623,7 @@ public final class AdminPermission extends Permission
                     filter = filterBuf.toString();
                 } //end if (pos != -1)
 
-                filterImpl = new FilterImpl(filter);
+                filterImpl = FrameworkUtil.createFilter( filter );
             } catch (InvalidSyntaxException e) {
                 //we will return null
             }

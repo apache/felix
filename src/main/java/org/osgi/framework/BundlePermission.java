@@ -71,7 +71,8 @@ public final class BundlePermission extends BasicPermission {
 															| ACTION_HOST
 															| ACTION_FRAGMENT;
 	private final static int	ACTION_NONE			= 0;
-	private final static int	ACTION_ERROR		= 0x80000000;
+//    NOT USED!!!
+//    private final static int	ACTION_ERROR		= 0x80000000;
 
 	/**
 	 * The actions mask.

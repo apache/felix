@@ -34,9 +34,12 @@ import org.osgi.framework.Bundle;
  * 
  * @version $Revision: 1.4 $
  */
-public class BundleSignerCondition {
-	private static final String CONDITION_TYPE = "org.osgi.service.condpermadmin.BundleSignerCondition";
-	/**
+public class BundleSignerCondition 
+{
+//  NOT USED!!!  
+//	private static final String CONDITION_TYPE = "org.osgi.service.condpermadmin.BundleSignerCondition";
+
+    /**
 	 * Constructs a condition that tries to match the passed Bundle's location
 	 * to the location pattern.
 	 * 

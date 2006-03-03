@@ -47,7 +47,8 @@ final public class ServicePermission extends BasicPermission {
 	private final static int	ACTION_ALL			= ACTION_GET
 															| ACTION_REGISTER;
 	private final static int	ACTION_NONE			= 0;
-	private final static int	ACTION_ERROR		= 0x80000000;
+//  NOT USED!!
+//    private final static int	ACTION_ERROR		= 0x80000000;
 
 	/**
 	 * The actions mask.

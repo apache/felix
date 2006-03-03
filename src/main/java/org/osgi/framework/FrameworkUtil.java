@@ -10,7 +10,9 @@
 
 package org.osgi.framework;
 
-import org.apache.felix.framework.FilterImpl;
+
+import java.lang.reflect.Constructor;
+
 
 /**
  * Framework Utility class.
@@ -22,9 +24,15 @@ import org.apache.felix.framework.FilterImpl;
  * @version $Revision: 1.1 $
  * @since 1.3
  */
-public class FrameworkUtil {
+public class FrameworkUtil 
+{
+    private static final Class[] CONST_ARGS = new Class[] { String.class };
+    private static final String FILTER_IMPL_FQCN = "org.osgi.framework.filterImplFQCN";
+    private static final String FILTER_IMPL_DEFAULT = "org.apache.felix.framework.FilterImpl";
+    private static Class filterImplClass;
 
-	/**
+
+    /**
 	 * Creates a <code>Filter</code> object. This <code>Filter</code> object
 	 * may be used to match a <code>ServiceReference</code> object or a
 	 * <code>Dictionary</code> object.
@@ -41,8 +49,37 @@ public class FrameworkUtil {
 	 * 
 	 * @see Filter
 	 */
-	public static Filter createFilter(String filter)
-			throws InvalidSyntaxException {
-		return new FilterImpl(filter);
+	public static Filter createFilter( String filter ) throws InvalidSyntaxException 
+    {
+        if ( filterImplClass == null )
+        {
+            String fqcn = System.getProperty( FILTER_IMPL_FQCN );
+            if ( fqcn == null )
+            {
+                fqcn = FILTER_IMPL_DEFAULT;
+            }
+            
+            try
+            {
+                filterImplClass = Class.forName( fqcn );
+            }
+            catch ( ClassNotFoundException e )
+            {
+                throw new RuntimeException( "Failed to load filter implementation class: " + fqcn );
+            }
+        }
+        
+        Constructor constructor;
+        try
+        {
+            constructor = filterImplClass.getConstructor( CONST_ARGS );
+            Filter instance = ( Filter ) constructor.newInstance( new Object[] { filter } );
+            return instance;
+        }
+        catch ( Exception e )
+        {
+            throw new RuntimeException( "Failed to instantiate filter using implementation class: " 
+                + filterImplClass.getName() );
+        }
 	}
 }
