@@ -11,11 +11,6 @@
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>org.ungoverned.osgi.service.shell</artifactId>
-      <version>${pom.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
       <artifactId>org.osgi</artifactId>
       <version>${pom.version}</version>
     </dependency>
