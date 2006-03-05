@@ -1,5 +1,7 @@
-Main-Class: org.apache.felix.framework.Main
+Main-Class: org.apache.felix.main.Main
 Class-Path: ../bin/bootstrapper.jar 
- org.osgi-0.8-SNAPSHOT.jar 
- org.apache.felix.moduleloader-0.8-SNAPSHOT.jar 
- org.apache.felix.framework-0.8-SNAPSHOT.jar 
+ ../lib/org.osgi-0.8-SNAPSHOT.jar 
+ ../lib/org.apache.felix.moduleloader-0.8-SNAPSHOT.jar 
+ ../lib/org.apache.felix.daemon-0.8-SNAPSHOT.jar 
+ ../lib/org.apache.felix.framework-0.8-SNAPSHOT.jar 
+ 
