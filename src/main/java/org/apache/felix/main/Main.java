@@ -14,7 +14,8 @@
  *   limitations under the License.
  *
  */
-package org.apache.felix.framework;
+package org.apache.felix.main;
+
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -23,7 +24,10 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import org.apache.directory.daemon.InstallationLayout;
+
 import org.apache.felix.framework.cache.DefaultBundleCache;
+import org.apache.felix.daemon.Service;
+
 
 /**
  * <p>
@@ -130,7 +134,7 @@ public class Main
         Main.loadSystemProperties();
 
         // Initialize the Felix Daemon/Service
-        DaemonService service = new DaemonService();
+        Service service = new Service();
         if ( argv.length > 0 && new File( argv[0] ).isDirectory() )
         {
             service.init( new InstallationLayout( argv[0] ), null );
@@ -297,7 +301,7 @@ public class Main
         for (Enumeration e = props.propertyNames(); e.hasMoreElements(); )
         {
             String name = (String) e.nextElement();
-            System.setProperty( name, DaemonService.substVars( ( String ) props.getProperty( name ) ) );
+            System.setProperty( name, Service.substVars( ( String ) props.getProperty( name ) ) );
         }
     }
 }
