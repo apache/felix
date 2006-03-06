@@ -8,6 +8,18 @@
   <packaging>jar</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>${pom.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>org.apache.felix.shell.tui</artifactId>
+      <version>${pom.version}</version>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
       <plugin>
