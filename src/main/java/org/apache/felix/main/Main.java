@@ -16,18 +16,16 @@
  */
 package org.apache.felix.main;
 
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import org.apache.directory.daemon.InstallationLayout;
-
+import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.cache.DefaultBundleCache;
-import org.apache.felix.daemon.Service;
-
+import org.apache.felix.framework.util.MutablePropertyResolverImpl;
+import org.apache.felix.framework.util.StringMap;
 
 /**
  * <p>
@@ -51,6 +49,17 @@ public class Main
      * The default name used for the system properties file.
     **/
     public static final String SYSTEM_PROPERTIES_FILE_VALUE = "system.properties";
+    /**
+     * The system property name used to specify an URL to the configuration
+     * property file to be used for the created the framework instance.
+    **/
+    public static final String CONFIG_PROPERTIES_PROP = "felix.config.properties";
+    /**
+     * The default name used for the configuration properties file.
+    **/
+    public static final String CONFIG_PROPERTIES_FILE_VALUE = "config.properties";
+
+    private static Felix m_felix = null;
 
     /**
      * <p>
@@ -133,24 +142,9 @@ public class Main
         // Load system properties.
         Main.loadSystemProperties();
 
-        // Initialize the Felix Daemon/Service
-        Service service = new Service();
-        if ( argv.length > 0 && new File( argv[0] ).isDirectory() )
-        {
-            service.init( new InstallationLayout( argv[0] ), null );
-        }
-        else if ( argv.length > 0 && new File( argv[0] ).isFile() )
-        {
-            service.init( null, argv );
-        }
-        else
-        {
-            service.init( null, null );
-        }
-        
         // Read configuration properties.
-        Properties configProps = service.getConfigurationProperties();
-        
+        Properties configProps = Main.readConfigProperties();
+
         // See if the profile name property was specified.
         String profileName = configProps.getProperty(DefaultBundleCache.CACHE_PROFILE_PROP);
 
@@ -192,9 +186,13 @@ public class Main
 
         try
         {
-            service.start();
+            // Now create an instance of the framework.
+            m_felix = new Felix();
+            m_felix.start(
+                new MutablePropertyResolverImpl(new StringMap(configProps, false)),
+                null);
         }
-        catch ( Exception ex )
+        catch (Exception ex)
         {
             System.err.println("Could not create framework: " + ex);
             ex.printStackTrace();
@@ -202,7 +200,6 @@ public class Main
         }
     }
 
-    
     /**
      * <p>
      * Loads the properties in the system property file associated with the
@@ -301,7 +298,185 @@ public class Main
         for (Enumeration e = props.propertyNames(); e.hasMoreElements(); )
         {
             String name = (String) e.nextElement();
-            System.setProperty( name, Service.substVars( ( String ) props.getProperty( name ) ) );
+            System.setProperty(name, substVars((String) props.getProperty(name)));
+        }
+    }
+
+    /**
+     * <p>
+     * Reads the configuration properties in the configuration property
+     * file associated with the framework installation; these properties are
+     * only accessible to the framework and are intended for configuration
+     * purposes. By default, the configuration property file is located in
+     * the same directory as the <tt>felix.jar</tt> file and is called
+     * "<tt>config.properties</tt>". This may be changed by setting the
+     * "<tt>felix.config.properties</tt>" system property to an
+     * arbitrary URL.
+     * </p>
+     * @return A <tt>Properties</tt> instance or <tt>null</tt> if there was an error.
+    **/
+    public static Properties readConfigProperties()
+    {
+        // The config properties file is either specified by a system
+        // property or it is in the same directory as the Felix JAR file.
+        // Try to load it from one of these places.
+
+        // See if the property URL was specified as a property.
+        URL propURL = null;
+        String custom = System.getProperty(CONFIG_PROPERTIES_PROP);
+        if (custom != null)
+        {
+            try
+            {
+                propURL = new URL(custom);
+            }
+            catch (MalformedURLException ex)
+            {
+                System.err.print("Main: " + ex);
+                return null;
+            }
+        }
+        else
+        {
+            // Determine where felix.jar is located by looking at the
+            // system class path.
+            String jarLoc = null;
+            String classpath = System.getProperty("java.class.path");
+            int index = classpath.toLowerCase().indexOf("felix.jar");
+            int start = classpath.lastIndexOf(File.pathSeparator, index) + 1;
+            if (index > start)
+            {
+                jarLoc = classpath.substring(start, index);
+                if (jarLoc.length() == 0)
+                {
+                    jarLoc = ".";
+                }
+            }
+            else
+            {
+                // Can't figure it out so use the current directory as default.
+                jarLoc = System.getProperty("user.dir");
+            }
+
+            try
+            {
+                propURL = new File(jarLoc, CONFIG_PROPERTIES_FILE_VALUE).toURL();
+            }
+            catch (MalformedURLException ex)
+            {
+                System.err.print("Main: " + ex);
+                return null;
+            }
+        }
+
+        // Read the properties file.
+        Properties props = new Properties();
+        InputStream is = null;
+        try
+        {
+            is = propURL.openConnection().getInputStream();
+            props.load(is);
+            is.close();
+        }
+        catch (FileNotFoundException ex)
+        {
+            // Ignore file not found.
+        }
+        catch (Exception ex)
+        {
+            System.err.println(
+                "Error loading config properties from " + propURL);
+            System.err.println("Main: " + ex);
+            try
+            {
+                if (is != null) is.close();
+            }
+            catch (IOException ex2)
+            {
+                // Nothing we can do.
+            }
+            return null;
+        }
+
+        // Perform variable substitution for system properties.
+        for (Enumeration e = props.propertyNames(); e.hasMoreElements(); )
+        {
+            String name = (String) e.nextElement();
+            props.setProperty(name, substVars((String) props.getProperty(name)));
+        }
+
+        return props;
+    }
+
+    private static final String DELIM_START = "${";
+    private static final char DELIM_STOP  = '}';
+    private static final int DELIM_START_LEN = 2;
+    private static final int DELIM_STOP_LEN  = 1;
+
+    /**
+     * <p>
+     * This method performs system property variable substitution on the
+     * specified string value. If the specified string contains the
+     * syntax <tt>${&lt;system-prop-name&gt;}</tt>, then the corresponding
+     * system property value is substituted for the marker.
+     * </p>
+     * @param val The string on which to perform system property substitution.
+     * @return The value of the specified string after system property substitution.
+     * @throws IllegalArgumentException If there was a syntax error in the
+     *         system property variable marker syntax.
+    **/
+    public static String substVars(String val)
+        throws IllegalArgumentException
+    {
+        StringBuffer sbuf = new StringBuffer();
+
+        if (val == null)
+        {
+            return val;
+        }
+
+        int i = 0;
+        int j, k;
+
+        while (true)
+        {
+            j = val.indexOf(DELIM_START, i);
+            if (j == -1)
+            {
+                if (i == 0)
+                {
+                    return val;
+                }
+                else
+                {
+                    sbuf.append(val.substring(i, val.length()));
+                    return sbuf.toString();
+                }
+            }
+            else
+            {
+                sbuf.append(val.substring(i, j));
+                k = val.indexOf(DELIM_STOP, j);
+                if (k == -1)
+                {
+                    throw new IllegalArgumentException(
+                    '"' + val +
+                    "\" has no closing brace. Opening brace at position "
+                    + j + '.');
+                }
+                else
+                {
+                    j += DELIM_START_LEN;
+                    String key = val.substring(j, k);
+                    // Try system properties.
+                    String replacement = System.getProperty(key, null);
+                    if (replacement != null)
+                    {
+                        sbuf.append(replacement);
+                    }
+                    i = k + DELIM_STOP_LEN;
+                }
+            }
         }
     }
 }
