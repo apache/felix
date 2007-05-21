@@ -1,0 +1,79 @@
+<project>
+  <parent>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>felix</artifactId>
+    <version>0.9.0-incubator-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>bundle</packaging>
+  <name>Apache Felix iPOJO</name>
+  <artifactId>org.apache.felix.ipojo</artifactId>
+  <version>0.7.1-incubator-SNAPSHOT</version>
+  <dependencies>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>0.9.0-incubator-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>0.9.0-incubator-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>org.apache.felix.ipojo.metadata</artifactId>
+      <version>0.7.1-incubator-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.bundleplugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>          
+            <Bundle-Name>iPOJO</Bundle-Name>
+            <Bundle-Vendor>Clement ESCOFFIER</Bundle-Vendor>
+            <Bundle-Description> iPOJO </Bundle-Description>
+            <Import-Package>
+              org.osgi.framework, 
+              org.osgi.service.cm,
+              org.osgi.service.log
+            </Import-Package>
+            <Private-Package>
+    			org.apache.felix.ipojo.composite.architecture,
+    			org.apache.felix.ipojo.composite.service*,
+    			org.apache.felix.ipojo.composite.instance,
+    			org.apache.felix.ipojo.handlers.architecture,
+    			org.apache.felix.ipojo.handlers.configuration,
+    			org.apache.felix.ipojo.handlers.dependency.nullable,
+              	org.apache.felix.ipojo.handlers.lifecycle.callback,
+              	org.objectweb.asm*
+            </Private-Package>
+            <Export-Package>
+              org.apache.felix.ipojo; version="0.7.1", 
+              org.apache.felix.ipojo.metadata; version="0.7.1", 
+              org.apache.felix.ipojo.architecture; version="0.7.1", 
+              org.apache.felix.ipojo.parser; version="0.7.1",
+              org.apache.felix.ipojo.util; version="0.7.1",
+              org.apache.felix.ipojo.handlers.dependency; version="0.7.1",
+              org.apache.felix.ipojo.handlers.providedservice; version="0.7.1", 
+              org.apache.felix.ipojo.composite; version="0.7.1",
+              org.osgi.service.cm,
+              org.osgi.service.log
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
