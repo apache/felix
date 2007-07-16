@@ -421,11 +421,35 @@ public class PreferencesImpl implements Preferences {
     }
 
     /**
+     * Get or create the node.
+     * If the node already exists, it's just returned. If not
+     * it is created.
+     * @param pathName
+     * @return
+     */
+    public PreferencesImpl getOrCreateNode(String pathName) {
+        if ( pathName == null ) {
+            throw new NullPointerException("Path must not be null.");
+        }
+        PreferencesImpl executingNode= this;
+        if ( pathName.length() == 0 ) {
+            return this;
+        }
+        if ( pathName.startsWith("/") && this.parent != null ) {
+            executingNode = this.getRoot();
+        }
+        if ( pathName.startsWith("/") ) {
+            pathName = pathName.substring(1);
+        }
+        return executingNode.getNode(pathName, false, true);
+    }
+
+    /**
      * Get a relative node.
      * @param path
      * @return
      */
-    protected Preferences getNode(String path, boolean saveNewlyCreatedNode, boolean create) {
+    protected PreferencesImpl getNode(String path, boolean saveNewlyCreatedNode, boolean create) {
         if ( path.startsWith("/") ) {
             throw new IllegalArgumentException("Path must not contained consecutive slashes");
         }
@@ -455,7 +479,7 @@ public class PreferencesImpl implements Preferences {
                 }
                 saveNewlyCreatedNode = false;
             }
-            final Preferences result;
+            final PreferencesImpl result;
             if ( subPath == null ) {
                 result = child;
             } else {
@@ -598,6 +622,41 @@ public class PreferencesImpl implements Preferences {
                 this.node(name);
             }
             ((PreferencesImpl)this.children.get(name)).update(child);
+        }
+    }
+
+    /***
+     * Apply the changes done to the passed preferences object.
+     * @param prefs
+     */
+    public void applyChanges(PreferencesImpl prefs) {
+        final ChangeSet changeSet = prefs.getChangeSet();
+        if ( changeSet.hasChanges ) {
+            Iterator i;
+            // remove properties
+            i = changeSet.removedProperties.iterator();
+            while ( i.hasNext() ) {
+                this.properties.remove(i.next());
+            }
+            // set/update properties
+            i = changeSet.changedProperties.iterator();
+            while ( i.hasNext() ) {
+                final String key = (String)i.next();
+                this.properties.put(key, prefs.properties.get(key));
+            }
+            // remove children
+            i = changeSet.removedChildren.iterator();
+            while ( i.hasNext() ) {
+                final String name = (String)i.next();
+                this.children.remove(name);
+            }
+            // added childs are processed in the next loop
+        }
+        final Iterator cI = prefs.getChildren().iterator();
+        while ( cI.hasNext() ) {
+            final PreferencesImpl current = (PreferencesImpl)cI.next();
+            final PreferencesImpl child = this.getOrCreateNode(current.name());
+            child.applyChanges(current);
         }
     }
 

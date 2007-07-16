@@ -176,20 +176,6 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
     }
 
     /**
-     * @see org.apache.felix.sandbox.preferences.BackingStore#update(org.apache.felix.sandbox.preferences.PreferencesImpl)
-     */
-    public void update(PreferencesImpl prefs) throws BackingStoreException {
-        final PreferencesImpl root = this.load(prefs.getDescription());
-        if ( root != null ) {
-            // and now update
-            if ( root.nodeExists(prefs.absolutePath()) ) {
-                final PreferencesImpl updated = (PreferencesImpl)root.node(prefs.absolutePath());
-                prefs.update(updated);
-            }
-        }
-    }
-
-    /**
      * Get the file fo the preferences tree.
      * @param desc
      * @return

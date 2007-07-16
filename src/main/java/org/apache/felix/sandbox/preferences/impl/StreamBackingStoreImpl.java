@@ -67,6 +67,14 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
             return;
         }
         this.checkAccess();
+        // load existing data
+        final PreferencesImpl savedData = this.load(prefs.getDescription());
+        if ( savedData != null ) {
+            // merge with saved version
+            final PreferencesImpl n = savedData.getOrCreateNode(prefs.absolutePath());
+            n.applyChanges(prefs);
+            prefs = savedData;
+        }
         final PreferencesImpl root = prefs.getRoot();
         try {
             final OutputStream os = this.getOutputStream(root.getDescription());
@@ -92,6 +100,20 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
             }
         }
         return false;
+    }
+
+    /**
+     * @see org.apache.felix.sandbox.preferences.BackingStore#update(org.apache.felix.sandbox.preferences.PreferencesImpl)
+     */
+    public void update(PreferencesImpl prefs) throws BackingStoreException {
+        final PreferencesImpl root = this.load(prefs.getDescription());
+        if ( root != null ) {
+            // and now update
+            if ( root.nodeExists(prefs.absolutePath()) ) {
+                final PreferencesImpl updated = (PreferencesImpl)root.node(prefs.absolutePath());
+                prefs.update(updated);
+            }
+        }
     }
 
     /**
