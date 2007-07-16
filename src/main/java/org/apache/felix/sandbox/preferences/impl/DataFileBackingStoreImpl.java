@@ -127,9 +127,9 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
     }
 
     /**
-     * @see org.apache.felix.sandbox.preferences.BackingStore#load(java.lang.Long)
+     * @see org.apache.felix.sandbox.preferences.BackingStore#loadAll(java.lang.Long)
      */
-    public PreferencesImpl[] load(Long bundleId) throws BackingStoreException {
+    public PreferencesImpl[] loadAll(Long bundleId) throws BackingStoreException {
         this.checkAccess();
         final List list = new ArrayList();
         final File[] children = this.rootDirectory.listFiles();
@@ -155,25 +155,36 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
     }
 
     /**
-     * @see org.apache.felix.sandbox.preferences.BackingStore#update(org.apache.felix.sandbox.preferences.PreferencesImpl)
+     * @see org.apache.felix.sandbox.preferences.BackingStore#load(org.apache.felix.sandbox.preferences.PreferencesDescription)
      */
-    public void update(PreferencesImpl prefs) throws BackingStoreException {
+    public PreferencesImpl load(PreferencesDescription desc) throws BackingStoreException {
         this.checkAccess();
-        final File file = this.getFile(prefs.getDescription());
+        final File file = this.getFile(desc);
         if ( file.exists() ) {
             try {
-                final PreferencesImpl root = new PreferencesImpl(prefs.getDescription(), this);
+                final PreferencesImpl root = new PreferencesImpl(desc, this);
                 final FileInputStream fis = new FileInputStream(file);
                 this.read(root, fis);
                 fis.close();
 
-                // and now update
-                if ( root.nodeExists(prefs.absolutePath()) ) {
-                    final PreferencesImpl updated = (PreferencesImpl)root.node(prefs.absolutePath());
-                    prefs.update(updated);
-                }
+                return root;
             } catch (IOException ioe) {
                 throw new BackingStoreException("Unable to load preferences.", ioe);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.felix.sandbox.preferences.BackingStore#update(org.apache.felix.sandbox.preferences.PreferencesImpl)
+     */
+    public void update(PreferencesImpl prefs) throws BackingStoreException {
+        final PreferencesImpl root = this.load(prefs.getDescription());
+        if ( root != null ) {
+            // and now update
+            if ( root.nodeExists(prefs.absolutePath()) ) {
+                final PreferencesImpl updated = (PreferencesImpl)root.node(prefs.absolutePath());
+                prefs.update(updated);
             }
         }
     }

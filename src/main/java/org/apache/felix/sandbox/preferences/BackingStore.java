@@ -57,10 +57,18 @@ public interface BackingStore {
     void remove(Long bundleId) throws BackingStoreException;
 
     /**
+     * Load the preferences for the given description.
+     * @param desc
+     * @return A new preferences object or null if it's not available in the backing store.
+     * @throws BackingStoreException
+     */
+    PreferencesImpl load(PreferencesDescription desc) throws BackingStoreException;
+
+    /**
      * Load all preferences for this bundle.
      * @param bundleId The bundle id.
      * @return An array with the preferences or an empty array.
      * @throws BackingStoreException
      */
-    PreferencesImpl[] load(Long bundleId) throws BackingStoreException;
+    PreferencesImpl[] loadAll(Long bundleId) throws BackingStoreException;
 }
