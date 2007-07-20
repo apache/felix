@@ -30,6 +30,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.PreferencesService;
@@ -52,7 +53,7 @@ public class PreferencesManager
     /** The bundle context. */
     protected BundleContext context;
 
-    /** The backing store implementation. */
+    /** The backing store service tracker. */
     protected BackingStore store;
 
     /**
@@ -78,8 +79,15 @@ public class PreferencesManager
     public void start(BundleContext context) throws Exception {
         this.context = context;
 
-        // create our backing store - we hard code this for now
-        this.store = new DataFileBackingStoreImpl(this.context);
+        // create our backing store - check if a service is registered
+        final ServiceReference ref = context.getServiceReference(BackingStore.class.getName());
+        if ( ref != null ) {
+            this.store = (BackingStore)context.getService(ref);
+        }
+        // if no store is registered use the default data file implementation
+        if ( this.store == null ) {
+            this.store = new DataFileBackingStoreImpl(this.context);
+        }
 
         // register this activator as a bundle lister
         context.addBundleListener(this);
