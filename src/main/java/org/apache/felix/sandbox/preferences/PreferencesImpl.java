@@ -18,6 +18,7 @@
  */
 package org.apache.felix.sandbox.preferences;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.codec.binary.Base64;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
@@ -329,23 +331,17 @@ public class PreferencesImpl implements Preferences {
         return result;
     }
 
-    protected static final String DIGIT_STRING = "0123456789abcdef";
-
-    protected static final char[] DIGITS = DIGIT_STRING.toCharArray();
-
     /**
      * @see org.osgi.service.prefs.Preferences#putByteArray(java.lang.String, byte[])
      */
     public void putByteArray(String key, byte[] value) {
         this.checkKey(key);
         this.checkValue(value);
-        // convert to hex string
-        final StringBuffer buf = new StringBuffer();
-        for(int i=0; i<value.length;i++) {
-            buf.append(DIGITS[(0xF0 & value[i]) >>> 4 ]);
-            buf.append(DIGITS[ 0x0F & value[i] ]);
+        try {
+            this.put(key, new String(Base64.decodeBase64(value), "utf-8"));
+        } catch (UnsupportedEncodingException ignore) {
+            // utf-8 is always available
         }
-        this.put(key, buf.toString());
     }
 
     /**
@@ -355,24 +351,10 @@ public class PreferencesImpl implements Preferences {
         byte[] result = def;
         String value = this.get(key, null);
         if ( value != null ) {
-            value = value.toLowerCase();
-            if ( value.length() % 2 == 0 ) {
-                byte[] b = new byte[value.length() / 2];
-                int i;
-                for(i=0; i<b.length; i++) {
-                    int posH = DIGIT_STRING.indexOf(value.charAt(i*2));
-                    if ( posH == -1 ) {
-                        break;
-                    }
-                    int posL = DIGIT_STRING.indexOf(value.charAt(i*2 + 1));
-                    if ( posL == -1 ) {
-                        break;
-                    }
-                    b[i] = (byte)(16 * posH + posL);
-                }
-                if ( i == b.length ) {
-                    result = b;
-                }
+            try {
+                result = Base64.decodeBase64(value.getBytes("utf-8"));
+            } catch (UnsupportedEncodingException ignore) {
+                // utf-8 is always available
             }
         }
         return result;
