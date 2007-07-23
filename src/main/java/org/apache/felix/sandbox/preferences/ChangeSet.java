@@ -99,4 +99,18 @@ public class ChangeSet {
         this.addedChildren.clear();
         this.changedProperties.clear();
     }
+
+    /**
+     * Import the changes from the other change set.
+     * @param other
+     */
+    public void importChanges(ChangeSet other) {
+        if (other.hasChanges) {
+            this.hasChanges = true;
+            this.addedChildren.addAll(other.addedChildren);
+            this.removedChildren.addAll(other.removedChildren);
+            this.changedProperties.addAll(other.changedProperties);
+            this.removedProperties.addAll(other.removedProperties);
+        }
+    }
 }

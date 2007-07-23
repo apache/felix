@@ -74,7 +74,7 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
             // merge with saved version
             final PreferencesImpl n = savedData.getOrCreateNode(prefs.absolutePath());
             n.applyChanges(prefs);
-            prefs = savedData;
+            prefs = n;
         }
         final PreferencesImpl root = prefs.getRoot();
         try {

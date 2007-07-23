@@ -641,6 +641,7 @@ public class PreferencesImpl implements Preferences {
     public void applyChanges(PreferencesImpl prefs) {
         final ChangeSet changeSet = prefs.getChangeSet();
         if ( changeSet.hasChanges ) {
+            this.changeSet.importChanges(prefs.changeSet);
             Iterator i;
             // remove properties
             i = changeSet.removedProperties.iterator();
