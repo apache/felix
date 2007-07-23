@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.sandbox.preferences.BackingStore;
 import org.apache.felix.sandbox.preferences.BackingStoreManager;
 import org.apache.felix.sandbox.preferences.PreferencesDescription;
 import org.apache.felix.sandbox.preferences.PreferencesImpl;
@@ -129,9 +128,9 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
     }
 
     /**
-     * @see org.apache.felix.sandbox.preferences.BackingStore#loadAll(java.lang.Long)
+     * @see org.apache.felix.sandbox.preferences.BackingStore#loadAll(org.apache.felix.sandbox.preferences.BackingStoreManager, java.lang.Long)
      */
-    public PreferencesImpl[] loadAll(Long bundleId) throws BackingStoreException {
+    public PreferencesImpl[] loadAll(BackingStoreManager manager, Long bundleId) throws BackingStoreException {
         this.checkAccess();
         final List list = new ArrayList();
         final File[] children = this.rootDirectory.listFiles();
@@ -141,7 +140,7 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
             final PreferencesDescription desc = this.getDescription(current);
             if ( desc != null ) {
                 if ( desc.getBundleId().equals(bundleId) ) {
-                    final PreferencesImpl root = new PreferencesImpl(desc, new DummyBackingStoreManager(this));
+                    final PreferencesImpl root = new PreferencesImpl(desc, manager);
                     try {
                         final FileInputStream fis = new FileInputStream(current);
                         this.read(root, fis);
@@ -157,14 +156,14 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
     }
 
     /**
-     * @see org.apache.felix.sandbox.preferences.BackingStore#load(org.apache.felix.sandbox.preferences.PreferencesDescription)
+     * @see org.apache.felix.sandbox.preferences.BackingStore#load(org.apache.felix.sandbox.preferences.BackingStoreManager, org.apache.felix.sandbox.preferences.PreferencesDescription)
      */
-    public PreferencesImpl load(PreferencesDescription desc) throws BackingStoreException {
+    public PreferencesImpl load(BackingStoreManager manager, PreferencesDescription desc) throws BackingStoreException {
         this.checkAccess();
         final File file = this.getFile(desc);
         if ( file.exists() ) {
             try {
-                final PreferencesImpl root = new PreferencesImpl(desc, new DummyBackingStoreManager(this));
+                final PreferencesImpl root = new PreferencesImpl(desc, manager);
                 final FileInputStream fis = new FileInputStream(file);
                 this.read(root, fis);
                 fis.close();
@@ -192,21 +191,5 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
         buffer.append(".ser");
         final File file = new File(this.rootDirectory, buffer.toString());
         return file;
-    }
-
-    protected static final class DummyBackingStoreManager implements BackingStoreManager {
-
-        protected final BackingStore store;
-
-        public DummyBackingStoreManager(BackingStore s) {
-            this.store = s;
-        }
-
-        /**
-         * @see org.apache.felix.sandbox.preferences.BackingStoreManager#getStore()
-         */
-        public BackingStore getStore() {
-            return this.store;
-        }
     }
 }

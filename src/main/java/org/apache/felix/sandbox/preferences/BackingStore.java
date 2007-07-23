@@ -58,17 +58,19 @@ public interface BackingStore {
 
     /**
      * Load the preferences for the given description.
+     * @param manager The backing store manager which should be passed to new preferences implementations.
      * @param desc
      * @return A new preferences object or null if it's not available in the backing store.
      * @throws BackingStoreException
      */
-    PreferencesImpl load(PreferencesDescription desc) throws BackingStoreException;
+    PreferencesImpl load(BackingStoreManager manager, PreferencesDescription desc) throws BackingStoreException;
 
     /**
      * Load all preferences for this bundle.
+     * @param manager The backing store manager which should be passed to new preferences implementations.
      * @param bundleId The bundle id.
      * @return An array with the preferences or an empty array.
      * @throws BackingStoreException
      */
-    PreferencesImpl[] loadAll(Long bundleId) throws BackingStoreException;
+    PreferencesImpl[] loadAll(BackingStoreManager manager, Long bundleId) throws BackingStoreException;
 }
