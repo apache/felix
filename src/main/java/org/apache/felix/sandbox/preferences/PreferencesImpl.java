@@ -18,11 +18,6 @@
  */
 package org.apache.felix.sandbox.preferences;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -125,6 +120,13 @@ public class PreferencesImpl implements Preferences {
      */
     public Collection getChildren() {
         return this.children.values();
+    }
+
+    /**
+     * Return the properties set.
+     */
+    public Map getProperties() {
+        return this.properties;
     }
 
     /**
@@ -658,50 +660,5 @@ public class PreferencesImpl implements Preferences {
             final PreferencesImpl child = this.getOrCreateNode(current.name());
             child.applyChanges(current);
         }
-    }
-
-    /**
-     * Load this preferences from an input stream.
-     * Currently the prefs are read from an object input stream and
-     * the serialization is done by hand.
-     * The changeSet is neither updated nor cleared in order to provide
-     * an update/sync functionality. This has to be done at a higher level.
-     */
-    public void read(InputStream in) throws IOException {
-        final ObjectInputStream ois = new ObjectInputStream(in);
-        final int size = ois.readInt();
-        for(int i=0; i<size; i++) {
-            int keyLength = ois.readInt();
-            int valueLength = ois.readInt();
-            final byte[] key = new byte[keyLength];
-            final byte[] value = new byte[valueLength];
-            ois.readFully(key);
-            ois.readFully(value);
-            this.properties.put(new String(key, "utf-8"), new String(value, "utf-8"));
-        }
-    }
-
-    /**
-     * Save this preferences to an output stream.
-     * Currently the prefs are written through an object output
-     * stream with handmade serialization of strings.
-     * The changeSet is neither updated nor cleared in order to provide
-     * an update/sync functionality. This has to be done at a higher level.
-     */
-    public void write(OutputStream out) throws IOException {
-        final ObjectOutputStream oos = new ObjectOutputStream(out);
-        final int size = this.properties.size();
-        oos.writeInt(size);
-        final Iterator i = this.properties.entrySet().iterator();
-        while ( i.hasNext() ) {
-             final Map.Entry entry = (Map.Entry)i.next();
-             final byte[] key = entry.getKey().toString().getBytes("utf-8");
-             final byte[] value = entry.getValue().toString().getBytes("utf-8");
-             oos.writeInt(key.length);
-             oos.writeInt(value.length);
-             oos.write(key);
-             oos.write(value);
-        }
-        oos.flush();
     }
 }

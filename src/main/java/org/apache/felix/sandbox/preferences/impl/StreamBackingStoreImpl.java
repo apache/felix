@@ -25,6 +25,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.felix.sandbox.preferences.BackingStore;
 import org.apache.felix.sandbox.preferences.PreferencesDescription;
@@ -124,7 +125,7 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
      */
     protected void write(PreferencesImpl prefs, OutputStream os)
     throws IOException {
-        prefs.write(os);
+        this.writePreferences(prefs, os);
         final ObjectOutputStream oos = new ObjectOutputStream(os);
         final Collection children = prefs.getChildren();
         oos.writeInt(children.size());
@@ -148,7 +149,7 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
      */
     protected void read(PreferencesImpl prefs, InputStream is)
     throws IOException {
-        prefs.read(is);
+        this.readPreferences(prefs, is);
         final ObjectInputStream ois = new ObjectInputStream(is);
         final int numberOfChilren = ois.readInt();
         for(int i=0; i<numberOfChilren; i++) {
@@ -158,5 +159,50 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
             final PreferencesImpl impl = (PreferencesImpl)prefs.node(new String(name, "utf-8"));
             this.read(impl, is);
         }
+    }
+
+    /**
+     * Load this preferences from an input stream.
+     * Currently the prefs are read from an object input stream and
+     * the serialization is done by hand.
+     * The changeSet is neither updated nor cleared in order to provide
+     * an update/sync functionality. This has to be done at a higher level.
+     */
+    protected void readPreferences(PreferencesImpl prefs, InputStream in) throws IOException {
+        final ObjectInputStream ois = new ObjectInputStream(in);
+        final int size = ois.readInt();
+        for(int i=0; i<size; i++) {
+            int keyLength = ois.readInt();
+            int valueLength = ois.readInt();
+            final byte[] key = new byte[keyLength];
+            final byte[] value = new byte[valueLength];
+            ois.readFully(key);
+            ois.readFully(value);
+            prefs.getProperties().put(new String(key, "utf-8"), new String(value, "utf-8"));
+        }
+    }
+
+    /**
+     * Save this preferences to an output stream.
+     * Currently the prefs are written through an object output
+     * stream with handmade serialization of strings.
+     * The changeSet is neither updated nor cleared in order to provide
+     * an update/sync functionality. This has to be done at a higher level.
+     */
+    protected void writePreferences(PreferencesImpl prefs, OutputStream out) throws IOException {
+        final ObjectOutputStream oos = new ObjectOutputStream(out);
+        final int size = prefs.getProperties().size();
+        oos.writeInt(size);
+        final Iterator i = prefs.getProperties().entrySet().iterator();
+        while ( i.hasNext() ) {
+             final Map.Entry entry = (Map.Entry)i.next();
+             final byte[] key = entry.getKey().toString().getBytes("utf-8");
+             final byte[] value = entry.getValue().toString().getBytes("utf-8");
+             oos.writeInt(key.length);
+             oos.writeInt(value.length);
+             oos.write(key);
+             oos.write(value);
+        }
+        oos.flush();
     }
 }
