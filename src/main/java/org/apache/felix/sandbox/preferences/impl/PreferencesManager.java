@@ -216,7 +216,7 @@ public class PreferencesManager
             }
             service = this.defaultStore;
         }
-        this.log(LogService.LOG_INFO, "Using store " + service.getClass().getName(), null);
+
         return service;
     }
 
