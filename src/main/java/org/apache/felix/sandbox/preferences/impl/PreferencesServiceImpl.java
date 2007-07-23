@@ -55,7 +55,7 @@ public class PreferencesServiceImpl implements PreferencesService {
         try {
             // load prefs first
             PreferencesImpl[] prefs = null;
-            prefs = this.storeManager.getStore().loadAll(this.bundleId);
+            prefs = this.storeManager.getStore().loadAll(storeManager, this.bundleId);
             for(int i=0;i<prefs.length;i++) {
                 if ( prefs[i].getDescription().getIdentifier() == null ) {
                     this.systemTree = prefs[i];

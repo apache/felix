@@ -69,7 +69,7 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
         }
         this.checkAccess();
         // load existing data
-        final PreferencesImpl savedData = this.load(prefs.getDescription());
+        final PreferencesImpl savedData = this.load(prefs.getBackingStoreManager(), prefs.getDescription());
         if ( savedData != null ) {
             // merge with saved version
             final PreferencesImpl n = savedData.getOrCreateNode(prefs.absolutePath());
@@ -107,7 +107,7 @@ public abstract class StreamBackingStoreImpl implements BackingStore {
      * @see org.apache.felix.sandbox.preferences.BackingStore#update(org.apache.felix.sandbox.preferences.PreferencesImpl)
      */
     public void update(PreferencesImpl prefs) throws BackingStoreException {
-        final PreferencesImpl root = this.load(prefs.getDescription());
+        final PreferencesImpl root = this.load(prefs.getBackingStoreManager(), prefs.getDescription());
         if ( root != null ) {
             // and now update
             if ( root.nodeExists(prefs.absolutePath()) ) {
