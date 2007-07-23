@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.sandbox.preferences.BackingStore;
+import org.apache.felix.sandbox.preferences.BackingStoreManager;
 import org.apache.felix.sandbox.preferences.PreferencesDescription;
 import org.apache.felix.sandbox.preferences.PreferencesImpl;
 import org.osgi.service.prefs.BackingStoreException;
@@ -45,17 +45,17 @@ public class PreferencesServiceImpl implements PreferencesService {
     /** The service id for the bundle this service belongs to. */
     protected final Long bundleId;
 
-    /** The backing store. */
-    protected final BackingStore store;
+    /** The backing store manager. */
+    protected final BackingStoreManager storeManager;
 
     public PreferencesServiceImpl(Long id,
-                                  BackingStore store) {
+                                  BackingStoreManager storeManager) {
         this.bundleId = id;
-        this.store = store;
+        this.storeManager = storeManager;
         try {
             // load prefs first
             PreferencesImpl[] prefs = null;
-            prefs = this.store.loadAll(this.bundleId);
+            prefs = this.storeManager.getStore().loadAll(this.bundleId);
             for(int i=0;i<prefs.length;i++) {
                 if ( prefs[i].getDescription().getIdentifier() == null ) {
                     this.systemTree = prefs[i];
@@ -73,7 +73,7 @@ public class PreferencesServiceImpl implements PreferencesService {
      */
     public synchronized Preferences getSystemPreferences() {
         if ( this.systemTree == null ) {
-            this.systemTree = new PreferencesImpl(new PreferencesDescription(this.bundleId, null), this.store);
+            this.systemTree = new PreferencesImpl(new PreferencesDescription(this.bundleId, null), this.storeManager);
         }
         // sync with latest version from store
         try {
@@ -91,7 +91,7 @@ public class PreferencesServiceImpl implements PreferencesService {
         PreferencesImpl result = (PreferencesImpl) this.trees.get(name);
         // if the tree does not exist yet, create it
         if (result == null) {
-            result = new PreferencesImpl(new PreferencesDescription(this.bundleId, name), this.store);
+            result = new PreferencesImpl(new PreferencesDescription(this.bundleId, name), this.storeManager);
             this.trees.put(name, result);
         }
         // sync with latest version from store

@@ -58,8 +58,8 @@ public class PreferencesImpl implements Preferences {
     /** The description for this preferences. */
     protected final PreferencesDescription description;
 
-    /** The backing store. */
-    protected final BackingStore store;
+    /** The backing store manager. */
+    protected final BackingStoreManager storeManager;
 
     /** The change set keeps track of all changes. */
     protected final ChangeSet changeSet = new ChangeSet();
@@ -67,13 +67,13 @@ public class PreferencesImpl implements Preferences {
     /**
      * Construct the root node of the tree.
      * @param d The unique description.
-     * @param store The backing store.
+     * @param storeManager The backing store.
      */
-    public PreferencesImpl(PreferencesDescription d, BackingStore store) {
+    public PreferencesImpl(PreferencesDescription d, BackingStoreManager storeManager) {
         this.parent = null;
         this.name = "";
         this.description = d;
-        this.store = store;
+        this.storeManager = storeManager;
     }
 
     /**
@@ -85,7 +85,7 @@ public class PreferencesImpl implements Preferences {
         this.parent = p;
         this.name = name;
         this.description = p.description;
-        this.store = p.store;
+        this.storeManager = p.storeManager;
     }
 
     /**
@@ -127,6 +127,13 @@ public class PreferencesImpl implements Preferences {
      */
     public Map getProperties() {
         return this.properties;
+    }
+
+    /**
+     * Return the backing store manager.
+     */
+    public BackingStoreManager getBackingStoreManager() {
+        return this.storeManager;
     }
 
     /**
@@ -589,7 +596,7 @@ public class PreferencesImpl implements Preferences {
      */
     public synchronized void flush() throws BackingStoreException {
         this.checkValidity();
-        this.store.store(this);
+        this.storeManager.getStore().store(this);
         this.changeSet.clear();
     }
 
@@ -598,8 +605,8 @@ public class PreferencesImpl implements Preferences {
      */
     public synchronized void sync() throws BackingStoreException {
         this.checkValidity();
-        this.store.update(this);
-        this.store.store(this);
+        this.storeManager.getStore().update(this);
+        this.storeManager.getStore().store(this);
     }
 
     /**

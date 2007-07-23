@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.sandbox.preferences.BackingStore;
+import org.apache.felix.sandbox.preferences.BackingStoreManager;
 import org.apache.felix.sandbox.preferences.PreferencesImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -30,10 +31,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.PreferencesService;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * This activator registers itself as a service factory for the
@@ -43,7 +45,8 @@ import org.osgi.service.prefs.PreferencesService;
 public class PreferencesManager
     implements BundleActivator,
                BundleListener,
-               ServiceFactory {
+               ServiceFactory,
+               BackingStoreManager {
 
     /** The map of already created services. For each client bundle
      * a new service is created.
@@ -54,7 +57,16 @@ public class PreferencesManager
     protected BundleContext context;
 
     /** The backing store service tracker. */
-    protected BackingStore store;
+    protected ServiceTracker storeTracker;
+
+    /** The service tracker for the log service. */
+    protected ServiceTracker logTracker;
+
+    /** The default store which is used if no service can be found. */
+    protected BackingStore defaultStore;
+
+    /** Tracking count for the store tracker to detect changes. */
+    protected int storeTrackingCount = -1;
 
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
@@ -64,7 +76,7 @@ public class PreferencesManager
             final Long bundleId = new Long(event.getBundle().getBundleId());
             synchronized ( this.services ) {
                 try {
-                    this.store.remove(bundleId);
+                    this.getStore().remove(bundleId);
                 } catch (BackingStoreException ignore) {
                     // we ignore this for now
                 }
@@ -79,38 +91,16 @@ public class PreferencesManager
     public void start(BundleContext context) throws Exception {
         this.context = context;
 
-        // create our backing store - check if a service is registered
-        final ServiceReference ref = context.getServiceReference(BackingStore.class.getName());
-        if ( ref != null ) {
-            this.store = (BackingStore)context.getService(ref);
-        }
-        // if no store is registered use the default data file implementation
-        if ( this.store == null ) {
-            this.store = new DataFileBackingStoreImpl(this.context);
-        }
+        // track the log service using a ServiceTracker
+        this.logTracker = new ServiceTracker( context, LogService.class.getName(), null );
+        this.logTracker.open();
+
+        // create the tracker for our backing store
+        this.storeTracker = new ServiceTracker( context, BackingStore.class.getName(), null);
+        this.storeTracker.open();
 
         // register this activator as a bundle lister
         context.addBundleListener(this);
-
-        // check which bundles are available
-        final Long[] availableBundleIds = this.store.availableBundles();
-
-        // now check the bundles, for which we have preferences, if they are still
-        // in service and delete the preferences where the bundles are out of service.
-        // we synchronize on services in order to get not disturbed by a bundle event
-        synchronized ( this.services ) {
-            for(int i=0; i<availableBundleIds.length; i++) {
-                final Long bundleId = availableBundleIds[i];
-                final Bundle bundle = context.getBundle(bundleId.longValue());
-                if (bundle == null || bundle.getState() == Bundle.UNINSTALLED) {
-                    try {
-                        this.store.remove(bundleId);
-                    } catch (BackingStoreException ignore) {
-                        // we ignore this for now
-                    }
-                }
-            }
-        }
 
         // finally register the service factory for the preferences service
         context.registerService(PreferencesService.class.getName(), this, null);
@@ -129,7 +119,19 @@ public class PreferencesManager
             }
             this.services.clear();
         }
-        this.store = null;
+        // stop tracking store service
+        if ( this.storeTracker != null ) {
+            this.storeTracker.close();
+            this.storeTracker = null;
+        }
+        this.defaultStore = null;
+
+        // stop tracking log service
+        if ( this.logTracker != null ) {
+            this.logTracker.close();
+            this.logTracker = null;
+        }
+
         this.context = null;
     }
 
@@ -146,7 +148,7 @@ public class PreferencesManager
 
             if (service == null) {
                 // create a new service instance
-                service = new PreferencesServiceImpl(bundleId, this.store);
+                service = new PreferencesServiceImpl(bundleId, this);
                 this.services.put(bundleId, service);
             }
             return service;
@@ -176,9 +178,70 @@ public class PreferencesManager
         while ( i.hasNext() ) {
             final PreferencesImpl prefs = (PreferencesImpl)i.next();
             try {
-                this.store.store(prefs);
+                this.getStore().store(prefs);
             } catch (BackingStoreException ignore) {
                 // we ignore this
+            }
+        }
+    }
+
+    protected void log( int level, String message, Throwable t ) {
+        final LogService log = ( LogService ) this.logTracker.getService();
+        if ( log != null ) {
+            log.log( level, message, t );
+            return;
+        }
+    }
+
+    /**
+     * @see org.apache.felix.sandbox.preferences.BackingStoreManager#getStore()
+     */
+    public BackingStore getStore() {
+        // has the service changed?
+        int currentCount = this.storeTracker.getTrackingCount();
+        BackingStore service = (BackingStore) this.storeTracker.getService();
+        if ( service != null && this.storeTrackingCount < currentCount ) {
+            this.storeTrackingCount = currentCount;
+            this.cleanupStore(service);
+        }
+        if ( service == null ) {
+            // no service available use default store
+            if ( this.defaultStore == null ) {
+                synchronized ( this ) {
+                    if ( this.defaultStore == null ) {
+                        this.defaultStore = new DataFileBackingStoreImpl(this.context);
+                        this.cleanupStore(this.defaultStore);
+                    }
+                }
+            }
+            service = this.defaultStore;
+        }
+        this.log(LogService.LOG_INFO, "Using store " + service.getClass().getName(), null);
+        return service;
+    }
+
+    /**
+     * Clean up the store and remove preferences for deleted bundles.
+     * @param store
+     */
+    protected void cleanupStore(BackingStore store) {
+        // check which bundles are available
+        final Long[] availableBundleIds = store.availableBundles();
+
+        // now check the bundles, for which we have preferences, if they are still
+        // in service and delete the preferences where the bundles are out of service.
+        // we synchronize on services in order to get not disturbed by a bundle event
+        synchronized ( this.services ) {
+            for(int i=0; i<availableBundleIds.length; i++) {
+                final Long bundleId = availableBundleIds[i];
+                final Bundle bundle = this.context.getBundle(bundleId.longValue());
+                if (bundle == null || bundle.getState() == Bundle.UNINSTALLED) {
+                    try {
+                        store.remove(bundleId);
+                    } catch (BackingStoreException ignore) {
+                        // we ignore this for now
+                    }
+                }
             }
         }
     }
