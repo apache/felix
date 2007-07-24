@@ -18,6 +18,8 @@
  */
 package org.apache.felix.sandbox.preferences;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -112,5 +114,37 @@ public class ChangeSet {
             this.changedProperties.addAll(other.changedProperties);
             this.removedProperties.addAll(other.removedProperties);
         }
+    }
+
+    /**
+     * Return a collection with the changed property names.
+     * @return A collection.
+     */
+    public Collection getChangedProperties() {
+        return Collections.unmodifiableCollection(this.changedProperties);
+    }
+
+    /**
+     * Return a collection with the removed property names.
+     * @return A collection.
+     */
+    public Collection getRemovedProperties() {
+        return Collections.unmodifiableCollection(this.removedProperties);
+    }
+
+    /**
+     * Return a collection with the added children names.
+     * @return A collection.
+     */
+    public Collection getAddedChildren() {
+        return Collections.unmodifiableCollection(this.addedChildren);
+    }
+
+    /**
+     * Return a collection with the removed children names.
+     * @return A collection.
+     */
+    public Collection getRemovedChildren() {
+        return Collections.unmodifiableCollection(this.removedChildren);
     }
 }
