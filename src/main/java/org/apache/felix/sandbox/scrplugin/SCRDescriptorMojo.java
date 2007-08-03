@@ -27,6 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.sandbox.scrplugin.om.Component;
+import org.apache.felix.sandbox.scrplugin.om.Implementation;
+import org.apache.felix.sandbox.scrplugin.om.Interface;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescriptorManager;
 import org.apache.felix.sandbox.scrplugin.tags.JavaField;
@@ -240,6 +243,151 @@ public class SCRDescriptorMojo extends AbstractMojo {
         return sd.validate() ? sd : null;
     }
 
+    /**
+     * Create a component for the java class description.
+     * @param description
+     * @return The generated component descriptor or null if any error occurs.
+     * @throws MojoExecutionException
+     */
+    protected Component createComponent(JavaClassDescription description)
+    throws MojoExecutionException {
+
+        final JavaTag componentTag = description.getTagByName(SCRDescriptor.COMPONENT);
+        final Component component = new Component(componentTag);
+
+        // set implementation
+        component.setImplementation(new Implementation(description.getName()));
+
+        this.doComponent(componentTag, component);
+
+        boolean inherited = this.getBoolean(componentTag, SCRDescriptor.COMPONENT_INHERIT, false);
+        boolean serviceFactory = this.doServices(description.getTagsByName(SCRDescriptor.SERVICE, inherited), component, description);
+        component.setServiceFactory(serviceFactory);
+
+        // properties
+        final JavaTag[] properties = description.getTagsByName(SCRDescriptor.PROPERTY, inherited);
+        if (properties != null && properties.length > 0) {
+            for (int i=0; i < properties.length; i++) {
+                this.doProperty(properties[i], null, component);
+            }
+        }
+
+        // references
+        final JavaTag[] references = description.getTagsByName(SCRDescriptor.REFERENCE, inherited);
+        if (references != null || references.length > 0) {
+            for (int i=0; i < references.length; i++) {
+                this.doReference(references[i], null, component);
+            }
+        }
+
+        // fields
+        do {
+            JavaField[] fields = description.getFields();
+            for (int i=0; fields != null && i < fields.length; i++) {
+                JavaTag tag = fields[i].getTagByName(SCRDescriptor.REFERENCE);
+                if (tag != null) {
+                    // this.doReference(tag, fields[i].getName(), sd);
+                }
+
+                tag = fields[i].getTagByName(SCRDescriptor.PROPERTY);
+                if (tag != null) {
+                    this.doProperty(tag, fields[i].getInitializationExpression(), component);
+                }
+            }
+
+            description = description.getSuperClass();
+        } while (inherited && description != null);
+
+        final List issues = new ArrayList();
+        final List warnings = new ArrayList();
+        component.validate(issues, warnings);
+
+        // now log warnings and errors (warnings first)
+        Iterator i = warnings.iterator();
+        while ( i.hasNext() ) {
+            this.getLog().warn((String)i.next());
+        }
+        i = issues.iterator();
+        while ( i.hasNext() ) {
+            this.getLog().error((String)i.next());
+        }
+
+        // return nothing if validation fails
+        return issues.size() == 0 ? component : null;
+    }
+
+    /**
+     * Fill the component object with the information from the tag.
+     * @param tag
+     * @param component
+     */
+    protected void doComponent(JavaTag tag, Component component) {
+
+        // check if this is an abstract definition
+        String abstractType = tag.getNamedParameter(SCRDescriptor.COMPONENT_ABSTRACT);
+        component.setAbstract((abstractType == null ? false : "yes".equalsIgnoreCase(abstractType) || "true".equalsIgnoreCase(abstractType)));
+
+        String name = tag.getNamedParameter(SCRDescriptor.COMPONENT_NAME);
+        component.setName(StringUtils.isEmpty(name) ? component.getImplementation().getClassame() : name);
+
+        component.setEnabled(Boolean.valueOf(this.getBoolean(tag, SCRDescriptor.COMPONENT_ENABLED, true)));
+        component.setFactory(tag.getNamedParameter(SCRDescriptor.COMPONENT_FACTORY));
+        component.setImmediate(Boolean.valueOf(this.getBoolean(tag, SCRDescriptor.COMPONENT_IMMEDIATE, true)));
+
+        // whether metatype information is to generated for the component
+        String metaType = tag.getNamedParameter(SCRDescriptor.COMPONENT_METATYPE);
+        boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase(metaType)
+            || "true".equalsIgnoreCase(metaType);
+        component.setHasMetaType(hasMetaType);
+        component.setLabel(tag.getNamedParameter(SCRDescriptor.COMPONENT_LABEL));
+        component.setDescription(tag.getNamedParameter(SCRDescriptor.COMPONENT_DESCRIPTION));
+    }
+
+    /**
+     * Process the service annotations
+     * @param services
+     * @param component
+     * @param description
+     * @return
+     * @throws MojoExecutionException
+     */
+    protected boolean doServices(JavaTag[] services, Component component, JavaClassDescription description)
+    throws MojoExecutionException {
+        // no services, hence certainly no service factory
+        if (services == null || services.length == 0) {
+            return false;
+        }
+
+        org.apache.felix.sandbox.scrplugin.om.Service service = new org.apache.felix.sandbox.scrplugin.om.Service();
+        component.setService(service);
+        boolean serviceFactory = false;
+        for (int i=0; i < services.length; i++) {
+            String name = services[i].getNamedParameter(SCRDescriptor.SERVICE_INTERFACE);
+            if (StringUtils.isEmpty(name)) {
+
+                while (description != null) {
+                    JavaClassDescription[] interfaces = description.getImplementedInterfaces();
+                    for (int j=0; interfaces != null && j < interfaces.length; j++) {
+                        final Interface interf = new Interface(services[i]);
+                        interf.setInterfacename(interfaces[j].getName());
+                        service.addInterface(interf);
+                    }
+
+                    // try super class
+                    description = description.getSuperClass();
+                }
+            } else {
+                final Interface interf = new Interface(services[i]);
+                interf.setInterfacename(name);
+                service.addInterface(interf);
+            }
+
+            serviceFactory |= this.getBoolean(services[i], SCRDescriptor.SERVICE_FACTORY, false);
+        }
+
+        return serviceFactory;
+    }
+
     private void doComponent(JavaTag comp, SCRDescriptor sd) {
         String name = comp.getNamedParameter(SCRDescriptor.COMPONENT_NAME);
         sd.setName(StringUtils.isEmpty(name) ? sd.getImplClass() : name);
@@ -341,6 +489,86 @@ public class SCRDescriptorMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * @param property
+     * @param defaultName
+     * @param component
+     */
+    protected void doProperty(JavaTag property, String defaultName, Component component) {
+        String name = property.getNamedParameter(SCRDescriptor.PROPERTY_NAME);
+        if (StringUtils.isEmpty(name) && defaultName!= null) {
+            name = defaultName.trim();
+            if (name.startsWith("\"")) name = name.substring(1);
+            if (name.endsWith("\"")) name = name.substring(0, name.length()-1);
+        }
+
+        if (!StringUtils.isEmpty(name)) {
+            org.apache.felix.sandbox.scrplugin.om.Property prop = new org.apache.felix.sandbox.scrplugin.om.Property(property);
+            prop.setName(name);
+            prop.setLabel(property.getNamedParameter(SCRDescriptor.PROPERTY_LABEL));
+            prop.setDescription(property.getNamedParameter(SCRDescriptor.PROPERTY_DESCRIPTION));
+            prop.setValue(property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE));
+            prop.setType(property.getNamedParameter(SCRDescriptor.PROPERTY_TYPE));
+            //prop.setPrivateProperty(this.getBoolean(property,
+            //    SCRDescriptor.PROPERTY_PRIVATE, prop.isPrivateProperty()));
+
+            // set optional multivalues, cardinality might be overwritten by setValues !!
+            //prop.setCardinality(property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY));
+            //prop.setValues(property.getNamedParameterMap());
+
+            // check options
+            String[] parameters = property.getParameters();
+            Map options = null;
+            for (int j=0; j < parameters.length; j++) {
+                if (SCRDescriptor.PROPERTY_OPTIONS.equals(parameters[j])) {
+                    options = new LinkedHashMap();
+                } else if (options != null) {
+                    String optionLabel = parameters[j];
+                    String optionValue = (j < parameters.length-2) ? parameters[j+2] : null;
+                    if (optionValue != null) {
+                        options.put(optionLabel, optionValue);
+                    }
+                    j += 2;
+                }
+            }
+            //prop.setOptions(options);
+
+            component.addProperty(prop);
+        }
+    }
+
+    /**
+     * @param reference
+     * @param defaultName
+     * @param component
+     */
+    protected void doReference(JavaTag reference, String defaultName, Component component) {
+        String name = reference.getNamedParameter(SCRDescriptor.REFERENCE_NAME);
+        if (StringUtils.isEmpty(name)) {
+            name = defaultName;
+        }
+
+        // ensure interface
+        String type = reference.getNamedParameter(SCRDescriptor.REFERENCE_INTERFACE);
+        if (StringUtils.isEmpty(type)) {
+            if ( reference.getField() != null ) {
+                type = reference.getField().getType();
+            }
+        }
+
+        if (!StringUtils.isEmpty(name)) {
+            org.apache.felix.sandbox.scrplugin.om.Reference ref = new org.apache.felix.sandbox.scrplugin.om.Reference(reference);
+            ref.setName(name);
+            ref.setInterfacename(type);
+            ref.setCardinality(reference.getNamedParameter(SCRDescriptor.REFERENCE_CARDINALITY));
+            ref.setPolicy(reference.getNamedParameter(SCRDescriptor.REFERENCE_POLICY));
+            ref.setTarget(reference.getNamedParameter(SCRDescriptor.REFERENCE_TARGET));
+            ref.setBind(reference.getNamedParameter(SCRDescriptor.REFERENCE_BIND));
+            ref.setUnbind(reference.getNamedParameter(SCRDescriptor.REFERENCE_UNDBIND));
+            component.addReference(ref);
+        }
+    }
+
     private void doReferences(JavaTag[] references, SCRDescriptor sd) {
         if (references == null || references.length == 0) {
             return;
@@ -378,7 +606,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         }
     }
 
-    private boolean getBoolean(JavaTag tag, String name, boolean defaultValue) {
+    protected boolean getBoolean(JavaTag tag, String name, boolean defaultValue) {
         String value = tag.getNamedParameter(name);
         return (value == null) ? defaultValue : Boolean.valueOf(value).booleanValue();
     }
