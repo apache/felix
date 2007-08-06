@@ -286,7 +286,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             for (int i=0; fields != null && i < fields.length; i++) {
                 JavaTag tag = fields[i].getTagByName(SCRDescriptor.REFERENCE);
                 if (tag != null) {
-                    // this.doReference(tag, fields[i].getName(), sd);
+                    this.doReference(tag, fields[i].getName(), component);
                 }
 
                 tag = fields[i].getTagByName(SCRDescriptor.PROPERTY);
@@ -509,12 +509,27 @@ public class SCRDescriptorMojo extends AbstractMojo {
             prop.setDescription(property.getNamedParameter(SCRDescriptor.PROPERTY_DESCRIPTION));
             prop.setValue(property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE));
             prop.setType(property.getNamedParameter(SCRDescriptor.PROPERTY_TYPE));
-            //prop.setPrivateProperty(this.getBoolean(property,
-            //    SCRDescriptor.PROPERTY_PRIVATE, prop.isPrivateProperty()));
+            prop.setPrivateProperty(this.getBoolean(property,
+                SCRDescriptor.PROPERTY_PRIVATE, prop.isPrivateProperty()));
 
             // set optional multivalues, cardinality might be overwritten by setValues !!
-            //prop.setCardinality(property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY));
-            //prop.setValues(property.getNamedParameterMap());
+            final String value = property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY);
+            if (value != null) {
+                if ("-".equals(value)) {
+                    // unlimited vector
+                    prop.setCardinality(new Integer(Integer.MIN_VALUE));
+                } else if ("+".equals(value)) {
+                   // unlimited array
+                    prop.setCardinality(new Integer(Integer.MAX_VALUE));
+                } else {
+                    try {
+                        prop.setCardinality(Integer.valueOf(value));
+                    } catch (NumberFormatException nfe) {
+                        // default to scalar in case of conversion problem
+                    }
+                }
+            }
+            prop.setValues(property.getNamedParameterMap());
 
             // check options
             String[] parameters = property.getParameters();
@@ -531,7 +546,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
                     j += 2;
                 }
             }
-            //prop.setOptions(options);
+            prop.setOptions(options);
 
             component.addProperty(prop);
         }

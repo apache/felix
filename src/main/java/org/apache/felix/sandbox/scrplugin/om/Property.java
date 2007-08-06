@@ -18,7 +18,10 @@
  */
 package org.apache.felix.sandbox.scrplugin.om;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
 
@@ -29,12 +32,18 @@ import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
 public class Property extends AbstractObject {
 
     protected String name;
-    protected String value;
+    protected Object value;
     protected String type;
     protected String text;
 
     protected String label;
     protected String description;
+
+    protected Integer cardinality;
+
+    protected boolean privateProperty = false;
+
+    protected Map options;
 
     /**
      * Default constructor.
@@ -58,7 +67,7 @@ public class Property extends AbstractObject {
         this.name = name;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return this.value;
     }
 
@@ -98,11 +107,56 @@ public class Property extends AbstractObject {
         this.description = description;
     }
 
+    public Integer getCardinality() {
+        return this.cardinality;
+    }
+
+    public void setCardinality(Integer cardinality) {
+        this.cardinality = cardinality;
+    }
+
+    public boolean isPrivateProperty() {
+        return this.privateProperty;
+    }
+
+    public void setPrivateProperty(boolean privateProperty) {
+        this.privateProperty = privateProperty;
+    }
+
+    public void setValues(Map valueMap) {
+        List values = new ArrayList();
+        for (Iterator vi = valueMap.entrySet().iterator(); vi.hasNext();) {
+            Map.Entry entry = (Map.Entry) vi.next();
+            String key = (String) entry.getKey();
+            if (key.startsWith("values")) {
+                values.add(entry.getValue());
+            }
+        }
+
+        if (!values.isEmpty()) {
+            this.value = values;
+
+            // assume array if set to scalar currently
+            if (this.cardinality == null) {
+                this.cardinality = new Integer(Integer.MAX_VALUE);
+            }
+        }
+    }
+
+    public Map getOptions() {
+        return this.options;
+    }
+
+    public void setOptions(Map options) {
+        this.options = options;
+    }
+
     /**
      * Validate the property.
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
     public void validate(List issues, List warnings) {
+        // might want to check name and type
     }
 }

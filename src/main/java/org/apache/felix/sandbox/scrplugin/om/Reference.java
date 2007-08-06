@@ -20,7 +20,11 @@ package org.apache.felix.sandbox.scrplugin.om;
 
 import java.util.List;
 
+import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
+import org.apache.felix.sandbox.scrplugin.tags.JavaMethod;
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * <code>Reference.java</code>...
@@ -98,7 +102,99 @@ public class Reference extends AbstractObject {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    public void validate(List issues, List warnings) {
+    public void validate(List issues, List warnings)
+    throws MojoExecutionException {
+        // validate name
+        if (StringUtils.isEmpty(this.name)) {
+            issues.add(this.getMessage("Reference has no name"));
+        }
+
+        // validate interface
+        if (StringUtils.isEmpty(this.interfacename)) {
+            issues.add(this.getMessage("Missing interface name"));
+        }
+
+        // validate cardinality
+        if (this.cardinality == null) {
+            this.cardinality = "1..1";
+        } else if (!"0..1".equals(this.cardinality) && !"1..1".equals(this.cardinality)
+            && !"0..n".equals(this.cardinality) && !"1..n".equals(this.cardinality)) {
+            issues.add(this.getMessage("Invalid Cardinality specification " + this.cardinality));
+        }
+
+        // validate policy
+        if (this.policy == null) {
+            this.policy = "static";
+        } else if (!"static".equals(this.policy) && !"dynamic".equals(this.policy)) {
+            issues.add(this.getMessage("Invalid Policy specification " + this.policy));
+        }
+
+        // validate bind and unbind methods
+        JavaClassDescription javaClass = this.tag.getJavaClassDescription();
+        if (javaClass != null) {
+            this.bind = this.validateMethod(javaClass, this.bind, issues, warnings);
+            this.unbind = this.validateMethod(javaClass, this.unbind, issues, warnings);
+        } else {
+            issues.add(this.getMessage("Cannot find Java class to which the reference belongs"));
+        }
+    }
+
+    protected String validateMethod(JavaClassDescription javaClass, String methodName, List issues, List warnings)
+    throws MojoExecutionException {
+
+        JavaMethod method = this.findMethod(javaClass, methodName);
+
+        if (method == null) {
+            issues.add(this.getMessage("Missing method " + methodName + " for reference " + this.getName()));
+            return null;
+        }
+
+        if (method.isPublic()) {
+            warnings.add(this.getMessage("Method " + method.getName() + " should be declared protected"));
+        } else if (!method.isProtected()) {
+            issues.add(this.getMessage("Method " + method.getName() + " has wrong qualifier, public or protected required"));
+            return null;
+        }
+
+        return method.getName();
+    }
+
+    protected JavaMethod findMethod(JavaClassDescription javaClass, String methodName)
+    throws MojoExecutionException {
+
+        String[] sig = new String[]{ this.getInterfacename() };
+        String[] sig2 = new String[]{ "org.osgi.framework.ServiceReference" };
+
+        // service interface or ServiceReference first
+        String realMethodName = methodName;
+        JavaMethod method = javaClass.getMethodBySignature(realMethodName, sig);
+        if (method == null) {
+            method = javaClass.getMethodBySignature(realMethodName, sig2);
+        }
+
+        // append reference name with service interface and ServiceReference
+        if (method == null) {
+            realMethodName = methodName + Character.toUpperCase(this.name.charAt(0))
+            + this.name.substring(1);
+
+            method = javaClass.getMethodBySignature(realMethodName, sig);
+        }
+        if (method == null) {
+            method = javaClass.getMethodBySignature(realMethodName, sig2);
+        }
+
+        // append type name with service interface and ServiceReference
+        if (method == null) {
+            int lastDot = this.getInterfacename().lastIndexOf('.');
+            realMethodName = methodName
+                + this.getInterfacename().substring(lastDot + 1);
+            method = javaClass.getMethodBySignature(realMethodName, sig);
+        }
+        if (method == null) {
+            method = javaClass.getMethodBySignature(realMethodName, sig2);
+        }
+
+        return method;
     }
 
 }
