@@ -52,6 +52,9 @@ public class Reference extends AbstractObject {
      */
     public Reference(JavaTag t) {
         super(t);
+        // set default values
+        this.setBind("bind");
+        this.setUnbind("unbind");
     }
 
     public String getName() {

@@ -88,6 +88,9 @@ public class SCRDescriptorMojo extends AbstractMojo {
         final List abstractDescriptors = new ArrayList();
         final JavaClassDescription[] javaSources = jManager.getSourceDescriptions();
 
+        // final Components components = new Components();
+        // final Components abstractComponents = new Components();
+
         for (int i = 0; i < javaSources.length; i++) {
             this.getLog().debug("Testing source " + javaSources[i].getName());
             final JavaTag tag = javaSources[i].getTagByName(SCRDescriptor.COMPONENT);
@@ -96,15 +99,25 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 final SCRDescriptor descriptor = this.createSCRDescriptor(javaSources[i]);
                 if (descriptor != null) {
                     if ( descriptor.isAbstract() ) {
-                        this.getLog().debug("Adding descriptor " + descriptor);
+                        this.getLog().debug("Adding abstract descriptor " + descriptor);
                         abstractDescriptors.add(descriptor);
                     } else {
-                        this.getLog().debug("Adding abstract descriptor " + descriptor);
+                        this.getLog().debug("Adding descriptor " + descriptor);
                         descriptors.add(descriptor);
                     }
                 } else {
                     hasFailures = true;
                 }
+                //final Component comp = this.createComponent(javaSources[i]);
+                //if (comp != null) {
+                //    if ( comp.isAbstract() ) {
+                //        this.getLog().debug("Adding abstract descriptor " + descriptor);
+                //        abstractComponents.addComponent(comp);
+                //    } else {
+                //        this.getLog().debug("Adding descriptor " + descriptor);
+                //        components.addComponent(comp);
+                //    }
+                //}
             }
         }
 
@@ -136,6 +149,9 @@ public class SCRDescriptorMojo extends AbstractMojo {
         FileOutputStream descriptorStream = null;
         XMLWriter xw = null;
         try {
+            // final ComponentDescriptorIO io = new ComponentDescriptorIO();
+            //io.write(descriptorFile, components);
+
             descriptorStream = new FileOutputStream(descriptorFile);
             xw = new XMLWriter(descriptorStream);
 
@@ -324,7 +340,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
     protected void doComponent(JavaTag tag, Component component) {
 
         // check if this is an abstract definition
-        String abstractType = tag.getNamedParameter(SCRDescriptor.COMPONENT_ABSTRACT);
+        final String abstractType = tag.getNamedParameter(SCRDescriptor.COMPONENT_ABSTRACT);
         component.setAbstract((abstractType == null ? false : "yes".equalsIgnoreCase(abstractType) || "true".equalsIgnoreCase(abstractType)));
 
         String name = tag.getNamedParameter(SCRDescriptor.COMPONENT_NAME);
@@ -335,8 +351,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
         component.setImmediate(Boolean.valueOf(this.getBoolean(tag, SCRDescriptor.COMPONENT_IMMEDIATE, true)));
 
         // whether metatype information is to generated for the component
-        String metaType = tag.getNamedParameter(SCRDescriptor.COMPONENT_METATYPE);
-        boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase(metaType)
+        final String metaType = tag.getNamedParameter(SCRDescriptor.COMPONENT_METATYPE);
+        final boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase(metaType)
             || "true".equalsIgnoreCase(metaType);
         component.setHasMetaType(hasMetaType);
         component.setLabel(tag.getNamedParameter(SCRDescriptor.COMPONENT_LABEL));
@@ -578,8 +594,15 @@ public class SCRDescriptorMojo extends AbstractMojo {
             ref.setCardinality(reference.getNamedParameter(SCRDescriptor.REFERENCE_CARDINALITY));
             ref.setPolicy(reference.getNamedParameter(SCRDescriptor.REFERENCE_POLICY));
             ref.setTarget(reference.getNamedParameter(SCRDescriptor.REFERENCE_TARGET));
-            ref.setBind(reference.getNamedParameter(SCRDescriptor.REFERENCE_BIND));
-            ref.setUnbind(reference.getNamedParameter(SCRDescriptor.REFERENCE_UNDBIND));
+            String value;
+            value = reference.getNamedParameter(SCRDescriptor.REFERENCE_BIND);
+            if ( value != null ) {
+                ref.setBind(value);
+            }
+            value = reference.getNamedParameter(SCRDescriptor.REFERENCE_UNDBIND);
+            if ( value != null ) {
+                ref.setUnbind(value);
+            }
             component.addReference(ref);
         }
     }
