@@ -28,16 +28,26 @@ import java.util.List;
  */
 public class Components {
 
+    /** The list of {@link Component}s. */
     protected List components = new ArrayList();
 
+    /**
+     * Return the list of {@link Component}s.
+     */
     public List getComponents() {
         return this.components;
     }
 
+    /**
+     * Set the list of {@link Component}s.
+     */
     public void setComponents(List components) {
         this.components = components;
     }
 
+    /**
+     * Add a component to the list.
+     */
     public void addComponent(Component component) {
         this.components.add(component);
     }

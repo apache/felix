@@ -28,12 +28,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.sandbox.scrplugin.om.Component;
+import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.om.Implementation;
 import org.apache.felix.sandbox.scrplugin.om.Interface;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescriptorManager;
 import org.apache.felix.sandbox.scrplugin.tags.JavaField;
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
+import org.apache.felix.sandbox.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -88,8 +90,10 @@ public class SCRDescriptorMojo extends AbstractMojo {
         final List abstractDescriptors = new ArrayList();
         final JavaClassDescription[] javaSources = jManager.getSourceDescriptions();
 
-        // final Components components = new Components();
-        // final Components abstractComponents = new Components();
+        // test the new om?
+        boolean testNewOM = false;
+        final Components components = new Components();
+        final Components abstractComponents = new Components();
 
         for (int i = 0; i < javaSources.length; i++) {
             this.getLog().debug("Testing source " + javaSources[i].getName());
@@ -108,16 +112,18 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 } else {
                     hasFailures = true;
                 }
-                //final Component comp = this.createComponent(javaSources[i]);
-                //if (comp != null) {
-                //    if ( comp.isAbstract() ) {
-                //        this.getLog().debug("Adding abstract descriptor " + descriptor);
-                //        abstractComponents.addComponent(comp);
-                //    } else {
-                //        this.getLog().debug("Adding descriptor " + descriptor);
-                //        components.addComponent(comp);
-                //    }
-                //}
+                if ( testNewOM ) {
+                    final Component comp = this.createComponent(javaSources[i]);
+                    if (comp != null) {
+                        if ( comp.isAbstract() ) {
+                            this.getLog().debug("Adding abstract descriptor " + descriptor);
+                            abstractComponents.addComponent(comp);
+                        } else {
+                            this.getLog().debug("Adding descriptor " + descriptor);
+                            components.addComponent(comp);
+                        }
+                    }
+                }
             }
         }
 
@@ -149,15 +155,17 @@ public class SCRDescriptorMojo extends AbstractMojo {
         FileOutputStream descriptorStream = null;
         XMLWriter xw = null;
         try {
-            // final ComponentDescriptorIO io = new ComponentDescriptorIO();
-            //io.write(descriptorFile, components);
+            if ( testNewOM ) {
+                final ComponentDescriptorIO io = new ComponentDescriptorIO();
+                io.write(descriptorFile, components);
+            } else {
+                descriptorStream = new FileOutputStream(descriptorFile);
+                xw = new XMLWriter(descriptorStream);
 
-            descriptorStream = new FileOutputStream(descriptorFile);
-            xw = new XMLWriter(descriptorStream);
-
-            for (Iterator di=descriptors.iterator(); di.hasNext(); ) {
-                SCRDescriptor sd = (SCRDescriptor) di.next();
-                sd.generate(xw);
+                for (Iterator di=descriptors.iterator(); di.hasNext(); ) {
+                    SCRDescriptor sd = (SCRDescriptor) di.next();
+                    sd.generate(xw);
+                }
             }
 
         } catch (IOException ioe) {

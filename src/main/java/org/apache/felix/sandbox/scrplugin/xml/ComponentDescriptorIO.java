@@ -59,6 +59,7 @@ public class ComponentDescriptorIO {
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "name");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "enabled");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "immediate");
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "tag");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "label");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "description");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "isAbstract");
@@ -71,6 +72,7 @@ public class ComponentDescriptorIO {
         this.xstream.alias("property", org.apache.felix.sandbox.scrplugin.om.Property.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "name");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "value");
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "tag");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "label");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "description");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "options");
@@ -81,6 +83,7 @@ public class ComponentDescriptorIO {
 
         this.xstream.alias("provide", org.apache.felix.sandbox.scrplugin.om.Interface.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Interface.class, "interfacename");
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Interface.class, "tag");
 
         this.xstream.alias("reference", org.apache.felix.sandbox.scrplugin.om.Reference.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "name");
@@ -90,6 +93,7 @@ public class ComponentDescriptorIO {
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "policy");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "bind");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "unbind");
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Reference.class, "tag");
     }
 
     public org.apache.felix.sandbox.scrplugin.om.Components read(File file) throws IOException, MojoExecutionException {
