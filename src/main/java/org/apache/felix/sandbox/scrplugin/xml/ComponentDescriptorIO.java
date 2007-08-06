@@ -52,14 +52,17 @@ public class ComponentDescriptorIO {
         this.xstream = new XStream();
         this.xstream.setMode(XStream.NO_REFERENCES);
 
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.AbstractObject.class, "tag");
+
         this.xstream.alias("components", org.apache.felix.sandbox.scrplugin.om.Components.class);
         this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Components.class, "components");
 
         this.xstream.alias("component", org.apache.felix.sandbox.scrplugin.om.Component.class);
+        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Component.class, "references");
+        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Component.class, "properties");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "name");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "enabled");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "immediate");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "tag");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "label");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "description");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "isAbstract");
@@ -72,18 +75,17 @@ public class ComponentDescriptorIO {
         this.xstream.alias("property", org.apache.felix.sandbox.scrplugin.om.Property.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "name");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "value");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "tag");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "label");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "description");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "options");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "privateProperty");
 
         this.xstream.alias("service", org.apache.felix.sandbox.scrplugin.om.Service.class);
+        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Service.class, "interfaces");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Service.class, "servicefactory");
 
         this.xstream.alias("provide", org.apache.felix.sandbox.scrplugin.om.Interface.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Interface.class, "interfacename");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Interface.class, "tag");
 
         this.xstream.alias("reference", org.apache.felix.sandbox.scrplugin.om.Reference.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "name");
@@ -93,7 +95,6 @@ public class ComponentDescriptorIO {
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "policy");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "bind");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "unbind");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Reference.class, "tag");
     }
 
     public org.apache.felix.sandbox.scrplugin.om.Components read(File file) throws IOException, MojoExecutionException {

@@ -24,7 +24,7 @@ import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
  * The <code>AbstractObject</code>
  * is the base class for the all classes of the scr om.
  */
-abstract class AbstractObject {
+public abstract class AbstractObject {
 
     protected final JavaTag tag;
 
