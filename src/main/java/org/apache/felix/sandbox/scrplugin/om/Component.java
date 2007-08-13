@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
+import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaMethod;
 import org.apache.felix.sandbox.scrplugin.tags.JavaParameter;
@@ -59,18 +61,14 @@ public class Component extends AbstractObject {
     /** The references. */
     protected List references = new ArrayList();
 
-    /** The label. */
-    protected String label;
-
-    /** The description. */
-    protected String description;
-
     /** Is this an abstract description? */
     protected boolean isAbstract;
 
-    protected boolean hasMetatype;
-
     protected boolean serviceFactory;
+
+    protected OCD ocd;
+
+    protected Designate designate;
 
     /**
      * Default constructor.
@@ -161,36 +159,12 @@ public class Component extends AbstractObject {
         this.references.add(ref);
     }
 
-    public String getLabel() {
-        return this.label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public boolean isAbstract() {
         return this.isAbstract;
     }
 
     public void setAbstract(boolean isAbstract) {
         this.isAbstract = isAbstract;
-    }
-
-    public boolean isHasMetaType() {
-        return this.hasMetatype;
-    }
-
-    public void setHasMetaType(boolean hasMetatype) {
-        this.hasMetatype = hasMetatype;
     }
 
     public boolean isServiceFactory() {
@@ -321,4 +295,19 @@ public class Component extends AbstractObject {
         }
     }
 
+    public OCD getOcd() {
+        return this.ocd;
+    }
+
+    public void setOcd(OCD ocd) {
+        this.ocd = ocd;
+    }
+
+    public Designate getDesignate() {
+        return this.designate;
+    }
+
+    public void setDesignate(Designate designate) {
+        this.designate = designate;
+    }
 }

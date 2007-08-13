@@ -63,10 +63,9 @@ public class ComponentDescriptorIO {
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "name");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "enabled");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "immediate");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "label");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "description");
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "ocd");
+        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "designate");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "isAbstract");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "hasMetatype");
         this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "serviceFactory");
 
         this.xstream.alias("implementation", org.apache.felix.sandbox.scrplugin.om.Implementation.class);
@@ -75,10 +74,6 @@ public class ComponentDescriptorIO {
         this.xstream.alias("property", org.apache.felix.sandbox.scrplugin.om.Property.class);
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "name");
         this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "value");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "label");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "description");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "options");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Property.class, "privateProperty");
 
         this.xstream.alias("service", org.apache.felix.sandbox.scrplugin.om.Service.class);
         this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Service.class, "interfaces");

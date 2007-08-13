@@ -31,6 +31,10 @@ import org.apache.felix.sandbox.scrplugin.om.Component;
 import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.om.Implementation;
 import org.apache.felix.sandbox.scrplugin.om.Interface;
+import org.apache.felix.sandbox.scrplugin.om.metatype.AD;
+import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
+import org.apache.felix.sandbox.scrplugin.om.metatype.MTObject;
+import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescriptorManager;
 import org.apache.felix.sandbox.scrplugin.tags.JavaField;
@@ -362,9 +366,30 @@ public class SCRDescriptorMojo extends AbstractMojo {
         final String metaType = tag.getNamedParameter(SCRDescriptor.COMPONENT_METATYPE);
         final boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase(metaType)
             || "true".equalsIgnoreCase(metaType);
-        component.setHasMetaType(hasMetaType);
-        component.setLabel(tag.getNamedParameter(SCRDescriptor.COMPONENT_LABEL));
-        component.setDescription(tag.getNamedParameter(SCRDescriptor.COMPONENT_DESCRIPTION));
+        if ( hasMetaType ) {
+            // ocd
+            final OCD ocd = new OCD();
+            component.setOcd(ocd);
+            ocd.setId(component.getName());
+            String ocdName = tag.getNamedParameter(SCRDescriptor.COMPONENT_LABEL);
+            if ( ocdName == null ) {
+                ocdName = "%" + component.getName() + ".name";
+            }
+            ocd.setName(ocdName);
+            String ocdDescription = tag.getNamedParameter(SCRDescriptor.COMPONENT_DESCRIPTION);
+            if ( ocdDescription == null ) {
+                ocdDescription = "%" + component.getName() + ".description";
+            }
+            ocd.setDescription(ocdDescription);
+            // designate
+            final Designate designate = new Designate();
+            component.setDesignate(designate);
+            designate.setPid(component.getName());
+            // designate.object
+            final MTObject mtobject = new MTObject();
+            designate.setObject(mtobject);
+            mtobject.setOcdref(component.getName());
+        }
     }
 
     /**
@@ -529,48 +554,65 @@ public class SCRDescriptorMojo extends AbstractMojo {
         if (!StringUtils.isEmpty(name)) {
             org.apache.felix.sandbox.scrplugin.om.Property prop = new org.apache.felix.sandbox.scrplugin.om.Property(property);
             prop.setName(name);
-            prop.setLabel(property.getNamedParameter(SCRDescriptor.PROPERTY_LABEL));
-            prop.setDescription(property.getNamedParameter(SCRDescriptor.PROPERTY_DESCRIPTION));
-            prop.setValue(property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE));
             prop.setType(property.getNamedParameter(SCRDescriptor.PROPERTY_TYPE));
-            prop.setPrivateProperty(this.getBoolean(property,
-                SCRDescriptor.PROPERTY_PRIVATE, prop.isPrivateProperty()));
-
-            // set optional multivalues, cardinality might be overwritten by setValues !!
-            final String value = property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY);
-            if (value != null) {
-                if ("-".equals(value)) {
-                    // unlimited vector
-                    prop.setCardinality(new Integer(Integer.MIN_VALUE));
-                } else if ("+".equals(value)) {
-                   // unlimited array
-                    prop.setCardinality(new Integer(Integer.MAX_VALUE));
-                } else {
-                    try {
-                        prop.setCardinality(Integer.valueOf(value));
-                    } catch (NumberFormatException nfe) {
-                        // default to scalar in case of conversion problem
-                    }
-                }
-            }
+            prop.setValue(property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE));
             prop.setValues(property.getNamedParameterMap());
+            final boolean isPrivate = this.getBoolean(property, SCRDescriptor.PROPERTY_PRIVATE, false);
+            // if this is a public property and the component is generating metatype info
+            // store the information!
+            if ( !isPrivate && component.getOcd() != null ) {
+                final OCD ocd = component.getOcd();
+                final AD ad = new AD();
+                ocd.getProperties().add(ad);
+                ad.setId(prop.getName());
+                ad.setType(prop.getType());
 
-            // check options
-            String[] parameters = property.getParameters();
-            Map options = null;
-            for (int j=0; j < parameters.length; j++) {
-                if (SCRDescriptor.PROPERTY_OPTIONS.equals(parameters[j])) {
-                    options = new LinkedHashMap();
-                } else if (options != null) {
-                    String optionLabel = parameters[j];
-                    String optionValue = (j < parameters.length-2) ? parameters[j+2] : null;
-                    if (optionValue != null) {
-                        options.put(optionLabel, optionValue);
-                    }
-                    j += 2;
+                String adName = property.getNamedParameter(SCRDescriptor.PROPERTY_LABEL);
+                if ( adName == null ) {
+                    adName = "%" + prop.getName() + ".name";
                 }
+                ad.setName(adName);
+                String adDesc = property.getNamedParameter(SCRDescriptor.PROPERTY_DESCRIPTION);
+                if ( adDesc == null ) {
+                    adDesc = "%" + prop.getName() + ".description";
+                }
+                ad.setDescription(adDesc);
+                // set optional multivalues, cardinality might be overwritten by setValues !!
+                final String value = property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY);
+                if (value != null) {
+                    if ("-".equals(value)) {
+                        // unlimited vector
+                        ad.setCardinality(new Integer(Integer.MIN_VALUE));
+                    } else if ("+".equals(value)) {
+                       // unlimited array
+                        ad.setCardinality(new Integer(Integer.MAX_VALUE));
+                    } else {
+                        try {
+                            ad.setCardinality(Integer.valueOf(value));
+                        } catch (NumberFormatException nfe) {
+                            // default to scalar in case of conversion problem
+                        }
+                    }
+                }
+                ad.setDefaultValue(prop.getValue());
+
+                // check options
+                String[] parameters = property.getParameters();
+                Map options = null;
+                for (int j=0; j < parameters.length; j++) {
+                    if (SCRDescriptor.PROPERTY_OPTIONS.equals(parameters[j])) {
+                        options = new LinkedHashMap();
+                    } else if (options != null) {
+                        String optionLabel = parameters[j];
+                        String optionValue = (j < parameters.length-2) ? parameters[j+2] : null;
+                        if (optionValue != null) {
+                            options.put(optionLabel, optionValue);
+                        }
+                        j += 2;
+                    }
+                }
+                ad.setOptions(options);
             }
-            prop.setOptions(options);
 
             component.addProperty(prop);
         }

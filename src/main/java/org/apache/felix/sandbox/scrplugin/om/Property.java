@@ -36,15 +36,6 @@ public class Property extends AbstractObject {
     protected String type;
     protected String text;
 
-    protected String label;
-    protected String description;
-
-    protected Integer cardinality;
-
-    protected boolean privateProperty = false;
-
-    protected Map options;
-
     /**
      * Default constructor.
      */
@@ -91,38 +82,6 @@ public class Property extends AbstractObject {
         this.text = text;
     }
 
-    public String getLabel() {
-        return this.label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Integer getCardinality() {
-        return this.cardinality;
-    }
-
-    public void setCardinality(Integer cardinality) {
-        this.cardinality = cardinality;
-    }
-
-    public boolean isPrivateProperty() {
-        return this.privateProperty;
-    }
-
-    public void setPrivateProperty(boolean privateProperty) {
-        this.privateProperty = privateProperty;
-    }
-
     public void setValues(Map valueMap) {
         List values = new ArrayList();
         for (Iterator vi = valueMap.entrySet().iterator(); vi.hasNext();) {
@@ -135,20 +94,7 @@ public class Property extends AbstractObject {
 
         if (!values.isEmpty()) {
             this.value = values;
-
-            // assume array if set to scalar currently
-            if (this.cardinality == null) {
-                this.cardinality = new Integer(Integer.MAX_VALUE);
-            }
         }
-    }
-
-    public Map getOptions() {
-        return this.options;
-    }
-
-    public void setOptions(Map options) {
-        this.options = options;
     }
 
     /**
