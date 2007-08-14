@@ -329,11 +329,29 @@ public class ComponentDescriptorIO {
         /** Pending property. */
         protected Property pendingProperty;
 
+        /** Flag for detecting the first element. */
+        protected boolean firstElement = true;
+
+        /** Override namespace. */
+        protected String overrideNamespace;
+
         public void startElement(String uri, String localName, String name, Attributes attributes)
         throws SAXException {
-            // we process elements in the default namespace and in the scr namespace only
-            // TODO - To be 100% correct we should only listen to the scr namespace
-            if ( "".equals(uri) || NAMESPACE_URI.equals(uri) ) {
+            // according to the spec, the elements should have the namespace,
+            // except when the root element is the "component" element
+            // So we check this for the first element, we receive.
+            if ( this.firstElement ) {
+                this.firstElement = false;
+                if ( localName.equals(COMPONENT) && "".equals(uri) ) {
+                    this.overrideNamespace = NAMESPACE_URI;
+                }
+            }
+
+            if ( this.overrideNamespace != null && "".equals(uri) ) {
+                uri = this.overrideNamespace;
+            }
+
+            if ( NAMESPACE_URI.equals(uri) ) {
 
                 if (localName.equals(COMPONENT)) {
 
@@ -409,9 +427,11 @@ public class ComponentDescriptorIO {
          * @see org.xml.sax.helpers.DefaultHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
          */
         public void endElement(String uri, String localName, String name) throws SAXException {
-            // we process elements in the default namespace and in the scr namespace only
-            // TODO - To be 100% correct we should only listen to the scr namespace
-            if ( "".equals(uri) || NAMESPACE_URI.equals(uri) ) {
+            if ( this.overrideNamespace != null && "".equals(uri) ) {
+                uri = this.overrideNamespace;
+            }
+
+            if ( NAMESPACE_URI.equals(uri) ) {
                 if (localName.equals("component") ) {
                     this.components.addComponent(this.currentComponent);
                     this.currentComponent = null;
