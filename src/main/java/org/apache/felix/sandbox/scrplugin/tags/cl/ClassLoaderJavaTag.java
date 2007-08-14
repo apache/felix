@@ -21,11 +21,11 @@ package org.apache.felix.sandbox.scrplugin.tags.cl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.sandbox.scrplugin.SCRDescriptor;
+import org.apache.felix.sandbox.scrplugin.Constants;
+import org.apache.felix.sandbox.scrplugin.om.Reference;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaField;
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
-import org.apache.felix.sandbox.scrplugin.xml.Reference;
 
 /**
  * <code>ClassLoaderJavaTag.java</code>...
@@ -58,7 +58,7 @@ public class ClassLoaderJavaTag implements JavaTag {
      */
     public String getName() {
         if ( this.reference != null ) {
-            return SCRDescriptor.REFERENCE;
+            return Constants.REFERENCE;
         }
         return null;
     }
@@ -80,13 +80,13 @@ public class ClassLoaderJavaTag implements JavaTag {
     public Map getNamedParameterMap() {
         if ( this.reference != null ) {
             final Map map = new HashMap();
-            map.put(SCRDescriptor.REFERENCE_BIND, this.reference.getBind());
-            map.put(SCRDescriptor.REFERENCE_CARDINALITY, this.reference.getCardinality());
-            map.put(SCRDescriptor.REFERENCE_INTERFACE, this.reference.getInterfacename());
-            map.put(SCRDescriptor.REFERENCE_NAME, this.reference.getName());
-            map.put(SCRDescriptor.REFERENCE_POLICY, this.reference.getPolicy());
-            map.put(SCRDescriptor.REFERENCE_TARGET, this.reference.getTarget());
-            map.put(SCRDescriptor.REFERENCE_UNDBIND, this.reference.getUnbind());
+            map.put(Constants.REFERENCE_BIND, this.reference.getBind());
+            map.put(Constants.REFERENCE_CARDINALITY, this.reference.getCardinality());
+            map.put(Constants.REFERENCE_INTERFACE, this.reference.getInterfacename());
+            map.put(Constants.REFERENCE_NAME, this.reference.getName());
+            map.put(Constants.REFERENCE_POLICY, this.reference.getPolicy());
+            map.put(Constants.REFERENCE_TARGET, this.reference.getTarget());
+            map.put(Constants.REFERENCE_UNDBIND, this.reference.getUnbind());
             return map;
         }
         return null;

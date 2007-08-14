@@ -34,18 +34,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import org.apache.felix.sandbox.scrplugin.Property;
-import org.apache.felix.sandbox.scrplugin.Reference;
-import org.apache.felix.sandbox.scrplugin.SCRDescriptor;
-import org.apache.felix.sandbox.scrplugin.Service;
+import org.apache.felix.sandbox.scrplugin.Constants;
+import org.apache.felix.sandbox.scrplugin.om.Component;
+import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.tags.cl.ClassLoaderJavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.qdox.QDoxJavaClassDescription;
-import org.apache.felix.sandbox.scrplugin.xml.Component;
 import org.apache.felix.sandbox.scrplugin.xml.ComponentDescriptorIO;
-import org.apache.felix.sandbox.scrplugin.xml.Components;
-import org.apache.felix.sandbox.scrplugin.xml.Implementation;
-import org.apache.felix.sandbox.scrplugin.xml.Interface;
-import org.apache.felix.sandbox.scrplugin.xml.XMLHandler;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -63,12 +57,6 @@ import com.thoughtworks.qdox.model.JavaSource;
  */
 public class JavaClassDescriptorManager {
 
-    public static final String ABSTRACT_DESCRIPTOR_FILENAME = "scrinfo.xml";
-
-    public static final String ABSTRACT_DESCRIPTOR_RELATIVE_PATH = "OSGI-INF" + File.separator + "scr-plugin" + File.separator + ABSTRACT_DESCRIPTOR_FILENAME;
-
-    public static final String ABSTRACT_DESCRIPTOR_ARCHIV_PATH = "OSGI-INF/scr-plugin/" + ABSTRACT_DESCRIPTOR_FILENAME;
-
     protected static final String SERVICE_COMPONENT = "Service-Component";
 
     /** The sources read by qdox. */
@@ -79,9 +67,6 @@ public class JavaClassDescriptorManager {
 
     /** The classloader used to compile the classes. */
     protected final ClassLoader classloader;
-
-    /** The xml handler to read and write the service descriptors. */
-    protected final XMLHandler xmlHandler = new XMLHandler();
 
     /** A cache containing the java class descriptions hashed by classname. */
     protected final Map javaClassDescriptions = new HashMap();
@@ -153,7 +138,7 @@ public class JavaClassDescriptorManager {
                     }
                     this.log.debug("Trying to get scrinfo from artifact " + artifact);
                     try {
-                        final File scrInfoFile = this.getFile(artifact, ABSTRACT_DESCRIPTOR_ARCHIV_PATH);
+                        final File scrInfoFile = this.getFile(artifact, Constants.ABSTRACT_DESCRIPTOR_ARCHIV_PATH);
                         if ( scrInfoFile != null ) {
                             components.addAll(this.parseServiceComponentDescriptor(artifact, scrInfoFile).getComponents());
                         } else {
@@ -192,125 +177,6 @@ public class JavaClassDescriptorManager {
     }
 
     /**
-     * Create the abstract descriptors file or delete it of no abstract descriptors are available.
-     * @param abstractDescriptors
-     */
-    public void writeAbstractDescriptorsFile(List abstractDescriptors, File outputDirectory)
-    throws MojoExecutionException {
-        try {
-            // if we have abstract descriptors, write them first
-            final File adFile = new File(outputDirectory, ABSTRACT_DESCRIPTOR_RELATIVE_PATH);
-            if ( !abstractDescriptors.isEmpty() ) {
-                this.getLog().info("Writing abstract service descriptor " + adFile + " with " + abstractDescriptors.size() + " entries.");
-                final Components container = new Components();
-                final Iterator i = abstractDescriptors.iterator();
-                while ( i.hasNext() ) {
-                    final SCRDescriptor current = (SCRDescriptor) i.next();
-                    // component
-                    final Component component = new Component();
-                    // enabled and immediate do not make sense for abstract components
-                    //component.setEnabled(Boolean.valueOf(current.isEnabled()));
-                    //component.setImmediate(Boolean.valueOf(current.isImmediate()));
-                    component.setName(current.getName());
-                    // do we support abstract factories or should we throw an exception? (TODO)
-                    component.setFactory(current.getFactory());
-
-                    // implementation
-                    final Implementation impl = new Implementation();
-                    impl.setClassname(current.getImplClass());
-                    component.setImplementation(impl);
-
-                    // properties
-                    final Iterator pI = current.getProperties();
-                    while ( pI.hasNext() ) {
-                        final Property p = (Property)pI.next();
-                        final org.apache.felix.sandbox.scrplugin.xml.Property prop = new org.apache.felix.sandbox.scrplugin.xml.Property();
-                        prop.setName(p.getName());
-                        if ( !"String".equals(p.getType())) {
-                            prop.setType(p.getType());
-                        }
-                        if (p.getValue() instanceof List) {
-                            final StringBuffer buffer = new StringBuffer();
-                            List values = (List) p.getValue();
-                            for (Iterator vi = values.iterator(); vi.hasNext();) {
-                                buffer.append(vi.next()).append('\n');
-                            }
-                        } else if (p.getValue() != null) {
-                            prop.setValue(p.getValue().toString());
-                        }
-                        component.getProperties().add(prop);
-                    }
-
-                    // services
-                    final Iterator sI = current.getServices();
-                    if (sI.hasNext()) {
-                        final org.apache.felix.sandbox.scrplugin.xml.Service srvc = new org.apache.felix.sandbox.scrplugin.xml.Service();
-                        component.setService(srvc);
-                        if ( current.isServiceFactory() ) {
-                            srvc.setServicefactory("true");
-                        }
-                        while (sI.hasNext()) {
-                            final Service s = (Service)sI.next();
-                            final Interface interf = new Interface();
-                            interf.setInterfacename(s.getInterfaceName());
-                            srvc.getInterfaces().add(interf);
-                        }
-                    }
-
-                    // references
-                    final Iterator rI = current.getReferences();
-                    while ( rI.hasNext() ) {
-                        final Reference r = (Reference)rI.next();
-                        final org.apache.felix.sandbox.scrplugin.xml.Reference ref = new org.apache.felix.sandbox.scrplugin.xml.Reference();
-                        ref.setName(r.getName());
-                        ref.setInterfacename(r.getInterfaceName());
-                        ref.setTarget(r.getTarget());
-                        ref.setCardinality(r.getCardinality());
-                        ref.setPolicy(r.getPolicy());
-                        ref.setBind(r.getBind());
-                        ref.setUnbind(r.getUnbind());
-
-                        component.getReferences().add(ref);
-                    }
-
-                    container.getComponents().add(component);
-                }
-                adFile.getParentFile().mkdirs();
-                this.xmlHandler.write(adFile, container);
-            } else {
-                // remove file
-                if ( adFile.exists() ) {
-                    this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
-                    adFile.delete();
-                }
-            }
-        } catch (IOException ioe) {
-            throw new MojoExecutionException("Failed to write scr-plugin scrinfo.xml", ioe);
-        }
-    }
-
-    /**
-     * Create the abstract descriptors file or delete it of no abstract descriptors are available.
-     * @param abstractDescriptors
-     */
-    public void writeAbstractDescriptorFile(org.apache.felix.sandbox.scrplugin.om.Components components, File outputDirectory)
-    throws MojoExecutionException {
-        // if we have abstract descriptors, write them
-        final File adFile = new File(outputDirectory, ABSTRACT_DESCRIPTOR_RELATIVE_PATH);
-        if ( !components.getComponents().isEmpty() ) {
-            this.getLog().info("Writing abstract service descriptor " + adFile + " with " + components.getComponents().size() + " entries.");
-            adFile.getParentFile().mkdirs();
-            ComponentDescriptorIO.write(components, adFile);
-        } else {
-            // remove file
-            if ( adFile.exists() ) {
-                this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
-                adFile.delete();
-            }
-        }
-    }
-
-    /**
      * Read the service component description.
      * @param artifact
      * @param entry
@@ -330,7 +196,7 @@ public class JavaClassDescriptorManager {
     protected Components parseServiceComponentDescriptor(Artifact artifact, File file)
     throws IOException, MojoExecutionException {
         this.log.debug("Parsing " + file);
-        final Components list = this.xmlHandler.read(file);
+        final Components list = ComponentDescriptorIO.read(file);
         return list;
     }
 

@@ -19,25 +19,30 @@
 package org.apache.felix.sandbox.scrplugin.xml;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.felix.sandbox.scrplugin.om.metatype.Definitions;
+import org.apache.felix.sandbox.scrplugin.om.Component;
+import org.apache.felix.sandbox.scrplugin.om.Components;
+import org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition;
+import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
+import org.apache.felix.sandbox.scrplugin.om.metatype.MTObject;
+import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
-import com.thoughtworks.xstream.XStream;
 
 /**
  * <code>MetaType</code>
@@ -47,68 +52,163 @@ import com.thoughtworks.xstream.XStream;
  */
 public class MetaTypeIO {
 
-    protected final XStream xstream;
+    private static final SAXTransformerFactory FACTORY = (SAXTransformerFactory) TransformerFactory.newInstance();
 
-    public MetaTypeIO() {
-        this.xstream = new XStream();
-        this.xstream.setMode(XStream.NO_REFERENCES);
+    public static final String NAMESPACE_URI = "http://www.osgi.org/xmlns/metatype/v1.0.0";
 
-        this.xstream.alias("OCD", org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "id");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "name");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "description");
+    public static final String PREFIX = "metatype";
 
-        this.xstream.alias("AD", org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition.class, "id");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition.class, "type");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "name");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "description");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "cardinality");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.OCD.class, "defaultValue");
+    protected static final String METADATA_ELEMENT = "MetaData";
+    protected static final String METADATA_ELEMENT_QNAME = PREFIX + ':' + METADATA_ELEMENT;
 
-        this.xstream.alias("Designate", org.apache.felix.sandbox.scrplugin.om.metatype.Designate.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.Designate.class, "pid");
+    protected static final String OCD_ELEMENT = "OCD";
+    protected static final String OCD_ELEMENT_QNAME = PREFIX + ':' + OCD_ELEMENT;
 
-        this.xstream.alias("Object", org.apache.felix.sandbox.scrplugin.om.metatype.MTObject.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.metatype.MTObject.class, "ocdref");
+    protected static final String DESIGNATE_ELEMENT = "Designate";
+    protected static final String DESIGNATE_ELEMENT_QNAME = PREFIX + ':' + DESIGNATE_ELEMENT;
+
+    protected static final String OBJECT_ELEMENT = "Object";
+    protected static final String OBJECT_ELEMENT_QNAME = PREFIX + ':' + OBJECT_ELEMENT;
+
+    protected static final String AD_ELEMENT = "AD";
+    protected static final String AD_ELEMENT_QNAME = PREFIX + ':' + AD_ELEMENT;
+
+    public static void write(Components components, File file)
+    throws MojoExecutionException {
+        try {
+            FileWriter writer = new FileWriter(file);
+            final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
+            final Transformer transformer = transformerHandler.getTransformer();
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformerHandler.setResult(new StreamResult(writer));
+
+            generateXML(components, transformerHandler);
+        } catch (TransformerException e) {
+            throw new MojoExecutionException("Unable to write xml to " + file, e);
+        } catch (SAXException e) {
+            throw new MojoExecutionException("Unable to generate xml for " + file, e);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to write xml to " + file, e);
+        }
     }
 
-    public Definitions read(File file) throws IOException, MojoExecutionException {
-        Writer buffer = new StringWriter();
-        final TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer;
-        try {
-            IOUtils.copy(new FileReader(file), buffer);
-            String xmlDoc = buffer.toString();
-            buffer = new StringWriter();
-            int pos = xmlDoc.indexOf("?>");
-            if ( pos > 0 ) {
-                xmlDoc = xmlDoc.substring(pos+2);
+    /**
+     * Generate the xml top level element and start streaming
+     * the components.
+     * @param components
+     * @param contentHandler
+     * @throws SAXException
+     */
+    protected static void generateXML(Components components, ContentHandler contentHandler)
+    throws SAXException {
+        contentHandler.startDocument();
+        contentHandler.startPrefixMapping(PREFIX, NAMESPACE_URI);
+
+        final AttributesImpl ai = new AttributesImpl();
+        addAttribute(ai, "localization", "metatype");
+
+        contentHandler.startElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
+
+        final Iterator i = components.getComponents().iterator();
+        while ( i.hasNext() ) {
+            final Component component = (Component)i.next();
+            if ( component.getOcd() != null ) {
+                generateXML(component.getOcd(), contentHandler);
+                generateXML(component.getDesignate(), contentHandler);
             }
-            xmlDoc = "<components>" + xmlDoc + "</components>";
-            transformer = factory.newTransformer(new StreamSource(this.getClass().getResourceAsStream("/org/apache/felix/sandbox/scrplugin/xml/read.xsl")));
-            transformer.setOutputProperty(OutputKeys.INDENT, "no");
-            transformer.transform(new StreamSource(new StringReader(xmlDoc)), new StreamResult(buffer));
-            return (Definitions)this.xstream.fromXML(new StringReader(buffer.toString()));
-        } catch (TransformerException e) {
-            throw new MojoExecutionException("Unable to read xml.", e);
+        }
+        // end wrapper element
+        contentHandler.endElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME);
+        contentHandler.endPrefixMapping(PREFIX);
+        contentHandler.endDocument();
+    }
+
+    protected static void generateXML(OCD ocd, ContentHandler contentHandler)
+    throws SAXException {
+        final AttributesImpl ai = new AttributesImpl();
+        addAttribute(ai, "id", ocd.getId());
+        addAttribute(ai, "name", ocd.getName());
+        addAttribute(ai, "description", ocd.getDescription());
+        contentHandler.startElement(NAMESPACE_URI, OCD_ELEMENT, OCD_ELEMENT_QNAME, ai);
+
+        final Iterator i = ocd.getProperties().iterator();
+        while ( i.hasNext() ) {
+            final AttributeDefinition ad = (AttributeDefinition) i.next();
+            generateXML(ad, contentHandler);
+        }
+
+        contentHandler.endElement(NAMESPACE_URI, OCD_ELEMENT, OCD_ELEMENT_QNAME);
+    }
+
+    protected static void generateXML(AttributeDefinition ad, ContentHandler contentHandler)
+    throws SAXException {
+        final AttributesImpl ai = new AttributesImpl();
+        addAttribute(ai, "id", ad.getId());
+        addAttribute(ai, "type", ad.getType());
+        if ( ad.getDefaultMultiValue() != null ) {
+            final StringBuffer buf = new StringBuffer();
+            for(int i=0; i<ad.getDefaultMultiValue().length; i++) {
+                if ( i > 0 ) {
+                    buf.append(',');
+                }
+                buf.append(ad.getDefaultMultiValue()[i]);
+            }
+            addAttribute(ai, "default", buf);
+        } else {
+            addAttribute(ai, "default", ad.getDefaultValue());
+        }
+        addAttribute(ai, "name", ad.getName());
+        addAttribute(ai, "description", ad.getDescription());
+        addAttribute(ai, "cardinality", ad.getCardinality());
+        contentHandler.startElement(NAMESPACE_URI, AD_ELEMENT, AD_ELEMENT_QNAME, ai);
+
+        if (ad.getOptions() != null) {
+            for (Iterator oi=ad.getOptions().entrySet().iterator(); oi.hasNext(); ) {
+                final Map.Entry entry = (Map.Entry) oi.next();
+                ai.clear();
+                addAttribute(ai, "value", String.valueOf(entry.getKey()));
+                addAttribute(ai, "label", String.valueOf(entry.getValue()));
+                contentHandler.startElement(NAMESPACE_URI, "Option", PREFIX + ':' + "Option", ai);
+            }
+        }
+
+        contentHandler.endElement(NAMESPACE_URI, AD_ELEMENT, AD_ELEMENT_QNAME);
+    }
+
+    protected static void generateXML(Designate designate, ContentHandler contentHandler)
+    throws SAXException {
+        final AttributesImpl ai = new AttributesImpl();
+        addAttribute(ai, "pid", designate.getPid());
+        contentHandler.startElement(NAMESPACE_URI, DESIGNATE_ELEMENT, DESIGNATE_ELEMENT_QNAME, ai);
+
+        generateXML(designate.getObject(), contentHandler);
+
+        contentHandler.endElement(NAMESPACE_URI, DESIGNATE_ELEMENT, DESIGNATE_ELEMENT_QNAME);
+    }
+
+    protected static void generateXML(MTObject obj, ContentHandler contentHandler)
+    throws SAXException {
+        final AttributesImpl ai = new AttributesImpl();
+        addAttribute(ai, "ocdref", obj.getOcdref());
+        contentHandler.startElement(NAMESPACE_URI, OBJECT_ELEMENT, OBJECT_ELEMENT_QNAME, ai);
+        contentHandler.endElement(NAMESPACE_URI, OBJECT_ELEMENT, OBJECT_ELEMENT_QNAME);
+    }
+
+    /**
+     * Helper method to add an attribute.
+     * This implementation adds a new attribute with the given name
+     * and value. Before adding the value is checked for non-null.
+     * @param ai    The attributes impl receiving the additional attribute.
+     * @param name  The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    protected static void addAttribute(AttributesImpl ai, String name, Object value) {
+        if ( value != null ) {
+            ai.addAttribute("", name, name, "CDATA", value.toString());
         }
     }
 
-    public void write(File file, Definitions defs)
-    throws IOException, MojoExecutionException {
-        Writer buffer = new StringWriter();
-        this.xstream.toXML(defs, buffer);
-
-        final TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer;
-        try {
-            transformer = factory.newTransformer(new StreamSource(this.getClass().getResourceAsStream("/org/apache/felix/sandbox/scrplugin/xml/write.xsl")));
-            transformer.setOutputProperty(OutputKeys.INDENT, "no");
-
-            transformer.transform(new StreamSource(new StringReader(buffer.toString())), new StreamResult(new FileWriter(file)));
-        } catch (TransformerException e) {
-            throw new MojoExecutionException("Unable to write xml.", e);
-        }
-    }
 }

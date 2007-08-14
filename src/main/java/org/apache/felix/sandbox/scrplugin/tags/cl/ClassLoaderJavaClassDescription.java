@@ -24,14 +24,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.felix.sandbox.scrplugin.SCRDescriptor;
+import org.apache.felix.sandbox.scrplugin.Constants;
+import org.apache.felix.sandbox.scrplugin.om.Component;
+import org.apache.felix.sandbox.scrplugin.om.Reference;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescriptorManager;
 import org.apache.felix.sandbox.scrplugin.tags.JavaField;
 import org.apache.felix.sandbox.scrplugin.tags.JavaMethod;
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
-import org.apache.felix.sandbox.scrplugin.xml.Component;
-import org.apache.felix.sandbox.scrplugin.xml.Reference;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -128,11 +128,11 @@ public class ClassLoaderJavaClassDescription implements JavaClassDescription {
     throws MojoExecutionException {
         JavaTag[] javaTags = EMPTY_TAGS;
         if ( this.component != null ) {
-            if ( SCRDescriptor.SERVICE.equals(name) ) {
+            if ( Constants.SERVICE.equals(name) ) {
 
-            } else if ( SCRDescriptor.PROPERTY.equals(name) ) {
+            } else if ( Constants.PROPERTY.equals(name) ) {
 
-            } else if ( SCRDescriptor.REFERENCE.equals(name) ) {
+            } else if ( Constants.REFERENCE.equals(name) ) {
                 if ( this.component.getReferences().size() > 0 ) {
                     javaTags = new JavaTag[this.component.getReferences().size()];
                     for(int i=0; i<this.component.getReferences().size(); i++) {

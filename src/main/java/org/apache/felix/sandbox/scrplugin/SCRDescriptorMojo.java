@@ -19,8 +19,6 @@
 package org.apache.felix.sandbox.scrplugin;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -40,12 +38,12 @@ import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescriptorManager;
 import org.apache.felix.sandbox.scrplugin.tags.JavaField;
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
 import org.apache.felix.sandbox.scrplugin.xml.ComponentDescriptorIO;
+import org.apache.felix.sandbox.scrplugin.xml.MetaTypeIO;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -90,43 +88,31 @@ public class SCRDescriptorMojo extends AbstractMojo {
         JavaClassDescriptorManager jManager = new JavaClassDescriptorManager(this.getLog(),
                                                                              this.project);
         // iterate through all source classes and check for component tag
-        final List descriptors = new ArrayList();
-        final List abstractDescriptors = new ArrayList();
         final JavaClassDescription[] javaSources = jManager.getSourceDescriptions();
 
-        // test the new om?
-        boolean testNewOM = false;
         final Components components = new Components();
         final Components abstractComponents = new Components();
+        boolean hasMetaTypeInfo = false;
 
         for (int i = 0; i < javaSources.length; i++) {
             this.getLog().debug("Testing source " + javaSources[i].getName());
-            final JavaTag tag = javaSources[i].getTagByName(SCRDescriptor.COMPONENT);
+            final JavaTag tag = javaSources[i].getTagByName(Constants.COMPONENT);
             if (tag != null) {
                 this.getLog().debug("Processing service class " + javaSources[i].getName());
-                final SCRDescriptor descriptor = this.createSCRDescriptor(javaSources[i]);
-                if (descriptor != null) {
-                    if ( descriptor.isAbstract() ) {
-                        this.getLog().debug("Adding abstract descriptor " + descriptor);
-                        abstractDescriptors.add(descriptor);
+                final Component comp = this.createComponent(javaSources[i]);
+                if (comp != null) {
+                    if ( comp.isAbstract() ) {
+                        this.getLog().debug("Adding abstract descriptor " + comp);
+                        abstractComponents.addComponent(comp);
                     } else {
-                        this.getLog().debug("Adding descriptor " + descriptor);
-                        descriptors.add(descriptor);
+                        this.getLog().debug("Adding descriptor " + comp);
+                        components.addComponent(comp);
+                        if ( comp.getOcd() != null ) {
+                            hasMetaTypeInfo = true;
+                        }
                     }
                 } else {
                     hasFailures = true;
-                }
-                if ( testNewOM ) {
-                    final Component comp = this.createComponent(javaSources[i]);
-                    if (comp != null) {
-                        if ( comp.isAbstract() ) {
-                            this.getLog().debug("Adding abstract descriptor " + descriptor);
-                            abstractComponents.addComponent(comp);
-                        } else {
-                            this.getLog().debug("Adding descriptor " + descriptor);
-                            components.addComponent(comp);
-                        }
-                    }
                 }
             }
         }
@@ -136,82 +122,51 @@ public class SCRDescriptorMojo extends AbstractMojo {
             throw new MojoFailureException("SCR Descriptor parsing had failures (see log)");
         }
 
-        jManager.writeAbstractDescriptorsFile(abstractDescriptors, this.outputDirectory);
+        // if we have abstract descriptors, write them
+        final File adFile = new File(this.outputDirectory, Constants.ABSTRACT_DESCRIPTOR_RELATIVE_PATH);
+        if ( !abstractComponents.getComponents().isEmpty() ) {
+            this.getLog().info("Writing abstract service descriptor " + adFile + " with " + components.getComponents().size() + " entries.");
+            adFile.getParentFile().mkdirs();
+            ComponentDescriptorIO.write(abstractComponents, adFile);
+        } else {
+            this.getLog().debug("No abstract SCR Descriptors found in project");
+            // remove file
+            if ( adFile.exists() ) {
+                this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
+                adFile.delete();
+            }
+        }
 
-        // terminate if there is nothing to write
-        if (descriptors.isEmpty()) {
-            this.getLog().info("No SCR Descriptors found in project");
+        // terminate if there is nothing else to write
+        if (components.getComponents().isEmpty()) {
+            this.getLog().debug("No SCR Descriptors found in project");
             return;
         }
 
-        // finally the descriptors have to be written ....
+        // check file name
         if (StringUtils.isEmpty(this.finalName)) {
             this.getLog().error("Descriptor file name must not be empty");
             return;
         }
 
+        // finally the descriptors have to be written ....
         File descriptorFile = new File(new File(this.outputDirectory, "OSGI-INF"), this.finalName);
         descriptorFile.getParentFile().mkdirs(); // ensure parent dir
 
-        this.getLog().info("Generating " + descriptors.size()
+        this.getLog().info("Generating " + components.getComponents().size()
                 + " Service Component Descriptors to " + descriptorFile);
 
-        FileOutputStream descriptorStream = null;
-        XMLWriter xw = null;
-        try {
-            if ( testNewOM ) {
-                ComponentDescriptorIO.write(components, descriptorFile);
-            } else {
-                descriptorStream = new FileOutputStream(descriptorFile);
-                xw = new XMLWriter(descriptorStream);
-
-                for (Iterator di=descriptors.iterator(); di.hasNext(); ) {
-                    SCRDescriptor sd = (SCRDescriptor) di.next();
-                    sd.generate(xw);
-                }
-            }
-
-        } catch (IOException ioe) {
-            hasFailures = true;
-            this.getLog().error("Cannot write descriptor to " + descriptorFile, ioe);
-            throw new MojoFailureException("Failed to write descriptor to " + descriptorFile);
-        } finally {
-            IOUtil.close(xw);
-            IOUtil.close(descriptorStream);
-
-            // remove the descriptor file in case of write failure
-            if (hasFailures) {
-                descriptorFile.delete();
-            }
-        }
+        ComponentDescriptorIO.write(components, descriptorFile);
 
         // create metatype information
         File mtFile = new File(this.outputDirectory, "OSGI-INF" + File.separator + "metatype" + File.separator + "metatype.xml");
         mtFile.getParentFile().mkdirs();
-
-        xw = null;
-        descriptorStream = null;
-        try {
-            descriptorStream = new FileOutputStream(mtFile);
-            xw = new XMLWriter(descriptorStream);
-
-            xw.printElementStart("MetaData", true);
-            xw.printAttribute("localization", "metatype");
-            xw.printElementStartClose(false);
-
-            for (Iterator di=descriptors.iterator(); di.hasNext(); ) {
-                SCRDescriptor sd = (SCRDescriptor) di.next();
-                sd.generateMetaTypeInfo(xw);
+        if ( hasMetaTypeInfo ) {
+            MetaTypeIO.write(components, mtFile);
+        } else {
+            if ( mtFile.exists() ) {
+                mtFile.delete();
             }
-
-            xw.printElementEnd("MetaData");
-
-        } catch (IOException ioe) {
-            this.getLog().error("Cannot write meta type descriptor", ioe);
-            throw new MojoFailureException("Failed to write meta type descriptor");
-        } finally {
-            IOUtil.close(xw);
-            IOUtil.close(descriptorStream);
         }
 
         // now add the descriptor file to the maven resources
@@ -231,45 +186,6 @@ public class SCRDescriptorMojo extends AbstractMojo {
         this.project.getProperties().setProperty("Service-Component", "OSGI-INF/" + this.finalName);
     }
 
-    private SCRDescriptor createSCRDescriptor(JavaClassDescription description)
-    throws MojoExecutionException {
-
-        final JavaTag component = description.getTagByName(SCRDescriptor.COMPONENT);
-        final SCRDescriptor sd = new SCRDescriptor(this.getLog(), component);
-        sd.setImplClass(description.getName());
-
-        boolean inherited = this.getBoolean(component, SCRDescriptor.COMPONENT_INHERIT, false);
-
-        this.doComponent(component, sd);
-
-        boolean serviceFactory = this.doServices(description.getTagsByName(SCRDescriptor.SERVICE, inherited), sd, description);
-        sd.setServiceFactory(serviceFactory);
-
-        this.doProperties(description.getTagsByName(SCRDescriptor.PROPERTY, inherited), sd);
-
-        this.doReferences(description.getTagsByName(SCRDescriptor.REFERENCE, inherited), sd);
-
-        do {
-            JavaField[] fields = description.getFields();
-            for (int i=0; fields != null && i < fields.length; i++) {
-                JavaTag tag = fields[i].getTagByName(SCRDescriptor.REFERENCE);
-                if (tag != null) {
-                    this.doReference(tag, fields[i].getName(), sd);
-                }
-
-                tag = fields[i].getTagByName(SCRDescriptor.PROPERTY);
-                if (tag != null) {
-                    this.doProperty(tag, fields[i].getInitializationExpression(), sd);
-                }
-            }
-
-            description = description.getSuperClass();
-        } while (inherited && description != null);
-
-        // return nothing if validation fails
-        return sd.validate() ? sd : null;
-    }
-
     /**
      * Create a component for the java class description.
      * @param description
@@ -279,7 +195,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
     protected Component createComponent(JavaClassDescription description)
     throws MojoExecutionException {
 
-        final JavaTag componentTag = description.getTagByName(SCRDescriptor.COMPONENT);
+        final JavaTag componentTag = description.getTagByName(Constants.COMPONENT);
         final Component component = new Component(componentTag);
 
         // set implementation
@@ -287,12 +203,12 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         this.doComponent(componentTag, component);
 
-        boolean inherited = this.getBoolean(componentTag, SCRDescriptor.COMPONENT_INHERIT, false);
-        boolean serviceFactory = this.doServices(description.getTagsByName(SCRDescriptor.SERVICE, inherited), component, description);
+        boolean inherited = this.getBoolean(componentTag, Constants.COMPONENT_INHERIT, false);
+        boolean serviceFactory = this.doServices(description.getTagsByName(Constants.SERVICE, inherited), component, description);
         component.setServiceFactory(serviceFactory);
 
         // properties
-        final JavaTag[] properties = description.getTagsByName(SCRDescriptor.PROPERTY, inherited);
+        final JavaTag[] properties = description.getTagsByName(Constants.PROPERTY, inherited);
         if (properties != null && properties.length > 0) {
             for (int i=0; i < properties.length; i++) {
                 this.doProperty(properties[i], null, component);
@@ -300,7 +216,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         }
 
         // references
-        final JavaTag[] references = description.getTagsByName(SCRDescriptor.REFERENCE, inherited);
+        final JavaTag[] references = description.getTagsByName(Constants.REFERENCE, inherited);
         if (references != null || references.length > 0) {
             for (int i=0; i < references.length; i++) {
                 this.doReference(references[i], null, component);
@@ -311,12 +227,12 @@ public class SCRDescriptorMojo extends AbstractMojo {
         do {
             JavaField[] fields = description.getFields();
             for (int i=0; fields != null && i < fields.length; i++) {
-                JavaTag tag = fields[i].getTagByName(SCRDescriptor.REFERENCE);
+                JavaTag tag = fields[i].getTagByName(Constants.REFERENCE);
                 if (tag != null) {
                     this.doReference(tag, fields[i].getName(), component);
                 }
 
-                tag = fields[i].getTagByName(SCRDescriptor.PROPERTY);
+                tag = fields[i].getTagByName(Constants.PROPERTY);
                 if (tag != null) {
                     this.doProperty(tag, fields[i].getInitializationExpression(), component);
                 }
@@ -351,18 +267,18 @@ public class SCRDescriptorMojo extends AbstractMojo {
     protected void doComponent(JavaTag tag, Component component) {
 
         // check if this is an abstract definition
-        final String abstractType = tag.getNamedParameter(SCRDescriptor.COMPONENT_ABSTRACT);
+        final String abstractType = tag.getNamedParameter(Constants.COMPONENT_ABSTRACT);
         component.setAbstract((abstractType == null ? false : "yes".equalsIgnoreCase(abstractType) || "true".equalsIgnoreCase(abstractType)));
 
-        String name = tag.getNamedParameter(SCRDescriptor.COMPONENT_NAME);
+        String name = tag.getNamedParameter(Constants.COMPONENT_NAME);
         component.setName(StringUtils.isEmpty(name) ? component.getImplementation().getClassame() : name);
 
-        component.setEnabled(Boolean.valueOf(this.getBoolean(tag, SCRDescriptor.COMPONENT_ENABLED, true)));
-        component.setFactory(tag.getNamedParameter(SCRDescriptor.COMPONENT_FACTORY));
-        component.setImmediate(Boolean.valueOf(this.getBoolean(tag, SCRDescriptor.COMPONENT_IMMEDIATE, true)));
+        component.setEnabled(Boolean.valueOf(this.getBoolean(tag, Constants.COMPONENT_ENABLED, true)));
+        component.setFactory(tag.getNamedParameter(Constants.COMPONENT_FACTORY));
+        component.setImmediate(Boolean.valueOf(this.getBoolean(tag, Constants.COMPONENT_IMMEDIATE, true)));
 
         // whether metatype information is to generated for the component
-        final String metaType = tag.getNamedParameter(SCRDescriptor.COMPONENT_METATYPE);
+        final String metaType = tag.getNamedParameter(Constants.COMPONENT_METATYPE);
         final boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase(metaType)
             || "true".equalsIgnoreCase(metaType);
         if ( hasMetaType ) {
@@ -370,12 +286,12 @@ public class SCRDescriptorMojo extends AbstractMojo {
             final OCD ocd = new OCD();
             component.setOcd(ocd);
             ocd.setId(component.getName());
-            String ocdName = tag.getNamedParameter(SCRDescriptor.COMPONENT_LABEL);
+            String ocdName = tag.getNamedParameter(Constants.COMPONENT_LABEL);
             if ( ocdName == null ) {
                 ocdName = "%" + component.getName() + ".name";
             }
             ocd.setName(ocdName);
-            String ocdDescription = tag.getNamedParameter(SCRDescriptor.COMPONENT_DESCRIPTION);
+            String ocdDescription = tag.getNamedParameter(Constants.COMPONENT_DESCRIPTION);
             if ( ocdDescription == null ) {
                 ocdDescription = "%" + component.getName() + ".description";
             }
@@ -410,7 +326,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         component.setService(service);
         boolean serviceFactory = false;
         for (int i=0; i < services.length; i++) {
-            String name = services[i].getNamedParameter(SCRDescriptor.SERVICE_INTERFACE);
+            String name = services[i].getNamedParameter(Constants.SERVICE_INTERFACE);
             if (StringUtils.isEmpty(name)) {
 
                 while (description != null) {
@@ -430,111 +346,10 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 service.addInterface(interf);
             }
 
-            serviceFactory |= this.getBoolean(services[i], SCRDescriptor.SERVICE_FACTORY, false);
+            serviceFactory |= this.getBoolean(services[i], Constants.SERVICE_FACTORY, false);
         }
 
         return serviceFactory;
-    }
-
-    private void doComponent(JavaTag comp, SCRDescriptor sd) {
-        String name = comp.getNamedParameter(SCRDescriptor.COMPONENT_NAME);
-        sd.setName(StringUtils.isEmpty(name) ? sd.getImplClass() : name);
-
-        sd.setEnabled(this.getBoolean(comp, SCRDescriptor.COMPONENT_ENABLED, true));
-        sd.setFactory(comp.getNamedParameter(SCRDescriptor.COMPONENT_FACTORY));
-        sd.setImmediate(this.getBoolean(comp, SCRDescriptor.COMPONENT_IMMEDIATE,
-            true));
-
-        sd.setLabel(comp.getNamedParameter(SCRDescriptor.COMPONENT_LABEL));
-        sd.setDescription(comp.getNamedParameter(SCRDescriptor.COMPONENT_DESCRIPTION));
-    }
-
-    private boolean doServices(JavaTag[] services, SCRDescriptor sd, JavaClassDescription description)
-    throws MojoExecutionException {
-        // no services, hence certainly no service factory
-        if (services == null || services.length == 0) {
-            return false;
-        }
-
-        boolean serviceFactory = false;
-        for (int i=0; i < services.length; i++) {
-            String name = services[i].getNamedParameter(SCRDescriptor.SERVICE_INTERFACE);
-            if (StringUtils.isEmpty(name)) {
-
-                while (description != null) {
-                    JavaClassDescription[] interfaces = description.getImplementedInterfaces();
-                    for (int j=0; interfaces != null && j < interfaces.length; j++) {
-                        Service service = new Service(this.getLog(), services[i]);
-                        service.setInterfaceName(interfaces[j].getName());
-                        sd.addService(service);
-                    }
-
-                    // try super class
-                    description = description.getSuperClass();
-                }
-            } else {
-                Service service = new Service(this.getLog(), services[i]);
-                service.setInterfaceName(name);
-                sd.addService(service);
-            }
-
-            serviceFactory |= this.getBoolean(services[i], SCRDescriptor.SERVICE_FACTORY, false);
-        }
-
-        return serviceFactory;
-    }
-
-    private void doProperties(JavaTag[] properties, SCRDescriptor sd) {
-        if (properties == null || properties.length == 0) {
-            return;
-        }
-
-        for (int i=0; i < properties.length; i++) {
-            this.doProperty(properties[i], null, sd);
-        }
-    }
-
-    private void doProperty(JavaTag property, String defaultName, SCRDescriptor sd) {
-        String name = property.getNamedParameter(SCRDescriptor.PROPERTY_NAME);
-        if (StringUtils.isEmpty(name) && defaultName!= null) {
-            name = defaultName.trim();
-            if (name.startsWith("\"")) name = name.substring(1);
-            if (name.endsWith("\"")) name = name.substring(0, name.length()-1);
-        }
-
-        if (!StringUtils.isEmpty(name)) {
-            Property prop = new Property(this.getLog(), property);
-            prop.setName(name);
-            prop.setLabel(property.getNamedParameter(SCRDescriptor.PROPERTY_LABEL));
-            prop.setDescription(property.getNamedParameter(SCRDescriptor.PROPERTY_DESCRIPTION));
-            prop.setValue(property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE));
-            prop.setType(property.getNamedParameter(SCRDescriptor.PROPERTY_TYPE));
-            prop.setPrivateProperty(this.getBoolean(property,
-                SCRDescriptor.PROPERTY_PRIVATE, prop.isPrivateProperty()));
-
-            // set optional multivalues, cardinailty might be overwritten by setValues !!
-            prop.setCardinality(property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY));
-            prop.setValues(property.getNamedParameterMap());
-
-            // check options
-            String[] parameters = property.getParameters();
-            Map options = null;
-            for (int j=0; j < parameters.length; j++) {
-                if (SCRDescriptor.PROPERTY_OPTIONS.equals(parameters[j])) {
-                    options = new LinkedHashMap();
-                } else if (options != null) {
-                    String optionLabel = parameters[j];
-                    String optionValue = (j < parameters.length-2) ? parameters[j+2] : null;
-                    if (optionValue != null) {
-                        options.put(optionLabel, optionValue);
-                    }
-                    j += 2;
-                }
-            }
-            prop.setOptions(options);
-
-            sd.addProperty(prop);
-        }
     }
 
     /**
@@ -543,7 +358,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @param component
      */
     protected void doProperty(JavaTag property, String defaultName, Component component) {
-        String name = property.getNamedParameter(SCRDescriptor.PROPERTY_NAME);
+        String name = property.getNamedParameter(Constants.PROPERTY_NAME);
         if (StringUtils.isEmpty(name) && defaultName!= null) {
             name = defaultName.trim();
             if (name.startsWith("\"")) name = name.substring(1);
@@ -553,8 +368,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
         if (!StringUtils.isEmpty(name)) {
             org.apache.felix.sandbox.scrplugin.om.Property prop = new org.apache.felix.sandbox.scrplugin.om.Property(property);
             prop.setName(name);
-            prop.setType(property.getNamedParameter(SCRDescriptor.PROPERTY_TYPE));
-            final String value = property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE);
+            prop.setType(property.getNamedParameter(Constants.PROPERTY_TYPE));
+            final String value = property.getNamedParameter(Constants.PROPERTY_VALUE);
             if ( value != null ) {
                 prop.setValue(value);
             } else {
@@ -573,7 +388,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 }
             }
 
-            final boolean isPrivate = this.getBoolean(property, SCRDescriptor.PROPERTY_PRIVATE, false);
+            final boolean isPrivate = this.getBoolean(property, Constants.PROPERTY_PRIVATE, false);
             // if this is a public property and the component is generating metatype info
             // store the information!
             if ( !isPrivate && component.getOcd() != null ) {
@@ -583,18 +398,18 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 ad.setId(prop.getName());
                 ad.setType(prop.getType());
 
-                String adName = property.getNamedParameter(SCRDescriptor.PROPERTY_LABEL);
+                String adName = property.getNamedParameter(Constants.PROPERTY_LABEL);
                 if ( adName == null ) {
                     adName = "%" + prop.getName() + ".name";
                 }
                 ad.setName(adName);
-                String adDesc = property.getNamedParameter(SCRDescriptor.PROPERTY_DESCRIPTION);
+                String adDesc = property.getNamedParameter(Constants.PROPERTY_DESCRIPTION);
                 if ( adDesc == null ) {
                     adDesc = "%" + prop.getName() + ".description";
                 }
                 ad.setDescription(adDesc);
                 // set optional multivalues, cardinality might be overwritten by setValues !!
-                final String cValue = property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY);
+                final String cValue = property.getNamedParameter(Constants.PROPERTY_CARDINALITY);
                 if (cValue != null) {
                     if ("-".equals(cValue)) {
                         // unlimited vector
@@ -617,7 +432,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 String[] parameters = property.getParameters();
                 Map options = null;
                 for (int j=0; j < parameters.length; j++) {
-                    if (SCRDescriptor.PROPERTY_OPTIONS.equals(parameters[j])) {
+                    if (Constants.PROPERTY_OPTIONS.equals(parameters[j])) {
                         options = new LinkedHashMap();
                     } else if (options != null) {
                         String optionLabel = parameters[j];
@@ -641,13 +456,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @param component
      */
     protected void doReference(JavaTag reference, String defaultName, Component component) {
-        String name = reference.getNamedParameter(SCRDescriptor.REFERENCE_NAME);
+        String name = reference.getNamedParameter(Constants.REFERENCE_NAME);
         if (StringUtils.isEmpty(name)) {
             name = defaultName;
         }
 
         // ensure interface
-        String type = reference.getNamedParameter(SCRDescriptor.REFERENCE_INTERFACE);
+        String type = reference.getNamedParameter(Constants.REFERENCE_INTERFACE);
         if (StringUtils.isEmpty(type)) {
             if ( reference.getField() != null ) {
                 type = reference.getField().getType();
@@ -658,56 +473,19 @@ public class SCRDescriptorMojo extends AbstractMojo {
             org.apache.felix.sandbox.scrplugin.om.Reference ref = new org.apache.felix.sandbox.scrplugin.om.Reference(reference);
             ref.setName(name);
             ref.setInterfacename(type);
-            ref.setCardinality(reference.getNamedParameter(SCRDescriptor.REFERENCE_CARDINALITY));
-            ref.setPolicy(reference.getNamedParameter(SCRDescriptor.REFERENCE_POLICY));
-            ref.setTarget(reference.getNamedParameter(SCRDescriptor.REFERENCE_TARGET));
+            ref.setCardinality(reference.getNamedParameter(Constants.REFERENCE_CARDINALITY));
+            ref.setPolicy(reference.getNamedParameter(Constants.REFERENCE_POLICY));
+            ref.setTarget(reference.getNamedParameter(Constants.REFERENCE_TARGET));
             String value;
-            value = reference.getNamedParameter(SCRDescriptor.REFERENCE_BIND);
+            value = reference.getNamedParameter(Constants.REFERENCE_BIND);
             if ( value != null ) {
                 ref.setBind(value);
             }
-            value = reference.getNamedParameter(SCRDescriptor.REFERENCE_UNDBIND);
+            value = reference.getNamedParameter(Constants.REFERENCE_UNDBIND);
             if ( value != null ) {
                 ref.setUnbind(value);
             }
             component.addReference(ref);
-        }
-    }
-
-    private void doReferences(JavaTag[] references, SCRDescriptor sd) {
-        if (references == null || references.length == 0) {
-            return;
-        }
-
-        for (int i=0; i < references.length; i++) {
-            this.doReference(references[i], null, sd);
-        }
-    }
-
-    private void doReference(JavaTag reference, String defaultName, SCRDescriptor sd) {
-        String name = reference.getNamedParameter(SCRDescriptor.REFERENCE_NAME);
-        if (StringUtils.isEmpty(name)) {
-            name = defaultName;
-        }
-
-        // ensure interface
-        String type = reference.getNamedParameter(SCRDescriptor.REFERENCE_INTERFACE);
-        if (StringUtils.isEmpty(type)) {
-            if ( reference.getField() != null ) {
-                type = reference.getField().getType();
-            }
-        }
-
-        if (!StringUtils.isEmpty(name)) {
-            Reference ref = new Reference(this.getLog(), reference);
-            ref.setName(name);
-            ref.setInterface(type);
-            ref.setCardinality(reference.getNamedParameter(SCRDescriptor.REFERENCE_CARDINALITY));
-            ref.setPolicy(reference.getNamedParameter(SCRDescriptor.REFERENCE_POLICY));
-            ref.setTarget(reference.getNamedParameter(SCRDescriptor.REFERENCE_TARGET));
-            ref.setBind(reference.getNamedParameter(SCRDescriptor.REFERENCE_BIND));
-            ref.setUnbind(reference.getNamedParameter(SCRDescriptor.REFERENCE_UNDBIND));
-            sd.addReference(ref);
         }
     }
 

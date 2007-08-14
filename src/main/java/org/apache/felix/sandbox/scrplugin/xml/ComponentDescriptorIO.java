@@ -38,7 +38,10 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.felix.sandbox.scrplugin.om.Component;
 import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.om.Implementation;
+import org.apache.felix.sandbox.scrplugin.om.Interface;
 import org.apache.felix.sandbox.scrplugin.om.Property;
+import org.apache.felix.sandbox.scrplugin.om.Reference;
+import org.apache.felix.sandbox.scrplugin.om.Service;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -86,7 +89,7 @@ public class ComponentDescriptorIO {
 
     private static final SAXTransformerFactory FACTORY = (SAXTransformerFactory) TransformerFactory.newInstance();
 
-    public static org.apache.felix.sandbox.scrplugin.om.Components read(File file)
+    public static Components read(File file)
     throws MojoExecutionException {
         try {
             final Transformer transformer = FACTORY.newTransformer();
@@ -107,7 +110,7 @@ public class ComponentDescriptorIO {
      * @param file
      * @throws MojoExecutionException
      */
-    public static void write(org.apache.felix.sandbox.scrplugin.om.Components components, File file)
+    public static void write(Components components, File file)
     throws MojoExecutionException {
         try {
             FileWriter writer = new FileWriter(file);
@@ -211,7 +214,7 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(org.apache.felix.sandbox.scrplugin.om.Service service, ContentHandler contentHandler)
+    protected static void generateXML(Service service, ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         addAttribute(ai, "servicefactory", service.getServicefactory());
@@ -235,7 +238,7 @@ public class ComponentDescriptorIO {
     protected static void generateXML(Interface interf, ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        addAttribute(ai, "interface", interf.getInterfaceame());
+        addAttribute(ai, "interface", interf.getInterfacename());
         contentHandler.startElement(NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME, ai);
         contentHandler.endElement(NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME);
     }
@@ -324,7 +327,7 @@ public class ComponentDescriptorIO {
         protected Component currentComponent;
 
         /** The current service. */
-        protected org.apache.felix.sandbox.scrplugin.om.Service currentService;
+        protected Service currentService;
 
         /** Pending property. */
         protected Property pendingProperty;
@@ -396,19 +399,19 @@ public class ComponentDescriptorIO {
 
                 } else if (localName.equals(SERVICE)) {
 
-                    this.currentService = new org.apache.felix.sandbox.scrplugin.om.Service();
+                    this.currentService = new Service();
 
                     this.currentService.setServicefactory(attributes.getValue("servicefactory"));
 
                     this.currentComponent.setService(this.currentService);
 
                 } else if (localName.equals(INTERFACE)) {
-                    final org.apache.felix.sandbox.scrplugin.om.Interface interf = new org.apache.felix.sandbox.scrplugin.om.Interface();
+                    final Interface interf = new Interface();
                     this.currentService.addInterface(interf);
                     interf.setInterfacename(attributes.getValue("interface"));
 
                 } else if (localName.equals(REFERENCE)) {
-                    org.apache.felix.sandbox.scrplugin.om.Reference ref = new org.apache.felix.sandbox.scrplugin.om.Reference();
+                    final Reference ref = new Reference();
 
                     ref.setName(attributes.getValue("name"));
                     ref.setInterfacename(attributes.getValue("interface"));
