@@ -32,6 +32,7 @@ import org.apache.felix.sandbox.scrplugin.om.Interface;
 import org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
 import org.apache.felix.sandbox.scrplugin.om.metatype.MTObject;
+import org.apache.felix.sandbox.scrplugin.om.metatype.MetaData;
 import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescriptorManager;
@@ -80,6 +81,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
      */
     private String finalName;
 
+    /**
+     * Name of the generated meta type file.
+     *
+     * @parameter default-value="metatype.xml"
+     */
+    private String metaTypeName;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.getLog().debug("Starting SCRDescriptorMojo....");
 
@@ -92,14 +100,15 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         final Components components = new Components();
         final Components abstractComponents = new Components();
-        boolean hasMetaTypeInfo = false;
+        final MetaData metaData = new MetaData();
+        metaData.setLocalization("metatype");
 
         for (int i = 0; i < javaSources.length; i++) {
             this.getLog().debug("Testing source " + javaSources[i].getName());
             final JavaTag tag = javaSources[i].getTagByName(Constants.COMPONENT);
             if (tag != null) {
                 this.getLog().debug("Processing service class " + javaSources[i].getName());
-                final Component comp = this.createComponent(javaSources[i]);
+                final Component comp = this.createComponent(javaSources[i], metaData);
                 if (comp != null) {
                     if ( comp.isAbstract() ) {
                         this.getLog().debug("Adding abstract descriptor " + comp);
@@ -107,9 +116,6 @@ public class SCRDescriptorMojo extends AbstractMojo {
                     } else {
                         this.getLog().debug("Adding descriptor " + comp);
                         components.addComponent(comp);
-                        if ( comp.getOcd() != null ) {
-                            hasMetaTypeInfo = true;
-                        }
                     }
                 } else {
                     hasFailures = true;
@@ -129,7 +135,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             adFile.getParentFile().mkdirs();
             ComponentDescriptorIO.write(abstractComponents, adFile);
         } else {
-            this.getLog().debug("No abstract SCR Descriptors found in project");
+            this.getLog().debug("No abstract SCR Descriptors found in project.");
             // remove file
             if ( adFile.exists() ) {
                 this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
@@ -139,13 +145,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         // terminate if there is nothing else to write
         if (components.getComponents().isEmpty()) {
-            this.getLog().debug("No SCR Descriptors found in project");
+            this.getLog().debug("No SCR Descriptors found in project.");
             return;
         }
 
         // check file name
         if (StringUtils.isEmpty(this.finalName)) {
-            this.getLog().error("Descriptor file name must not be empty");
+            this.getLog().error("Descriptor file name must not be empty.");
             return;
         }
 
@@ -158,11 +164,17 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         ComponentDescriptorIO.write(components, descriptorFile);
 
+        // check file name
+        if (StringUtils.isEmpty(this.metaTypeName)) {
+            this.getLog().error("Meta type file name must not be empty.");
+            return;
+        }
+
         // create metatype information
-        File mtFile = new File(this.outputDirectory, "OSGI-INF" + File.separator + "metatype" + File.separator + "metatype.xml");
+        File mtFile = new File(this.outputDirectory, "OSGI-INF" + File.separator + "metatype" + File.separator + this.metaTypeName);
         mtFile.getParentFile().mkdirs();
-        if ( hasMetaTypeInfo ) {
-            MetaTypeIO.write(components, mtFile);
+        if ( metaData.getDescriptors().size() > 0 ) {
+            MetaTypeIO.write(metaData, mtFile);
         } else {
             if ( mtFile.exists() ) {
                 mtFile.delete();
@@ -192,7 +204,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @return The generated component descriptor or null if any error occurs.
      * @throws MojoExecutionException
      */
-    protected Component createComponent(JavaClassDescription description)
+    protected Component createComponent(JavaClassDescription description, MetaData metaData)
     throws MojoExecutionException {
 
         final JavaTag componentTag = description.getTagByName(Constants.COMPONENT);
@@ -201,7 +213,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         // set implementation
         component.setImplementation(new Implementation(description.getName()));
 
-        this.doComponent(componentTag, component);
+        final OCD ocd = this.doComponent(componentTag, component, metaData);
 
         boolean inherited = this.getBoolean(componentTag, Constants.COMPONENT_INHERIT, false);
         boolean serviceFactory = this.doServices(description.getTagsByName(Constants.SERVICE, inherited), component, description);
@@ -211,7 +223,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         final JavaTag[] properties = description.getTagsByName(Constants.PROPERTY, inherited);
         if (properties != null && properties.length > 0) {
             for (int i=0; i < properties.length; i++) {
-                this.doProperty(properties[i], null, component);
+                this.doProperty(properties[i], null, component, ocd);
             }
         }
 
@@ -234,7 +246,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
                 tag = fields[i].getTagByName(Constants.PROPERTY);
                 if (tag != null) {
-                    this.doProperty(tag, fields[i].getInitializationExpression(), component);
+                    this.doProperty(tag, fields[i].getInitializationExpression(), component, ocd);
                 }
             }
 
@@ -264,7 +276,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @param tag
      * @param component
      */
-    protected void doComponent(JavaTag tag, Component component) {
+    protected OCD doComponent(JavaTag tag, Component component, MetaData metaData) {
 
         // check if this is an abstract definition
         final String abstractType = tag.getNamedParameter(Constants.COMPONENT_ABSTRACT);
@@ -284,7 +296,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         if ( hasMetaType ) {
             // ocd
             final OCD ocd = new OCD();
-            component.setOcd(ocd);
+            metaData.addOCD(ocd);
             ocd.setId(component.getName());
             String ocdName = tag.getNamedParameter(Constants.COMPONENT_LABEL);
             if ( ocdName == null ) {
@@ -298,13 +310,15 @@ public class SCRDescriptorMojo extends AbstractMojo {
             ocd.setDescription(ocdDescription);
             // designate
             final Designate designate = new Designate();
-            component.setDesignate(designate);
+            metaData.addDesignate(designate);
             designate.setPid(component.getName());
             // designate.object
             final MTObject mtobject = new MTObject();
             designate.setObject(mtobject);
             mtobject.setOcdref(component.getName());
+            return ocd;
         }
+        return null;
     }
 
     /**
@@ -357,7 +371,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @param defaultName
      * @param component
      */
-    protected void doProperty(JavaTag property, String defaultName, Component component) {
+    protected void doProperty(JavaTag property, String defaultName, Component component, OCD ocd) {
         String name = property.getNamedParameter(Constants.PROPERTY_NAME);
         if (StringUtils.isEmpty(name) && defaultName!= null) {
             name = defaultName.trim();
@@ -391,8 +405,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             final boolean isPrivate = this.getBoolean(property, Constants.PROPERTY_PRIVATE, false);
             // if this is a public property and the component is generating metatype info
             // store the information!
-            if ( !isPrivate && component.getOcd() != null ) {
-                final OCD ocd = component.getOcd();
+            if ( !isPrivate && ocd != null ) {
                 final AttributeDefinition ad = new AttributeDefinition();
                 ocd.getProperties().add(ad);
                 ad.setId(prop.getName());

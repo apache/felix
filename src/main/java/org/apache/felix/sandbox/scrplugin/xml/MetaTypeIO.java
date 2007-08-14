@@ -32,11 +32,10 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.felix.sandbox.scrplugin.om.Component;
-import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
 import org.apache.felix.sandbox.scrplugin.om.metatype.MTObject;
+import org.apache.felix.sandbox.scrplugin.om.metatype.MetaData;
 import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.xml.sax.ContentHandler;
@@ -73,7 +72,7 @@ public class MetaTypeIO {
     protected static final String AD_ELEMENT = "AD";
     protected static final String AD_ELEMENT_QNAME = PREFIX + ':' + AD_ELEMENT;
 
-    public static void write(Components components, File file)
+    public static void write(MetaData metaData, File file)
     throws MojoExecutionException {
         try {
             FileWriter writer = new FileWriter(file);
@@ -85,7 +84,7 @@ public class MetaTypeIO {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformerHandler.setResult(new StreamResult(writer));
 
-            generateXML(components, transformerHandler);
+            generateXML(metaData, transformerHandler);
         } catch (TransformerException e) {
             throw new MojoExecutionException("Unable to write xml to " + file, e);
         } catch (SAXException e) {
@@ -97,27 +96,28 @@ public class MetaTypeIO {
 
     /**
      * Generate the xml top level element and start streaming
-     * the components.
-     * @param components
+     * the meta data.
+     * @param metaData
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Components components, ContentHandler contentHandler)
+    protected static void generateXML(MetaData metaData, ContentHandler contentHandler)
     throws SAXException {
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, NAMESPACE_URI);
 
         final AttributesImpl ai = new AttributesImpl();
-        addAttribute(ai, "localization", "metatype");
+        addAttribute(ai, "localization", metaData.getLocalization());
 
         contentHandler.startElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
 
-        final Iterator i = components.getComponents().iterator();
+        final Iterator i = metaData.getDescriptors().iterator();
         while ( i.hasNext() ) {
-            final Component component = (Component)i.next();
-            if ( component.getOcd() != null ) {
-                generateXML(component.getOcd(), contentHandler);
-                generateXML(component.getDesignate(), contentHandler);
+            final Object obj = i.next();
+            if ( obj instanceof OCD ) {
+                generateXML((OCD)obj, contentHandler);
+            } else {
+                generateXML((Designate)obj, contentHandler);
             }
         }
         // end wrapper element

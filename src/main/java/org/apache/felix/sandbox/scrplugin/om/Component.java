@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
-import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
 import org.apache.felix.sandbox.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.JavaMethod;
 import org.apache.felix.sandbox.scrplugin.tags.JavaParameter;
@@ -65,10 +63,6 @@ public class Component extends AbstractObject {
     protected boolean isAbstract;
 
     protected boolean serviceFactory;
-
-    protected OCD ocd;
-
-    protected Designate designate;
 
     /**
      * Default constructor.
@@ -293,21 +287,5 @@ public class Component extends AbstractObject {
         if (!"org.osgi.service.component.ComponentContext".equals(param.getType())) {
             warnings.add(this.getMessage("Activation method " + methodName + " has wrong argument type " + param.getType()));
         }
-    }
-
-    public OCD getOcd() {
-        return this.ocd;
-    }
-
-    public void setOcd(OCD ocd) {
-        this.ocd = ocd;
-    }
-
-    public Designate getDesignate() {
-        return this.designate;
-    }
-
-    public void setDesignate(Designate designate) {
-        this.designate = designate;
     }
 }
