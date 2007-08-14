@@ -41,6 +41,7 @@ import org.apache.felix.sandbox.scrplugin.Service;
 import org.apache.felix.sandbox.scrplugin.tags.cl.ClassLoaderJavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.tags.qdox.QDoxJavaClassDescription;
 import org.apache.felix.sandbox.scrplugin.xml.Component;
+import org.apache.felix.sandbox.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.felix.sandbox.scrplugin.xml.Components;
 import org.apache.felix.sandbox.scrplugin.xml.Implementation;
 import org.apache.felix.sandbox.scrplugin.xml.Interface;
@@ -276,6 +277,32 @@ public class JavaClassDescriptorManager {
                 }
                 adFile.getParentFile().mkdirs();
                 this.xmlHandler.write(adFile, container);
+            } else {
+                // remove file
+                if ( adFile.exists() ) {
+                    this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
+                    adFile.delete();
+                }
+            }
+        } catch (IOException ioe) {
+            throw new MojoExecutionException("Failed to write scr-plugin scrinfo.xml", ioe);
+        }
+    }
+
+    /**
+     * Create the abstract descriptors file or delete it of no abstract descriptors are available.
+     * @param abstractDescriptors
+     */
+    public void writeAbstractDescriptorFile(org.apache.felix.sandbox.scrplugin.om.Components components, File outputDirectory)
+    throws MojoExecutionException {
+        try {
+            // if we have abstract descriptors, write them
+            final File adFile = new File(outputDirectory, ABSTRACT_DESCRIPTOR_RELATIVE_PATH);
+            if ( !components.getComponents().isEmpty() ) {
+                this.getLog().info("Writing abstract service descriptor " + adFile + " with " + components.getComponents().size() + " entries.");
+                adFile.getParentFile().mkdirs();
+                ComponentDescriptorIO io = new ComponentDescriptorIO();
+                io.write(adFile, components);
             } else {
                 // remove file
                 if ( adFile.exists() ) {
