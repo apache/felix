@@ -31,7 +31,7 @@ import org.apache.felix.sandbox.scrplugin.om.Component;
 import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.om.Implementation;
 import org.apache.felix.sandbox.scrplugin.om.Interface;
-import org.apache.felix.sandbox.scrplugin.om.metatype.AD;
+import org.apache.felix.sandbox.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.sandbox.scrplugin.om.metatype.Designate;
 import org.apache.felix.sandbox.scrplugin.om.metatype.MTObject;
 import org.apache.felix.sandbox.scrplugin.om.metatype.OCD;
@@ -562,7 +562,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             // store the information!
             if ( !isPrivate && component.getOcd() != null ) {
                 final OCD ocd = component.getOcd();
-                final AD ad = new AD();
+                final AttributeDefinition ad = new AttributeDefinition();
                 ocd.getProperties().add(ad);
                 ad.setId(prop.getName());
                 ad.setType(prop.getType());
@@ -595,6 +595,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
                     }
                 }
                 ad.setDefaultValue(prop.getValue());
+                ad.setText(prop.getText());
 
                 // check options
                 String[] parameters = property.getParameters();

@@ -18,18 +18,19 @@
  */
 package org.apache.felix.sandbox.scrplugin.om.metatype;
 
-import java.util.List;
 import java.util.Map;
 
-public class AD {
+public class AttributeDefinition {
 
     protected String id;
 
     protected String type;
 
-    protected Object defaultValue;
+    protected String defaultValue;
 
     protected String name;
+
+    protected String text;
 
     protected String description;
 
@@ -57,14 +58,21 @@ public class AD {
         return this.defaultValue;
     }
 
-    public void setDefaultValue(Object defaultValue) {
+    public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
-        if ( defaultValue instanceof List ) {
-            // assume array if set to scalar currently
-            if ( ((List)defaultValue).size() > 0 && this.cardinality == null ) {
-                this.cardinality = new Integer(Integer.MAX_VALUE);
-            }
+        this.text = null;
+    }
+
+    public void setText(String v) {
+        this.defaultValue = null;
+        this.text = v;
+        if (v != null && v.length() > 0 && this.cardinality == null ) {
+            this.cardinality = new Integer(Integer.MAX_VALUE);
         }
+    }
+
+    public String getText() {
+        return this.text;
     }
 
     public String getName() {

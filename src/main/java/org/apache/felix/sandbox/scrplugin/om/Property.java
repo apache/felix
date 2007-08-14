@@ -18,7 +18,6 @@
  */
 package org.apache.felix.sandbox.scrplugin.om;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,7 @@ import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
 public class Property extends AbstractObject {
 
     protected String name;
-    protected Object value;
+    protected String value;
     protected String type;
     protected String text;
 
@@ -58,12 +57,13 @@ public class Property extends AbstractObject {
         this.name = name;
     }
 
-    public Object getValue() {
+    public String getValue() {
         return this.value;
     }
 
     public void setValue(String value) {
         this.value = value;
+        this.text = null;
     }
 
     public String getType() {
@@ -80,20 +80,18 @@ public class Property extends AbstractObject {
 
     public void setText(String text) {
         this.text = text;
+        this.value = null;
     }
 
     public void setValues(Map valueMap) {
-        List values = new ArrayList();
+        this.value = null;
+        this.text = "";
         for (Iterator vi = valueMap.entrySet().iterator(); vi.hasNext();) {
             Map.Entry entry = (Map.Entry) vi.next();
             String key = (String) entry.getKey();
             if (key.startsWith("values")) {
-                values.add(entry.getValue());
+                this.text = this.text + entry.getValue() + "\n";
             }
-        }
-
-        if (!values.isEmpty()) {
-            this.value = values;
         }
     }
 
