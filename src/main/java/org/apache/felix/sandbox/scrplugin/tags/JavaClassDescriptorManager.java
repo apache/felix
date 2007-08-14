@@ -295,23 +295,18 @@ public class JavaClassDescriptorManager {
      */
     public void writeAbstractDescriptorFile(org.apache.felix.sandbox.scrplugin.om.Components components, File outputDirectory)
     throws MojoExecutionException {
-        try {
-            // if we have abstract descriptors, write them
-            final File adFile = new File(outputDirectory, ABSTRACT_DESCRIPTOR_RELATIVE_PATH);
-            if ( !components.getComponents().isEmpty() ) {
-                this.getLog().info("Writing abstract service descriptor " + adFile + " with " + components.getComponents().size() + " entries.");
-                adFile.getParentFile().mkdirs();
-                ComponentDescriptorIO io = new ComponentDescriptorIO();
-                io.write(adFile, components);
-            } else {
-                // remove file
-                if ( adFile.exists() ) {
-                    this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
-                    adFile.delete();
-                }
+        // if we have abstract descriptors, write them
+        final File adFile = new File(outputDirectory, ABSTRACT_DESCRIPTOR_RELATIVE_PATH);
+        if ( !components.getComponents().isEmpty() ) {
+            this.getLog().info("Writing abstract service descriptor " + adFile + " with " + components.getComponents().size() + " entries.");
+            adFile.getParentFile().mkdirs();
+            ComponentDescriptorIO.write(components, adFile);
+        } else {
+            // remove file
+            if ( adFile.exists() ) {
+                this.getLog().debug("Removing obsolete abstract service descriptor " + adFile);
+                adFile.delete();
             }
-        } catch (IOException ioe) {
-            throw new MojoExecutionException("Failed to write scr-plugin scrinfo.xml", ioe);
         }
     }
 

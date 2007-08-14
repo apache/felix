@@ -18,9 +18,7 @@
  */
 package org.apache.felix.sandbox.scrplugin.om;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.sandbox.scrplugin.tags.JavaTag;
 
@@ -33,7 +31,7 @@ public class Property extends AbstractObject {
     protected String name;
     protected String value;
     protected String type;
-    protected String text;
+    protected String[] multiValue;
 
     /**
      * Default constructor.
@@ -63,7 +61,7 @@ public class Property extends AbstractObject {
 
     public void setValue(String value) {
         this.value = value;
-        this.text = null;
+        this.multiValue = null;
     }
 
     public String getType() {
@@ -74,25 +72,13 @@ public class Property extends AbstractObject {
         this.type = type;
     }
 
-    public String getText() {
-        return this.text;
+    public String[] getMultiValue() {
+        return this.multiValue;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setMultiValue(String[] values) {
+        this.multiValue = values;
         this.value = null;
-    }
-
-    public void setValues(Map valueMap) {
-        this.value = null;
-        this.text = "";
-        for (Iterator vi = valueMap.entrySet().iterator(); vi.hasNext();) {
-            Map.Entry entry = (Map.Entry) vi.next();
-            String key = (String) entry.getKey();
-            if (key.startsWith("values")) {
-                this.text = this.text + entry.getValue() + "\n";
-            }
-        }
     }
 
     /**

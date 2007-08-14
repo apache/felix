@@ -30,7 +30,7 @@ public class AttributeDefinition {
 
     protected String name;
 
-    protected String text;
+    protected String[] defaultMultiValue;
 
     protected String description;
 
@@ -60,19 +60,19 @@ public class AttributeDefinition {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
-        this.text = null;
+        this.defaultMultiValue = null;
     }
 
-    public void setText(String v) {
+    public void setDefaultMultiValue(String[] values) {
         this.defaultValue = null;
-        this.text = v;
-        if (v != null && v.length() > 0 && this.cardinality == null ) {
+        this.defaultMultiValue = values;
+        if (values != null && values.length > 0 && this.cardinality == null ) {
             this.cardinality = new Integer(Integer.MAX_VALUE);
         }
     }
 
-    public String getText() {
-        return this.text;
+    public String[] getDefaultMultiValue() {
+        return this.defaultMultiValue;
     }
 
     public String getName() {

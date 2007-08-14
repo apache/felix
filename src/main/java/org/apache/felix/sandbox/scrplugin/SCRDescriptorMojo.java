@@ -160,8 +160,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         XMLWriter xw = null;
         try {
             if ( testNewOM ) {
-                final ComponentDescriptorIO io = new ComponentDescriptorIO();
-                io.write(descriptorFile, components);
+                ComponentDescriptorIO.write(components, descriptorFile);
             } else {
                 descriptorStream = new FileOutputStream(descriptorFile);
                 xw = new XMLWriter(descriptorStream);
@@ -555,8 +554,25 @@ public class SCRDescriptorMojo extends AbstractMojo {
             org.apache.felix.sandbox.scrplugin.om.Property prop = new org.apache.felix.sandbox.scrplugin.om.Property(property);
             prop.setName(name);
             prop.setType(property.getNamedParameter(SCRDescriptor.PROPERTY_TYPE));
-            prop.setValue(property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE));
-            prop.setValues(property.getNamedParameterMap());
+            final String value = property.getNamedParameter(SCRDescriptor.PROPERTY_VALUE);
+            if ( value != null ) {
+                prop.setValue(value);
+            } else {
+                // check for multivalue
+                final List values = new ArrayList();
+                final Map valueMap = property.getNamedParameterMap();
+                for (Iterator vi = valueMap.entrySet().iterator(); vi.hasNext();) {
+                    final Map.Entry entry = (Map.Entry) vi.next();
+                    final String key = (String) entry.getKey();
+                    if (key.startsWith("values")) {
+                        values.add(entry.getValue());
+                    }
+                }
+                if ( values.size() > 0 ) {
+                    prop.setMultiValue((String[])values.toArray(new String[values.size()]));
+                }
+            }
+
             final boolean isPrivate = this.getBoolean(property, SCRDescriptor.PROPERTY_PRIVATE, false);
             // if this is a public property and the component is generating metatype info
             // store the information!
@@ -578,24 +594,24 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 }
                 ad.setDescription(adDesc);
                 // set optional multivalues, cardinality might be overwritten by setValues !!
-                final String value = property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY);
-                if (value != null) {
-                    if ("-".equals(value)) {
+                final String cValue = property.getNamedParameter(SCRDescriptor.PROPERTY_CARDINALITY);
+                if (cValue != null) {
+                    if ("-".equals(cValue)) {
                         // unlimited vector
                         ad.setCardinality(new Integer(Integer.MIN_VALUE));
-                    } else if ("+".equals(value)) {
+                    } else if ("+".equals(cValue)) {
                        // unlimited array
                         ad.setCardinality(new Integer(Integer.MAX_VALUE));
                     } else {
                         try {
-                            ad.setCardinality(Integer.valueOf(value));
+                            ad.setCardinality(Integer.valueOf(cValue));
                         } catch (NumberFormatException nfe) {
                             // default to scalar in case of conversion problem
                         }
                     }
                 }
                 ad.setDefaultValue(prop.getValue());
-                ad.setText(prop.getText());
+                ad.setDefaultMultiValue(prop.getMultiValue());
 
                 // check options
                 String[] parameters = property.getParameters();
