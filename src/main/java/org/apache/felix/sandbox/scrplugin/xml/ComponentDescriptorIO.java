@@ -23,6 +23,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -336,10 +337,7 @@ public class ComponentDescriptorIO {
 
                 if (localName.equals(COMPONENT)) {
 
-                    // Create a new Component
                     this.currentComponent = new Component();
-
-                    // name attribute is mandatory
                     this.currentComponent.setName(attributes.getValue("name"));
 
                     // enabled attribute is optional
@@ -352,52 +350,37 @@ public class ComponentDescriptorIO {
                         this.currentComponent.setImmediate(Boolean.valueOf(attributes.getValue("immediate")));
                     }
 
-                    // factory attribute is optional
-                    if (attributes.getValue("factory") != null) {
-                        this.currentComponent.setFactory(attributes.getValue("factory"));
-                    }
+                    this.currentComponent.setFactory(attributes.getValue("factory"));
+
                 } else if (localName.equals(IMPLEMENTATION)) {
                     // Set the implementation class name (mandatory)
-                    if ( this.currentComponent == null ) {
-                        throw new SAXException("XML is not valid: implementation nees a surrounding component element.");
-                    }
-                    if ( this.currentComponent.getImplementation() != null ) {
-                        throw new SAXException("Only one implementation per component allowed.");
-                    }
                     final Implementation impl = new Implementation();
                     this.currentComponent.setImplementation(impl);
                     impl.setClassname(attributes.getValue("class"));
-                } else if (localName.equals("property")) {
-                    Property prop = new Property();
 
-                    // name attribute is mandatory
+                } else if (localName.equals(PROPERTY)) {
+                    final Property prop = new Property();
+
                     prop.setName(attributes.getValue("name"));
+                    prop.setType(attributes.getValue("type"));
 
-                    // type attribute is optional
-                    if (attributes.getValue("type") != null) {
-                        prop.setType(attributes.getValue("type"));
-                    }
-
-                    // 112.4.5: If the value attribute is specified, the body of the element is ignored.
                     if ( attributes.getValue("value") != null) {
                         prop.setValue(attributes.getValue("value"));
                         this.currentComponent.addProperty(prop);
-                    }
-                    else {
-                        // hold the metadata pending
+                    } else {
+                        // hold the property pending as we have a multi value
                         this.pendingProperty = prop;
                     }
-                    // TODO: treat the case where a properties file name is provided (p. 292)
+
                 } else if (localName.equals("properties")) {
+
                     // TODO: implement the properties tag
+
                 } else if (localName.equals(SERVICE)) {
 
                     this.currentService = new org.apache.felix.sandbox.scrplugin.om.Service();
 
-                    // servicefactory attribute is optional
-                    if (attributes.getValue("servicefactory") != null) {
-                        this.currentService.setServicefactory(attributes.getValue("servicefactory"));
-                    }
+                    this.currentService.setServicefactory(attributes.getValue("servicefactory"));
 
                     this.currentComponent.setService(this.currentService);
 
@@ -408,19 +391,11 @@ public class ComponentDescriptorIO {
 
                 } else if (localName.equals(REFERENCE)) {
                     org.apache.felix.sandbox.scrplugin.om.Reference ref = new org.apache.felix.sandbox.scrplugin.om.Reference();
+
                     ref.setName(attributes.getValue("name"));
                     ref.setInterfacename(attributes.getValue("interface"));
-
-                    // Cardinality
-                    if (attributes.getValue("cardinality")!= null) {
-                        ref.setCardinality(attributes.getValue("cardinality"));
-                    }
-
-                    if (attributes.getValue("policy") != null) {
-                        ref.setPolicy(attributes.getValue("policy"));
-                    }
-
-                    //if
+                    ref.setCardinality(attributes.getValue("cardinality"));
+                    ref.setPolicy(attributes.getValue("policy"));
                     ref.setTarget(attributes.getValue("target"));
                     ref.setBind(attributes.getValue("bind"));
                     ref.setUnbind(attributes.getValue("unbind"));
@@ -437,13 +412,23 @@ public class ComponentDescriptorIO {
             // we process elements in the default namespace and in the scr namespace only
             // TODO - To be 100% correct we should only listen to the scr namespace
             if ( "".equals(uri) || NAMESPACE_URI.equals(uri) ) {
-                if (localName.equals("component")) {
+                if (localName.equals("component") ) {
                     this.components.addComponent(this.currentComponent);
                     this.currentComponent = null;
                 } else if (localName.equals("property") && this.pendingProperty != null) {
-                    // 112.4.5 body expected to contain property value
-                    // if so, the pendingProperty field would be null
-                    // currently, we just ignore this situation
+                    // now split the value
+                    final String text = this.pendingProperty.getValue();
+                    if ( text != null ) {
+                        final StringTokenizer st = new StringTokenizer(text);
+                        final String[] values = new String[st.countTokens()];
+                        int index = 0;
+                        while ( st.hasMoreTokens() ) {
+                            values[index] = st.nextToken();
+                            index++;
+                        }
+                        this.pendingProperty.setMultiValue(values);
+                    }
+                    this.currentComponent.addProperty(this.pendingProperty);
                     this.pendingProperty = null;
                 }
             }
@@ -453,11 +438,13 @@ public class ComponentDescriptorIO {
          * @see org.xml.sax.helpers.DefaultHandler#characters(char[], int, int)
          */
         public void characters(char[] ch, int start, int length) throws SAXException {
-            // TODO - we have to handle multiple character events and have to split up the values
             if ( this.pendingProperty != null ) {
-                this.pendingProperty.setValue( new String(ch, start, length) );
-                this.currentComponent.addProperty(this.pendingProperty);
-                this.pendingProperty = null;
+                final String text = new String(ch, start, length);
+                if ( this.pendingProperty.getValue() != null ) {
+                    this.pendingProperty.setValue(text);
+                } else {
+                    this.pendingProperty.setValue(this.pendingProperty.getValue() + text);
+                }
             }
         }
     }
