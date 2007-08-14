@@ -22,31 +22,28 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Iterator;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.sandbox.scrplugin.om.Component;
 import org.apache.felix.sandbox.scrplugin.om.Components;
 import org.apache.felix.sandbox.scrplugin.om.Implementation;
 import org.apache.felix.sandbox.scrplugin.om.Property;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
-
-import com.thoughtworks.xstream.XStream;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * <code>ComponentDescriptorIO</code>
@@ -88,71 +85,18 @@ public class ComponentDescriptorIO {
 
     private static final SAXTransformerFactory FACTORY = (SAXTransformerFactory) TransformerFactory.newInstance();
 
-    protected final XStream xstream;
-
-    public ComponentDescriptorIO() {
-        this.xstream = new XStream();
-        this.xstream.setMode(XStream.NO_REFERENCES);
-
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.AbstractObject.class, "tag");
-
-        this.xstream.alias(ComponentDescriptorIO.COMPONENTS, org.apache.felix.sandbox.scrplugin.om.Components.class);
-        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Components.class, ComponentDescriptorIO.COMPONENTS);
-
-        this.xstream.alias(ComponentDescriptorIO.COMPONENT, org.apache.felix.sandbox.scrplugin.om.Component.class);
-        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Component.class, "references");
-        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Component.class, "properties");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "name");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "enabled");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Component.class, "immediate");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "ocd");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "designate");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "isAbstract");
-        this.xstream.omitField(org.apache.felix.sandbox.scrplugin.om.Component.class, "serviceFactory");
-
-        this.xstream.alias("implementation", org.apache.felix.sandbox.scrplugin.om.Implementation.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Implementation.class, "classname");
-
-        this.xstream.alias("property", org.apache.felix.sandbox.scrplugin.om.Property.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "name");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Property.class, "value");
-
-        this.xstream.alias("service", org.apache.felix.sandbox.scrplugin.om.Service.class);
-        this.xstream.addImplicitCollection(org.apache.felix.sandbox.scrplugin.om.Service.class, "interfaces");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Service.class, "servicefactory");
-
-        this.xstream.alias("provide", org.apache.felix.sandbox.scrplugin.om.Interface.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Interface.class, "interfacename");
-
-        this.xstream.alias("reference", org.apache.felix.sandbox.scrplugin.om.Reference.class);
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "name");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "interfacename");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "target");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "cardinality");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "policy");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "bind");
-        this.xstream.useAttributeFor(org.apache.felix.sandbox.scrplugin.om.Reference.class, "unbind");
-    }
-
-    public org.apache.felix.sandbox.scrplugin.om.Components read(File file) throws IOException, MojoExecutionException {
-        Writer buffer = new StringWriter();
-        final TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer;
+    public static org.apache.felix.sandbox.scrplugin.om.Components read(File file)
+    throws MojoExecutionException {
         try {
-            IOUtils.copy(new FileReader(file), buffer);
-            String xmlDoc = buffer.toString();
-            buffer = new StringWriter();
-            int pos = xmlDoc.indexOf("?>");
-            if ( pos > 0 ) {
-                xmlDoc = xmlDoc.substring(pos+2);
-            }
-            xmlDoc = "<components>" + xmlDoc + "</components>";
-            transformer = factory.newTransformer(new StreamSource(this.getClass().getResourceAsStream("/org/apache/felix/sandbox/scrplugin/xml/read.xsl")));
-            transformer.setOutputProperty(OutputKeys.INDENT, "no");
-            transformer.transform(new StreamSource(new StringReader(xmlDoc)), new StreamResult(buffer));
-            return (org.apache.felix.sandbox.scrplugin.om.Components)this.xstream.fromXML(new StringReader(buffer.toString()));
+            final Transformer transformer = FACTORY.newTransformer();
+            final XmlHandler xmlHandler = new XmlHandler();
+            transformer.transform(new StreamSource(new FileReader(file)),
+                    new SAXResult(xmlHandler));
+            return xmlHandler.components;
         } catch (TransformerException e) {
             throw new MojoExecutionException("Unable to read xml.", e);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to read xml from " + file, e);
         }
     }
 
@@ -363,6 +307,158 @@ public class ComponentDescriptorIO {
         if ( text != null ) {
             final char[] c = text.toCharArray();
             ch.characters(c, 0, c.length);
+        }
+    }
+
+    /**
+     * A content handler for parsing the component descriptions.
+     *
+     */
+    protected static final class XmlHandler extends DefaultHandler {
+
+        /** The components container. */
+        protected final Components components = new Components();
+
+        /** A reference to the current component. */
+        protected Component currentComponent;
+
+        /** The current service. */
+        protected org.apache.felix.sandbox.scrplugin.om.Service currentService;
+
+        /** Pending property. */
+        protected Property pendingProperty;
+
+        public void startElement(String uri, String localName, String name, Attributes attributes)
+        throws SAXException {
+            // we process elements in the default namespace and in the scr namespace only
+            // TODO - To be 100% correct we should only listen to the scr namespace
+            if ( "".equals(uri) || NAMESPACE_URI.equals(uri) ) {
+
+                if (localName.equals(COMPONENT)) {
+
+                    // Create a new Component
+                    this.currentComponent = new Component();
+
+                    // name attribute is mandatory
+                    this.currentComponent.setName(attributes.getValue("name"));
+
+                    // enabled attribute is optional
+                    if (attributes.getValue("enabled") != null) {
+                        this.currentComponent.setEnabled(Boolean.valueOf(attributes.getValue("enabled")));
+                    }
+
+                    // immediate attribute is optional
+                    if (attributes.getValue("immediate") != null) {
+                        this.currentComponent.setImmediate(Boolean.valueOf(attributes.getValue("immediate")));
+                    }
+
+                    // factory attribute is optional
+                    if (attributes.getValue("factory") != null) {
+                        this.currentComponent.setFactory(attributes.getValue("factory"));
+                    }
+                } else if (localName.equals(IMPLEMENTATION)) {
+                    // Set the implementation class name (mandatory)
+                    if ( this.currentComponent == null ) {
+                        throw new SAXException("XML is not valid: implementation nees a surrounding component element.");
+                    }
+                    if ( this.currentComponent.getImplementation() != null ) {
+                        throw new SAXException("Only one implementation per component allowed.");
+                    }
+                    final Implementation impl = new Implementation();
+                    this.currentComponent.setImplementation(impl);
+                    impl.setClassname(attributes.getValue("class"));
+                } else if (localName.equals("property")) {
+                    Property prop = new Property();
+
+                    // name attribute is mandatory
+                    prop.setName(attributes.getValue("name"));
+
+                    // type attribute is optional
+                    if (attributes.getValue("type") != null) {
+                        prop.setType(attributes.getValue("type"));
+                    }
+
+                    // 112.4.5: If the value attribute is specified, the body of the element is ignored.
+                    if ( attributes.getValue("value") != null) {
+                        prop.setValue(attributes.getValue("value"));
+                        this.currentComponent.addProperty(prop);
+                    }
+                    else {
+                        // hold the metadata pending
+                        this.pendingProperty = prop;
+                    }
+                    // TODO: treat the case where a properties file name is provided (p. 292)
+                } else if (localName.equals("properties")) {
+                    // TODO: implement the properties tag
+                } else if (localName.equals(SERVICE)) {
+
+                    this.currentService = new org.apache.felix.sandbox.scrplugin.om.Service();
+
+                    // servicefactory attribute is optional
+                    if (attributes.getValue("servicefactory") != null) {
+                        this.currentService.setServicefactory(attributes.getValue("servicefactory"));
+                    }
+
+                    this.currentComponent.setService(this.currentService);
+
+                } else if (localName.equals(INTERFACE)) {
+                    final org.apache.felix.sandbox.scrplugin.om.Interface interf = new org.apache.felix.sandbox.scrplugin.om.Interface();
+                    this.currentService.addInterface(interf);
+                    interf.setInterfacename(attributes.getValue("interface"));
+
+                } else if (localName.equals(REFERENCE)) {
+                    org.apache.felix.sandbox.scrplugin.om.Reference ref = new org.apache.felix.sandbox.scrplugin.om.Reference();
+                    ref.setName(attributes.getValue("name"));
+                    ref.setInterfacename(attributes.getValue("interface"));
+
+                    // Cardinality
+                    if (attributes.getValue("cardinality")!= null) {
+                        ref.setCardinality(attributes.getValue("cardinality"));
+                    }
+
+                    if (attributes.getValue("policy") != null) {
+                        ref.setPolicy(attributes.getValue("policy"));
+                    }
+
+                    //if
+                    ref.setTarget(attributes.getValue("target"));
+                    ref.setBind(attributes.getValue("bind"));
+                    ref.setUnbind(attributes.getValue("unbind"));
+
+                    this.currentComponent.addReference(ref);
+                }
+            }
+        }
+
+        /**
+         * @see org.xml.sax.helpers.DefaultHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
+         */
+        public void endElement(String uri, String localName, String name) throws SAXException {
+            // we process elements in the default namespace and in the scr namespace only
+            // TODO - To be 100% correct we should only listen to the scr namespace
+            if ( "".equals(uri) || NAMESPACE_URI.equals(uri) ) {
+                if (localName.equals("component")) {
+                    this.components.addComponent(this.currentComponent);
+                    this.currentComponent = null;
+                } else if (localName.equals("property") && this.pendingProperty != null) {
+                    // 112.4.5 body expected to contain property value
+                    // if so, the pendingProperty field would be null
+                    // currently, we just ignore this situation
+                    this.pendingProperty = null;
+                }
+            }
+        }
+
+        /**
+         * @see org.xml.sax.helpers.DefaultHandler#characters(char[], int, int)
+         */
+        public void characters(char[] ch, int start, int length) throws SAXException {
+            // TODO - we have to handle multiple character events and have to split up the values
+            if ( this.pendingProperty != null ) {
+                this.pendingProperty.setValue( new String(ch, start, length) );
+                this.currentComponent.addProperty(this.pendingProperty);
+                this.pendingProperty = null;
+            }
         }
     }
 }
