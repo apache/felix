@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,12 +25,10 @@ import org.w3c.dom.Node;
 /**
  * describe and store category node.
  * 
- * @author Maxime
- * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 
-public class Category
-{
+public class Category {
     /**
      * id of the category.
      */
@@ -41,8 +39,7 @@ public class Category
      * 
      * @return id
      */
-    public String getId()
-    {
+    public String getId() {
         return m_id;
     }
 
@@ -50,8 +47,7 @@ public class Category
      * set the id attribute.
      * @param id new id value
      */
-    public void setId(String id)
-    {
+    public void setId(String id) {
         this.m_id = id;
     }
 
@@ -60,8 +56,7 @@ public class Category
      * @param father father document for create Node
      * @return node
      */
-    public Node getNode(Document father)
-    {
+    public Node getNode(Document father) {
         Element category = father.createElement("category");
         category.setAttribute("id", this.getId());
         return category;

@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import java.io.File;
 
@@ -28,14 +28,14 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 
 /**
- * @description construct the repository.xml from a compiled bundle
- * 
+ * construct the repository.xml from a compiled bundle.
+ * @description construct the repository.xml from a compiled bundle.
  * @goal install-file
  * @requiresProject false
  * @phase install
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ObrInstallFile extends AbstractMojo
-{
+public class ObrInstallFile extends AbstractMojo {
     /**
      * The local Maven repository.
      * 
@@ -61,31 +61,36 @@ public class ObrInstallFile extends AbstractMojo
     private Settings m_settings;
 
     /**
-     * @descritpion symbolic name define by the user
+     * Artifact Id.
+     * @description symbolic name define by the user
      * @parameter expression="${artifactId}"
      */
     private String m_artifactId;
 
     /**
-     * @descritpion groupId define by the user
+     * Group Id.
+     * @description groupId define by the user
      * @parameter expression="${groupId}"
      */
     private String m_groupId;
 
     /**
-     * @descritpion version define by the user
+     * Version.
+     * @description version define by the user
      * @parameter expression="${version}"
      */
     private String m_version;
 
     /**
-     * @descritpion packaging define by the user
+     * Packaging.
+     * @description packaging define by the user
      * @parameter expression="${packaging}"
      */
     private String m_packaging;
 
     /**
-     * @descritpion obr file define by the user
+     * OBR File.
+     * @description obr file define by the user
      * @parameter expression="${obr-file}"
      */
     private String m_obrFile;
@@ -101,8 +106,7 @@ public class ObrInstallFile extends AbstractMojo
      * @throws MojoExecutionException if the plugin failed
      * @throws MojoFailureException if the plugin failed
      */
-    public void execute() throws MojoExecutionException, MojoFailureException
-    {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("Install-File Obr starts:");
 
         m_project = new MavenProject();
@@ -113,23 +117,19 @@ public class ObrInstallFile extends AbstractMojo
 
         PathFile fileOut;
 
-        if (m_groupId == null)
-        {
+        if (m_groupId == null) {
             getLog().error("-DgroupId=VALUE is required");
             return;
         }
-        if (m_artifactId == null)
-        {
+        if (m_artifactId == null) {
             getLog().error("-Dartifactid=VALUE is required");
             return;
         }
-        if (m_version == null)
-        {
+        if (m_version == null) {
             getLog().error("-Dversion=VALUE is required");
             return;
         }
-        if (m_packaging == null)
-        {
+        if (m_packaging == null) {
             getLog().error("-Dpackaging=VALUE is required");
             return;
         }
@@ -138,35 +138,34 @@ public class ObrInstallFile extends AbstractMojo
         PathFile repoLocal = new PathFile(m_localRepo.getBasedir());
 
         // get the target file in mvn repo
-        fileOut = new PathFile(PathFile.uniformSeparator(m_settings.getLocalRepository()) + File.separator + m_groupId.replace('.', File.separatorChar) + File.separator + m_artifactId + File.separator + m_version + File.separator + m_artifactId + "-"
-                + m_version + "." + m_packaging);
+        fileOut = new PathFile(PathFile.uniformSeparator(m_settings.getLocalRepository()) + File.separator + m_groupId.replace('.', File.separatorChar) + File.separator + m_artifactId + File.separator + m_version + File.separator + m_artifactId
+                + "-" + m_version + "." + m_packaging);
 
-        if (!fileOut.isExists())
-        {
+        if (!fileOut.isExists()) {
             getLog().error("file doesn't exist: " + fileOut.getAbsoluteFilename());
             return;
-        }
-        else
+        } else {
             getLog().info("Target file: " + fileOut.getAbsoluteFilename());
+        }
 
-        if (m_repositoryPath == null)
-        {
+        if (m_repositoryPath == null) {
             m_repositoryPath = "file:" + repoLocal.getOnlyAbsoluteFilename() + "repository.xml";
             getLog().warn("-DpathRepo is not define, use default repository: " + m_repositoryPath);
         }
 
         PathFile fileRepo = new PathFile(m_repositoryPath);
-        if (fileRepo.isRelative())
+        if (fileRepo.isRelative()) {
             fileRepo.setBaseDir(m_settings.getLocalRepository());
+        }
 
         // create the folder to the repository
         PathFile repoExist = new PathFile(fileRepo.getAbsolutePath());
-        if (!repoExist.isExists())
+        if (!repoExist.isExists()) {
             fileRepo.createPath();
+        }
 
         PathFile fileObrXml = new PathFile(m_obrFile);
-        if (!fileObrXml.isExists())
-        {
+        if (!fileObrXml.isExists()) {
             getLog().warn("obr.xml file not found, use default");
         }
 

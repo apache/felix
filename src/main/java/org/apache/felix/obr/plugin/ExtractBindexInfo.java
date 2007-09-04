@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -28,25 +28,21 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
-
-import bundles.obr.resource.BundleInfo;
-import bundles.obr.resource.CapabilityImpl;
-import bundles.obr.resource.RepositoryImpl;
-import bundles.obr.resource.RequirementImpl;
-import bundles.obr.resource.ResourceImpl;
-import bundles.obr.resource.VersionImpl;
+import org.osgi.impl.bundle.obr.resource.BundleInfo;
+import org.osgi.impl.bundle.obr.resource.CapabilityImpl;
+import org.osgi.impl.bundle.obr.resource.RepositoryImpl;
+import org.osgi.impl.bundle.obr.resource.RequirementImpl;
+import org.osgi.impl.bundle.obr.resource.ResourceImpl;
+import org.osgi.impl.bundle.obr.resource.VersionImpl;
 
 /**
  * this class is used to configure bindex and get information built by bindex about targeted bundle.
- * 
- * @author Maxime
- * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ExtractBindexInfo
-{
+public class ExtractBindexInfo {
 
     /**
-     * attribute get from bindex which describe targeted ressource.
+     * attribute get from bindex which describe targeted resource.
      */
     private ResourceImpl m_resource;
 
@@ -56,49 +52,38 @@ public class ExtractBindexInfo
      * @param outFile path on targeted jar-file
      * @throws MojoExecutionException occurs if bindex configuration failed
      */
-    public ExtractBindexInfo(URI repoFilename, String outFile) throws MojoExecutionException
-    {
+    public ExtractBindexInfo(URI repoFilename, String outFile) throws MojoExecutionException {
 
         this.m_resource = null;
         RepositoryImpl repository = null;
-        try
-        {
+        try {
             repository = new RepositoryImpl(new File(repoFilename).getAbsoluteFile().toURL());
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             e.printStackTrace();
             throw new MojoExecutionException("MalformedURLException");
         }
         BundleInfo info = null;
-        try
-        {
+        try {
             info = new BundleInfo(repository, new File(outFile));
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new MojoExecutionException("Exception");
         }
 
-        try
-        {
+        try {
             m_resource = info.build();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new MojoExecutionException("Exception");
         }
     }
 
     /**
-     * transform logical operator in xml syntax. 
+     * transform logical operator in xml syntax.
      * @param filter string which contains logical operator
-     * @return  string in correct xml syntax 
+     * @return string in correct xml syntax
      */
-    private String parseFilter(String filter)
-    {
+    private String parseFilter(String filter) {
         filter.replaceAll("&", "&amp");
         filter.replaceAll(">=", "&gt");
 
@@ -107,44 +92,38 @@ public class ExtractBindexInfo
 
     /**
      * extract capabilities from bindex information.
-     * @return bundle capabilities List 
+     * @return bundle capabilities List
      */
-    public List getCapabilities()
-    {
-        ArrayList list = new ArrayList();
+    public List getCapabilities() {
+        List list = new ArrayList();
         Collection res = m_resource.getCapabilityList();
         Iterator it = res.iterator();
-        while (it.hasNext())
-        {
+        while (it.hasNext()) {
             Capability capability = new Capability();
-            CapabilityImpl ci = ((CapabilityImpl) it.next());
+            CapabilityImpl ci = (CapabilityImpl) it.next();
             capability.setName(ci.getName());
             // System.out.println(ci.getName()) ;
-            if (!(ci.getName().compareTo("bundle") == 0))
-            {
+            if (!(ci.getName().compareTo("bundle") == 0)) {
                 Map properties = ci.getProperties();
-                for (Iterator k = properties.keySet().iterator(); k.hasNext();)
-                {
+                for (Iterator k = properties.keySet().iterator(); k.hasNext();) {
                     PElement p = new PElement();
                     String key = (String) k.next();
                     List values = (List) properties.get(key);
-                    for (Iterator v = values.iterator(); v.hasNext();)
-                    {
+                    for (Iterator v = values.iterator(); v.hasNext();) {
                         Object value = v.next();
                         p.setN(key);
-                        if (value != null)
-                        {
+                        if (value != null) {
                             p.setV(value.toString());
-                        }
-                        else
+                        } else {
                             System.out.println("Missing value " + key);
+                        }
                         String type = null;
-                        if (value instanceof Number)
+                        if (value instanceof Number) {
                             type = "number";
-                        else if (value.getClass() == VersionImpl.class)
-                            type = "version";
-                        if (type != null)
-                        {
+                        } else { 
+                            if (value.getClass() == VersionImpl.class) { type = "version"; }
+                        }
+                        if (type != null) {
                             p.setT(type);
                         }
                     }
@@ -156,18 +135,17 @@ public class ExtractBindexInfo
         }
         return list;
     }
+
     /**
      * extract requirement from bindex information.
      * @return bundle requirement List
      */
-    public List getRequirement()
-    {
-        ArrayList list = new ArrayList();
+    public List getRequirement() {
+        List list = new ArrayList();
         Collection res = m_resource.getRequirementList();
         Iterator it = res.iterator();
-        while (it.hasNext())
-        {
-            RequirementImpl ci = ((RequirementImpl) it.next());
+        while (it.hasNext()) {
+            RequirementImpl ci = (RequirementImpl) it.next();
             Require require = new Require();
 
             require.setExtend(String.valueOf(ci.isExtend()));
@@ -185,8 +163,7 @@ public class ExtractBindexInfo
      * extract symbolic name from bindex information.
      * @return bundle symbolic name
      */
-    public String getSymbolicName()
-    {
+    public String getSymbolicName() {
         return m_resource.getSymbolicName();
     }
 
@@ -194,20 +171,19 @@ public class ExtractBindexInfo
      * extract version from bindex information.
      * @return bundle version
      */
-    public String getVersion()
-    {
-        if (m_resource.getVersion() != null)
+    public String getVersion() {
+        if (m_resource.getVersion() != null) {
             return m_resource.getVersion().toString();
-        else
+        } else {
             return null;
+        }
     }
 
     /**
      * extract presentation name from bindex information.
      * @return bundle presentation name
      */
-    public String getPresentationName()
-    {
+    public String getPresentationName() {
         return m_resource.getPresentationName();
     }
 
@@ -215,8 +191,7 @@ public class ExtractBindexInfo
      * extract copyright from bindex information.
      * @return bundle copyright
      */
-    public String getCopyright()
-    {
+    public String getCopyright() {
         return m_resource.getCopyright();
     }
 
@@ -224,8 +199,7 @@ public class ExtractBindexInfo
      * extract description from bindex information.
      * @return bundle description
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return m_resource.getDescription();
     }
 
@@ -233,36 +207,36 @@ public class ExtractBindexInfo
      * extract documentation from bindex information.
      * @return bundle documentation
      */
-    public String getDocumentation()
-    {
-        if (m_resource.getDocumentation() != null)
+    public String getDocumentation() {
+        if (m_resource.getDocumentation() != null) {
             return m_resource.getDocumentation().toString();
-        else
+        } else {
             return null;
+        }
     }
 
     /**
      * extract license from bindex information.
      * @return bundle license
      */
-    public String getLicense()
-    {
-        if (m_resource.getLicense() != null)
+    public String getLicense() {
+        if (m_resource.getLicense() != null) {
             return m_resource.getLicense().toString();
-        else
+        } else {
             return null;
+        }
     }
 
     /**
      * extract source from bindex information.
      * @return bundle source
      */
-    public String getSource()
-    {
-        if (m_resource.getSource() != null)
+    public String getSource() {
+        if (m_resource.getSource() != null) {
             return m_resource.getSource().toString();
-        else
+        } else {
             return null;
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
+
 /**
  * this class is used to store some user information about configuration of the plugin.
- * @author Maxime
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  *
  */
-public class Config
-{
+public class Config {
 
     /**
      * use relative path or not.
@@ -39,8 +39,7 @@ public class Config
      * constructor: set default configuration: use relative path and don't upload file.
      *
      */
-    public Config()
-    {
+    public Config() {
         // default configuration
         m_pathRelative = true;
         m_fileRemote = false;
@@ -50,8 +49,7 @@ public class Config
      * set relativePath attribute.
      * @param value new value of attribute
      */
-    public void setPathRelative(boolean value)
-    {
+    public void setPathRelative(boolean value) {
         m_pathRelative = value;
     }
 
@@ -59,8 +57,7 @@ public class Config
      * set fileRemote attribute.
      * @param value new value of attribute
      */
-    public void setRemotely(boolean value)
-    {
+    public void setRemotely(boolean value) {
         m_fileRemote = value;
     }
 
@@ -68,8 +65,7 @@ public class Config
      * get use path relative.
      * @return true if plugin use relative path, else false
      */
-    public boolean isPathRelative()
-    {
+    public boolean isPathRelative() {
         return m_pathRelative;
     }
 
@@ -77,8 +73,7 @@ public class Config
      * get if use upload file.
      * @return true if the file will be uploaded, else false
      */
-    public boolean isRemotely()
-    {
+    public boolean isRemotely() {
         return m_fileRemote;
     }
 }

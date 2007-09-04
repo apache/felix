@@ -6,7 +6,6 @@
 	<packaging>maven-plugin</packaging>
 	<name>obr maven plugin</name>
 	<version>0.0.1</version>
-	<url>http://maven.apache.org</url>
 
 	<dependencies>
 		<dependency>
@@ -29,8 +28,6 @@
 			<artifactId>maven-project</artifactId>
 			<version>2.0.7</version>
 		</dependency>
-
-
 	</dependencies>
 
 </project>

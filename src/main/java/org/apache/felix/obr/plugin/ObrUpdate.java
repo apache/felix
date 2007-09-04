@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
@@ -50,13 +49,15 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
- * this class parse the old repository.xml file build the bundle resource description and update the repository
- * @author Maxime
- * 
+ * this class parse the old repository.xml file build the bundle resource description and update the repository.
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 
-public class ObrUpdate
-{
+public class ObrUpdate {
+    /**
+     * generate the date format to insert it in repository descriptor file.
+     */
+    static SimpleDateFormat m_format = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
 
     /**
      * logger for this plugin.
@@ -66,22 +67,22 @@ public class ObrUpdate
     /**
      * name and path to the repository descriptor file.
      */
-    private URI m_repoFilename; 
+    private URI m_repoFilename;
 
     /**
      * name and path to the obr.xml file.
      */
-    private String m_obrXml; 
+    private String m_obrXml;
 
     /**
      * name and path to the bundle jar file.
      */
-    private String m_outputFile; 
+    private String m_outputFile;
 
     /**
      * maven project description.
      */
-    private MavenProject m_project; 
+    private MavenProject m_project;
 
     /**
      * user configuration information.
@@ -96,38 +97,32 @@ public class ObrUpdate
     /**
      * root on parent document.
      */
-    private Document m_repoDoc; 
+    private Document m_repoDoc;
 
     /**
      * used to determine the first free id.
      */
-    private boolean[] m_idTab; 
+    private boolean[] m_idTab;
 
     /**
      * first Node on repository descriptor tree.
      */
-    private Node m_root; 
+    private Node m_root;
 
     /**
      * used to extract bindex bundle information.
      */
-    private ExtractBindexInfo m_ebi; 
+    private ExtractBindexInfo m_ebi;
 
     /**
-     * used to store bundle information
+     * used to store bundle information.
      */
-    private ResourcesBundle m_resourceBundle; 
-
-   
-    /**
-     * generate the date format to insert it in repository descriptor file
-     */
-    static SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
+    private ResourcesBundle m_resourceBundle;
 
     /**
-     * pathfile to the repository descriptor file 
+     * pathfile to the repository descriptor file.
      */
-    private PathFile m_repo; 
+    private PathFile m_repo;
 
     /**
      * initialize information.
@@ -139,8 +134,7 @@ public class ObrUpdate
      * @param userConfig user information
      * @param log plugin logger
      */
-    public ObrUpdate(PathFile repoFilename, String obrXml, MavenProject project, String outputFile, String localRepo, Config userConfig, Log log)
-    {
+    public ObrUpdate(PathFile repoFilename, String obrXml, MavenProject project, String outputFile, String localRepo, Config userConfig, Log log) {
         // this.m_localRepo = localRepo;
         this.m_outputFile = outputFile;
         this.m_repoFilename = repoFilename.getUri();
@@ -154,78 +148,61 @@ public class ObrUpdate
 
         m_resourceBundle = new ResourcesBundle(log);
 
-        if (userConfig.isRemotely())
-        {
+        if (userConfig.isRemotely()) {
             this.m_repo = new PathFile(localRepo);
-        }
-        else
-        {
+        } else {
             this.m_repo = repoFilename;
         }
         // System.err.println("Construct: "+repoFilename.getAbsoluteFilename());
     }
 
     /**
-     * update the  repository descriptor file.
-     * parse the old repository descriptor file,
-     * get the old reference of the bundle or determine the id for a new bundle,
-     * extract information from bindex
-     * set the new information in descriptor file and save it.
+     * update the repository descriptor file. parse the old repository descriptor file, get the old reference of the bundle or determine the id for a new bundle, extract information from bindex set the new information in descriptor file and save it.
      * @throws MojoExecutionException if the plugin failed
      */
-    public void updateRepository() throws MojoExecutionException
-    {
+    public void updateRepository() throws MojoExecutionException {
 
         m_constructor = initConstructor();
 
-        if (m_constructor == null)
+        if (m_constructor == null)  {
             return;
+        }
 
         // get the file size
         PathFile pf = new PathFile(m_outputFile);
         File fout = pf.getFile();
         pf.setBaseDir(m_repo.getOnlyAbsolutePath());
-        if (fout.exists())
-        {
+        if (fout.exists()) {
             m_resourceBundle.setSize(String.valueOf(fout.length()));
-            if (m_userConfig.isPathRelative())
+            if (m_userConfig.isPathRelative()) {
                 m_resourceBundle.setUri(pf.getOnlyRelativeFilename().replace('\\', '/'));
-            else
+            } else {
                 m_resourceBundle.setUri("file:" + m_outputFile);
-        }
-        else
-        {
+            }
+        } else {
             m_logger.error("file doesn't exist: " + m_outputFile);
             return;
         }
 
         // parse repository
-        if (parseRepositoryXml() == -1)
-        {
-            return;
-        }
+        if (parseRepositoryXml() == -1) { return; }
 
         // parse the obr.xml file
-        if (m_obrXml != null)
-        {
-            URL url = getClass().getResource("/SchemaObr.xsd");
+        if (m_obrXml != null) {
+            // URL url = getClass().getResource("/SchemaObr.xsd");
             // TODO validate obr.xml file
 
             Document obrXmlDoc = parseFile(m_obrXml, m_constructor);
-            if (obrXmlDoc == null)
-                return;
+            if (obrXmlDoc == null) { return; }
             Node obrXmlRoot = (Element) obrXmlDoc.getDocumentElement();
             // sort the obr file
             sortObrXml(obrXmlRoot);
         }
 
         // use bindex to extract bundle information
-        try
-        {
+        try {
             m_ebi = new ExtractBindexInfo(m_repoFilename, m_outputFile);
-        }
-        catch (MojoExecutionException e)
-        {
+        } catch (MojoExecutionException e) {
             m_logger.error("unable to build Bindex informations");
             e.printStackTrace();
             throw new MojoExecutionException("MojoFailureException");
@@ -233,21 +210,17 @@ public class ObrUpdate
 
         m_resourceBundle.construct(m_project, m_ebi);
 
-        if (!walkOnTree(m_root))
-        {
+        if (!walkOnTree(m_root)) {
             // the correct resource node was not found, we must create it
             // we calcul the new id
             int id = -1;
-            for (int i = 1; i < m_idTab.length; i++)
-            {
-                if (!m_idTab[i])
-                {
+            for (int i = 1; i < m_idTab.length; i++) {
+                if (!m_idTab[i]) {
                     id = i;
                     break;
                 }
             }
-            if (id == -1)
-                id = m_idTab.length;
+            if (id == -1) { id = m_idTab.length; }
 
             searchRepository(m_root, id);
         }
@@ -260,16 +233,12 @@ public class ObrUpdate
      * init the document builder from xerces.
      * @return DocumentBuilder ready to create new document
      */
-    private DocumentBuilder initConstructor()
-    {
+    private DocumentBuilder initConstructor() {
         DocumentBuilder constructor = null;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        try
-        {
+        try {
             constructor = factory.newDocumentBuilder();
-        }
-        catch (ParserConfigurationException e)
-        {
+        } catch (ParserConfigurationException e) {
             m_logger.error("unable to create a new xml document");
             e.printStackTrace();
         }
@@ -282,20 +251,15 @@ public class ObrUpdate
      * @return 0 if the bundle is already in the descriptor, else -1
      * @throws MojoExecutionException if the plugin failed
      */
-    private int parseRepositoryXml() throws MojoExecutionException
-    {
+    private int parseRepositoryXml() throws MojoExecutionException {
 
         File fout = new File(m_repoFilename.getPath());
-        if (!fout.exists())
-        {
+        if (!fout.exists()) {
             // create the repository.xml
-            try
-            {
+            try {
                 fout.createNewFile();
                 m_logger.info("create new repository.xml file");
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 m_logger.error("cannot create " + m_repoFilename.getPath());
                 e.printStackTrace();
                 return -1;
@@ -306,14 +270,11 @@ public class ObrUpdate
             Date d = new Date();
             d.setTime(System.currentTimeMillis());
             Element root = doc.createElement("repository");
-            root.setAttribute("lastmodified", format.format(d));
+            root.setAttribute("lastmodified", m_format.format(d));
             root.setAttribute("name", "MyRepository");
-            try
-            {
+            try {
                 writeToFile(m_repoFilename, root);
-            }
-            catch (MojoExecutionException e)
-            {
+            } catch (MojoExecutionException e) {
                 e.printStackTrace();
                 throw new MojoExecutionException("MojoExecutionException");
             }
@@ -321,10 +282,7 @@ public class ObrUpdate
 
         // now we parse the repository.xml file
         m_repoDoc = parseFile(m_repoFilename.getPath()/* +m_ext */, m_constructor);
-        if (m_repoDoc == null)
-        {
-            return -1;
-        }
+        if (m_repoDoc == null) { return -1; }
 
         m_root = (Element) m_repoDoc.getDocumentElement();
         return 0;
@@ -335,26 +293,19 @@ public class ObrUpdate
      * transform a xml file to a xerces Document.
      * @param filename path to the xml file
      * @param constructor DocumentBuilder get from xerces
-     * @return  Document which describe this file
+     * @return Document which describe this file
      */
-    private Document parseFile(String filename, DocumentBuilder constructor)
-    {
-        if (constructor == null)
-            return null;
+    private Document parseFile(String filename, DocumentBuilder constructor) {
+        if (constructor == null) { return null; }
         // The document is the root of the DOM tree.
         m_logger.info("Try to open: " + filename);
         Document doc = null;
-        try
-        {
+        try {
             doc = constructor.parse(new File(filename));
-        }
-        catch (SAXException e)
-        {
+        } catch (SAXException e) {
             e.printStackTrace();
             return null;
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             m_logger.error("cannot open file: " + filename);
             e.printStackTrace();
             return null;
@@ -366,74 +317,55 @@ public class ObrUpdate
      * put the information from obr.xml into ressourceBundle object.
      * @param node Node to the OBR.xml file
      */
-    private void sortObrXml(Node node)
-    {
-        if (node.getNodeName().compareTo("require") == 0)
-        {
+    private void sortObrXml(Node node) {
+        if (node.getNodeName().compareTo("require") == 0) {
             Require newRequireNode = new Require();
             NamedNodeMap list = node.getAttributes();
-            try
-            {
+            try {
                 newRequireNode.setExtend(list.getNamedItem("extend").getNodeValue());
                 newRequireNode.setMultiple(list.getNamedItem("multiple").getNodeValue());
                 newRequireNode.setOptional(list.getNamedItem("optional").getNodeValue());
                 newRequireNode.setFilter(list.getNamedItem("filter").getNodeValue());
                 newRequireNode.setName(list.getNamedItem("name").getNodeValue());
-            }
-            catch (NullPointerException e)
-            {
+            } catch (NullPointerException e) {
                 m_logger.error("the obr.xml file seems to be invalid in a \"require\" tag (one or more attributes are missing)");
                 // e.printStackTrace();
             }
             newRequireNode.setValue(node.getTextContent());
             m_resourceBundle.addRequire(newRequireNode);
-        }
-        else if (node.getNodeName().compareTo("capability") == 0)
-        {
+        } else if (node.getNodeName().compareTo("capability") == 0) {
             Capability newCapability = new Capability();
-            try
-            {
+            try {
                 newCapability.setName(node.getAttributes().getNamedItem("name").getNodeValue());
-            }
-            catch (NullPointerException e)
-            {
+            } catch (NullPointerException e) {
                 m_logger.error("attribute \"name\" is missing in obr.xml in a \"capability\" tag");
                 e.printStackTrace();
             }
             NodeList list = node.getChildNodes();
-            for (int i = 0; i < list.getLength(); i++)
-            {
+            for (int i = 0; i < list.getLength(); i++) {
                 PElement p = new PElement();
                 Node n = list.item(i);
                 Node item = null;
                 // System.err.println(n.getNodeName());
-                if (n.getNodeName().compareTo("p") == 0)
-                {
+                if (n.getNodeName().compareTo("p") == 0) {
 
                     p.setN(n.getAttributes().getNamedItem("n").getNodeValue());
                     item = n.getAttributes().getNamedItem("t");
-                    if (item != null)
-                        p.setT(item.getNodeValue());
+                    if (item != null) { p.setT(item.getNodeValue()); }
                     item = n.getAttributes().getNamedItem("v");
-                    if (item != null)
-                        p.setV(item.getNodeValue());
+                    if (item != null) { p.setV(item.getNodeValue()); }
 
                     newCapability.addP(p);
                 }
             }
             m_resourceBundle.addCapability(newCapability);
-        }
-        else if (node.getNodeName().compareTo("category") == 0)
-        {
+        } else if (node.getNodeName().compareTo("category") == 0) {
             Category newCategory = new Category();
             newCategory.setId(node.getAttributes().getNamedItem("id").getNodeValue());
             m_resourceBundle.addCategory(newCategory);
-        }
-        else
-        {
+        } else {
             NodeList list = node.getChildNodes();
-            for (int i = 0; i < list.getLength(); i++)
-            {
+            for (int i = 0; i < list.getLength(); i++) {
                 sortObrXml(list.item(i));
             }
         }
@@ -445,17 +377,13 @@ public class ObrUpdate
      * @param treeToBeWrite Node root of the tree to be write in file
      * @throws MojoExecutionException if the plugin failed
      */
-    private void writeToFile(URI outputFilename, Node treeToBeWrite) throws MojoExecutionException
-    {
+    private void writeToFile(URI outputFilename, Node treeToBeWrite) throws MojoExecutionException {
         // init the transformer
         Transformer transformer = null;
         TransformerFactory tfabrique = TransformerFactory.newInstance();
-        try
-        {
+        try {
             transformer = tfabrique.newTransformer();
-        }
-        catch (TransformerConfigurationException e)
-        {
+        } catch (TransformerConfigurationException e) {
             m_logger.error("Unable to write to file: " + outputFilename.toString());
             e.printStackTrace();
             throw new MojoExecutionException("TransformerConfigurationException");
@@ -473,34 +401,25 @@ public class ObrUpdate
 
         File fichier = new File(outputFilename);
         FileOutputStream flux = null;
-        try
-        {
+        try {
             flux = new FileOutputStream(fichier);
-        }
-        catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
             m_logger.error("Unable to write to file: " + fichier.getName());
             e.printStackTrace();
             throw new MojoExecutionException("FileNotFoundException");
         }
         Result output = new StreamResult(flux);
-        try
-        {
+        try {
             transformer.transform(input, output);
-        }
-        catch (TransformerException e)
-        {
+        } catch (TransformerException e) {
             e.printStackTrace();
             throw new MojoExecutionException("TransformerException");
         }
 
-        try
-        {
+        try {
             flux.flush();
             flux.close();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
             throw new MojoExecutionException("IOException");
         }
@@ -512,33 +431,22 @@ public class ObrUpdate
      * @param node targeted node
      * @return true if the requiered node was found else false.
      */
-    private boolean walkOnTree(Node node)
-    {
+    private boolean walkOnTree(Node node) {
 
-        if (node.getNodeName().compareTo("resource") == 0)
-        {
-            if (resource(node))
-                return true;
-            else
-                return false;
-        }
-        else
-        { // look at the repository node (first in the file)
-            if (node.getNodeName().compareTo("repository") == 0)
-            {
+        if (node.getNodeName().compareTo("resource") == 0) {
+            return resource(node);
+        } else { // look at the repository node (first in the file)
+            if (node.getNodeName().compareTo("repository") == 0) {
                 Date d = new Date();
                 d.setTime(System.currentTimeMillis());
                 NamedNodeMap nList = node.getAttributes();
                 Node n = nList.getNamedItem("lastmodified");
-                n.setNodeValue(format.format(d));
+                n.setNodeValue(m_format.format(d));
             }
             NodeList list = node.getChildNodes();
-            if (list.getLength() > 0)
-            {
-                for (int i = 0; i < list.getLength(); i++)
-                {
-                    if (walkOnTree(list.item(i)))
-                        return true;
+            if (list.getLength() > 0) {
+                for (int i = 0; i < list.getLength(); i++) {
+                    if (walkOnTree(list.item(i))) { return true; }
                 }
             }
             return false;
@@ -551,21 +459,15 @@ public class ObrUpdate
      * @param node Node on the xml file
      * @param id id of the bundle ressource
      */
-    private void searchRepository(Node node, int id)
-    {
-        if (node.getNodeName().compareTo("repository") == 0)
-        {
+    private void searchRepository(Node node, int id) {
+        if (node.getNodeName().compareTo("repository") == 0) {
             m_resourceBundle.setId(String.valueOf(id));
             node.appendChild(m_resourceBundle.getNode(m_repoDoc));
             return;
-        }
-        else
-        {
+        } else {
             NodeList list = node.getChildNodes();
-            if (list.getLength() > 0)
-            {
-                for (int i = 0; i < list.getLength(); i++)
-                {
+            if (list.getLength() > 0) {
+                for (int i = 0; i < list.getLength(); i++) {
                     searchRepository(list.item(i), id);
                 }
             }
@@ -575,24 +477,23 @@ public class ObrUpdate
 
     /**
      * compare two node and update the array which compute the smallest free id.
-     * 
-     * @param node
+     * @param node : node
      * @return true if the node is the same bundle than the ressourceBundle, else false.
      */
-    private boolean resource(Node node)
-    {
+    private boolean resource(Node node) {
 
         // this part save all the id free if we need to add resource
         int id = Integer.parseInt(node.getAttributes().getNamedItem("id").getNodeValue());
-        if (id >= m_idTab.length)
-        {
+        if (id >= m_idTab.length) {
             // resize tab
             boolean[] bt = new boolean[id + 1];
-            for (int i = 0; i < id + 1; i++)
-                if (m_idTab.length > i && m_idTab[i])
+            for (int i = 0; i < id + 1; i++) {
+                if (m_idTab.length > i && m_idTab[i]) {
                     bt[i] = true;
-                else
+                } else {
                     bt[i] = false;
+                }
+            }
 
             m_idTab = bt;
         }
@@ -600,8 +501,7 @@ public class ObrUpdate
 
         NamedNodeMap map = node.getAttributes();
 
-        if (m_resourceBundle.isSameBundleResource(map.getNamedItem("symbolicname").getNodeValue(), map.getNamedItem("presentationname").getNodeValue(), map.getNamedItem("version").getNodeValue()))
-        {
+        if (m_resourceBundle.isSameBundleResource(map.getNamedItem("symbolicname").getNodeValue(), map.getNamedItem("presentationname").getNodeValue(), map.getNamedItem("version").getNodeValue())) {
             m_resourceBundle.setId(String.valueOf(id));
             node.getParentNode().replaceChild(m_resourceBundle.getNode(m_repoDoc), node);
             return true;

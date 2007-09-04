@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
 /**
  * this class store a Require tag.
- * @author Maxime
- *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Require
-{
+public class Require {
 
     /**
      * store the extend attribute.
@@ -63,108 +62,96 @@ public class Require
      * get the extend attribute.
      * @return a string which contains the value of the boolean
      */
-    public String getExtend()
-    {
+    public String getExtend() {
         return m_extend;
     }
 
     /**
      * set the extend attribute.
-     * @param m_extend new value for the extend attribute
+     * @param extend new value for the extend attribute
      */
-    public void setExtend(String m_extend)
-    {
-        this.m_extend = m_extend;
+    public void setExtend(String extend) {
+        this.m_extend = extend;
     }
 
     /**
      * get the filter attribute.
      * @return m_filter value
      */
-    public String getFilter()
-    {
+    public String getFilter() {
         return m_filter;
     }
 
     /**
      * set the filter attribute.
-     * @param m_filter new value for filter
+     * @param filter new value for filter
      */
-    public void setFilter(String m_filter)
-    {
-        this.m_filter = m_filter;
+    public void setFilter(String filter) {
+        this.m_filter = filter;
     }
 
     /**
      * get multiple attribute.
      * @return m_multiple value
      */
-    public String getMultiple()
-    {
+    public String getMultiple() {
         return m_multiple;
     }
 
     /**
      * set multiple attribute.
-     * @param m_multiple new value for m_multiple
+     * @param multiple new value for m_multiple
      */
-    public void setMultiple(String m_multiple)
-    {
-        this.m_multiple = m_multiple;
+    public void setMultiple(String multiple) {
+        this.m_multiple = multiple;
     }
 
     /**
      * get name attribute.
      * @return m_name value
      */
-    public String getName()
-    {
+    public String getName() {
         return m_name;
     }
 
     /**
      * set name attribute.
-     * @param m_name new value for m_name
+     * @param name new value for m_name
      */
-    public void setName(String m_name)
-    {
-        this.m_name = m_name;
+    public void setName(String name) {
+        this.m_name = name;
     }
 
     /**
      * get the optional attribute.
      * @return m_optional value
      */
-    public String getOptional()
-    {
+    public String getOptional() {
         return m_optional;
     }
 
     /**
      * set the optional attribute.
-     * @param m_optionnal new value for m_optional
+     * @param optionnal new value for m_optional
      */
-    public void setOptional(String m_optionnal)
-    {
-        this.m_optional = m_optionnal;
+    public void setOptional(String optionnal) {
+        this.m_optional = optionnal;
     }
 
     /**
      * get value of the tag.
-     * @return value of this tag requiere
+     * @return value of this tag
      */
-    public String getValue()
-    {
+    public String getValue() {
         return m_value;
     }
 
     /**
      * set the value of the tag.
-     * @param m_value new value for this tag
+     * @param value new value for this tag
      */
-    public void setValue(String m_value)
-    {
-        this.m_value = m_value;
+    public void setValue(String value) {
+        this.m_value = value;
     }
 
     /**
@@ -173,8 +160,7 @@ public class Require
      * @param father father document for create Node
      * @return node
      */
-    public Node getNode(Document father)
-    {
+    public Node getNode(Document father) {
         Element require = father.createElement("require");
         require.setAttribute("name", this.getName());
         require.setAttribute("filter", this.getFilter());

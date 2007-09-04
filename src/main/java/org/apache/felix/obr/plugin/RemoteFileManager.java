@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,10 +42,9 @@ import org.apache.maven.wagon.repository.Repository;
 
 /**
  * this class is used to manage all connections by wagon.
- * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class RemoteFileManager
-{
+public class RemoteFileManager {
 
     /**
      * save the connection.
@@ -72,7 +71,6 @@ public class RemoteFileManager
      */
     private Log m_log;
 
-
     /**
      * initialize main information.
      * @param ar ArtifactRepository provides by maven
@@ -80,8 +78,7 @@ public class RemoteFileManager
      * @param settings settings of the current project provides by maven
      * @param log logger
      */
-    public RemoteFileManager(ArtifactRepository ar, WagonManager wm, Settings settings, Log log)
-    {
+    public RemoteFileManager(ArtifactRepository ar, WagonManager wm, Settings settings, Log log) {
         m_artifactRepository = ar;
         m_wagonManager = wm;
         m_settings = settings;
@@ -93,19 +90,14 @@ public class RemoteFileManager
      * disconnect the current object.
      *
      */
-    public void disconnect()
-    {
-        if (m_wagon == null)
-        {
+    public void disconnect() {
+        if (m_wagon == null) {
             m_log.error("must be connected first!");
             return;
         }
-        try
-        {
+        try {
             m_wagon.disconnect();
-        }
-        catch (ConnectionException e)
-        {
+        } catch (ConnectionException e) {
             m_log.error("Error disconnecting wagon - ignored", e);
         }
     }
@@ -114,49 +106,35 @@ public class RemoteFileManager
      * connect the current object to artifact repository given in constructor.
      * @throws MojoExecutionException if connection failed
      */
-    public void connect() throws MojoExecutionException
-    {
+    public void connect() throws MojoExecutionException {
         String url = m_artifactRepository.getUrl();
         String id = m_artifactRepository.getId();
 
         Repository repository = new Repository(id, url);
 
-        try
-        {
+        try {
             m_wagon = m_wagonManager.getWagon(repository);
             //configureWagon(m_wagon, repository.getId());
-        }
-        catch (UnsupportedProtocolException e)
-        {
+        } catch (UnsupportedProtocolException e) {
             throw new MojoExecutionException("Unsupported protocol: '" + repository.getProtocol() + "'", e);
-        }
-        catch (WagonConfigurationException e)
-        {
+        } catch (WagonConfigurationException e) {
             throw new MojoExecutionException("Unable to configure Wagon: '" + repository.getProtocol() + "'", e);
         }
 
-        try
-        {
+        try {
             Debug debug = new Debug();
             m_wagon.addTransferListener(debug);
 
             ProxyInfo proxyInfo = getProxyInfo(m_settings);
-            if (proxyInfo != null)
-            {
+            if (proxyInfo != null) {
                 m_wagon.connect(repository, m_wagonManager.getAuthenticationInfo(id), proxyInfo);
-            }
-            else
-            {
+            } else {
                 m_wagon.connect(repository, m_wagonManager.getAuthenticationInfo(id));
             }
 
-        }
-        catch (ConnectionException e)
-        {
+        } catch (ConnectionException e) {
             throw new MojoExecutionException("Error uploading file", e);
-        }
-        catch (AuthenticationException e)
-        {
+        } catch (AuthenticationException e) {
             throw new MojoExecutionException("Error uploading file", e);
         }
     }
@@ -170,11 +148,9 @@ public class RemoteFileManager
      * @throws ResourceDoesNotExistException if the targeted resource doesn't exist
      * @throws AuthorizationException if the connection authorization failed
      */
-    public File get(String url) throws IOException, TransferFailedException, ResourceDoesNotExistException, AuthorizationException
-    {
+    public File get(String url) throws IOException, TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 
-        if (m_wagon == null)
-        {
+        if (m_wagon == null) {
             m_log.error("must be connected first!");
             return null;
         }
@@ -192,10 +168,8 @@ public class RemoteFileManager
      * @throws ResourceDoesNotExistException if the targeted resource doesn't exist
      * @throws AuthorizationException if the connection authorization failed
      */
-    public void put(File file, String url) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException
-    {
-        if (m_wagon == null)
-        {
+    public void put(File file, String url) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+        if (m_wagon == null) {
             m_log.error("must be connected first!");
             return;
         }
@@ -207,11 +181,9 @@ public class RemoteFileManager
      * @param settings project settings given by maven
      * @return a proxyInfo object instancied or null if no active proxy is define in the settings.xml
      */
-    public static ProxyInfo getProxyInfo(Settings settings)
-    {
+    public static ProxyInfo getProxyInfo(Settings settings) {
         ProxyInfo proxyInfo = null;
-        if (settings != null && settings.getActiveProxy() != null)
-        {
+        if (settings != null && settings.getActiveProxy() != null) {
             Proxy settingsProxy = settings.getActiveProxy();
 
             proxyInfo = new ProxyInfo();
@@ -233,35 +205,24 @@ public class RemoteFileManager
      * @return  true if thr reuiered file is locked, else false
      * @throws MojoFailureException if the plugin failed
      */
-    public boolean isLockedFile(RemoteFileManager remote, String fileName) throws MojoFailureException
-    {
+    public boolean isLockedFile(RemoteFileManager remote, String fileName) throws MojoFailureException {
         File file = null;
-        try
-        {
+        try {
             file = remote.get(fileName + ".lock");
-        }
-        catch (TransferFailedException e)
-        {
+        } catch (TransferFailedException e) {
             e.printStackTrace();
             throw new MojoFailureException("TransferFailedException");
 
-        }
-        catch (ResourceDoesNotExistException e)
-        {
+        } catch (ResourceDoesNotExistException e) {
             return false;
-        }
-        catch (AuthorizationException e)
-        {
+        } catch (AuthorizationException e) {
             e.printStackTrace();
             throw new MojoFailureException("AuthorizationException");
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
             throw new MojoFailureException("IOException");
         }
-        if (file != null && file.length() == 0)
-            return false;
+        if (file != null && file.length() == 0) { return false; }
         return true;
     }
 

@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import java.io.File;
 import java.util.List;
@@ -34,9 +34,9 @@ import org.apache.maven.settings.Settings;
  * @goal repository
  * @phase install
  * @requiresDependencyResolution compile
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ObrInstall extends AbstractMojo
-{
+public class ObrInstall extends AbstractMojo {
     /**
      * The local Maven repository.
      * 
@@ -81,71 +81,58 @@ public class ObrInstall extends AbstractMojo
      * @implements org.apache.maven.plugin.Mojo.execute 
      * @throws MojoExecutionException if the plugin failed
      */
-    public void execute() throws MojoExecutionException
-    {
+    public void execute() throws MojoExecutionException {
         getLog().info("Obr Plugin starts:");
 
-        if (m_repositoryPath == null)
-        {
+        if (m_repositoryPath == null) {
             m_repositoryPath = "file:/" + m_localRepo.getBasedir() + File.separator + "repository.xml";
             getLog().warn("-DpathRepo is not define, use default repository: " + m_repositoryPath);
         }
 
         PathFile file = new PathFile(m_repositoryPath);
-        if (file.isExists())
-        {
-            if (!m_repositoryPath.startsWith("file:/"))
-                m_repositoryPath = "file:/" + m_repositoryPath;
+        if (file.isExists()) {
+            if (!m_repositoryPath.startsWith("file:/")) { m_repositoryPath = "file:/" + m_repositoryPath; }
         }
 
         // locate the obr.xml file
         String obrXmlFile = null;
         List l = m_project.getResources();
-        for (int i = 0; i < l.size(); i++)
-        {
+        for (int i = 0; i < l.size(); i++) {
             File f = new File(((Resource) l.get(i)).getDirectory() + File.separator + "obr.xml");
-            if (f.exists())
-            {
+            if (f.exists()) {
                 obrXmlFile = ((Resource) l.get(i)).getDirectory() + File.separator + "obr.xml";
                 break;
             }
         }
         // the obr.xml file is not present
-        if (obrXmlFile == null)
-        {
+        if (obrXmlFile == null) {
             getLog().warn("obr.xml is not present, use default");
         }
 
         // get the path to local maven repository
         file = new PathFile(PathFile.uniformSeparator(m_settings.getLocalRepository()) + File.separator + PathFile.uniformSeparator(m_localRepo.pathOf(m_project.getArtifact())));
-        if (file.isExists())
+        if (file.isExists()) {
             m_fileInLocalRepo = file.getOnlyAbsoluteFilename();
-        else
-        {
+        } else {
             getLog().error("file not found in local repository: " + m_settings.getLocalRepository() + File.separator + m_localRepo.pathOf(m_project.getArtifact()));
             return;
         }
 
         // verify the repository.xml
         PathFile fileRepo = new PathFile(m_repositoryPath);
-        if (fileRepo.isRelative())
-            fileRepo.setBaseDir(m_settings.getLocalRepository());
+        if (fileRepo.isRelative()) { fileRepo.setBaseDir(m_settings.getLocalRepository()); }
 
         // create the folder to the repository
         PathFile repoExist = new PathFile(fileRepo.getAbsolutePath());
-        if (!repoExist.isExists())
-            fileRepo.createPath();
+        if (!repoExist.isExists()) { fileRepo.createPath(); }
 
         // build the user configuration (use default)
         Config user = new Config();
 
         ObrUpdate obrUpdate = new ObrUpdate(fileRepo, obrXmlFile, m_project, m_fileInLocalRepo, PathFile.uniformSeparator(m_settings.getLocalRepository()), user, getLog());
-        try
-        {
+        try {
             obrUpdate.updateRepository();
-        }
-        catch (MojoExecutionException e)
-        {
+        } catch (MojoExecutionException e) {
             e.printStackTrace();
             throw new MojoExecutionException("MojoFailureException");
         }

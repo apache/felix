@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.maven.obr.plugin;
+package org.apache.felix.obr.plugin;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -24,11 +24,10 @@ import org.w3c.dom.Node;
 
 /**
  * this class describe the p element in a capability tag.
- * @author Maxime
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  * 
  */
-public class PElement
-{
+public class PElement {
     /**
      * store the v tag (value).
      */
@@ -48,54 +47,48 @@ public class PElement
      * get the n tag.
      * @return attribute n
      */
-    public String getN()
-    {
+    public String getN() {
         return m_n;
     }
 
     /**
      * set the n tage.
-     * @param m_n new value
+     * @param n new value
      */
-    public void setN(String m_n)
-    {
-        this.m_n = m_n;
+    public void setN(String n) {
+        this.m_n = n;
     }
 
     /**
      * get the t tag.
      * @return attribute t
      */
-    public String getT()
-    {
+    public String getT() {
         return m_t;
     }
 
     /**
      * set the t tag.
-     * @param m_t new value
+     * @param t new value
      */
-    public void setT(String m_t)
-    {
-        this.m_t = m_t;
+    public void setT(String t) {
+        this.m_t = t;
     }
 
     /**
      * get the v tag.
      * @return attribute v
      */
-    public String getV()
-    {
+    public String getV() {
         return m_v;
     }
 
     /**
      * set the v tag.
-     * @param m_v new value
+     * @param v new value
      */
-    public void setV(String m_v)
-    {
-        this.m_v = m_v;
+    public void setV(String v) {
+        this.m_v = v;
     }
 
     /**
@@ -103,15 +96,12 @@ public class PElement
      * @param father father document for create Node
      * @return node
      */
-    public Node getNode(Document father)
-    {
+    public Node getNode(Document father) {
         Element p = father.createElement("p");
         p.setAttribute("n", this.getN());
-        if (this.getT() != null)
-            p.setAttribute("t", this.getT());
+        if (this.getT() != null) { p.setAttribute("t", this.getT()); }
 
-        if (this.getV() != null)
-            p.setAttribute("v", this.getV());
+        if (this.getV() != null) { p.setAttribute("v", this.getV()); }
 
         return p;
     }
