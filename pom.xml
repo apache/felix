@@ -33,9 +33,15 @@
     <description>Sling Management Console Servlet</description>
 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/webmanager</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/webmanager
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/webmanager
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/webmanager
+        </url>
     </scm>
 
     <build>
