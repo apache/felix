@@ -39,6 +39,7 @@ import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -114,16 +115,35 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
             return;
         }
 
-        Configuration config = ca.getConfiguration(pid, null);
-
+        Configuration config = null;
+        try {
+            Configuration[] configs = ca.listConfigurations("(" + Constants.SERVICE_PID + "="+ pid + ")");
+            if (configs != null && configs.length > 0) {
+                config = configs[0]; 
+            }
+        } catch (InvalidSyntaxException ise) {
+            // should print message
+            return;
+        }
+        
         json.put(ConfigManager.PID, pid);
         json.put("isFactory", isFactory);
 
-        Dictionary props = mergeWithMetaType(config, json, locale);
+        Dictionary<?, ?> props = null;
+        ObjectClassDefinition ocd;
+        if (config != null) {
+            props = config.getProperties();
+            ocd = getObjectClassDefinition(config, locale);
+        } else {
+            ocd = getObjectClassDefinition(pid, locale);
+        }
+        
+        props = mergeWithMetaType(props, ocd, json);
+
 
         if (props != null) {
             JSONObject properties = new JSONObject();
-            for (Enumeration pe = props.keys(); pe.hasMoreElements();) {
+            for (Enumeration<?> pe = props.keys(); pe.hasMoreElements();) {
                 Object key = pe.nextElement();
 
                 // ignore well known special properties
@@ -149,18 +169,18 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
         }
 
-        addConfigurationInfo(config, json, locale);
+        if (config != null) {
+            addConfigurationInfo(config, json, locale);
+        }
     }
 
-    private Dictionary mergeWithMetaType(Configuration config, JSONObject json,
-            String locale) throws JSONException {
+    private Dictionary<?, ?> mergeWithMetaType(Dictionary<?, ?> props,
+            ObjectClassDefinition ocd, JSONObject json) throws JSONException {
 
-        Dictionary props = config.getProperties();
         if (props == null) {
-            props = new Hashtable();
+            props = new Hashtable<String, Object>();
         }
 
-        ObjectClassDefinition ocd = getObjectClassDefinition(config, locale);
         if (ocd != null) {
 
             String name = ocd.getName();

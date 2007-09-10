@@ -18,24 +18,24 @@ package org.apache.sling.console.web.internal;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Dictionary;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.console.web.Render;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedServiceFactory;
-import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
@@ -95,8 +95,11 @@ public class ConfigManager extends ConfigManagerBase implements Render {
         String locale = (loc != null) ? loc.toString() : null;
 
         try {
+            // get a list of all pids for which MetaData exists
+            Map<String, Bundle> metaDataPids = getMetadataPids();
+            
             // sorted map of options 
-            SortedMap options = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+            SortedMap<String, String> options = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
             
             // find all ManagedServiceFactories to get the factoryPIDs
             ServiceReference[] refs = getBundleContext().getServiceReferences(
@@ -137,7 +140,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                     continue;
                 }
 
-                Dictionary props = cfgs[i].getProperties();
+                Dictionary<?, ?> props = cfgs[i].getProperties();
                 Object slingContext = (props != null) ? props.get("sling.context") : null;
 
                 // insert and entry for the pid
@@ -150,6 +153,10 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                         name += slingContext + ", ";
                     }
                     name += pid + ")";
+                    
+                    // remove from the list of known pids
+                    metaDataPids.remove(pid);
+                    
                 } else if (slingContext != null) {
                     name = pid + " (" + slingContext + ")";
                 } else {
@@ -167,7 +174,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                         continue;
                     }
                     
-                    Object existing = options.remove("pid="+pid);
+                    String existing = options.remove("pid="+pid);
                     if (existing != null) {
                         options.put("factoryPid="+pid, existing);
                     } else {
@@ -182,12 +189,22 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                 }
             }
 
+            // If there are any meta data PIDs for which there is no existing
+            // configuration, we add them to the list to create configuration
+            if (!metaDataPids.isEmpty()) {
+                for (Entry<String, Bundle> mdp : metaDataPids.entrySet()) {
+                    ObjectClassDefinition ocd = getObjectClassDefinition(
+                        mdp.getValue(), mdp.getKey(), locale);
+                    options.put("pid=" + mdp.getKey(), ocd.getName() + " ("
+                        + mdp.getKey() + ")");
+                }
+            }
+
             pw.println("<form method='post' name='configSelection' onSubmit='configure(); return false;'");
             pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
                 + "' value='" + SetStartLevelAction.NAME + "'>");
             pw.println("<select class='select' name='pid' onChange='configure();'>");
-            for (Iterator mi = options.entrySet().iterator(); mi.hasNext();) {
-                Map.Entry entry = (Map.Entry) mi.next();
+            for (Entry<String, String> entry : options.entrySet()) {
                 pw.print("<option value='" + entry.getKey() + "'>");
                 pw.print(entry.getValue());
                 pw.println("</option>");
@@ -196,6 +213,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
             pw.println("&nbsp;&nbsp;");
             pw.println("<input class='submit' type='submit' value='Configure' />");
             pw.println("</form>");
+            
         } catch (Exception e) {
             // write a message or ignore
         }

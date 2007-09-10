@@ -15,20 +15,21 @@
  */
 package org.apache.sling.console.web.internal;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>ConfigManagerBase</code> TODO
@@ -55,8 +56,40 @@ abstract class ConfigManagerBase {
         return metaTypeService;
     }
 
+    protected Map<String, Bundle> getMetadataPids() {
+        Map<String, Bundle> pids = new HashMap<String, Bundle>();
+        MetaTypeService mts = getMetaTypeService();
+        if (mts != null) {
+            Bundle[] bundles = getBundleContext().getBundles();
+            for (int i=0; i < bundles.length; i++) {
+                MetaTypeInformation mti = mts.getMetaTypeInformation(bundles[i]);
+                if (mti != null) {
+                    String[] pidList = mti.getPids();
+                    for (int j = 0; pidList != null && j < pidList.length; j++) {
+                        pids.put(pidList[j], bundles[i]);
+                    }
+                }
+            }
+        }
+        return pids;
+    }
+    
     protected ObjectClassDefinition getObjectClassDefinition(
             Configuration config, String locale) {
+        
+        // if the configuration is not bound, search in the bundles
+        if (config.getBundleLocation() == null) {
+            ObjectClassDefinition ocd = getObjectClassDefinition(config.getPid(), locale);
+            if (ocd != null) {
+                return ocd;
+            }
+            
+            // if none, check whether there might be one for the factory PID
+            if (config.getFactoryPid() != null) {
+                return getObjectClassDefinition(config.getFactoryPid(), locale);
+            }
+        }
+        
         MetaTypeService mts = getMetaTypeService();
         if (mts != null) {
             Bundle bundle = getBundle(config.getBundleLocation());
@@ -94,6 +127,21 @@ abstract class ConfigManagerBase {
         }
 
         // fallback to nothing found
+        return null;
+    }
+    
+    protected ObjectClassDefinition getObjectClassDefinition(String pid, String locale) {
+        Bundle[] bundles = getBundleContext().getBundles();
+        for (int i=0; i < bundles.length; i++) {
+            try {
+                ObjectClassDefinition ocd = getObjectClassDefinition(bundles[i], pid, locale);
+                if (ocd != null) {
+                    return ocd;
+                }
+            } catch (IllegalArgumentException iae) {
+                // don't care
+            }
+        }
         return null;
     }
     
