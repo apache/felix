@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.obr.plugin;
+package org.apache.felix.sandbox.obr.plugin;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -106,7 +106,6 @@ public class ObrDeploy extends AbstractMojo {
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("Obr-deploy start:");
-        System.err.println(m_repositoryName);
 
         ArtifactRepository ar = m_project.getDistributionManagementArtifactRepository();
 

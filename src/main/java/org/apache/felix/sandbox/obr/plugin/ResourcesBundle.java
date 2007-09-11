@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.obr.plugin;
+package org.apache.felix.sandbox.obr.plugin;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -271,14 +271,20 @@ public class ResourcesBundle {
         size.setTextContent(this.getSize());
         resource.appendChild(size);
 
-        documentation.setTextContent(this.getDocumentation());
-        resource.appendChild(documentation);
+        if (this.getDocumentation() != null) {
+            documentation.setTextContent(this.getDocumentation());
+            resource.appendChild(documentation);
+        }
 
-        source.setTextContent(this.getSource());
-        resource.appendChild(source);
+        if (this.getSource() != null) {
+            source.setTextContent(this.getSource());
+            resource.appendChild(source);
+        }
 
-        license.setTextContent(this.getLicense());
-        resource.appendChild(license);
+        if (this.getLicense() != null) {
+            license.setTextContent(this.getLicense());
+            resource.appendChild(license);
+        }
 
         List list = (ArrayList) this.getNodeCategories(father);
         for (int i = 0; i < list.size(); i++) {
