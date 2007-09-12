@@ -68,6 +68,11 @@ public class SlingManager extends GenericServlet {
     private static final String PROP_MANAGER_ROOT = "manager.root";
 
     /**
+     * @scr.property value="list"
+     */
+    private static final String PROP_DEFAULT_RENDER = "default.render";
+
+    /**
      * @scr.property value="Sling Management Console"
      */
     private static final String PROP_REALM = "realm";
@@ -99,6 +104,8 @@ public class SlingManager extends GenericServlet {
     private SortedMap<String, Render> renders = new TreeMap<String, Render>();
 
     private Render defaultRender;
+
+    private String defaultRenderName;
 
     private String webManagerRoot;
 
@@ -253,6 +260,11 @@ public class SlingManager extends GenericServlet {
 
         Dictionary config = this.componentContext.getProperties();
 
+        this.defaultRenderName = (String) config.get(PROP_DEFAULT_RENDER);
+        if ( this.renders.get(this.defaultRenderName ) != null ) {
+            this.defaultRender = this.renders.get(this.defaultRenderName);
+        }
+
         // get authentication details
         String realm = this.getProperty(config, PROP_REALM,
             "Sling Management Console");
@@ -305,6 +317,8 @@ public class SlingManager extends GenericServlet {
         this.renders.put(render.getName(), render);
 
         if (this.defaultRender == null) {
+            this.defaultRender = render;
+        } else if ( render.getName().equals(this.defaultRenderName ) ) {
             this.defaultRender = render;
         }
     }
