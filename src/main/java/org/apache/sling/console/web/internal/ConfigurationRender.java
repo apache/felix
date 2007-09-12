@@ -172,14 +172,14 @@ public class ConfigurationRender implements Render {
         pw.println("*** Assemblies:");
 
         Bundle[] bundles = this.bundleContext.getBundles();
-        SortedSet keys = new TreeSet();
+        SortedSet<String> keys = new TreeSet<String>();
         for (int i = 0; i < bundles.length; i++) {
             if (bundles[i].getHeaders().get("Assembly-Bundles") != null) {
                 keys.add(this.getBundleString(bundles[i], false));
             }
         }
 
-        for (Iterator ki = keys.iterator(); ki.hasNext();) {
+        for (Iterator<String> ki = keys.iterator(); ki.hasNext();) {
             this.infoLine(pw, null, null, ki.next());
         }
 
@@ -192,12 +192,12 @@ public class ConfigurationRender implements Render {
         // Monitor" [Resolved]
 
         Bundle[] bundles = this.bundleContext.getBundles();
-        SortedSet keys = new TreeSet();
+        SortedSet<String> keys = new TreeSet<String>();
         for (int i = 0; i < bundles.length; i++) {
             keys.add(this.getBundleString(bundles[i], true));
         }
 
-        for (Iterator ki = keys.iterator(); ki.hasNext();) {
+        for (Iterator<String> ki = keys.iterator(); ki.hasNext();) {
             this.infoLine(pw, null, null, ki.next());
         }
 
@@ -208,7 +208,7 @@ public class ConfigurationRender implements Render {
         pw.println("*** Services:");
 
         // get the list of services sorted by service ID (ascending)
-        SortedMap srMap = new TreeMap();
+        SortedMap<Object, ServiceReference> srMap = new TreeMap<Object, ServiceReference>();
         try {
             ServiceReference[] srs = this.bundleContext.getAllServiceReferences(
                 null, null);
@@ -220,8 +220,8 @@ public class ConfigurationRender implements Render {
             // expected
         }
 
-        for (Iterator si = srMap.values().iterator(); si.hasNext();) {
-            ServiceReference sr = (ServiceReference) si.next();
+        for (Iterator<ServiceReference> si = srMap.values().iterator(); si.hasNext();) {
+            ServiceReference sr = si.next();
 
             this.infoLine(pw, null,
                 String.valueOf(sr.getProperty(Constants.SERVICE_ID)),
@@ -230,7 +230,7 @@ public class ConfigurationRender implements Render {
 
             Bundle[] users = sr.getUsingBundles();
             if (users != null && users.length > 0) {
-                List userString = new ArrayList();
+                List<String> userString = new ArrayList<String>();
                 for (int i = 0; i < users.length; i++) {
                     userString.add(this.getBundleString(users[i], false));
                 }
@@ -307,13 +307,13 @@ public class ConfigurationRender implements Render {
         try {
             Configuration[] configs = ca.listConfigurations(null);
             if (configs != null) {
-                SortedMap sm = new TreeMap();
-                for (int i = 0; configs != null && i < configs.length; i++) {
+                SortedMap<Object, Configuration> sm = new TreeMap<Object, Configuration>();
+                for (int i = 0; i < configs.length; i++) {
                     sm.put(configs[i].getPid(), configs[i]);
                 }
 
-                for (Iterator mi = sm.values().iterator(); mi.hasNext();) {
-                    this.printConfiguration(pw, (Configuration) mi.next());
+                for (Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext();) {
+                    this.printConfiguration(pw, mi.next());
                 }
             }
         } catch (Exception e) {

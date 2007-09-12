@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.SortedMap;
@@ -39,41 +38,11 @@ public class Util {
     /** web apps subpage */
     public static final String PAGE_WEBAPPS = "/webapps";
 
-    /** List connectors subpage. */
-    private static final String PAGE_CONNECTORS = "/connectors";
-
-    /** Change password subpage */
-    private static final String PAGE_PASSWD = "/passwd";
-
     /** vm statistics subpage */
     public static final String PAGE_VM_STAT = "/vmstat";
 
     /** Logs subpage */
     public static final String PAGE_LOGS = "/logs";
-
-    /** Stop server subpage */
-    private static final String PAGE_SHUTDOWN = "/shutdown";
-
-    /** Deploy subpage */
-    private static final String PAGE_DEPLOY = "/deploy";
-
-    /** Deploy RAR subpage */
-    private static final String PAGE_DEPLOY_RAR = "/deploy2";
-
-    /** Start action */
-    private static final String ACTION_START = "start";
-
-    /** Stop action */
-    private static final String ACTION_STOP = "stop";
-
-    /** Deploy action */
-    private static final String ACTION_DEPLOY = "deploy";
-
-    /** Undeploy action */
-    private static final String ACTION_UNDEPLOY = "undeploy";
-
-    /** GC action */
-    private static final String ACTION_GC = "gc";
 
     /** Parameter name */
     public static final String PARAM_ACTION = "action";
@@ -82,40 +51,7 @@ public class Util {
     public static final String PARAM_CONTENT = "content";
 
     /** Parameter name */
-    private static final String PARAM_CONTEXT = "context";
-
-    /** Parameter name */
-    private static final String PARAM_CONTAINER = "container";
-
-    /** Parameter name. */
-    private static final String PARAM_RAR_FILE = "rar_file";
-
-    /** Parameter name */
-    private static final String PARAM_JNDI_NAME = "jndi_name";
-
-    /** User name parameter */
-    private static final String PARAM_USERNAME = "username";
-
-    /** Parameter name */
-    private static final String PARAM_PASSWORD = "password";
-
-    /** Parameter name */
-    private static final String PARAM_OLD_PASSWORD = "password_old";
-
-    /** Parameter name */
-    private static final String PARAM_CHECK_PASSWORD = "password_check";
-
-    /** Parameter name */
     public static final String PARAM_SHUTDOWN = "shutdown";
-
-    /** Parameter name */
-    private static final String PARAM_GC = "gc";
-
-    /** Parameter name */
-    private static final String PARAM_REDIRECT = "redirect";
-
-    /** Parameter value */
-    private static final String VALUE_USERNAME = "admin";
 
     /** Parameter value */
     public static final String VALUE_SHUTDOWN = "shutdown";
@@ -147,9 +83,6 @@ public class Util {
         + "<p>"
         + "<a target=\"_blank\" href=\"{13}\" title=\"{11}\"><img src=\"res/imgs/logo.png\" width=\"200\" height=\"100\" border=\"0\"></a>"
         + "</p>" + "</div>";
-
-    private static final String YEAR =
-        String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
 
     /** The name of the request attribute containig the map of FileItems from the POST request */
     public static final String ATTR_FILEUPLOAD = "org.apache.sling.webmanager.fileupload";
@@ -183,12 +116,12 @@ public class Util {
         return pw;
     }
 
-    public static void navigation(PrintWriter pw, Collection renders, String current, boolean disabled) {
+    public static void navigation(PrintWriter pw, Collection<Render> renders, String current, boolean disabled) {
         pw.println("<p id='technav'>");
 
-        SortedMap map = new TreeMap();
-        for (Iterator ri=renders.iterator(); ri.hasNext(); ) {
-            Render render = (Render) ri.next();
+        SortedMap<String, String> map = new TreeMap<String, String>();
+        for (Iterator<Render> ri=renders.iterator(); ri.hasNext(); ) {
+            Render render = ri.next();
             if (render.getLabel() == null) {
                 // ignore renders without a label
             } else if (disabled || current.equals(render.getName())) {
@@ -198,7 +131,7 @@ public class Util {
             }
         }
 
-        for (Iterator li=map.values().iterator(); li.hasNext(); ) {
+        for (Iterator<String> li=map.values().iterator(); li.hasNext(); ) {
             pw.println(li.next());
         }
 

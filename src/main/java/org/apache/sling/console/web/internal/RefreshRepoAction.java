@@ -56,7 +56,7 @@ public class RefreshRepoAction implements Action {
             HttpServletResponse response)  {
 
         String repositoryURL = request.getParameter("repository");
-        Iterator repos = this.repoAdmin.getRepositories();
+        Iterator<Repository> repos = this.repoAdmin.getRepositories();
         Repository repo = this.getRepository(repos, repositoryURL);
 
         URL repoURL = null;
@@ -84,13 +84,13 @@ public class RefreshRepoAction implements Action {
 
     //---------- internal -----------------------------------------------------
 
-    private Repository getRepository(Iterator repos, String repositoryUrl) {
+    private Repository getRepository(Iterator<Repository> repos, String repositoryUrl) {
         if (repositoryUrl == null || repositoryUrl.length() == 0) {
             return null;
         }
 
         while (repos.hasNext()) {
-            Repository repo = (Repository) repos.next();
+            Repository repo = repos.next();
             if (repositoryUrl.equals(repo.getURL().toString())) {
                 return repo;
             }
