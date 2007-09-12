@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,19 +38,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.metatype.AttributeDefinition;
-import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * The <code>AjaxConfigManagerAction</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.reference interface="org.osgi.service.cm.ConfigurationAdmin" name="configurationAdmin"
  * @scr.reference interface="org.osgi.service.metatype.MetaTypeService" name="metaTypeService"
@@ -63,14 +62,14 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
     public String getName() {
         return NAME;
     }
-    
+
     public String getLabel() {
         return NAME;
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
@@ -79,7 +78,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
         // should actually apply the configuration before redirecting
         if (request.getParameter("apply") != null) {
-            return applyConfiguration(request, response);
+            return this.applyConfiguration(request, response);
         }
 
         JSONObject result = new JSONObject();
@@ -92,7 +91,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
         if (pid != null) {
             try {
-                configForm(result, pid, isFactory, request.getLocale());
+                this.configForm(result, pid, isFactory, request.getLocale());
             } catch (Exception e) {
                 // add message
             }
@@ -109,7 +108,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
             Locale loc) throws IOException, JSONException {
         String locale = (loc == null) ? null : loc.toString();
 
-        ConfigurationAdmin ca = getConfigurationAdmin();
+        ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             // should print message
             return;
@@ -119,13 +118,13 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         try {
             Configuration[] configs = ca.listConfigurations("(" + Constants.SERVICE_PID + "="+ pid + ")");
             if (configs != null && configs.length > 0) {
-                config = configs[0]; 
+                config = configs[0];
             }
         } catch (InvalidSyntaxException ise) {
             // should print message
             return;
         }
-        
+
         json.put(ConfigManager.PID, pid);
         json.put("isFactory", isFactory);
 
@@ -133,12 +132,12 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         ObjectClassDefinition ocd;
         if (config != null) {
             props = config.getProperties();
-            ocd = getObjectClassDefinition(config, locale);
+            ocd = this.getObjectClassDefinition(config, locale);
         } else {
-            ocd = getObjectClassDefinition(pid, locale);
+            ocd = this.getObjectClassDefinition(pid, locale);
         }
-        
-        props = mergeWithMetaType(props, ocd, json);
+
+        props = this.mergeWithMetaType(props, ocd, json);
 
 
         if (props != null) {
@@ -170,7 +169,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         }
 
         if (config != null) {
-            addConfigurationInfo(config, json, locale);
+            this.addConfigurationInfo(config, json, locale);
         }
     }
 
@@ -188,7 +187,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                 name += " (" + props.get("sling.context") + ")";
             }
             json.put("title", name);
-            
+
             if (ocd.getDescription() != null) {
                 json.put("description", ocd.getDescription());
             }
@@ -259,7 +258,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
                 json.put("propertylist", propertyList);
             }
-            
+
             // nothing more to display
             props = null;
         }
@@ -278,7 +277,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         if (config.getBundleLocation() == null) {
             location = "None";
         } else {
-            Bundle bundle = getBundle(config.getBundleLocation());
+            Bundle bundle = this.getBundle(config.getBundleLocation());
 
             Dictionary headers = bundle.getHeaders(locale);
             String name = (String) headers.get(Constants.BUNDLE_NAME);
@@ -297,13 +296,13 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
     private boolean applyConfiguration(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
 
-        ConfigurationAdmin ca = getConfigurationAdmin();
+        ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             return false;
         }
 
         String pid = request.getParameter("pid");
-        
+
         if (request.getParameter("delete") != null) {
             // TODO: should log this here !!
             Configuration config = ca.getConfiguration(pid, null);
@@ -313,7 +312,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
             // pid is a factory PID and we have to create a new configuration
             // we should actually also display that one !
             Configuration config = ca.createFactoryConfiguration(pid, null);
-            
+
             // add sling context into the configuration
             if (request.getParameter("sling.context") != null) {
                 Dictionary props = config.getProperties();
@@ -323,11 +322,11 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                 props.put("sling.context", request.getParameter("sling.context"));
                 config.update(props);
             }
-            
+
 //            request.setAttribute(ATTR_REDIRECT_PARAMETERS, "pid=" + config.getPid());
             return true;
         }
-        
+
         String propertyList = request.getParameter("propertylist");
         if (propertyList == null) {
             String propertiesString = request.getParameter("properties");
@@ -348,7 +347,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                 props = new Hashtable();
             }
 
-            Map adMap = getAttributeDefinitionMap(config, null);
+            Map adMap = this.getAttributeDefinitionMap(config, null);
             if (adMap != null) {
                 StringTokenizer propTokens = new StringTokenizer(propertyList,
                     ",");
@@ -364,7 +363,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                     } else if (ad.getCardinality() == 0) {
                         // scalar of non-string
                         String prop = request.getParameter(propName);
-                        props.put(propName, toType(ad.getType(), prop));
+                        props.put(propName, this.toType(ad.getType(), prop));
                     } else {
                         // array or vector of any type
                         Vector vec = new Vector();
@@ -372,7 +371,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                         String[] properties = request.getParameterValues(propName);
                         if (properties != null) {
                             for (int i = 0; i < properties.length; i++) {
-                                vec.add(toType(ad.getType(), properties[i]));
+                                vec.add(this.toType(ad.getType(), properties[i]));
                             }
                         }
 
@@ -387,7 +386,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                             props.put(propName, vec);
                         } else {
                             // convert to an array
-                            props.put(propName, toArray(ad.getType(), vec));
+                            props.put(propName, this.toArray(ad.getType(), vec));
                         }
                     }
                 }

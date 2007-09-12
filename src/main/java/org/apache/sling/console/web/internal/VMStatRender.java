@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +23,7 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.assembly.installer.InstallerService;
 import org.apache.sling.console.web.Render;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.startlevel.StartLevel;
 
 /**
@@ -37,12 +36,12 @@ public class VMStatRender implements Render {
 
     public static final String NAME = "vmstat";
     public static final String LABEL = "System Information";
-    
+
     private static final long startDate = (new Date()).getTime();
 
     /** @scr.reference */
     private StartLevel startLevel;
-    
+
     /*
      * (non-Javadoc)
      * @see org.apache.sling.manager.web.internal.Render#getName()
@@ -50,7 +49,7 @@ public class VMStatRender implements Render {
     public String getName() {
         return NAME;
     }
-    
+
     /*
      * (non-Javadoc)
      * @see org.apache.sling.manager.web.internal.Render#getLabel()
@@ -58,13 +57,13 @@ public class VMStatRender implements Render {
     public String getLabel() {
         return LABEL;
     }
-    
+
     /* (non-Javadoc)
      * @see org.apache.sling.manager.web.internal.Render#render(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     public void render(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         PrintWriter pw = response.getWriter();
 
         pw.println("");
@@ -88,7 +87,7 @@ public class VMStatRender implements Render {
         pw.println("<form method='post'>");
         pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
             + "' value='" + SetStartLevelAction.NAME + "'>");
-        pw.println("<input class='input' type='text' size='3' name='systemStartLevel' value='" + startLevel.getStartLevel() + "'/>");
+        pw.println("<input class='input' type='text' size='3' name='systemStartLevel' value='" + this.startLevel.getStartLevel() + "'/>");
         pw.println("&nbsp;&nbsp;<input class='submit' type='submit' name='"
             + SetStartLevelAction.LABEL + "' value='Change'>");
         pw.println("</form>");
@@ -100,7 +99,7 @@ public class VMStatRender implements Render {
         pw.println("<form method='post'>");
         pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
             + "' value='" + SetStartLevelAction.NAME + "'>");
-        pw.println("<input class='input' type='text' size='3' name='bundleStartLevel' value='" + startLevel.getInitialBundleStartLevel() + "'/>");
+        pw.println("<input class='input' type='text' size='3' name='bundleStartLevel' value='" + this.startLevel.getInitialBundleStartLevel() + "'/>");
         pw.println("&nbsp;&nbsp;<input class='submit' type='submit' name='"
             + SetStartLevelAction.LABEL + "' value='Change'>");
         pw.println("</form>");
@@ -156,11 +155,11 @@ public class VMStatRender implements Render {
         pw.println("<th colspan='2' class='content container'>Java Information:</th>");
         pw.println("</tr>");
 
-        infoLine(pw, "Java Runtime", "ABOUT_JRT");
-        infoLine(pw, "Java Virtual Machine", "ABOUT_JVM");
-        infoLine(pw, "Total Memory", "ABOUT_MEM");
-        infoLine(pw, "Used Memory", "ABOUT_USED");
-        infoLine(pw, "Free Memory", "ABOUT_FREE");
+        this.infoLine(pw, "Java Runtime", "ABOUT_JRT");
+        this.infoLine(pw, "Java Virtual Machine", "ABOUT_JVM");
+        this.infoLine(pw, "Total Memory", "ABOUT_MEM");
+        this.infoLine(pw, "Used Memory", "ABOUT_USED");
+        this.infoLine(pw, "Free Memory", "ABOUT_FREE");
 
         pw.println("<tr class='content'>");
         pw.println("<form method='post'>");
@@ -174,7 +173,7 @@ public class VMStatRender implements Render {
 
         pw.println("</table>");
     }
-    
+
     private void infoLine(PrintWriter pw, String label, String jsName) {
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>" + label + "</td>");
@@ -184,7 +183,7 @@ public class VMStatRender implements Render {
     }
 
     //--------- SCR Integration -----------------------------------------------
-    
+
     protected void bindStartLevel(StartLevel startLevel) {
         this.startLevel = startLevel;
     }

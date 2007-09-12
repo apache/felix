@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,13 +24,11 @@ import org.apache.sling.assembly.installer.InstallerException;
 import org.apache.sling.assembly.installer.InstallerService;
 import org.apache.sling.assembly.installer.VersionRange;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.log.LogService;
 
 /**
  * The <code>UpdateAction</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
@@ -46,27 +45,27 @@ public class UpdateAction extends BundleAction {
     public String getName() {
         return NAME;
     }
-    
+
     public String getLabel() {
         return LABEL;
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
             HttpServletResponse response) {
 
-        long bundleId = getBundleId(request);
+        long bundleId = this.getBundleId(request);
         if (bundleId > 0) { // cannot stop system bundle !!
-            Bundle bundle = getBundleContext().getBundle(bundleId);
+            Bundle bundle = this.getBundleContext().getBundle(bundleId);
             if (bundle != null) {
                 try {
-                    updateFromRepo(bundle);
+                    this.updateFromRepo(bundle);
                 } catch (Throwable t) {
-                    log(bundle, "Uncaught Problem", t);
+                    this.log(bundle, "Uncaught Problem", t);
                 }
 
             }
@@ -82,7 +81,7 @@ public class UpdateAction extends BundleAction {
             Constants.BUNDLE_VERSION);
 
         // TODO: Should be restrict to same major.micro ??
-        
+
         Thread t = new Thread("Background Update") {
             public void run() {
                 // wait some time for the request to settle
@@ -91,24 +90,24 @@ public class UpdateAction extends BundleAction {
                 } catch (InterruptedException ie) {
                     // don't care
                 }
-                
-                Installer installer = installerService.getInstaller();
+
+                Installer installer = UpdateAction.this.installerService.getInstaller();
                 installer.addBundle(name, new VersionRange(version), -1);
                 try {
                     installer.install(false);
                 } catch (InstallerException ie) {
                     Throwable cause = (ie.getCause() != null) ? ie.getCause() : ie;
-                    log(bundle, "Cannot update", cause);
+                    UpdateAction.this.log(bundle, "Cannot update", cause);
                 } finally {
                     installer.dispose();
                 }
             }
         };
-        
+
         t.setDaemon(true); // make a daemon thread (detach from current thread)
         t.start();
     }
-    
+
     protected void bindInstallerService(InstallerService installerService) {
         this.installerService = installerService;
     }

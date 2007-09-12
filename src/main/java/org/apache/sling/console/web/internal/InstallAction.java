@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,14 +33,12 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.sling.assembly.installer.Installer;
 import org.apache.sling.assembly.installer.InstallerService;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.service.log.LogService;
 
 /**
  * The <code>InstallAction</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
@@ -62,14 +61,14 @@ public class InstallAction extends BundleAction {
     public String getName() {
         return NAME;
     }
-    
+
     public String getLabel() {
         return LABEL;
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
@@ -81,10 +80,10 @@ public class InstallAction extends BundleAction {
             return true;
         }
 
-        FileItem startItem = getFileItem(params, FIELD_START, true);
-        FileItem startLevelItem = getFileItem(params, FIELD_STARTLEVEL, true);
-        FileItem bundleItem = getFileItem(params, FIELD_BUNDLEFILE, false);
-        
+        FileItem startItem = this.getFileItem(params, FIELD_START, true);
+        FileItem startLevelItem = this.getFileItem(params, FIELD_STARTLEVEL, true);
+        FileItem bundleItem = this.getFileItem(params, FIELD_BUNDLEFILE, false);
+
         // don't care any more if not bundle item
         if (bundleItem == null || bundleItem.getSize() <= 0) {
             return true;
@@ -113,9 +112,9 @@ public class InstallAction extends BundleAction {
             bundleItem.write(tmpFile);
             bundleLocation = "inputstream:" + bundleItem.getName();
 
-            installBundle(bundleLocation, tmpFile, startLevel, start);
+            this.installBundle(bundleLocation, tmpFile, startLevel, start);
         } catch (Exception e) {
-            log(null, "Problem accessing uploaded bundle file", e);
+            this.log(null, "Problem accessing uploaded bundle file", e);
         } finally {
             if (tmpFile != null) {
                 tmpFile.delete();
@@ -144,14 +143,14 @@ public class InstallAction extends BundleAction {
         if (bundleFile != null) {
 
             // try to get the bundle name, fail if none
-            String symbolicName = getSymbolicName(bundleFile);
+            String symbolicName = this.getSymbolicName(bundleFile);
             if (symbolicName == null) {
                 return;
             }
 
             // check for existing bundle first
             Bundle newBundle = null;
-            Bundle[] bundles = getBundleContext().getBundles();
+            Bundle[] bundles = this.getBundleContext().getBundles();
             for (int i = 0; i < bundles.length; i++) {
                 if (bundles[i].getLocation().equals(location)
                     || bundles[i].getSymbolicName().equals(symbolicName)) {
@@ -160,14 +159,14 @@ public class InstallAction extends BundleAction {
                 }
             }
 
-            Installer installer = installerService.getInstaller();
+            Installer installer = this.installerService.getInstaller();
             try {
                 // stream will be closed by update or installBundle
                 InputStream bundleStream = new FileInputStream(bundleFile);
 
                 if (newBundle != null) {
                     // update existing bundle, to not set startlevel or start
-                    updateBackground(newBundle, bundleFile, bundleStream);
+                    this.updateBackground(newBundle, bundleFile, bundleStream);
 
                 } else {
                     // non-existing bundle is installed
@@ -176,7 +175,7 @@ public class InstallAction extends BundleAction {
                     installer.install(start);
                 }
             } catch (Throwable t) {
-                log(null, "Failed to install bundle " + symbolicName
+                this.log(null, "Failed to install bundle " + symbolicName
                     + " (Location:" + location + ")", t);
             } finally {
                 installer.dispose();
@@ -229,11 +228,11 @@ public class InstallAction extends BundleAction {
                 }
             }
         };
-        
+
         t.setDaemon(true); // make a daemon thread (detach from current thread)
         t.start();
     }
-    
+
     protected void bindInstallerService(InstallerService installerService) {
         this.installerService = installerService;
     }

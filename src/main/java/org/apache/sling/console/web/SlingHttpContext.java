@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,13 +60,13 @@ final class SlingHttpContext implements HttpContext {
     }
 
     public String getMimeType(String name) {
-        return base.getMimeType(name);
+        return this.base.getMimeType(name);
     }
 
     public URL getResource(String name) {
-        URL url = base.getResource(name);
+        URL url = this.base.getResource(name);
         if (url == null && name.endsWith("/")) {
-            return base.getResource(name.substring(0, name.length() - 1));
+            return this.base.getResource(name.substring(0, name.length() - 1));
         }
         return url;
     }
@@ -77,7 +78,7 @@ final class SlingHttpContext implements HttpContext {
      * <p>
      * If no user name is set, the <code>Authorization</code> header is
      * ignored and the client is assumed to be authenticated.
-     * 
+     *
      * @param request The HTTP request used to get the
      *            <code>Authorization</code> header.
      * @param response The HTTP response used to send the authentication request
@@ -91,7 +92,7 @@ final class SlingHttpContext implements HttpContext {
             HttpServletResponse response) {
 
         // don't care for authentication if no user name is configured
-        if (user == null) {
+        if (this.user == null) {
             return true;
         }
 
@@ -110,12 +111,12 @@ final class SlingHttpContext implements HttpContext {
 
                 // Check whether authorization type matches
                 if (authType.equalsIgnoreCase(AUTHENTICATION_SCHEME_BASIC)
-                    && user.equals(authInfo)) {
-                    
+                    && this.user.equals(authInfo)) {
+
                     // as per the spec, set attributes
                     request.setAttribute(HttpContext.AUTHENTICATION_TYPE, "");
-                    request.setAttribute(HttpContext.REMOTE_USER, userId);
-                    
+                    request.setAttribute(HttpContext.REMOTE_USER, this.userId);
+
                     // succeed
                     return true;
                 }
@@ -124,23 +125,23 @@ final class SlingHttpContext implements HttpContext {
 
         // request authentication
         response.setHeader(HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC
-            + " realm=\"" + realm + "\"");
+            + " realm=\"" + this.realm + "\"");
         try {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         } catch (IOException ioe) {
             // failed sending the error, fall back to setting the status
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
-        
+
         // inform HttpService that authentication failed
         return false;
     }
-    
+
 
     /**
      * Base64 encodes the user name and password for comparison to the value of
      * a Basic encoded HTTP header authentication.
-     * 
+     *
      * @param user The name of the user in the username/password pair
      * @param password The password in the username/password pair
      * @return The Base64 encoded username/password pair or <code>null</code>

@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,9 +36,9 @@ abstract class BundleAction implements Action {
     private LogService log;
 
     protected BundleContext getBundleContext() {
-        return bundleContext;
+        return this.bundleContext;
     }
-    
+
     protected long getBundleId(HttpServletRequest request) {
         String bundleIdPar = request.getParameter(BundleListRender.BUNDLE_ID);
         if (bundleIdPar != null) {
@@ -47,25 +48,25 @@ abstract class BundleAction implements Action {
                 // TODO: log
             }
         }
-        
+
         // no bundleId or wrong format
         return -1;
     }
-    
+
     protected void log(Bundle bundle, String message, Throwable t) {
-        log.log(LogService.LOG_ERROR, message, t);
+        this.log.log(LogService.LOG_ERROR, message, t);
     }
-    
+
     //--------- SCR Integration -----------------------------------------------
-   
+
     protected void activate(ComponentContext context) {
-        bundleContext = context.getBundleContext();
+        this.bundleContext = context.getBundleContext();
     }
 
     protected void deactivate(ComponentContext context) {
-        bundleContext = null;
+        this.bundleContext = null;
     }
-    
+
     protected void bindLog(LogService logService) {
         this.log = logService;
     }

@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,7 +47,7 @@ import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>BundleRepositoryRender</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.reference name="installerService" interface="org.apache.sling.assembly.installer.InstallerService"
  * @scr.service
@@ -62,7 +63,7 @@ public class BundleRepositoryRender implements Render {
     public static final String PARAM_REPO_URL = "repositoryURL";
 
     private static final String REPOSITORY_PROPERTY = "obr.repository.url";
-    
+
     private BundleContext bundleContext;
     private String[] repoURLs;
 
@@ -70,7 +71,7 @@ public class BundleRepositoryRender implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#getName()
      */
     public String getName() {
@@ -79,7 +80,7 @@ public class BundleRepositoryRender implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#getLabel()
      */
     public String getLabel() {
@@ -90,10 +91,10 @@ public class BundleRepositoryRender implements Render {
             throws IOException {
 
         PrintWriter pw = response.getWriter();
-        header(pw);
+        this.header(pw);
 
-        Set activeURLs = new HashSet(); 
-        Iterator repos = repoAdmin.getRepositories();
+        Set activeURLs = new HashSet();
+        Iterator repos = this.repoAdmin.getRepositories();
         if (!repos.hasNext()) {
             pw.println("<tr class='content'>");
             pw.println("<td class='content' colspan='4'>No Active Repositories</td>");
@@ -101,7 +102,7 @@ public class BundleRepositoryRender implements Render {
         } else {
             while (repos.hasNext()) {
                 Repository repo = (Repository) repos.next();
-                
+
                 activeURLs.add(repo.getURL().toString());
 
                 pw.println("<tr class='content'>");
@@ -122,13 +123,13 @@ public class BundleRepositoryRender implements Render {
                 pw.println("</tr>");
             }
         }
-        
+
         // list any repositories configured but not active
-        for (int i=0; i < repoURLs.length; i++) {
-            if (!activeURLs.contains(repoURLs[i])) {
+        for (int i=0; i < this.repoURLs.length; i++) {
+            if (!activeURLs.contains(this.repoURLs[i])) {
                 pw.println("<tr class='content'>");
                 pw.println("<td class='content'>-</td>");
-                pw.println("<td class='content'>" + repoURLs[i] + "</td>");
+                pw.println("<td class='content'>" + this.repoURLs[i] + "</td>");
                 pw.println("<td class='content'>[inactive, click Refresh to activate]</td>");
                 pw.println("<td class='content'>");
                 pw.println("<form>");
@@ -136,7 +137,7 @@ public class BundleRepositoryRender implements Render {
                     + "' value='" + RefreshRepoAction.NAME + "'>");
                 pw.println("<input type='hidden' name='"
                     + RefreshRepoAction.PARAM_REPO + "' value='"
-                    + repoURLs[i] + "'>");
+                    + this.repoURLs[i] + "'>");
                 pw.println("<input class='submit' type='submit' value='Refresh'>");
                 pw.println("</form>");
                 pw.println("</td>");
@@ -144,9 +145,9 @@ public class BundleRepositoryRender implements Render {
             }
         }
 
-        footer(pw);
-        
-        listResources(pw);
+        this.footer(pw);
+
+        this.listResources(pw);
     }
 
     private void header(PrintWriter pw) {
@@ -185,28 +186,28 @@ public class BundleRepositoryRender implements Render {
         pw.println("<th class='content'>Version</th>");
         pw.println("</tr>");
     }
-    
+
     private void listResources(PrintWriter pw) {
-        Map bundles = getBundles();
-        
-        Iterator resources = repoAdmin.getResources();
+        Map bundles = this.getBundles();
+
+        Iterator resources = this.repoAdmin.getResources();
         SortedSet resSet = new TreeSet(new Comparator() {
             public int compare(Object o1, Object o2) {
                 if (o1 == o2 || o1.equals(o2)) {
                     return 0;
                 }
-                
+
                 Resource r1 = (Resource) o1;
                 Resource r2 = (Resource) o2;
-                
+
                 if (r1.getPresentationName().equals(r2.getPresentationName())) {
                     return r1.getVersion().compareTo(r2.getVersion());
                 }
-                
+
                 return r1.getPresentationName().compareTo(r2.getPresentationName());
             }
         });
-        
+
         while (resources.hasNext()) {
             Resource res = (Resource) resources.next();
             Version ver = (Version) bundles.get(res.getSymbolicName());
@@ -214,16 +215,16 @@ public class BundleRepositoryRender implements Render {
                 resSet.add(res);
             }
         }
-        
-        resourcesHeader(pw, !resSet.isEmpty());
-        
+
+        this.resourcesHeader(pw, !resSet.isEmpty());
+
         for (Iterator ri=resSet.iterator(); ri.hasNext(); ) {
-            printResource(pw, (Resource) ri.next());
+            this.printResource(pw, (Resource) ri.next());
         }
-        
-        resourcesFooter(pw, !resSet.isEmpty());
+
+        this.resourcesFooter(pw, !resSet.isEmpty());
     }
-    
+
     private void printResource(PrintWriter pw, Resource res) {
         pw.println("<tr class='content'>");
         pw.println("<td class='content' valign='top' align='center'><input class='checkradio' type='checkbox' name='bundle' value='" + res.getSymbolicName() + "," + res.getVersion() + "'></td>");
@@ -238,10 +239,10 @@ public class BundleRepositoryRender implements Render {
         }
         pw.println("<td class='content' " + style + ">" + res.getPresentationName() + " (" + res.getSymbolicName() + ")</td>");
         pw.println("<td class='content' " + style + " valign='top'>" + res.getVersion() + "</td>");
-        
+
         pw.println("</tr>");
     }
-    
+
     private void resourcesButtons(PrintWriter pw) {
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>&nbsp;</td>");
@@ -251,54 +252,54 @@ public class BundleRepositoryRender implements Render {
         pw.println("<input class='submit' style='width:auto' type='submit' name='deploystart' value='Deploy and Start Selected'>");
         pw.println("</td></tr>");
     }
-    
+
     private void resourcesFooter(PrintWriter pw, boolean doForm) {
         if (doForm) {
-            resourcesButtons(pw);
+            this.resourcesButtons(pw);
         }
         pw.println("</table></form>");
     }
-    
+
     private Map getBundles() {
         Map bundles = new HashMap();
-        
-        Bundle[] installed = bundleContext.getBundles();
+
+        Bundle[] installed = this.bundleContext.getBundles();
         for (int i=0; i < installed.length; i++) {
             String ver = (String) installed[i].getHeaders().get(Constants.BUNDLE_VERSION);
             Version bundleVersion = Version.parseVersion(ver);
-            
+
             // assume one bundle instance per symbolic name !!
             bundles.put(installed[i].getSymbolicName(), bundleVersion);
         }
-        
+
         return bundles;
     }
 
     //--------- SCR Integration -----------------------------------------------
-    
+
     protected void activate(ComponentContext context) {
-        bundleContext = context.getBundleContext();
-        
-        String urlStr = bundleContext.getProperty(REPOSITORY_PROPERTY);
+        this.bundleContext = context.getBundleContext();
+
+        String urlStr = this.bundleContext.getProperty(REPOSITORY_PROPERTY);
         StringTokenizer st = new StringTokenizer(urlStr);
         List urlList = new ArrayList();
         while (st.hasMoreTokens()) {
             urlList.add(st.nextToken());
         }
-        repoURLs = (String[]) urlList.toArray(new String[urlList.size()]);
+        this.repoURLs = (String[]) urlList.toArray(new String[urlList.size()]);
     }
 
     protected void deactivate(ComponentContext context) {
-        bundleContext = null;
-        repoURLs = null;
+        this.bundleContext = null;
+        this.repoURLs = null;
     }
-    
+
     protected void bindInstallerService(InstallerService installerService) {
         this.repoAdmin = installerService.getBundleRepositoryAdmin();
     }
-    
+
     protected void unbindInstallerService(InstallerService installerService) {
         this.repoAdmin = null;
     }
-    
+
 }

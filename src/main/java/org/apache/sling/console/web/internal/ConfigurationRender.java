@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +40,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.assembly.installer.InstallerService;
 import org.apache.sling.console.web.Render;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -52,11 +52,10 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 import org.osgi.service.prefs.PreferencesService;
-import org.osgi.service.startlevel.StartLevel;
 
 /**
  * The <code>VMStatRender</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.service
  */
@@ -70,7 +69,7 @@ public class ConfigurationRender implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#getName()
      */
     public String getName() {
@@ -79,7 +78,7 @@ public class ConfigurationRender implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#getLabel()
      */
     public String getLabel() {
@@ -88,7 +87,7 @@ public class ConfigurationRender implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#render(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
@@ -112,13 +111,13 @@ public class ConfigurationRender implements Render {
                 SimpleDateFormat.LONG, Locale.US).format(new Date()));
         pw.println();
 
-        printSystemProperties(pw);
-        printRawFrameworkProperties(pw);
-        printAssemblies(pw);
-        printBundles(pw);
-        printServices(pw);
-        printPreferences(pw);
-        printConfigurations(pw);
+        this.printSystemProperties(pw);
+        this.printRawFrameworkProperties(pw);
+        this.printAssemblies(pw);
+        this.printBundles(pw);
+        this.printServices(pw);
+        this.printPreferences(pw);
+        this.printConfigurations(pw);
 
         pw.println("</pre>");
         pw.println("</td>");
@@ -133,7 +132,7 @@ public class ConfigurationRender implements Render {
         SortedSet keys = new TreeSet(props.keySet());
         for (Iterator ki = keys.iterator(); ki.hasNext();) {
             String key = (String) ki.next();
-            infoLine(pw, null, key, props.get(key));
+            this.infoLine(pw, null, key, props.get(key));
         }
 
         pw.println();
@@ -142,7 +141,7 @@ public class ConfigurationRender implements Render {
     private void printRawFrameworkProperties(PrintWriter pw) {
         pw.println("*** Raw Framework properties:");
 
-        File file = new File(bundleContext.getProperty("sling.home"),
+        File file = new File(this.bundleContext.getProperty("sling.home"),
             "sling.properties");
         if (file.exists()) {
             Properties props = new Properties();
@@ -159,7 +158,7 @@ public class ConfigurationRender implements Render {
             SortedSet keys = new TreeSet(props.keySet());
             for (Iterator ki = keys.iterator(); ki.hasNext();) {
                 String key = (String) ki.next();
-                infoLine(pw, null, key, props.get(key));
+                this.infoLine(pw, null, key, props.get(key));
             }
 
         } else {
@@ -172,16 +171,16 @@ public class ConfigurationRender implements Render {
     private void printAssemblies(PrintWriter pw) {
         pw.println("*** Assemblies:");
 
-        Bundle[] bundles = bundleContext.getBundles();
+        Bundle[] bundles = this.bundleContext.getBundles();
         SortedSet keys = new TreeSet();
         for (int i = 0; i < bundles.length; i++) {
             if (bundles[i].getHeaders().get("Assembly-Bundles") != null) {
-                keys.add(getBundleString(bundles[i], false));
+                keys.add(this.getBundleString(bundles[i], false));
             }
         }
 
         for (Iterator ki = keys.iterator(); ki.hasNext();) {
-            infoLine(pw, null, null, ki.next());
+            this.infoLine(pw, null, null, ki.next());
         }
 
         pw.println();
@@ -192,14 +191,14 @@ public class ConfigurationRender implements Render {
         // biz.junginger.freemem.FreeMem (1.3.0) "FreeMem Eclipse Memory
         // Monitor" [Resolved]
 
-        Bundle[] bundles = bundleContext.getBundles();
+        Bundle[] bundles = this.bundleContext.getBundles();
         SortedSet keys = new TreeSet();
         for (int i = 0; i < bundles.length; i++) {
-            keys.add(getBundleString(bundles[i], true));
+            keys.add(this.getBundleString(bundles[i], true));
         }
 
         for (Iterator ki = keys.iterator(); ki.hasNext();) {
-            infoLine(pw, null, null, ki.next());
+            this.infoLine(pw, null, null, ki.next());
         }
 
         pw.println();
@@ -211,7 +210,7 @@ public class ConfigurationRender implements Render {
         // get the list of services sorted by service ID (ascending)
         SortedMap srMap = new TreeMap();
         try {
-            ServiceReference[] srs = bundleContext.getAllServiceReferences(
+            ServiceReference[] srs = this.bundleContext.getAllServiceReferences(
                 null, null);
             for (int i = 0; i < srs.length; i++) {
                 srMap.put(srs[i].getProperty(Constants.SERVICE_ID), srs[i]);
@@ -224,18 +223,18 @@ public class ConfigurationRender implements Render {
         for (Iterator si = srMap.values().iterator(); si.hasNext();) {
             ServiceReference sr = (ServiceReference) si.next();
 
-            infoLine(pw, null,
+            this.infoLine(pw, null,
                 String.valueOf(sr.getProperty(Constants.SERVICE_ID)),
                 sr.getProperty(Constants.OBJECTCLASS));
-            infoLine(pw, "  ", "Bundle", getBundleString(sr.getBundle(), false));
+            this.infoLine(pw, "  ", "Bundle", this.getBundleString(sr.getBundle(), false));
 
             Bundle[] users = sr.getUsingBundles();
             if (users != null && users.length > 0) {
                 List userString = new ArrayList();
                 for (int i = 0; i < users.length; i++) {
-                    userString.add(getBundleString(users[i], false));
+                    userString.add(this.getBundleString(users[i], false));
                 }
-                infoLine(pw, "  ", "Using Bundles", userString);
+                this.infoLine(pw, "  ", "Using Bundles", userString);
             }
 
             String[] keys = sr.getPropertyKeys();
@@ -243,7 +242,7 @@ public class ConfigurationRender implements Render {
             for (int i = 0; i < keys.length; i++) {
                 if (!Constants.SERVICE_ID.equals(keys[i])
                     && !Constants.OBJECTCLASS.equals(keys[i])) {
-                    infoLine(pw, "  ", keys[i], sr.getProperty(keys[i]));
+                    this.infoLine(pw, "  ", keys[i], sr.getProperty(keys[i]));
                 }
             }
 
@@ -254,26 +253,26 @@ public class ConfigurationRender implements Render {
     private void printPreferences(PrintWriter pw) {
         pw.println("*** System Preferences:");
 
-        ServiceReference sr = bundleContext.getServiceReference(PreferencesService.class.getName());
+        ServiceReference sr = this.bundleContext.getServiceReference(PreferencesService.class.getName());
         if (sr == null) {
             pw.println("  Preferences Service not registered");
             pw.println();
             return;
         }
 
-        PreferencesService ps = (PreferencesService) bundleContext.getService(sr);
+        PreferencesService ps = (PreferencesService) this.bundleContext.getService(sr);
         try {
-            printPreferences(pw, ps.getSystemPreferences());
+            this.printPreferences(pw, ps.getSystemPreferences());
 
             String[] users = ps.getUsers();
             for (int i = 0; users != null && i < users.length; i++) {
                 pw.println("*** User Preferences " + users[i] + ":");
-                printPreferences(pw, ps.getUserPreferences(users[i]));
+                this.printPreferences(pw, ps.getUserPreferences(users[i]));
             }
         } catch (BackingStoreException bse) {
             // todo or not :-)
         } finally {
-            bundleContext.ungetService(sr);
+            this.bundleContext.ungetService(sr);
         }
     }
 
@@ -282,12 +281,12 @@ public class ConfigurationRender implements Render {
 
         String[] children = prefs.childrenNames();
         for (int i = 0; i < children.length; i++) {
-            printPreferences(pw, prefs.node(children[i]));
+            this.printPreferences(pw, prefs.node(children[i]));
         }
 
         String[] keys = prefs.keys();
         for (int i = 0; i < keys.length; i++) {
-            infoLine(pw, null, prefs.absolutePath() + "/" + keys[i], prefs.get(
+            this.infoLine(pw, null, prefs.absolutePath() + "/" + keys[i], prefs.get(
                 keys[i], null));
         }
 
@@ -297,14 +296,14 @@ public class ConfigurationRender implements Render {
     private void printConfigurations(PrintWriter pw) {
         pw.println("*** Configurations:");
 
-        ServiceReference sr = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
+        ServiceReference sr = this.bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
         if (sr == null) {
             pw.println("  Configuration Admin Service not registered");
             pw.println();
             return;
         }
 
-        ConfigurationAdmin ca = (ConfigurationAdmin) bundleContext.getService(sr);
+        ConfigurationAdmin ca = (ConfigurationAdmin) this.bundleContext.getService(sr);
         try {
             Configuration[] configs = ca.listConfigurations(null);
             if (configs != null) {
@@ -314,27 +313,27 @@ public class ConfigurationRender implements Render {
                 }
 
                 for (Iterator mi = sm.values().iterator(); mi.hasNext();) {
-                    printConfiguration(pw, (Configuration) mi.next());
+                    this.printConfiguration(pw, (Configuration) mi.next());
                 }
             }
         } catch (Exception e) {
             // todo or not :-)
         } finally {
-            bundleContext.ungetService(sr);
+            this.bundleContext.ungetService(sr);
         }
     }
 
     private void printConfiguration(PrintWriter pw, Configuration config) {
-        infoLine(pw, "", "PID", config.getPid());
+        this.infoLine(pw, "", "PID", config.getPid());
 
         if (config.getFactoryPid() != null) {
-            infoLine(pw, "  ", "Factory PID", config.getFactoryPid());
+            this.infoLine(pw, "  ", "Factory PID", config.getFactoryPid());
         }
 
         String loc = (config.getBundleLocation() != null)
                 ? config.getBundleLocation()
                 : "Unbound";
-        infoLine(pw, "  ", "BundleLocation", loc);
+        this.infoLine(pw, "  ", "BundleLocation", loc);
 
         Dictionary props = config.getProperties();
         if (props != null) {
@@ -345,7 +344,7 @@ public class ConfigurationRender implements Render {
 
             for (Iterator ki = keys.iterator(); ki.hasNext();) {
                 String key = (String) ki.next();
-                infoLine(pw, "  ", key, props.get(key));
+                this.infoLine(pw, "  ", key, props.get(key));
             }
         }
 
@@ -363,7 +362,7 @@ public class ConfigurationRender implements Render {
             pw.print('=');
         }
 
-        printObject(pw, value);
+        this.printObject(pw, value);
 
         pw.println();
     }
@@ -372,7 +371,7 @@ public class ConfigurationRender implements Render {
         if (value == null) {
             pw.print("null");
         } else if (value.getClass().isArray()) {
-            printArray(pw, (Object[]) value);
+            this.printArray(pw, (Object[]) value);
         } else {
             pw.print(value);
         }
@@ -385,7 +384,7 @@ public class ConfigurationRender implements Render {
                 if (i > 0) {
                     pw.print(", ");
                 }
-                printObject(pw, values[i]);
+                this.printObject(pw, values[i]);
             }
         }
         pw.print(']');
@@ -436,12 +435,12 @@ public class ConfigurationRender implements Render {
     }
 
     //--------- SCR Integration -----------------------------------------------
-    
+
     protected void activate(ComponentContext context) {
-        bundleContext = context.getBundleContext();
+        this.bundleContext = context.getBundleContext();
     }
 
     protected void deactivate(ComponentContext context) {
-        bundleContext = null;
+        this.bundleContext = null;
     }
 }

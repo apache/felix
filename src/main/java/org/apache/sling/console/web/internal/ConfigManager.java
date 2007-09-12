@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +19,8 @@ package org.apache.sling.console.web.internal;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Dictionary;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -40,7 +39,7 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * The <code>ConfigManager</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.reference interface="org.osgi.service.cm.ConfigurationAdmin" name="configurationAdmin"
  * @scr.reference interface="org.osgi.service.metatype.MetaTypeService" name="metaTypeService"
@@ -67,7 +66,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
 
         // true if MetaType service information is not required
         boolean optionalMetaType = false;
-        
+
         PrintWriter pw = response.getWriter();
 
         pw.println("<script type='text/javascript' src='res/ui/configmanager.js'>");
@@ -77,16 +76,16 @@ public class ConfigManager extends ConfigManagerBase implements Render {
         pw.println("<tr class='content' id='configField'>");
         pw.println("<td class='content'>Configurations</th>");
         pw.println("<td class='content'>");
-        listConfigurations(pw, optionalMetaType, request.getLocale());
+        this.listConfigurations(pw, optionalMetaType, request.getLocale());
         pw.println("</td>");
         pw.println("</tr>");
-        
+
         pw.println("</table>");
     }
 
     private void listConfigurations(PrintWriter pw, boolean optionalMetaType, Locale loc) {
 
-        ConfigurationAdmin ca = getConfigurationAdmin();
+        ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             pw.print("Configuration Admin Service not available");
             return;
@@ -96,13 +95,13 @@ public class ConfigManager extends ConfigManagerBase implements Render {
 
         try {
             // get a list of all pids for which MetaData exists
-            Map<String, Bundle> metaDataPids = getMetadataPids();
-            
-            // sorted map of options 
+            Map<String, Bundle> metaDataPids = this.getMetadataPids();
+
+            // sorted map of options
             SortedMap<String, String> options = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-            
+
             // find all ManagedServiceFactories to get the factoryPIDs
-            ServiceReference[] refs = getBundleContext().getServiceReferences(
+            ServiceReference[] refs = this.getBundleContext().getServiceReferences(
                 ManagedServiceFactory.class.getName(), null);
             for (int i = 0; refs != null && i < refs.length; i++) {
                 Object factoryPid = refs[i].getProperty(Constants.SERVICE_PID);
@@ -110,7 +109,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                     String pid = (String) factoryPid;
                     Object slingContext = refs[i].getProperty("sling.context");
                     String name;
-                    ObjectClassDefinition ocd = getObjectClassDefinition(
+                    ObjectClassDefinition ocd = this.getObjectClassDefinition(
                         refs[i].getBundle(), pid, locale);
                     if (ocd != null) {
                         name = ocd.getName() + " (";
@@ -123,7 +122,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                     } else {
                         name = pid;
                     }
-                    
+
                     if (ocd != null || optionalMetaType) {
                         options.put("factoryPid="+pid, name);
                     }
@@ -133,7 +132,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
             // get a sorted list of configuration PIDs
             Configuration[] cfgs = ca.listConfigurations(null);
             for (int i = 0; cfgs != null && i < cfgs.length; i++) {
-                
+
                 // ignore configuration object if an entry already exists in the map
                 String pid = cfgs[i].getPid();
                 if (options.containsKey("pid="+pid) || options.containsKey("factoryPid="+pid)) {
@@ -144,7 +143,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                 Object slingContext = (props != null) ? props.get("sling.context") : null;
 
                 // insert and entry for the pid
-                ObjectClassDefinition ocd = getObjectClassDefinition(cfgs[i],
+                ObjectClassDefinition ocd = this.getObjectClassDefinition(cfgs[i],
                     locale);
                 String name;
                 if (ocd != null) {
@@ -153,16 +152,16 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                         name += slingContext + ", ";
                     }
                     name += pid + ")";
-                    
+
                     // remove from the list of known pids
                     metaDataPids.remove(pid);
-                    
+
                 } else if (slingContext != null) {
                     name = pid + " (" + slingContext + ")";
                 } else {
                     name = pid;
                 }
-                
+
                 if (ocd != null || optionalMetaType) {
                     options.put("pid="+pid, name);
                 }
@@ -173,13 +172,13 @@ public class ConfigManager extends ConfigManagerBase implements Render {
                     if (options.containsValue("factoryPid="+pid)) {
                         continue;
                     }
-                    
+
                     String existing = options.remove("pid="+pid);
                     if (existing != null) {
                         options.put("factoryPid="+pid, existing);
                     } else {
-                        Bundle bundle = getBundle(cfgs[i].getBundleLocation());
-                        ocd = getObjectClassDefinition(bundle, pid, locale);
+                        Bundle bundle = this.getBundle(cfgs[i].getBundleLocation());
+                        ocd = this.getObjectClassDefinition(bundle, pid, locale);
                         if (ocd != null) {
                             options.put("factoryPid="+pid, ocd.getName());
                         } else if (optionalMetaType) {
@@ -193,7 +192,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
             // configuration, we add them to the list to create configuration
             if (!metaDataPids.isEmpty()) {
                 for (Entry<String, Bundle> mdp : metaDataPids.entrySet()) {
-                    ObjectClassDefinition ocd = getObjectClassDefinition(
+                    ObjectClassDefinition ocd = this.getObjectClassDefinition(
                         mdp.getValue(), mdp.getKey(), locale);
                     options.put("pid=" + mdp.getKey(), ocd.getName() + " ("
                         + mdp.getKey() + ")");
@@ -213,7 +212,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
             pw.println("&nbsp;&nbsp;");
             pw.println("<input class='submit' type='submit' value='Configure' />");
             pw.println("</form>");
-            
+
         } catch (Exception e) {
             // write a message or ignore
         }

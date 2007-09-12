@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +23,6 @@ import java.text.MessageFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -77,7 +77,7 @@ public class Util {
 
     /** Parameter name */
     public static final String PARAM_ACTION = "action";
-    
+
     /** Parameter name */
     public static final String PARAM_CONTENT = "content";
 
@@ -153,12 +153,12 @@ public class Util {
 
     /** The name of the request attribute containig the map of FileItems from the POST request */
     public static final String ATTR_FILEUPLOAD = "org.apache.sling.webmanager.fileupload";
-    
+
     public static PrintWriter startHtml(HttpServletResponse resp, String pageTitle) throws IOException {
         resp.setContentType("text/html; utf-8");
-        
+
         PrintWriter pw = resp.getWriter();
-        
+
         String adminTitle = "Sling Management Console"; // ServletEngine.VERSION.getFullProductName();
         String productName = "Sling"; // ServletEngine.VERSION.getShortProductName();
         String productWeb = "http://wiki.apache.org/jackrabbit/ApacheSling";
@@ -168,7 +168,7 @@ public class Util {
         long freeMem = Runtime.getRuntime().freeMemory() / 1024;
         long totalMem = Runtime.getRuntime().totalMemory() / 1024;
         long usedMem = totalMem - freeMem;
-        
+
         String header = MessageFormat.format(HEADER, new Object[] {
             adminTitle,
             "1.0.0-SNAPSHOT", // ServletEngine.VERSION.getFullVersion(),
@@ -185,7 +185,7 @@ public class Util {
 
     public static void navigation(PrintWriter pw, Collection renders, String current, boolean disabled) {
         pw.println("<p id='technav'>");
-            
+
         SortedMap map = new TreeMap();
         for (Iterator ri=renders.iterator(); ri.hasNext(); ) {
             Render render = (Render) ri.next();
@@ -197,14 +197,14 @@ public class Util {
                 map.put(render.getLabel(), "<a href='" + render.getName() + "'>" + render.getLabel() + "</a></li>");
             }
         }
-        
+
         for (Iterator li=map.values().iterator(); li.hasNext(); ) {
             pw.println(li.next());
         }
-        
+
         pw.println("</p>");
     }
-    
+
     public static void endHhtml(PrintWriter pw) {
         pw.println("</body>");
         pw.println("</html>");
@@ -214,7 +214,7 @@ public class Util {
         pw.println("<script type='text/javascript'>");
         pw.println("// <![CDATA[");
     }
-    
+
     public static void endScript(PrintWriter pw) {
         pw.println("// ]]>");
         pw.println("</script>");
@@ -230,7 +230,7 @@ public class Util {
             }
         }
     }
-    
+
     private static InputStream getResource(String resource) {
         return Util.class.getResourceAsStream(resource);
     }

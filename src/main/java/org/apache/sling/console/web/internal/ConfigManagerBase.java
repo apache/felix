@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +16,8 @@
  */
 package org.apache.sling.console.web.internal;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -45,22 +43,22 @@ abstract class ConfigManagerBase {
     private MetaTypeService metaTypeService;
 
     protected BundleContext getBundleContext() {
-        return bundleContext;
+        return this.bundleContext;
     }
 
     protected ConfigurationAdmin getConfigurationAdmin() {
-        return configurationAdmin;
+        return this.configurationAdmin;
     }
 
     protected MetaTypeService getMetaTypeService() {
-        return metaTypeService;
+        return this.metaTypeService;
     }
 
     protected Map<String, Bundle> getMetadataPids() {
         Map<String, Bundle> pids = new HashMap<String, Bundle>();
-        MetaTypeService mts = getMetaTypeService();
+        MetaTypeService mts = this.getMetaTypeService();
         if (mts != null) {
-            Bundle[] bundles = getBundleContext().getBundles();
+            Bundle[] bundles = this.getBundleContext().getBundles();
             for (int i=0; i < bundles.length; i++) {
                 MetaTypeInformation mti = mts.getMetaTypeInformation(bundles[i]);
                 if (mti != null) {
@@ -73,26 +71,26 @@ abstract class ConfigManagerBase {
         }
         return pids;
     }
-    
+
     protected ObjectClassDefinition getObjectClassDefinition(
             Configuration config, String locale) {
-        
+
         // if the configuration is not bound, search in the bundles
         if (config.getBundleLocation() == null) {
-            ObjectClassDefinition ocd = getObjectClassDefinition(config.getPid(), locale);
+            ObjectClassDefinition ocd = this.getObjectClassDefinition(config.getPid(), locale);
             if (ocd != null) {
                 return ocd;
             }
-            
+
             // if none, check whether there might be one for the factory PID
             if (config.getFactoryPid() != null) {
-                return getObjectClassDefinition(config.getFactoryPid(), locale);
+                return this.getObjectClassDefinition(config.getFactoryPid(), locale);
             }
         }
-        
-        MetaTypeService mts = getMetaTypeService();
+
+        MetaTypeService mts = this.getMetaTypeService();
         if (mts != null) {
-            Bundle bundle = getBundle(config.getBundleLocation());
+            Bundle bundle = this.getBundle(config.getBundleLocation());
             if (bundle != null) {
                 MetaTypeInformation mti = mts.getMetaTypeInformation(bundle);
                 if (mti != null) {
@@ -101,7 +99,7 @@ abstract class ConfigManagerBase {
                     if (ocd != null) {
                         return ocd;
                     }
-                    
+
                     // if none, check whether there might be one for the factory PID
                     if (config.getFactoryPid() != null) {
                         return mti.getObjectClassDefinition(config.getFactoryPid(), locale);
@@ -117,7 +115,7 @@ abstract class ConfigManagerBase {
     protected ObjectClassDefinition getObjectClassDefinition(Bundle bundle,
             String pid, String locale) {
         if (bundle != null) {
-            MetaTypeService mts = getMetaTypeService();
+            MetaTypeService mts = this.getMetaTypeService();
             if (mts != null) {
                 MetaTypeInformation mti = mts.getMetaTypeInformation(bundle);
                 if (mti != null) {
@@ -129,12 +127,12 @@ abstract class ConfigManagerBase {
         // fallback to nothing found
         return null;
     }
-    
+
     protected ObjectClassDefinition getObjectClassDefinition(String pid, String locale) {
-        Bundle[] bundles = getBundleContext().getBundles();
+        Bundle[] bundles = this.getBundleContext().getBundles();
         for (int i=0; i < bundles.length; i++) {
             try {
-                ObjectClassDefinition ocd = getObjectClassDefinition(bundles[i], pid, locale);
+                ObjectClassDefinition ocd = this.getObjectClassDefinition(bundles[i], pid, locale);
                 if (ocd != null) {
                     return ocd;
                 }
@@ -144,9 +142,9 @@ abstract class ConfigManagerBase {
         }
         return null;
     }
-    
+
     protected Map getAttributeDefinitionMap(Configuration config, String locale) {
-        ObjectClassDefinition ocd = getObjectClassDefinition(config, locale);
+        ObjectClassDefinition ocd = this.getObjectClassDefinition(config, locale);
         if (ocd != null) {
             AttributeDefinition[] ad = ocd.getAttributeDefinitions(ObjectClassDefinition.ALL);
             if (ad != null) {
@@ -157,17 +155,17 @@ abstract class ConfigManagerBase {
                 return adMap;
             }
         }
-        
+
         // fallback to nothing found
         return null;
     }
-    
+
     protected Bundle getBundle(String bundleLocation) {
         if (bundleLocation == null) {
             return null;
         }
 
-        Bundle[] bundles = getBundleContext().getBundles();
+        Bundle[] bundles = this.getBundleContext().getBundles();
         for (int i = 0; i < bundles.length; i++) {
             if (bundleLocation.equals(bundles[i].getLocation())) {
                 return bundles[i];
@@ -178,23 +176,23 @@ abstract class ConfigManagerBase {
     }
 
     //--------- SCR Integration -----------------------------------------------
-    
+
     protected void activate(ComponentContext context) {
-        bundleContext = context.getBundleContext();
+        this.bundleContext = context.getBundleContext();
     }
 
     protected void deactivate(ComponentContext context) {
-        bundleContext = null;
+        this.bundleContext = null;
     }
-    
+
     protected void bindConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
         this.configurationAdmin = configurationAdmin;
     }
-    
+
     protected void unbindConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
         this.configurationAdmin = null;
     }
-    
+
     protected void bindMetaTypeService(MetaTypeService metaTypeService) {
         this.metaTypeService = metaTypeService;
     }

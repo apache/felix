@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +18,6 @@ package org.apache.sling.console.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,7 +46,7 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>Sling Manager</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%manager.name"
  *                description="%manager.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -109,19 +109,19 @@ public class SlingManager extends GenericServlet {
         HttpServletResponse response = (HttpServletResponse) res;
 
         // check whether we are not at .../{webManagerRoot}
-        if (request.getRequestURI().endsWith(webManagerRoot)) {
+        if (request.getRequestURI().endsWith(this.webManagerRoot)) {
             response.sendRedirect(request.getRequestURI() + "/"
-                + defaultRender.getName());
+                + this.defaultRender.getName());
             return;
         }
 
         // handle the request action, terminate if done
-        if (handleAction(request, response)) {
+        if (this.handleAction(request, response)) {
             return;
         }
 
         // otherwise we render the response
-        Render render = getRender(request);
+        Render render = this.getRender(request);
         if (render == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -133,7 +133,7 @@ public class SlingManager extends GenericServlet {
         // Boolean.valueOf(request.getParameter("disabled")).booleanValue();
 
         PrintWriter pw = Util.startHtml(response, render.getLabel());
-        Util.navigation(pw, renders.values(), current, disabled);
+        Util.navigation(pw, this.renders.values(), current, disabled);
 
         render.render(request, response);
 
@@ -143,17 +143,17 @@ public class SlingManager extends GenericServlet {
     protected boolean handleAction(HttpServletRequest req,
             HttpServletResponse resp) throws IOException {
         // check action
-        String actionName = getParameter(req, Util.PARAM_ACTION);
+        String actionName = this.getParameter(req, Util.PARAM_ACTION);
         if (actionName != null) {
-            Action action = operations.get(actionName);
+            Action action = this.operations.get(actionName);
             if (action != null) {
                 boolean redirect = true;
                 try {
                     redirect = action.performAction(req, resp);
                 } catch (IOException ioe) {
-                    log(ioe.getMessage(), ioe);
+                    this.log(ioe.getMessage(), ioe);
                 } catch (ServletException se) {
-                    log(se.getMessage(), se.getRootCause());
+                    this.log(se.getMessage(), se.getRootCause());
                 }
                 if (redirect) {
                     String uri = req.getRequestURI();
@@ -186,8 +186,8 @@ public class SlingManager extends GenericServlet {
             page = page.substring(lastSlash + 1);
         }
 
-        Render render = renders.get(page);
-        return (render == null) ? defaultRender : render;
+        Render render = this.renders.get(page);
+        return (render == null) ? this.defaultRender : render;
     }
 
     private String getParameter(HttpServletRequest request, String name) {
@@ -251,72 +251,72 @@ public class SlingManager extends GenericServlet {
     protected void activate(ComponentContext context) {
         this.componentContext = context;
 
-        Dictionary config = componentContext.getProperties();
+        Dictionary config = this.componentContext.getProperties();
 
         // get authentication details
-        String realm = getProperty(config, PROP_REALM,
+        String realm = this.getProperty(config, PROP_REALM,
             "Sling Management Console");
-        String userId = getProperty(config, PROP_USER_NAME, null);
-        String password = getProperty(config, PROP_PASSWORD, null);
+        String userId = this.getProperty(config, PROP_USER_NAME, null);
+        String password = this.getProperty(config, PROP_PASSWORD, null);
 
         // get the web manager root path
-        webManagerRoot = getProperty(config, PROP_MANAGER_ROOT, "/sling");
-        if (!webManagerRoot.startsWith("/")) {
-            webManagerRoot = "/" + webManagerRoot;
+        this.webManagerRoot = this.getProperty(config, PROP_MANAGER_ROOT, "/sling");
+        if (!this.webManagerRoot.startsWith("/")) {
+            this.webManagerRoot = "/" + this.webManagerRoot;
         }
 
         // register the servlet and resources
         try {
-            HttpContext httpContext = new SlingHttpContext(httpService, realm,
+            HttpContext httpContext = new SlingHttpContext(this.httpService, realm,
                 userId, password);
 
             // rest of sling
-            httpService.registerServlet(webManagerRoot, this, config,
+            this.httpService.registerServlet(this.webManagerRoot, this, config,
                 httpContext);
-            httpService.registerResources(webManagerRoot + "/res", "/res",
+            this.httpService.registerResources(this.webManagerRoot + "/res", "/res",
                 httpContext);
 
         } catch (Exception e) {
-            logService.log(LogService.LOG_ERROR, "Problem setting up", e);
+            this.logService.log(LogService.LOG_ERROR, "Problem setting up", e);
         }
     }
 
     protected void deactivate(ComponentContext context) {
-        httpService.unregister(webManagerRoot + "/res");
-        httpService.unregister(webManagerRoot);
+        this.httpService.unregister(this.webManagerRoot + "/res");
+        this.httpService.unregister(this.webManagerRoot);
 
         this.componentContext = null;
 
         // simply remove all operations, we should not be used anymore
-        defaultRender = null;
-        operations.clear();
-        renders.clear();
+        this.defaultRender = null;
+        this.operations.clear();
+        this.renders.clear();
     }
 
     protected void bindOperation(Action operation) {
-        operations.put(operation.getName(), operation);
+        this.operations.put(operation.getName(), operation);
     }
 
     protected void unbindOperation(Action operation) {
-        operations.remove(operation.getName());
+        this.operations.remove(operation.getName());
     }
 
     protected void bindRender(Render render) {
-        renders.put(render.getName(), render);
+        this.renders.put(render.getName(), render);
 
-        if (defaultRender == null) {
-            defaultRender = render;
+        if (this.defaultRender == null) {
+            this.defaultRender = render;
         }
     }
 
     protected void unbindRender(Render render) {
-        renders.remove(render.getName());
+        this.renders.remove(render.getName());
 
-        if (defaultRender == render) {
-            if (renders.isEmpty()) {
-                defaultRender = null;
+        if (this.defaultRender == render) {
+            if (this.renders.isEmpty()) {
+                this.defaultRender = null;
             } else {
-                defaultRender = renders.values().iterator().next();
+                this.defaultRender = this.renders.values().iterator().next();
             }
         }
     }
@@ -324,7 +324,7 @@ public class SlingManager extends GenericServlet {
     /**
      * Returns the named property from the configuration. If the property does
      * not exist, the default value <code>def</code> is returned.
-     * 
+     *
      * @param config The properties from which to returned the named one
      * @param name The name of the property to return
      * @param def The default value if the named property does not exist

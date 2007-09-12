@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,9 +46,9 @@ public class BundleListRender implements Render {
     public static final String NAME = "list";
     public static final String LABEL = "Bundles";
     public static final String BUNDLE_ID = "bundleId";
-    
+
     private BundleContext bundleContext;
-    
+
     /** @scr.reference */
     private StartLevel startLevel;
 
@@ -68,71 +69,71 @@ public class BundleListRender implements Render {
     public String getLabel() {
         return LABEL;
     }
-    
+
     /* (non-Javadoc)
      * @see org.apache.sling.manager.web.internal.internal.Render#render(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     public void render(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         PrintWriter pw = response.getWriter();
-        
-        header(pw);
-        
-        installForm(pw);
+
+        this.header(pw);
+
+        this.installForm(pw);
         pw.println("<tr class='content'>");
         pw.println("<td colspan='7' class='content'>&nbsp;</th>");
         pw.println("</tr>");
 
 
-        tableHeader(pw);
-        
-        Bundle[] bundles = getBundles();
+        this.tableHeader(pw);
+
+        Bundle[] bundles = this.getBundles();
         if (bundles == null || bundles.length == 0) {
             pw.println("<tr class='content'>");
-            pw.println("<td class='content' colspan='6'>No " + getLabel() + " installed currently</td>");
+            pw.println("<td class='content' colspan='6'>No " + this.getLabel() + " installed currently</td>");
             pw.println("</tr>");
         } else {
             long previousBundle = -1;
             for (int i = 0; i < bundles.length; i++) {
-                
+
                 if (previousBundle >= 0) {
                     // prepare for injected table information row
                     pw.println("<tr id='bundle" + previousBundle + "'></tr>");
                 }
 
-                bundle(pw, bundles[i]);
-                
+                this.bundle(pw, bundles[i]);
+
                 previousBundle = bundles[i].getBundleId();
             }
-            
+
             if (previousBundle >= 0) {
                 // prepare for injected table information row
                 pw.println("<tr id='bundle" + previousBundle + "'></tr>");
             }
         }
-        
+
         pw.println("<tr class='content'>");
         pw.println("<td colspan='7' class='content'>&nbsp;</th>");
         pw.println("</tr>");
 
-        installForm(pw);
-        
-        footer(pw);
+        this.installForm(pw);
+
+        this.footer(pw);
     }
 
     protected BundleContext getBundleContext() {
-        return bundleContext;
+        return this.bundleContext;
     }
-    
+
     protected StartLevel getStartLevelService() {
-        return startLevel;
+        return this.startLevel;
     }
-    
+
     protected Bundle[] getBundles() {
-        return bundleContext.getBundles();
+        return this.bundleContext.getBundles();
     }
-    
+
     private void header(PrintWriter pw) {
         Util.startScript(pw);
         pw.println("function showDetails(bundleId) {");
@@ -164,12 +165,12 @@ public class BundleListRender implements Render {
 
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
     }
-    
+
     private void tableHeader(PrintWriter pw) {
 //        pw.println("<tr class='content'>");
 //        pw.println("<th class='content container' colspan='7'>Installed " + getLabel() + "</th>");
 //        pw.println("</tr>");
-        
+
         pw.println("<tr class='content'>");
         pw.println("<th class='content'>ID</th>");
         pw.println("<th class='content' width='100%'>Name</th>");
@@ -177,42 +178,42 @@ public class BundleListRender implements Render {
         pw.println("<th class='content' colspan='4'>Actions</th>");
         pw.println("</tr>");
     }
-    
+
     private void footer(PrintWriter pw) {
         pw.println("</table>");
     }
-    
+
     private void bundle(PrintWriter pw, Bundle bundle) {
         String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
         if (name == null || name.length() == 0) {
             name = bundle.getSymbolicName();
         }
-        
+
         pw.println("<tr>");
         pw.println("<td class='content right'>" + bundle.getBundleId() + "</td>");
         pw.println("<td class='content'><a href='javascript:showDetails(" + bundle.getBundleId() + ")'>" + name + "</a></td>");
-        pw.println("<td class='content center'>" + toStateString(bundle.getState()) + "</td>");
+        pw.println("<td class='content center'>" + this.toStateString(bundle.getState()) + "</td>");
 
         // no buttons for system bundle
         if (bundle.getBundleId() == 0) {
             pw.println("<td class='content' colspan='4'>&nbsp;</td>");
         } else {
             boolean enabled = bundle.getState() == Bundle.INSTALLED || bundle.getState() == Bundle.RESOLVED;
-            actionForm(pw, enabled, bundle.getBundleId(), StartAction.NAME, StartAction.LABEL);
+            this.actionForm(pw, enabled, bundle.getBundleId(), StartAction.NAME, StartAction.LABEL);
 
             enabled = bundle.getState() == Bundle.ACTIVE;
-            actionForm(pw, enabled, bundle.getBundleId(), StopAction.NAME, StopAction.LABEL);
-            
-            enabled = bundle.getState() != Bundle.UNINSTALLED && hasUpdates(bundle);
-            actionForm(pw, enabled, bundle.getBundleId(), UpdateAction.NAME, UpdateAction.LABEL);
-            
+            this.actionForm(pw, enabled, bundle.getBundleId(), StopAction.NAME, StopAction.LABEL);
+
+            enabled = bundle.getState() != Bundle.UNINSTALLED && this.hasUpdates(bundle);
+            this.actionForm(pw, enabled, bundle.getBundleId(), UpdateAction.NAME, UpdateAction.LABEL);
+
             enabled = bundle.getState() == Bundle.INSTALLED || bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.ACTIVE;
-            actionForm(pw, enabled, bundle.getBundleId(), UninstallAction.NAME, UninstallAction.LABEL);
+            this.actionForm(pw, enabled, bundle.getBundleId(), UninstallAction.NAME, UninstallAction.LABEL);
         }
-     
+
         pw.println("</tr>");
     }
-    
+
     private void actionForm(PrintWriter pw, boolean enabled, long bundleId, String action, String actionLabel) {
         pw.println("<form name='form" + bundleId + "' method='post'>");
         pw.println("<td class='content' align='right'>");
@@ -222,10 +223,10 @@ public class BundleListRender implements Render {
         pw.println("</td>");
         pw.println("</form>");
     }
-    
+
     private void installForm(PrintWriter pw) {
-        int startLevel = getStartLevelService().getInitialBundleStartLevel();
-        
+        int startLevel = this.getStartLevelService().getInitialBundleStartLevel();
+
         pw.println("<form method='post' enctype='multipart/form-data'>");
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>&nbsp;</td>");
@@ -243,7 +244,7 @@ public class BundleListRender implements Render {
         pw.println("</tr>");
         pw.println("</form>");
     }
-    
+
     private String toStateString(int bundleState) {
         switch (bundleState) {
             case Bundle.INSTALLED: return "Installed";
@@ -255,12 +256,12 @@ public class BundleListRender implements Render {
             default: return "Unknown: " + bundleState;
         }
     }
-    
+
     private boolean hasUpdates(Bundle bundle) {
 
         Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
-        
-        for (Iterator ri=repoAdmin.getResources(); ri.hasNext(); ) {
+
+        for (Iterator ri=this.repoAdmin.getResources(); ri.hasNext(); ) {
             Resource res = (Resource) ri.next();
             if (bundle.getSymbolicName().equals(res.getSymbolicName())) {
                 if (res.getVersion().compareTo(bundleVersion) > 0) {
@@ -268,28 +269,28 @@ public class BundleListRender implements Render {
                 }
             }
         }
-        
+
         return false;
     }
 
     //--------- SCR Integration -----------------------------------------------
-    
+
     protected void activate(ComponentContext context) {
-        bundleContext = context.getBundleContext();
+        this.bundleContext = context.getBundleContext();
     }
 
     protected void deactivate(ComponentContext context) {
-        bundleContext = null;
+        this.bundleContext = null;
     }
-    
+
     protected void bindInstallerService(InstallerService installerService) {
         this.repoAdmin = installerService.getBundleRepositoryAdmin();
     }
-    
+
     protected void unbindInstallerService(InstallerService installerService) {
         this.repoAdmin = null;
     }
-    
+
     protected void bindStartLevel(StartLevel startLevel) {
         this.startLevel = startLevel;
     }

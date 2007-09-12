@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +38,7 @@ import org.osgi.service.startlevel.StartLevel;
 
 /**
  * The <code>AjaxBundleDetailsAction</code> TODO
- * 
+ *
  * @scr.component metatype="false"
  * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
@@ -62,36 +63,36 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
             HttpServletResponse response) throws IOException, ServletException {
         JSONObject result = null;
         try {
-            long bundleId = getBundleId(request);
-            Bundle bundle = getBundleContext().getBundle(bundleId);
+            long bundleId = this.getBundleId(request);
+            Bundle bundle = this.getBundleContext().getBundle(bundleId);
             if (bundle != null) {
                 Dictionary headers = bundle.getHeaders();
 
                 JSONArray props = new JSONArray();
-                keyVal(props, "Symbolic Name", bundle.getSymbolicName());
-                keyVal(props, "Version", headers.get(Constants.BUNDLE_VERSION));
-                keyVal(props, "Location", bundle.getLocation());
-                keyVal(props, "Last Modification", new Date(
+                this.keyVal(props, "Symbolic Name", bundle.getSymbolicName());
+                this.keyVal(props, "Version", headers.get(Constants.BUNDLE_VERSION));
+                this.keyVal(props, "Location", bundle.getLocation());
+                this.keyVal(props, "Last Modification", new Date(
                     bundle.getLastModified()));
 
-                keyVal(props, "Vendor", headers.get(Constants.BUNDLE_VENDOR));
-                keyVal(props, "Copyright",
+                this.keyVal(props, "Vendor", headers.get(Constants.BUNDLE_VENDOR));
+                this.keyVal(props, "Copyright",
                     headers.get(Constants.BUNDLE_COPYRIGHT));
-                keyVal(props, "Description",
+                this.keyVal(props, "Description",
                     headers.get(Constants.BUNDLE_DESCRIPTION));
 
-                keyVal(props, "Start Level", getStartLevel(bundle));
+                this.keyVal(props, "Start Level", this.getStartLevel(bundle));
 
-                listImportExport(props, bundle);
+                this.listImportExport(props, bundle);
 
-                listServices(props, bundle);
+                this.listServices(props, bundle);
 
                 result = new JSONObject();
                 result.put(BundleListRender.BUNDLE_ID, bundleId);
@@ -110,15 +111,15 @@ public class AjaxBundleDetailsAction extends BundleAction {
     }
 
     private Integer getStartLevel(Bundle bundle) {
-        if (startLevelService == null) {
+        if (this.startLevelService == null) {
             return null;
         }
 
-        return new Integer(startLevelService.getBundleStartLevel(bundle));
+        return new Integer(this.startLevelService.getBundleStartLevel(bundle));
     }
 
     private void listImportExport(JSONArray props, Bundle bundle) {
-        ExportedPackage[] exports = packageAdmin.getExportedPackages(bundle);
+        ExportedPackage[] exports = this.packageAdmin.getExportedPackages(bundle);
         if (exports != null && exports.length > 0) {
             StringBuffer val = new StringBuffer();
             for (int i = 0; i < exports.length; i++) {
@@ -127,12 +128,12 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 val.append(exports[i].getVersion());
                 val.append("<br />");
             }
-            keyVal(props, "Exported Packages", val.toString());
+            this.keyVal(props, "Exported Packages", val.toString());
         } else {
-            keyVal(props, "Exported Packages", "None");
+            this.keyVal(props, "Exported Packages", "None");
         }
 
-        exports = packageAdmin.getExportedPackages((Bundle) null);
+        exports = this.packageAdmin.getExportedPackages((Bundle) null);
         if (exports != null && exports.length > 0) {
             StringBuffer val = new StringBuffer();
             for (int i = 0; i < exports.length; i++) {
@@ -159,7 +160,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 val.append("None");
             }
 
-            keyVal(props, "Imported Packages", val.toString());
+            this.keyVal(props, "Imported Packages", val.toString());
         }
     }
 
@@ -175,22 +176,22 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
             StringBuffer val = new StringBuffer();
 
-            appendProperty(val, refs[i], Constants.OBJECTCLASS, "Types");
-            appendProperty(val, refs[i], "sling.context", "Sling Context");
-            appendProperty(val, refs[i], Constants.SERVICE_PID, "PID");
-            appendProperty(val, refs[i], ConfigurationAdmin.SERVICE_FACTORYPID,
+            this.appendProperty(val, refs[i], Constants.OBJECTCLASS, "Types");
+            this.appendProperty(val, refs[i], "sling.context", "Sling Context");
+            this.appendProperty(val, refs[i], Constants.SERVICE_PID, "PID");
+            this.appendProperty(val, refs[i], ConfigurationAdmin.SERVICE_FACTORYPID,
                 "Factory PID");
-            appendProperty(val, refs[i], ComponentConstants.COMPONENT_NAME,
+            this.appendProperty(val, refs[i], ComponentConstants.COMPONENT_NAME,
                 "Component Name");
-            appendProperty(val, refs[i], ComponentConstants.COMPONENT_ID,
+            this.appendProperty(val, refs[i], ComponentConstants.COMPONENT_ID,
                 "Component ID");
-            appendProperty(val, refs[i], ComponentConstants.COMPONENT_FACTORY,
+            this.appendProperty(val, refs[i], ComponentConstants.COMPONENT_FACTORY,
                 "Component Factory");
-            appendProperty(val, refs[i], Constants.SERVICE_DESCRIPTION,
+            this.appendProperty(val, refs[i], Constants.SERVICE_DESCRIPTION,
                 "Description");
-            appendProperty(val, refs[i], Constants.SERVICE_VENDOR, "Vendor");
+            this.appendProperty(val, refs[i], Constants.SERVICE_VENDOR, "Vendor");
 
-            keyVal(props, key, val.toString());
+            this.keyVal(props, key, val.toString());
         }
     }
 
