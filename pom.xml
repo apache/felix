@@ -4,7 +4,7 @@
 	<groupId>org.apache.felix</groupId>
 	<artifactId>maven-obr-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
-	<name>obr maven plugin</name>
+	<name>OBR Maven Plugin</name>
 	<version>0.0.1</version>
 
 	<dependencies>
@@ -12,6 +12,16 @@
 			<groupId>net.sf.kxml</groupId>
 			<artifactId>kxml2</artifactId>
 			<version>2.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>${groupId}</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>${groupId}</groupId>
+			<artifactId>org.apache.felix.bundlerepository</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
