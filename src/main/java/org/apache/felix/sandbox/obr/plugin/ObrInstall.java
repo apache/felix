@@ -70,6 +70,14 @@ public class ObrInstall extends AbstractMojo {
      */
 
     private Settings m_settings;
+    
+    /**
+     * Enable/Disable this goal
+     * @description If true evrything the goal do nothing, the goal just skip over 
+     * @parameter default="false"
+     */
+    private boolean disableAutoInstall;    
+    
 
     /**
      * path to file in the maven local repository.
@@ -83,7 +91,11 @@ public class ObrInstall extends AbstractMojo {
      */
     public void execute() throws MojoExecutionException {
         getLog().info("Obr Plugin starts:");
-
+        if(disableAutoInstall){
+        	getLog().info("OBR repository goal disable by 'disableAutoInstall' configuration");
+        	return;
+        }
+        
         if (m_repositoryPath == null) {
             m_repositoryPath = "file:/" + m_localRepo.getBasedir() + File.separator + "repository.xml";
             getLog().warn("-DpathRepo is not define, use default repository: " + m_repositoryPath);
