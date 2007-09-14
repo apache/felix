@@ -70,29 +70,29 @@ public class AjaxBundleDetailsAction extends BundleAction {
             HttpServletResponse response) throws IOException, ServletException {
         JSONObject result = null;
         try {
-            long bundleId = this.getBundleId(request);
-            Bundle bundle = this.getBundleContext().getBundle(bundleId);
+            long bundleId = getBundleId(request);
+            Bundle bundle = getBundleContext().getBundle(bundleId);
             if (bundle != null) {
                 Dictionary headers = bundle.getHeaders();
 
                 JSONArray props = new JSONArray();
-                this.keyVal(props, "Symbolic Name", bundle.getSymbolicName());
-                this.keyVal(props, "Version", headers.get(Constants.BUNDLE_VERSION));
-                this.keyVal(props, "Location", bundle.getLocation());
-                this.keyVal(props, "Last Modification", new Date(
+                keyVal(props, "Symbolic Name", bundle.getSymbolicName());
+                keyVal(props, "Version", headers.get(Constants.BUNDLE_VERSION));
+                keyVal(props, "Location", bundle.getLocation());
+                keyVal(props, "Last Modification", new Date(
                     bundle.getLastModified()));
 
-                this.keyVal(props, "Vendor", headers.get(Constants.BUNDLE_VENDOR));
-                this.keyVal(props, "Copyright",
+                keyVal(props, "Vendor", headers.get(Constants.BUNDLE_VENDOR));
+                keyVal(props, "Copyright",
                     headers.get(Constants.BUNDLE_COPYRIGHT));
-                this.keyVal(props, "Description",
+                keyVal(props, "Description",
                     headers.get(Constants.BUNDLE_DESCRIPTION));
 
-                this.keyVal(props, "Start Level", this.getStartLevel(bundle));
+                keyVal(props, "Start Level", getStartLevel(bundle));
 
-                this.listImportExport(props, bundle);
+                listImportExport(props, bundle);
 
-                this.listServices(props, bundle);
+                listServices(props, bundle);
 
                 result = new JSONObject();
                 result.put(BundleListRender.BUNDLE_ID, bundleId);
@@ -111,15 +111,15 @@ public class AjaxBundleDetailsAction extends BundleAction {
     }
 
     private Integer getStartLevel(Bundle bundle) {
-        if (this.startLevelService == null) {
+        if (startLevelService == null) {
             return null;
         }
 
-        return new Integer(this.startLevelService.getBundleStartLevel(bundle));
+        return new Integer(startLevelService.getBundleStartLevel(bundle));
     }
 
     private void listImportExport(JSONArray props, Bundle bundle) {
-        ExportedPackage[] exports = this.packageAdmin.getExportedPackages(bundle);
+        ExportedPackage[] exports = packageAdmin.getExportedPackages(bundle);
         if (exports != null && exports.length > 0) {
             StringBuffer val = new StringBuffer();
             for (int i = 0; i < exports.length; i++) {
@@ -128,12 +128,12 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 val.append(exports[i].getVersion());
                 val.append("<br />");
             }
-            this.keyVal(props, "Exported Packages", val.toString());
+            keyVal(props, "Exported Packages", val.toString());
         } else {
-            this.keyVal(props, "Exported Packages", "None");
+            keyVal(props, "Exported Packages", "None");
         }
 
-        exports = this.packageAdmin.getExportedPackages((Bundle) null);
+        exports = packageAdmin.getExportedPackages((Bundle) null);
         if (exports != null && exports.length > 0) {
             StringBuffer val = new StringBuffer();
             for (int i = 0; i < exports.length; i++) {
@@ -160,7 +160,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 val.append("None");
             }
 
-            this.keyVal(props, "Imported Packages", val.toString());
+            keyVal(props, "Imported Packages", val.toString());
         }
     }
 
@@ -176,22 +176,22 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
             StringBuffer val = new StringBuffer();
 
-            this.appendProperty(val, refs[i], Constants.OBJECTCLASS, "Types");
-            this.appendProperty(val, refs[i], "sling.context", "Sling Context");
-            this.appendProperty(val, refs[i], Constants.SERVICE_PID, "PID");
-            this.appendProperty(val, refs[i], ConfigurationAdmin.SERVICE_FACTORYPID,
+            appendProperty(val, refs[i], Constants.OBJECTCLASS, "Types");
+            appendProperty(val, refs[i], "sling.context", "Sling Context");
+            appendProperty(val, refs[i], Constants.SERVICE_PID, "PID");
+            appendProperty(val, refs[i], ConfigurationAdmin.SERVICE_FACTORYPID,
                 "Factory PID");
-            this.appendProperty(val, refs[i], ComponentConstants.COMPONENT_NAME,
+            appendProperty(val, refs[i], ComponentConstants.COMPONENT_NAME,
                 "Component Name");
-            this.appendProperty(val, refs[i], ComponentConstants.COMPONENT_ID,
+            appendProperty(val, refs[i], ComponentConstants.COMPONENT_ID,
                 "Component ID");
-            this.appendProperty(val, refs[i], ComponentConstants.COMPONENT_FACTORY,
+            appendProperty(val, refs[i], ComponentConstants.COMPONENT_FACTORY,
                 "Component Factory");
-            this.appendProperty(val, refs[i], Constants.SERVICE_DESCRIPTION,
+            appendProperty(val, refs[i], Constants.SERVICE_DESCRIPTION,
                 "Description");
-            this.appendProperty(val, refs[i], Constants.SERVICE_VENDOR, "Vendor");
+            appendProperty(val, refs[i], Constants.SERVICE_VENDOR, "Vendor");
 
-            this.keyVal(props, key, val.toString());
+            keyVal(props, key, val.toString());
         }
     }
 
@@ -222,23 +222,5 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 // don't care
             }
         }
-    }
-
-    // --------- SCR -----------------------------------------------------------
-
-    protected void bindStartLevel(StartLevel startLevelService) {
-        this.startLevelService = startLevelService;
-    }
-
-    protected void unbindStartLevel(StartLevel startLevelService) {
-        this.startLevelService = null;
-    }
-
-    protected void bindPackageAdmin(PackageAdmin packageAdmin) {
-        this.packageAdmin = packageAdmin;
-    }
-
-    protected void unbindPackageAdmin(PackageAdmin packageAdmin) {
-        this.packageAdmin = null;
     }
 }
