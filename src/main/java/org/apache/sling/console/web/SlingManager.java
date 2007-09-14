@@ -63,6 +63,13 @@ public class SlingManager extends GenericServlet {
     private static final long serialVersionUID = 1L;
 
     /**
+     * The name and value of a parameter which will prevent redirection to a
+     * render after the action has been executed (value is "_noredir_"). This
+     * may be used by programmatic action submissions.
+     */
+    public static final String PARAM_NO_REDIRECT_AFTER_ACTION = "_noredir_";
+    
+    /**
      * @scr.property value="/sling"
      */
     private static final String PROP_MANAGER_ROOT = "manager.root";
@@ -86,7 +93,7 @@ public class SlingManager extends GenericServlet {
      * @scr.property value="admin"
      */
     private static final String PROP_PASSWORD = "password";
-
+    
     private ComponentContext componentContext;
 
     /**
@@ -115,15 +122,15 @@ public class SlingManager extends GenericServlet {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
+        // handle the request action, terminate if done
+        if (this.handleAction(request, response)) {
+            return;
+        }
+
         // check whether we are not at .../{webManagerRoot}
         if (request.getRequestURI().endsWith(this.webManagerRoot)) {
             response.sendRedirect(request.getRequestURI() + "/"
                 + this.defaultRender.getName());
-            return;
-        }
-
-        // handle the request action, terminate if done
-        if (this.handleAction(request, response)) {
             return;
         }
 
@@ -162,6 +169,15 @@ public class SlingManager extends GenericServlet {
                 } catch (ServletException se) {
                     this.log(se.getMessage(), se.getRootCause());
                 }
+                
+                // maybe overwrite redirect
+                if (PARAM_NO_REDIRECT_AFTER_ACTION.equals(getParameter(req, PARAM_NO_REDIRECT_AFTER_ACTION))) {
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                    resp.setContentType("text/html");
+                    resp.getWriter().println("Ok");
+                    return true;
+                }
+                
                 if (redirect) {
                     String uri = req.getRequestURI();
                     // Object pars =
