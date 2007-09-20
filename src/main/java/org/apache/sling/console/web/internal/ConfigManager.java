@@ -76,7 +76,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
         pw.println("<tr class='content' id='configField'>");
         pw.println("<td class='content'>Configurations</th>");
         pw.println("<td class='content'>");
-        this.listConfigurations(pw, optionalMetaType, request.getLocale());
+        this.listConfigurations(pw, optionalMetaType, getLocale(request));
         pw.println("</td>");
         pw.println("</tr>");
 

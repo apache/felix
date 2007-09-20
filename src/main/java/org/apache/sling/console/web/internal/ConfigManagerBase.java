@@ -17,7 +17,10 @@
 package org.apache.sling.console.web.internal;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -173,6 +176,16 @@ abstract class ConfigManagerBase {
         }
 
         return null;
+    }
+    
+    protected Locale getLocale(HttpServletRequest request) {
+        try {
+            return request.getLocale();
+        } catch (Throwable t) {
+            // expected in standard OSGi Servlet 2.1 environments
+            // fallback to using the default locale
+            return Locale.getDefault();
+        }
     }
 
     //--------- SCR Integration -----------------------------------------------

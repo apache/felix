@@ -91,7 +91,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
         if (pid != null) {
             try {
-                this.configForm(result, pid, isFactory, request.getLocale());
+                this.configForm(result, pid, isFactory, getLocale(request));
             } catch (Exception e) {
                 // add message
             }
