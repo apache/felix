@@ -99,6 +99,14 @@ public class ObrDeploy extends AbstractMojo {
     private String m_fileInLocalRepo;
 
     /**
+     * Enable/Disable this goal
+     * @description If true evrything the goal do nothing, the goal just skip over 
+     * @parameter expression="${maven.obr.installToRemoteOBR}" default-value="false"
+     */
+    private boolean installToRemoteOBR;    
+
+    
+    /**
      * main method for this goal.
      * @implements org.apache.maven.plugin.Mojo.execute 
      * @throws MojoExecutionException if the plugin failed
@@ -106,7 +114,13 @@ public class ObrDeploy extends AbstractMojo {
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("Obr-deploy start:");
-
+        if(!installToRemoteOBR)
+        {
+        	getLog().info("maven-obr-plugin:deploy goal is disable due to one of the following reason:");
+        	getLog().info(" - 'installToRemoteOBR' configuration set to false");
+        	getLog().info(" - JVM property maven.obr.installToRemoteOBR set to false");
+        	return;
+        }
         ArtifactRepository ar = m_project.getDistributionManagementArtifactRepository();
 
         // locate the obr.xml file

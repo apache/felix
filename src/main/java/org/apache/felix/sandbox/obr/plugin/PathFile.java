@@ -254,13 +254,17 @@ public class PathFile {
     public URI getUri() {
         if (!this.isValid()) { return null; }
         String path = PathFile.uniformSeparator(getAbsoluteFilename());
-        if (File.separatorChar == '\\') { path = path.replace("\\", "/"); }
+        if (File.separatorChar == '\\') { 
+        	path = path.replace("\\", "/");
+        	path = path.replace(" ", "%20");
+        }
 
         URI uri = null;
         try {
             uri = new URI(path);
-        } catch (URISyntaxException e) {
-            System.err.println("malformed uri: " + path);
+        } catch (URISyntaxException e) {        	
+            System.err.println("Malformed URI: " + path);
+            System.err.println(e.getMessage());
             return null;
         }
         return uri;

@@ -161,6 +161,10 @@ public class ObrUpdate {
      * @throws MojoExecutionException if the plugin failed
      */
     public void updateRepository() throws MojoExecutionException {
+    	
+    	m_logger.debug(" (f) m_obrXml = " + m_obrXml);
+    	m_logger.debug(" (f) m_outputFile = " + m_outputFile);
+    	m_logger.debug(" (f) m_repoFilename = " + m_repoFilename);
 
         m_constructor = initConstructor();
 
@@ -247,20 +251,22 @@ public class ObrUpdate {
     }
 
     /**
-     * pase the reporitory descriptor file.
+     * Parse the reporitory descriptor file.
+     * 
      * @return 0 if the bundle is already in the descriptor, else -1
      * @throws MojoExecutionException if the plugin failed
      */
     private int parseRepositoryXml() throws MojoExecutionException {
 
-        File fout = new File(m_repoFilename.getPath());
+        File fout = new File(m_repoFilename);
         if (!fout.exists()) {
             // create the repository.xml
             try {
-                fout.createNewFile();
-                m_logger.info("create new repository.xml file");
+
+            	fout.createNewFile();
+                m_logger.info("Created new repository.xml file in "+fout.getAbsolutePath());
             } catch (IOException e) {
-                m_logger.error("cannot create " + m_repoFilename.getPath());
+                m_logger.error("Cannot create file " + fout.getAbsolutePath());
                 e.printStackTrace();
                 return -1;
             }
@@ -281,7 +287,7 @@ public class ObrUpdate {
         }
 
         // now we parse the repository.xml file
-        m_repoDoc = parseFile(m_repoFilename.getPath()/* +m_ext */, m_constructor);
+        m_repoDoc = parseFile(fout.getAbsolutePath(), m_constructor);
         if (m_repoDoc == null) { return -1; }
 
         m_root = (Element) m_repoDoc.getDocumentElement();
