@@ -49,7 +49,6 @@ import org.osgi.service.component.ComponentContext;
  * The <code>BundleRepositoryRender</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="installerService" interface="org.apache.sling.assembly.installer.InstallerService"
  * @scr.service
  */
 public class BundleRepositoryRender implements Render {
@@ -67,7 +66,8 @@ public class BundleRepositoryRender implements Render {
     private BundleContext bundleContext;
     private String[] repoURLs;
 
-    private BundleRepositoryAdmin repoAdmin;
+    /** @scr.reference */
+    private InstallerService installerService;
 
     /*
      * (non-Javadoc)
@@ -93,8 +93,8 @@ public class BundleRepositoryRender implements Render {
         PrintWriter pw = response.getWriter();
         this.header(pw);
 
-        Set activeURLs = new HashSet();
-        Iterator repos = this.repoAdmin.getRepositories();
+        Set<String> activeURLs = new HashSet<String>();
+        Iterator<?> repos = installerService.getBundleRepositoryAdmin().getRepositories();
         if (!repos.hasNext()) {
             pw.println("<tr class='content'>");
             pw.println("<td class='content' colspan='4'>No Active Repositories</td>");
@@ -188,29 +188,26 @@ public class BundleRepositoryRender implements Render {
     }
 
     private void listResources(PrintWriter pw) {
-        Map bundles = this.getBundles();
+        Map<String, Version> bundles = this.getBundles();
 
-        Iterator resources = this.repoAdmin.getResources();
-        SortedSet resSet = new TreeSet(new Comparator() {
-            public int compare(Object o1, Object o2) {
+        Iterator<?> resources = installerService.getBundleRepositoryAdmin().getResources();
+        SortedSet<Resource> resSet = new TreeSet<Resource>(new Comparator<Resource>() {
+            public int compare(Resource o1, Resource o2) {
                 if (o1 == o2 || o1.equals(o2)) {
                     return 0;
                 }
 
-                Resource r1 = (Resource) o1;
-                Resource r2 = (Resource) o2;
-
-                if (r1.getPresentationName().equals(r2.getPresentationName())) {
-                    return r1.getVersion().compareTo(r2.getVersion());
+                if (o1.getPresentationName().equals(o2.getPresentationName())) {
+                    return o1.getVersion().compareTo(o2.getVersion());
                 }
 
-                return r1.getPresentationName().compareTo(r2.getPresentationName());
+                return o1.getPresentationName().compareTo(o2.getPresentationName());
             }
         });
 
         while (resources.hasNext()) {
             Resource res = (Resource) resources.next();
-            Version ver = (Version) bundles.get(res.getSymbolicName());
+            Version ver = bundles.get(res.getSymbolicName());
             if (ver == null || ver.compareTo(res.getVersion()) < 0) {
                 resSet.add(res);
             }
@@ -218,8 +215,8 @@ public class BundleRepositoryRender implements Render {
 
         this.resourcesHeader(pw, !resSet.isEmpty());
 
-        for (Iterator ri=resSet.iterator(); ri.hasNext(); ) {
-            this.printResource(pw, (Resource) ri.next());
+        for (Resource resource : resSet) {
+            this.printResource(pw, resource);
         }
 
         this.resourcesFooter(pw, !resSet.isEmpty());
@@ -260,8 +257,8 @@ public class BundleRepositoryRender implements Render {
         pw.println("</table></form>");
     }
 
-    private Map getBundles() {
-        Map bundles = new HashMap();
+    private Map<String, Version> getBundles() {
+        Map<String, Version> bundles = new HashMap<String, Version>();
 
         Bundle[] installed = this.bundleContext.getBundles();
         for (int i=0; i < installed.length; i++) {
@@ -284,25 +281,20 @@ public class BundleRepositoryRender implements Render {
         this.bundleContext = context.getBundleContext();
 
         String urlStr = this.bundleContext.getProperty(REPOSITORY_PROPERTY);
-        StringTokenizer st = new StringTokenizer(urlStr);
-        List urlList = new ArrayList();
-        while (st.hasMoreTokens()) {
-            urlList.add(st.nextToken());
+        List<String> urlList = new ArrayList<String>();
+
+        if (urlStr != null) {
+            StringTokenizer st = new StringTokenizer(urlStr);
+            while (st.hasMoreTokens()) {
+                urlList.add(st.nextToken());
+            }
         }
-        this.repoURLs = (String[]) urlList.toArray(new String[urlList.size()]);
+        
+        this.repoURLs = urlList.toArray(new String[urlList.size()]);
     }
 
     protected void deactivate(ComponentContext context) {
         this.bundleContext = null;
         this.repoURLs = null;
     }
-
-    protected void bindInstallerService(InstallerService installerService) {
-        this.repoAdmin = installerService.getBundleRepositoryAdmin();
-    }
-
-    protected void unbindInstallerService(InstallerService installerService) {
-        this.repoAdmin = null;
-    }
-
 }
