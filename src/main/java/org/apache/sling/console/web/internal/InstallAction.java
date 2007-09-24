@@ -152,8 +152,10 @@ public class InstallAction extends BundleAction {
             Bundle newBundle = null;
             Bundle[] bundles = this.getBundleContext().getBundles();
             for (int i = 0; i < bundles.length; i++) {
-                if (bundles[i].getLocation().equals(location)
-                    || bundles[i].getSymbolicName().equals(symbolicName)) {
+                if ((bundles[i].getLocation() != null && bundles[i].getLocation().equals(
+                    location))
+                    || (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals(
+                        symbolicName))) {
                     newBundle = bundles[i];
                     break;
                 }

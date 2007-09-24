@@ -144,10 +144,25 @@ public class AjaxBundleDetailsAction extends BundleAction {
                         val.append(ep.getName());
                         val.append(",version=").append(ep.getVersion());
                         val.append(" from ");
-                        val.append(ep.getExportingBundle().getSymbolicName());
-                        val.append(" (").append(
-                            ep.getExportingBundle().getBundleId());
-                        val.append(")");
+                        
+                        if (ep.getExportingBundle().getSymbolicName() != null) {
+                            // list the bundle name if not null
+                            val.append(ep.getExportingBundle().getSymbolicName());
+                            val.append(" (").append(
+                                ep.getExportingBundle().getBundleId());
+                            val.append(")");
+                        } else if (ep.getExportingBundle().getLocation() != null) {
+                            // otherwise try the location
+                            val.append(ep.getExportingBundle().getLocation());
+                            val.append(" (").append(
+                                ep.getExportingBundle().getBundleId());
+                            val.append(")");
+                        } else {
+                            // fallback to just the bundle id
+                            // only append the bundle
+                            val.append(ep.getExportingBundle().getBundleId());
+                        }
+
                         val.append("<br />");
 
                         break;

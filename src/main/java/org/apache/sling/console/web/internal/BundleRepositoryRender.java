@@ -269,7 +269,10 @@ public class BundleRepositoryRender implements Render {
             Version bundleVersion = Version.parseVersion(ver);
 
             // assume one bundle instance per symbolic name !!
-            bundles.put(installed[i].getSymbolicName(), bundleVersion);
+            // only add if there is a symbolic name !
+            if (installed[i].getSymbolicName() != null) {
+                bundles.put(installed[i].getSymbolicName(), bundleVersion);
+            }
         }
 
         return bundles;

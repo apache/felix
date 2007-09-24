@@ -187,6 +187,12 @@ public class BundleListRender implements Render {
         String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
         if (name == null || name.length() == 0) {
             name = bundle.getSymbolicName();
+            if (name == null) {
+                name = bundle.getLocation();
+                if (name == null) {
+                    name = String.valueOf(bundle.getBundleId());
+                }
+            }
         }
 
         pw.println("<tr>");
@@ -259,6 +265,11 @@ public class BundleListRender implements Render {
 
     private boolean hasUpdates(Bundle bundle) {
 
+        // don't care for bundles with no symbolic name
+        if (bundle.getSymbolicName() == null) {
+            return false;
+        }
+        
         Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
 
         for (Iterator ri=this.repoAdmin.getResources(); ri.hasNext(); ) {

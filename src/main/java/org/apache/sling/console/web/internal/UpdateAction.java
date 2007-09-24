@@ -80,6 +80,11 @@ public class UpdateAction extends BundleAction {
         final String version = (String) bundle.getHeaders().get(
             Constants.BUNDLE_VERSION);
 
+        // the name is required, otherwise we can do nothing
+        if (name == null) {
+            return;
+        }
+        
         // TODO: Should be restrict to same major.micro ??
 
         Thread t = new Thread("Background Update") {

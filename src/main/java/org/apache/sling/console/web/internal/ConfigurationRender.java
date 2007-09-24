@@ -393,7 +393,13 @@ public class ConfigurationRender implements Render {
     private String getBundleString(Bundle bundle, boolean withState) {
         StringBuffer buf = new StringBuffer();
 
-        buf.append(bundle.getSymbolicName());
+        if (bundle.getSymbolicName() != null) {
+            buf.append(bundle.getSymbolicName());
+        } else if (bundle.getLocation() != null) {
+            buf.append(bundle.getLocation());
+        } else {
+            buf.append(bundle.getBundleId());
+        }
 
         Dictionary headers = bundle.getHeaders();
         if (headers.get(Constants.BUNDLE_VERSION) != null) {
