@@ -66,9 +66,6 @@
                         <Private-Package>
                             org.apache.sling.console.web.*,
                             
-                            <!-- Ajax Data Exchange -->
-                            org.json,
-                            
                             <!-- File Upload functionality -->
                             org.apache.commons.fileupload,
                             org.apache.commons.fileupload.disk,
@@ -114,5 +111,11 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>sling-json</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -24,9 +24,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.sling.json.JSONArray;
+import org.apache.sling.json.JSONException;
+import org.apache.sling.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -144,7 +144,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
                         val.append(ep.getName());
                         val.append(",version=").append(ep.getVersion());
                         val.append(" from ");
-                        
+
                         if (ep.getExportingBundle().getSymbolicName() != null) {
                             // list the bundle name if not null
                             val.append(ep.getExportingBundle().getSymbolicName());
