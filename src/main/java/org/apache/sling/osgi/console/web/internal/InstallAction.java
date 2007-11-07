@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,8 +30,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.sling.assembly.installer.Installer;
-import org.apache.sling.assembly.installer.InstallerService;
+import org.apache.sling.osgi.assembly.installer.Installer;
+import org.apache.sling.osgi.assembly.installer.InstallerService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;

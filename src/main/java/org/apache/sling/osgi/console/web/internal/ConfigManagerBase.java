@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.util.HashMap;
 import java.util.Locale;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web;
+package org.apache.sling.osgi.console.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -38,7 +38,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
-import org.apache.sling.console.web.internal.Util;
+import org.apache.sling.osgi.console.web.internal.Util;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
@@ -52,9 +52,9 @@ import org.osgi.service.log.LogService;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Management Console"
  * @scr.reference name="operation"
- *                interface="org.apache.sling.console.web.Action"
+ *                interface="org.apache.sling.osgi.console.web.Action"
  *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="render" interface="org.apache.sling.console.web.Render"
+ * @scr.reference name="render" interface="org.apache.sling.osgi.console.web.Render"
  *                cardinality="0..n" policy="dynamic"
  */
 public class SlingManager extends GenericServlet {

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,7 +22,7 @@ import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.console.web.Render;
+import org.apache.sling.osgi.console.web.Render;
 
 /**
  * The <code>ShutdownRender</code> TODO

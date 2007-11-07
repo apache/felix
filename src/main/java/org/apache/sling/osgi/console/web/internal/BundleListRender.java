@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,10 +23,10 @@ import java.util.Iterator;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.assembly.installer.InstallerService;
-import org.apache.sling.assembly.installer.Resource;
-import org.apache.sling.console.web.Render;
+import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
+import org.apache.sling.osgi.assembly.installer.InstallerService;
+import org.apache.sling.osgi.assembly.installer.Resource;
+import org.apache.sling.osgi.console.web.Render;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -38,7 +38,7 @@ import org.osgi.service.startlevel.StartLevel;
  * The <code>BundleListRender</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="installerService" interface="org.apache.sling.assembly.installer.InstallerService"
+ * @scr.reference name="installerService" interface="org.apache.sling.osgi.assembly.installer.InstallerService"
  * @scr.service
  */
 public class BundleListRender implements Render {
@@ -269,7 +269,7 @@ public class BundleListRender implements Render {
         if (bundle.getSymbolicName() == null) {
             return false;
         }
-        
+
         Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
 
         for (Iterator ri=this.repoAdmin.getResources(); ri.hasNext(); ) {

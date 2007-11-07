@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,11 +34,10 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.assembly.installer.InstallerService;
-import org.apache.sling.assembly.installer.Repository;
-import org.apache.sling.assembly.installer.Resource;
-import org.apache.sling.console.web.Render;
+import org.apache.sling.osgi.assembly.installer.InstallerService;
+import org.apache.sling.osgi.assembly.installer.Repository;
+import org.apache.sling.osgi.assembly.installer.Resource;
+import org.apache.sling.osgi.console.web.Render;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -289,7 +288,7 @@ public class BundleRepositoryRender implements Render {
                 urlList.add(st.nextToken());
             }
         }
-        
+
         this.repoURLs = urlList.toArray(new String[urlList.size()]);
     }
 

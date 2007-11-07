@@ -14,27 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 
 /**
- * The <code>RefreshPackagesAction</code> TODO
+ * The <code>StopAction</code> TODO
  *
  * @scr.component metatype="false"
  * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
-public class RefreshPackagesAction extends BundleAction {
+public class UninstallAction extends BundleAction {
 
-    public static final String NAME = "refreshPackages";
-    public static final String LABEL = "Refresh Packages";
-
-    /** @scr.reference */
-    private PackageAdmin packageAdmin;
+    public static final String NAME = "uninstall";
+    public static final String LABEL = "Uninstall";
 
     public String getName() {
         return NAME;
@@ -44,22 +42,27 @@ public class RefreshPackagesAction extends BundleAction {
         return LABEL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
-    public boolean performAction(HttpServletRequest request,
-            HttpServletResponse response) {
+    public boolean performAction(HttpServletRequest request, HttpServletResponse response) {
 
-        this.packageAdmin.refreshPackages(null);
+        long bundleId = this.getBundleId(request);
+        if (bundleId > 0) { // cannot stop system bundle !!
+            Bundle bundle = this.getBundleContext().getBundle(bundleId);
+            if (bundle != null) {
+                try {
+                    bundle.uninstall();
+                } catch (BundleException be) {
+                    this.log(bundle, "Cannot uninstall", be);
+                }
+
+            }
+        }
 
         return true;
     }
-
-    protected void bindPackageAdmin(PackageAdmin packageAdmin) {
-        this.packageAdmin = packageAdmin;
-    }
-
-    protected void unbindPackageAdmin(PackageAdmin packageAdmin) {
-        this.packageAdmin = null;
-    }
 }
+

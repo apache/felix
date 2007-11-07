@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.assembly.installer.Installer;
-import org.apache.sling.assembly.installer.InstallerException;
-import org.apache.sling.assembly.installer.InstallerService;
-import org.apache.sling.assembly.installer.VersionRange;
-import org.apache.sling.console.web.Action;
+import org.apache.sling.osgi.assembly.installer.Installer;
+import org.apache.sling.osgi.assembly.installer.InstallerException;
+import org.apache.sling.osgi.assembly.installer.InstallerService;
+import org.apache.sling.osgi.assembly.installer.VersionRange;
+import org.apache.sling.osgi.console.web.Action;
 import org.osgi.service.log.LogService;
 
 /**

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ import org.osgi.framework.Bundle;
  * The <code>BundleListRender</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="installerService" interface="org.apache.sling.assembly.installer.InstallerService"
+ * @scr.reference name="installerService" interface="org.apache.sling.osgi.assembly.installer.InstallerService"
  * @scr.reference name="startLevel" interface="org.osgi.service.startlevel.StartLevel"
  * @scr.service
  */

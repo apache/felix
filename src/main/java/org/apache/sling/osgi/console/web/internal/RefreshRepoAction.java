@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import java.net.URL;
 import java.util.Iterator;
@@ -22,16 +22,16 @@ import java.util.Iterator;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.assembly.installer.InstallerService;
-import org.apache.sling.assembly.installer.Repository;
-import org.apache.sling.console.web.Action;
+import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
+import org.apache.sling.osgi.assembly.installer.InstallerService;
+import org.apache.sling.osgi.assembly.installer.Repository;
+import org.apache.sling.osgi.console.web.Action;
 
 /**
  * The <code>InstallFromRepoAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="installer" interface="org.apache.sling.assembly.installer.InstallerService"
+ * @scr.reference name="installer" interface="org.apache.sling.osgi.assembly.installer.InstallerService"
  * @scr.service
  */
 public class RefreshRepoAction implements Action {

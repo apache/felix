@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web.internal;
+package org.apache.sling.osgi.console.web.internal;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
+import org.apache.sling.osgi.console.web.Action;
 
 /**
- * The <code>StopAction</code> TODO
+ * The <code>GCAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
-public class StartAction extends BundleAction {
+public class GCAction implements Action {
 
-    public static final String NAME = "start";
-    public static final String LABEL = "Start";
+    public static final String NAME = "gc";
+    public static final String LABEL = "Collect Garbage";
 
     public String getName() {
         return NAME;
@@ -42,26 +40,12 @@ public class StartAction extends BundleAction {
         return LABEL;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
+    /* (non-Javadoc)
+     * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request, HttpServletResponse response) {
-
-        long bundleId = this.getBundleId(request);
-        if (bundleId > 0) { // cannot start system bundle !!
-            Bundle bundle = this.getBundleContext().getBundle(bundleId);
-            if (bundle != null) {
-                try {
-                    bundle.start();
-                } catch (BundleException be) {
-                    this.log(bundle, "Cannot start", be);
-                }
-
-            }
-        }
-        return true;
+        System.gc();
+        return false;
     }
-}
 
+}

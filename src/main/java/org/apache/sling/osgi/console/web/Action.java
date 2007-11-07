@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.console.web;
+package org.apache.sling.osgi.console.web;
 
 import java.io.IOException;
 
