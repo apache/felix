@@ -40,7 +40,6 @@ import org.osgi.framework.Constants;
  * The <code>InstallAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
 public class InstallAction extends BundleAction {

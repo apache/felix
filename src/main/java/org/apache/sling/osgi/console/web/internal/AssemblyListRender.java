@@ -25,8 +25,6 @@ import org.osgi.framework.Bundle;
  * The <code>BundleListRender</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="installerService" interface="org.apache.sling.osgi.assembly.installer.InstallerService"
- * @scr.reference name="startLevel" interface="org.osgi.service.startlevel.StartLevel"
  * @scr.service
  */
 public class AssemblyListRender extends BundleListRender {

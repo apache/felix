@@ -26,7 +26,6 @@ import org.osgi.framework.BundleException;
  * The <code>StopAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
 public class StopAction extends BundleAction {

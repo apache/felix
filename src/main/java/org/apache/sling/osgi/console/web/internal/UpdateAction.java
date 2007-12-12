@@ -30,7 +30,6 @@ import org.osgi.framework.Constants;
  * The <code>UpdateAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
 public class UpdateAction extends BundleAction {

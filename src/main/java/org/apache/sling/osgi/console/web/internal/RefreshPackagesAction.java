@@ -25,7 +25,6 @@ import org.osgi.service.packageadmin.PackageAdmin;
  * The <code>RefreshPackagesAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
 public class RefreshPackagesAction extends BundleAction {

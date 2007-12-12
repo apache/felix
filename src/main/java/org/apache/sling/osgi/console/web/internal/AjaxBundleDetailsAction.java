@@ -40,7 +40,6 @@ import org.osgi.service.startlevel.StartLevel;
  * The <code>AjaxBundleDetailsAction</code> TODO
  *
  * @scr.component metatype="false"
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
  * @scr.service
  */
 public class AjaxBundleDetailsAction extends BundleAction {
