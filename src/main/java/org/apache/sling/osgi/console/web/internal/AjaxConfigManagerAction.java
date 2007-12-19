@@ -279,15 +279,16 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         } else {
             Bundle bundle = this.getBundle(config.getBundleLocation());
 
-            Dictionary headers = bundle.getHeaders(locale);
-            String name = (String) headers.get(Constants.BUNDLE_NAME);
+            @SuppressWarnings("unchecked")
+            Dictionary<String, String> headers = bundle.getHeaders(locale);
+            String name = headers.get(Constants.BUNDLE_NAME);
             if (name == null) {
                 location = bundle.getSymbolicName();
             } else {
                 location = name + " (" + bundle.getSymbolicName() + ")";
             }
 
-            Version v = Version.parseVersion((String) headers.get(Constants.BUNDLE_VERSION));
+            Version v = Version.parseVersion(headers.get(Constants.BUNDLE_VERSION));
             location += ", Version " + v.toString();
         }
         json.put("bundleLocation", location);
@@ -315,9 +316,10 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
             // add sling context into the configuration
             if (request.getParameter("sling.context") != null) {
-                Dictionary props = config.getProperties();
+                @SuppressWarnings("unchecked")
+                Dictionary<String, Object> props = config.getProperties();
                 if (props == null) {
-                    props = new Hashtable();
+                    props = new Hashtable<String, Object>();
                 }
                 props.put("sling.context", request.getParameter("sling.context"));
                 config.update(props);
@@ -342,18 +344,19 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
             }
         } else {
             Configuration config = ca.getConfiguration(pid, null);
-            Dictionary props = config.getProperties();
+            @SuppressWarnings("unchecked")
+            Dictionary<String, Object> props = config.getProperties();
             if (props == null) {
-                props = new Hashtable();
+                props = new Hashtable<String, Object>();
             }
 
-            Map adMap = this.getAttributeDefinitionMap(config, null);
+            Map<String, AttributeDefinition> adMap = this.getAttributeDefinitionMap(config, null);
             if (adMap != null) {
                 StringTokenizer propTokens = new StringTokenizer(propertyList,
                     ",");
                 while (propTokens.hasMoreTokens()) {
                     String propName = propTokens.nextToken();
-                    AttributeDefinition ad = (AttributeDefinition) adMap.get(propName);
+                    AttributeDefinition ad = adMap.get(propName);
                     if (ad == null
                         || (ad.getCardinality() == 0 && ad.getType() == AttributeDefinition.STRING)) {
                         String prop = request.getParameter(propName);

@@ -146,12 +146,12 @@ abstract class ConfigManagerBase {
         return null;
     }
 
-    protected Map getAttributeDefinitionMap(Configuration config, String locale) {
+    protected Map<String, AttributeDefinition> getAttributeDefinitionMap(Configuration config, String locale) {
         ObjectClassDefinition ocd = this.getObjectClassDefinition(config, locale);
         if (ocd != null) {
             AttributeDefinition[] ad = ocd.getAttributeDefinitions(ObjectClassDefinition.ALL);
             if (ad != null) {
-                Map adMap = new HashMap();
+                Map<String, AttributeDefinition> adMap = new HashMap<String, AttributeDefinition>();
                 for (int i = 0; i < ad.length; i++) {
                     adMap.put(ad[i].getID(), ad[i]);
                 }
@@ -177,7 +177,7 @@ abstract class ConfigManagerBase {
 
         return null;
     }
-    
+
     protected Locale getLocale(HttpServletRequest request) {
         try {
             return request.getLocale();

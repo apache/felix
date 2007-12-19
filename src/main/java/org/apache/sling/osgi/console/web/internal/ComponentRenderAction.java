@@ -322,12 +322,13 @@ public class ComponentRenderAction implements Render, Action {
     }
 
     private void listProperties(JSONArray jsonProps, Component component) {
-        Dictionary props = component.getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> props = component.getProperties();
         if (props != null) {
             StringBuffer buf = new StringBuffer();
-            TreeSet keys = new TreeSet(Collections.list(props.keys()));
-            for (Iterator ki = keys.iterator(); ki.hasNext();) {
-                Object key = ki.next();
+            TreeSet<String> keys = new TreeSet<String>(Collections.list(props.keys()));
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();) {
+                String key = ki.next();
                 buf.append(key).append(" = ");
 
                 Object prop = props.get(key);

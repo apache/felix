@@ -272,8 +272,8 @@ public class BundleListRender implements Render {
 
         Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
 
-        for (Iterator ri=this.repoAdmin.getResources(); ri.hasNext(); ) {
-            Resource res = (Resource) ri.next();
+        for (Iterator<Resource> ri=this.repoAdmin.getResources(); ri.hasNext(); ) {
+            Resource res = ri.next();
             if (bundle.getSymbolicName().equals(res.getSymbolicName())) {
                 if (res.getVersion().compareTo(bundleVersion) > 0) {
                     return true;

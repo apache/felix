@@ -74,7 +74,8 @@ public class InstallAction extends BundleAction {
             HttpServletResponse response) throws ServletException {
 
         // get the uploaded data
-        Map params = (Map) request.getAttribute(Util.ATTR_FILEUPLOAD);
+        @SuppressWarnings("unchecked")
+        Map<String, FileItem[]> params = (Map<String, FileItem[]>) request.getAttribute(Util.ATTR_FILEUPLOAD);
         if (params == null) {
             return true;
         }
@@ -123,8 +124,8 @@ public class InstallAction extends BundleAction {
         return true;
     }
 
-    private FileItem getFileItem(Map params, String name, boolean isFormField) {
-        FileItem[] items = (FileItem[]) params.get(name);
+    private FileItem getFileItem(Map<String, FileItem[]> params, String name, boolean isFormField) {
+        FileItem[] items = params.get(name);
         if (items != null) {
             for (int i = 0; i < items.length; i++) {
                 if (items[i].isFormField() == isFormField) {

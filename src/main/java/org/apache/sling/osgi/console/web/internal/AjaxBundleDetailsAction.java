@@ -72,7 +72,8 @@ public class AjaxBundleDetailsAction extends BundleAction {
             long bundleId = getBundleId(request);
             Bundle bundle = getBundleContext().getBundle(bundleId);
             if (bundle != null) {
-                Dictionary headers = bundle.getHeaders();
+                @SuppressWarnings("unchecked")
+                Dictionary<String, String> headers = bundle.getHeaders();
 
                 JSONArray props = new JSONArray();
                 keyVal(props, "Symbolic Name", bundle.getSymbolicName());
