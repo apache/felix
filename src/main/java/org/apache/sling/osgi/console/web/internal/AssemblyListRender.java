@@ -50,12 +50,12 @@ public class AssemblyListRender extends BundleListRender {
 
     protected Bundle[] getBundles() {
         Bundle[] bundles = this.getBundleContext().getBundles();
-        List assList = new ArrayList();
+        List<Bundle> assList = new ArrayList<Bundle>();
         for (int i=0; i < bundles.length; i++) {
             if (bundles[i].getHeaders().get("Assembly-Bundles") != null) {
                 assList.add(bundles[i]);
             }
         }
-        return (Bundle[]) assList.toArray(new Bundle[assList.size()]);
+        return assList.toArray(new Bundle[assList.size()]);
     }
 }

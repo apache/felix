@@ -85,8 +85,6 @@ final class SlingHttpContext implements HttpContext {
      *            if authentication is required but not satisfied.
      * @return <code>true</code> if authentication is required and not
      *         satisfied by the request.
-     * @throws IOException If an IO error occurrs while trying to request
-     *             authentication.
      */
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) {

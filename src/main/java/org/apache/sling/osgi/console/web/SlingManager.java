@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -68,7 +67,7 @@ public class SlingManager extends GenericServlet {
      * may be used by programmatic action submissions.
      */
     public static final String PARAM_NO_REDIRECT_AFTER_ACTION = "_noredir_";
-    
+
     /**
      * @scr.property value="/sling"
      */
@@ -93,7 +92,7 @@ public class SlingManager extends GenericServlet {
      * @scr.property value="admin"
      */
     private static final String PROP_PASSWORD = "password";
-    
+
     private ComponentContext componentContext;
 
     /**
@@ -169,7 +168,7 @@ public class SlingManager extends GenericServlet {
                 } catch (ServletException se) {
                     this.log(se.getMessage(), se.getRootCause());
                 }
-                
+
                 // maybe overwrite redirect
                 if (PARAM_NO_REDIRECT_AFTER_ACTION.equals(getParameter(req, PARAM_NO_REDIRECT_AFTER_ACTION))) {
                     resp.setStatus(HttpServletResponse.SC_OK);
@@ -177,7 +176,7 @@ public class SlingManager extends GenericServlet {
                     resp.getWriter().println("Ok");
                     return true;
                 }
-                
+
                 if (redirect) {
                     String uri = req.getRequestURI();
                     // Object pars =
@@ -221,6 +220,7 @@ public class SlingManager extends GenericServlet {
         }
 
         // check, whether we alread have the parameters
+        @SuppressWarnings("unchecked")
         Map<String, FileItem[]> params = (Map<String, FileItem[]>) request.getAttribute(Util.ATTR_FILEUPLOAD);
         if (params == null) {
             // parameters not read yet, read now
@@ -235,9 +235,9 @@ public class SlingManager extends GenericServlet {
             // Parse the request
             params = new HashMap<String, FileItem[]>();
             try {
-                List /* FileItem */items = upload.parseRequest(request);
-                for (Iterator ii = items.iterator(); ii.hasNext();) {
-                    FileItem fi = (FileItem) ii.next();
+                @SuppressWarnings("unchecked")
+                List<FileItem> items = upload.parseRequest(request);
+                for (FileItem fi : items) {
                     FileItem[] current = params.get(fi.getFieldName());
                     if (current == null) {
                         current = new FileItem[] { fi };
@@ -274,7 +274,8 @@ public class SlingManager extends GenericServlet {
     protected void activate(ComponentContext context) {
         this.componentContext = context;
 
-        Dictionary config = this.componentContext.getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> config = this.componentContext.getProperties();
 
         this.defaultRenderName = (String) config.get(PROP_DEFAULT_RENDER);
         if ( this.renders.get(this.defaultRenderName ) != null ) {
@@ -361,7 +362,7 @@ public class SlingManager extends GenericServlet {
      * @return The value of the named property as a string or <code>def</code>
      *         if the property does not exist
      */
-    private String getProperty(Dictionary config, String name, String def) {
+    private String getProperty(Dictionary<String, Object> config, String name, String def) {
         Object value = config.get(name);
         if (value instanceof String) {
             return (String) value;
