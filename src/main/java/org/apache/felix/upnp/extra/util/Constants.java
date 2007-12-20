@@ -25,7 +25,7 @@ public interface Constants {
 	/**
 	 * If this property is set on a UPnP Device means that the 
 	 * device service is been created by UPnP base Driver. <br>
-	 * The value of the do not mean nothing. <br>
+	 * The value of the does not carry any mean. <br>
 	 * The name of the property is "UPnP.device.import".
 	 */
 	public static final String UPNP_IMPORT = "UPnP.device.imported"; 
