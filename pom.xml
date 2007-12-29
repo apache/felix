@@ -70,9 +70,7 @@
               	org.objectweb.asm*;-split-package:=merge-first
             </Private-Package>
             <Export-Package>
-              org.apache.felix.ipojo.composite; version="0.7.6",
-              org.osgi.service.cm,
-              org.osgi.service.log
+              org.apache.felix.ipojo.composite; version="0.7.6"
             </Export-Package>
             <IPOJO-Extension>composite:org.apache.felix.ipojo.composite.CompositeFactory</IPOJO-Extension>
             <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
