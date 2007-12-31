@@ -369,7 +369,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                         props.put(propName, this.toType(ad.getType(), prop));
                     } else {
                         // array or vector of any type
-                        Vector vec = new Vector();
+                        Vector<Object> vec = new Vector<Object>();
 
                         String[] properties = request.getParameterValues(propName);
                         if (properties != null) {
@@ -428,7 +428,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         }
     }
 
-    private Object toArray(int type, Vector values) {
+    private Object toArray(int type, Vector<Object> values) {
         int size = values.size();
 
         // short cut for string array

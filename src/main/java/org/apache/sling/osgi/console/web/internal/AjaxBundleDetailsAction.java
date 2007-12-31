@@ -17,8 +17,12 @@
 package org.apache.sling.osgi.console.web.internal;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Dictionary;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -121,6 +125,13 @@ public class AjaxBundleDetailsAction extends BundleAction {
     private void listImportExport(JSONArray props, Bundle bundle) {
         ExportedPackage[] exports = packageAdmin.getExportedPackages(bundle);
         if (exports != null && exports.length > 0) {
+            // do alphabetical sort
+            Arrays.sort(exports, new Comparator<ExportedPackage>() {
+                public int compare(ExportedPackage p1, ExportedPackage p2) {
+                    return p1.getName().compareTo(p2.getName());
+                }
+            });
+
             StringBuffer val = new StringBuffer();
             for (int i = 0; i < exports.length; i++) {
                 val.append(exports[i].getName());
@@ -135,43 +146,57 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
         exports = packageAdmin.getExportedPackages((Bundle) null);
         if (exports != null && exports.length > 0) {
-            StringBuffer val = new StringBuffer();
+            // collect import packages first
+            final List<ExportedPackage> imports = new ArrayList<ExportedPackage>();
             for (int i = 0; i < exports.length; i++) {
-                ExportedPackage ep = exports[i];
-                Bundle[] importers = ep.getImportingBundles();
+                final ExportedPackage ep = exports[i];
+                final Bundle[] importers = ep.getImportingBundles();
                 for (int j = 0; importers != null && j < importers.length; j++) {
                     if (importers[j].getBundleId() == bundle.getBundleId()) {
-                        val.append(ep.getName());
-                        val.append(",version=").append(ep.getVersion());
-                        val.append(" from ");
-
-                        if (ep.getExportingBundle().getSymbolicName() != null) {
-                            // list the bundle name if not null
-                            val.append(ep.getExportingBundle().getSymbolicName());
-                            val.append(" (").append(
-                                ep.getExportingBundle().getBundleId());
-                            val.append(")");
-                        } else if (ep.getExportingBundle().getLocation() != null) {
-                            // otherwise try the location
-                            val.append(ep.getExportingBundle().getLocation());
-                            val.append(" (").append(
-                                ep.getExportingBundle().getBundleId());
-                            val.append(")");
-                        } else {
-                            // fallback to just the bundle id
-                            // only append the bundle
-                            val.append(ep.getExportingBundle().getBundleId());
-                        }
-
-                        val.append("<br />");
+                        imports.add(ep);
 
                         break;
                     }
                 }
             }
+            // now sort
+            StringBuffer val = new StringBuffer();
+            if ( imports.size() > 0 ) {
+                final ExportedPackage[] packages = imports.toArray(new ExportedPackage[imports.size()]);
+                Arrays.sort(packages, new Comparator<ExportedPackage>() {
+                    public int compare(ExportedPackage p1, ExportedPackage p2) {
+                        return p1.getName().compareTo(p2.getName());
+                    }
+                });
+                // and finally print out
+                for (int i = 0; i < packages.length; i++) {
+                    ExportedPackage ep = packages[i];
+                    val.append(ep.getName());
+                    val.append(",version=").append(ep.getVersion());
+                    val.append(" from ");
 
-            // add description if there are no imports
-            if (val.length() == 0) {
+                    if (ep.getExportingBundle().getSymbolicName() != null) {
+                        // list the bundle name if not null
+                        val.append(ep.getExportingBundle().getSymbolicName());
+                        val.append(" (").append(
+                            ep.getExportingBundle().getBundleId());
+                        val.append(")");
+                    } else if (ep.getExportingBundle().getLocation() != null) {
+                        // otherwise try the location
+                        val.append(ep.getExportingBundle().getLocation());
+                        val.append(" (").append(
+                            ep.getExportingBundle().getBundleId());
+                        val.append(")");
+                    } else {
+                        // fallback to just the bundle id
+                        // only append the bundle
+                        val.append(ep.getExportingBundle().getBundleId());
+                    }
+
+                    val.append("<br />");
+                }
+            } else {
+                // add description if there are no imports
                 val.append("None");
             }
 
