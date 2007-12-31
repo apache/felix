@@ -335,15 +335,16 @@ public class ConfigurationRender implements Render {
                 : "Unbound";
         this.infoLine(pw, "  ", "BundleLocation", loc);
 
-        Dictionary props = config.getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> props = config.getProperties();
         if (props != null) {
-            SortedSet keys = new TreeSet();
-            for (Enumeration ke = props.keys(); ke.hasMoreElements();) {
+            SortedSet<String> keys = new TreeSet<String>();
+            for (Enumeration<String> ke = props.keys(); ke.hasMoreElements();) {
                 keys.add(ke.nextElement());
             }
 
-            for (Iterator ki = keys.iterator(); ki.hasNext();) {
-                String key = (String) ki.next();
+            for (Iterator<String> ki = keys.iterator(); ki.hasNext();) {
+                String key = ki.next();
                 this.infoLine(pw, "  ", key, props.get(key));
             }
         }
@@ -401,7 +402,8 @@ public class ConfigurationRender implements Render {
             buf.append(bundle.getBundleId());
         }
 
-        Dictionary headers = bundle.getHeaders();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, String> headers = bundle.getHeaders();
         if (headers.get(Constants.BUNDLE_VERSION) != null) {
             buf.append(" (").append(headers.get(Constants.BUNDLE_VERSION)).append(
                 ')');
