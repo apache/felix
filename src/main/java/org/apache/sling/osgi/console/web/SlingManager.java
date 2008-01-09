@@ -19,7 +19,9 @@ package org.apache.sling.osgi.console.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -299,11 +301,13 @@ public class SlingManager extends GenericServlet {
             HttpContext httpContext = new SlingHttpContext(this.httpService, realm,
                 userId, password);
 
+            Dictionary<String, String> servletConfig = toStringConfig(config);
+            
             // rest of sling
-            this.httpService.registerServlet(this.webManagerRoot, this, config,
-                httpContext);
-            this.httpService.registerResources(this.webManagerRoot + "/res", "/res",
-                httpContext);
+            this.httpService.registerServlet(this.webManagerRoot, this,
+                servletConfig, httpContext);
+            this.httpService.registerResources(this.webManagerRoot + "/res",
+                "/res", httpContext);
 
         } catch (Exception e) {
             this.logService.log(LogService.LOG_ERROR, "Problem setting up", e);
@@ -373,5 +377,14 @@ public class SlingManager extends GenericServlet {
         }
 
         return String.valueOf(value);
+    }
+    
+    private Dictionary<String, String> toStringConfig(Dictionary<?, ?> config) {
+        Dictionary<String, String> stringConfig = new Hashtable<String, String>();
+        for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
+            Object key = ke.nextElement();
+            stringConfig.put(key.toString(), String.valueOf(config.get(key)));
+        }
+        return stringConfig;
     }
 }
