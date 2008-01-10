@@ -78,7 +78,7 @@ public class ProvidedServiceHandler extends CompositeHandler {
      * @see org.apache.felix.ipojo.Handler#initializeComponentFactory(org.apache.felix.ipojo.architecture.ComponentTypeDescription, org.apache.felix.ipojo.metadata.Element)
      */
     public void initializeComponentFactory(ComponentTypeDescription cd, Element metadata) throws ConfigurationException {
-        Element[] provides = metadata.getElements("provides", "");
+        Element[] provides = metadata.getElements("provides");
         for (int i = 0; i < provides.length; i++) {
             String spec = provides[i].getAttribute("specification");
             if (spec != null) {
@@ -101,7 +101,6 @@ public class ProvidedServiceHandler extends CompositeHandler {
 
         // Get composition metadata
         Element[] provides = metadata.getElements("provides", "");
-        if (provides.length == 0) { return; }
 
         for (int i = 0; i < provides.length; i++) {
             ProvidedService ps = new ProvidedService(this, provides[i], "" + i);
@@ -219,7 +218,7 @@ public class ProvidedServiceHandler extends CompositeHandler {
             if (o instanceof String) {
                 Element specification = ManifestMetadataParser.parse((String) o);
                 Element[] reqs = specification.getElements("requires");
-                for (int j = 0; j < reqs.length; j++) {
+                for (int j = 0; reqs != null && j < reqs.length; j++) {
                     ServiceImporter imp = getAttachedRequirement(reqs[j]);
                     if (imp != null) {
                         // Fix service-level dependency flag

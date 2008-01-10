@@ -80,7 +80,7 @@ public class ImportHandler extends CompositeHandler {
             filtersConfiguration = (Dictionary) conf.get("requires.filters");
         }
 
-        for (int i = 0; i < imp.length; i++) {
+        for (int i = 0; imp != null && i < imp.length; i++) {
             boolean optional = false;
             boolean aggregate = false;
             String specification = imp[i].getAttribute("specification");

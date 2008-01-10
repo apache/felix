@@ -116,7 +116,11 @@ public class ProvidedService {
         m_metadata = m_composition.buildMetadata(m_instanceName);
 
         // Create the factory
-        m_factory = new ComponentFactory(m_context, m_clazz, m_metadata);
+        try {
+            m_factory = new ComponentFactory(m_context, m_clazz, m_metadata);
+        } catch (ConfigurationException e) {
+            // Should not happen.
+        }
         m_factory.start();
 
         // Create the exports

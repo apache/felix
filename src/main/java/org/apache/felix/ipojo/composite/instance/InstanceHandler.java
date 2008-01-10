@@ -266,8 +266,9 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             dict.put("component", comp);
         }
 
-        for (int i = 0; i < instance.getElements("property").length; i++) {
-            parseProperty(instance.getElements("property")[i], dict);
+        Element[] props = instance.getElements("property");
+        for (int i = 0; props != null && i < props.length; i++) {
+            parseProperty(props[i], dict);
         }
 
         return dict;
@@ -291,7 +292,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             // Recursive case
             // Check if there is 'property' element
             Element[] subProps = prop.getElements("property");
-            if (subProps.length == 0) { throw new ParseException("A complex property must have at least one 'property' sub-element"); }
+            if (subProps == null) { throw new ParseException("A complex property must have at least one 'property' sub-element"); }
             Dictionary dict2 = new Properties();
             for (int i = 0; i < subProps.length; i++) {
                 parseProperty(subProps[i], dict2);

@@ -63,9 +63,10 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
                 filter = "(&" + filter + f + ")";
             }
             Properties prop = new Properties();
-            for (int k = 0; k < services[i].getElements("property").length; k++) {
-                String key = services[i].getElements("property")[k].getAttribute("name");
-                String value = services[i].getElements("property")[k].getAttribute("value");
+            Element[] props = services[i].getElements("property");
+            for (int k = 0; props != null && k < props.length; k++) {
+                String key = props[k].getAttribute("name");
+                String value = props[k].getAttribute("value");
                 prop.put(key, value);
             }
             String ag = services[i].getAttribute("aggregate");

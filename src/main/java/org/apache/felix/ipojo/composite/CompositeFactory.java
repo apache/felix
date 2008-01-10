@@ -57,27 +57,23 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
      * Create a composite factory.
      * @param bc : bundle context
      * @param cm : metadata of the component to create
+     * @throws ConfigurationException occurs when the element describing the factory is malformed.
      */
-    public CompositeFactory(BundleContext bc, Element cm) {
+    public CompositeFactory(BundleContext bc, Element cm) throws ConfigurationException {
         super(bc, cm);
-        if (! check(cm)) {
-            return;
-        }      
     }
     
     /**
      * Check if the metadata are well formed.
      * @param cm : metadata
      * @return true if the metadata are correct.
+     * @throws ConfigurationException occurs when the element describing the factory is malformed.
      * @see org.apache.felix.ipojo.ComponentFactory#check(org.apache.felix.ipojo.metadata.Element)
      */
-    public boolean check(Element cm) {
+    public void check(Element cm) throws ConfigurationException {
         String name = cm.getAttribute("name");
         if (name == null) {
-            System.err.println("A composite needs a name");
-            return false;
-        } else {
-            return true;
+            throw new ConfigurationException("A composite needs a name : " + cm);
         }
     }
     

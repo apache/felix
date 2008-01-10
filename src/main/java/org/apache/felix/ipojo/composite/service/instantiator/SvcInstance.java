@@ -234,7 +234,7 @@ public class SvcInstance implements TrackerCustomizer {
         //TODO : use the service reference instead of the factory object to avoid to get the factory.
         // Check if the factory can provide the specification
         Element[] provides = fact.getDescription().getElements("provides");
-        for (int i = 0; i < provides.length; i++) {
+        for (int i = 0; provides != null && i < provides.length; i++) {
             if (provides[i].getAttribute("specification").equals(m_specification)) {
 
                 // Check that the factory needs every properties contained in
@@ -271,7 +271,7 @@ public class SvcInstance implements TrackerCustomizer {
      */
     private boolean containsProperty(String name, Factory factory) {
         Element[] props = factory.getDescription().getElements("property");
-        for (int i = 0; i < props.length; i++) {
+        for (int i = 0; props != null && i < props.length; i++) {
             if (props[i].getAttribute("name").equalsIgnoreCase(name)) {
                 return true;
             }

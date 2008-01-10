@@ -88,7 +88,7 @@ public class CompositionMetadata {
         m_specification = new SpecificationMetadata(spec, m_context, false, false, m_handler);        
 
         Element[] mappings = description.getElements("delegation");
-        for (int i = 0; i < mappings.length; i++) {
+        for (int i = 0; mappings != null && i < mappings.length; i++) {
             String methodName = mappings[i].getAttribute("method");
             MethodMetadata method = m_specification.getMethodByName(methodName);
             if (method == null) {
