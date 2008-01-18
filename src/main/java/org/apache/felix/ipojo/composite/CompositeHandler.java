@@ -19,7 +19,9 @@
 package org.apache.felix.ipojo.composite;
 
 import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.Handler;
+import org.apache.felix.ipojo.util.Logger;
 
 
 /**
@@ -41,13 +43,25 @@ public abstract class CompositeHandler extends Handler {
     private CompositeManager m_manager;
     
     /**
+     * Composite Factory
+     */
+    private CompositeFactory m_factory;
+    
+    /**
      * Set the manager.
      * This method me be called only once time.
      * @param cm : the composite manager.
      */
     protected final void attach(ComponentInstance cm) {
         m_manager = (CompositeManager) cm;
-        setLogger(m_manager.getFactory().getLogger());
+    }
+    
+    public final void setFactory(Factory factory) {
+        m_factory = (CompositeFactory) factory;
+    }
+    
+    public final Logger getLogger() {
+        return m_factory.getLogger();
     }
     
     public final CompositeManager getCompositeManager() {
