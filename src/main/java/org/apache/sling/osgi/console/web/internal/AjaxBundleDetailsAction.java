@@ -22,19 +22,27 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.bundlerepository.R4Attribute;
+import org.apache.felix.bundlerepository.R4Export;
+import org.apache.felix.bundlerepository.R4Import;
+import org.apache.felix.bundlerepository.R4Package;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -107,7 +115,11 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
                 keyVal(props, "Start Level", getStartLevel(bundle));
 
-                listImportExport(props, bundle);
+                if (bundle.getState() == Bundle.INSTALLED) {
+                    listImportExportsUnresolved(props, bundle);
+                } else {
+                    listImportExport(props, bundle);
+                }
 
                 listServices(props, bundle);
 
@@ -147,21 +159,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
             StringBuffer val = new StringBuffer();
             for (ExportedPackage export : exports) {
-
-                boolean bootDel = isBootDelegated(export.getName());
-                if (bootDel) {
-                    val.append("<span style=\"color: red\">!! ");
-                }
-
-                val.append(export.getName());
-                val.append(",version=");
-                val.append(export.getVersion());
-
-                if (bootDel) {
-                    val.append(" -- Overwritten by Boot Delegation</span>");
-                }
-
-                val.append("<br />");
+                printExport(val, export.getName(), export.getVersion());
             }
             keyVal(props, "Exported Packages", val.toString());
         } else {
@@ -194,39 +192,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 });
                 // and finally print out
                 for (ExportedPackage ep : packages) {
-
-                    boolean bootDel = isBootDelegated(ep.getName());
-                    if (bootDel) {
-                        val.append("<span style=\"color: red\">!! ");
-                    }
-
-                    val.append(ep.getName());
-                    val.append(",version=").append(ep.getVersion());
-                    val.append(" from ");
-
-                    if (ep.getExportingBundle().getSymbolicName() != null) {
-                        // list the bundle name if not null
-                        val.append(ep.getExportingBundle().getSymbolicName());
-                        val.append(" (").append(
-                            ep.getExportingBundle().getBundleId());
-                        val.append(")");
-                    } else if (ep.getExportingBundle().getLocation() != null) {
-                        // otherwise try the location
-                        val.append(ep.getExportingBundle().getLocation());
-                        val.append(" (").append(
-                            ep.getExportingBundle().getBundleId());
-                        val.append(")");
-                    } else {
-                        // fallback to just the bundle id
-                        // only append the bundle
-                        val.append(ep.getExportingBundle().getBundleId());
-                    }
-
-                    if (bootDel) {
-                        val.append(" -- Overwritten by Boot Delegation</span>");
-                    }
-
-                    val.append("<br />");
+                    printImport(val, ep.getName(), ep.getVersion(), ep);
                 }
             } else {
                 // add description if there are no imports
@@ -234,6 +200,84 @@ public class AjaxBundleDetailsAction extends BundleAction {
             }
 
             keyVal(props, "Imported Packages", val.toString());
+        }
+    }
+
+    private void listImportExportsUnresolved(JSONArray props, Bundle bundle) {
+        Dictionary<?, ?> dict = bundle.getHeaders();
+
+        String target = (String) dict.get(Constants.EXPORT_PACKAGE);
+        if (target != null) {
+            R4Package[] pkgs = R4Package.parseImportOrExportHeader(target);
+            if (pkgs != null && pkgs.length > 0) {
+                // do alphabetical sort
+                Arrays.sort(pkgs, new Comparator<R4Package>() {
+                    public int compare(R4Package p1, R4Package p2) {
+                        return p1.getName().compareTo(p2.getName());
+                    }
+                });
+
+                StringBuffer val = new StringBuffer();
+                for (R4Package pkg : pkgs) {
+                    R4Export export = new R4Export(pkg);
+
+                    printExport(val, export.getName(), export.getVersion());
+                }
+                keyVal(props, "Exported Packages", val.toString());
+            } else {
+                keyVal(props, "Exported Packages", "None");
+            }
+        }
+
+        target = (String) dict.get(Constants.IMPORT_PACKAGE);
+        if (target != null) {
+            R4Package[] pkgs = R4Package.parseImportOrExportHeader(target);
+            if (pkgs != null && pkgs.length > 0) {
+                Map<String, R4Import> imports = new TreeMap<String, R4Import>();
+                for (R4Package pkg : pkgs) {
+                    imports.put(pkg.getName(), new R4Import(pkg));
+                }
+
+                // collect import packages first
+                final Map<String, ExportedPackage> candidates = new HashMap<String, ExportedPackage>();
+                ExportedPackage[] exports = packageAdmin.getExportedPackages((Bundle) null);
+                if (exports != null && exports.length > 0) {
+
+                    for (int i = 0; i < exports.length; i++) {
+                        final ExportedPackage ep = exports[i];
+
+                        R4Import imp = imports.get(ep.getName());
+                        if (imp != null && imp.isSatisfied(toR4Export(ep))) {
+                            candidates.put(ep.getName(), ep);
+                        }
+                    }
+                }
+
+                // now sort
+                StringBuffer val = new StringBuffer();
+                if (imports.size() > 0) {
+                    for (R4Import r4Import : imports.values()) {
+                        ExportedPackage ep = candidates.get(r4Import.getName());
+
+                        // if there is no matching export, check whether this
+                        // bundle has the package, ignore the entry in this case
+                        if (ep == null) {
+                            String path = r4Import.getName().replace('.', '/');
+                            if (bundle.getResource(path) != null) {
+                                continue;
+                            }
+                        }
+
+                        printImport(val, r4Import.getName(),
+                            r4Import.getVersion(), ep);
+                    }
+                } else {
+                    // add description if there are no imports
+                    val.append("None");
+                }
+
+                keyVal(props, "Imported Packages", val.toString());
+            }
         }
     }
 
@@ -297,6 +341,68 @@ public class AjaxBundleDetailsAction extends BundleAction {
         }
     }
 
+    private void printExport(StringBuffer val, String name, Version version) {
+        boolean bootDel = isBootDelegated(name);
+        if (bootDel) {
+            val.append("<span style=\"color: red\">!! ");
+        }
+
+        val.append(name);
+        val.append(",version=");
+        val.append(version);
+
+        if (bootDel) {
+            val.append(" -- Overwritten by Boot Delegation</span>");
+        }
+
+        val.append("<br />");
+
+    }
+
+    private void printImport(StringBuffer val, String name, Version version,
+            ExportedPackage export) {
+        boolean bootDel = isBootDelegated(name);
+        if (bootDel || export == null) {
+            val.append("<span style=\"color: red\">!! ");
+        }
+
+        val.append(name);
+        val.append(",version=").append(version);
+        val.append(" from ");
+
+        if (export != null) {
+            if (export.getExportingBundle().getSymbolicName() != null) {
+                // list the bundle name if not null
+                val.append(export.getExportingBundle().getSymbolicName());
+                val.append(" (").append(
+                    export.getExportingBundle().getBundleId());
+                val.append(")");
+            } else if (export.getExportingBundle().getLocation() != null) {
+                // otherwise try the location
+                val.append(export.getExportingBundle().getLocation());
+                val.append(" (").append(
+                    export.getExportingBundle().getBundleId());
+                val.append(")");
+            } else {
+                // fallback to just the bundle id
+                // only append the bundle
+                val.append(export.getExportingBundle().getBundleId());
+            }
+
+            if (bootDel) {
+                val.append(" -- Overwritten by Boot Delegation</span>");
+            }
+        } else {
+            val.append(" -- Cannot be resolved");
+            if (bootDel) {
+                val.append(" and overwritten by Boot Delegation");
+            }
+            val.append("</span>");
+        }
+
+        val.append("<br />");
+    }
+
     // returns true if the package is listed in the bootdelegation property
     private boolean isBootDelegated(String pkgName) {
 
@@ -327,6 +433,13 @@ public class AjaxBundleDetailsAction extends BundleAction {
         }
 
         return false;
+    }
+
+    private R4Export toR4Export(ExportedPackage export) {
+        R4Attribute version = new R4Attribute(Constants.VERSION_ATTRIBUTE,
+            export.getVersion().toString(), false);
+        return new R4Export(export.getName(), null,
+            new R4Attribute[] { version });
     }
 
     // ---------- SCR integration ----------------------------------------------

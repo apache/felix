@@ -70,10 +70,13 @@
                             <!-- Required by FileUpload and Util -->
                             org.apache.commons.io,
                             org.apache.commons.io.filefilter,
-                            org.apache.commons.io.output
+                            org.apache.commons.io.output,
+
+                            <!-- Import/Export-Package parsing -->
+                            org.apache.felix.bundlerepository
                         </Private-Package>
                         <Import-Package>
-                            org.apache.felix.scr;resolution:=optional,*
+                            org.apache.felix.*;resolution:=optional,*
                         </Import-Package>
                     </instructions>
                 </configuration>
@@ -129,5 +132,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.bundlerepository</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
 </project>
