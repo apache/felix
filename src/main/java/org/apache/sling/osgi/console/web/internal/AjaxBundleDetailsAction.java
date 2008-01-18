@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -36,13 +37,14 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 
 /**
  * The <code>AjaxBundleDetailsAction</code> TODO
- *
+ * 
  * @scr.component metatype="false"
  * @scr.service
  */
@@ -56,6 +58,17 @@ public class AjaxBundleDetailsAction extends BundleAction {
     /** @scr.reference */
     private PackageAdmin packageAdmin;
 
+    // bootdelegation property entries. wildcards are converted to package
+    // name prefixes. whether an entry is a wildcard or not is set as a flag
+    // in the bootPkgWildcards array.
+    // see #activate and #isBootDelegated
+    private String[] bootPkgs;
+
+    // a flag for each entry in bootPkgs indicating whether the respective
+    // entry was declared as a wildcard or not
+    // see #activate and #isBootDelegated
+    private boolean[] bootPkgWildcards;
+
     public String getName() {
         return NAME;
     }
@@ -66,7 +79,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
@@ -133,10 +146,21 @@ public class AjaxBundleDetailsAction extends BundleAction {
             });
 
             StringBuffer val = new StringBuffer();
-            for (int i = 0; i < exports.length; i++) {
-                val.append(exports[i].getName());
+            for (ExportedPackage export : exports) {
+
+                boolean bootDel = isBootDelegated(export.getName());
+                if (bootDel) {
+                    val.append("<span style=\"color: red\">!! ");
+                }
+
+                val.append(export.getName());
                 val.append(",version=");
-                val.append(exports[i].getVersion());
+                val.append(export.getVersion());
+
+                if (bootDel) {
+                    val.append(" -- Overwritten by Boot Delegation</span>");
+                }
+
                 val.append("<br />");
             }
             keyVal(props, "Exported Packages", val.toString());
@@ -161,7 +185,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
             }
             // now sort
             StringBuffer val = new StringBuffer();
-            if ( imports.size() > 0 ) {
+            if (imports.size() > 0) {
                 final ExportedPackage[] packages = imports.toArray(new ExportedPackage[imports.size()]);
                 Arrays.sort(packages, new Comparator<ExportedPackage>() {
                     public int compare(ExportedPackage p1, ExportedPackage p2) {
@@ -169,8 +193,13 @@ public class AjaxBundleDetailsAction extends BundleAction {
                     }
                 });
                 // and finally print out
-                for (int i = 0; i < packages.length; i++) {
-                    ExportedPackage ep = packages[i];
+                for (ExportedPackage ep : packages) {
+
+                    boolean bootDel = isBootDelegated(ep.getName());
+                    if (bootDel) {
+                        val.append("<span style=\"color: red\">!! ");
+                    }
+
                     val.append(ep.getName());
                     val.append(",version=").append(ep.getVersion());
                     val.append(" from ");
@@ -191,6 +220,10 @@ public class AjaxBundleDetailsAction extends BundleAction {
                         // fallback to just the bundle id
                         // only append the bundle
                         val.append(ep.getExportingBundle().getBundleId());
+                    }
+
+                    if (bootDel) {
+                        val.append(" -- Overwritten by Boot Delegation</span>");
                     }
 
                     val.append("<br />");
@@ -262,5 +295,63 @@ public class AjaxBundleDetailsAction extends BundleAction {
                 // don't care
             }
         }
+    }
+
+    // returns true if the package is listed in the bootdelegation property
+    private boolean isBootDelegated(String pkgName) {
+
+        // bootdelegation analysis from Apache Felix R4SearchPolicyCore
+
+        // Only consider delegation if we have a package name, since
+        // we don't want to promote the default package. The spec does
+        // not take a stand on this issue.
+        if (pkgName.length() > 0) {
+
+            // Delegate any packages listed in the boot delegation
+            // property to the parent class loader.
+            for (int i = 0; i < bootPkgs.length; i++) {
+
+                // A wildcarded boot delegation package will be in the form of
+                // "foo.", so if the package is wildcarded do a startsWith() or
+                // a regionMatches() to ignore the trailing "." to determine if
+                // the request should be delegated to the parent class loader.
+                // If the package is not wildcarded, then simply do an equals()
+                // test to see if the request should be delegated to the parent
+                // class loader.
+                if ((bootPkgWildcards[i] && (pkgName.startsWith(bootPkgs[i]) || bootPkgs[i].regionMatches(
+                    0, pkgName, 0, pkgName.length())))
+                    || (!bootPkgWildcards[i] && bootPkgs[i].equals(pkgName))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // ---------- SCR integration ----------------------------------------------
+
+    protected void activate(ComponentContext context) {
+
+        super.activate(context);
+
+        // bootdelegation property parsing from Apache Felix R4SearchPolicyCore
+        String bootDelegation = context.getBundleContext().getProperty(
+            Constants.FRAMEWORK_BOOTDELEGATION);
+        bootDelegation = (bootDelegation == null) ? "java.*" : bootDelegation
+            + ",java.*";
+        StringTokenizer st = new StringTokenizer(bootDelegation, " ,");
+        bootPkgs = new String[st.countTokens()];
+        bootPkgWildcards = new boolean[bootPkgs.length];
+        for (int i = 0; i < bootPkgs.length; i++) {
+            bootDelegation = st.nextToken();
+            if (bootDelegation.endsWith("*")) {
+                bootPkgWildcards[i] = true;
+                bootDelegation = bootDelegation.substring(0,
+                    bootDelegation.length() - 1);
+            }
+            bootPkgs[i] = bootDelegation;
+        }
+
     }
 }
