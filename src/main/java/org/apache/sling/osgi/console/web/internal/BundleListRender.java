@@ -18,6 +18,8 @@ package org.apache.sling.osgi.console.web.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,15 +38,18 @@ import org.osgi.service.startlevel.StartLevel;
 
 /**
  * The <code>BundleListRender</code> TODO
- *
+ * 
  * @scr.component metatype="false"
- * @scr.reference name="installerService" interface="org.apache.sling.osgi.assembly.installer.InstallerService"
+ * @scr.reference name="installerService"
+ *                interface="org.apache.sling.osgi.assembly.installer.InstallerService"
  * @scr.service
  */
 public class BundleListRender implements Render {
 
     public static final String NAME = "list";
+
     public static final String LABEL = "Bundles";
+
     public static final String BUNDLE_ID = "bundleId";
 
     private BundleContext bundleContext;
@@ -56,6 +61,7 @@ public class BundleListRender implements Render {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.sling.manager.web.internal.Render#getName()
      */
     public String getName() {
@@ -64,14 +70,18 @@ public class BundleListRender implements Render {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.sling.manager.web.internal.Render#getLabel()
      */
     public String getLabel() {
         return LABEL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.internal.Render#render(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.sling.manager.web.internal.internal.Render#render(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
      */
     public void render(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -85,15 +95,18 @@ public class BundleListRender implements Render {
         pw.println("<td colspan='7' class='content'>&nbsp;</th>");
         pw.println("</tr>");
 
-
         this.tableHeader(pw);
 
         Bundle[] bundles = this.getBundles();
         if (bundles == null || bundles.length == 0) {
             pw.println("<tr class='content'>");
-            pw.println("<td class='content' colspan='6'>No " + this.getLabel() + " installed currently</td>");
+            pw.println("<td class='content' colspan='6'>No " + this.getLabel()
+                + " installed currently</td>");
             pw.println("</tr>");
         } else {
+
+            sort(bundles);
+
             long previousBundle = -1;
             for (int i = 0; i < bundles.length; i++) {
 
@@ -145,11 +158,13 @@ public class BundleListRender implements Render {
         pw.println("        span.innerHTML = '';");
         pw.println("        return;");
         pw.println("    }");
-        pw.println("    var parm = '?" + Util.PARAM_ACTION + "=" + AjaxBundleDetailsAction.NAME + "&" + BUNDLE_ID + "=' + bundleId;");
+        pw.println("    var parm = '?" + Util.PARAM_ACTION + "="
+            + AjaxBundleDetailsAction.NAME + "&" + BUNDLE_ID + "=' + bundleId;");
         pw.println("    sendRequest('GET', parm, displayBundleDetails);");
         pw.println("}");
         pw.println("function displayBundleDetails(obj) {");
-        pw.println("    var span = document.getElementById('bundle' + obj." + BUNDLE_ID + ");");
+        pw.println("    var span = document.getElementById('bundle' + obj."
+            + BUNDLE_ID + ");");
         pw.println("    if (!span) {");
         pw.println("        return;");
         pw.println("    }");
@@ -167,9 +182,10 @@ public class BundleListRender implements Render {
     }
 
     private void tableHeader(PrintWriter pw) {
-//        pw.println("<tr class='content'>");
-//        pw.println("<th class='content container' colspan='7'>Installed " + getLabel() + "</th>");
-//        pw.println("</tr>");
+        // pw.println("<tr class='content'>");
+        // pw.println("<th class='content container' colspan='7'>Installed " +
+        // getLabel() + "</th>");
+        // pw.println("</tr>");
 
         pw.println("<tr class='content'>");
         pw.println("<th class='content'>ID</th>");
@@ -184,48 +200,54 @@ public class BundleListRender implements Render {
     }
 
     private void bundle(PrintWriter pw, Bundle bundle) {
-        String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
-        if (name == null || name.length() == 0) {
-            name = bundle.getSymbolicName();
-            if (name == null) {
-                name = bundle.getLocation();
-                if (name == null) {
-                    name = String.valueOf(bundle.getBundleId());
-                }
-            }
-        }
+        String name = getName(bundle);
 
         pw.println("<tr>");
-        pw.println("<td class='content right'>" + bundle.getBundleId() + "</td>");
-        pw.println("<td class='content'><a href='javascript:showDetails(" + bundle.getBundleId() + ")'>" + name + "</a></td>");
-        pw.println("<td class='content center'>" + this.toStateString(bundle.getState()) + "</td>");
+        pw.println("<td class='content right'>" + bundle.getBundleId()
+            + "</td>");
+        pw.println("<td class='content'><a href='javascript:showDetails("
+            + bundle.getBundleId() + ")'>" + name + "</a></td>");
+        pw.println("<td class='content center'>"
+            + this.toStateString(bundle.getState()) + "</td>");
 
         // no buttons for system bundle
         if (bundle.getBundleId() == 0) {
             pw.println("<td class='content' colspan='4'>&nbsp;</td>");
         } else {
-            boolean enabled = bundle.getState() == Bundle.INSTALLED || bundle.getState() == Bundle.RESOLVED;
-            this.actionForm(pw, enabled, bundle.getBundleId(), StartAction.NAME, StartAction.LABEL);
+            boolean enabled = bundle.getState() == Bundle.INSTALLED
+                || bundle.getState() == Bundle.RESOLVED;
+            this.actionForm(pw, enabled, bundle.getBundleId(),
+                StartAction.NAME, StartAction.LABEL);
 
             enabled = bundle.getState() == Bundle.ACTIVE;
-            this.actionForm(pw, enabled, bundle.getBundleId(), StopAction.NAME, StopAction.LABEL);
+            this.actionForm(pw, enabled, bundle.getBundleId(), StopAction.NAME,
+                StopAction.LABEL);
 
-            enabled = bundle.getState() != Bundle.UNINSTALLED && this.hasUpdates(bundle);
-            this.actionForm(pw, enabled, bundle.getBundleId(), UpdateAction.NAME, UpdateAction.LABEL);
+            enabled = bundle.getState() != Bundle.UNINSTALLED
+                && this.hasUpdates(bundle);
+            this.actionForm(pw, enabled, bundle.getBundleId(),
+                UpdateAction.NAME, UpdateAction.LABEL);
 
-            enabled = bundle.getState() == Bundle.INSTALLED || bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.ACTIVE;
-            this.actionForm(pw, enabled, bundle.getBundleId(), UninstallAction.NAME, UninstallAction.LABEL);
+            enabled = bundle.getState() == Bundle.INSTALLED
+                || bundle.getState() == Bundle.RESOLVED
+                || bundle.getState() == Bundle.ACTIVE;
+            this.actionForm(pw, enabled, bundle.getBundleId(),
+                UninstallAction.NAME, UninstallAction.LABEL);
         }
 
         pw.println("</tr>");
     }
 
-    private void actionForm(PrintWriter pw, boolean enabled, long bundleId, String action, String actionLabel) {
+    private void actionForm(PrintWriter pw, boolean enabled, long bundleId,
+            String action, String actionLabel) {
         pw.println("<form name='form" + bundleId + "' method='post'>");
         pw.println("<td class='content' align='right'>");
-        pw.println("<input type='hidden' name='" + Util.PARAM_ACTION + "' value='" + action + "' />");
-        pw.println("<input type='hidden' name='" + BUNDLE_ID + "' value='" + bundleId + "' />");
-        pw.println("<input class='submit' type='submit' value='" + actionLabel + "'" +  (enabled ? "" : "disabled") + " />");
+        pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
+            + "' value='" + action + "' />");
+        pw.println("<input type='hidden' name='" + BUNDLE_ID + "' value='"
+            + bundleId + "' />");
+        pw.println("<input class='submit' type='submit' value='" + actionLabel
+            + "'" + (enabled ? "" : "disabled") + " />");
         pw.println("</td>");
         pw.println("</form>");
     }
@@ -237,15 +259,27 @@ public class BundleListRender implements Render {
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>&nbsp;</td>");
         pw.println("<td class='content'>");
-        pw.println("<input type='hidden' name='" + Util.PARAM_ACTION + "' value='" + InstallAction.NAME + "' />");
-        pw.println("<input class='input' type='file' name='" + InstallAction.FIELD_BUNDLEFILE + "'>");
-        pw.println(" - Start <input class='checkradio' type='checkbox' name='" + InstallAction.FIELD_START + "' value='start'>");
-        pw.println(" - Start Level <input class='input' type='input' name='" + InstallAction.FIELD_STARTLEVEL + "' value='" + startLevel + "' width='4'>");
+        pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
+            + "' value='" + InstallAction.NAME + "' />");
+        pw.println("<input class='input' type='file' name='"
+            + InstallAction.FIELD_BUNDLEFILE + "'>");
+        pw.println(" - Start <input class='checkradio' type='checkbox' name='"
+            + InstallAction.FIELD_START + "' value='start'>");
+        pw.println(" - Start Level <input class='input' type='input' name='"
+            + InstallAction.FIELD_STARTLEVEL + "' value='" + startLevel
+            + "' width='4'>");
         pw.println("</td>");
         pw.println("<td class='content' align='right' colspan='5' noWrap>");
-        pw.println("<input class='submit' style='width:auto' type='submit' value='" + InstallAction.LABEL + "'>");
+        pw.println("<input class='submit' style='width:auto' type='submit' value='"
+            + InstallAction.LABEL + "'>");
         pw.println("&nbsp;");
-        pw.println("<input class='submit' style='width:auto' type='submit' value='" + RefreshPackagesAction.LABEL + "' onClick='this.form[\"" + Util.PARAM_ACTION + "\"].value=\"" + RefreshPackagesAction.NAME + "\"; return true;'>");
+        pw.println("<input class='submit' style='width:auto' type='submit' value='"
+            + RefreshPackagesAction.LABEL
+            + "' onClick='this.form[\""
+            + Util.PARAM_ACTION
+            + "\"].value=\""
+            + RefreshPackagesAction.NAME
+            + "\"; return true;'>");
         pw.println("</td>");
         pw.println("</tr>");
         pw.println("</form>");
@@ -253,13 +287,20 @@ public class BundleListRender implements Render {
 
     private String toStateString(int bundleState) {
         switch (bundleState) {
-            case Bundle.INSTALLED: return "Installed";
-            case Bundle.RESOLVED: return "Resolved";
-            case Bundle.STARTING: return "Starting";
-            case Bundle.ACTIVE: return "Active";
-            case Bundle.STOPPING: return "Stopping";
-            case Bundle.UNINSTALLED: return "Uninstalled";
-            default: return "Unknown: " + bundleState;
+            case Bundle.INSTALLED:
+                return "Installed";
+            case Bundle.RESOLVED:
+                return "Resolved";
+            case Bundle.STARTING:
+                return "Starting";
+            case Bundle.ACTIVE:
+                return "Active";
+            case Bundle.STOPPING:
+                return "Stopping";
+            case Bundle.UNINSTALLED:
+                return "Uninstalled";
+            default:
+                return "Unknown: " + bundleState;
         }
     }
 
@@ -270,9 +311,10 @@ public class BundleListRender implements Render {
             return false;
         }
 
-        Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+        Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(
+            Constants.BUNDLE_VERSION));
 
-        for (Iterator<Resource> ri=this.repoAdmin.getResources(); ri.hasNext(); ) {
+        for (Iterator<Resource> ri = this.repoAdmin.getResources(); ri.hasNext();) {
             Resource res = ri.next();
             if (bundle.getSymbolicName().equals(res.getSymbolicName())) {
                 if (res.getVersion().compareTo(bundleVersion) > 0) {
@@ -284,7 +326,25 @@ public class BundleListRender implements Render {
         return false;
     }
 
-    //--------- SCR Integration -----------------------------------------------
+    private void sort(Bundle[] bundles) {
+        Arrays.sort(bundles, BUNDLE_NAME_COMPARATOR);
+    }
+
+    private static String getName(Bundle bundle) {
+        String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+        if (name == null || name.length() == 0) {
+            name = bundle.getSymbolicName();
+            if (name == null) {
+                name = bundle.getLocation();
+                if (name == null) {
+                    name = String.valueOf(bundle.getBundleId());
+                }
+            }
+        }
+        return name;
+    }
+    
+    // --------- SCR Integration -----------------------------------------------
 
     protected void activate(ComponentContext context) {
         this.bundleContext = context.getBundleContext();
@@ -309,4 +369,47 @@ public class BundleListRender implements Render {
     protected void unbindStartLevel(StartLevel startLevel) {
         this.startLevel = null;
     }
+
+    // ---------- inner classes ------------------------------------------------
+
+    private static final Comparator<Bundle> BUNDLE_NAME_COMPARATOR = new Comparator<Bundle>() {
+        public int compare(Bundle b1, Bundle b2) {
+
+            // the same bundles
+            if (b1 == b2 || b1.getBundleId() == b2.getBundleId()) {
+                return 0;
+            }
+
+            // special case for system bundle, which always is first
+            if (b1.getBundleId() == 0) {
+                return -1;
+            } else if (b2.getBundleId() == 0) {
+                return 1;
+            }
+            
+            // compare the symbolic names
+            int snComp = getName(b1).compareToIgnoreCase(getName(b2));
+            if (snComp != 0) {
+                return snComp;
+            }
+
+            // same names, compare versions
+            Version v1 = Version.parseVersion((String) b1.getHeaders().get(
+                Constants.BUNDLE_VERSION));
+            Version v2 = Version.parseVersion((String) b2.getHeaders().get(
+                Constants.BUNDLE_VERSION));
+            int vComp = v1.compareTo(v2);
+            if (vComp != 0) {
+                return vComp;
+            }
+            
+            // same version ? Not really, but then, we compare by bundle id
+            if (b1.getBundleId() < b2.getBundleId()) {
+                return -1;
+            }
+
+            // b1 id must be > b2 id because equality is already checked
+            return 1;
+        }
+    };
 }
