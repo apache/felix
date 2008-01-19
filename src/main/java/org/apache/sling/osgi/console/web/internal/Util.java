@@ -60,7 +60,7 @@ public class Util {
         + "<html>"
         + "<head>"
         + "<meta http-equiv=\"Content-Type\" content=\"text/html; utf-8\">"
-        + "<link rel=\"icon\" href=\"res/imgs/logo_16.png\">"
+        + "<link rel=\"icon\" href=\"res/imgs/favicon.ico\">"
         + "<title>{0} - {12}</title>"
         + "<script src=\"res/ui/admin.js\" language=\"JavaScript\"></script>"
         + "<script language=\"JavaScript\">"
@@ -81,7 +81,7 @@ public class Util {
         + "{0}<br>{12}"
         + "</h1>"
         + "<p>"
-        + "<a target=\"_blank\" href=\"{13}\" title=\"{11}\"><img src=\"res/imgs/logo.png\" width=\"200\" height=\"100\" border=\"0\"></a>"
+        + "<a target=\"_blank\" href=\"{13}\" title=\"{11}\"><img src=\"res/imgs/Sling.png\" width=\"175\" height=\"100\" border=\"0\"></a>"
         + "</p>" + "</div>";
 
     /** The name of the request attribute containig the map of FileItems from the POST request */
@@ -94,7 +94,7 @@ public class Util {
 
         String adminTitle = "Sling Management Console"; // ServletEngine.VERSION.getFullProductName();
         String productName = "Sling"; // ServletEngine.VERSION.getShortProductName();
-        String productWeb = "http://wiki.apache.org/jackrabbit/ApacheSling";
+        String productWeb = "http://incubator.apache.org/sling";
         String vendorName = "http://www.apache.org"; // ServletEngine.VERSION.getVendorWeb();
         String vendorWeb = "http://www.apache.org"; // ServletEngine.VERSION.getVendorWeb();
 

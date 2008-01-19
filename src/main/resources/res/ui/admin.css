@@ -28,8 +28,8 @@
     border-color: black;
 }
 
-#lead { /* background-*/
-    color: #B6CAE4;
+#lead {
+    color: #00678C;
     /* color: #ffffff; */
     margin: 0px 0px 26px 0px;
     padding: 0px;
@@ -43,9 +43,9 @@
     */
     margin: 0px;
     padding: 5px 0 0 8px;
-    font-size: 26px;
-    font-weight: normal;
-    line-height: 32px;
+    font-size: 400%;
+    font-weight: bold;
+    line-height: 120%;
     height: 95px;
     /* account for 5px top marging to get a total of 100px */
     float: left;
