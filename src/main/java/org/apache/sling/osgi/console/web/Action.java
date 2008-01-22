@@ -24,11 +24,13 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface Action {
 
+    static final String SERVICE = Action.class.getName();
+    
     /**
      * The name of a request attribute, which may be set by performAction if
      * redirecting.
      */
-    public static final String ATTR_REDIRECT_PARAMETERS= "redirectParameters";
+    static final String ATTR_REDIRECT_PARAMETERS= "redirectParameters";
 
     String getName();
 

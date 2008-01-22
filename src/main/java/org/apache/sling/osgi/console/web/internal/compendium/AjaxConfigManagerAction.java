@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.compendium;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -29,7 +29,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -48,11 +47,7 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * The <code>AjaxConfigManagerAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.reference interface="org.osgi.service.cm.ConfigurationAdmin" name="configurationAdmin"
- * @scr.reference interface="org.osgi.service.metatype.MetaTypeService" name="metaTypeService"
- * @scr.service
+ * 
  */
 public class AjaxConfigManagerAction extends ConfigManagerBase implements
         Action {
@@ -69,16 +64,16 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
     public boolean performAction(HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ServletException {
+            HttpServletResponse response) throws IOException {
 
         // should actually apply the configuration before redirecting
         if (request.getParameter("apply") != null) {
-            return this.applyConfiguration(request, response);
+            return applyConfiguration(request);
         }
 
         JSONObject result = new JSONObject();
@@ -116,7 +111,8 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
 
         Configuration config = null;
         try {
-            Configuration[] configs = ca.listConfigurations("(" + Constants.SERVICE_PID + "="+ pid + ")");
+            Configuration[] configs = ca.listConfigurations("("
+                + Constants.SERVICE_PID + "=" + pid + ")");
             if (configs != null && configs.length > 0) {
                 config = configs[0];
             }
@@ -138,7 +134,6 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         }
 
         props = this.mergeWithMetaType(props, ocd, json);
-
 
         if (props != null) {
             JSONObject properties = new JSONObject();
@@ -229,14 +224,14 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                     if (ad[i].getCardinality() == 0) {
                         // scalar
                         if (value instanceof Vector) {
-                            value = ((Vector) value).get(0);
+                            value = ((Vector<?>) value).get(0);
                         } else if (value.getClass().isArray()) {
                             value = Array.get(value, 0);
                         }
                         entry.put("value", value);
                     } else {
                         if (value instanceof Vector) {
-                            value = new JSONArray((Vector) value);
+                            value = new JSONArray((Vector<?>) value);
                         } else if (value.getClass().isArray()) {
                             value = new JSONArray(
                                 Arrays.asList((Object[]) value));
@@ -294,8 +289,8 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
         json.put("bundleLocation", location);
     }
 
-    private boolean applyConfiguration(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
+    private boolean applyConfiguration(HttpServletRequest request)
+            throws IOException {
 
         ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
@@ -321,11 +316,13 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                 if (props == null) {
                     props = new Hashtable<String, Object>();
                 }
-                props.put("sling.context", request.getParameter("sling.context"));
+                props.put("sling.context",
+                    request.getParameter("sling.context"));
                 config.update(props);
             }
 
-//            request.setAttribute(ATTR_REDIRECT_PARAMETERS, "pid=" + config.getPid());
+            // request.setAttribute(ATTR_REDIRECT_PARAMETERS, "pid=" +
+            // config.getPid());
             return true;
         }
 
@@ -350,7 +347,8 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
                 props = new Hashtable<String, Object>();
             }
 
-            Map<String, AttributeDefinition> adMap = this.getAttributeDefinitionMap(config, null);
+            Map<String, AttributeDefinition> adMap = this.getAttributeDefinitionMap(
+                config, null);
             if (adMap != null) {
                 StringTokenizer propTokens = new StringTokenizer(propertyList,
                     ",");
@@ -398,7 +396,7 @@ public class AjaxConfigManagerAction extends ConfigManagerBase implements
             config.update(props);
         }
 
-//        request.setAttribute(ATTR_REDIRECT_PARAMETERS, "pid=" + pid);
+        // request.setAttribute(ATTR_REDIRECT_PARAMETERS, "pid=" + pid);
         return true;
     }
 

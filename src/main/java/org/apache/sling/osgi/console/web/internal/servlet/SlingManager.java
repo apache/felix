@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web;
+package org.apache.sling.osgi.console.web.internal.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -39,24 +39,44 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
+import org.apache.sling.osgi.console.web.Action;
+import org.apache.sling.osgi.console.web.Render;
+import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 import org.apache.sling.osgi.console.web.internal.Util;
-import org.osgi.service.component.ComponentContext;
+import org.apache.sling.osgi.console.web.internal.compendium.AjaxConfigManagerAction;
+import org.apache.sling.osgi.console.web.internal.compendium.ComponentRenderAction;
+import org.apache.sling.osgi.console.web.internal.compendium.ConfigManager;
+import org.apache.sling.osgi.console.web.internal.core.AjaxBundleDetailsAction;
+import org.apache.sling.osgi.console.web.internal.core.BundleListRender;
+import org.apache.sling.osgi.console.web.internal.core.InstallAction;
+import org.apache.sling.osgi.console.web.internal.core.RefreshPackagesAction;
+import org.apache.sling.osgi.console.web.internal.core.SetStartLevelAction;
+import org.apache.sling.osgi.console.web.internal.core.StartAction;
+import org.apache.sling.osgi.console.web.internal.core.StopAction;
+import org.apache.sling.osgi.console.web.internal.core.UninstallAction;
+import org.apache.sling.osgi.console.web.internal.core.UpdateAction;
+import org.apache.sling.osgi.console.web.internal.misc.AssemblyListRender;
+import org.apache.sling.osgi.console.web.internal.misc.ConfigurationRender;
+import org.apache.sling.osgi.console.web.internal.obr.BundleRepositoryRender;
+import org.apache.sling.osgi.console.web.internal.obr.InstallFromRepoAction;
+import org.apache.sling.osgi.console.web.internal.obr.RefreshRepoAction;
+import org.apache.sling.osgi.console.web.internal.system.GCAction;
+import org.apache.sling.osgi.console.web.internal.system.ShutdownAction;
+import org.apache.sling.osgi.console.web.internal.system.ShutdownRender;
+import org.apache.sling.osgi.console.web.internal.system.VMStatRender;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>Sling Manager</code> TODO
- *
- * @scr.component immediate="true" label="%manager.name"
+ * 
+ * @scr.component ds="no" label="%manager.name"
  *                description="%manager.description"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling Management Console"
- * @scr.reference name="operation"
- *                interface="org.apache.sling.osgi.console.web.Action"
- *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="render" interface="org.apache.sling.osgi.console.web.Render"
- *                cardinality="0..n" policy="dynamic"
  */
 public class SlingManager extends GenericServlet {
 
@@ -95,17 +115,30 @@ public class SlingManager extends GenericServlet {
      */
     private static final String PROP_PASSWORD = "password";
 
-    private ComponentContext componentContext;
+    private static final Class<?>[] PLUGIN_CLASSES = {
+        AjaxConfigManagerAction.class, ComponentRenderAction.class,
+        ConfigManager.class, AjaxBundleDetailsAction.class,
+        BundleListRender.class, InstallAction.class,
+        RefreshPackagesAction.class, SetStartLevelAction.class,
+        StartAction.class, StopAction.class, UninstallAction.class,
+        UpdateAction.class, AssemblyListRender.class,
+        ConfigurationRender.class, BundleRepositoryRender.class,
+        InstallFromRepoAction.class, RefreshRepoAction.class, GCAction.class,
+        ShutdownAction.class, ShutdownRender.class, VMStatRender.class };
 
-    /**
-     * @scr.reference
-     */
+    private BundleContext bundleContext;
+
+    private Logger log;
+
+    private ServiceTracker httpServiceTracker;
+
     private HttpService httpService;
 
-    /**
-     * @scr.reference
-     */
-    private LogService logService;
+    private ServiceTracker operationsTracker;
+
+    private ServiceTracker rendersTracker;
+
+    private ServiceRegistration configurationListener;
 
     private Map<String, Action> operations = new HashMap<String, Action>();
 
@@ -116,6 +149,82 @@ public class SlingManager extends GenericServlet {
     private String defaultRenderName;
 
     private String webManagerRoot;
+
+    private Dictionary<String, Object> configuration;
+
+    public SlingManager(BundleContext bundleContext) {
+
+        this.bundleContext = bundleContext;
+        this.log = new Logger(bundleContext);
+
+        updateConfiguration(null);
+        
+        try {
+            this.configurationListener = ConfigurationListener.create(this);
+        } catch (Throwable t) {
+            // might be caused by CM not available
+        }
+
+        // track renders and operations
+        operationsTracker = new OperationServiceTracker(this);
+        operationsTracker.open();
+        rendersTracker = new RenderServiceTracker(this);
+        rendersTracker.open();
+        httpServiceTracker = new HttpServiceTracker(this);
+        httpServiceTracker.open();
+
+        for (Class<?> pluginClass : PLUGIN_CLASSES) {
+            try {
+                Object plugin = pluginClass.newInstance();
+                if (plugin instanceof BaseManagementPlugin) {
+                    ((BaseManagementPlugin) plugin).setBundleContext(bundleContext);
+                    ((BaseManagementPlugin) plugin).setLogger(log);
+                }
+                if (plugin instanceof Action) {
+                    bindOperation((Action) plugin);
+                }
+                if (plugin instanceof Render) {
+                    bindRender((Render) plugin);
+                }
+            } catch (Throwable t) {
+                // todo: log
+            }
+        }
+    }
+
+    public void dispose() {
+
+        if (configurationListener != null) {
+            configurationListener.unregister();
+            configurationListener = null;
+        }
+
+        if (operationsTracker != null) {
+            operationsTracker.close();
+            operationsTracker = null;
+        }
+
+        if (rendersTracker != null) {
+            rendersTracker.close();
+            rendersTracker = null;
+        }
+
+        if (httpServiceTracker != null) {
+            httpServiceTracker.close();
+            httpServiceTracker = null;
+        }
+
+        // simply remove all operations, we should not be used anymore
+        this.defaultRender = null;
+        this.operations.clear();
+        this.renders.clear();
+
+        if (log != null) {
+            log.dispose();
+        }
+
+        this.bundleContext = null;
+    }
 
     public void service(ServletRequest req, ServletResponse res)
             throws ServletException, IOException {
@@ -172,7 +281,8 @@ public class SlingManager extends GenericServlet {
                 }
 
                 // maybe overwrite redirect
-                if (PARAM_NO_REDIRECT_AFTER_ACTION.equals(getParameter(req, PARAM_NO_REDIRECT_AFTER_ACTION))) {
+                if (PARAM_NO_REDIRECT_AFTER_ACTION.equals(getParameter(req,
+                    PARAM_NO_REDIRECT_AFTER_ACTION))) {
                     resp.setStatus(HttpServletResponse.SC_OK);
                     resp.setContentType("text/html");
                     resp.getWriter().println("Ok");
@@ -271,18 +381,97 @@ public class SlingManager extends GenericServlet {
         return null;
     }
 
-    // ---------- SCR Integration ----------------------------------------------
+    BundleContext getBundleContext() {
+        return bundleContext;
+    }
 
-    protected void activate(ComponentContext context) {
-        this.componentContext = context;
+    private static class HttpServiceTracker extends ServiceTracker {
 
-        @SuppressWarnings("unchecked")
-        Dictionary<String, Object> config = this.componentContext.getProperties();
+        private final SlingManager slingManager;
 
-        this.defaultRenderName = (String) config.get(PROP_DEFAULT_RENDER);
-        if ( this.renders.get(this.defaultRenderName ) != null ) {
-            this.defaultRender = this.renders.get(this.defaultRenderName);
+        HttpServiceTracker(SlingManager slingManager) {
+            super(slingManager.getBundleContext(), HttpService.class.getName(),
+                null);
+            this.slingManager = slingManager;
         }
+
+        @Override
+        public Object addingService(ServiceReference reference) {
+            Object operation = super.addingService(reference);
+            if (operation instanceof HttpService) {
+                slingManager.bindHttpService((HttpService) operation);
+            }
+            return operation;
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            if (service instanceof HttpService) {
+                slingManager.unbindHttpService((HttpService) service);
+            }
+
+            super.removedService(reference, service);
+        }
+    }
+
+    private static class OperationServiceTracker extends ServiceTracker {
+
+        private final SlingManager slingManager;
+
+        OperationServiceTracker(SlingManager slingManager) {
+            super(slingManager.getBundleContext(), Action.SERVICE, null);
+            this.slingManager = slingManager;
+        }
+
+        @Override
+        public Object addingService(ServiceReference reference) {
+            Object operation = super.addingService(reference);
+            if (operation instanceof Action) {
+                slingManager.bindOperation((Action) operation);
+            }
+            return operation;
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            if (service instanceof Action) {
+                slingManager.bindOperation((Action) service);
+            }
+
+            super.removedService(reference, service);
+        }
+    }
+
+    private static class RenderServiceTracker extends ServiceTracker {
+
+        private final SlingManager slingManager;
+
+        RenderServiceTracker(SlingManager slingManager) {
+            super(slingManager.getBundleContext(), Render.SERVICE, null);
+            this.slingManager = slingManager;
+        }
+
+        @Override
+        public Object addingService(ServiceReference reference) {
+            Object operation = super.addingService(reference);
+            if (operation instanceof Render) {
+                slingManager.bindRender((Render) operation);
+            }
+            return operation;
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            if (service instanceof Render) {
+                slingManager.bindRender((Render) service);
+            }
+
+            super.removedService(reference, service);
+        }
+    }
+
+    protected synchronized void bindHttpService(HttpService httpService) {
+        Dictionary<String, Object> config = getConfiguration();
 
         // get authentication details
         String realm = this.getProperty(config, PROP_REALM,
@@ -290,40 +479,33 @@ public class SlingManager extends GenericServlet {
         String userId = this.getProperty(config, PROP_USER_NAME, null);
         String password = this.getProperty(config, PROP_PASSWORD, null);
 
-        // get the web manager root path
-        this.webManagerRoot = this.getProperty(config, PROP_MANAGER_ROOT, "/sling");
-        if (!this.webManagerRoot.startsWith("/")) {
-            this.webManagerRoot = "/" + this.webManagerRoot;
-        }
-
         // register the servlet and resources
         try {
-            HttpContext httpContext = new SlingHttpContext(this.httpService, realm,
+            HttpContext httpContext = new SlingHttpContext(httpService, realm,
                 userId, password);
 
             Dictionary<String, String> servletConfig = toStringConfig(config);
-            
+
             // rest of sling
-            this.httpService.registerServlet(this.webManagerRoot, this,
+            httpService.registerServlet(this.webManagerRoot, this,
                 servletConfig, httpContext);
-            this.httpService.registerResources(this.webManagerRoot + "/res",
-                "/res", httpContext);
+            httpService.registerResources(this.webManagerRoot + "/res", "/res",
+                httpContext);
 
         } catch (Exception e) {
-            this.logService.log(LogService.LOG_ERROR, "Problem setting up", e);
+            log.log(LogService.LOG_ERROR, "Problem setting up", e);
         }
+
+        this.httpService = httpService;
     }
 
-    protected void deactivate(ComponentContext context) {
-        this.httpService.unregister(this.webManagerRoot + "/res");
-        this.httpService.unregister(this.webManagerRoot);
+    protected synchronized void unbindHttpService(HttpService httpService) {
+        httpService.unregister(this.webManagerRoot + "/res");
+        httpService.unregister(this.webManagerRoot);
 
-        this.componentContext = null;
-
-        // simply remove all operations, we should not be used anymore
-        this.defaultRender = null;
-        this.operations.clear();
-        this.renders.clear();
+        if (this.httpService == httpService) {
+            this.httpService = null;
+        }
     }
 
     protected void bindOperation(Action operation) {
@@ -339,7 +521,7 @@ public class SlingManager extends GenericServlet {
 
         if (this.defaultRender == null) {
             this.defaultRender = render;
-        } else if ( render.getName().equals(this.defaultRenderName ) ) {
+        } else if (render.getName().equals(this.defaultRenderName)) {
             this.defaultRender = render;
         }
     }
@@ -356,17 +538,50 @@ public class SlingManager extends GenericServlet {
         }
     }
 
+    private Dictionary<String, Object> getConfiguration() {
+        return configuration;
+    }
+
+    void updateConfiguration(Dictionary<String, Object> config) {
+        if (config == null) {
+            config = new Hashtable<String, Object>();
+        }
+        
+        configuration = config;
+
+        defaultRenderName = (String) config.get(PROP_DEFAULT_RENDER);
+        if (defaultRenderName != null && renders.get(defaultRenderName) != null) {
+            defaultRender = renders.get(defaultRenderName);
+        }
+
+        // get the web manager root path
+        webManagerRoot = this.getProperty(config, PROP_MANAGER_ROOT, "/sling");
+        if (!webManagerRoot.startsWith("/")) {
+            webManagerRoot = "/" + webManagerRoot;
+        }
+
+        // might update http service registration
+        HttpService httpService = this.httpService;
+        if (httpService != null) {
+            synchronized (this) {
+                unbindHttpService(httpService);
+                bindHttpService(httpService);
+            }
+        }
+    }
+
     /**
      * Returns the named property from the configuration. If the property does
      * not exist, the default value <code>def</code> is returned.
-     *
+     * 
      * @param config The properties from which to returned the named one
      * @param name The name of the property to return
      * @param def The default value if the named property does not exist
      * @return The value of the named property as a string or <code>def</code>
      *         if the property does not exist
      */
-    private String getProperty(Dictionary<String, Object> config, String name, String def) {
+    private String getProperty(Dictionary<String, Object> config, String name,
+            String def) {
         Object value = config.get(name);
         if (value instanceof String) {
             return (String) value;
@@ -378,7 +593,7 @@ public class SlingManager extends GenericServlet {
 
         return String.valueOf(value);
     }
-    
+
     private Dictionary<String, String> toStringConfig(Dictionary<?, ?> config) {
         Dictionary<String, String> stringConfig = new Hashtable<String, String>();
         for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {

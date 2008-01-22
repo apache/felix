@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.compendium;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -22,39 +22,51 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>ConfigManagerBase</code> TODO
+ * 
  */
-abstract class ConfigManagerBase {
+abstract class ConfigManagerBase extends BaseManagementPlugin {
 
-    private BundleContext bundleContext;
+    private ServiceTracker configurationAdmin;
 
-    /** @scr.reference */
-    private ConfigurationAdmin configurationAdmin;
+    private ServiceTracker metaTypeService;
 
-    /** @scr.reference */
-    private MetaTypeService metaTypeService;
-
-    protected BundleContext getBundleContext() {
-        return this.bundleContext;
+    public void setBundleContext(BundleContext bundleContext) {
+        super.setBundleContext(bundleContext);
+        
+        configurationAdmin = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+        configurationAdmin.open();
+        metaTypeService = new ServiceTracker(bundleContext, MetaTypeService.class.getName(), null);
+        metaTypeService.open();
     }
-
+    
+    public void destroy() {
+        if (configurationAdmin != null) {
+            configurationAdmin.close();
+        }
+        if (metaTypeService != null) {
+            metaTypeService.close();
+        }
+    }
+    
     protected ConfigurationAdmin getConfigurationAdmin() {
-        return this.configurationAdmin;
+        return (ConfigurationAdmin) configurationAdmin.getService();
     }
 
     protected MetaTypeService getMetaTypeService() {
-        return this.metaTypeService;
+        return (MetaTypeService) metaTypeService.getService();
     }
 
     protected Map<String, Bundle> getMetadataPids() {
@@ -62,7 +74,7 @@ abstract class ConfigManagerBase {
         MetaTypeService mts = this.getMetaTypeService();
         if (mts != null) {
             Bundle[] bundles = this.getBundleContext().getBundles();
-            for (int i=0; i < bundles.length; i++) {
+            for (int i = 0; i < bundles.length; i++) {
                 MetaTypeInformation mti = mts.getMetaTypeInformation(bundles[i]);
                 if (mti != null) {
                     String[] pidList = mti.getPids();
@@ -80,14 +92,16 @@ abstract class ConfigManagerBase {
 
         // if the configuration is not bound, search in the bundles
         if (config.getBundleLocation() == null) {
-            ObjectClassDefinition ocd = this.getObjectClassDefinition(config.getPid(), locale);
+            ObjectClassDefinition ocd = this.getObjectClassDefinition(
+                config.getPid(), locale);
             if (ocd != null) {
                 return ocd;
             }
 
             // if none, check whether there might be one for the factory PID
             if (config.getFactoryPid() != null) {
-                return this.getObjectClassDefinition(config.getFactoryPid(), locale);
+                return this.getObjectClassDefinition(config.getFactoryPid(),
+                    locale);
             }
         }
 
@@ -98,14 +112,17 @@ abstract class ConfigManagerBase {
                 MetaTypeInformation mti = mts.getMetaTypeInformation(bundle);
                 if (mti != null) {
                     // try OCD by PID first
-                    ObjectClassDefinition ocd = mti.getObjectClassDefinition(config.getPid(), locale);
+                    ObjectClassDefinition ocd = mti.getObjectClassDefinition(
+                        config.getPid(), locale);
                     if (ocd != null) {
                         return ocd;
                     }
 
-                    // if none, check whether there might be one for the factory PID
+                    // if none, check whether there might be one for the factory
+                    // PID
                     if (config.getFactoryPid() != null) {
-                        return mti.getObjectClassDefinition(config.getFactoryPid(), locale);
+                        return mti.getObjectClassDefinition(
+                            config.getFactoryPid(), locale);
                     }
                 }
             }
@@ -131,11 +148,13 @@ abstract class ConfigManagerBase {
         return null;
     }
 
-    protected ObjectClassDefinition getObjectClassDefinition(String pid, String locale) {
+    protected ObjectClassDefinition getObjectClassDefinition(String pid,
+            String locale) {
         Bundle[] bundles = this.getBundleContext().getBundles();
-        for (int i=0; i < bundles.length; i++) {
+        for (int i = 0; i < bundles.length; i++) {
             try {
-                ObjectClassDefinition ocd = this.getObjectClassDefinition(bundles[i], pid, locale);
+                ObjectClassDefinition ocd = this.getObjectClassDefinition(
+                    bundles[i], pid, locale);
                 if (ocd != null) {
                     return ocd;
                 }
@@ -146,8 +165,10 @@ abstract class ConfigManagerBase {
         return null;
     }
 
-    protected Map<String, AttributeDefinition> getAttributeDefinitionMap(Configuration config, String locale) {
-        ObjectClassDefinition ocd = this.getObjectClassDefinition(config, locale);
+    protected Map<String, AttributeDefinition> getAttributeDefinitionMap(
+            Configuration config, String locale) {
+        ObjectClassDefinition ocd = this.getObjectClassDefinition(config,
+            locale);
         if (ocd != null) {
             AttributeDefinition[] ad = ocd.getAttributeDefinitions(ObjectClassDefinition.ALL);
             if (ad != null) {
@@ -188,29 +209,4 @@ abstract class ConfigManagerBase {
         }
     }
 
-    //--------- SCR Integration -----------------------------------------------
-
-    protected void activate(ComponentContext context) {
-        this.bundleContext = context.getBundleContext();
-    }
-
-    protected void deactivate(ComponentContext context) {
-        this.bundleContext = null;
-    }
-
-    protected void bindConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
-        this.configurationAdmin = configurationAdmin;
-    }
-
-    protected void unbindConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
-        this.configurationAdmin = null;
-    }
-
-    protected void bindMetaTypeService(MetaTypeService metaTypeService) {
-        this.metaTypeService = metaTypeService;
-    }
-
-    protected void unbindMetaTypeService(MetaTypeService metaTypeService) {
-        this.metaTypeService = null;
-    }
 }

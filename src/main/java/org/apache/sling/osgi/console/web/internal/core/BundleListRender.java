@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,22 +29,18 @@ import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
 import org.apache.sling.osgi.assembly.installer.InstallerService;
 import org.apache.sling.osgi.assembly.installer.Resource;
 import org.apache.sling.osgi.console.web.Render;
+import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
+import org.apache.sling.osgi.console.web.internal.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>BundleListRender</code> TODO
- * 
- * @scr.component metatype="false"
- * @scr.reference name="installerService"
- *                interface="org.apache.sling.osgi.assembly.installer.InstallerService"
- * @scr.service
  */
-public class BundleListRender implements Render {
+public class BundleListRender extends BaseManagementPlugin implements Render {
 
     public static final String NAME = "list";
 
@@ -52,12 +48,25 @@ public class BundleListRender implements Render {
 
     public static final String BUNDLE_ID = "bundleId";
 
-    private BundleContext bundleContext;
+    private static final String INSTALLER_SERVICE_NAME = "org.apache.sling.osgi.assembly.installer.InstallerService";
 
-    /** @scr.reference */
-    private StartLevel startLevel;
+    // track the optional installer service manually
+    private ServiceTracker installerService;
 
-    private BundleRepositoryAdmin repoAdmin;
+    public void setBundleContext(BundleContext bundleContext) {
+        super.setBundleContext(bundleContext);
+
+        installerService = new ServiceTracker(bundleContext,
+            INSTALLER_SERVICE_NAME, null);
+        installerService.open();
+    }
+
+    // protected void deactivate(ComponentContext context) {
+    // if (installerService != null) {
+    // installerService.close();
+    // installerService = null;
+    // }
+    // }
 
     /*
      * (non-Javadoc)
@@ -135,16 +144,8 @@ public class BundleListRender implements Render {
         this.footer(pw);
     }
 
-    protected BundleContext getBundleContext() {
-        return this.bundleContext;
-    }
-
-    protected StartLevel getStartLevelService() {
-        return this.startLevel;
-    }
-
     protected Bundle[] getBundles() {
-        return this.bundleContext.getBundles();
+        return getBundleContext().getBundles();
     }
 
     private void header(PrintWriter pw) {
@@ -253,7 +254,7 @@ public class BundleListRender implements Render {
     }
 
     private void installForm(PrintWriter pw) {
-        int startLevel = this.getStartLevelService().getInitialBundleStartLevel();
+        int startLevel = getStartLevel().getInitialBundleStartLevel();
 
         pw.println("<form method='post' enctype='multipart/form-data'>");
         pw.println("<tr class='content'>");
@@ -306,6 +307,12 @@ public class BundleListRender implements Render {
 
     private boolean hasUpdates(Bundle bundle) {
 
+        // no updates if there is no installer service
+        Object isObject = installerService.getService();
+        if (isObject == null) {
+            return false;
+        }
+
         // don't care for bundles with no symbolic name
         if (bundle.getSymbolicName() == null) {
             return false;
@@ -314,7 +321,8 @@ public class BundleListRender implements Render {
         Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(
             Constants.BUNDLE_VERSION));
 
-        for (Iterator<Resource> ri = this.repoAdmin.getResources(); ri.hasNext();) {
+        BundleRepositoryAdmin repoAdmin = ((InstallerService) isObject).getBundleRepositoryAdmin();
+        for (Iterator<Resource> ri = repoAdmin.getResources(); ri.hasNext();) {
             Resource res = ri.next();
             if (bundle.getSymbolicName().equals(res.getSymbolicName())) {
                 if (res.getVersion().compareTo(bundleVersion) > 0) {
@@ -343,32 +351,6 @@ public class BundleListRender implements Render {
         }
         return name;
     }
-    
-    // --------- SCR Integration -----------------------------------------------
-
-    protected void activate(ComponentContext context) {
-        this.bundleContext = context.getBundleContext();
-    }
-
-    protected void deactivate(ComponentContext context) {
-        this.bundleContext = null;
-    }
-
-    protected void bindInstallerService(InstallerService installerService) {
-        this.repoAdmin = installerService.getBundleRepositoryAdmin();
-    }
-
-    protected void unbindInstallerService(InstallerService installerService) {
-        this.repoAdmin = null;
-    }
-
-    protected void bindStartLevel(StartLevel startLevel) {
-        this.startLevel = startLevel;
-    }
-
-    protected void unbindStartLevel(StartLevel startLevel) {
-        this.startLevel = null;
-    }
 
     // ---------- inner classes ------------------------------------------------
 
@@ -386,7 +368,7 @@ public class BundleListRender implements Render {
             } else if (b2.getBundleId() == 0) {
                 return 1;
             }
-            
+
             // compare the symbolic names
             int snComp = getName(b1).compareToIgnoreCase(getName(b2));
             if (snComp != 0) {
@@ -402,7 +384,7 @@ public class BundleListRender implements Render {
             if (vComp != 0) {
                 return vComp;
             }
-            
+
             // same version ? Not really, but then, we compare by bundle id
             if (b1.getBundleId() < b2.getBundleId()) {
                 return -1;

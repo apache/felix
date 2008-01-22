@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.system;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,36 +24,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.osgi.console.web.Render;
 
-/**
- * The <code>ShutdownRender</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
 public class ShutdownRender implements Render {
 
     public static final String NAME = "shutdown";
     public static final String LABEL = null; // hide from navigation
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#getName()
-     */
     public String getName() {
         return NAME;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#getLabel()
-     */
     public String getLabel() {
         return LABEL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#render(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     public void render(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 

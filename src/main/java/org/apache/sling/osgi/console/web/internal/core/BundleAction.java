@@ -14,30 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.osgi.console.web.Action;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.log.LogService;
+import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 
-/**
- * The <code>BundleAction</code> TODO
- *
- * @scr.reference name="log" interface="org.osgi.service.log.LogService"
- */
-abstract class BundleAction implements Action {
-
-    private BundleContext bundleContext;
-
-    private LogService log;
-
-    protected BundleContext getBundleContext() {
-        return this.bundleContext;
-    }
+abstract class BundleAction extends BaseManagementPlugin implements Action {
 
     protected long getBundleId(HttpServletRequest request) {
         String bundleIdPar = request.getParameter(BundleListRender.BUNDLE_ID);
@@ -53,25 +37,4 @@ abstract class BundleAction implements Action {
         return -1;
     }
 
-    protected void log(Bundle bundle, String message, Throwable t) {
-        this.log.log(LogService.LOG_ERROR, message, t);
-    }
-
-    //--------- SCR Integration -----------------------------------------------
-
-    protected void activate(ComponentContext context) {
-        this.bundleContext = context.getBundleContext();
-    }
-
-    protected void deactivate(ComponentContext context) {
-        this.bundleContext = null;
-    }
-
-    protected void bindLog(LogService logService) {
-        this.log = logService;
-    }
-
-    protected void unbindLog(LogService logService) {
-        this.log = null;
-    }
 }

@@ -14,20 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.service.log.LogService;
 
-/**
- * The <code>StopAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
 public class StartAction extends BundleAction {
 
     public static final String NAME = "start";
@@ -41,11 +36,6 @@ public class StartAction extends BundleAction {
         return LABEL;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
-     */
     public boolean performAction(HttpServletRequest request, HttpServletResponse response) {
 
         long bundleId = this.getBundleId(request);
@@ -55,7 +45,7 @@ public class StartAction extends BundleAction {
                 try {
                     bundle.start();
                 } catch (BundleException be) {
-                    this.log(bundle, "Cannot start", be);
+                    getLog().log(LogService.LOG_ERROR, "Cannot start", be);
                 }
 
             }

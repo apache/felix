@@ -14,33 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.sling.osgi.assembly.installer.Installer;
-import org.apache.sling.osgi.assembly.installer.InstallerService;
+import org.apache.sling.osgi.console.web.internal.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.service.log.LogService;
+import org.osgi.service.startlevel.StartLevel;
 
 /**
  * The <code>InstallAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
  */
 public class InstallAction extends BundleAction {
 
@@ -54,9 +50,6 @@ public class InstallAction extends BundleAction {
 
     public static final String FIELD_BUNDLEFILE = "bundlefile";
 
-    /** @scr.reference */
-    private InstallerService installerService;
-
     public String getName() {
         return NAME;
     }
@@ -67,11 +60,11 @@ public class InstallAction extends BundleAction {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException {
+            HttpServletResponse response) {
 
         // get the uploaded data
         @SuppressWarnings("unchecked")
@@ -81,7 +74,8 @@ public class InstallAction extends BundleAction {
         }
 
         FileItem startItem = this.getFileItem(params, FIELD_START, true);
-        FileItem startLevelItem = this.getFileItem(params, FIELD_STARTLEVEL, true);
+        FileItem startLevelItem = this.getFileItem(params, FIELD_STARTLEVEL,
+            true);
         FileItem bundleItem = this.getFileItem(params, FIELD_BUNDLEFILE, false);
 
         // don't care any more if not bundle item
@@ -114,7 +108,8 @@ public class InstallAction extends BundleAction {
 
             this.installBundle(bundleLocation, tmpFile, startLevel, start);
         } catch (Exception e) {
-            this.log(null, "Problem accessing uploaded bundle file", e);
+            getLog().log(LogService.LOG_ERROR,
+                "Problem accessing uploaded bundle file", e);
         } finally {
             if (tmpFile != null) {
                 tmpFile.delete();
@@ -124,7 +119,8 @@ public class InstallAction extends BundleAction {
         return true;
     }
 
-    private FileItem getFileItem(Map<String, FileItem[]> params, String name, boolean isFormField) {
+    private FileItem getFileItem(Map<String, FileItem[]> params, String name,
+            boolean isFormField) {
         FileItem[] items = params.get(name);
         if (items != null) {
             for (int i = 0; i < items.length; i++) {
@@ -138,8 +134,8 @@ public class InstallAction extends BundleAction {
         return null;
     }
 
-    private void installBundle(String location, File bundleFile, int startLevel,
-            boolean start) {
+    private void installBundle(String location, File bundleFile,
+            int startLevel, boolean start) {
         if (bundleFile != null) {
 
             // try to get the bundle name, fail if none
@@ -161,26 +157,22 @@ public class InstallAction extends BundleAction {
                 }
             }
 
-            Installer installer = this.installerService.getInstaller();
             try {
                 // stream will be closed by update or installBundle
                 InputStream bundleStream = new FileInputStream(bundleFile);
 
                 if (newBundle != null) {
                     // update existing bundle, to not set startlevel or start
-                    this.updateBackground(newBundle, bundleFile, bundleStream);
+                    updateBackground(newBundle, bundleFile, bundleStream);
 
                 } else {
-                    // non-existing bundle is installed
-                    URL source = bundleFile.toURI().toURL();
-                    installer.addBundle(location, source, startLevel);
-                    installer.install(start);
+
+                    installBackground(bundleFile, location, startLevel, start);
+
                 }
             } catch (Throwable t) {
-                this.log(null, "Failed to install bundle " + symbolicName
+                getLog().log(LogService.LOG_ERROR, "Failed to install bundle " + symbolicName
                     + " (Location:" + location + ")", t);
-            } finally {
-                installer.dispose();
             }
         }
     }
@@ -210,8 +202,57 @@ public class InstallAction extends BundleAction {
         return null;
     }
 
-    private void updateBackground(final Bundle bundle, final File bundleFile, final InputStream bundleStream) {
-        Thread t = new Thread("Background Update") {
+    private void installBackground(final File bundleFile,
+            final String location, final int startlevel, final boolean doStart) {
+
+        Thread t = new Thread("Background Install " + bundleFile) {
+            public void run() {
+                // wait some time for the request to settle
+                try {
+                    sleep(500L);
+                } catch (InterruptedException ie) {
+                    // don't care
+                }
+
+                // now deploy the resolved bundles
+                InputStream fin = null;
+                try {
+                    fin = new FileInputStream(bundleFile);
+                    Bundle bundle = getBundleContext().installBundle(location,
+                        fin);
+
+                    StartLevel sl = getStartLevel();
+                    if (sl != null) {
+                        sl.setBundleStartLevel(bundle, startlevel);
+                    }
+
+                    if (doStart) {
+                        bundle.start();
+                    }
+                } catch (IOException ioe) {
+                    // TODO: log
+                } catch (BundleException be) {
+                    // TODO: log
+                } finally {
+                    if (fin != null) {
+                        try {
+                            fin.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
+                    bundleFile.delete();
+                }
+            }
+        };
+
+        t.setDaemon(true); // make a daemon thread (detach from current thread)
+        t.start();
+    }
+
+    private void updateBackground(final Bundle bundle, final File bundleFile,
+            final InputStream bundleStream) {
+        Thread t = new Thread("Background Update" + bundle.getSymbolicName()
+            + " (" + bundle.getBundleId() + ")") {
             public void run() {
                 // wait some time for the request to settle
                 try {
@@ -235,11 +276,4 @@ public class InstallAction extends BundleAction {
         t.start();
     }
 
-    protected void bindInstallerService(InstallerService installerService) {
-        this.installerService = installerService;
-    }
-
-    protected void unbindInstallerService(InstallerService installerService) {
-        this.installerService = null;
-    }
 }

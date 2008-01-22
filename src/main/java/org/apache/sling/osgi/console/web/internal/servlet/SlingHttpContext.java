@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web;
+package org.apache.sling.osgi.console.web.internal.servlet;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,11 +28,11 @@ import org.osgi.service.http.HttpService;
 
 final class SlingHttpContext implements HttpContext {
 
-    static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
+    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
-    static final String HEADER_AUTHORIZATION = "Authorization";
+    private static final String HEADER_AUTHORIZATION = "Authorization";
 
-    static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
+    private static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
 
     /**
      * The encoding table which causes BaseFlex encoding/deconding to work like

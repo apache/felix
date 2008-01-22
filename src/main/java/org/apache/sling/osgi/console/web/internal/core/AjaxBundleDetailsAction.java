@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,31 +39,19 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 
-/**
- * The <code>AjaxBundleDetailsAction</code> TODO
- * 
- * @scr.component metatype="false"
- * @scr.service
- */
 public class AjaxBundleDetailsAction extends BundleAction {
 
     public static final String NAME = "ajaxBundleDetails";
-
-    /** @scr.reference */
-    private StartLevel startLevelService;
-
-    /** @scr.reference */
-    private PackageAdmin packageAdmin;
 
     // bootdelegation property entries. wildcards are converted to package
     // name prefixes. whether an entry is a wildcard or not is set as a flag
@@ -76,6 +63,28 @@ public class AjaxBundleDetailsAction extends BundleAction {
     // entry was declared as a wildcard or not
     // see #activate and #isBootDelegated
     private boolean[] bootPkgWildcards;
+
+    @Override
+    public void setBundleContext(BundleContext bundleContext) {
+        super.setBundleContext(bundleContext);
+
+        // bootdelegation property parsing from Apache Felix R4SearchPolicyCore
+        String bootDelegation = bundleContext.getProperty(Constants.FRAMEWORK_BOOTDELEGATION);
+        bootDelegation = (bootDelegation == null) ? "java.*" : bootDelegation
+            + ",java.*";
+        StringTokenizer st = new StringTokenizer(bootDelegation, " ,");
+        bootPkgs = new String[st.countTokens()];
+        bootPkgWildcards = new boolean[bootPkgs.length];
+        for (int i = 0; i < bootPkgs.length; i++) {
+            bootDelegation = st.nextToken();
+            if (bootDelegation.endsWith("*")) {
+                bootPkgWildcards[i] = true;
+                bootDelegation = bootDelegation.substring(0,
+                    bootDelegation.length() - 1);
+            }
+            bootPkgs[i] = bootDelegation;
+        }
+    }
 
     public String getName() {
         return NAME;
@@ -91,7 +100,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ServletException {
+            HttpServletResponse response) throws IOException {
         JSONObject result = null;
         try {
             long bundleId = getBundleId(request);
@@ -140,14 +149,16 @@ public class AjaxBundleDetailsAction extends BundleAction {
     }
 
     private Integer getStartLevel(Bundle bundle) {
-        if (startLevelService == null) {
-            return null;
-        }
-
-        return new Integer(startLevelService.getBundleStartLevel(bundle));
+        StartLevel sl = getStartLevel();
+        return (sl != null) ? sl.getBundleStartLevel(bundle) : null;
     }
 
     private void listImportExport(JSONArray props, Bundle bundle) {
+        PackageAdmin packageAdmin = getPackageAdmin();
+        if (packageAdmin == null) {
+            return;
+        }
+
         ExportedPackage[] exports = packageAdmin.getExportedPackages(bundle);
         if (exports != null && exports.length > 0) {
             // do alphabetical sort
@@ -240,15 +251,18 @@ public class AjaxBundleDetailsAction extends BundleAction {
 
                 // collect import packages first
                 final Map<String, ExportedPackage> candidates = new HashMap<String, ExportedPackage>();
-                ExportedPackage[] exports = packageAdmin.getExportedPackages((Bundle) null);
-                if (exports != null && exports.length > 0) {
+                PackageAdmin packageAdmin = getPackageAdmin();
+                if (packageAdmin != null) {
+                    ExportedPackage[] exports = packageAdmin.getExportedPackages((Bundle) null);
+                    if (exports != null && exports.length > 0) {
 
-                    for (int i = 0; i < exports.length; i++) {
-                        final ExportedPackage ep = exports[i];
+                        for (int i = 0; i < exports.length; i++) {
+                            final ExportedPackage ep = exports[i];
 
-                        R4Import imp = imports.get(ep.getName());
-                        if (imp != null && imp.isSatisfied(toR4Export(ep))) {
-                            candidates.put(ep.getName(), ep);
+                            R4Import imp = imports.get(ep.getName());
+                            if (imp != null && imp.isSatisfied(toR4Export(ep))) {
+                                candidates.put(ep.getName(), ep);
+                            }
                         }
                     }
                 }
@@ -442,29 +456,4 @@ public class AjaxBundleDetailsAction extends BundleAction {
             new R4Attribute[] { version });
     }
 
-    // ---------- SCR integration ----------------------------------------------
-
-    protected void activate(ComponentContext context) {
-
-        super.activate(context);
-
-        // bootdelegation property parsing from Apache Felix R4SearchPolicyCore
-        String bootDelegation = context.getBundleContext().getProperty(
-            Constants.FRAMEWORK_BOOTDELEGATION);
-        bootDelegation = (bootDelegation == null) ? "java.*" : bootDelegation
-            + ",java.*";
-        StringTokenizer st = new StringTokenizer(bootDelegation, " ,");
-        bootPkgs = new String[st.countTokens()];
-        bootPkgWildcards = new boolean[bootPkgs.length];
-        for (int i = 0; i < bootPkgs.length; i++) {
-            bootDelegation = st.nextToken();
-            if (bootDelegation.endsWith("*")) {
-                bootPkgWildcards[i] = true;
-                bootDelegation = bootDelegation.substring(0,
-                    bootDelegation.length() - 1);
-            }
-            bootPkgs[i] = bootDelegation;
-        }
-
-    }
 }

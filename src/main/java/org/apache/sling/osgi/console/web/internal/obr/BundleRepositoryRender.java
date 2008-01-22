@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.obr;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,23 +35,18 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
 import org.apache.sling.osgi.assembly.installer.InstallerService;
 import org.apache.sling.osgi.assembly.installer.Repository;
 import org.apache.sling.osgi.assembly.installer.Resource;
 import org.apache.sling.osgi.console.web.Render;
+import org.apache.sling.osgi.console.web.internal.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.component.ComponentContext;
 
-/**
- * The <code>BundleRepositoryRender</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
-public class BundleRepositoryRender implements Render {
+public class BundleRepositoryRender extends AbstractObrPlugin implements Render {
 
     public static final String NAME = "bundlerepo";
 
@@ -62,26 +58,28 @@ public class BundleRepositoryRender implements Render {
 
     private static final String REPOSITORY_PROPERTY = "obr.repository.url";
 
-    private BundleContext bundleContext;
     private String[] repoURLs;
 
-    /** @scr.reference */
-    private InstallerService installerService;
+    public void setBundleContext(BundleContext bundleContext) {
+        super.setBundleContext(bundleContext);
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.manager.web.internal.Render#getName()
-     */
+        String urlStr = bundleContext.getProperty(REPOSITORY_PROPERTY);
+        List<String> urlList = new ArrayList<String>();
+
+        if (urlStr != null) {
+            StringTokenizer st = new StringTokenizer(urlStr);
+            while (st.hasMoreTokens()) {
+                urlList.add(st.nextToken());
+            }
+        }
+
+        this.repoURLs = urlList.toArray(new String[urlList.size()]);
+    }
+
     public String getName() {
         return NAME;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.manager.web.internal.Render#getLabel()
-     */
     public String getLabel() {
         return LABEL;
     }
@@ -92,8 +90,15 @@ public class BundleRepositoryRender implements Render {
         PrintWriter pw = response.getWriter();
         this.header(pw);
 
+        Iterator<?> repos;
+        BundleRepositoryAdmin repoAdmin = getBundleRepositoryAdmin();
+        if (repoAdmin != null) {
+            repos = repoAdmin.getRepositories();
+        } else {
+            repos = Collections.emptyList().iterator();
+        }
+
         Set<String> activeURLs = new HashSet<String>();
-        Iterator<?> repos = installerService.getBundleRepositoryAdmin().getRepositories();
         if (!repos.hasNext()) {
             pw.println("<tr class='content'>");
             pw.println("<td class='content' colspan='4'>No Active Repositories</td>");
@@ -124,7 +129,7 @@ public class BundleRepositoryRender implements Render {
         }
 
         // list any repositories configured but not active
-        for (int i=0; i < this.repoURLs.length; i++) {
+        for (int i = 0; i < this.repoURLs.length; i++) {
             if (!activeURLs.contains(this.repoURLs[i])) {
                 pw.println("<tr class='content'>");
                 pw.println("<td class='content'>-</td>");
@@ -170,9 +175,8 @@ public class BundleRepositoryRender implements Render {
 
         if (doForm) {
             pw.println("<form method='post'>");
-            pw.println("<input type='hidden' name='"
-                + Util.PARAM_ACTION + "' value='" + InstallFromRepoAction.NAME
-                + "'>");
+            pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
+                + "' value='" + InstallFromRepoAction.NAME + "'>");
         }
 
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
@@ -187,22 +191,30 @@ public class BundleRepositoryRender implements Render {
     }
 
     private void listResources(PrintWriter pw) {
+        InstallerService is = getInstallerService();
+        if (is == null) {
+            return;
+        }
+
         Map<String, Version> bundles = this.getBundles();
 
-        Iterator<?> resources = installerService.getBundleRepositoryAdmin().getResources();
-        SortedSet<Resource> resSet = new TreeSet<Resource>(new Comparator<Resource>() {
-            public int compare(Resource o1, Resource o2) {
-                if (o1 == o2 || o1.equals(o2)) {
-                    return 0;
-                }
+        Iterator<?> resources = is.getBundleRepositoryAdmin().getResources();
+        SortedSet<Resource> resSet = new TreeSet<Resource>(
+            new Comparator<Resource>() {
+                public int compare(Resource o1, Resource o2) {
+                    if (o1 == o2 || o1.equals(o2)) {
+                        return 0;
+                    }
 
-                if (o1.getPresentationName().equals(o2.getPresentationName())) {
-                    return o1.getVersion().compareTo(o2.getVersion());
-                }
+                    if (o1.getPresentationName().equals(
+                        o2.getPresentationName())) {
+                        return o1.getVersion().compareTo(o2.getVersion());
+                    }
 
-                return o1.getPresentationName().compareTo(o2.getPresentationName());
-            }
-        });
+                    return o1.getPresentationName().compareTo(
+                        o2.getPresentationName());
+                }
+            });
 
         while (resources.hasNext()) {
             Resource res = (Resource) resources.next();
@@ -223,18 +235,22 @@ public class BundleRepositoryRender implements Render {
 
     private void printResource(PrintWriter pw, Resource res) {
         pw.println("<tr class='content'>");
-        pw.println("<td class='content' valign='top' align='center'><input class='checkradio' type='checkbox' name='bundle' value='" + res.getSymbolicName() + "," + res.getVersion() + "'></td>");
+        pw.println("<td class='content' valign='top' align='center'><input class='checkradio' type='checkbox' name='bundle' value='"
+            + res.getSymbolicName() + "," + res.getVersion() + "'></td>");
 
         // check whether the resource is an assembly (category name)
         String style = "";
         String[] cat = res.getCategories();
-        for (int i=0; cat != null && i < cat.length; i++) {
+        for (int i = 0; cat != null && i < cat.length; i++) {
             if ("assembly".equals(cat[i])) {
                 style = "style='font-weight:bold'";
             }
         }
-        pw.println("<td class='content' " + style + ">" + res.getPresentationName() + " (" + res.getSymbolicName() + ")</td>");
-        pw.println("<td class='content' " + style + " valign='top'>" + res.getVersion() + "</td>");
+        pw.println("<td class='content' " + style + ">"
+            + res.getPresentationName() + " (" + res.getSymbolicName()
+            + ")</td>");
+        pw.println("<td class='content' " + style + " valign='top'>"
+            + res.getVersion() + "</td>");
 
         pw.println("</tr>");
     }
@@ -259,9 +275,10 @@ public class BundleRepositoryRender implements Render {
     private Map<String, Version> getBundles() {
         Map<String, Version> bundles = new HashMap<String, Version>();
 
-        Bundle[] installed = this.bundleContext.getBundles();
-        for (int i=0; i < installed.length; i++) {
-            String ver = (String) installed[i].getHeaders().get(Constants.BUNDLE_VERSION);
+        Bundle[] installed = getBundleContext().getBundles();
+        for (int i = 0; i < installed.length; i++) {
+            String ver = (String) installed[i].getHeaders().get(
+                Constants.BUNDLE_VERSION);
             Version bundleVersion = Version.parseVersion(ver);
 
             // assume one bundle instance per symbolic name !!
@@ -274,26 +291,4 @@ public class BundleRepositoryRender implements Render {
         return bundles;
     }
 
-    //--------- SCR Integration -----------------------------------------------
-
-    protected void activate(ComponentContext context) {
-        this.bundleContext = context.getBundleContext();
-
-        String urlStr = this.bundleContext.getProperty(REPOSITORY_PROPERTY);
-        List<String> urlList = new ArrayList<String>();
-
-        if (urlStr != null) {
-            StringTokenizer st = new StringTokenizer(urlStr);
-            while (st.hasMoreTokens()) {
-                urlList.add(st.nextToken());
-            }
-        }
-
-        this.repoURLs = urlList.toArray(new String[urlList.size()]);
-    }
-
-    protected void deactivate(ComponentContext context) {
-        this.bundleContext = null;
-        this.repoURLs = null;
-    }
 }

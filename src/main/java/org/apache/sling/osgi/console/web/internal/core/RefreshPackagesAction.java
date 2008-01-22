@@ -14,24 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
-
 /**
- * The <code>StopAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
+ * The <code>RefreshPackagesAction</code> TODO
  */
-public class UninstallAction extends BundleAction {
+public class RefreshPackagesAction extends BundleAction {
 
-    public static final String NAME = "uninstall";
-    public static final String LABEL = "Uninstall";
+    public static final String NAME = "refreshPackages";
+
+    public static final String LABEL = "Refresh Packages";
 
     public String getName() {
         return NAME;
@@ -43,25 +38,16 @@ public class UninstallAction extends BundleAction {
 
     /*
      * (non-Javadoc)
-     *
-     * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
+     * 
+     * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
      */
-    public boolean performAction(HttpServletRequest request, HttpServletResponse response) {
+    public boolean performAction(HttpServletRequest request,
+            HttpServletResponse response) {
 
-        long bundleId = this.getBundleId(request);
-        if (bundleId > 0) { // cannot stop system bundle !!
-            Bundle bundle = this.getBundleContext().getBundle(bundleId);
-            if (bundle != null) {
-                try {
-                    bundle.uninstall();
-                } catch (BundleException be) {
-                    this.log(bundle, "Cannot uninstall", be);
-                }
-
-            }
-        }
+        getPackageAdmin().refreshPackages(null);
 
         return true;
     }
-}
 
+}

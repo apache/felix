@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.compendium;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -37,15 +36,10 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.osgi.console.web.Action;
 import org.apache.sling.osgi.console.web.Render;
-import org.osgi.service.log.LogService;
+import org.apache.sling.osgi.console.web.internal.Util;
 
-/**
- * The <code>ComponentRenderAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
-public class ComponentRenderAction implements Render, Action {
+public class ComponentRenderAction extends AbstractScrPlugin implements Render,
+        Action {
 
     public static final String NAME = "components";
 
@@ -61,12 +55,6 @@ public class ComponentRenderAction implements Render, Action {
 
     public static final String OPERATION_DISABLE = "disable";
 
-    /** @scr.reference */
-    private ScrService scrService;
-
-    /** @scr.reference */
-    private LogService log;
-
     public String getName() {
         return NAME;
     }
@@ -76,19 +64,25 @@ public class ComponentRenderAction implements Render, Action {
     }
 
     public boolean performAction(HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ServletException {
-        long componentId = getComponentId(request);
-        Component component = scrService.getComponent(componentId);
+            HttpServletResponse response) throws IOException {
 
-        if (component != null) {
-            String op = request.getParameter(OPERATION);
-            if (OPERATION_DETAILS.equals(op)) {
-                return sendAjaxDetails(component, response);
-            } else if (OPERATION_ENABLE.equals(op)) {
-                component.enable();
-            } else if (OPERATION_DISABLE.equals(op)) {
-                component.disable();
+        ScrService scrService = getScrService();
+        if (scrService != null) {
+
+            long componentId = getComponentId(request);
+            Component component = scrService.getComponent(componentId);
+
+            if (component != null) {
+                String op = request.getParameter(OPERATION);
+                if (OPERATION_DETAILS.equals(op)) {
+                    return sendAjaxDetails(component, response);
+                } else if (OPERATION_ENABLE.equals(op)) {
+                    component.enable();
+                } else if (OPERATION_DISABLE.equals(op)) {
+                    component.disable();
+                }
             }
+
         }
 
         return true;
@@ -107,38 +101,46 @@ public class ComponentRenderAction implements Render, Action {
 
         this.tableHeader(pw);
 
-        Component[] components = scrService.getComponents();
-        if (components == null || components.length == 0) {
+        ScrService scrService = getScrService();
+        if (scrService == null) {
             pw.println("<tr class='content'>");
-            pw.println("<td class='content' colspan='5'>No " + this.getLabel()
-                + " installed currently</td>");
+            pw.println("<td class='content' colspan='5'>Apache Felix Declarative Service required for this function</td>");
             pw.println("</tr>");
-
         } else {
+            Component[] components = scrService.getComponents();
+            if (components == null || components.length == 0) {
+                pw.println("<tr class='content'>");
+                pw.println("<td class='content' colspan='5'>No "
+                    + this.getLabel() + " installed currently</td>");
+                pw.println("</tr>");
 
-            // order components by id
-            TreeMap<String, Component> componentMap = new TreeMap<String, Component>();
-            for (Component component : components) {
-                componentMap.put(component.getName(), component);
-            }
+            } else {
 
-            // render components
-            long previousComponent = -1;
-            for (Component component : componentMap.values()) {
+                // order components by id
+                TreeMap<String, Component> componentMap = new TreeMap<String, Component>();
+                for (Component component : components) {
+                    componentMap.put(component.getName(), component);
+                }
+
+                // render components
+                long previousComponent = -1;
+                for (Component component : componentMap.values()) {
+                    if (previousComponent >= 0) {
+                        // prepare for injected table information row
+                        pw.println("<tr id='component" + previousComponent
+                            + "'></tr>");
+                    }
+
+                    component(pw, component);
+
+                    previousComponent = component.getId();
+                }
+
                 if (previousComponent >= 0) {
                     // prepare for injected table information row
                     pw.println("<tr id='component" + previousComponent
                         + "'></tr>");
                 }
-
-                component(pw, component);
-
-                previousComponent = component.getId();
-            }
-
-            if (previousComponent >= 0) {
-                // prepare for injected table information row
-                pw.println("<tr id='component" + previousComponent + "'></tr>");
             }
         }
 
@@ -237,7 +239,7 @@ public class ComponentRenderAction implements Render, Action {
     }
 
     private boolean sendAjaxDetails(Component component,
-            HttpServletResponse response) throws IOException, ServletException {
+            HttpServletResponse response) throws IOException {
         JSONObject result = null;
         try {
             if (component != null) {
@@ -326,7 +328,8 @@ public class ComponentRenderAction implements Render, Action {
         Dictionary<String, Object> props = component.getProperties();
         if (props != null) {
             StringBuffer buf = new StringBuffer();
-            TreeSet<String> keys = new TreeSet<String>(Collections.list(props.keys()));
+            TreeSet<String> keys = new TreeSet<String>(
+                Collections.list(props.keys()));
             for (Iterator<String> ki = keys.iterator(); ki.hasNext();) {
                 String key = ki.next();
                 buf.append(key).append(" = ");
@@ -358,7 +361,7 @@ public class ComponentRenderAction implements Render, Action {
         }
     }
 
-    private String toStateString(int state) {
+    static String toStateString(int state) {
         switch (state) {
             case Component.STATE_DISABLED:
                 return "disabled";
@@ -395,10 +398,6 @@ public class ComponentRenderAction implements Render, Action {
 
         // no bundleId or wrong format
         return -1;
-    }
-
-    protected void log(String message, Throwable t) {
-        log.log(LogService.LOG_ERROR, message, t);
     }
 
 }

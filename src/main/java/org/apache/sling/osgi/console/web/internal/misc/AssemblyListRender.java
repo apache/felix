@@ -14,36 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.misc;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.osgi.console.web.internal.core.BundleListRender;
 import org.osgi.framework.Bundle;
 
-/**
- * The <code>BundleListRender</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
 public class AssemblyListRender extends BundleListRender {
 
     public static final String NAME = "assemblyList";
     public static final String LABEL = "Assemblies";
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#getName()
-     */
     public String getName() {
         return NAME;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#getLabel()
-     */
     public String getLabel() {
         return LABEL;
     }

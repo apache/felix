@@ -14,19 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.system;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.osgi.console.web.Action;
 
-/**
- * The <code>GCAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
 public class GCAction implements Action {
 
     public static final String NAME = "gc";
@@ -40,9 +34,6 @@ public class GCAction implements Action {
         return LABEL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
-     */
     public boolean performAction(HttpServletRequest request, HttpServletResponse response) {
         System.gc();
         return false;

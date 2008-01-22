@@ -14,27 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.osgi.console.web.Action;
+import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 import org.osgi.service.startlevel.StartLevel;
 
 /**
- * The <code>GCAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
+ * The <code>SetStartLevelAction</code> TODO
  */
-public class SetStartLevelAction implements Action {
+public class SetStartLevelAction extends BaseManagementPlugin implements Action {
 
     public static final String NAME = "setStartLevel";
-    public static final String LABEL = "Set Start Level";
 
-    /** @scr.reference */
-    private StartLevel startLevel;
+    public static final String LABEL = "Set Start Level";
 
     public String getName() {
         return NAME;
@@ -44,19 +40,25 @@ public class SetStartLevelAction implements Action {
         return LABEL;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
-    public boolean performAction(HttpServletRequest request, HttpServletResponse response) {
+    public boolean performAction(HttpServletRequest request,
+            HttpServletResponse response) {
 
-        int bundleSL = this.getParameterInt(request, "bundleStartLevel");
-        if (bundleSL > 0 && bundleSL != this.startLevel.getInitialBundleStartLevel()) {
-            this.startLevel.setInitialBundleStartLevel(bundleSL);
-        }
+        StartLevel sl = getStartLevel();
+        if (sl != null) {
+            int bundleSL = this.getParameterInt(request, "bundleStartLevel");
+            if (bundleSL > 0 && bundleSL != sl.getInitialBundleStartLevel()) {
+                sl.setInitialBundleStartLevel(bundleSL);
+            }
 
-        int systemSL = this.getParameterInt(request, "systemStartLevel");
-        if (systemSL > 0 && systemSL != this.startLevel.getStartLevel()) {
-            this.startLevel.setStartLevel(systemSL);
+            int systemSL = this.getParameterInt(request, "systemStartLevel");
+            if (systemSL > 0 && systemSL != sl.getStartLevel()) {
+                sl.setStartLevel(systemSL);
+            }
         }
 
         return true;
@@ -72,13 +74,4 @@ public class SetStartLevelAction implements Action {
         return -1;
     }
 
-    //--------- SCR -----------------------------------------------------------
-
-    protected void bindStartLevel(StartLevel startLevel) {
-        this.startLevel = startLevel;
-    }
-
-    protected void unbindStartLevel(StartLevel startLevel) {
-        this.startLevel = null;
-    }
 }

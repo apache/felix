@@ -52,6 +52,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
+                <version>1.0.3-SNAPSHOT</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -59,7 +60,14 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>
+                            org.apache.sling.osgi.console.web.internal.SlingManagerActivator
+                        </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.sling.osgi.console.web,
+                        </Export-Package>
                         <Private-Package>
+                            !org.apache.sling.osgi.console.web,
                             org.apache.sling.osgi.console.web.*,
 
                             <!-- File Upload functionality -->
@@ -72,11 +80,15 @@
                             org.apache.commons.io.filefilter,
                             org.apache.commons.io.output,
 
+                            <!-- Required for JSON data transfer -->
+                            org.apache.sling.commons.json,
+
                             <!-- Import/Export-Package parsing -->
                             org.apache.felix.bundlerepository
                         </Private-Package>
                         <Import-Package>
-                            org.apache.felix.*;resolution:=optional,*
+                            org.apache.sling.*; org.apache.felix.*;
+                            org.osgi.service.obr;resolution:=optional,*
                         </Import-Package>
                     </instructions>
                 </configuration>
@@ -117,7 +129,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

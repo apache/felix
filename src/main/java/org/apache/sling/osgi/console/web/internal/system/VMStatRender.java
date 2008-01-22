@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.system;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,43 +24,26 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.osgi.console.web.Render;
-import org.osgi.service.startlevel.StartLevel;
+import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
+import org.apache.sling.osgi.console.web.internal.Util;
+import org.apache.sling.osgi.console.web.internal.core.SetStartLevelAction;
 
-/**
- * The <code>VMStatRender</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
- */
-public class VMStatRender implements Render {
+public class VMStatRender extends BaseManagementPlugin implements Render {
 
     public static final String NAME = "vmstat";
+
     public static final String LABEL = "System Information";
 
     private static final long startDate = (new Date()).getTime();
 
-    /** @scr.reference */
-    private StartLevel startLevel;
-
-    /*
-     * (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#getName()
-     */
     public String getName() {
         return NAME;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#getLabel()
-     */
     public String getLabel() {
         return LABEL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.manager.web.internal.Render#render(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     public void render(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -87,7 +70,8 @@ public class VMStatRender implements Render {
         pw.println("<form method='post'>");
         pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
             + "' value='" + SetStartLevelAction.NAME + "'>");
-        pw.println("<input class='input' type='text' size='3' name='systemStartLevel' value='" + this.startLevel.getStartLevel() + "'/>");
+        pw.println("<input class='input' type='text' size='3' name='systemStartLevel' value='"
+            + getStartLevel().getStartLevel() + "'/>");
         pw.println("&nbsp;&nbsp;<input class='submit' type='submit' name='"
             + SetStartLevelAction.LABEL + "' value='Change'>");
         pw.println("</form>");
@@ -99,7 +83,8 @@ public class VMStatRender implements Render {
         pw.println("<form method='post'>");
         pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
             + "' value='" + SetStartLevelAction.NAME + "'>");
-        pw.println("<input class='input' type='text' size='3' name='bundleStartLevel' value='" + this.startLevel.getInitialBundleStartLevel() + "'/>");
+        pw.println("<input class='input' type='text' size='3' name='bundleStartLevel' value='"
+            + getStartLevel().getInitialBundleStartLevel() + "'/>");
         pw.println("&nbsp;&nbsp;<input class='submit' type='submit' name='"
             + SetStartLevelAction.LABEL + "' value='Change'>");
         pw.println("</form>");
@@ -118,7 +103,8 @@ public class VMStatRender implements Render {
         pw.println("<td class='content'>Last Started</td>");
         pw.println("<td class='content'>");
         pw.println("<script language='JavaScript'>");
-        pw.println("localDate(" + startDate /* <%= Server.getStartTime() %> */ + ")");
+        pw.println("localDate(" + startDate /* <%= Server.getStartTime() %> */
+            + ")");
         pw.println("</script>");
         pw.println("</td>");
         pw.println("</tr>");
@@ -134,7 +120,8 @@ public class VMStatRender implements Render {
                 + "' value='" + Util.VALUE_SHUTDOWN + "'>");
             pw.println("<input class='submit important' type='submit' value='Stop' onclick=\"return confirm('This will terminate all running applications. Do you want to stop the server?')\">");
         } else {
-            pw.println("<input class='submit important' type='button' value='Abort' onclick=\"abort('" + request.getRequestURI() + "')\">&nbsp;");
+            pw.println("<input class='submit important' type='button' value='Abort' onclick=\"abort('"
+                + request.getRequestURI() + "')\">&nbsp;");
             pw.println("<input type='hidden' name='" + Util.PARAM_ACTION
                 + "' value='" + ShutdownAction.NAME + "'>");
             pw.println("Shutdown in <span id='countdowncell'>&nbsp;</span>");
@@ -182,13 +169,4 @@ public class VMStatRender implements Render {
         pw.println("</td></tr>");
     }
 
-    //--------- SCR Integration -----------------------------------------------
-
-    protected void bindStartLevel(StartLevel startLevel) {
-        this.startLevel = startLevel;
-    }
-
-    protected void unbindStartLevel(StartLevel startLevel) {
-        this.startLevel = null;
-    }
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.compendium;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.osgi.console.web.Render;
+import org.apache.sling.osgi.console.web.internal.Util;
+import org.apache.sling.osgi.console.web.internal.core.SetStartLevelAction;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -39,11 +41,6 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * The <code>ConfigManager</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.reference interface="org.osgi.service.cm.ConfigurationAdmin" name="configurationAdmin"
- * @scr.reference interface="org.osgi.service.metatype.MetaTypeService" name="metaTypeService"
- * @scr.service
  */
 public class ConfigManager extends ConfigManagerBase implements Render {
 

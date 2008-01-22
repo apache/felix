@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.console.web.internal;
+package org.apache.sling.osgi.console.web.internal.core;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,13 +24,13 @@ import org.apache.sling.osgi.assembly.installer.InstallerException;
 import org.apache.sling.osgi.assembly.installer.InstallerService;
 import org.apache.sling.osgi.assembly.installer.VersionRange;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>UpdateAction</code> TODO
- *
- * @scr.component metatype="false"
- * @scr.service
  */
 public class UpdateAction extends BundleAction {
 
@@ -38,8 +38,18 @@ public class UpdateAction extends BundleAction {
 
     public static final String LABEL = "Update";
 
-    /** @scr.reference */
-    private InstallerService installerService;
+    private static final String INSTALLER_SERVICE_NAME = "org.apache.sling.osgi.assembly.installer.InstallerService";
+
+    // track the optional installer service manually
+    private ServiceTracker installerService;
+
+    public void setBundleContext(BundleContext bundleContext) {
+        super.setBundleContext(bundleContext);
+
+        installerService = new ServiceTracker(bundleContext,
+            INSTALLER_SERVICE_NAME, null);
+        installerService.open();
+    }
 
     public String getName() {
         return NAME;
@@ -51,7 +61,7 @@ public class UpdateAction extends BundleAction {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
@@ -64,7 +74,7 @@ public class UpdateAction extends BundleAction {
                 try {
                     this.updateFromRepo(bundle);
                 } catch (Throwable t) {
-                    this.log(bundle, "Uncaught Problem", t);
+                    getLog().log(LogService.LOG_ERROR, "Uncaught Problem", t);
                 }
 
             }
@@ -75,6 +85,11 @@ public class UpdateAction extends BundleAction {
 
     private void updateFromRepo(final Bundle bundle) {
 
+        final InstallerService is = (InstallerService) installerService.getService();
+        if (is == null) {
+            return;
+        }
+        
         final String name = bundle.getSymbolicName();
         final String version = (String) bundle.getHeaders().get(
             Constants.BUNDLE_VERSION);
@@ -95,13 +110,15 @@ public class UpdateAction extends BundleAction {
                     // don't care
                 }
 
-                Installer installer = UpdateAction.this.installerService.getInstaller();
+                Installer installer = is.getInstaller();
                 installer.addBundle(name, new VersionRange(version), -1);
                 try {
                     installer.install(false);
                 } catch (InstallerException ie) {
-                    Throwable cause = (ie.getCause() != null) ? ie.getCause() : ie;
-                    UpdateAction.this.log(bundle, "Cannot update", cause);
+                    Throwable cause = (ie.getCause() != null)
+                            ? ie.getCause()
+                            : ie;
+                    getLog().log(LogService.LOG_ERROR, "Cannot update", cause);
                 } finally {
                     installer.dispose();
                 }
@@ -112,11 +129,4 @@ public class UpdateAction extends BundleAction {
         t.start();
     }
 
-    protected void bindInstallerService(InstallerService installerService) {
-        this.installerService = installerService;
-    }
-
-    protected void unbindInstallerService(InstallerService installerService) {
-        this.installerService = null;
-    }
 }
