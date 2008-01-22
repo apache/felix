@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public interface Render {
 
-    static final String SERVICE = Action.class.getName();
+    static final String SERVICE = Render.class.getName();
 
     String getName();
 
