@@ -37,6 +37,9 @@ import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.osgi.console.web.Action;
 import org.apache.sling.osgi.console.web.Render;
 import org.apache.sling.osgi.console.web.internal.Util;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
 
 public class ComponentRenderAction extends AbstractScrPlugin implements Render,
         Action {
@@ -317,6 +320,31 @@ public class ComponentRenderAction extends AbstractScrPlugin implements Render,
                     "<br />");
                 buf.append("Policy: ").append(
                     refs[i].isStatic() ? "static" : "dynamic").append("<br />");
+
+                // list bound services
+                ServiceReference[] boundRefs = refs[i].getServiceReferences();
+                if (boundRefs != null && boundRefs.length > 0) {
+                    for (int j = 0; j < boundRefs.length; j++) {
+                        buf.append("Bound Service ID ");
+                        buf.append(boundRefs[j].getProperty(Constants.SERVICE_ID));
+
+                        String name = (String) boundRefs[j].getProperty(ComponentConstants.COMPONENT_NAME);
+                        if (name == null) {
+                            name = (String) boundRefs[j].getProperty(Constants.SERVICE_PID);
+                            if (name == null) {
+                                name = (String) boundRefs[j].getProperty(Constants.SERVICE_DESCRIPTION);
+                            }
+                        }
+                        if (name != null) {
+                            buf.append(" (");
+                            buf.append(name);
+                            buf.append(")");
+                        }
+                    }
+                } else {
+                    buf.append("No Services bound");
+                }
+                buf.append("<br />");
 
                 keyVal(props, "Reference " + refs[i].getName(), buf.toString());
             }

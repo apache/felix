@@ -31,7 +31,10 @@ import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.ScrService;
 import org.apache.sling.osgi.console.web.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.ComponentConstants;
 
 public class ComponentConfigurationPrinter extends AbstractScrPlugin implements
         ConfigurationPrinter {
@@ -141,6 +144,30 @@ public class ComponentConfigurationPrinter extends AbstractScrPlugin implements
                 pw.println("    Policy: "
                     + (refs[i].isStatic() ? "static" : "dynamic"));
 
+                // list bound services
+                ServiceReference[] boundRefs = refs[i].getServiceReferences();
+                if (boundRefs != null && boundRefs.length > 0) {
+                    for (int j = 0; j < boundRefs.length; j++) {
+                        pw.print("    Bound Service: ID ");
+                        pw.print(boundRefs[j].getProperty(Constants.SERVICE_ID));
+
+                        String name = (String) boundRefs[j].getProperty(ComponentConstants.COMPONENT_NAME);
+                        if (name == null) {
+                            name = (String) boundRefs[j].getProperty(Constants.SERVICE_PID);
+                            if (name == null) {
+                                name = (String) boundRefs[j].getProperty(Constants.SERVICE_DESCRIPTION);
+                            }
+                        }
+                        if (name != null) {
+                            pw.print(" (");
+                            pw.print(name);
+                            pw.print(")");
+                        }
+                    }
+                } else {
+                    pw.print("    No Services bound");
+                }
+                pw.println();
             }
         }
     }
