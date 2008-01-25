@@ -44,6 +44,7 @@ import org.apache.sling.osgi.console.web.Render;
 import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 import org.apache.sling.osgi.console.web.internal.Util;
 import org.apache.sling.osgi.console.web.internal.compendium.AjaxConfigManagerAction;
+import org.apache.sling.osgi.console.web.internal.compendium.ComponentConfigurationPrinter;
 import org.apache.sling.osgi.console.web.internal.compendium.ComponentRenderAction;
 import org.apache.sling.osgi.console.web.internal.compendium.ConfigManager;
 import org.apache.sling.osgi.console.web.internal.core.AjaxBundleDetailsAction;
@@ -116,12 +117,12 @@ public class SlingManager extends GenericServlet {
     private static final String PROP_PASSWORD = "password";
 
     private static final Class<?>[] PLUGIN_CLASSES = {
-        AjaxConfigManagerAction.class, ComponentRenderAction.class,
-        ConfigManager.class, AjaxBundleDetailsAction.class,
-        BundleListRender.class, InstallAction.class,
-        RefreshPackagesAction.class, SetStartLevelAction.class,
-        StartAction.class, StopAction.class, UninstallAction.class,
-        UpdateAction.class, AssemblyListRender.class,
+        AjaxConfigManagerAction.class, ComponentConfigurationPrinter.class,
+        ComponentRenderAction.class, ConfigManager.class,
+        AjaxBundleDetailsAction.class, BundleListRender.class,
+        InstallAction.class, RefreshPackagesAction.class,
+        SetStartLevelAction.class, StartAction.class, StopAction.class,
+        UninstallAction.class, UpdateAction.class, AssemblyListRender.class,
         ConfigurationRender.class, BundleRepositoryRender.class,
         InstallFromRepoAction.class, RefreshRepoAction.class, GCAction.class,
         ShutdownAction.class, ShutdownRender.class, VMStatRender.class };
@@ -158,7 +159,7 @@ public class SlingManager extends GenericServlet {
         this.log = new Logger(bundleContext);
 
         updateConfiguration(null);
-        
+
         try {
             this.configurationListener = ConfigurationListener.create(this);
         } catch (Throwable t) {
@@ -546,7 +547,7 @@ public class SlingManager extends GenericServlet {
         if (config == null) {
             config = new Hashtable<String, Object>();
         }
-        
+
         configuration = config;
 
         defaultRenderName = (String) config.get(PROP_DEFAULT_RENDER);
