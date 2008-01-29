@@ -94,26 +94,34 @@ public class InstallAction extends BundleAction {
             try {
                 startLevel = Integer.parseInt(startLevelItem.getString());
             } catch (NumberFormatException nfe) {
-                // TODO: Handle or ignore
+                getLog().log(
+                    LogService.LOG_INFO,
+                    "Cannot parse start level parameter " + startLevelItem
+                        + " to a number, not setting start level");
             }
         }
 
-        // install the bundle now
+        // write the bundle data to a temporary file to ease processing
         File tmpFile = null;
         try {
             // copy the data to a file for better processing
             tmpFile = File.createTempFile("install", ".tmp");
             bundleItem.write(tmpFile);
-            bundleLocation = "inputstream:" + bundleItem.getName();
-
-            this.installBundle(bundleLocation, tmpFile, startLevel, start);
         } catch (Exception e) {
             getLog().log(LogService.LOG_ERROR,
                 "Problem accessing uploaded bundle file", e);
-        } finally {
+
+            // remove the tmporary file
             if (tmpFile != null) {
                 tmpFile.delete();
+                tmpFile = null;
             }
+        }
+
+        // install or update the bundle now
+        if (tmpFile != null) {
+            bundleLocation = "inputstream:" + bundleItem.getName();
+            installBundle(bundleLocation, tmpFile, startLevel, start);
         }
 
         return true;
@@ -141,38 +149,31 @@ public class InstallAction extends BundleAction {
             // try to get the bundle name, fail if none
             String symbolicName = this.getSymbolicName(bundleFile);
             if (symbolicName == null) {
+                bundleFile.delete();
                 return;
             }
 
             // check for existing bundle first
-            Bundle newBundle = null;
+            Bundle updateBundle = null;
             Bundle[] bundles = this.getBundleContext().getBundles();
             for (int i = 0; i < bundles.length; i++) {
                 if ((bundles[i].getLocation() != null && bundles[i].getLocation().equals(
                     location))
                     || (bundles[i].getSymbolicName() != null && bundles[i].getSymbolicName().equals(
                         symbolicName))) {
-                    newBundle = bundles[i];
+                    updateBundle = bundles[i];
                     break;
                 }
             }
 
-            try {
-                // stream will be closed by update or installBundle
-                InputStream bundleStream = new FileInputStream(bundleFile);
+            if (updateBundle != null) {
 
-                if (newBundle != null) {
-                    // update existing bundle, to not set startlevel or start
-                    updateBackground(newBundle, bundleFile, bundleStream);
+                updateBackground(updateBundle, bundleFile);
 
-                } else {
+            } else {
 
-                    installBackground(bundleFile, location, startLevel, start);
+                installBackground(bundleFile, location, startLevel, start);
 
-                }
-            } catch (Throwable t) {
-                getLog().log(LogService.LOG_ERROR, "Failed to install bundle " + symbolicName
-                    + " (Location:" + location + ")", t);
             }
         }
     }
@@ -187,7 +188,9 @@ public class InstallAction extends BundleAction {
                     Constants.BUNDLE_SYMBOLICNAME);
             }
         } catch (IOException ioe) {
-            // TODO: should log
+            getLog().log(LogService.LOG_WARNING,
+                "Cannot extract symbolic name of bundle file " + bundleFile,
+                ioe);
         } finally {
             if (jar != null) {
                 try {
@@ -205,75 +208,89 @@ public class InstallAction extends BundleAction {
     private void installBackground(final File bundleFile,
             final String location, final int startlevel, final boolean doStart) {
 
-        Thread t = new Thread("Background Install " + bundleFile) {
-            public void run() {
-                // wait some time for the request to settle
-                try {
-                    sleep(500L);
-                } catch (InterruptedException ie) {
-                    // don't care
+        Thread t = new InstallHelper(this, "Background Install " + bundleFile,
+            bundleFile) {
+
+            @Override
+            protected void doRun(InputStream bundleStream)
+                    throws BundleException {
+                Bundle bundle = getBundleContext().installBundle(location,
+                    bundleStream);
+
+                StartLevel sl = getStartLevel();
+                if (sl != null) {
+                    sl.setBundleStartLevel(bundle, startlevel);
                 }
 
-                // now deploy the resolved bundles
-                InputStream fin = null;
-                try {
-                    fin = new FileInputStream(bundleFile);
-                    Bundle bundle = getBundleContext().installBundle(location,
-                        fin);
-
-                    StartLevel sl = getStartLevel();
-                    if (sl != null) {
-                        sl.setBundleStartLevel(bundle, startlevel);
-                    }
-
-                    if (doStart) {
-                        bundle.start();
-                    }
-                } catch (IOException ioe) {
-                    // TODO: log
-                } catch (BundleException be) {
-                    // TODO: log
-                } finally {
-                    if (fin != null) {
-                        try {
-                            fin.close();
-                        } catch (IOException ignore) {
-                        }
-                    }
-                    bundleFile.delete();
+                if (doStart) {
+                    bundle.start();
                 }
             }
         };
 
-        t.setDaemon(true); // make a daemon thread (detach from current thread)
         t.start();
     }
 
-    private void updateBackground(final Bundle bundle, final File bundleFile,
-            final InputStream bundleStream) {
-        Thread t = new Thread("Background Update" + bundle.getSymbolicName()
-            + " (" + bundle.getBundleId() + ")") {
-            public void run() {
-                // wait some time for the request to settle
-                try {
-                    sleep(500L);
-                } catch (InterruptedException ie) {
-                    // don't care
-                }
+    private void updateBackground(final Bundle bundle, final File bundleFile) {
+        Thread t = new InstallHelper(this, "Background Update"
+            + bundle.getSymbolicName() + " (" + bundle.getBundleId() + ")",
+            bundleFile) {
 
-                // now deploy the resolved bundles
-                try {
-                    bundle.update(bundleStream);
-                } catch (BundleException be) {
-                    // TODO: log
-                } finally {
-                    bundleFile.delete();
-                }
+            @Override
+            protected void doRun(InputStream bundleStream)
+                    throws BundleException {
+                bundle.update(bundleStream);
             }
         };
 
-        t.setDaemon(true); // make a daemon thread (detach from current thread)
         t.start();
     }
 
+    private static abstract class InstallHelper extends Thread {
+
+        private final InstallAction installAction;
+
+        private final File bundleFile;
+
+        InstallHelper(InstallAction installAction, String name, File bundleFile) {
+            super(name);
+            setDaemon(true);
+
+            this.installAction = installAction;
+            this.bundleFile = bundleFile;
+        }
+
+        protected abstract void doRun(InputStream bundleStream)
+                throws BundleException;
+
+        public void run() {
+            // wait some time for the request to settle
+            try {
+                sleep(500L);
+            } catch (InterruptedException ie) {
+                // don't care
+            }
+
+            // now deploy the resolved bundles
+            InputStream bundleStream = null;
+            try {
+                bundleStream = new FileInputStream(bundleFile);
+                doRun(bundleStream);
+            } catch (IOException ioe) {
+                installAction.getLog().log(LogService.LOG_ERROR,
+                    "Cannot install or update bundle from " + bundleFile, ioe);
+            } catch (BundleException be) {
+                installAction.getLog().log(LogService.LOG_ERROR,
+                    "Cannot install or update bundle from " + bundleFile, be);
+            } finally {
+                if (bundleStream != null) {
+                    try {
+                        bundleStream.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+                bundleFile.delete();
+            }
+        }
+    }
 }
