@@ -137,12 +137,6 @@
             <artifactId>org.apache.felix.scr</artifactId>
             <version>0.9.0-SNAPSHOT</version>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
