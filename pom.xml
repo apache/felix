@@ -135,7 +135,6 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
