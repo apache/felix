@@ -18,9 +18,7 @@
  */
 package org.apache.felix.scrplugin.tags.qdox;
 
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaField;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.tags.*;
 
 import com.thoughtworks.qdox.model.DocletTag;
 
@@ -32,9 +30,9 @@ public class QDoxJavaField implements JavaField {
 
     protected final com.thoughtworks.qdox.model.JavaField field;
 
-    protected final JavaClassDescription description;
+    protected final QDoxJavaClassDescription description;
 
-    public QDoxJavaField(com.thoughtworks.qdox.model.JavaField f, JavaClassDescription d) {
+    public QDoxJavaField(com.thoughtworks.qdox.model.JavaField f, QDoxJavaClassDescription d) {
         this.field = f;
         this.description = d;
     }
@@ -42,8 +40,26 @@ public class QDoxJavaField implements JavaField {
     /**
      * @see org.apache.felix.scrplugin.tags.JavaField#getInitializationExpression()
      */
-    public String getInitializationExpression() {
-        return this.field.getInitializationExpression();
+    public String[] getInitializationExpression() {
+        String[] values = ClassUtil.getInitializationExpression(this.description.getCompiledClass(), this.getName());
+        if ( values == null ) {
+            // try qdox
+            String value = this.field.getInitializationExpression();
+            if ( value != null ) {
+                int pos = value.indexOf("\"");
+                if ( pos != -1 ) {
+                    try {
+                        value = value.substring(pos + 1);
+                        value = value.substring(0, value.lastIndexOf("\""));
+                    } catch (ArrayIndexOutOfBoundsException aioobe) {
+                        // ignore this as this is a qdox problem
+                        value = this.field.getInitializationExpression();
+                    }
+                }
+                values = new String[] {value};
+            }
+        }
+        return values;
     }
 
     /**

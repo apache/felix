@@ -60,6 +60,35 @@ public class ClassLoaderJavaClassDescription implements JavaClassDescription {
     }
 
     /**
+     * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getFieldByName(java.lang.String)
+     */
+    public JavaField getFieldByName(String name) throws MojoExecutionException {
+        Field field = null;
+        try {
+            field = this.clazz.getField(name);
+        } catch (SecurityException e) {
+            // ignore
+        } catch (NoSuchFieldException e) {
+            // ignore
+        }
+        if ( field != null ) {
+            return new ClassLoaderJavaField(field, this);
+        }
+        if ( this.getSuperClass() != null ) {
+            this.getSuperClass().getFieldByName(name);
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getExternalFieldByName(java.lang.String)
+     */
+    public JavaField getExternalFieldByName(String name)
+    throws MojoExecutionException {
+        throw new MojoExecutionException("getExternalFieldByName not support for this class.");
+    }
+
+    /**
      * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getImplementedInterfaces()
      */
     public JavaClassDescription[] getImplementedInterfaces() throws MojoExecutionException {
@@ -213,7 +242,7 @@ public class ClassLoaderJavaClassDescription implements JavaClassDescription {
     public boolean isPublic() {
         return Modifier.isPublic(this.clazz.getModifiers());
     }
-    
+
     public String toString() {
         return getName();
     }

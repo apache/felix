@@ -45,10 +45,14 @@ public class QDoxJavaClassDescription
 
     protected final JavaSource source;
 
-    public QDoxJavaClassDescription(JavaSource source, JavaClassDescriptorManager m) {
+    /** The compiled class. */
+    protected final Class clazz;
+
+    public QDoxJavaClassDescription(Class clazz, JavaSource source, JavaClassDescriptorManager m) {
         this.javaClass = source.getClasses()[0];
         this.manager = m;
         this.source = source;
+        this.clazz = clazz;
     }
 
     /**
@@ -119,6 +123,83 @@ public class QDoxJavaClassDescription
             f[i] = new QDoxJavaField(fields[i], this);
         }
         return f;
+    }
+
+    /**
+     * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getFieldByName(java.lang.String)
+     */
+    public JavaField getFieldByName(String name)
+    throws MojoExecutionException {
+        final com.thoughtworks.qdox.model.JavaField field = this.javaClass.getFieldByName(name);
+        if ( field != null ) {
+            return new QDoxJavaField(field, this);
+        }
+        if ( this.getSuperClass() != null ) {
+            return this.getSuperClass().getFieldByName(name);
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getExternalFieldByName(java.lang.String)
+     */
+    public JavaField getExternalFieldByName(String name)
+    throws MojoExecutionException {
+        int lastDot = name.lastIndexOf('.');
+        // if there is no dot, this should be a static import
+        if ( lastDot == -1 ) {
+            final String importDef = this.searchImport('.' + name);
+            if ( importDef != null ) {
+                int sep = importDef.lastIndexOf('.');
+                final String className = importDef.substring(0, sep);
+                final String constantName = importDef.substring(sep+1);
+                final JavaClassDescription jcd = this.manager.getJavaClassDescription(className);
+                if ( jcd != null ) {
+                    return jcd.getFieldByName(constantName);
+                }
+            }
+        } else {
+            // check for fully qualified
+            int firstDot = name.indexOf('.');
+            if ( firstDot == lastDot ) {
+                // we only have one dot, so either the class is imported or in the same package
+                final String className = name.substring(0, lastDot);
+                final String constantName = name.substring(lastDot+1);
+                final String importDef = this.searchImport('.' + className);
+                if ( importDef != null ) {
+                    final JavaClassDescription jcd = this.manager.getJavaClassDescription(importDef);
+                    if ( jcd != null ) {
+                        return jcd.getFieldByName(constantName);
+                    }
+                }
+                final JavaClassDescription jcd = this.manager.getJavaClassDescription(this.javaClass.getSource().getPackage() + '.' + className);
+                if ( jcd != null ) {
+                    return jcd.getFieldByName(constantName);
+                }
+
+            } else {
+                // we have more than one dot, so this is a fully qualified class
+                final String className = name.substring(0, lastDot);
+                final String constantName = name.substring(lastDot+1);
+                final JavaClassDescription jcd = this.manager.getJavaClassDescription(className);
+                if ( jcd != null ) {
+                    return jcd.getFieldByName(constantName);
+                }
+            }
+        }
+        return null;
+    }
+
+    protected String searchImport(String name) {
+        final String[] imports = this.javaClass.getSource().getImports();
+        if ( imports != null ) {
+            for(int i=0; i<imports.length; i++ ) {
+                if ( imports[i].endsWith(name) ) {
+                    return imports[i];
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -308,8 +389,15 @@ public class QDoxJavaClassDescription
         meth.setModifiers(new String[] {"protected"});
         this.javaClass.addMethod(meth);
     }
-    
+
+    /**
+     * @see java.lang.Object#toString()
+     */
     public String toString() {
         return getName();
+    }
+
+    public Class getCompiledClass() {
+        return this.clazz;
     }
 }
