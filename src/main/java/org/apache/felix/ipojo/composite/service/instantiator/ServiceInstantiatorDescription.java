@@ -28,6 +28,7 @@ import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.composite.CompositeHandler;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -63,13 +64,13 @@ public class ServiceInstantiatorDescription extends HandlerDescription {
         for (int i = 0; i < m_instances.size(); i++) {
             SvcInstance inst = (SvcInstance) m_instances.get(i);
             Element service = new Element("Service", "");
-            service.addAttribute(new Attribute("Specification", inst.getSpecification()));
+            service.addAttribute(new Attribute("Specification", inst.getServiceSpecification()));
             String state = "unresolved";
-            if (inst.isSatisfied()) {
+            if (inst.getState() == AbstractServiceDependency.RESOLVED) {
                 state = "resolved";
             }
             service.addAttribute(new Attribute("State", state));
-            Map map = inst.getUsedReferences();
+            Map map = inst.getMatchingFactories();
             Set keys = map.keySet();
             Iterator it = keys.iterator();
             while (it.hasNext()) {

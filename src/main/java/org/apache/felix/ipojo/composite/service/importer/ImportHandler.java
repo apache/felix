@@ -19,16 +19,20 @@
 package org.apache.felix.ipojo.composite.service.importer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.List;
 
+import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.PolicyServiceContext;
-import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.composite.CompositeHandler;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * This handler manages the import and the export of services from /
@@ -39,25 +43,14 @@ import org.osgi.framework.BundleContext;
 public class ImportHandler extends CompositeHandler {
 
     /**
-     * Service Scope.
-     */
-    private ServiceContext m_scope;
-
-    /**
-     * Parent context.
-     */
-    private BundleContext m_context;
-
-    /**
      * List of importers.
      */
     private List m_importers = new ArrayList();
-
-//    /**
-//     * Is the handler valid ?
-//     * (Lifecycle controller)
-//     */
-//    private boolean m_valid;
+    
+    /**
+     * Flag to check if the start method has finished.
+     */
+    private boolean m_isStarted;
     
 
     /**
@@ -70,8 +63,6 @@ public class ImportHandler extends CompositeHandler {
      * org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary conf) throws ConfigurationException {
-        m_context = getCompositeManager().getContext();
-        m_scope = getCompositeManager().getServiceContext();
         Element[] imp = metadata.getElements("requires");
         
         // Get instance filters
@@ -92,7 +83,8 @@ public class ImportHandler extends CompositeHandler {
                 String agg = imp[i].getAttribute("aggregate");
                 aggregate = agg != null && agg.equalsIgnoreCase("true");
 
-                String filter = "(&(objectClass=" + specification + ")(!(instance.name=" + getCompositeManager().getInstanceName() + ")))"; // Cannot import yourself
+                String filter_orig = "(&(objectClass=" + specification + ")(!(instance.name=" + getCompositeManager().getInstanceName() + ")))"; // Cannot import yourself
+                String filter = filter_orig;
                 String f = imp[i].getAttribute("filter");
                 if (f != null) {
                     filter = "(&" + filter + f + ")";
@@ -100,24 +92,37 @@ public class ImportHandler extends CompositeHandler {
                 
                 String id = imp[i].getAttribute("id");
                 
-                int scopePolicy = -1;
                 String scope = imp[i].getAttribute("scope");
+                BundleContext bc = getCompositeManager().getGlobalContext(); // Get the default bundle context.
                 if (scope != null) {
                     if (scope.equalsIgnoreCase("global")) {
-                        scopePolicy = PolicyServiceContext.GLOBAL;
+                        bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.GLOBAL);
                     } else if (scope.equalsIgnoreCase("composite")) {
-                        scopePolicy = PolicyServiceContext.LOCAL;
+                        bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL);
                     } else if (scope.equalsIgnoreCase("composite+global")) {
-                        scopePolicy = PolicyServiceContext.LOCAL_AND_GLOBAL;
-                    }                
+                        bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL_AND_GLOBAL);
+                    }
                 }
                 
                 // Configure instance filter if available
                 if (filtersConfiguration != null && id != null && filtersConfiguration.get(id) != null) {
-                    filter = (String) filtersConfiguration.get(id);
+                    filter = "(&" + filter_orig + (String) filtersConfiguration.get(id) + ")";
                 }
                 
-                ServiceImporter si = new ServiceImporter(specification, filter, aggregate, optional, m_context, m_scope, scopePolicy, id, this);
+                Filter fil = null;
+                if (filter != null) {
+                    try {
+                        fil = getCompositeManager().getGlobalContext().createFilter(filter);
+                    } catch (InvalidSyntaxException e) {
+                        throw new ConfigurationException("A required filter " + filter + " is malformed : " + e.getMessage());
+                    }
+                }
+                
+                Comparator cmp = AbstractServiceDependency.getComparator(imp[i], getCompositeManager().getGlobalContext());
+                Class spec = AbstractServiceDependency.loadSpecification(specification, getCompositeManager().getGlobalContext());
+                int policy = AbstractServiceDependency.getPolicy(imp[i]);
+                
+                ServiceImporter si = new ServiceImporter(spec, fil, aggregate, optional, cmp, policy, bc, id, this);
                 m_importers.add(si);
             } else { // Malformed import
                 error( "Malformed imports : the specification attribute is mandatory");
@@ -137,6 +142,7 @@ public class ImportHandler extends CompositeHandler {
             si.start();
         }
         isHandlerValid();
+        m_isStarted = true;
     }
 
     /**
@@ -149,6 +155,7 @@ public class ImportHandler extends CompositeHandler {
             ServiceImporter si = (ServiceImporter) m_importers.get(i);
             si.stop();
         }
+        m_isStarted = false;
     }
 
     /**
@@ -159,12 +166,24 @@ public class ImportHandler extends CompositeHandler {
     public void isHandlerValid() {
         for (int i = 0; i < m_importers.size(); i++) {
             ServiceImporter si = (ServiceImporter) m_importers.get(i);
-            if (!si.isSatisfied()) {
+            if (si.getState() != AbstractServiceDependency.RESOLVED) {
                 setValidity(false);
                 return;
             }
         }
         setValidity(true);
+    }
+    
+    public void stateChanged(int newState) {
+        // If we are becoming valid and started, check if we need to freeze importers.
+        if (m_isStarted && newState == ComponentInstance.VALID) { 
+            for (int i = 0; i < m_importers.size(); i++) {
+                ServiceImporter si = (ServiceImporter) m_importers.get(i);
+                if (si.isStatic()) {
+                    si.freeze();
+                }
+            }
+        }
     }
 
     /**

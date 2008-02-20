@@ -41,7 +41,10 @@ import org.apache.felix.ipojo.composite.service.instantiator.SvcInstance;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ManifestMetadataParser;
 import org.apache.felix.ipojo.parser.ParseException;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -186,7 +189,7 @@ public class ProvidedServiceHandler extends CompositeHandler {
 
         for (int i = 0; sh != null && i < sh.getInstances().size(); i++) {
             SvcInstance svc = (SvcInstance) sh.getInstances().get(i);
-            String itf = svc.getSpecification();
+            String itf = svc.getServiceSpecification();
             boolean agg = svc.isAggregate();
             boolean opt = svc.isOptional();
 
@@ -196,7 +199,7 @@ public class ProvidedServiceHandler extends CompositeHandler {
 
         for (int i = 0; ih != null && i < ih.getRequirements().size(); i++) {
             ServiceImporter si = (ServiceImporter) ih.getRequirements().get(i);
-            String itf = si.getSpecification();
+            String itf = si.getSpecification().getName();
             boolean agg = si.isAggregate();
             boolean opt = si.isOptional();
 
@@ -269,7 +272,7 @@ public class ProvidedServiceHandler extends CompositeHandler {
         String requirement = element.getAttribute("specification");
         for (int i = 0; i < ih.getRequirements().size(); i++) {
             ServiceImporter imp = (ServiceImporter) ih.getRequirements().get(i);
-            if (imp.getSpecification().equals(requirement)) { return imp; }
+            if (imp.getId().equals(requirement) || imp.getSpecification().getName().equals(requirement)) { return imp; }
         }
         return null;
     }
@@ -310,6 +313,7 @@ public class ProvidedServiceHandler extends CompositeHandler {
                 ih = (ImportHandler) ci.getHandler();
                 getCompositeManager().addCompositeHandler(ci);
             }
+            
             String spec = elem.getAttribute("specification");
             String filter = "(&(objectClass=" + spec + ")(!(instance.name=" + getCompositeManager().getInstanceName() + ")))"; // Cannot import yourself
             String f = elem.getAttribute("filter");
@@ -317,7 +321,24 @@ public class ProvidedServiceHandler extends CompositeHandler {
                 filter = "(&" + filter + f + ")";
             }
             
-            ServiceImporter si = new ServiceImporter(spec, filter, agg, opt, getCompositeManager().getContext(), getCompositeManager().getServiceContext(), PolicyServiceContext.LOCAL, null, ih);
+            BundleContext  bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.GLOBAL);
+            
+            Filter fil = null;
+            try {
+                fil = getCompositeManager().getGlobalContext().createFilter(filter);
+            } catch (InvalidSyntaxException e) {
+                throw new CompositionException("A required filter " + filter + " is malformed : " + e.getMessage());
+            }
+            
+            Class specToImport = null;
+            try {
+                specToImport = getCompositeManager().getGlobalContext().getBundle().loadClass(spec);
+            } catch (ClassNotFoundException e) {
+                throw new CompositionException("A required specification cannot be loaded : " + spec);
+            }
+            
+            ServiceImporter si = new ServiceImporter(specToImport, fil, agg, opt, null, AbstractServiceDependency.DYNAMIC_BINDING_POLICY, bc, null, ih);
+            
             ih.getRequirements().add(si);
             SpecificationMetadata sm = new SpecificationMetadata(spec, m_context, agg, opt, this);
             m_services.add(sm); // Update the available types

@@ -19,17 +19,19 @@
 package org.apache.felix.ipojo.composite.service.importer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.ipojo.PolicyServiceContext;
-import org.apache.felix.ipojo.ServiceContext;
-import org.apache.felix.ipojo.util.Tracker;
-import org.apache.felix.ipojo.util.TrackerCustomizer;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -38,64 +40,16 @@ import org.osgi.framework.ServiceRegistration;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceImporter implements TrackerCustomizer {
-
-    /**
-     * Destination context.
-     */
-    private ServiceContext m_destination;
-
-    /**
-     * Context where service need to be found. 
-     */
-    private ServiceContext m_origin;
-
-    /**
-     * Imported Specification.
-     */
-    private String m_specification;
-
-    /**
-     * LDAP filter filtering external providers.
-     */
-    private Filter m_filter;
-
-    /**
-     * String form of the LDAP filter.
-     */
-    private String m_filterStr;
-
-    /**
-     * Should we importer several providers?
-     */
-    private boolean m_aggregate = false;
-
-    /**
-     * Is the import optional?
-     */
-    private boolean m_optional = false;
-
-    /**
-     * Is the importer valid?
-     */
-    private boolean m_isValid;
-    
-    /**
-     * Resolving policy.
-     */
-    private int m_policy;
-    
-    /**
-     * TRacker tracking imported service.
-     */
-    private Tracker m_tracker;
+public class ServiceImporter extends AbstractServiceDependency {
 
     /**
      * Reference on the handler.
      */
     private ImportHandler m_handler;
+    
+    private BundleContext m_origin;
 
-    private class Record {
+    private class Record implements ServiceListener {
         /**
          * External Reference.
          */
@@ -108,6 +62,30 @@ public class ServiceImporter implements TrackerCustomizer {
          * Exposed Object.
          */
         private Object m_svcObject;
+        
+        private Record(ServiceReference ref) {
+            m_ref = ref;
+            try {
+                m_origin.addServiceListener(this, "(" + Constants.SERVICE_ID + "=" + ref.getProperty(Constants.SERVICE_ID) + ")");
+            } catch (InvalidSyntaxException e) {
+                // Nothing to do.
+            }
+        }
+        
+        private void register() {
+            m_svcObject = getService(m_ref);
+            m_reg = m_handler.getCompositeManager().getServiceContext().registerService(getSpecification().getName(), m_svcObject, getProps(m_ref));
+        }
+        
+        private void dispose() {
+            m_origin.removeServiceListener(this);
+            if (m_reg != null) {
+                m_reg.unregister();
+                m_svcObject = null;
+                m_reg = null;
+            }
+            m_ref = null;
+        }
         
         /**
          * Test object equality.
@@ -122,6 +100,14 @@ public class ServiceImporter implements TrackerCustomizer {
             }
             return false;
         }
+
+        public synchronized void serviceChanged(ServiceEvent evt) {
+            // In case of modification, modify the service imported service registration.
+            if (m_reg != null && evt.getType() == ServiceEvent.MODIFIED) {
+                      m_reg.setProperties(getProps(evt.getServiceReference()));
+              }
+            }
+            
     }
 
     /**
@@ -138,6 +124,8 @@ public class ServiceImporter implements TrackerCustomizer {
      * Is this requirement attached to a service-level requirement.
      */
     private boolean m_isServiceLevelRequirement;
+    
+    private boolean m_isFrozen;
 
     /**
      * Constructor.
@@ -152,41 +140,18 @@ public class ServiceImporter implements TrackerCustomizer {
      * @param id : requirement id (may be null)
      * @param in : handler
      */
-    public ServiceImporter(String specification, String filter, boolean multiple, boolean optional, BundleContext from, ServiceContext to, int policy, String id,
-            ImportHandler in) {
-        this.m_destination = to;
-        try {
-            this.m_filter = from.createFilter(filter);
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-            return;
-        }
-        this.m_aggregate = multiple;
-        this.m_specification = specification;
-        this.m_optional = optional;
+    public ServiceImporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, BundleContext bc, String id, ImportHandler in) {
+        super(specification, multiple, optional, filter, cmp, policy, bc);
+        
+        m_origin = bc;
+        
         this.m_handler = in;
         
         if (m_id == null) {
-            m_id = m_specification;
+            m_id = super.getSpecification().getName();
         } else {
             m_id = id;
         }
-        
-        if (policy == -1) {
-            m_policy = PolicyServiceContext.LOCAL_AND_GLOBAL;  
-        } else {
-            m_policy = policy;
-        }
-    }
-
-    /**
-     * Start method to begin the import.
-     */
-    public void start() {
-        m_origin = new PolicyServiceContext(m_handler.getCompositeManager().getGlobalContext(), m_handler.getCompositeManager().getParentServiceContext(), m_policy);
-        m_tracker = new Tracker(m_origin, m_filter, this);
-        m_tracker.open();
-        m_isValid = isSatisfied();
     }
 
     /**
@@ -195,7 +160,7 @@ public class ServiceImporter implements TrackerCustomizer {
      * @param ref : the reference.
      * @return the property dictionary
      */
-    private Dictionary getProps(ServiceReference ref) {
+    private static Dictionary getProps(ServiceReference ref) {
         Properties prop = new Properties();
         String[] keys = ref.getPropertyKeys();
         for (int i = 0; i < keys.length; i++) {
@@ -203,35 +168,33 @@ public class ServiceImporter implements TrackerCustomizer {
         }
         return prop;
     }
+    
+    public boolean isStatic() {
+        return getBindingPolicy() == STATIC_BINDING_POLICY;
+    }
+    
+    public void freeze() {
+        m_isFrozen = true;
+    }
+    
+    public boolean isFrozen() {
+        return m_isFrozen;
+    }
 
     /**
      * Stop the management of the import.
      */
     public void stop() {
 
-        m_tracker.close();
+        super.stop();
 
         for (int i = 0; i < m_records.size(); i++) {
             Record rec = (Record) m_records.get(i);
-            rec.m_svcObject = null;
-            if (rec.m_reg != null) {
-                rec.m_reg.unregister();
-                m_tracker.ungetService(rec.m_ref);
-                rec.m_ref = null;
-            }
+            rec.dispose();
         }
         
-        m_tracker = null;
         m_records.clear();
 
-    }
-
-    /**
-     * Check if the import is satisfied.
-     * @return true if the import is optional or at least one provider is imported
-     */
-    public boolean isSatisfied() {
-        return m_optional || m_records.size() > 0;
     }
 
     /**
@@ -251,10 +214,6 @@ public class ServiceImporter implements TrackerCustomizer {
         return l;
     }
 
-    public String getSpecification() {
-        return m_specification;
-    }
-
     /**
      * Build the list of imported service provider.
      * @return the list of all imported services.
@@ -265,11 +224,6 @@ public class ServiceImporter implements TrackerCustomizer {
             l.add((((Record) m_records.get(i)).m_ref).getProperty("instance.name"));
         }
         return l;
-
-    }
-
-    public String getFilter() {
-        return m_filterStr;
     }
     
     /**
@@ -279,7 +233,8 @@ public class ServiceImporter implements TrackerCustomizer {
      */
     public void setServiceLevelDependency() {
         m_isServiceLevelRequirement = true;
-        m_policy = PolicyServiceContext.LOCAL;
+        PolicyServiceContext bc = new PolicyServiceContext(m_handler.getCompositeManager().getGlobalContext(), m_handler.getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL);
+        setBundleContext(bc);
     }
 
     public String getId() {
@@ -289,104 +244,34 @@ public class ServiceImporter implements TrackerCustomizer {
     public boolean isServiceLevelRequirement() {
         return m_isServiceLevelRequirement;
     }
-    
-    public boolean isAggregate() {
-        return m_aggregate;
-    }
-    
-    public boolean isOptional() {
-        return m_optional;
+
+    public void invalidate() {
+        m_handler.invalidating(this);
     }
 
-    /**
-     * A new service is detected.
-     * @param reference : service reference
-     * @return true if not already imported.
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public boolean addingService(ServiceReference reference) {
-        for (int i = 0; i < m_records.size(); i++) {
-            Record rec = (Record) m_records.get(i);
-            if (rec.m_ref == reference) {
-                return false; // Already contained
-            }
-        }
-        return true;
+    public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
+        throw new UnsupportedOperationException("Service import does not support dependency reconfiguration");
     }
-    
-    /**
-     * The given service reference was added inside the tracker list.
-     * Register the internal service.
-     * @param reference : added reference
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addedService(org.osgi.framework.ServiceReference)
-     */
-    public void addedService(ServiceReference reference) {
-        Record rec = new Record();
-        rec.m_ref = reference;
+
+    public void onServiceArrival(ServiceReference ref) {
+        Record rec = new Record(ref);
         m_records.add(rec);
-        // Publishing ?
-        if (m_records.size() == 1 || m_aggregate) { // If the service is the first one, or if it is a multiple imports
-            rec.m_svcObject = m_tracker.getService(rec.m_ref);
-            rec.m_reg = m_destination.registerService(m_specification, rec.m_svcObject, getProps(rec.m_ref));
-        }
-        // Compute the new state
-        if (!m_isValid && isSatisfied()) {
-            m_isValid = true;
-            m_handler.validating(this);
-        }
+        // Always register the reference, as the method is call only when needed. 
+        rec.register();
     }
 
-    /**
-     * An imported service was modified.
-     * @param reference : service reference
-     * @param service : service object (if already get)
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void modifiedService(ServiceReference reference, Object service) {
-        List l = getRecordsByRef(reference);
+    public void onServiceDeparture(ServiceReference ref) {
+        List l = getRecordsByRef(ref);
         for (int i = 0; i < l.size(); i++) { // Stop the implied record
             Record rec = (Record) l.get(i);
-            if (rec.m_reg != null) {
-                rec.m_reg.setProperties(getProps(rec.m_ref));
-            }
-        }
-    }
-
-    /**
-     * An imported service disappears.
-     *@param reference : service reference
-     * @param service : service object (if already get)
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void removedService(ServiceReference reference, Object service) {
-        List l = getRecordsByRef(reference);
-        for (int i = 0; i < l.size(); i++) { // Stop the implied record
-            Record rec = (Record) l.get(i);
-            if (rec.m_reg != null) {
-                rec.m_svcObject = null;
-                rec.m_reg.unregister();
-                rec.m_reg = null;
-                m_tracker.ungetService(rec.m_ref);
-            }
+            rec.dispose();
+            
         }
         m_records.removeAll(l);
+    }
 
-        // Check the validity & if we need to re-import the service
-        if (m_records.size() > 0) {
-            // There is other available services
-            if (!m_aggregate) { // Import the next one
-                Record rec = (Record) m_records.get(0);
-                if (rec.m_svcObject == null) { // It is the first service which disappears - create the next one
-                    rec.m_svcObject = m_tracker.getService(rec.m_ref);
-                    rec.m_reg = m_destination.registerService(m_specification, rec.m_svcObject, getProps(rec.m_ref));
-                }
-            }
-        } else {
-            if (!m_optional) {
-                m_isValid = false;
-                m_handler.invalidating(this);
-            }
-        }
+    public void validate() {
+        m_handler.validating(this);
     }
 
 }

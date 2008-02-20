@@ -129,7 +129,7 @@ public class CompositionMetadata {
                     m_handler.error( "The factory " + type + " is not available, cannot check the composition");
                     throw new CompositionException("The factory " + type + " needs to be available to check the composition");
                 } else {
-                    String className = (String) refs[0].getProperty("component.class"); //TODO !!!!
+                    String className = (String) refs[0].getProperty("component.class");
                     Class impl = m_context.getBundle().loadClass(className);
                     SpecificationMetadata spec = new SpecificationMetadata(impl, type, m_handler);
                     FieldMetadata field = new FieldMetadata(spec);
@@ -233,8 +233,8 @@ public class CompositionMetadata {
         try {
             clazz = getBundleContext().getBundle().loadClass(m_specification.getName());
         } catch (ClassNotFoundException e1) {
-            //TODO
-            e1.printStackTrace();
+            // The class has already be loaded.
+            return null;
         }
         byte[] pojo = POJOWriter.dump(clazz, m_name, getFieldList(), getMethodList());
         Manipulator m = new Manipulator();

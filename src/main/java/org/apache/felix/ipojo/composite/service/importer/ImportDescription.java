@@ -24,6 +24,7 @@ import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.composite.CompositeHandler;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
 
 /**
  * Description of the Import Export Handler.
@@ -57,11 +58,11 @@ public class ImportDescription extends HandlerDescription {
         for (int i = 0; i < m_imports.size(); i++) {
             ServiceImporter imp = (ServiceImporter) m_imports.get(i);
             Element impo = new Element("Requires", "");
-            impo.addAttribute(new Attribute("Specification", imp.getSpecification()));
+            impo.addAttribute(new Attribute("Specification", imp.getSpecification().getName()));
             if (imp.getFilter() != null) {
                 impo.addAttribute(new Attribute("Filter", imp.getFilter()));
             }
-            if (imp.isSatisfied()) {
+            if (imp.getState() == AbstractServiceDependency.RESOLVED) {
                 impo.addAttribute(new Attribute("State", "resolved"));
                 for (int j = 0; j < imp.getProviders().size(); j++) {
                     Element pr = new Element("Provider", "");

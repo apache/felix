@@ -19,14 +19,19 @@
 package org.apache.felix.ipojo.composite.service.instantiator;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.composite.CompositeHandler;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * Service Instantiator Class. This handler allows to instantiate service
@@ -40,6 +45,8 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
      * List of instances to manage.
      */
     private List/* <SvcInstance> */m_instances = new ArrayList();
+    
+    private boolean m_isStarted;
 
     /**
      * Configure the handler.
@@ -62,6 +69,14 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
             if (f != null) {
                 filter = "(&" + filter + f + ")";
             }
+            
+            Filter fil;
+            try {
+                fil = getCompositeManager().getGlobalContext().createFilter(filter);
+            } catch (InvalidSyntaxException e) {
+                throw new ConfigurationException("Malformed filter " + filter + " : " + e.getMessage());
+            }
+            
             Properties prop = new Properties();
             Element[] props = services[i].getElements("property");
             for (int k = 0; props != null && k < props.length; k++) {
@@ -75,7 +90,13 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
             String op = services[i].getAttribute("optional");
             boolean opt = op != null && op.equalsIgnoreCase("true");
             
-            SvcInstance inst = new SvcInstance(this, spec, prop, agg, opt, filter);
+            int policy = AbstractServiceDependency.getPolicy(services[i]);
+            
+            Comparator cmp = AbstractServiceDependency.getComparator(services[i], getCompositeManager().getGlobalContext());
+            
+            //String source = services[i].getAttribute("context-source");
+            
+            SvcInstance inst = new SvcInstance(this, spec, prop, agg, opt, fil, cmp, policy);
             m_instances.add(inst);
         }
     }
@@ -93,6 +114,7 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
         }
 
         isHandlerValid();
+        m_isStarted = true;
     }
 
     /**
@@ -103,7 +125,7 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
     private void isHandlerValid() {
         for (int i = 0; i < m_instances.size(); i++) {
             SvcInstance inst = (SvcInstance) m_instances.get(i);
-            if (!inst.isSatisfied()) {
+            if (inst.getState() != AbstractServiceDependency.RESOLVED) {
                 setValidity(false);
                 return;
             }
@@ -122,6 +144,19 @@ public class ServiceInstantiatorHandler extends CompositeHandler {
             inst.stop();
         }
         m_instances.clear();
+        m_isStarted = false;
+    }
+    
+    public void stateChanged(int newState) {
+        // If we are becoming valid and started, check if we need to freeze importers.
+        if (m_isStarted && newState == ComponentInstance.VALID) { 
+            for (int i = 0; i < m_instances.size(); i++) {
+                SvcInstance si = (SvcInstance) m_instances.get(i);
+                if (si.getBindingPolicy() == AbstractServiceDependency.STATIC_BINDING_POLICY) {
+                    si.freeze();
+                }
+            }
+        }
     }
 
     /**

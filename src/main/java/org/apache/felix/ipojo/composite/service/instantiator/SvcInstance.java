@@ -18,6 +18,7 @@
  */
 package org.apache.felix.ipojo.composite.service.instantiator;
 
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -30,12 +31,10 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
-import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
-import org.apache.felix.ipojo.metadata.Element;
-import org.apache.felix.ipojo.util.Tracker;
-import org.apache.felix.ipojo.util.TrackerCustomizer;
-import org.osgi.framework.InvalidSyntaxException;
+import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -44,12 +43,7 @@ import org.osgi.framework.ServiceReference;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class SvcInstance implements TrackerCustomizer {
-
-    /**
-     * Required specification.
-     */
-    private String m_specification;
+public class SvcInstance extends AbstractServiceDependency {
 
     /**
      * Configuration to push to the instance.
@@ -57,39 +51,18 @@ public class SvcInstance implements TrackerCustomizer {
     private Dictionary m_configuration;
 
     /**
-     * Map of factory references => instance or NO_INSTANCE.
-     */
-    private Map /* ServiceReference */m_usedRef = new HashMap();
-
-    /**
-     * Does we instantiate several provider ?
-     */
-    private boolean m_isAggregate = false;
-
-    /**
-     * Is the service optional ?
-     */
-    private boolean m_isOptional = false;
-
-    /**
      * Handler creating the service instance.
      */
     private ServiceInstantiatorHandler m_handler;
-
+    
     /**
-     * Service Context (internal scope).
+     * Map of matching factories  Service Reference => instance or null (null if the service reference is not actually used).
      */
-    private ServiceContext m_context;
-
-    /**
-     * True if the service instantiation is valid.
-     */
-    private boolean m_isValid = false;
-
-    /**
-     * Tracker used to track required factory.
-     */
-    private Tracker m_tracker;
+    private Map /*<ServiceReference, Instance>*/m_matchingFactories = new HashMap();
+    
+    private String m_specification;
+    
+    private boolean m_isFrozen;
 
     /**
      * Constructor.
@@ -99,63 +72,48 @@ public class SvcInstance implements TrackerCustomizer {
      * @param isAgg : is the service instance an aggregate service ?
      * @param isOpt : is the service instance optional ?
      * @param filt : LDAP filter
+     * @throws ConfigurationException : an attribute cannot be parsed correctly, or is incorrect.
      */
-    public SvcInstance(ServiceInstantiatorHandler h, String spec, Dictionary conf, boolean isAgg, boolean isOpt, String filt) {
-        m_handler = h;
-        m_context = h.getCompositeManager().getServiceContext();
+    public SvcInstance(ServiceInstantiatorHandler h, String spec, Dictionary conf, boolean isAgg, boolean isOpt, Filter filt, Comparator cmp, int policy) throws ConfigurationException {
+        super(Factory.class, isAgg, isOpt, filt, cmp, policy, null);
+        
         m_specification = spec;
+        
+        m_handler = h;
+        setBundleContext(m_handler.getCompositeManager().getServiceContext());
+        
         m_configuration = conf;
-        m_isAggregate = isAgg;
-        m_isOptional = isOpt;
-        try {
-            m_tracker  = new Tracker(m_context, h.getCompositeManager().getContext().createFilter(filt), this);
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
-    }
 
-    /**
-     * Start the service instance.
-     * @param sc
-     */
-    public void start() {
-        m_tracker.open();
-        m_isValid = isSatisfied();
+
+        //TODO managing several sources
     }
 
     /**
      * Stop the service instance.
      */
     public void stop() {
-        m_tracker.close();
-        
-        Set keys = m_usedRef.keySet();
+        super.stop();
+
+        Set keys = m_matchingFactories.keySet();
         Iterator it = keys.iterator();
         while (it.hasNext()) {
             ServiceReference ref = (ServiceReference) it.next();
-            Object o = m_usedRef.get(ref);
+            Object o = m_matchingFactories.get(ref);
             if (o != null) {
                 ((ComponentInstance) o).dispose();
             }
         }
-        m_usedRef.clear();
-        m_tracker = null;
-        m_isValid = false;
-    }
+        
+        m_matchingFactories.clear();
 
-    /**
-     * Check if an instance is already created.
-     * @return true if at least one instance is created.
-     */
-    private boolean isAnInstanceCreated() {
-        Set keys = m_usedRef.keySet();
-        Iterator it = keys.iterator();
-        while (it.hasNext()) {
-            if (m_usedRef.get(it.next()) != null)  {
-                return true;
-            }
-        }
-        return false;
+    }
+    
+    public boolean isFrozen() {
+        return m_isFrozen;
+    }
+    
+    public void freeze() {
+        m_isFrozen = true;
     }
 
     /**
@@ -163,8 +121,11 @@ public class SvcInstance implements TrackerCustomizer {
      * The instance is not added inside the map.
      * @param factory : the factory from which we need to create the instance.
      * @return the created component instance.
+     * @throws ConfigurationException : the instance cannot be configured correctly.
+     * @throws MissingHandlerException  : the factory is invalid.
+     * @throws UnacceptableConfiguration : the given configuration is invalid for the given factory.
      */
-    private ComponentInstance createInstance(Factory factory) {
+    private ComponentInstance createInstance(Factory factory) throws UnacceptableConfiguration, MissingHandlerException, ConfigurationException {
         // Add an unique name if not specified.
         Properties p = new Properties();
         Enumeration kk = m_configuration.keys();
@@ -173,56 +134,8 @@ public class SvcInstance implements TrackerCustomizer {
             p.put(k, m_configuration.get(k));
         }
         ComponentInstance instance = null;
-        try {
-            instance = factory.createComponentInstance(p);
-        } catch (UnacceptableConfiguration e) {
-            e.printStackTrace();
-        } catch (MissingHandlerException e) {
-            e.printStackTrace();
-        } catch (ConfigurationException e) {
-            e.printStackTrace();
-        }
+        instance = factory.createComponentInstance(p);
         return instance;
-    }
-
-    /**
-     * Create an instance for the next available factory.
-     */
-    private void createNextInstance() {
-        Set keys = m_usedRef.keySet();
-        Iterator it = keys.iterator();
-        ServiceReference ref = (ServiceReference) it.next();
-        try {
-            Factory factory = (Factory) m_context.getService(ref);
-
-            // Add an unique name if not specified.
-            Properties p = new Properties();
-            Enumeration kk = m_configuration.keys();
-            while (kk.hasMoreElements()) {
-                String k = (String) kk.nextElement();
-                p.put(k, m_configuration.get(k));
-            }
-            
-            ComponentInstance instance = factory.createComponentInstance(p);
-            m_usedRef.put(ref, instance);
-            m_context.ungetService(ref);
-        } catch (UnacceptableConfiguration e) {
-            m_handler.error( "A matching factory (" + ref.getProperty("instance.name") + ") seems to refuse the given configuration : " + e.getMessage());
-        } catch (MissingHandlerException e) {
-            m_handler.error( "A matching factory (" + ref.getProperty("instance.name") + ") seems to refuse the given configuration : " + e.getMessage());
-        } catch (ConfigurationException e) {
-            m_handler.error( "A matching factory (" + ref.getProperty("instance.name") + ") seems to refuse the given configuration : " + e.getMessage());
-        }
-    }
-
-
-
-    /**
-     * Check if the service instance is satisfied.
-     * @return true if the service instance if satisfied.
-     */
-    public boolean isSatisfied() {
-        return m_isOptional || m_usedRef.size() > 0;
     }
 
     /**
@@ -230,33 +143,34 @@ public class SvcInstance implements TrackerCustomizer {
      * @param fact : the factory to test.
      * @return true if the factory match, false otherwise.
      */
-    private boolean match(Factory fact) {
-        //TODO : use the service reference instead of the factory object to avoid to get the factory.
+    public boolean match(ServiceReference fact) {
         // Check if the factory can provide the specification
-        Element[] provides = fact.getDescription().getElements("provides");
+        ComponentTypeDescription desc = (ComponentTypeDescription) fact.getProperty("component.description");
+        if (desc == null) { 
+            return false; // No component type description. 
+        } 
+       
+        String[] provides = desc.getprovidedServiceSpecification();
         for (int i = 0; provides != null && i < provides.length; i++) {
-            if (provides[i].getAttribute("specification").equals(m_specification)) {
-
+            if (provides[i].equals(m_specification)) {
                 // Check that the factory needs every properties contained in
                 // the configuration
+                org.apache.felix.ipojo.architecture.PropertyDescription[] props = desc.getProperties();
                 Enumeration e = m_configuration.keys();
                 while (e.hasMoreElements()) {
                     String k = (String) e.nextElement();
-                    if (!containsProperty(k, fact)) {
-                        return false;
-                    }
+                    if (!containsProperty(k, props)) { return false; }
                 }
 
-                // Add an unique name if not specified.
                 Properties p = new Properties();
                 Enumeration keys = m_configuration.keys();
                 while (keys.hasMoreElements()) {
                     String k = (String) keys.nextElement();
                     p.put(k, m_configuration.get(k));
                 }
-
-                // Check the acceptability.
-                return fact.isAcceptable(p);
+                
+                Factory factory = (Factory) getService(fact);
+                return factory.isAcceptable(p);
             }
         }
         return false;
@@ -269,16 +183,11 @@ public class SvcInstance implements TrackerCustomizer {
      * @param factory : factory to test
      * @return true if the factory support this property
      */
-    private boolean containsProperty(String name, Factory factory) {
-        Element[] props = factory.getDescription().getElements("property");
+    private boolean containsProperty(String name, org.apache.felix.ipojo.architecture.PropertyDescription[] props) {
         for (int i = 0; props != null && i < props.length; i++) {
-            if (props[i].getAttribute("name").equalsIgnoreCase(name)) {
-                return true;
-            }
+            if (props[i].getName().equalsIgnoreCase(name)) { return true; }
         }
-        if (name.equalsIgnoreCase("name")) {
-            return true;
-        } // Skip the name property
+        if (name.equalsIgnoreCase("name")) { return true; } // Skip the name property
         return false;
     }
 
@@ -286,101 +195,58 @@ public class SvcInstance implements TrackerCustomizer {
      * Get the required specification.
      * @return the required specification.
      */
-    public String getSpecification() {
+    public String getServiceSpecification() {
         return m_specification;
     }
     
-    public boolean isAggregate() {
-        return m_isAggregate;
-    }
-    
-    public boolean isOptional() {
-        return m_isOptional;
-    }
-
     /**
      * Get the map of used references [reference, component instance].
      * @return the map of used references.
      */
-    protected Map getUsedReferences() {
-        return m_usedRef;
+    protected Map getMatchingFactories() {
+        return m_matchingFactories;
     }
 
-    /**
-     * A factory potentially matching with the managed instance appears.
-     * @param reference : service reference
-     * @return : true if the factory match
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public boolean addingService(ServiceReference reference) {
-        Factory fact = (Factory) m_tracker.getService(reference);
-        if (match(fact)) {
-            m_tracker.ungetService(reference);
-            return true;
-        } else {
-            m_tracker.ungetService(reference);
-            return false;
+    public void invalidate() {
+        m_handler.invalidate();
+        
+    }
+
+    public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void onServiceArrival(ServiceReference ref) {
+        // The given factory matches.
+        try {
+        Factory fact = (Factory) getService(ref);
+        ComponentInstance ci = createInstance(fact);
+        m_matchingFactories.put(ref, ci);
+        } catch (UnacceptableConfiguration e) {
+            m_handler.error("A matching factory refuse the actual configuration : " + e.getMessage());
+            m_handler.getCompositeManager().stop();
+        } catch (MissingHandlerException e) {
+            m_handler.error("A matching factory is no more valid : " + e.getMessage());
+            m_handler.getCompositeManager().stop();
+        } catch (ConfigurationException e) {
+            m_handler.error("A matching configuration is refuse by the instance : " + e.getMessage());
+            m_handler.getCompositeManager().stop();
         }
         
     }
-    
-    /**
-     * A matching service reference has been added in the tracker. 
-     * @param reference : added reference.
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addedService(org.osgi.framework.ServiceReference)
-     */
-    public void addedService(ServiceReference reference) {
-        Factory fact = (Factory) m_tracker.getService(reference);
-        if (m_isAggregate) { // Create an instance for the new factory
-            m_usedRef.put(reference, createInstance(fact));
-            if (!m_isValid) {
-                m_isValid = true;
-                m_handler.validate();
-            }
-        } else {
-            if (!isAnInstanceCreated()) {
-                m_usedRef.put(reference, createInstance(fact));
-            } else {
-                m_usedRef.put(reference, null); // Store the reference
-            }
-            if (!m_isValid) {
-                m_isValid = true;
-                m_handler.validate();
-            }
-        }
-        m_tracker.ungetService(reference);
-    }
 
-    /**
-     * A used factory was modified.
-     * @param reference : service reference
-     * @param service : object if already get
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void modifiedService(ServiceReference reference, Object service) { } 
-        
-    /**
-     * A used factory disappears.
-     * @param reference : service reference
-     * @param service : object if already get
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void removedService(ServiceReference reference, Object service) {
-     // Remove the reference is contained
-        Object o = m_usedRef.remove(reference);
+    public void onServiceDeparture(ServiceReference ref) {
+        // Remove the reference is contained
+        Object o = m_matchingFactories.remove(ref);
         if (o != null) {
             ((ComponentInstance) o).dispose();
-            if (m_usedRef.size() > 0) {
-                if (!m_isAggregate) {
-                    createNextInstance(); // Create an instance with another factory
-                }
-            } else { // No more candidate
-                if (!m_isOptional) {
-                    m_isValid = false;
-                    m_handler.invalidate();
-                }
-            }
         }
+    }
+
+    public void validate() {
+        m_handler.validate();
+        
     }
 
 }
