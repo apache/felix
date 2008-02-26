@@ -18,27 +18,28 @@
  */
 package org.apache.felix.ipojo.composite.service.provides;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Dictionary;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.felix.ipojo.ServiceContext;
+import org.apache.felix.ipojo.composite.CompositeManager;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.apache.felix.ipojo.util.DependencyLifecycleListener;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 /**
  * Export an service from the scope to the parent context.
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceExporter implements ServiceListener {
+public class ServiceExporter extends AbstractServiceDependency {
 
     /**
      * Destination context.
@@ -46,64 +47,14 @@ public class ServiceExporter implements ServiceListener {
     private BundleContext m_destination;
 
     /**
-     * Origin context.
+     * Composite Manager.
      */
-    private ServiceContext m_origin;
+    private CompositeManager m_manager;
 
     /**
-     * Exported specification.
+     * Map of service reference - service registration storing exported services.
      */
-    private String m_specification;
-
-    /**
-     * LDAP filter filtering internal provider.
-     */
-    private Filter m_filter;
-
-    /**
-     * String form of the LDAP filter.
-     */
-    private String m_filterStr;
-
-    /**
-     * Should be exported several providers.
-     */
-    private boolean m_aggregate = false;
-
-    /**
-     * Is this exports optional?
-     */
-    private boolean m_optional = false;
-
-    /**
-     * Reference on the provided service.
-     */
-    private ProvidedService m_ps;
-
-    /**
-     * Is the export valid?
-     */
-    private boolean m_isValid;
-
-    private class Record {
-        /**
-         * Internal Reference.
-         */
-        private ServiceReference m_ref;
-        /**
-         * External Registration.
-         */
-        private ServiceRegistration m_reg;
-        /**
-         * Exposed object.
-         */
-        private Object m_svcObject;
-    }
-
-    /**
-     * List of managed records.
-     */
-    private List/* <Record> */m_records = new ArrayList()/* <Record> */;
+    private Map/*<ServiceReference, ServiceRegistration>*/m_registrations = new HashMap();
 
     /**
      * Constructor.
@@ -112,70 +63,20 @@ public class ServiceExporter implements ServiceListener {
      * @param filter : LDAP filter
      * @param multiple : is the export an aggregate export?
      * @param optional : is the export optional?
+     * @param cmp : comparator to use in the dependency
+     * @param policy : binding policy.
      * @param from : internal service context
-     * @param to : external bundle context
-     * @param exp : handler
+     * @param to : parent bundle context
+     * @param listener : dependency lifecycle listener to notify when the dependency state change. 
+     * @param cm : composite manager
      */
-    public ServiceExporter(String specification, String filter, boolean multiple, boolean optional, ServiceContext from, BundleContext to, ProvidedService exp) {
-        this.m_destination = to;
-        this.m_origin = from;
-        this.m_ps = exp;
-        try {
-            this.m_filter = to.createFilter(filter);
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-            return;
-        }
-        this.m_aggregate = multiple;
-        this.m_specification = specification;
-        this.m_optional = optional;
-    }
+    public ServiceExporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, ServiceContext from, BundleContext to, DependencyLifecycleListener listener, CompositeManager cm) {
+        super(specification, multiple, optional, filter, cmp, policy, from, listener);
 
-    /**
-     * Start method.
-     * Start the export and the provider tracking. 
-     */
-    public synchronized void start() {
-        try {
-            ServiceReference[] refs = m_origin.getServiceReferences(m_specification, null);
-            if (refs != null) {
-                for (int i = 0; i < refs.length; i++) {
-                    if (m_filter.match(refs[i])) {
-                        Record rec = new Record();
-                        rec.m_ref = refs[i];
-                        m_records.add(rec);
-                    }
-                }
-            }
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
+        m_destination = to;
 
-        // Publish available services
-        if (m_records.size() > 0) {
-            if (m_aggregate) {
-                for (int i = 0; i < m_records.size(); i++) {
-                    Record rec = (Record) m_records.get(i);
-                    rec.m_svcObject = m_origin.getService(rec.m_ref);
-                    rec.m_reg = m_destination.registerService(m_specification, rec.m_svcObject, getProps(rec.m_ref));
-                }
-            } else {
-                Record rec = (Record) m_records.get(0);
-                if (rec.m_reg == null) {
-                    rec.m_svcObject = m_origin.getService(rec.m_ref);
-                    rec.m_reg = m_destination.registerService(m_specification, rec.m_svcObject, getProps(rec.m_ref));
-                }
-            }
-        }
+        m_manager = cm;
 
-        // Register service listener
-        try {
-            m_origin.addServiceListener(this, "(" + Constants.OBJECTCLASS + "=" + m_specification + ")");
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
-
-        m_isValid = isSatisfied();
     }
 
     /**
@@ -191,173 +92,72 @@ public class ServiceExporter implements ServiceListener {
             prop.put(keys[i], ref.getProperty(keys[i]));
         }
 
-        prop.put("instance.name", m_ps.getManager().getInstanceName());
-        prop.put("factory.name", m_ps.getManager().getFactory().getName());
+        prop.put("instance.name", m_manager.getInstanceName());
+        prop.put("factory.name", m_manager.getFactory().getName());
 
         return prop;
     }
 
     /**
-     * Stop  method.
-     * Remove the service listener and unregister all exported service.
+     * Stop an exporter.
+     * Remove the service listener
+     * Unregister all exported services.
      */
-    public synchronized void stop() {
-        m_origin.removeServiceListener(this);
-
-        for (int i = 0; i < m_records.size(); i++) {
-            Record rec = (Record) m_records.get(i);
-            rec.m_svcObject = null;
-            if (rec.m_reg != null) {
-                rec.m_reg.unregister();
-                m_origin.ungetService(rec.m_ref);
-                rec.m_ref = null;
-            }
+    public void stop() {
+        super.stop();
+        Set refs = m_registrations.keySet();
+        Iterator it = refs.iterator();
+        while (it.hasNext()) {
+            ServiceReference ref = (ServiceReference) it.next();
+            ServiceRegistration reg = (ServiceRegistration) m_registrations.get(ref);
+            reg.unregister();
         }
-
-        m_records.clear();
+        m_registrations.clear();
     }
 
     /**
-     * Check exporter validity.
-     * @return true if the exports is optional, or a service is really exported
+     * A service has been injected. Register it.
+     * @param reference : the new reference.
+     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addedService(org.osgi.framework.ServiceReference)
      */
-    public boolean isSatisfied() {
-        return m_optional || m_records.size() > 0;
+    public void onServiceArrival(ServiceReference reference) {
+        Object svc = getService(reference);
+        ServiceRegistration reg = m_destination.registerService(getSpecification().getName(), svc, getProps(reference));
+        m_registrations.put(reference, reg);
     }
 
     /**
-     * Check if a service is published.
-     * @return true if at least one service is published by this handler
+     * An exported service was modified.
+     * @param reference : modified reference
+     * @see org.apache.felix.ipojo.util.TrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
      */
-    public boolean isPublishing() {
-        return m_records.size() > 0;
-    }
-
-    /**
-     * Get the list of records using the given reference.
-     * @param ref : the service reference
-     * @return the list of records using the given reference, empty if no record used this reference
-     */
-    private List/* <Record> */getRecordsByRef(ServiceReference ref) {
-        List l = new ArrayList();
-        for (int i = 0; i < m_records.size(); i++) {
-            Record rec = (Record) m_records.get(i);
-            if (rec.m_ref == ref) {
-                l.add(rec);
-            }
-        }
-        return l;
-    }
-
-    /**
-     * Service Listener Implementation.
-     * @param ev : the service event
-     * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
-     */
-    public void serviceChanged(ServiceEvent ev) {
-        if (ev.getType() == ServiceEvent.REGISTERED) {
-            arrivalManagement(ev.getServiceReference());
-        }
-        if (ev.getType() == ServiceEvent.UNREGISTERING) {
-            departureManagement(ev.getServiceReference());
-        }
-
-        if (ev.getType() == ServiceEvent.MODIFIED) {
-            if (m_filter.match(ev.getServiceReference())) {
-                // Test if the ref is always matching with the filter
-                List l = getRecordsByRef(ev.getServiceReference());
-                if (l.size() > 0) { // The ref is already contained => update
-                    // the properties
-                    for (int i = 0; i < l.size(); i++) { // Stop the implied
-                        // record
-                        Record rec = (Record) l.get(i);
-                        if (rec.m_reg != null) {
-                            rec.m_reg.setProperties(getProps(rec.m_ref));
-                        }
-                    }
-                } else { // it is a new mathcing service => add it
-                    arrivalManagement(ev.getServiceReference());
-                }
-            } else {
-                List l = getRecordsByRef(ev.getServiceReference());
-                if (l.size() > 0) { // The ref is already contained => the
-                    // service does no more match
-                    departureManagement(ev.getServiceReference());
-                }
-            }
+    public void onServiceModification(ServiceReference reference) {
+        ServiceRegistration reg = (ServiceRegistration) m_registrations.get(reference);
+        if (reg != null) {
+            reg.setProperties(getProps(reference));
         }
     }
 
     /**
-     * Manage the arrival of a service.
-     * @param ref : the new service reference.
+     * An exported service disappears.
+     * @param reference : service reference
+     * @see org.apache.felix.ipojo.util.TrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
      */
-    private void arrivalManagement(ServiceReference ref) {
-        // Check if the new service match
-        if (m_filter.match(ref)) {
-            // Add it to the record list
-            Record rec = new Record();
-            rec.m_ref = ref;
-            m_records.add(rec);
-            // Publishing ?
-            if (m_records.size() == 1 || m_aggregate) { // If the service is the
-                // first one, or if it
-                // is a multiple imports
-                rec.m_svcObject = m_origin.getService(rec.m_ref);
-                rec.m_reg = m_destination.registerService(m_specification, rec.m_svcObject, getProps(rec.m_ref));
-            }
-            // Compute the new state
-            if (!m_isValid && isSatisfied()) {
-                m_isValid = true;
-                m_ps.validating(this);
-            }
+    public void onServiceDeparture(ServiceReference reference) {
+        ServiceRegistration reg = (ServiceRegistration) m_registrations.get(reference);
+        if (reg != null) {
+            reg.unregister();
         }
+        m_registrations.remove(reference);
     }
 
     /**
-     * Manage the departure of a service.
-     * @param ref : the new service reference.
+     * On Dependency Reconfiguration notification method.
+     * @param departs : leaving service references.
+     * @param arrivals : new injected service references.
+     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
      */
-    private void departureManagement(ServiceReference ref) {
-        List l = getRecordsByRef(ref);
-        for (int i = 0; i < l.size(); i++) { // Stop the implied record
-            Record rec = (Record) l.get(i);
-            if (rec.m_reg != null) {
-                rec.m_svcObject = null;
-                rec.m_reg.unregister();
-                rec.m_reg = null;
-                m_origin.ungetService(rec.m_ref);
-            }
-        }
-        m_records.removeAll(l);
-
-        // Check the validity & if we need to reimport the service
-        if (m_records.size() > 0) {
-            // There is other available services
-            if (!m_aggregate) { // Import the next one
-                Record rec = (Record) m_records.get(0);
-                if (rec.m_svcObject == null) { // It is the first service who
-                    // disappears - create the next
-                    // one
-                    rec.m_svcObject = m_origin.getService(rec.m_ref);
-                    rec.m_reg = m_destination.registerService(m_specification, rec.m_svcObject, getProps(rec.m_ref));
-                }
-            }
-        } else {
-            if (!m_optional) {
-                m_isValid = false;
-                m_ps.invalidating(this);
-            }
-        }
-    }
-
-
-    protected String getSpecification() {
-        return m_specification;
-    }
-
-
-    public String getFilter() {
-        return m_filterStr;
+    public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
+        throw new UnsupportedOperationException("Dynamic dependency reconfiguration is not supported by service exporter");
     }
 }

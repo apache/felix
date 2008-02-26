@@ -43,7 +43,7 @@ public abstract class CompositeHandler extends Handler {
     private CompositeManager m_manager;
     
     /**
-     * Composite Factory
+     * Composite Factory.
      */
     private CompositeFactory m_factory;
     

@@ -25,6 +25,7 @@ import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.composite.CompositeHandler;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
 
 /**
  * Provided Service Handler Description for composite.
@@ -37,16 +38,23 @@ public class ProvidedServiceHandlerDescription extends HandlerDescription {
      * Provided Service Description list.
      */
     private List m_providedServices = new ArrayList();
+    
+    /**
+     * List of exports.
+     */
+    private List m_exports;
 
     /**
      * Constructor.
      * 
      * @param h : composite handler.
      * @param ps : The list of Provided Service.
+     * @param exporters : list of managed exports
      */
-    public ProvidedServiceHandlerDescription(CompositeHandler h, List ps) {
+    public ProvidedServiceHandlerDescription(CompositeHandler h, List ps, List exporters) {
         super(h);
         m_providedServices = ps;
+        m_exports = exporters;
     }
 
     /**
@@ -60,7 +68,7 @@ public class ProvidedServiceHandlerDescription extends HandlerDescription {
             ProvidedService ps = (ProvidedService) m_providedServices.get(i);
             Element service = new Element("service", "");
             String state = "unregistered";
-            if (ps.getState()) {
+            if (ps.isRegistered()) {
                 state = "registered";
             }
             String spec = "[" + ps.getSpecification() + "]";
@@ -68,6 +76,20 @@ public class ProvidedServiceHandlerDescription extends HandlerDescription {
             service.addAttribute(new Attribute("State", state));
             services.addElement(service);
         }
+        
+        for (int i = 0; i < m_exports.size(); i++) {
+            ServiceExporter exp = (ServiceExporter) m_exports.get(i);
+            Element expo = new Element("Exports", "");
+            expo.addAttribute(new Attribute("Specification", exp.getSpecification().getName()));
+            expo.addAttribute(new Attribute("Filter", exp.getFilter()));
+            if (exp.getState() == AbstractServiceDependency.RESOLVED) {
+                expo.addAttribute(new Attribute("State", "resolved"));
+            } else {
+                expo.addAttribute(new Attribute("State", "unresolved"));
+            }
+            services.addElement(expo);
+        }
+        
         return services;
     }
 

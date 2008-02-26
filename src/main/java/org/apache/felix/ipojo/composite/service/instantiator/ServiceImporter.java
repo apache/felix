@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo.composite.service.importer;
+package org.apache.felix.ipojo.composite.service.instantiator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,17 +27,12 @@ import java.util.Properties;
 import org.apache.felix.ipojo.PolicyServiceContext;
 import org.apache.felix.ipojo.util.AbstractServiceDependency;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 /**
  * Import a service form the parent to the internal service registry.
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServiceImporter extends AbstractServiceDependency {
@@ -45,40 +40,56 @@ public class ServiceImporter extends AbstractServiceDependency {
     /**
      * Reference on the handler.
      */
-    private ImportHandler m_handler;
-    
-    private BundleContext m_origin;
+    private ServiceDependencyHandler m_handler;
 
-    private class Record implements ServiceListener {
+    private final class Record {
         /**
          * External Reference.
          */
         private ServiceReference m_ref;
+
         /**
          * Internal Registration.
          */
         private ServiceRegistration m_reg;
+
         /**
          * Exposed Object.
          */
         private Object m_svcObject;
-        
+
+        /**
+         * Constructor.
+         * @param ref : service reference.
+         */
         private Record(ServiceReference ref) {
             m_ref = ref;
-            try {
-                m_origin.addServiceListener(this, "(" + Constants.SERVICE_ID + "=" + ref.getProperty(Constants.SERVICE_ID) + ")");
-            } catch (InvalidSyntaxException e) {
-                // Nothing to do.
-            }
         }
-        
+
+        /**
+         * Register the current import.
+         */
         private void register() {
+            if (m_reg != null) {
+                m_reg.unregister();
+            }
             m_svcObject = getService(m_ref);
             m_reg = m_handler.getCompositeManager().getServiceContext().registerService(getSpecification().getName(), m_svcObject, getProps(m_ref));
         }
-        
+
+        /**
+         * Update the current import.
+         */
+        private void update() {
+            if (m_reg != null) {
+                m_reg.setProperties(getProps(m_ref));
+            }
+        }
+
+        /**
+         * Unregister and release the current import.
+         */
         private void dispose() {
-            m_origin.removeServiceListener(this);
             if (m_reg != null) {
                 m_reg.unregister();
                 m_svcObject = null;
@@ -86,7 +97,7 @@ public class ServiceImporter extends AbstractServiceDependency {
             }
             m_ref = null;
         }
-        
+
         /**
          * Test object equality.
          * @param o : object to confront against the current object.
@@ -100,14 +111,6 @@ public class ServiceImporter extends AbstractServiceDependency {
             }
             return false;
         }
-
-        public synchronized void serviceChanged(ServiceEvent evt) {
-            // In case of modification, modify the service imported service registration.
-            if (m_reg != null && evt.getType() == ServiceEvent.MODIFIED) {
-                      m_reg.setProperties(getProps(evt.getServiceReference()));
-              }
-            }
-            
     }
 
     /**
@@ -124,7 +127,10 @@ public class ServiceImporter extends AbstractServiceDependency {
      * Is this requirement attached to a service-level requirement.
      */
     private boolean m_isServiceLevelRequirement;
-    
+
+    /**
+     * Is the set of used provider frozen ?
+     */
     private boolean m_isFrozen;
 
     /**
@@ -134,24 +140,23 @@ public class ServiceImporter extends AbstractServiceDependency {
      * @param filter : LDAP filter
      * @param multiple : should the importer imports several services ?
      * @param optional : is the import optional ?
-     * @param from : parent context
-     * @param to : internal context
+     * @param cmp : comparator to use for the tracking 
      * @param policy : resolving policy
+     * @param bc : bundle context to use for the tracking (can be a servie context)
      * @param id : requirement id (may be null)
      * @param in : handler
      */
-    public ServiceImporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, BundleContext bc, String id, ImportHandler in) {
-        super(specification, multiple, optional, filter, cmp, policy, bc);
-        
-        m_origin = bc;
-        
+    public ServiceImporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, BundleContext bc, String id, ServiceDependencyHandler in) {
+        super(specification, multiple, optional, filter, cmp, policy, bc, in);
+
         this.m_handler = in;
-        
+
         if (m_id == null) {
             m_id = super.getSpecification().getName();
         } else {
             m_id = id;
         }
+
     }
 
     /**
@@ -168,15 +173,15 @@ public class ServiceImporter extends AbstractServiceDependency {
         }
         return prop;
     }
-    
-    public boolean isStatic() {
-        return getBindingPolicy() == STATIC_BINDING_POLICY;
-    }
-    
+
+    /**
+     * Freeze the set of used provider.
+     * This method allow to fix the set of provider when the static binding policy is used.
+     */
     public void freeze() {
         m_isFrozen = true;
     }
-    
+
     public boolean isFrozen() {
         return m_isFrozen;
     }
@@ -192,7 +197,7 @@ public class ServiceImporter extends AbstractServiceDependency {
             Record rec = (Record) m_records.get(i);
             rec.dispose();
         }
-        
+
         m_records.clear();
 
     }
@@ -218,14 +223,14 @@ public class ServiceImporter extends AbstractServiceDependency {
      * Build the list of imported service provider.
      * @return the list of all imported services.
      */
-    protected List getProviders() {
+    public List getProviders() {
         List l = new ArrayList();
         for (int i = 0; i < m_records.size(); i++) {
             l.add((((Record) m_records.get(i)).m_ref).getProperty("instance.name"));
         }
         return l;
     }
-    
+
     /**
      * Set that this dependency is a service level dependency.
      * This forces the scoping policy to be STRICT. 
@@ -240,19 +245,33 @@ public class ServiceImporter extends AbstractServiceDependency {
     public String getId() {
         return m_id;
     }
-    
+
     public boolean isServiceLevelRequirement() {
         return m_isServiceLevelRequirement;
     }
 
-    public void invalidate() {
-        m_handler.invalidating(this);
-    }
-
+    /**
+     * On Dependency Reconfiguration notification method.
+     * @param departs : leaving service references.
+     * @param arrivals : new injected service references.
+     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
+     */
     public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
-        throw new UnsupportedOperationException("Service import does not support dependency reconfiguration");
+        for (int i = 0; departs != null && i < departs.length; i++) {
+            onServiceDeparture(departs[i]);
+        }
+        
+        for (int i = 0; arrivals != null && i < arrivals.length; i++) {
+            onServiceArrival(arrivals[i]);
+        }
     }
 
+    /**
+     * A new service is injected by the tracker.
+     * This method create a 'Record' and register it.
+     * @param ref : new service reference.
+     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceArrival(org.osgi.framework.ServiceReference)
+     */
     public void onServiceArrival(ServiceReference ref) {
         Record rec = new Record(ref);
         m_records.add(rec);
@@ -260,18 +279,32 @@ public class ServiceImporter extends AbstractServiceDependency {
         rec.register();
     }
 
+    /**
+     * A used service disappears.
+     * This method find the implicated 'Record', dispose it and remove it from the list.
+     * @param ref : leaving service reference.
+     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceDeparture(org.osgi.framework.ServiceReference)
+     */
     public void onServiceDeparture(ServiceReference ref) {
         List l = getRecordsByRef(ref);
         for (int i = 0; i < l.size(); i++) { // Stop the implied record
             Record rec = (Record) l.get(i);
             rec.dispose();
-            
         }
         m_records.removeAll(l);
     }
 
-    public void validate() {
-        m_handler.validating(this);
+    /**
+     * A used service is modified.
+     * @param ref : modified service reference.
+     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceModification(org.osgi.framework.ServiceReference)
+     */
+    public void onServiceModification(ServiceReference ref) {
+        List l = getRecordsByRef(ref);
+        for (int i = 0; i < l.size(); i++) { // Stop the implied record
+            Record rec = (Record) l.get(i);
+            rec.update();
+        }
     }
 
 }

@@ -54,7 +54,7 @@ public class CompositionMetadata {
      * Bundle Context.
      */
     private BundleContext m_context;
-    
+
     /**
      * Manipulation Metadata.
      */
@@ -85,14 +85,14 @@ public class CompositionMetadata {
 
         // Get implemented service specification
         String spec = description.getAttribute("specification");
-        m_specification = new SpecificationMetadata(spec, m_context, false, false, m_handler);        
+        m_specification = new SpecificationMetadata(spec, m_context, false, false, m_handler);
 
         Element[] mappings = description.getElements("delegation");
         for (int i = 0; mappings != null && i < mappings.length; i++) {
             String methodName = mappings[i].getAttribute("method");
             MethodMetadata method = m_specification.getMethodByName(methodName);
             if (method == null) {
-                m_handler.error( "The method " + methodName + " does not exist in the specicifation " + spec);
+                m_handler.error("The method " + methodName + " does not exist in the specicifation " + spec);
                 return;
             }
 
@@ -120,13 +120,13 @@ public class CompositionMetadata {
      */
     private void buildAvailableMappingList() throws CompositionException {
         int index = 0;
-        
+
         for (int i = 0; i < m_handler.getInstanceType().size(); i++) {
             String type = (String) m_handler.getInstanceType().get(i);
             try {
                 ServiceReference[] refs = m_context.getServiceReferences(Factory.class.getName(), "(factory.name=" + type + ")");
                 if (refs == null) {
-                    m_handler.error( "The factory " + type + " is not available, cannot check the composition");
+                    m_handler.error("The factory " + type + " is not available, cannot check the composition");
                     throw new CompositionException("The factory " + type + " needs to be available to check the composition");
                 } else {
                     String className = (String) refs[0].getProperty("component.class");
@@ -139,9 +139,9 @@ public class CompositionMetadata {
                     index++;
                 }
             } catch (InvalidSyntaxException e) {
-                m_handler.error( "A LDAP filter is not valid : " + e.getMessage());
+                m_handler.error("A LDAP filter is not valid : " + e.getMessage());
             } catch (ClassNotFoundException e) {
-                m_handler.error( "The implementation class of a component cannot be loaded : " + e.getMessage());
+                m_handler.error("The implementation class of a component cannot be loaded : " + e.getMessage());
             }
         }
 
@@ -160,7 +160,6 @@ public class CompositionMetadata {
             index++;
         }
     }
-    
 
     /**
      * Build the delegation mapping.
@@ -178,7 +177,7 @@ public class CompositionMetadata {
             SpecificationMetadata spec = map.getSpecification();
             for (int j = 0; j < spec.getMethods().size(); j++) {
                 MethodMetadata method = (MethodMetadata) spec.getMethods().get(j);
-                if (spec.isInterface()) { 
+                if (spec.isInterface()) {
                     availableSvcMethods.put(method, map);
                 } else {
                     availableInstMethods.put(method, map);
@@ -218,9 +217,7 @@ public class CompositionMetadata {
                     }
                 }
             }
-            if (!found) {
-                throw new CompositionException("Inconsistent composition - the method " + method.getMethod() + " could not be delegated");
-            }
+            if (!found) { throw new CompositionException("Inconsistent composition - the method " + method.getMethod() + " could not be delegated"); }
         }
     }
 
@@ -259,7 +256,7 @@ public class CompositionMetadata {
         Attribute factory = new Attribute("factory", "false");
         elem.addAttribute(className);
         elem.addAttribute(factory);
-        
+
         // Add architecture for debug
         elem.addAttribute(new Attribute("architecture", "true"));
 
@@ -283,11 +280,11 @@ public class CompositionMetadata {
                 elem.addElement(dep);
             }
         }
-        
+
         Element properties = new Element("properties", "");
         for (int i = 0; i < fields.size(); i++) {
             FieldMetadata field = (FieldMetadata) fields.get(i);
-            if (field.isUseful() &&  ! field.getSpecification().isInterface()) {
+            if (field.isUseful() && !field.getSpecification().isInterface()) {
                 Element prop = new Element("Property", "");
                 prop.addAttribute(new Attribute("field", field.getName()));
                 properties.addElement(prop);
@@ -299,7 +296,7 @@ public class CompositionMetadata {
 
         // Insert information to metadata
         elem.addElement(m_manipulationMetadata);
-        
+
         return elem;
     }
 
@@ -323,7 +320,7 @@ public class CompositionMetadata {
     private List getMethodList() {
         return m_specification.getMethods();
     }
-    
+
     /**
      * Store links between Field and pointed Specification.
      */

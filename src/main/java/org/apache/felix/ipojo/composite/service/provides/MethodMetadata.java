@@ -70,34 +70,36 @@ public class MethodMetadata {
     public FieldMetadata getDelegation() {
         return m_delegation;
     }
-
+    
     /**
-     * Check if two method metadata are equals.
-     * @param mm : the method metadata to compare with the current method metadata.
-     * @return true if the two method are equals
+     * Equals method.
+     * This method check if two MethodMetadata are equals or if the current MemethodMetadata is equals with a Method object. 
+     * @param o : object.
+     * @return true if the current object and the given object are equals.
+     * @see java.lang.Object#equals(java.lang.Object)
      */
-    public boolean equals(MethodMetadata mm) {
-        Method met = mm.getMethod();
-        return equals(met);
-    }
-
-    /**
-     * Equals method for Method object.
-     * @param met : the method object to compare.
-     * @return true if the given method signature is equals to the current method metadata.
-     */
-    public boolean equals(Method met) {
-        if (! met.getName().equals(m_method.getName()) || met.getParameterTypes().length != m_method.getParameterTypes().length) {
-            return false;
+    public boolean equals(Object o) {
+        if (o instanceof MethodMetadata) {
+            Method met = ((MethodMetadata) o).getMethod();
+            return equals(met);
         }
-
-        for (int i = 0; i < m_method.getParameterTypes().length; i++) {
-            if (!m_method.getParameterTypes()[i].getName().equals(met.getParameterTypes()[i].getName())) {
+        
+        if (o instanceof Method) {
+            Method met = (Method) o;
+            if (! met.getName().equals(m_method.getName()) || met.getParameterTypes().length != m_method.getParameterTypes().length) {
                 return false;
             }
-        }
 
-        return true;
+            for (int i = 0; i < m_method.getParameterTypes().length; i++) {
+                if (!m_method.getParameterTypes()[i].getName().equals(met.getParameterTypes()[i].getName())) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        
+        return false;
     }
 
     public int getPolicy() {

@@ -44,14 +44,21 @@ public class ServiceInstantiatorDescription extends HandlerDescription {
     private List m_instances;
 
     /**
+     * List of exports.
+     */
+    private List m_imports;
+
+    /**
      * Constructor.
      * 
      * @param h : composite handler
-     * @param insts : list of service instance
+     * @param insts : list of service instances
+     * @param imps : list of service importers
      */
-    public ServiceInstantiatorDescription(CompositeHandler h, List insts) {
+    public ServiceInstantiatorDescription(CompositeHandler h, List insts, List imps) {
         super(h);
         m_instances = insts;
+        m_imports = imps;
     }
 
     /**
@@ -61,6 +68,26 @@ public class ServiceInstantiatorDescription extends HandlerDescription {
      */
     public Element getHandlerInfo() {
         Element services = super.getHandlerInfo();
+        for (int i = 0; i < m_imports.size(); i++) {
+            ServiceImporter imp = (ServiceImporter) m_imports.get(i);
+            Element impo = new Element("Requires", "");
+            impo.addAttribute(new Attribute("Specification", imp.getSpecification().getName()));
+            if (imp.getFilter() != null) {
+                impo.addAttribute(new Attribute("Filter", imp.getFilter()));
+            }
+            if (imp.getState() == AbstractServiceDependency.RESOLVED) {
+                impo.addAttribute(new Attribute("State", "resolved"));
+                for (int j = 0; j < imp.getProviders().size(); j++) {
+                    Element pr = new Element("Provider", "");
+                    pr.addAttribute(new Attribute("name", (String) imp.getProviders().get(j)));
+                    impo.addElement(pr);
+                }
+            } else {
+                impo.addAttribute(new Attribute("State", "unresolved"));
+            }
+            services.addElement(impo);
+        }
+        
         for (int i = 0; i < m_instances.size(); i++) {
             SvcInstance inst = (SvcInstance) m_instances.get(i);
             Element service = new Element("Service", "");

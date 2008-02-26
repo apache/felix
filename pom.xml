@@ -66,6 +66,7 @@
 							org.apache.felix.ipojo.composite.architecture,
 							org.apache.felix.ipojo.composite.service*,
 							org.apache.felix.ipojo.composite.instance,
+							org.apache.felix.ipojo.composite.util,
 							!org.objectweb.asm.xml*,
 							org.objectweb.asm*;-split-package:=merge-first
 						</Private-Package>

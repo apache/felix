@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo.composite.service.importer;
+package org.apache.felix.ipojo.composite.service.provides;
 
 import java.util.List;
 
@@ -30,22 +30,22 @@ import org.apache.felix.ipojo.util.AbstractServiceDependency;
  * Description of the Import Export Handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ImportDescription extends HandlerDescription {
+public class ExportDescription extends HandlerDescription {
 
     /**
      * List of exports.
      */
-    private List m_imports;
+    private List m_exports;
 
     /**
      * Constructor.
      * 
      * @param h : composite handler
-     * @param importers : list of managed imports
+     * @param exporters : list of managed exports
      */
-    public ImportDescription(CompositeHandler h, List importers) {
+    public ExportDescription(CompositeHandler h, List exporters) {
         super(h);
-        m_imports = importers;
+        m_exports = exporters;
     }
 
     /**
@@ -55,26 +55,19 @@ public class ImportDescription extends HandlerDescription {
      */
     public Element getHandlerInfo() {
         Element handler = super.getHandlerInfo();
-        for (int i = 0; i < m_imports.size(); i++) {
-            ServiceImporter imp = (ServiceImporter) m_imports.get(i);
-            Element impo = new Element("Requires", "");
-            impo.addAttribute(new Attribute("Specification", imp.getSpecification().getName()));
-            if (imp.getFilter() != null) {
-                impo.addAttribute(new Attribute("Filter", imp.getFilter()));
-            }
-            if (imp.getState() == AbstractServiceDependency.RESOLVED) {
-                impo.addAttribute(new Attribute("State", "resolved"));
-                for (int j = 0; j < imp.getProviders().size(); j++) {
-                    Element pr = new Element("Provider", "");
-                    pr.addAttribute(new Attribute("name", (String) imp.getProviders().get(j)));
-                    impo.addElement(pr);
-                }
+        for (int i = 0; i < m_exports.size(); i++) {
+            ServiceExporter exp = (ServiceExporter) m_exports.get(i);
+            Element expo = new Element("Exports", "");
+            expo.addAttribute(new Attribute("Specification", exp.getSpecification().getName()));
+            expo.addAttribute(new Attribute("Filter", exp.getFilter()));
+            if (exp.getState() == AbstractServiceDependency.RESOLVED) {
+                expo.addAttribute(new Attribute("State", "resolved"));
             } else {
-                impo.addAttribute(new Attribute("State", "unresolved"));
+                expo.addAttribute(new Attribute("State", "unresolved"));
             }
-            handler.addElement(impo);
+            handler.addElement(expo);
         }
         return handler;
-    }
 
+    }
 }

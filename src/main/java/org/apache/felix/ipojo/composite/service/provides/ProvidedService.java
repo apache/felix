@@ -30,14 +30,18 @@ import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.composite.CompositeManager;
 import org.apache.felix.ipojo.composite.instance.InstanceHandler;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.apache.felix.ipojo.util.DependencyLifecycleListener;
 import org.apache.felix.ipojo.util.Logger;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * Composite Provided Service.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ProvidedService {
+public class ProvidedService implements DependencyLifecycleListener {
 
     /**
      * Composite Manager.
@@ -83,7 +87,7 @@ public class ProvidedService {
      * Exporter.
      */
     private ServiceExporter m_exports;
-    
+
     /**
      * Created instance name.
      */
@@ -110,7 +114,7 @@ public class ProvidedService {
      */
     public void start() throws CompositionException {
         m_composition.buildMapping();
-        
+
         m_instanceName = m_composition.getSpecificationMetadata().getName() + "Provider-Gen";
         m_clazz = m_composition.buildPOJO();
         m_metadata = m_composition.buildMetadata(m_instanceName);
@@ -123,10 +127,16 @@ public class ProvidedService {
         }
         m_factory.start();
 
-        // Create the exports
-        m_exports = new ServiceExporter(m_composition.getSpecificationMetadata().getName(), "(instance.name=" + m_instanceName + ")", false, false,
-                m_scope, m_context, this);
-        m_exports.start();
+        try {
+            Class spec = AbstractServiceDependency.loadSpecification(m_composition.getSpecificationMetadata().getName(), m_context);
+            Filter filter = m_context.createFilter("(instance.name=" + m_instanceName + ")");
+            // Create the exports
+            m_exports = new ServiceExporter(spec, filter, false, false, null, AbstractServiceDependency.DYNAMIC_BINDING_POLICY, m_scope, m_context, this, m_manager);
+        } catch (InvalidSyntaxException e) {
+            throw new CompositionException("A provided service filter is invalid : " + e.getMessage());
+        } catch (ConfigurationException e) {
+            throw new CompositionException("The class " + m_composition.getSpecificationMetadata().getName() + " cannot be loaded : " + e.getMessage());
+        }
     }
 
     /**
@@ -156,53 +166,14 @@ public class ProvidedService {
      * The exporter becomes valid.
      * @param exporter : the exporter
      */
-    public void validating(ServiceExporter exporter) {
+    public void validate(AbstractServiceDependency exporter) {
     }
 
     /**
      * The exporter becomes invalid.
      * @param exporter : the exporter
      */
-    public void invalidating(ServiceExporter exporter) {
-    }
-
-    /**
-     * Unregister published service.
-     */
-    protected void unregister() {
-        if (m_instance != null) {
-            m_instance.dispose();
-            m_instance = null;
-        }
-    }
-
-    /**
-     * Register published service.
-     */
-    protected void register() {
-        if (m_exports != null) {
-            if (m_instance != null) { m_instance.dispose(); }
-            Properties p = new Properties();
-            p.put("name", m_instanceName);
-            List fields = m_composition.getFieldList();
-            for (int i = 0; i < fields.size(); i++) {
-                FieldMetadata fm = (FieldMetadata) fields.get(i);
-                if (fm.isUseful() && !fm.getSpecification().isInterface()) {
-                    String type = fm.getSpecification().getComponentType();
-                    Object o = getObjectByType(type);
-                    p.put(fm.getName(), o); 
-                }
-            }
-            try {
-                m_instance = m_factory.createComponentInstance(p, m_manager.getServiceContext());
-            } catch (UnacceptableConfiguration e) {
-                e.printStackTrace();
-            } catch (MissingHandlerException e) {
-                e.printStackTrace();
-            } catch (ConfigurationException e) {
-                e.printStackTrace();
-            }
-        }
+    public void invalidate(AbstractServiceDependency exporter) {
     }
 
     /**
@@ -217,7 +188,6 @@ public class ProvidedService {
             m_manager.getFactory().getLogger().log(Logger.ERROR, "An instance object cannot be found for the type : " + type);
         }
         return o;
-        
     }
 
     public String getSpecification() {
@@ -225,14 +195,49 @@ public class ProvidedService {
     }
 
     /**
-     * Check the provided service state.
-     * @return true if the exporter is publishing.
+     * Unregister the exposed service.
      */
-    public boolean getState() {
-        if (m_exports != null && m_exports.isPublishing()) {
-            return true;
+    public void unregister() {
+        m_exports.stop();
+    }
+
+    /**
+     * Register the exposed service.
+     */
+    public void register() {
+        Properties p = new Properties();
+        p.put("name", m_instanceName);
+        List fields = m_composition.getFieldList();
+        for (int i = 0; i < fields.size(); i++) {
+            FieldMetadata fm = (FieldMetadata) fields.get(i);
+            if (fm.isUseful() && !fm.getSpecification().isInterface()) {
+                String type = fm.getSpecification().getComponentType();
+                Object o = getObjectByType(type);
+                p.put(fm.getName(), o);
+            }
         }
-        return false;
+
+        if (m_instance != null) {
+            // We have to reconfigure the instance in order to inject up to date glue component instance.
+            m_instance.reconfigure(p);
+        } else {
+            // Else we have to create the instance 
+            try {
+                m_instance = m_factory.createComponentInstance(p, m_manager.getServiceContext());
+            } catch (UnacceptableConfiguration e) {
+                throw new IllegalStateException("Cannot create the service implementation : " + e.getMessage());
+            } catch (MissingHandlerException e) {
+                throw new IllegalStateException("Cannot create the service implementation : " + e.getMessage());
+            } catch (ConfigurationException e) {
+                throw new IllegalStateException("Cannot create the service implementation : " + e.getMessage());
+            }
+        }
+
+        m_exports.start();
+    }
+
+    public boolean isRegistered() {
+        return m_exports.getState() == AbstractServiceDependency.RESOLVED;
     }
 
 }

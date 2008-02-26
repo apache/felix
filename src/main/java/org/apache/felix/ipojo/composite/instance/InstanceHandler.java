@@ -48,12 +48,6 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * Internal context.
      */
     private ServiceContext m_scope;
-
-//    /**
-//     * Is the handler valid ?
-//     * (Lifecycle controller)
-//     */
-//    private boolean m_isValid = false;
     
     /**
      * Available factories.
@@ -161,9 +155,9 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             config.setFactory(fact.getName());
             config.getInstance().addInstanceStateListener(this);
         } catch (UnacceptableConfiguration e) {
-            error( "A factory is available for the configuration but the configuration is not acceptable", e);
+            error("A factory is available for the configuration but the configuration is not acceptable", e);
         } catch (MissingHandlerException e) {
-            error( "The instance creation has failed, at least one handler is missing", e);
+            error("The instance creation has failed, at least one handler is missing", e);
         } catch (ConfigurationException e) {
             error("The instance creation has failed, an error during the configuration has occured", e);
         }
@@ -239,7 +233,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             try {
                 conf = parseInstance(instances[i]);
             } catch (ParseException e) {
-                error( "An instance cannot be parsed correctly", e);
+                error("An instance cannot be parsed correctly", e);
                 throw new ConfigurationException("An instance cannot be parsed correctly : " + e.getMessage());
             }
             m_configurations[i] = new ManagedConfiguration(conf);
@@ -252,7 +246,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * @return : the resulting dictionary
      * @throws ParseException : occurs when a configuration cannot be parse correctly.
      */
-    private Dictionary parseInstance(Element instance) throws ParseException {
+    public static Dictionary parseInstance(Element instance) throws ParseException {
         Dictionary dict = new Properties();
         String name = instance.getAttribute("name");
         if (name != null) {
@@ -280,7 +274,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * @param dict : the dictionary to populate
      * @throws ParseException : occurs if the property cannot be parsed correctly
      */
-    private void parseProperty(Element prop, Dictionary dict) throws ParseException {
+    public static void parseProperty(Element prop, Dictionary dict) throws ParseException {
         // Check that the property has a name
         String name = prop.getAttribute("name");
         String value = prop.getAttribute("value");
@@ -320,8 +314,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
     /**
      * Check handler validity.
-     * The method update the m_validity field.
-     * @return the new validity.
+     * The method update the validaity of the handler.
      */
     private void checkValidity() {
         for (int i = 0; i < m_configurations.length; i++) {
@@ -369,8 +362,13 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      */
     public Object getObjectFromInstance(String type) {
         for (int i = 0; i < m_configurations.length; i++) {
-            if (m_configurations[i].getInstance() != null && type.equals(m_configurations[i].getFactory()) && m_configurations[i].getInstance().getState() == ComponentInstance.VALID) { 
-                return ((InstanceManager) m_configurations[i].getInstance()).getPojoObject(); 
+            if (m_configurations[i].getInstance() != null && type.equals(m_configurations[i].getFactory())) {
+                if (m_configurations[i].getInstance().getState() == ComponentInstance.VALID) {
+                    return ((InstanceManager) m_configurations[i].getInstance()).getPojoObject();
+                } else {
+                    error("An object cannot be get from the instance of the type " + type + ": invalid instance" + m_configurations[i].getInstance().getInstanceDescription().getDescription());
+                    return null;
+                }
             }
         }
         return null;

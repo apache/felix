@@ -49,12 +49,12 @@ public class SpecificationMetadata {
      * Is the specification optional?
      */
     private boolean m_isOptional = false;
-    
+
     /**
      * Is the specification an interface?
      */
     private boolean m_isInterface = true;
-    
+
     /**
      * Component Type.
      */
@@ -76,7 +76,7 @@ public class SpecificationMetadata {
     public SpecificationMetadata(String name, BundleContext bc, boolean isAggregate, boolean isOptional, ProvidedServiceHandler psd) {
         m_name = name;
         m_handler = psd;
-    
+
         // Populate methods :
         try {
             Class clazz = bc.getBundle().loadClass(name);
@@ -86,10 +86,10 @@ public class SpecificationMetadata {
                 m_methods.add(method);
             }
         } catch (ClassNotFoundException e) {
-            m_handler.error( "Cannot open " + name + " : " + e.getMessage());
+            m_handler.error("Cannot open " + name + " : " + e.getMessage());
             return;
         }
-    
+
         m_isAggregate = isAggregate;
         m_isOptional = isOptional;
     }
@@ -108,7 +108,7 @@ public class SpecificationMetadata {
         m_name = c.getName();
         Method[] methods = c.getMethods();
         for (int i = 0; i < methods.length; i++) {
-            MethodMetadata method = new MethodMetadata(methods[i]);    
+            MethodMetadata method = new MethodMetadata(methods[i]);
             m_methods.add(method);
         }
         m_isInterface = false;
@@ -130,9 +130,7 @@ public class SpecificationMetadata {
     public MethodMetadata getMethodByName(String name) {
         for (int i = 0; i < m_methods.size(); i++) {
             MethodMetadata met = (MethodMetadata) m_methods.get(i);
-            if (met.getMethod().getName().equals(name)) {
-                return met;
-            }
+            if (met.getMethod().getName().equals(name)) { return met; }
         }
         return null;
     }
@@ -144,7 +142,7 @@ public class SpecificationMetadata {
     public boolean isOptional() {
         return m_isOptional;
     }
-    
+
     public boolean isInterface() {
         return m_isInterface;
     }
@@ -152,7 +150,7 @@ public class SpecificationMetadata {
     public void setIsOptional(boolean optional) {
         m_isOptional = optional;
     }
-    
+
     public String getComponentType() {
         return m_componentType;
     }

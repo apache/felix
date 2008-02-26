@@ -66,7 +66,6 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
     /**
      * Check if the metadata are well formed.
      * @param cm : metadata
-     * @return true if the metadata are correct.
      * @throws ConfigurationException occurs when the element describing the factory is malformed.
      * @see org.apache.felix.ipojo.ComponentFactory#check(org.apache.felix.ipojo.metadata.Element)
      */
@@ -82,6 +81,7 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
     
     /**
      * Compute required handlers.
+     * @return the list of required handler.
      */
     public List getRequiredHandlerList() {
         List list = new ArrayList();
@@ -132,6 +132,15 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
         }
     }
     
+    /**
+     * Create an instance from the current factory.
+     * @param configuration : instance configuration
+     * @param context : bundle context to inject in the instance manager
+     * @param handlers : array of handler object to attached on the instance 
+     * @return the created instance
+     * @throws ConfigurationException either the instance configuration or the instance starting has failed 
+     * @see org.apache.felix.ipojo.ComponentFactory#createInstance(java.util.Dictionary, org.apache.felix.ipojo.IPojoContext, org.apache.felix.ipojo.HandlerManager[])
+     */
     public ComponentInstance createInstance(Dictionary configuration, IPojoContext context, HandlerManager[] handlers) throws ConfigurationException {
         CompositeManager inst = new CompositeManager(this, context, handlers);
         inst.configure(m_componentMetadata, configuration);
