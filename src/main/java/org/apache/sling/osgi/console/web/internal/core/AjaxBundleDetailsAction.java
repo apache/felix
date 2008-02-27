@@ -159,6 +159,8 @@ public class AjaxBundleDetailsAction extends BundleAction {
             return;
         }
 
+        Map<String, Bundle> usingBundles = new TreeMap<String, Bundle>();
+        
         ExportedPackage[] exports = packageAdmin.getExportedPackages(bundle);
         if (exports != null && exports.length > 0) {
             // do alphabetical sort
@@ -171,6 +173,12 @@ public class AjaxBundleDetailsAction extends BundleAction {
             StringBuffer val = new StringBuffer();
             for (ExportedPackage export : exports) {
                 printExport(val, export.getName(), export.getVersion());
+                Bundle[] ubList = export.getImportingBundles();
+                if (ubList != null) {
+                    for (Bundle ub : ubList) {
+                        usingBundles.put(ub.getSymbolicName(), ub);
+                    }
+                }
             }
             keyVal(props, "Exported Packages", val.toString());
         } else {
@@ -211,6 +219,15 @@ public class AjaxBundleDetailsAction extends BundleAction {
             }
 
             keyVal(props, "Imported Packages", val.toString());
+        }
+        
+        if (!usingBundles.isEmpty()) {
+            StringBuffer val = new StringBuffer();
+            for (Bundle usingBundle : usingBundles.values()) {
+                val.append(getBundleDescriptor(usingBundle));
+                val.append("<br />");
+            }
+            keyVal(props, "Importing Bundles", val.toString());
         }
     }
 
@@ -370,7 +387,6 @@ public class AjaxBundleDetailsAction extends BundleAction {
         }
 
         val.append("<br />");
-
     }
 
     private void printImport(StringBuffer val, String name, Version version,
@@ -385,23 +401,7 @@ public class AjaxBundleDetailsAction extends BundleAction {
         val.append(" from ");
 
         if (export != null) {
-            if (export.getExportingBundle().getSymbolicName() != null) {
-                // list the bundle name if not null
-                val.append(export.getExportingBundle().getSymbolicName());
-                val.append(" (").append(
-                    export.getExportingBundle().getBundleId());
-                val.append(")");
-            } else if (export.getExportingBundle().getLocation() != null) {
-                // otherwise try the location
-                val.append(export.getExportingBundle().getLocation());
-                val.append(" (").append(
-                    export.getExportingBundle().getBundleId());
-                val.append(")");
-            } else {
-                // fallback to just the bundle id
-                // only append the bundle
-                val.append(export.getExportingBundle().getBundleId());
-            }
+            val.append(getBundleDescriptor(export.getExportingBundle()));
 
             if (bootDel) {
                 val.append(" -- Overwritten by Boot Delegation</span>");
@@ -456,4 +456,23 @@ public class AjaxBundleDetailsAction extends BundleAction {
             new R4Attribute[] { version });
     }
 
+    private String getBundleDescriptor(Bundle bundle) {
+        StringBuffer val = new StringBuffer();
+        if (bundle.getSymbolicName() != null) {
+            // list the bundle name if not null
+            val.append(bundle.getSymbolicName());
+            val.append(" (").append(bundle.getBundleId());
+            val.append(")");
+        } else if (bundle.getLocation() != null) {
+            // otherwise try the location
+            val.append(bundle.getLocation());
+            val.append(" (").append(bundle.getBundleId());
+            val.append(")");
+        } else {
+            // fallback to just the bundle id
+            // only append the bundle
+            val.append(bundle.getBundleId());
+        }
+        return val.toString();
+    }
 }
