@@ -24,32 +24,18 @@ package org.apache.felix.ipojo.composite.service.provides;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class CompositionException extends Exception {
-
+    //TODO consider removing this class to use configuration exception.
     /**
      * serialVersionUID.
      */
     private static final long serialVersionUID = -3063353267573738105L;
 
     /**
-     * Message.
-     */
-    private String m_message;
-
-    /**
      * Constructor.
      * @param message : a message.
      */
     public CompositionException(String message) {
-        m_message = message;
-    }
-
-    /**
-     * Get the exception message.
-     * @return the message.
-     * @see java.lang.Throwable#getMessage()
-     */
-    public String getMessage() {
-        return m_message;
+        super(message);
     }
 
 }

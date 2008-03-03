@@ -50,10 +50,10 @@ public abstract class CompositeHandler extends Handler {
     /**
      * Set the manager.
      * This method me be called only once time.
-     * @param cm : the composite manager.
+     * @param instance : the composite manager.
      */
-    protected final void attach(ComponentInstance cm) {
-        m_manager = (CompositeManager) cm;
+    protected final void attach(ComponentInstance instance) {
+        m_manager = (CompositeManager) instance;
     }
     
     public final void setFactory(Factory factory) {

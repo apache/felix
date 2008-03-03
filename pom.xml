@@ -46,11 +46,11 @@
 				<configuration>
 					<instructions>
 						<Bundle-Name>
-							iPOJO-composite-unstable
+							iPOJO Composite
 						</Bundle-Name>
 						<Bundle-Vendor>Clement ESCOFFIER</Bundle-Vendor>
 						<Bundle-Description>
-							iPOJO Composite
+							iPOJO Composititon Framework 
 						</Bundle-Description>
 						<Import-Package>
 							org.apache.felix.ipojo,

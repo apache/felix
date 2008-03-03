@@ -58,7 +58,7 @@ public class CompositionMetadata {
     /**
      * Manipulation Metadata.
      */
-    private Element m_manipulationMetadata;
+    private Element m_manipulation;
 
     /**
      * Reference on the handler.
@@ -72,13 +72,13 @@ public class CompositionMetadata {
 
     /**
      * Constructor.
-     * @param bc : bundle context
+     * @param context : bundle context
      * @param description : 'provides' element
      * @param psh : parent handler 
      * @param name : name of the composition.
      */
-    public CompositionMetadata(BundleContext bc, Element description, ProvidedServiceHandler psh, String name) {
-        m_context = bc;
+    public CompositionMetadata(BundleContext context, Element description, ProvidedServiceHandler psh, String name) {
+        m_context = context;
         m_handler = psh;
         // Get the composition name
         m_name = description.getAttribute("specification") + name;
@@ -169,8 +169,8 @@ public class CompositionMetadata {
         buildAvailableMappingList();
 
         // Dependency closure is OK, now look for method delegation
-        Map/* <MethodMetadata, Mapping> */availableSvcMethods = new HashMap();
-        Map/* <MethodMetadata, Mapping> */availableInstMethods = new HashMap();
+        Map/* <MethodMetadata, Mapping> */svcMethods = new HashMap();
+        Map/* <MethodMetadata, Mapping> */instMethods = new HashMap();
 
         for (int i = 0; i < m_mappings.size(); i++) {
             Mapping map = (Mapping) m_mappings.get(i);
@@ -178,9 +178,9 @@ public class CompositionMetadata {
             for (int j = 0; j < spec.getMethods().size(); j++) {
                 MethodMetadata method = (MethodMetadata) spec.getMethods().get(j);
                 if (spec.isInterface()) {
-                    availableSvcMethods.put(method, map);
+                    svcMethods.put(method, map);
                 } else {
-                    availableInstMethods.put(method, map);
+                    instMethods.put(method, map);
                 }
             }
         }
@@ -188,26 +188,26 @@ public class CompositionMetadata {
         // For each needed method, search if available and store the mapping
         for (int j = 0; j < m_specification.getMethods().size(); j++) {
             MethodMetadata method = (MethodMetadata) m_specification.getMethods().get(j);
-            Set keys = availableInstMethods.keySet(); // Look first in methods contained in the glue code.
-            Iterator it = keys.iterator();
+            Set keys = instMethods.keySet(); // Look first in methods contained in the glue code.
+            Iterator iterator = keys.iterator();
             boolean found = false;
-            while (it.hasNext() & !found) {
-                MethodMetadata met = (MethodMetadata) it.next();
+            while (iterator.hasNext() & !found) {
+                MethodMetadata met = (MethodMetadata) iterator.next();
                 if (met.equals(method)) {
                     found = true;
-                    FieldMetadata field = ((Mapping) availableInstMethods.get(met)).getField();
+                    FieldMetadata field = ((Mapping) instMethods.get(met)).getField();
                     field.setUseful(true);
                     method.setDelegation(field);
                 }
             }
             if (!found) { // If not found looks inside method contained in services.
-                keys = availableSvcMethods.keySet(); // Look first in methods contained in the glue code
-                it = keys.iterator();
-                while (!found && it.hasNext()) {
-                    MethodMetadata met = (MethodMetadata) it.next();
+                keys = svcMethods.keySet(); // Look first in methods contained in the glue code
+                iterator = keys.iterator();
+                while (!found && iterator.hasNext()) {
+                    MethodMetadata met = (MethodMetadata) iterator.next();
                     if (met.equals(method)) {
                         found = true;
-                        FieldMetadata field = ((Mapping) availableSvcMethods.get(met)).getField();
+                        FieldMetadata field = ((Mapping) svcMethods.get(met)).getField();
                         field.setUseful(true);
                         method.setDelegation(field);
                         // Test optional
@@ -234,23 +234,23 @@ public class CompositionMetadata {
             return null;
         }
         byte[] pojo = POJOWriter.dump(clazz, m_name, getFieldList(), getMethodList());
-        Manipulator m = new Manipulator();
+        Manipulator manipulator = new Manipulator();
         try {
-            byte[] ff = m.manipulate(pojo);
-            m_manipulationMetadata = m.getManipulationMetadata();
-            return ff;
+            byte[] newclazz = manipulator.manipulate(pojo);
+            m_manipulation = manipulator.getManipulationMetadata();
+            return newclazz;
         } catch (IOException e) {
-            e.printStackTrace();
+            m_handler.error("An error occurs during the composite implementation creation : " + e.getMessage(), e);
         }
         return null;
     }
 
     /**
      * Build service implementation metadata.
-     * @param in : name of the future instance (used to avoid cycle)
+     * @param name : name of the future instance (used to avoid cycle)
      * @return Component Type metadata. 
      */
-    protected Element buildMetadata(String in) {
+    protected Element buildMetadata(String name) {
         Element elem = new Element("component", "");
         Attribute className = new Attribute("className", m_name);
         Attribute factory = new Attribute("factory", "false");
@@ -276,7 +276,7 @@ public class CompositionMetadata {
                 if (field.getSpecification().isOptional()) {
                     dep.addAttribute(new Attribute("optional", "true"));
                 }
-                dep.addAttribute(new Attribute("filter", "(!(instance.name=" + in + "))"));
+                dep.addAttribute(new Attribute("filter", "(!(instance.name=" + name + "))"));
                 elem.addElement(dep);
             }
         }
@@ -295,7 +295,7 @@ public class CompositionMetadata {
         }
 
         // Insert information to metadata
-        elem.addElement(m_manipulationMetadata);
+        elem.addElement(m_manipulation);
 
         return elem;
     }

@@ -63,8 +63,8 @@ public class MethodMetadata {
         return m_method;
     }
 
-    public void setDelegation(FieldMetadata dm) {
-        m_delegation = dm;
+    public void setDelegation(FieldMetadata field) {
+        m_delegation = field;
     }
 
     public FieldMetadata getDelegation() {
@@ -74,18 +74,18 @@ public class MethodMetadata {
     /**
      * Equals method.
      * This method check if two MethodMetadata are equals or if the current MemethodMetadata is equals with a Method object. 
-     * @param o : object.
+     * @param object : object.
      * @return true if the current object and the given object are equals.
      * @see java.lang.Object#equals(java.lang.Object)
      */
-    public boolean equals(Object o) {
-        if (o instanceof MethodMetadata) {
-            Method met = ((MethodMetadata) o).getMethod();
+    public boolean equals(Object object) {
+        if (object instanceof MethodMetadata) {
+            Method met = ((MethodMetadata) object).getMethod();
             return equals(met);
         }
         
-        if (o instanceof Method) {
-            Method met = (Method) o;
+        if (object instanceof Method) {
+            Method met = (Method) object;
             if (! met.getName().equals(m_method.getName()) || met.getParameterTypes().length != m_method.getParameterTypes().length) {
                 return false;
             }
@@ -100,6 +100,15 @@ public class MethodMetadata {
         }
         
         return false;
+    }
+    
+    /**
+     * Hash code method.
+     * @return the parent hash code.
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        return super.hashCode();
     }
 
     public int getPolicy() {
@@ -117,7 +126,7 @@ public class MethodMetadata {
      * Check if the method can throw UnsupportedOperationException.
      * @return true if the method has declared the UnsupportedOperationException.
      */
-    boolean throwsUnsupportedOperationException() {
+    protected boolean throwsUnsupportedOperationException() {
         for (int i = 0; i < m_method.getExceptionTypes().length; i++) {
             if (m_method.getExceptionTypes()[i].getName().equals(UnsupportedOperationException.class.getName())) {
                 return true;

@@ -33,8 +33,8 @@ import org.apache.felix.ipojo.composite.instance.InstanceHandler;
 import org.apache.felix.ipojo.composite.util.SourceManager;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ParseException;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
-import org.apache.felix.ipojo.util.DependencyLifecycleListener;
+import org.apache.felix.ipojo.util.DependencyModel;
+import org.apache.felix.ipojo.util.DependencyStateListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -45,7 +45,7 @@ import org.osgi.framework.InvalidSyntaxException;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceDependencyHandler extends CompositeHandler implements DependencyLifecycleListener {
+public class ServiceDependencyHandler extends CompositeHandler implements DependencyStateListener {
 
     /**
      * List of instances to manage.
@@ -80,9 +80,9 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
             throw new ConfigurationException("Malformed service : the specification attribute is mandatory");
         }
         String filter = "(&(!(factory.name=" + getCompositeManager().getFactory().getComponentDescription().getName() + "))(factory.state=1))"; // Cannot reinstantiate yourself
-        String f = service.getAttribute("filter");
-        if (f != null) {
-            filter = "(&" + filter + f + ")";
+        String givenFilter = service.getAttribute("filter");
+        if (givenFilter != null) {
+            filter = "(&" + filter + givenFilter + ")"; //NOPMD
         }
         
         Filter fil;
@@ -102,26 +102,26 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
             }
         }
         
-        String ag = service.getAttribute("aggregate");
-        boolean agg = ag != null && ag.equalsIgnoreCase("true");
+        String aggregate = service.getAttribute("aggregate");
+        boolean agg = aggregate != null && aggregate.equalsIgnoreCase("true");
         
-        String op = service.getAttribute("optional");
-        boolean opt = op != null && op.equalsIgnoreCase("true");
+        String optional = service.getAttribute("optional");
+        boolean opt = optional != null && optional.equalsIgnoreCase("true");
         
-        int policy = AbstractServiceDependency.getPolicy(service);
+        int policy = DependencyModel.getPolicy(service);
         
-        Comparator cmp = AbstractServiceDependency.getComparator(service, getCompositeManager().getGlobalContext());
+        Comparator cmp = DependencyModel.getComparator(service, getCompositeManager().getGlobalContext());
         
         SvcInstance inst = new SvcInstance(this, spec, prop, agg, opt, fil, cmp, policy);
         m_instances.add(inst);
         
         String sources = service.getAttribute("context-source");
         if (sources != null) {
-            SourceManager sm = new SourceManager(sources, filter, inst, getCompositeManager());
+            SourceManager source = new SourceManager(sources, filter, inst, getCompositeManager());
             if (m_sources == null) {
                 m_sources = new ArrayList(1);
             }
-            m_sources.add(sm);
+            m_sources.add(source);
         }
     }
     
@@ -129,15 +129,19 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      * Create a Service importer object from the given Element.
      * This method parse the given element and configure the service importer object.
      * @param imp : Element describing the import
-     * @param filterConfiguration : instance filter customization
+     * @param confFilter : instance filter customization
      * @throws ConfigurationException : the service importer cannot be created correctly
      */
-    private void createServiceImport(Element imp, Dictionary filterConfiguration) throws ConfigurationException {
+    private void createServiceImport(Element imp, Dictionary confFilter) throws ConfigurationException {
         boolean optional = false;
         boolean aggregate = false;
         String specification = imp.getAttribute("specification");
 
-        if (specification != null) {
+        if (specification == null) { 
+            // Malformed import
+            error("Malformed imports : the specification attribute is mandatory");
+            throw new ConfigurationException("Malformed imports : the specification attribute is mandatory");
+        } else {
             String opt = imp.getAttribute("optional");
             optional = opt != null && opt.equalsIgnoreCase("true");
 
@@ -146,28 +150,28 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
 
             String original = "(&(objectClass=" + specification + ")(!(instance.name=" + getCompositeManager().getInstanceName() + ")))"; // Cannot import yourself
             String filter = original;
-            String f = imp.getAttribute("filter");
-            if (f != null) {
-                filter = "(&" + filter + f + ")";
+            String givenFilter = imp.getAttribute("filter");
+            if (givenFilter != null) {
+                filter = "(&" + filter + givenFilter + ")"; //NOPMD
             }
 
-            String id = imp.getAttribute("id");
+            String identitity = imp.getAttribute("id");
 
             String scope = imp.getAttribute("scope");
-            BundleContext bc = getCompositeManager().getGlobalContext(); // Get the default bundle context.
+            BundleContext context = getCompositeManager().getGlobalContext(); // Get the default bundle context.
             if (scope != null) {
                 if (scope.equalsIgnoreCase("global")) {
-                    bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.GLOBAL);
+                    context = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.GLOBAL);
                 } else if (scope.equalsIgnoreCase("composite")) {
-                    bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL);
+                    context = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL);
                 } else if (scope.equalsIgnoreCase("composite+global")) {
-                    bc = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL_AND_GLOBAL);
+                    context = new PolicyServiceContext(getCompositeManager().getGlobalContext(), getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL_AND_GLOBAL);
                 }
             }
 
             // Configure instance filter if available
-            if (filterConfiguration != null && id != null && filterConfiguration.get(id) != null) {
-                filter = "(&" + original + (String) filterConfiguration.get(id) + ")";
+            if (confFilter != null && identitity != null && confFilter.get(identitity) != null) {
+                filter = "(&" + original + (String) confFilter.get(identitity) + ")";
             }
 
             Filter fil = null;
@@ -179,25 +183,22 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
                 }
             }
 
-            Comparator cmp = AbstractServiceDependency.getComparator(imp, getCompositeManager().getGlobalContext());
-            Class spec = AbstractServiceDependency.loadSpecification(specification, getCompositeManager().getGlobalContext());
-            int policy = AbstractServiceDependency.getPolicy(imp);
+            Comparator cmp = DependencyModel.getComparator(imp, getCompositeManager().getGlobalContext());
+            Class spec = DependencyModel.loadSpecification(specification, getCompositeManager().getGlobalContext());
+            int policy = DependencyModel.getPolicy(imp);
 
-            ServiceImporter si = new ServiceImporter(spec, fil, aggregate, optional, cmp, policy, bc, id, this);
-            m_importers.add(si);
+            ServiceImporter importer = new ServiceImporter(spec, fil, aggregate, optional, cmp, policy, context, identitity, this);
+            m_importers.add(importer);
             
             String sources = imp.getAttribute("context-source");
             if (sources != null) {
-                SourceManager sm = new SourceManager(sources, filter, si, getCompositeManager());
+                SourceManager source = new SourceManager(sources, filter, importer, getCompositeManager());
                 if (m_sources == null) {
                     m_sources = new ArrayList(1);
                 }
-                m_sources.add(sm);
+                m_sources.add(source);
             }
             
-        } else { // Malformed import
-            error("Malformed imports : the specification attribute is mandatory");
-            throw new ConfigurationException("Malformed imports : the specification attribute is mandatory");
         }
     }
 
@@ -211,9 +212,9 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
     public void configure(Element metadata, Dictionary conf) throws ConfigurationException {
         Element[] services = metadata.getElements("subservice");
         // Get instance filters
-        Dictionary filtersConfiguration = null;
+        Dictionary confFilter = null;
         if (conf.get("requires.filters") != null) {
-            filtersConfiguration = (Dictionary) conf.get("requires.filters");
+            confFilter = (Dictionary) conf.get("requires.filters");
         }
         
         for (int i = 0; i < services.length; i++) {
@@ -223,7 +224,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
             } else if ("instantiate".equalsIgnoreCase(action)) {
                 createServiceInstance(services[i]);
             } else if ("import".equalsIgnoreCase(action)) {
-                createServiceImport(services[i], filtersConfiguration);
+                createServiceImport(services[i], confFilter);
             } else {
                 throw new ConfigurationException("Unknown action : " + action);
             }
@@ -240,13 +241,13 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      */
     public void start() {
         for (int i = 0; m_sources != null && i < m_sources.size(); i++) {
-            SourceManager sm = (SourceManager) m_sources.get(i);
-            sm.start();
+            SourceManager source = (SourceManager) m_sources.get(i);
+            source.start();
         }
         
         for (int i = 0; i < m_importers.size(); i++) {
-            ServiceImporter si = (ServiceImporter) m_importers.get(i);
-            si.start();
+            ServiceImporter imp = (ServiceImporter) m_importers.get(i);
+            imp.start();
         }
         
         for (int i = 0; i < m_instances.size(); i++) {
@@ -264,8 +265,8 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      */
     private void isHandlerValid() {
         for (int i = 0; i < m_importers.size(); i++) {
-            ServiceImporter si = (ServiceImporter) m_importers.get(i);
-            if (si.getState() != AbstractServiceDependency.RESOLVED) {
+            ServiceImporter imp = (ServiceImporter) m_importers.get(i);
+            if (imp.getState() != DependencyModel.RESOLVED) {
                 setValidity(false);
                 return;
             }
@@ -273,7 +274,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
         
         for (int i = 0; i < m_instances.size(); i++) {
             SvcInstance inst = (SvcInstance) m_instances.get(i);
-            if (inst.getState() != AbstractServiceDependency.RESOLVED) {
+            if (inst.getState() != DependencyModel.RESOLVED) {
                 setValidity(false);
                 return;
             }
@@ -289,8 +290,8 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      */
     public void stop() {
         for (int i = 0; m_sources != null && i < m_sources.size(); i++) {
-            SourceManager sm = (SourceManager) m_sources.get(i);
-            sm.stop();
+            SourceManager source = (SourceManager) m_sources.get(i);
+            source.stop();
         }
         
         for (int i = 0; i < m_instances.size(); i++) {
@@ -299,8 +300,8 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
         }
         
         for (int i = 0; i < m_importers.size(); i++) {
-            ServiceImporter si = (ServiceImporter) m_importers.get(i);
-            si.stop();
+            ServiceImporter imp = (ServiceImporter) m_importers.get(i);
+            imp.stop();
         }
 
         m_isStarted = false;
@@ -316,16 +317,16 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
         // If we are becoming valid and started, check if we need to freeze importers.
         if (m_isStarted && newState == ComponentInstance.VALID) { 
             for (int i = 0; i < m_importers.size(); i++) {
-                ServiceImporter si = (ServiceImporter) m_importers.get(i);
-                if (si.getBindingPolicy() == AbstractServiceDependency.STATIC_BINDING_POLICY) {
-                    si.freeze();
+                ServiceImporter imp = (ServiceImporter) m_importers.get(i);
+                if (imp.getBindingPolicy() == DependencyModel.STATIC_BINDING_POLICY) {
+                    imp.freeze();
                 }
             }
             
             for (int i = 0; i < m_instances.size(); i++) {
-                SvcInstance si = (SvcInstance) m_instances.get(i);
-                if (si.getBindingPolicy() == AbstractServiceDependency.STATIC_BINDING_POLICY) {
-                    si.freeze();
+                SvcInstance imp = (SvcInstance) m_instances.get(i);
+                if (imp.getBindingPolicy() == DependencyModel.STATIC_BINDING_POLICY) {
+                    imp.freeze();
                 }
             }
         }
@@ -335,7 +336,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      * An service instance becomes valid.
      * @param dep : dependency becoming valid.
      */
-    public void validate(AbstractServiceDependency dep) {
+    public void validate(DependencyModel dep) {
         if (!getValidity()) {
             isHandlerValid();
         }
@@ -345,7 +346,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      * A service instance becomes invalid.
      * @param dep : dependency becoming valid.
      */
-    public void invalidate(AbstractServiceDependency dep) {
+    public void invalidate(DependencyModel dep) {
         if (getValidity()) {
             isHandlerValid();
         }

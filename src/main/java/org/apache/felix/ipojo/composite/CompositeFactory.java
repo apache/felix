@@ -55,24 +55,24 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
 
     /**
      * Create a composite factory.
-     * @param bc : bundle context
-     * @param cm : metadata of the component to create
+     * @param context : bundle context
+     * @param metadata : metadata of the component to create
      * @throws ConfigurationException occurs when the element describing the factory is malformed.
      */
-    public CompositeFactory(BundleContext bc, Element cm) throws ConfigurationException {
-        super(bc, cm);
+    public CompositeFactory(BundleContext context, Element metadata) throws ConfigurationException {
+        super(context, metadata);
     }
     
     /**
      * Check if the metadata are well formed.
-     * @param cm : metadata
+     * @param metadata : metadata
      * @throws ConfigurationException occurs when the element describing the factory is malformed.
      * @see org.apache.felix.ipojo.ComponentFactory#check(org.apache.felix.ipojo.metadata.Element)
      */
-    public void check(Element cm) throws ConfigurationException {
-        String name = cm.getAttribute("name");
+    public void check(Element metadata) throws ConfigurationException {
+        String name = metadata.getAttribute("name");
         if (name == null) {
-            throw new ConfigurationException("A composite needs a name : " + cm);
+            throw new ConfigurationException("A composite needs a name : " + metadata);
         }
     }
     
@@ -88,15 +88,15 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
         Element[] elems = m_componentMetadata.getElements();
         for (int i = 0; i < elems.length; i++) {
             Element current = elems[i]; 
-            RequiredHandler hi = new RequiredHandler(current.getName(), current.getNameSpace());
-            if (! list.contains(hi)) { list.add(hi); }
+            RequiredHandler req = new RequiredHandler(current.getName(), current.getNameSpace());
+            if (! list.contains(req)) { list.add(req); }
         }
         
         // Add architecture if architecture != 'false'
         String arch = m_componentMetadata.getAttribute("architecture");
         if (arch == null || arch.equalsIgnoreCase("true")) {
-            RequiredHandler hi = new RequiredHandler("architecture", null);
-            if (! list.contains(hi)) { list.add(hi); }
+            RequiredHandler req = new RequiredHandler("architecture", null);
+            if (! list.contains(req)) { list.add(req); }
         }
         
         return list;
@@ -160,15 +160,15 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
         if (properties == null || properties.get("name") == null) {
             throw new UnacceptableConfiguration("The configuration does not contains the \"name\" property");
         }
-        final String name = (String) properties.get("name");
+        String name = (String) properties.get("name");
         
-        ComponentInstance cm = (CompositeManager) m_componentInstances.get(name);
+        ComponentInstance instance = (CompositeManager) m_componentInstances.get(name);
         
-        if (cm == null) {
+        if (instance == null) {
             return; // The instance does not exist.
         }
         
-        cm.reconfigure(properties); // re-configure the component
+        instance.reconfigure(properties); // re-configure the component
     }
 
     public String getFactoryName() {

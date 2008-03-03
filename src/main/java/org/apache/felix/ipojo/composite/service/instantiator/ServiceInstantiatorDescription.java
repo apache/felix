@@ -28,7 +28,7 @@ import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.composite.CompositeHandler;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.apache.felix.ipojo.util.DependencyModel;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -51,12 +51,12 @@ public class ServiceInstantiatorDescription extends HandlerDescription {
     /**
      * Constructor.
      * 
-     * @param h : composite handler
+     * @param handler : composite handler
      * @param insts : list of service instances
      * @param imps : list of service importers
      */
-    public ServiceInstantiatorDescription(CompositeHandler h, List insts, List imps) {
-        super(h);
+    public ServiceInstantiatorDescription(CompositeHandler handler, List insts, List imps) {
+        super(handler);
         m_instances = insts;
         m_imports = imps;
     }
@@ -75,12 +75,12 @@ public class ServiceInstantiatorDescription extends HandlerDescription {
             if (imp.getFilter() != null) {
                 impo.addAttribute(new Attribute("Filter", imp.getFilter()));
             }
-            if (imp.getState() == AbstractServiceDependency.RESOLVED) {
+            if (imp.getState() == DependencyModel.RESOLVED) {
                 impo.addAttribute(new Attribute("State", "resolved"));
                 for (int j = 0; j < imp.getProviders().size(); j++) {
-                    Element pr = new Element("Provider", "");
-                    pr.addAttribute(new Attribute("name", (String) imp.getProviders().get(j)));
-                    impo.addElement(pr);
+                    Element prov = new Element("Provider", "");
+                    prov.addAttribute(new Attribute("name", (String) imp.getProviders().get(j)));
+                    impo.addElement(prov);
                 }
             } else {
                 impo.addAttribute(new Attribute("State", "unresolved"));
@@ -93,19 +93,19 @@ public class ServiceInstantiatorDescription extends HandlerDescription {
             Element service = new Element("Service", "");
             service.addAttribute(new Attribute("Specification", inst.getServiceSpecification()));
             String state = "unresolved";
-            if (inst.getState() == AbstractServiceDependency.RESOLVED) {
+            if (inst.getState() == DependencyModel.RESOLVED) {
                 state = "resolved";
             }
             service.addAttribute(new Attribute("State", state));
             Map map = inst.getMatchingFactories();
             Set keys = map.keySet();
-            Iterator it = keys.iterator();
-            while (it.hasNext()) {
-                ServiceReference ref = (ServiceReference) it.next();
-                Object o = map.get(ref);
-                if (o != null) {
+            Iterator iterator = keys.iterator();
+            while (iterator.hasNext()) {
+                ServiceReference ref = (ServiceReference) iterator.next();
+                Object object = map.get(ref);
+                if (object != null) {
                     Element fact = new Element("Factory", "");
-                    fact.addAttribute(new Attribute("Name", ((ComponentInstance) o).getFactory().getName()));
+                    fact.addAttribute(new Attribute("Name", ((ComponentInstance) object).getFactory().getName()));
                     service.addElement(fact);
                 }
             }

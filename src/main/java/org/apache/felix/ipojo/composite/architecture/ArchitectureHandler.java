@@ -53,7 +53,9 @@ public class ArchitectureHandler extends CompositeHandler implements Architectur
      * Stop the handler.
      * @see org.apache.felix.ipojo.Handler#stop()
      */
-    public void stop() { }
+    public void stop() {
+        // Nothing to do.
+    }
 
     /**
      * Start the handler.

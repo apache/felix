@@ -68,18 +68,18 @@ public class SpecificationMetadata {
     /**
      * Constructor.
      * @param name : specification name.
-     * @param bc : bundle context.
+     * @param context : bundle context.
      * @param isAggregate : is the specification aggregate.
      * @param isOptional : is the specification optional.
      * @param psd : the handler.
      */
-    public SpecificationMetadata(String name, BundleContext bc, boolean isAggregate, boolean isOptional, ProvidedServiceHandler psd) {
+    public SpecificationMetadata(String name, BundleContext context, boolean isAggregate, boolean isOptional, ProvidedServiceHandler psd) {
         m_name = name;
         m_handler = psd;
 
         // Populate methods :
         try {
-            Class clazz = bc.getBundle().loadClass(name);
+            Class clazz = context.getBundle().loadClass(name);
             Method[] methods = clazz.getMethods();
             for (int i = 0; i < methods.length; i++) {
                 MethodMetadata method = new MethodMetadata(methods[i]);
@@ -96,17 +96,17 @@ public class SpecificationMetadata {
 
     /**
      * Constructor.
-     * @param c : class
+     * @param clazz : class
      * @param type : component type
      * @param psd : the parent handler
      */
-    public SpecificationMetadata(Class c, String type, ProvidedServiceHandler psd) {
+    public SpecificationMetadata(Class clazz, String type, ProvidedServiceHandler psd) {
         m_handler = psd;
         m_isAggregate = false;
         m_isOptional = false;
         m_componentType = type;
-        m_name = c.getName();
-        Method[] methods = c.getMethods();
+        m_name = clazz.getName();
+        Method[] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             MethodMetadata method = new MethodMetadata(methods[i]);
             m_methods.add(method);

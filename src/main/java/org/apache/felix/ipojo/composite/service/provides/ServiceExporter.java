@@ -28,8 +28,8 @@ import java.util.Set;
 
 import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.composite.CompositeManager;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
-import org.apache.felix.ipojo.util.DependencyLifecycleListener;
+import org.apache.felix.ipojo.util.DependencyModel;
+import org.apache.felix.ipojo.util.DependencyStateListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
@@ -39,7 +39,7 @@ import org.osgi.framework.ServiceRegistration;
  * Export an service from the scope to the parent context.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceExporter extends AbstractServiceDependency {
+public class ServiceExporter extends DependencyModel {
 
     /**
      * Destination context.
@@ -66,16 +66,16 @@ public class ServiceExporter extends AbstractServiceDependency {
      * @param cmp : comparator to use in the dependency
      * @param policy : binding policy.
      * @param from : internal service context
-     * @param to : parent bundle context
+     * @param dest : parent bundle context
      * @param listener : dependency lifecycle listener to notify when the dependency state change. 
-     * @param cm : composite manager
+     * @param manager : composite manager
      */
-    public ServiceExporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, ServiceContext from, BundleContext to, DependencyLifecycleListener listener, CompositeManager cm) {
+    public ServiceExporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, ServiceContext from, BundleContext dest, DependencyStateListener listener, CompositeManager manager) {
         super(specification, multiple, optional, filter, cmp, policy, from, listener);
 
-        m_destination = to;
+        m_destination = dest;
 
-        m_manager = cm;
+        m_manager = manager;
 
     }
 
@@ -106,9 +106,9 @@ public class ServiceExporter extends AbstractServiceDependency {
     public void stop() {
         super.stop();
         Set refs = m_registrations.keySet();
-        Iterator it = refs.iterator();
-        while (it.hasNext()) {
-            ServiceReference ref = (ServiceReference) it.next();
+        Iterator iterator = refs.iterator();
+        while (iterator.hasNext()) {
+            ServiceReference ref = (ServiceReference) iterator.next();
             ServiceRegistration reg = (ServiceRegistration) m_registrations.get(ref);
             reg.unregister();
         }
@@ -155,7 +155,7 @@ public class ServiceExporter extends AbstractServiceDependency {
      * On Dependency Reconfiguration notification method.
      * @param departs : leaving service references.
      * @param arrivals : new injected service references.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
+     * @see org.apache.felix.ipojo.util.DependencyModel#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
      */
     public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
         throw new UnsupportedOperationException("Dynamic dependency reconfiguration is not supported by service exporter");

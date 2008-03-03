@@ -33,6 +33,11 @@ import org.objectweb.asm.Type;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class POJOWriter implements Opcodes {
+    
+    //TODO : consider using getOpCode
+    //TODO : fix bug on double-space
+    //TODO : use a logger
+    //TODO : merge this class with another class only static method.
 
     /**
      * Create a class.
@@ -168,6 +173,7 @@ public class POJOWriter implements Opcodes {
                 writeReturn(Type.getReturnType(desc), mv);
             } else { // All policy
                 if (Type.getReturnType(desc).getSort() != Type.VOID) {
+                    //TODO use logger.
                     System.err.println("All policy cannot be used on method which does not return void");
                 }
 

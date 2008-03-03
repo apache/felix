@@ -27,7 +27,8 @@ import org.apache.felix.ipojo.ContextListener;
 import org.apache.felix.ipojo.ContextSource;
 import org.apache.felix.ipojo.Extender;
 import org.apache.felix.ipojo.composite.CompositeManager;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.apache.felix.ipojo.parser.ParseUtils;
+import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.Tracker;
 import org.apache.felix.ipojo.util.TrackerCustomizer;
 import org.osgi.framework.BundleContext;
@@ -50,7 +51,7 @@ public class SourceManager implements ContextListener {
     /**
      * Managed dependency.
      */
-    private AbstractServiceDependency m_dependency;
+    private DependencyModel m_dependency;
 
     /**
      * List of monitored context sources.
@@ -82,18 +83,19 @@ public class SourceManager implements ContextListener {
      * @param sources : context-source attribute from the dependency metadata
      * @param depfilter : original dependency filter
      * @param dependency : dependency object
-     * @param cm : composite manager
+     * @param manager : composite manager
      * @throws ConfigurationException : the sources are incorrect.
      */
-    public SourceManager(String sources, String depfilter, AbstractServiceDependency dependency, CompositeManager cm) throws ConfigurationException {
+    public SourceManager(String sources, String depfilter, DependencyModel dependency, CompositeManager manager) throws ConfigurationException {
         m_filter = depfilter;
         m_properties = getProperties(depfilter);
         m_dependency = dependency;
-        m_context = cm.getGlobalContext();
-        if (cm.getParentServiceContext() != null) {
-            parseSources(sources, cm.getGlobalContext(), cm.getParentServiceContext(), cm.getServiceContext());
-        } else { // The parent is the global context
-            parseSources(sources, cm.getGlobalContext(), cm.getGlobalContext(), cm.getServiceContext());
+        m_context = manager.getGlobalContext();
+        if (manager.getParentServiceContext() == null) {
+            // The parent is the global context
+            parseSources(sources, manager.getGlobalContext(), manager.getGlobalContext(), manager.getServiceContext());
+        } else {
+            parseSources(sources, manager.getGlobalContext(), manager.getParentServiceContext(), manager.getServiceContext());
         }
     }
 
@@ -123,10 +125,10 @@ public class SourceManager implements ContextListener {
      * @return the state of this source manager.
      */
     public int getState() {
-        if (m_sources.size() > 0) {
-            return AbstractServiceDependency.RESOLVED;
+        if (m_sources.isEmpty()) {
+            return DependencyModel.UNRESOLVED;
         } else {
-            return AbstractServiceDependency.UNRESOLVED;
+            return DependencyModel.RESOLVED;
         }
     }
 
@@ -153,7 +155,7 @@ public class SourceManager implements ContextListener {
         synchronized (this) {
             for (int i = 0; i < m_sources.size(); i++) {
                 Dictionary props = ((ContextSource) m_sources.get(i)).getContext();
-                fil = substitute(fil, props);
+                fil = substitute(fil, props); //NOPMD
             }
         }
         if (!fil.equals(m_dependency.getFilter())) {
@@ -169,19 +171,19 @@ public class SourceManager implements ContextListener {
      */
     public static String substitute(String str, Dictionary values) {       
         int len = str.length();
-        StringBuffer sb = new StringBuffer(len);
+        StringBuffer buffer = new StringBuffer(len);
 
         int prev = 0;
         int start = str.indexOf("${");
-        int end = str.indexOf("}", start);
+        int end = str.indexOf('}', start);
         while (start != -1 && end != -1) {
             String key = str.substring(start + 2, end);
             Object value = values.get(key);
-            if (value != null) {
-                sb.append(str.substring(prev, start));
-                sb.append(value);
+            if (value == null) {
+                buffer.append(str.substring(prev, end + 1));
             } else {
-                sb.append(str.substring(prev, end + 1));
+                buffer.append(str.substring(prev, start));
+                buffer.append(value);
             }
             prev = end + 1;
             if (prev >= str.length()) {
@@ -190,13 +192,13 @@ public class SourceManager implements ContextListener {
 
             start = str.indexOf("${", prev);
             if (start != -1) {
-                end = str.indexOf("}", start);
+                end = str.indexOf('}', start);
             }
         }
 
-        sb.append(str.substring(prev));
+        buffer.append(str.substring(prev));
 
-        return sb.toString();
+        return buffer.toString();
     }
 
     /**
@@ -208,7 +210,7 @@ public class SourceManager implements ContextListener {
         List list = new ArrayList();
         int prev = 0;
         int start = str.indexOf("${");
-        int end = str.indexOf("}", start);
+        int end = str.indexOf('}', start);
         while (start != -1 && end != -1) {
             String key = str.substring(start + 2, end);
             list.add(key);
@@ -219,7 +221,7 @@ public class SourceManager implements ContextListener {
 
             start = str.indexOf("${", prev);
             if (start != -1) {
-                end = str.indexOf("}", start);
+                end = str.indexOf('}', start);
             }
         }
 
@@ -246,24 +248,24 @@ public class SourceManager implements ContextListener {
      * @throws ConfigurationException : the context-source attribute is invalid.
      */
     private void parseSources(String sourceAtt, BundleContext global, BundleContext parent, BundleContext local) throws ConfigurationException {
-        String[] sources = Extender.split(sourceAtt, ',');
+        String[] sources = ParseUtils.split(sourceAtt, ",");
         for (int i = 0; i < sources.length; i++) {
-            String[] srcs = Extender.split(sources[i], ':');
+            String[] srcs = ParseUtils.split(sources[i], ":");
             if (srcs.length == 1) {
                 // No prefix use local. //TODO choose default case.
-                SourceTracker st = new SourceTracker(srcs[0], local);
-                m_trackers.add(st);
+                SourceTracker tracker = new SourceTracker(srcs[0], local);
+                m_trackers.add(tracker);
             } else if (srcs.length == 2) {
                 // According to prefix add the source in the good list.
                 if (srcs[0].equalsIgnoreCase("parent")) {
-                    SourceTracker st = new SourceTracker(srcs[1], parent);
-                    m_trackers.add(st);
+                    SourceTracker tracker = new SourceTracker(srcs[1], parent);
+                    m_trackers.add(tracker);
                 } else if (srcs[0].equalsIgnoreCase("local")) {
-                    SourceTracker st = new SourceTracker(srcs[1], local);
-                    m_trackers.add(st);
+                    SourceTracker tracker = new SourceTracker(srcs[1], local);
+                    m_trackers.add(tracker);
                 } else if (srcs[0].equalsIgnoreCase("global")) {
-                    SourceTracker st = new SourceTracker(srcs[1], global);
-                    m_trackers.add(st);
+                    SourceTracker tracker = new SourceTracker(srcs[1], global);
+                    m_trackers.add(tracker);
                 } else {
                     throw new ConfigurationException("Unknowns context scope : " + srcs[0]);
                 }
@@ -275,20 +277,20 @@ public class SourceManager implements ContextListener {
 
     /**
      * A context source appears.
-     * @param cs : new context source.
+     * @param source : new context source.
      */
-    private void addContextSource(ContextSource cs) {
-        m_sources.add(cs);
+    private void addContextSource(ContextSource source) {
+        m_sources.add(source);
         computeFilter();
-        cs.registerContextListener(this, m_properties);
+        source.registerContextListener(this, m_properties);
     }
 
     /**
      * A context source disappears.
-     * @param cs : leaving context source.
+     * @param source : leaving context source.
      */
-    private void removeContextSource(ContextSource cs) {
-        m_sources.remove(cs);
+    private void removeContextSource(ContextSource source) {
+        m_sources.remove(source);
         computeFilter();
     }
 
@@ -302,14 +304,14 @@ public class SourceManager implements ContextListener {
         /**
          * Constructor.
          * @param name : name of the required context-source.
-         * @param bc : bundle context to use.
+         * @param countext : bundle context to use.
          * @throws ConfigurationException : the context-source name is invalid.
          */
-        public SourceTracker(String name, BundleContext bc) throws ConfigurationException {
+        public SourceTracker(String name, BundleContext countext) throws ConfigurationException {
             String fil = "(&(" + Constants.OBJECTCLASS + "=" + ContextSource.class.getName() + ")(" + SOURCE_NAME + "=" + name + "))";
             try {
-                Filter filter = bc.createFilter(fil);
-                m_tracker = new Tracker(bc, filter, this);
+                Filter filter = countext.createFilter(fil);
+                m_tracker = new Tracker(countext, filter, this);
             } catch (InvalidSyntaxException e) {
                 throw new ConfigurationException("A Context source filter is invalid " + fil + " : " + e.getMessage());
             }

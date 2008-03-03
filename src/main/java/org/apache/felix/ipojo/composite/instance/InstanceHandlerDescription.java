@@ -42,11 +42,11 @@ public class InstanceHandlerDescription extends HandlerDescription {
     /**
      * Constructor.
      * 
-     * @param h : handler
+     * @param handler : handler
      * @param insts : list of component instances
      */
-    public InstanceHandlerDescription(CompositeHandler h, List insts) {
-        super(h);
+    public InstanceHandlerDescription(CompositeHandler handler, List insts) {
+        super(handler);
         m_instances = insts;
     }
 
@@ -60,7 +60,10 @@ public class InstanceHandlerDescription extends HandlerDescription {
         for (int i = 0; i < m_instances.size(); i++) {
             ManagedConfiguration inst = (ManagedConfiguration) m_instances.get(i);
             Element instance = new Element("Instance", "");
-            if (inst.getInstance() != null) {
+            if (inst.getInstance() == null) { 
+                instance.addAttribute(new Attribute("Factory", inst.getConfiguration().get("component").toString()));
+                instance.addAttribute(new Attribute("State", "Not Available"));
+            } else {
                 instance.addAttribute(new Attribute("Factory", inst.getFactory()));
                 instance.addAttribute(new Attribute("Name", inst.getInstance().getInstanceName()));
                 String state = null;
@@ -78,9 +81,6 @@ public class InstanceHandlerDescription extends HandlerDescription {
                 }
                 instance.addAttribute(new Attribute("State", state));
                 instance.addElement(inst.getInstance().getInstanceDescription().getDescription());
-            } else {
-                instance.addAttribute(new Attribute("Factory", inst.getConfiguration().get("component").toString()));
-                instance.addAttribute(new Attribute("State", "Not Available"));
             }
             instances.addElement(instance);
         }

@@ -33,7 +33,8 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.apache.felix.ipojo.architecture.PropertyDescription;
+import org.apache.felix.ipojo.util.DependencyModel;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 
@@ -41,7 +42,7 @@ import org.osgi.framework.ServiceReference;
  * Manage a service instantiation. This service create component instance providing the required service specification.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class SvcInstance extends AbstractServiceDependency {
+public class SvcInstance extends DependencyModel {
 
     /**
      * Configuration to push to the instance.
@@ -56,7 +57,7 @@ public class SvcInstance extends AbstractServiceDependency {
     /**
      * Map of matching factories Service Reference => instance or null (null if the service reference is not actually used).
      */
-    private Map /* <ServiceReference, Instance> */m_matchingFactories = new HashMap();
+    private Map /* <ServiceReference, Instance> */m_factories = new HashMap();
 
     /**
      * Required specification.
@@ -70,7 +71,7 @@ public class SvcInstance extends AbstractServiceDependency {
 
     /**
      * Constructor.
-     * @param h : the handler.
+     * @param handler : the handler.
      * @param spec : required specification.
      * @param conf : instance configuration.
      * @param isAgg : is the service instance an aggregate service ?
@@ -80,12 +81,12 @@ public class SvcInstance extends AbstractServiceDependency {
      * @param policy : binding policy
      * @throws ConfigurationException : an attribute cannot be parsed correctly, or is incorrect.
      */
-    public SvcInstance(ServiceDependencyHandler h, String spec, Dictionary conf, boolean isAgg, boolean isOpt, Filter filt, Comparator cmp, int policy) throws ConfigurationException {
-        super(Factory.class, isAgg, isOpt, filt, cmp, policy, null, h);
+    public SvcInstance(ServiceDependencyHandler handler, String spec, Dictionary conf, boolean isAgg, boolean isOpt, Filter filt, Comparator cmp, int policy) throws ConfigurationException {
+        super(Factory.class, isAgg, isOpt, filt, cmp, policy, null, handler);
 
         m_specification = spec;
 
-        m_handler = h;
+        m_handler = handler;
         setBundleContext(m_handler.getCompositeManager().getServiceContext());
 
         m_configuration = conf;
@@ -97,17 +98,17 @@ public class SvcInstance extends AbstractServiceDependency {
     public void stop() {
         super.stop();
 
-        Set keys = m_matchingFactories.keySet();
-        Iterator it = keys.iterator();
-        while (it.hasNext()) {
-            ServiceReference ref = (ServiceReference) it.next();
-            Object o = m_matchingFactories.get(ref);
-            if (o != null) {
-                ((ComponentInstance) o).dispose();
+        Set keys = m_factories.keySet();
+        Iterator iterator = keys.iterator();
+        while (iterator.hasNext()) {
+            ServiceReference ref = (ServiceReference) iterator.next();
+            Object object = m_factories.get(ref);
+            if (object != null) {
+                ((ComponentInstance) object).dispose();
             }
         }
 
-        m_matchingFactories.clear();
+        m_factories.clear();
 
     }
 
@@ -133,14 +134,14 @@ public class SvcInstance extends AbstractServiceDependency {
      */
     private ComponentInstance createInstance(Factory factory) throws UnacceptableConfiguration, MissingHandlerException, ConfigurationException {
         // Recreate the configuration to avoid sharing.
-        Properties p = new Properties();
-        Enumeration kk = m_configuration.keys();
-        while (kk.hasMoreElements()) {
-            String k = (String) kk.nextElement();
-            p.put(k, m_configuration.get(k));
+        Properties props = new Properties();
+        Enumeration keys = m_configuration.keys();
+        while (keys.hasMoreElements()) {
+            String key = (String) keys.nextElement();
+            props.put(key, m_configuration.get(key));
         }
         ComponentInstance instance = null;
-        instance = factory.createComponentInstance(p);
+        instance = factory.createComponentInstance(props);
         return instance;
     }
 
@@ -161,22 +162,17 @@ public class SvcInstance extends AbstractServiceDependency {
             if (provides[i].equals(m_specification)) {
                 // Check that the factory needs every properties contained in
                 // the configuration
-                org.apache.felix.ipojo.architecture.PropertyDescription[] props = desc.getProperties();
-                Enumeration e = m_configuration.keys();
-                while (e.hasMoreElements()) {
-                    String k = (String) e.nextElement();
-                    if (!containsProperty(k, props)) { return false; }
-                }
-
-                Properties p = new Properties();
+                PropertyDescription[] props = desc.getProperties();
+                Properties conf = new Properties();
                 Enumeration keys = m_configuration.keys();
                 while (keys.hasMoreElements()) {
-                    String k = (String) keys.nextElement();
-                    p.put(k, m_configuration.get(k));
+                    String key = (String) keys.nextElement();
+                    if (!containsProperty(key, props)) { return false; }
+                    conf.put(key, m_configuration.get(key));
                 }
 
                 Factory factory = (Factory) getService(fact);
-                return factory.isAcceptable(p);
+                return factory.isAcceptable(conf);
             }
         }
         return false;
@@ -209,14 +205,14 @@ public class SvcInstance extends AbstractServiceDependency {
      * @return the map of used references.
      */
     protected Map getMatchingFactories() {
-        return m_matchingFactories;
+        return m_factories;
     }
 
     /**
      * On Dependency Reconfiguration notification method.
      * @param departs : leaving service references.
      * @param arrivals : new injected service references.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
+     * @see org.apache.felix.ipojo.util.DependencyModel#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
      */
     public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
         for (int i = 0; departs != null && i < departs.length; i++) {
@@ -232,14 +228,14 @@ public class SvcInstance extends AbstractServiceDependency {
      * A new service is injected.
      * This method create the sub-service instance in the composite.
      * @param ref : service reference.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceArrival(org.osgi.framework.ServiceReference)
+     * @see org.apache.felix.ipojo.util.DependencyModel#onServiceArrival(org.osgi.framework.ServiceReference)
      */
     public void onServiceArrival(ServiceReference ref) {
         // The given factory matches.
         try {
             Factory fact = (Factory) getService(ref);
-            ComponentInstance ci = createInstance(fact);
-            m_matchingFactories.put(ref, ci);
+            ComponentInstance instance = createInstance(fact);
+            m_factories.put(ref, instance);
         } catch (UnacceptableConfiguration e) {
             m_handler.error("A matching factory refuse the actual configuration : " + e.getMessage());
             m_handler.getCompositeManager().stop();
@@ -258,13 +254,13 @@ public class SvcInstance extends AbstractServiceDependency {
      * A used service is leaving.
      * This method dispose the created instance.
      * @param ref : leaving service reference.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceDeparture(org.osgi.framework.ServiceReference)
+     * @see org.apache.felix.ipojo.util.DependencyModel#onServiceDeparture(org.osgi.framework.ServiceReference)
      */
     public void onServiceDeparture(ServiceReference ref) {
         // Remove the reference is contained
-        Object o = m_matchingFactories.remove(ref);
-        if (o != null) {
-            ((ComponentInstance) o).dispose();
+        Object instance = m_factories.remove(ref);
+        if (instance != null) {
+            ((ComponentInstance) instance).dispose();
         }
     }
 

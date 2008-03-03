@@ -64,7 +64,7 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
     /**
      * Instance State Listener List.
      */
-    private List m_instanceListeners = new ArrayList();
+    private List m_listeners = new ArrayList();
 
     /**
      * Internal service context of the composition.
@@ -84,12 +84,12 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
     /**
      * Construct a new Component Manager.
      * @param factory : the factory managing the instance manager
-     * @param bc : the bundle context to give to the instance
+     * @param context : the bundle context to give to the instance
      * @param handlers : the handlers to plug
      */
-    public CompositeManager(CompositeFactory factory, BundleContext bc, HandlerManager[] handlers) {
+    public CompositeManager(CompositeFactory factory, BundleContext context, HandlerManager[] handlers) {
         m_factory = factory;
-        m_context = bc;
+        m_context = context;
         // Initialize the service context.
         m_internalContext = new CompositeServiceContext(m_context, this);
         m_handlers = handlers;
@@ -97,16 +97,16 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
 
     /**
      * Plug the given handler to the current container.
-     * @param h : the handler to plug.
+     * @param handler : the handler to plug.
      */
-    public synchronized void addCompositeHandler(HandlerManager h) {
+    public synchronized void addCompositeHandler(HandlerManager handler) {
         if (m_handlers.length > 0) {
             HandlerManager[] newInstances = new HandlerManager[m_handlers.length + 1];
             System.arraycopy(m_handlers, 0, newInstances, 0, m_handlers.length);
-            newInstances[m_handlers.length] = h;
+            newInstances[m_handlers.length] = handler;
             m_handlers = newInstances;
         } else {
-            m_handlers = new HandlerManager[] { h };
+            m_handlers = new HandlerManager[] { handler };
         }
     }
 
@@ -116,8 +116,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @see org.apache.felix.ipojo.ComponentInstance#addInstanceStateListener(org.apache.felix.ipojo.InstanceStateListener)
      */
     public void addInstanceStateListener(InstanceStateListener listener) {
-        synchronized (m_instanceListeners) {
-            m_instanceListeners.add(listener);
+        synchronized (m_listeners) {
+            m_listeners.add(listener);
         }
     }
 
@@ -125,17 +125,17 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * Configure the instance manager. Stop the existing handler, clear the
      * handler list, change the metadata, recreate the handler
      * 
-     * @param cm : the component type metadata
+     * @param metadata : the component type metadata
      * @param configuration : the configuration of the instance
      * @throws ConfigurationException : occurs when the component type are incorrect.
      */
-    public void configure(Element cm, Dictionary configuration) throws ConfigurationException {        
+    public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {        
         // Add the name
         m_name = (String) configuration.get("name");
         
         // Create the standard handlers and add these handlers to the list
         for (int i = 0; i < m_handlers.length; i++) {
-            m_handlers[i].init(this, cm, configuration);
+            m_handlers[i].init(this, metadata, configuration);
         }
     }
     
@@ -146,8 +146,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
     public void dispose() {
         if (m_state > STOPPED) { stop(); }
         
-        for (int i = 0; i < m_instanceListeners.size(); i++) {
-            ((InstanceStateListener) m_instanceListeners.get(i)).stateChanged(this, DISPOSED);
+        for (int i = 0; i < m_listeners.size(); i++) {
+            ((InstanceStateListener) m_listeners.get(i)).stateChanged(this, DISPOSED);
         }
         
         m_factory.disposed(this);
@@ -158,7 +158,7 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
             m_handlers[i].dispose();
         }
         m_handlers = new HandlerManager[0];
-        m_instanceListeners.clear();
+        m_listeners.clear();
     }
 
     /**
@@ -199,8 +199,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @return the global bundle context.
      */
     public BundleContext getGlobalContext() {
-        IPojoContext c = (IPojoContext) m_context;
-        return c.getGlobalContext();
+        IPojoContext context = (IPojoContext) m_context;
+        return context.getGlobalContext();
     }
     
     /**
@@ -209,10 +209,10 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @see org.apache.felix.ipojo.ComponentInstance#getInstanceDescription()
      */
     public InstanceDescription getInstanceDescription() {
-        InstanceDescription instanceDescription = new InstanceDescription(m_name, m_state, getContext().getBundle().getBundleId(), m_factory.getComponentDescription());
+        InstanceDescription desc = new InstanceDescription(m_name, m_state, getContext().getBundle().getBundleId(), m_factory.getComponentDescription());
         CompositeHandler[] handlers = getRegistredCompositeHandlers();
         for (int i = 0; i < handlers.length; i++) {
-            instanceDescription.addHandler(handlers[i].getDescription());
+            desc.addHandler(handlers[i].getDescription());
         }
 
         // Get instances description of internal instance
@@ -222,14 +222,14 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
             if (refs != null) {
                 for (int i = 0; i < refs.length; i++) {
                     Architecture arch = (Architecture) m_internalContext.getService(refs[i]);
-                    instanceDescription.addInstance(arch.getInstanceDescription());
+                    desc.addInstance(arch.getInstanceDescription());
                     m_internalContext.ungetService(refs[i]);
                 }
             }
         } catch (InvalidSyntaxException e) {
-            e.printStackTrace(); // Should not happen
+            // Cannot happen
         }
-        return instanceDescription;
+        return desc;
     }
 
     /**
@@ -246,8 +246,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @return the parent service context.
      */
     public ServiceContext getParentServiceContext() {
-        IPojoContext c = (IPojoContext) m_context;
-        return c.getServiceContext();
+        IPojoContext context = (IPojoContext) m_context;
+        return context.getServiceContext();
     }
 
     /**
@@ -255,11 +255,11 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @return the list of the registered handlers.
      */
     public CompositeHandler[] getRegistredCompositeHandlers() {
-        CompositeHandler[] h = new CompositeHandler[m_handlers.length];
+        CompositeHandler[] handler = new CompositeHandler[m_handlers.length];
         for (int i = 0; i < m_handlers.length; i++) {
-            h[i] = (CompositeHandler) m_handlers[i].getHandler();
+            handler[i] = (CompositeHandler) m_handlers[i].getHandler();
         }
-        return h;
+        return handler;
     }
     
     /**
@@ -305,8 +305,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @see org.apache.felix.ipojo.ComponentInstance#removeInstanceStateListener(org.apache.felix.ipojo.InstanceStateListener)
      */
     public void removeInstanceStateListener(InstanceStateListener listener) {
-        synchronized (m_instanceListeners) {
-            m_instanceListeners.remove(listener);
+        synchronized (m_listeners) {
+            m_listeners.remove(listener);
         }
     }
 
@@ -331,8 +331,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
                 }
             }
             
-            for (int i = 0; i < m_instanceListeners.size(); i++) {
-                ((InstanceStateListener) m_instanceListeners.get(i)).stateChanged(this, state);
+            for (int i = 0; i < m_listeners.size(); i++) {
+                ((InstanceStateListener) m_listeners.get(i)).stateChanged(this, state);
             }
         }
     }
@@ -414,8 +414,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
         m_internalContext.stop(); // Turn off the factory tracking
         m_state = STOPPED;
         
-        for (int i = 0; i < m_instanceListeners.size(); i++) {
-            ((InstanceStateListener) m_instanceListeners.get(i)).stateChanged(this, STOPPED);
+        for (int i = 0; i < m_listeners.size(); i++) {
+            ((InstanceStateListener) m_listeners.get(i)).stateChanged(this, STOPPED);
         }
     }
     
@@ -426,8 +426,8 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
     protected synchronized void kill() {
         if (m_state > STOPPED) { stop(); }
         
-        for (int i = 0; i < m_instanceListeners.size(); i++) {
-            ((InstanceStateListener) m_instanceListeners.get(i)).stateChanged(this, DISPOSED);
+        for (int i = 0; i < m_listeners.size(); i++) {
+            ((InstanceStateListener) m_listeners.get(i)).stateChanged(this, DISPOSED);
         }
 
         // Cleaning
@@ -437,6 +437,6 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
             m_handlers[i].dispose();
         }
         m_handlers = new HandlerManager[0];
-        m_instanceListeners.clear();
+        m_listeners.clear();
     }
 }

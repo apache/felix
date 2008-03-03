@@ -73,12 +73,6 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      * List of imported factories.
      */
     private List m_factories = new ArrayList();
-
-    /**
-     * External context.
-     */
-    private BundleContext m_parent;
-
     /**
      * Internal service registry.
      */
@@ -103,27 +97,26 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      * Constructor. This constructor instantiate a service registry with the
      * given bundle context.
      * 
-     * @param bc : the bundle context
+     * @param context : the bundle context
      */
-    public CompositeServiceContext(BundleContext bc) {
-        m_registry = new ServiceRegistry(bc);
-        m_parent = bc;
-        if (m_parent instanceof IPojoContext) {
-            m_global = ((IPojoContext) m_parent).getGlobalContext();
+    public CompositeServiceContext(BundleContext context) {
+        m_registry = new ServiceRegistry(context);
+        if (context instanceof IPojoContext) {
+            m_global = ((IPojoContext) context).getGlobalContext();
         } else {
-            m_global = m_parent; // the parent context is the global context
+            m_global = context; // the parent context is the global context
         }
     }
 
     /**
      * Constructor.
      * 
-     * @param bc : the bundle context
-     * @param ci : the component instance owning this context
+     * @param context : the bundle context
+     * @param instance : the component instance owning this context
      */
-    public CompositeServiceContext(BundleContext bc, ComponentInstance ci) {
-        this(bc);
-        m_instance = ci;
+    public CompositeServiceContext(BundleContext context, ComponentInstance instance) {
+        this(context);
+        m_instance = instance;
     }
 
     /**
@@ -353,12 +346,12 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
 
     /**
      * Get the bundle object with the given id.
-     * @param id : bundle id
+     * @param bundleId : bundle id
      * @return the bundle object
      * @see org.osgi.framework.BundleContext#getBundle(long)
      */
-    public Bundle getBundle(long id) {
-        return m_global.getBundle(id);
+    public Bundle getBundle(long bundleId) {
+        return m_global.getBundle(bundleId);
     }
 
     /**

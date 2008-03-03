@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.ipojo.PolicyServiceContext;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
+import org.apache.felix.ipojo.util.DependencyModel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
@@ -35,7 +35,7 @@ import org.osgi.framework.ServiceRegistration;
  * Import a service form the parent to the internal service registry.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceImporter extends AbstractServiceDependency {
+public class ServiceImporter extends DependencyModel {
 
     /**
      * Reference on the handler.
@@ -62,7 +62,7 @@ public class ServiceImporter extends AbstractServiceDependency {
          * Constructor.
          * @param ref : service reference.
          */
-        private Record(ServiceReference ref) {
+        protected Record(ServiceReference ref) {
             m_ref = ref;
         }
 
@@ -100,16 +100,24 @@ public class ServiceImporter extends AbstractServiceDependency {
 
         /**
          * Test object equality.
-         * @param o : object to confront against the current object.
+         * @param object : object to confront against the current object.
          * @return true if the two objects are equals (same service reference).
          * @see java.lang.Object#equals(java.lang.Object)
          */
-        public boolean equals(Object o) {
-            if (o instanceof Record) {
-                Record rec = (Record) o;
+        public boolean equals(Object object) {
+            if (object instanceof Record) {
+                Record rec = (Record) object;
                 return rec.m_ref == m_ref;
             }
             return false;
+        }
+        
+        /**
+         * Hash code method.
+         * @return the hash code by calling the parent method.
+         */
+        public int hashCode() {
+            return super.hashCode();
         }
     }
 
@@ -126,7 +134,7 @@ public class ServiceImporter extends AbstractServiceDependency {
     /**
      * Is this requirement attached to a service-level requirement.
      */
-    private boolean m_isServiceLevelRequirement;
+    private boolean m_specLevelReq;
 
     /**
      * Is the set of used provider frozen ?
@@ -142,19 +150,20 @@ public class ServiceImporter extends AbstractServiceDependency {
      * @param optional : is the import optional ?
      * @param cmp : comparator to use for the tracking 
      * @param policy : resolving policy
-     * @param bc : bundle context to use for the tracking (can be a servie context)
-     * @param id : requirement id (may be null)
-     * @param in : handler
+     * @param context : bundle context to use for the tracking (can be a servie context)
+     * @param identitity : requirement id (may be null)
+     * @param handler : handler
      */
-    public ServiceImporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, BundleContext bc, String id, ServiceDependencyHandler in) {
-        super(specification, multiple, optional, filter, cmp, policy, bc, in);
+    public ServiceImporter(Class specification, Filter filter, boolean multiple, boolean optional, Comparator cmp, int policy, BundleContext context, String identitity
+            , ServiceDependencyHandler handler) {
+        super(specification, multiple, optional, filter, cmp, policy, context, handler);
 
-        this.m_handler = in;
+        this.m_handler = handler;
 
         if (m_id == null) {
             m_id = super.getSpecification().getName();
         } else {
-            m_id = id;
+            m_id = identitity;
         }
 
     }
@@ -209,14 +218,14 @@ public class ServiceImporter extends AbstractServiceDependency {
      * @return the list containing all record using the given reference
      */
     private List/* <Record> */getRecordsByRef(ServiceReference ref) {
-        List l = new ArrayList();
+        List list = new ArrayList();
         for (int i = 0; i < m_records.size(); i++) {
             Record rec = (Record) m_records.get(i);
             if (rec.m_ref == ref) {
-                l.add(rec);
+                list.add(rec);
             }
         }
-        return l;
+        return list;
     }
 
     /**
@@ -224,11 +233,11 @@ public class ServiceImporter extends AbstractServiceDependency {
      * @return the list of all imported services.
      */
     public List getProviders() {
-        List l = new ArrayList();
+        List list = new ArrayList();
         for (int i = 0; i < m_records.size(); i++) {
-            l.add((((Record) m_records.get(i)).m_ref).getProperty("instance.name"));
+            list.add((((Record) m_records.get(i)).m_ref).getProperty("instance.name"));
         }
-        return l;
+        return list;
     }
 
     /**
@@ -237,9 +246,9 @@ public class ServiceImporter extends AbstractServiceDependency {
      * @param b
      */
     public void setServiceLevelDependency() {
-        m_isServiceLevelRequirement = true;
-        PolicyServiceContext bc = new PolicyServiceContext(m_handler.getCompositeManager().getGlobalContext(), m_handler.getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL);
-        setBundleContext(bc);
+        m_specLevelReq = true;
+        PolicyServiceContext context = new PolicyServiceContext(m_handler.getCompositeManager().getGlobalContext(), m_handler.getCompositeManager().getParentServiceContext(), PolicyServiceContext.LOCAL);
+        setBundleContext(context);
     }
 
     public String getId() {
@@ -247,14 +256,14 @@ public class ServiceImporter extends AbstractServiceDependency {
     }
 
     public boolean isServiceLevelRequirement() {
-        return m_isServiceLevelRequirement;
+        return m_specLevelReq;
     }
 
     /**
      * On Dependency Reconfiguration notification method.
      * @param departs : leaving service references.
      * @param arrivals : new injected service references.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
+     * @see org.apache.felix.ipojo.util.DependencyModel#onDependencyReconfiguration(org.osgi.framework.ServiceReference[], org.osgi.framework.ServiceReference[])
      */
     public void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals) {
         for (int i = 0; departs != null && i < departs.length; i++) {
@@ -270,7 +279,7 @@ public class ServiceImporter extends AbstractServiceDependency {
      * A new service is injected by the tracker.
      * This method create a 'Record' and register it.
      * @param ref : new service reference.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceArrival(org.osgi.framework.ServiceReference)
+     * @see org.apache.felix.ipojo.util.DependencyModel#onServiceArrival(org.osgi.framework.ServiceReference)
      */
     public void onServiceArrival(ServiceReference ref) {
         Record rec = new Record(ref);
@@ -283,26 +292,26 @@ public class ServiceImporter extends AbstractServiceDependency {
      * A used service disappears.
      * This method find the implicated 'Record', dispose it and remove it from the list.
      * @param ref : leaving service reference.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceDeparture(org.osgi.framework.ServiceReference)
+     * @see org.apache.felix.ipojo.util.DependencyModel#onServiceDeparture(org.osgi.framework.ServiceReference)
      */
     public void onServiceDeparture(ServiceReference ref) {
-        List l = getRecordsByRef(ref);
-        for (int i = 0; i < l.size(); i++) { // Stop the implied record
-            Record rec = (Record) l.get(i);
+        List list = getRecordsByRef(ref);
+        for (int i = 0; i < list.size(); i++) { // Stop the implied record
+            Record rec = (Record) list.get(i);
             rec.dispose();
         }
-        m_records.removeAll(l);
+        m_records.removeAll(list);
     }
 
     /**
      * A used service is modified.
      * @param ref : modified service reference.
-     * @see org.apache.felix.ipojo.util.AbstractServiceDependency#onServiceModification(org.osgi.framework.ServiceReference)
+     * @see org.apache.felix.ipojo.util.DependencyModel#onServiceModification(org.osgi.framework.ServiceReference)
      */
     public void onServiceModification(ServiceReference ref) {
-        List l = getRecordsByRef(ref);
-        for (int i = 0; i < l.size(); i++) { // Stop the implied record
-            Record rec = (Record) l.get(i);
+        List list = getRecordsByRef(ref);
+        for (int i = 0; i < list.size(); i++) { // Stop the implied record
+            Record rec = (Record) list.get(i);
             rec.update();
         }
     }

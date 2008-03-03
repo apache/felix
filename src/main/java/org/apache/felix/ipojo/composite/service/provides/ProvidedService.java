@@ -30,8 +30,8 @@ import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.composite.CompositeManager;
 import org.apache.felix.ipojo.composite.instance.InstanceHandler;
 import org.apache.felix.ipojo.metadata.Element;
-import org.apache.felix.ipojo.util.AbstractServiceDependency;
-import org.apache.felix.ipojo.util.DependencyLifecycleListener;
+import org.apache.felix.ipojo.util.DependencyModel;
+import org.apache.felix.ipojo.util.DependencyStateListener;
 import org.apache.felix.ipojo.util.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -41,7 +41,7 @@ import org.osgi.framework.InvalidSyntaxException;
  * Composite Provided Service.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ProvidedService implements DependencyLifecycleListener {
+public class ProvidedService implements DependencyStateListener {
 
     /**
      * Composite Manager.
@@ -52,16 +52,6 @@ public class ProvidedService implements DependencyLifecycleListener {
      * Composition Model.
      */
     private CompositionMetadata m_composition;
-
-    /**
-     * generated POJO class.
-     */
-    private byte[] m_clazz;
-
-    /**
-     * Metadata of the POJO. 
-     */
-    private Element m_metadata;
 
     /**
      * Internal context.
@@ -116,22 +106,22 @@ public class ProvidedService implements DependencyLifecycleListener {
         m_composition.buildMapping();
 
         m_instanceName = m_composition.getSpecificationMetadata().getName() + "Provider-Gen";
-        m_clazz = m_composition.buildPOJO();
-        m_metadata = m_composition.buildMetadata(m_instanceName);
+        byte[] clazz = m_composition.buildPOJO();
+        Element metadata = m_composition.buildMetadata(m_instanceName);
 
         // Create the factory
         try {
-            m_factory = new ComponentFactory(m_context, m_clazz, m_metadata);
+            m_factory = new ComponentFactory(m_context, clazz, metadata);
         } catch (ConfigurationException e) {
             // Should not happen.
         }
         m_factory.start();
 
         try {
-            Class spec = AbstractServiceDependency.loadSpecification(m_composition.getSpecificationMetadata().getName(), m_context);
+            Class spec = DependencyModel.loadSpecification(m_composition.getSpecificationMetadata().getName(), m_context);
             Filter filter = m_context.createFilter("(instance.name=" + m_instanceName + ")");
             // Create the exports
-            m_exports = new ServiceExporter(spec, filter, false, false, null, AbstractServiceDependency.DYNAMIC_BINDING_POLICY, m_scope, m_context, this, m_manager);
+            m_exports = new ServiceExporter(spec, filter, false, false, null, DependencyModel.DYNAMIC_BINDING_POLICY, m_scope, m_context, this, m_manager);
         } catch (InvalidSyntaxException e) {
             throw new CompositionException("A provided service filter is invalid : " + e.getMessage());
         } catch (ConfigurationException e) {
@@ -166,14 +156,16 @@ public class ProvidedService implements DependencyLifecycleListener {
      * The exporter becomes valid.
      * @param exporter : the exporter
      */
-    public void validate(AbstractServiceDependency exporter) {
+    public void validate(DependencyModel exporter) {
+        // Nothing to do.
     }
 
     /**
      * The exporter becomes invalid.
      * @param exporter : the exporter
      */
-    public void invalidate(AbstractServiceDependency exporter) {
+    public void invalidate(DependencyModel exporter) {
+        // Nothing to do.
     }
 
     /**
@@ -182,12 +174,12 @@ public class ProvidedService implements DependencyLifecycleListener {
      * @return an object from an instance of this type or null
      */
     private Object getObjectByType(String type) {
-        InstanceHandler h = (InstanceHandler) m_manager.getCompositeHandler("org.apache.felix.ipojo.composite.instance.InstanceHandler");
-        Object o = h.getObjectFromInstance(type);
-        if (o == null) {
+        InstanceHandler handler = (InstanceHandler) m_manager.getCompositeHandler("org.apache.felix.ipojo.composite.instance.InstanceHandler");
+        Object pojo = handler.getObjectFromInstance(type);
+        if (pojo == null) {
             m_manager.getFactory().getLogger().log(Logger.ERROR, "An instance object cannot be found for the type : " + type);
         }
-        return o;
+        return pojo;
     }
 
     public String getSpecification() {
@@ -205,25 +197,22 @@ public class ProvidedService implements DependencyLifecycleListener {
      * Register the exposed service.
      */
     public void register() {
-        Properties p = new Properties();
-        p.put("name", m_instanceName);
+        Properties props = new Properties();
+        props.put("name", m_instanceName);
         List fields = m_composition.getFieldList();
         for (int i = 0; i < fields.size(); i++) {
-            FieldMetadata fm = (FieldMetadata) fields.get(i);
-            if (fm.isUseful() && !fm.getSpecification().isInterface()) {
-                String type = fm.getSpecification().getComponentType();
-                Object o = getObjectByType(type);
-                p.put(fm.getName(), o);
+            FieldMetadata field = (FieldMetadata) fields.get(i);
+            if (field.isUseful() && !field.getSpecification().isInterface()) {
+                String type = field.getSpecification().getComponentType();
+                Object pojo = getObjectByType(type);
+                props.put(field.getName(), pojo);
             }
         }
 
-        if (m_instance != null) {
-            // We have to reconfigure the instance in order to inject up to date glue component instance.
-            m_instance.reconfigure(p);
-        } else {
-            // Else we have to create the instance 
+        if (m_instance == null) {
+         // Else we have to create the instance 
             try {
-                m_instance = m_factory.createComponentInstance(p, m_manager.getServiceContext());
+                m_instance = m_factory.createComponentInstance(props, m_manager.getServiceContext());
             } catch (UnacceptableConfiguration e) {
                 throw new IllegalStateException("Cannot create the service implementation : " + e.getMessage());
             } catch (MissingHandlerException e) {
@@ -231,13 +220,16 @@ public class ProvidedService implements DependencyLifecycleListener {
             } catch (ConfigurationException e) {
                 throw new IllegalStateException("Cannot create the service implementation : " + e.getMessage());
             }
+        } else {
+            // We have to reconfigure the instance in order to inject up to date glue component instance.
+            m_instance.reconfigure(props);
         }
-
+        
         m_exports.start();
     }
 
     public boolean isRegistered() {
-        return m_exports.getState() == AbstractServiceDependency.RESOLVED;
+        return m_exports.getState() == DependencyModel.RESOLVED;
     }
 
 }

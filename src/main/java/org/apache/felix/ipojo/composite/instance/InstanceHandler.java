@@ -94,7 +94,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
          * Return the managed configuration.
          * @return the configuration.
          */
-        Dictionary getConfiguration() {
+        protected Dictionary getConfiguration() {
             return m_configuration;
         }
 
@@ -102,11 +102,11 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
          * Return the used factory name.
          * @return the factory name
          */
-        String getFactory() {
+        protected String getFactory() {
             return m_factoryName;
         }
         
-        String getNeededFactoryName() {
+        protected String getNeededFactoryName() {
             return m_desiredFactory;
         }
 
@@ -114,7 +114,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
          * Return the created instance.
          * @return the instance (or null if no instance are created).
          */
-        ComponentInstance getInstance() {
+        protected ComponentInstance getInstance() {
             return m_instance;
         }
 
@@ -123,7 +123,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
          * 
          * @param name : the factory name.
          */
-        void setFactory(String name) {
+        protected void setFactory(String name) {
             m_factoryName = name;
         }
 
@@ -132,7 +132,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
          * 
          * @param instance : the instance
          */
-        void setInstance(ComponentInstance instance) {
+        protected void setInstance(ComponentInstance instance) {
             m_instance = instance;
         }
     }
@@ -165,15 +165,15 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
     
     /**
      * A new valid factory appears.
-     * @param f : factory.
+     * @param factory : factory.
      */
-    public void bindFactory(Factory f) {
+    public void bindFactory(Factory factory) {
         boolean implicated = false;
-        String factName = f.getName();
-        String className = f.getComponentDescription().getClassName();
+        String factName = factory.getName();
+        String className = factory.getComponentDescription().getClassName();
         for (int i = 0; i < m_configurations.length; i++) {
             if (m_configurations[i].getInstance() == null && (m_configurations[i].getNeededFactoryName().equals(factName) || m_configurations[i].getNeededFactoryName().equals(className))) {
-                createInstance(f, m_configurations[i]);
+                createInstance(factory, m_configurations[i]);
                 implicated = true;
             }
         }
@@ -184,12 +184,12 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
     
     /**
      * An existing factory disappears or becomes invalid.
-     * @param f : factory
+     * @param factory : factory
      */
-    public void unbindFactory(Factory f) {
+    public void unbindFactory(Factory factory) {
         boolean implicated = false;
         for (int i = 0; i < m_configurations.length; i++) {
-            if (m_configurations[i].getInstance() != null && m_configurations[i].getFactory().equals(f.getName())) {
+            if (m_configurations[i].getInstance() != null && m_configurations[i].getFactory().equals(factory.getName())) {
                 m_configurations[i].setInstance(null);
                 m_configurations[i].setFactory(null);
                 implicated = true;
@@ -280,9 +280,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         String value = prop.getAttribute("value");
         if (name == null) { throw new ParseException("A property does not have the 'name' attribute"); }
         // Final case : the property element has a 'value' attribute
-        if (value != null) {
-            dict.put(name, value);
-        } else {
+        if (value == null) {
             // Recursive case
             // Check if there is 'property' element
             Element[] subProps = prop.getElements("property");
@@ -292,6 +290,8 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
                 parseProperty(subProps[i], dict2);
                 dict.put(prop.getAttribute("name"), dict2);
             }
+        } else {
+            dict.put(name, value);
         }
     }
 
@@ -380,11 +380,11 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * @see org.apache.felix.ipojo.CompositeHandler#getDescription()
      */
     public HandlerDescription getDescription() {
-        List l = new ArrayList();
+        List list = new ArrayList();
         for (int i = 0; i < m_configurations.length; i++) {
-            l.add(m_configurations[i]);
+            list.add(m_configurations[i]);
         }
-        return new InstanceHandlerDescription(this, l);
+        return new InstanceHandlerDescription(this, list);
     }
 
     /**
