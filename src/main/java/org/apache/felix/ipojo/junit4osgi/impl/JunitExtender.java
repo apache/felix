@@ -166,7 +166,7 @@ public class JunitExtender implements OSGiJunitRunner {
         return test;
     }
 
-    public List<Test> getTests() {
+    public synchronized List<Test> getTests() {
         List<Test> results = new ArrayList<Test>();
         Iterator<Entry<Bundle, List<Class>>> it = m_suites.entrySet().iterator();
         while (it.hasNext()) {
@@ -225,6 +225,10 @@ public class JunitExtender implements OSGiJunitRunner {
     public void stopping() {
         System.out.println("Cleaning test suites ...");
         m_suites = null;
+    }
+    
+    public void starting() {
+        System.out.println("Junit Extender starting ...");
     }
 
     private BundleContext getBundleContext(Bundle bundle) {
