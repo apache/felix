@@ -34,7 +34,11 @@ public class TestListModel extends AbstractListModel {
     private List<TestRecord> list = new ArrayList<TestRecord>();
 
     public Object getElementAt(int index) {
-        return list.get(index).name;
+        if (index >= list.size()) {
+            return null;
+        } else {
+            return list.get(index).name;
+        }
     }
 
     public Test getTestElementAt(int index) {
@@ -42,21 +46,29 @@ public class TestListModel extends AbstractListModel {
     }
 
     public void addTest(Test test) {
-        TestRecord tr = new TestRecord();
-        tr.test = test;
-        tr.name = test.toString();
-        list.add(tr);
+        synchronized(this) {
+            TestRecord tr = new TestRecord();
+            tr.test = test;
+            tr.name = test.toString();
+            list.add(tr);
+        }
         fireContentsChanged(this, list.size() - 1, list.size() - 1);
     }
 
     public void removeTest(Test test) {
-        for (TestRecord t : list) {
-            if (t.test.equals(test)) {
-                int index = list.indexOf(t);
-                list.remove(t);
-                fireContentsChanged(this, index, index);
-                return;
+        int index = 1;
+        synchronized(this) {
+            for (TestRecord t : list) {
+                if (t.test.equals(test)) {
+                    index = list.indexOf(t);
+                    list.remove(t);
+                    return;
+                }
             }
+        }
+        
+        if (index != -1) {
+            fireContentsChanged(this, index, index);
         }
     }
 

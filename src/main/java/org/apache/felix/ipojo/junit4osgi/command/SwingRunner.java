@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.swing.JScrollBar;
 
+import javax.swing.table.TableColumn;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -58,62 +59,20 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
     private boolean m_running = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    
-    /**
-     * Select all button.
-     */
     private javax.swing.JButton m_allButton;
-
-    /**
-     * Execute button.
-     */
     private javax.swing.JButton m_executeButton;
-
-    /**
-     * Message scroll pane.
-     */
+    private javax.swing.JLabel m_executedResults;
     private javax.swing.JScrollPane m_message;
-
-    /**
-     * Message Text Area.
-     */
     private javax.swing.JTextArea m_messageArea;
-
-    /**
-     * Ok button (test dialog).
-     */
     private javax.swing.JButton m_ok;
-
-    /**
-     * Main panel. 
-     */
     private javax.swing.JPanel m_panel;
-
-    /**
-     * Result dialog. 
-     */
+    private javax.swing.JProgressBar m_progress;
     private javax.swing.JDialog m_resultDialog;
-
-    /**
-     * Result scroll pane.
-     */
     private javax.swing.JScrollPane m_resultScroll;
-
-    /**
-     * Result table. 
-     */
     private javax.swing.JTable m_resultTable;
-
-    /**
-     * Available Suite List.  
-     */
+    private javax.swing.JPanel m_statusBar;
     private javax.swing.JList m_suiteList;
-
-    /**
-     * Test Suite scroll pane.
-     */
     private javax.swing.JScrollPane m_suiteScroll;
-
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -133,6 +92,21 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         m_resultDialog.setVisible(false);
         refreshSuites();
         m_context.addBundleListener(this);
+        m_executedResults.setText(" \t No executed tests");
+        m_progress.setIndeterminate(false);
+        m_progress.setMaximum(100);
+        m_progress.setValue(100);
+        
+        TableColumn column = null;
+        for (int i = 0; i < m_resultTable.getColumnCount(); i++) {
+            column = m_resultTable.getColumnModel().getColumn(i);
+            if (i == 0) {
+                column.setPreferredWidth(350); //first column is bigger
+            } else {
+                column.setPreferredWidth(50);
+                column.setCellRenderer(new ResultCellRenderer());
+        }
+}
     }
 
     /**
@@ -165,9 +139,9 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         java.awt.GridBagConstraints gridBagConstraints;
 
         m_resultDialog = new javax.swing.JDialog();
-        m_ok = new javax.swing.JButton();
         m_message = new javax.swing.JScrollPane();
         m_messageArea = new javax.swing.JTextArea();
+        m_ok = new javax.swing.JButton();
         m_panel = new javax.swing.JPanel();
         m_suiteScroll = new javax.swing.JScrollPane();
         m_suiteList = new javax.swing.JList();
@@ -175,6 +149,9 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         m_executeButton = new javax.swing.JButton();
         m_resultScroll = new javax.swing.JScrollPane();
         m_resultTable = new javax.swing.JTable();
+        m_statusBar = new javax.swing.JPanel();
+        m_progress = new javax.swing.JProgressBar();
+        m_executedResults = new javax.swing.JLabel();
 
         m_resultDialog.setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         m_resultDialog.setMinimumSize(new java.awt.Dimension(320, 250));
@@ -182,26 +159,12 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 onDialogClosed(evt);
             }
-
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 onDialogClosed(evt);
             }
         });
-        m_resultDialog.getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        m_ok.setText("Ok");
-        m_ok.setPreferredSize(new java.awt.Dimension(120, 23));
-        m_ok.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.insets = new java.awt.Insets(1, 3, 3, 3);
-        m_resultDialog.getContentPane().add(m_ok, gridBagConstraints);
-
+        m_message.setBorder(null);
         m_message.setMinimumSize(new java.awt.Dimension(300, 202));
         m_message.setPreferredSize(new java.awt.Dimension(300, 202));
 
@@ -211,15 +174,20 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         m_messageArea.setLineWrap(true);
         m_messageArea.setRows(5);
         m_messageArea.setWrapStyleWord(true);
-        m_messageArea.setMinimumSize(new java.awt.Dimension(250, 200));
+        m_messageArea.setMinimumSize(new java.awt.Dimension(300, 250));
         m_messageArea.setPreferredSize(new java.awt.Dimension(250, 200));
         m_message.setViewportView(m_messageArea);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        m_resultDialog.getContentPane().add(m_message, gridBagConstraints);
+        m_resultDialog.getContentPane().add(m_message, java.awt.BorderLayout.CENTER);
+
+        m_ok.setText("Ok");
+        m_ok.setPreferredSize(new java.awt.Dimension(120, 23));
+        m_ok.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okActionPerformed(evt);
+            }
+        });
+        m_resultDialog.getContentPane().add(m_ok, java.awt.BorderLayout.SOUTH);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Junit Runner");
@@ -284,7 +252,6 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         m_resultScroll.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         m_resultScroll.setMinimumSize(new java.awt.Dimension(452, 402));
 
-        //m_resultTable.setAutoCreateRowSorter(true);
         m_resultTable.setFont(new java.awt.Font("Tahoma", 0, 10));
         m_resultTable.setModel(new ResultTableModel());
         m_resultTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -309,9 +276,24 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(3, 3, 3, 3);
         getContentPane().add(m_panel, gridBagConstraints);
+
+        m_statusBar.setLayout(new javax.swing.BoxLayout(m_statusBar, javax.swing.BoxLayout.LINE_AXIS));
+
+        m_progress.setIndeterminate(true);
+        m_statusBar.add(m_progress);
+
+        m_executedResults.setText("aaaaaaaaaaaaaaa");
+        m_statusBar.add(m_executedResults);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        getContentPane().add(m_statusBar, gridBagConstraints);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -331,26 +313,26 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
         }
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         executeTest(list);
-    } //GEN-LAST:event_m_executeButtonActionPerformed
+    }//GEN-LAST:event_m_executeButtonActionPerformed
 
     /**
      * All button action.
      * @param evt : event.
      */
-    private void allButtonActionPerformed(java.awt.event.ActionEvent evt) { //GEN-FIRST:event_m_allButtonActionPerformed
+    private void allButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_allButtonActionPerformed
         int max = m_suiteList.getModel().getSize();
         int[] indices = new int[max];
         for (int i = 0; i < max; i++) {
             indices[i] = i;
         }
         m_suiteList.setSelectedIndices(indices);
-    } //GEN-LAST:event_m_allButtonActionPerformed
+    }//GEN-LAST:event_m_allButtonActionPerformed
 
     /**
      * Listener on table click.
      * @param evt : event.
      */
-    private void resultTableMouseClicked(java.awt.event.MouseEvent evt) { //GEN-FIRST:event_m_resultTableMouseClicked
+    private void resultTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_m_resultTableMouseClicked
         Point p = evt.getPoint();
         int row = m_resultTable.rowAtPoint(p);
         int col = m_resultTable.columnAtPoint(p);
@@ -362,25 +344,25 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
             m_messageArea.setText(message);
             m_resultDialog.setVisible(true);
         }
-    } //GEN-LAST:event_m_resultTableMouseClicked
+    }//GEN-LAST:event_m_resultTableMouseClicked
 
     /**
      * Ok button action.
      * @param evt : event.
      */
-    private void okActionPerformed(java.awt.event.ActionEvent evt) { //GEN-FIRST:event_m_okActionPerformed
+    private void okActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_okActionPerformed
         m_resultDialog.setVisible(false);
         setEnabled(true);
-    } //GEN-LAST:event_m_okActionPerformed
+    }//GEN-LAST:event_m_okActionPerformed
 
     /**
      * Listener when the test report is closed.
      * @param evt : event.
      */
-    private void onDialogClosed(java.awt.event.WindowEvent evt) { //GEN-FIRST:event_onDialogClosed
+    private void onDialogClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_onDialogClosed
         m_resultDialog.setVisible(false);
         setEnabled(true);
-    } //GEN-LAST:event_onDialogClosed
+    }//GEN-LAST:event_onDialogClosed
 
     /**
      * Execute method.
@@ -392,6 +374,7 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
                 ResultTableModel model = (ResultTableModel) m_resultTable.getModel();
                 m_running = true;
                 m_executeButton.setText("Running...");
+                m_progress.setIndeterminate(true);
                 model.clear();
                 for (int i = 0; i < list.size(); i++) {
                     TestResult tr = new TestResult();
@@ -399,17 +382,28 @@ public class SwingRunner extends javax.swing.JFrame implements BundleListener {
                     list.get(i).run(tr);
                 }
                 m_running = false;
+                m_progress.setIndeterminate(false);
+                m_progress.setMaximum(100);
+                m_progress.setValue(100);
                 m_executeButton.setText("Execute");
+                computeExecutedTest();
                 setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
+
         };
         new Thread(thread).start();
     }
+    
+     private void computeExecutedTest() {
+        ResultTableModel results = (ResultTableModel) m_resultTable.getModel();
+        String m = " \t ";
+        m+= results.getTestCount() + " tests executed / ";
+        m+= results.getSucess() + " sucess / ";
+        m+= results.getFailures() + " failures / ";
+        m+= results.getErrors() + " errors ";
+        m_executedResults.setText(m);
+     }
 
-    /**
-     * @author clement
-     *
-     */
     private class MyTestListener implements junit.framework.TestListener {
         /**
          * Table model.
