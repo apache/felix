@@ -47,9 +47,7 @@
 							org.apache.felix.ipojo.handler.extender
 						</Private-Package>
 						<Bundle-Name>${pom.name}</Bundle-Name>
-						<Bundle-SymbolicName>
-							ipojo.event.admin.handler.extender
-						</Bundle-SymbolicName>
+						<Bundle-SymbolicName>org.apache.felix.ipojo.handler.extender.pattern</Bundle-SymbolicName>
 					</instructions>
 				</configuration>
 			</plugin>
