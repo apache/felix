@@ -66,7 +66,7 @@ public class ConfigManager extends ConfigManagerBase implements Render {
 
         PrintWriter pw = response.getWriter();
 
-        pw.println("<script type='text/javascript' src='res/ui/configmanager.js'>");
+        pw.println("<script type='text/javascript' src='res/ui/configmanager.js'></script>");
 
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
