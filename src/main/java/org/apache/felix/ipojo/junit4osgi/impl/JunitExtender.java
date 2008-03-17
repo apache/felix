@@ -67,7 +67,7 @@ public class JunitExtender implements OSGiJunitRunner {
         }
     }
 
-    private void addTestSuite(Bundle bundle, Class<? extends Test> test) {
+    private synchronized void addTestSuite(Bundle bundle, Class<? extends Test> test) {
         List<Class> list = m_suites.get(bundle);
         if (list == null) {
             list = new ArrayList<Class>();
@@ -78,7 +78,7 @@ public class JunitExtender implements OSGiJunitRunner {
         }
     }
 
-    private void removeTestSuites(Bundle bundle) {
+    private synchronized void removeTestSuites(Bundle bundle) {
         m_suites.remove(bundle);
     }
 
@@ -90,7 +90,7 @@ public class JunitExtender implements OSGiJunitRunner {
         m_printer = new ResultPrinter(pw);
     }
 
-    public List<TestResult> run() {
+    public synchronized List<TestResult> run() {
         List<TestResult> results = new ArrayList<TestResult>(m_suites.size());
         Iterator<Entry<Bundle, List<Class>>> it = m_suites.entrySet().iterator();
         while (it.hasNext()) {
@@ -185,7 +185,7 @@ public class JunitExtender implements OSGiJunitRunner {
         return doRun(test);
     }
 
-    public List<Test> getTests(long bundleId) {
+    public synchronized List<Test> getTests(long bundleId) {
         Iterator<Entry<Bundle, List<Class>>> it = m_suites.entrySet().iterator();
         while (it.hasNext()) {
             Entry<Bundle, List<Class>> entry = it.next();
@@ -203,7 +203,7 @@ public class JunitExtender implements OSGiJunitRunner {
         return null;
     }
 
-    public List<TestResult> run(long bundleId) {
+    public synchronized List<TestResult> run(long bundleId) {
         Iterator<Entry<Bundle, List<Class>>> it = m_suites.entrySet().iterator();
         while (it.hasNext()) {
             Entry<Bundle, List<Class>> entry = it.next();
@@ -222,9 +222,9 @@ public class JunitExtender implements OSGiJunitRunner {
         return null;
     }
 
-    public void stopping() {
+    public synchronized void stopping() {
         System.out.println("Cleaning test suites ...");
-        m_suites = null;
+        m_suites.clear();
     }
     
     public void starting() {
