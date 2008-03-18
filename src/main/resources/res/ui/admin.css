@@ -402,6 +402,10 @@ th.important {
     text-decoration: none;
 }
 
+body {
+	background-color: white;
+}
+
 /* TEXT STYLING */ /*
 h1, h2, h3, h4, h5, h6, p
 
