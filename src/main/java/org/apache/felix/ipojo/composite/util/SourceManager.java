@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.ContextListener;
 import org.apache.felix.ipojo.ContextSource;
-import org.apache.felix.ipojo.Extender;
 import org.apache.felix.ipojo.composite.CompositeManager;
 import org.apache.felix.ipojo.parser.ParseUtils;
 import org.apache.felix.ipojo.util.DependencyModel;
