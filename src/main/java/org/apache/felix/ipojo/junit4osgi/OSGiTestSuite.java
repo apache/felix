@@ -28,37 +28,36 @@ import org.osgi.framework.BundleContext;
 /**
  * OSGi Test Suite.
  * Allow the injection of the bundle context.
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class OSGiTestSuite extends TestSuite {
-    
+
     protected BundleContext context;
-    
+
     public OSGiTestSuite(Class clazz, BundleContext bc) {
-       super(clazz);
-       context = bc;
+        super(clazz);
+        context = bc;
     }
-    
+
     public OSGiTestSuite(BundleContext bc) {
         super();
         context = bc;
     }
-    
+
     public OSGiTestSuite(String name, BundleContext bc) {
         super(name);
         context = bc;
     }
-    
+
     public OSGiTestSuite(Class clazz, String name, BundleContext bc) {
         super(clazz, name);
         context = bc;
     }
-    
+
     public void setBundleContext(BundleContext bc) {
         context = bc;
     }
-    
+
     /**
      * Adds the tests from the given class to the suite
      */
@@ -71,8 +70,7 @@ public class OSGiTestSuite extends TestSuite {
             System.out.println("Error : the " + testClass + " is not a valid test class");
         }
     }
-    
-    
+
     public void runTest(Test test, TestResult result) {
         if (test instanceof OSGiTestSuite) {
             ((OSGiTestSuite) test).context = context;
@@ -83,8 +81,7 @@ public class OSGiTestSuite extends TestSuite {
         } else {
             test.run(result);
         }
-        
-        
+
     }
 
 }

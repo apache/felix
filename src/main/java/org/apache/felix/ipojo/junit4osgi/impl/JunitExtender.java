@@ -256,7 +256,9 @@ public class JunitExtender implements OSGiJunitRunner {
         }
 
         if (meth != null) {
-            meth.setAccessible(true);
+            if (! meth.isAccessible()) {
+                meth.setAccessible(true);
+            }
             try {
                 return (BundleContext) meth.invoke(bundle, new Object[0]);
             } catch (IllegalArgumentException e) {
@@ -275,7 +277,9 @@ public class JunitExtender implements OSGiJunitRunner {
         Field[] fields = bundle.getClass().getDeclaredFields();
         for (int i = 0; i < fields.length; i++) {
             if (BundleContext.class.isAssignableFrom(fields[i].getType())) {
-                fields[i].setAccessible(true);
+                if (! fields[i].isAccessible()) {
+                    fields[i].setAccessible(true);
+                }
                 try {
                     return (BundleContext) fields[i].get(bundle);
                 } catch (IllegalArgumentException e) {

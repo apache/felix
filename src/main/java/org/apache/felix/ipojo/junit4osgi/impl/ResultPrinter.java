@@ -31,7 +31,6 @@ import junit.runner.BaseTestRunner;
 
 /**
  * Result Printer.
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ResultPrinter implements TestListener {

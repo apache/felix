@@ -26,7 +26,6 @@ import junit.framework.TestResult;
 
 /**
  * OSGi Junit Runner.
- * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface OSGiJunitRunner {
