@@ -26,14 +26,33 @@ import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.metadata.Element;
 
+/**
+ * Handler automating extender pattern. The component using this handler is notified 
+ * when an handler with a special manifest extension is detected, the component is notified.
+ * When a managed handler leaves, the component is also notified.
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ExtenderModelHandler extends PrimitiveHandler {
     
-    public final static String NAMESPACE = "org.apache.felix.ipojo.extender";
+    /**
+     * Handler namespace.
+     */
+    public static final String NAMESPACE = "org.apache.felix.ipojo.extender";
     
+    /**
+     * Extension manager list.
+     */
     private List m_managers = new ArrayList(1);
 
+    /**
+     * Configure method.
+     * @param elem : component type element.
+     * @param dict : instance configuration.
+     * @throws ConfigurationException : the configuration is not valid.
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     */
     public void configure(Element elem, Dictionary dict) throws ConfigurationException {
-        Element[] elems = elem.getElements("extender",NAMESPACE);
+        Element[] elems = elem.getElements("extender", NAMESPACE);
         for (int i = 0; i < elems.length; i++) {
             String extension = elems[i].getAttribute("extension");
             String onArrival = elems[i].getAttribute("onArrival");
@@ -52,12 +71,20 @@ public class ExtenderModelHandler extends PrimitiveHandler {
         
     }
 
+    /**
+     * Start the handler.
+     * @see org.apache.felix.ipojo.Handler#start()
+     */
     public void start() {
         for (int i = 0; i < m_managers.size(); i++) {
             ((ExtenderManager) m_managers.get(i)).start();
         }
     }
 
+    /**
+     * Stop the handler.
+     * @see org.apache.felix.ipojo.Handler#stop()
+     */
     public void stop() {
         for (int i = 0; i < m_managers.size(); i++) {
             ((ExtenderManager) m_managers.get(i)).stop();

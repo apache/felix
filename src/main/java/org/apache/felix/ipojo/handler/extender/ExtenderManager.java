@@ -30,15 +30,49 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
 
+/**
+ * Track and manage extensions.
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ExtenderManager implements SynchronousBundleListener {
     
+    /**
+     * Looked extension.
+     */
     private String m_extension;
+    
+    /**
+     * OnArrival method. 
+     */
     private Callback m_onArrival;
+    
+    /**
+     * OnDeparture method. 
+     */
     private Callback m_onDeparture;
+    
+    /**
+     * Attached handler. 
+     */
     private PrimitiveHandler m_handler;
+    
+    /**
+     * Bundle context. 
+     */
     private BundleContext m_context;
+    
+    /**
+     * List of managed bundles. 
+     */
     private List m_bundles = new ArrayList();
     
+    /**
+     * Constructor.
+     * @param handler : attached handler.
+     * @param extension : looked extension.
+     * @param bind : onArrival method
+     * @param unbind : onDeparture method.
+     */
     public ExtenderManager(ExtenderModelHandler handler, String extension, String bind, String unbind) {
         m_handler = handler;
         m_onArrival = new Callback(bind, new Class[] {Bundle.class, String.class}, false, m_handler.getInstanceManager());
@@ -47,6 +81,10 @@ public class ExtenderManager implements SynchronousBundleListener {
         m_context = handler.getInstanceManager().getContext();
     }
     
+    /**
+     * Start method.
+     * Look for already presents bundle and register a (synchronous) bundle listener.
+     */
     public void start() {
         synchronized (this) {
             // listen to any changes in bundles.
@@ -60,9 +98,14 @@ public class ExtenderManager implements SynchronousBundleListener {
         }
     }
     
+    /**
+     * Manage a bundle arrival:
+     * Check the extension and manage it if present.
+     * @param bundle : bundle.
+     */
     private void onArrival(Bundle bundle) {
         Dictionary headers = bundle.getHeaders();
-        String header = (String )headers.get(m_extension);
+        String header = (String) headers.get(m_extension);
         if (header != null) {
             m_bundles.add(bundle);
             try {
@@ -80,11 +123,20 @@ public class ExtenderManager implements SynchronousBundleListener {
         }
     }
 
+    /**
+     * Stop method.
+     * Remove the bundle listener. 
+     */
     public void stop() {
         m_context.removeBundleListener(this);
         m_bundles.clear();
     }
 
+    /**
+     * Bundle listener.
+     * @param event : event.
+     * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
+     */
     public void bundleChanged(BundleEvent event) {
         switch (event.getType()) {
             case BundleEvent.STARTED:
@@ -99,6 +151,11 @@ public class ExtenderManager implements SynchronousBundleListener {
         
     }
 
+    /**
+     * Manage a bundle departure.
+     * If the bundle was managed, invoke the OnDeparture callback, and remove the bundle from the list.
+     * @param bundle : bundle.
+     */
     private void onDeparture(Bundle bundle) {
         if (m_bundles.contains(bundle)) {
             try {
