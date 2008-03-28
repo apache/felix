@@ -18,44 +18,40 @@
  */
 package org.apache.felix.ipojo;
 
-import java.util.List;
+import java.util.Dictionary;
+
 
 /**
- * Missing Handler Exception.
- * This exception occurs when an handler is missing to build an instance.
+ * Context Source service interface.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MissingHandlerException extends Exception {
+public interface ContextSource {
     
     /**
-     * Serialization Id. 
+     * Get the current value of the given property.
+     * @param property : property name
+     * @return the property value, null if unknown
      */
-    private static final long serialVersionUID = 5047792897590881478L;
+    Object getProperty(String property);
     
     /**
-     * Message. 
+     * Get the whole context.
+     * @return the dictionary [Property, Value]
      */
-    private String m_message;
+    Dictionary getContext();
     
     /**
-     * Constructor.
-     * @param missing : list of missing handlers.
+     * Register a context listener on the given set of properties.
+     * The listener will be notified of every change made on these properties.
+     * @param listener : the context listener to register.
+     * @param properties : property set monitored by the listener.
      */
-    public MissingHandlerException(List missing) {
-        super();
-        m_message = "Missing handlers : ";
-        for (int i = 0; i < missing.size(); i++) {
-            m_message += (String) missing.get(i) + " ";
-        }
-    }
+    void registerContextListener(ContextListener listener, String[] properties);
     
     /**
-     * Get the error message.
-     * @return : the error message
-     * @see java.lang.Throwable#getMessage()
+     * Unregister the given context listener.
+     * @param listener : the listener to unregister.
      */
-    public String getMessage() {
-        return m_message;
-    }
+    void unregisterContextListener(ContextListener listener);
 
 }

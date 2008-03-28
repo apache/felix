@@ -18,20 +18,21 @@
  */
 package org.apache.felix.ipojo.architecture;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Dictionary;
+import java.util.Properties;
 
 import org.apache.felix.ipojo.ComponentFactory;
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 
 /**
  * Component Type description.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ComponentDescription {
+public class ComponentTypeDescription {
 
     /**
      * Provided service by the component type.
@@ -42,13 +43,6 @@ public class ComponentDescription {
      * Configuration Properties accepted by the component type.
      */
     private PropertyDescription[] m_properties = new PropertyDescription[0];
-    
-    /**
-     * List of required properties.
-     * This list contains only property which does not have a default value.
-     */
-    private List m_requiredProperties = new ArrayList();
-
 
     /**
      * Represented factory.
@@ -59,12 +53,8 @@ public class ComponentDescription {
      * Constructor.
      * @param factory : represented factory.
      */
-    public ComponentDescription(Factory factory) {
+    public ComponentTypeDescription(Factory factory) {
         m_factory = factory;
-    }
-    
-    public List getRequiredProperties() {
-        return m_requiredProperties;
     }
 
     /**
@@ -98,36 +88,40 @@ public class ComponentDescription {
      * @param value : property value.
      */
     public void addProperty(String name, String value) {
-        PropertyDescription pd = new PropertyDescription(name, String.class.getName(), value);
-        addProperty(pd);
+        addProperty(name, value, false);
+    }
+    
+    /**
+     * Add a String property in the component type.
+     * @param name : property name.
+     * @param value : property value.
+     * @param immutable : the property is immutable.
+     */
+    public void addProperty(String name, String value, boolean immutable) {
+        PropertyDescription prop = new PropertyDescription(name, String.class.getName(), value);
+        addProperty(prop);
     }
 
     /**
      * Add a configuration properties to the component type.
      * @param pd : the property to add
      */
-    public void addProperty(PropertyDescription pd) {
-        String n = pd.getName();
-        if ("name".equals(n)) {
-            pd = new PropertyDescription(n, pd.getType(), null); // Instance name case.
-        }
+    public void addProperty(PropertyDescription pd) { //NOPMD remove the instance name of the 'name' property.
+        String name = pd.getName();
+        if ("name".equals(name)) {
+            pd = new PropertyDescription(name, pd.getType(), null); //NOPMD Instance name case.
+        } 
         
         // Check if the property is not already in the array
         for (int i = 0; i < m_properties.length; i++) {
             PropertyDescription desc = m_properties[i];
-            if (desc.getName().equals(n)) {
-                return;
-            }
+            if (desc.getName().equals(name)) { return; }
         }
 
         PropertyDescription[] newProps = new PropertyDescription[m_properties.length + 1];
         System.arraycopy(m_properties, 0, newProps, 0, m_properties.length);
         newProps[m_properties.length] = pd;
         m_properties = newProps;
-        
-        if (pd.getValue() == null) {
-            m_requiredProperties.add(n);
-        }
     }
 
     /**
@@ -156,6 +150,37 @@ public class ComponentDescription {
     public String getName() {
         return m_factory.getName();
     }
+    
+    /**
+     * Compute the default service properties to publish : 
+     * factory.name, service.pid, component.providedServiceSpecification, component.properties, component.description, factory.State.
+     * @return : the dictionary of properties to publish.
+     */
+    public Dictionary getPropertiesToPublish() {
+        Properties props = new Properties();
+
+        props.put("factory.name", m_factory.getName());
+        props.put(Constants.SERVICE_PID, m_factory.getName()); // Service PID is required for the integration in the configuration admin.
+
+        props.put("component.providedServiceSpecifications", m_providedServiceSpecification);
+        props.put("component.properties", m_properties);
+        props.put("component.description", this);
+        
+        // add every immutable property
+        for (int i = 0; i < m_properties.length; i++) {
+            if (m_properties[i].isImmutable() && m_properties[i].getValue() != null) {
+                props.put(m_properties[i].getName(), m_properties[i].getObjectValue(m_factory.getBundleContext()));
+            }
+        }
+
+        // Add factory state
+        props.put("factory.state", new Integer(m_factory.getState()));
+
+        return props;
+
+    }
+    
+    
 
     /**
      * Get the component type description.
@@ -165,14 +190,9 @@ public class ComponentDescription {
         Element desc = new Element("Factory", "");
 
         desc.addAttribute(new Attribute("name", m_factory.getName()));
-        desc.addAttribute(new Attribute("bundle", "" + ((ComponentFactory) m_factory).getBundleContext().getBundle().getBundleId()));
-
-        String cn = getClassName();
-        if (cn == null) {
-            desc.addAttribute(new Attribute("Composite", "true"));
-        } else {
-            desc.addAttribute(new Attribute("Implementation-Class", getClassName()));
-        }
+        desc.addAttribute(
+                          new Attribute("bundle", 
+                                          Long.toString(((ComponentFactory) m_factory).getBundleContext().getBundle().getBundleId())));
 
         String state = "valid";
         if (m_factory.getState() == Factory.INVALID) {
@@ -181,12 +201,12 @@ public class ComponentDescription {
         desc.addAttribute(new Attribute("state", state));
 
         // Display required & missing handlers
-        Element rh = new Element("RequiredHandlers", "");
-        rh.addAttribute(new Attribute("list", m_factory.getRequiredHandlers().toString()));
-        Element mh = new Element("MissingHandlers", "");
-        mh.addAttribute(new Attribute("list", m_factory.getMissingHandlers().toString()));
-        desc.addElement(rh);
-        desc.addElement(mh);
+        Element req = new Element("RequiredHandlers", "");
+        req.addAttribute(new Attribute("list", m_factory.getRequiredHandlers().toString()));
+        Element missing = new Element("MissingHandlers", "");
+        missing.addAttribute(new Attribute("list", m_factory.getMissingHandlers().toString()));
+        desc.addElement(req);
+        desc.addElement(missing);
 
         for (int i = 0; i < m_providedServiceSpecification.length; i++) {
             Element prov = new Element("provides", "");
@@ -198,10 +218,10 @@ public class ComponentDescription {
             Element prop = new Element("property", "");
             prop.addAttribute(new Attribute("name", m_properties[i].getName()));
             prop.addAttribute(new Attribute("type", m_properties[i].getType()));
-            if (m_properties[i].getValue() != null) {
-                prop.addAttribute(new Attribute("value", m_properties[i].getValue()));
-            } else {
+            if (m_properties[i].getValue() == null) {
                 prop.addAttribute(new Attribute("value", "REQUIRED"));
+            } else {
+                prop.addAttribute(new Attribute("value", m_properties[i].getValue()));
             }
             desc.addElement(prop);
         }

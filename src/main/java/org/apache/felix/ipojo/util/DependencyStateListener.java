@@ -16,46 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo;
+package org.apache.felix.ipojo.util;
 
-import java.util.List;
 
 /**
- * Missing Handler Exception.
- * This exception occurs when an handler is missing to build an instance.
+ * This interface allows a class to be notified of dependency state changes.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MissingHandlerException extends Exception {
-    
-    /**
-     * Serialization Id. 
-     */
-    private static final long serialVersionUID = 5047792897590881478L;
-    
-    /**
-     * Message. 
-     */
-    private String m_message;
-    
-    /**
-     * Constructor.
-     * @param missing : list of missing handlers.
-     */
-    public MissingHandlerException(List missing) {
-        super();
-        m_message = "Missing handlers : ";
-        for (int i = 0; i < missing.size(); i++) {
-            m_message += (String) missing.get(i) + " ";
-        }
-    }
-    
-    /**
-     * Get the error message.
-     * @return : the error message
-     * @see java.lang.Throwable#getMessage()
-     */
-    public String getMessage() {
-        return m_message;
-    }
+public interface DependencyStateListener {
 
+    /**
+     * The given dependency becomes valid.
+     * @param dependency : dependency becoming valid.
+     */
+    void validate(DependencyModel dependency);
+    
+    /**
+     * The given dependency becomes invalid.
+     * @param dependency : dependency becoming invalid.
+     */
+    void invalidate(DependencyModel dependency);
 }

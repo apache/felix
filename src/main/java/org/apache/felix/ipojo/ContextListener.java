@@ -18,44 +18,19 @@
  */
 package org.apache.felix.ipojo;
 
-import java.util.List;
 
 /**
- * Missing Handler Exception.
- * This exception occurs when an handler is missing to build an instance.
+ * Context Source Listener.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MissingHandlerException extends Exception {
+public interface ContextListener {
     
     /**
-     * Serialization Id. 
+     * A monitored value has been modified.
+     * @param source : context source containing the property
+     * @param property : modified property name
+     * @param value : new value of the property
      */
-    private static final long serialVersionUID = 5047792897590881478L;
-    
-    /**
-     * Message. 
-     */
-    private String m_message;
-    
-    /**
-     * Constructor.
-     * @param missing : list of missing handlers.
-     */
-    public MissingHandlerException(List missing) {
-        super();
-        m_message = "Missing handlers : ";
-        for (int i = 0; i < missing.size(); i++) {
-            m_message += (String) missing.get(i) + " ";
-        }
-    }
-    
-    /**
-     * Get the error message.
-     * @return : the error message
-     * @see java.lang.Throwable#getMessage()
-     */
-    public String getMessage() {
-        return m_message;
-    }
+    void update(ContextSource source, String property, Object value);
 
 }

@@ -26,7 +26,7 @@ import org.apache.felix.ipojo.metadata.Element;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ManipulationMetadata {
+public class PojoMetadata {
     
     /**
      * List of implemented interfaces.
@@ -55,21 +55,21 @@ public class ManipulationMetadata {
      * parsing manipulation metadata.
      * @param metadata : component type metadata
      */
-    public ManipulationMetadata(Element metadata) {
+    public PojoMetadata(Element metadata) {
         Element manip = metadata.getElements("manipulation", "")[0];
         m_super = manip.getAttribute("super");
         Element[] fields = manip.getElements("field");
-        for (int i = 0; i < fields.length; i++) {
-            FieldMetadata fm = new FieldMetadata(fields[i]);
-            addField(fm);
+        for (int i = 0; fields != null && i < fields.length; i++) {
+            FieldMetadata field = new FieldMetadata(fields[i]);
+            addField(field);
         }
         Element[] methods = manip.getElements("method");
-        for (int i = 0; i < methods.length; i++) {
-            MethodMetadata fm = new MethodMetadata(methods[i]);
-            addMethod(fm);
+        for (int i = 0; methods != null && i < methods.length; i++) {
+            MethodMetadata method = new MethodMetadata(methods[i]);
+            addMethod(method);
         }
         Element[] itfs = manip.getElements("interface");
-        for (int i = 0; i < itfs.length; i++) {
+        for (int i = 0; itfs != null && i < itfs.length; i++) {
             addInterface(itfs[i].getAttribute("name"));
         }
     }
@@ -167,13 +167,13 @@ public class ManipulationMetadata {
     public MethodMetadata getMethod(String name, String[] types) {
         for (int i = 0; i < m_methods.length; i++) {
             if (m_methods[i].getMethodName().equalsIgnoreCase(name) && m_methods[i].getMethodArguments().length == types.length) {
-                boolean ok = true;
-                for (int j = 0; ok && j < types.length; j++) {
-                    if (! types[j].equals(m_methods[i].getMethodArguments()[j])) {
-                        ok = false;
+                int argIndex = 0;
+                for (; argIndex < types.length; argIndex++) {
+                    if (! types[argIndex].equals(m_methods[i].getMethodArguments()[argIndex])) {
+                        break;
                     }
                 }
-                if (ok) { return m_methods[i]; }
+                if (argIndex == types.length) { return m_methods[i]; } // No mismatch detected.
             }
         }
         return null;
@@ -181,11 +181,11 @@ public class ManipulationMetadata {
         
      /**
       * Add a method to the list.
-     * @param mm : Method Metadata to add.
+     * @param method : Method Metadata to add.
      */
-    private void addMethod(MethodMetadata mm) {
+    private void addMethod(MethodMetadata method) {
         for (int i = 0; (m_methods != null) && (i < m_methods.length); i++) {
-            if (m_methods[i] == mm) {
+            if (m_methods[i] == method) {
                 return;
             }
         }
@@ -193,20 +193,20 @@ public class ManipulationMetadata {
         if (m_methods.length > 0) {
             MethodMetadata[] newInstances = new MethodMetadata[m_methods.length + 1];
             System.arraycopy(m_methods, 0, newInstances, 0, m_methods.length);
-            newInstances[m_methods.length] = mm;
+            newInstances[m_methods.length] = method;
             m_methods = newInstances;
         } else {
-            m_methods = new MethodMetadata[] { mm };
+            m_methods = new MethodMetadata[] { method };
         }
     }
         
      /**
       * Add a field to the list.
-     * @param mm : the Field Metadata to add.
+     * @param field : the Field Metadata to add.
      */
-    private void addField(FieldMetadata mm) {
+    private void addField(FieldMetadata field) {
         for (int i = 0; (m_fields != null) && (i < m_fields.length); i++) {
-            if (m_fields[i] == mm) {
+            if (m_fields[i] == field) {
                 return;
             }
         }
@@ -214,20 +214,20 @@ public class ManipulationMetadata {
         if (m_fields.length > 0) {
             FieldMetadata[] newInstances = new FieldMetadata[m_fields.length + 1];
             System.arraycopy(m_fields, 0, newInstances, 0, m_fields.length);
-            newInstances[m_fields.length] = mm;
+            newInstances[m_fields.length] = field;
             m_fields = newInstances;
         } else {
-            m_fields = new FieldMetadata[] { mm };
+            m_fields = new FieldMetadata[] { field };
         }
     }
         
     /**
      * Add the interface to the list.
-     * @param mm : the interface name to add.
+     * @param itf : the interface name to add.
      */
-    private void addInterface(String mm) {
+    private void addInterface(String itf) {
         for (int i = 0; (m_interfaces != null) && (i < m_interfaces.length); i++) {
-            if (m_interfaces[i] == mm) {
+            if (m_interfaces[i] == itf) {
                 return;
             }
         }
@@ -235,10 +235,10 @@ public class ManipulationMetadata {
         if (m_interfaces.length > 0) {
             String[] newInstances = new String[m_interfaces.length + 1];
             System.arraycopy(m_interfaces, 0, newInstances, 0, m_interfaces.length);
-            newInstances[m_interfaces.length] = mm;
+            newInstances[m_interfaces.length] = itf;
             m_interfaces = newInstances;
         } else {
-            m_interfaces = new String[] { mm };
+            m_interfaces = new String[] { itf };
         }
     }
 
