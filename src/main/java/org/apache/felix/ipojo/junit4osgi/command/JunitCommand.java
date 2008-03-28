@@ -79,7 +79,7 @@ public class JunitCommand implements Command {
                     tr = runner.run(bundleId);
                 }
             } catch (NumberFormatException e) {
-                System.err.println("Unable to parse id " + line);
+                err.println("Unable to parse id " + line);
                 return;
             }
         }
@@ -89,7 +89,7 @@ public class JunitCommand implements Command {
             TestResult result = it.next();
             if (result.failureCount() != 0) {
                 TestFailure fail = (TestFailure) result.failures().nextElement();
-                System.out.println(fail.trace());
+                out.println(fail.trace());
                 return;
             }
         }
