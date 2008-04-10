@@ -116,6 +116,12 @@ public class SlingManager extends GenericServlet {
      */
     private static final String PROP_PASSWORD = "password";
 
+    /**
+     * The default value for the {@link #PROP_MANAGER_ROOT} configuration
+     * property (value is "/system/console").
+     */
+    private static final String DEFAULT_MANAGER_ROOT = "/system/console";
+
     private static final Class<?>[] PLUGIN_CLASSES = {
         AjaxConfigManagerAction.class, ComponentConfigurationPrinter.class,
         ComponentRenderAction.class, ConfigManager.class,
@@ -556,7 +562,7 @@ public class SlingManager extends GenericServlet {
         }
 
         // get the web manager root path
-        webManagerRoot = this.getProperty(config, PROP_MANAGER_ROOT, "/sling");
+        webManagerRoot = this.getProperty(config, PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT);
         if (!webManagerRoot.startsWith("/")) {
             webManagerRoot = "/" + webManagerRoot;
         }
