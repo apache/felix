@@ -75,7 +75,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>Sling Manager</code> TODO
- * 
+ *
  * @scr.component ds="no" label="%manager.name"
  *                description="%manager.description"
  */
@@ -92,7 +92,7 @@ public class SlingManager extends GenericServlet {
     public static final String PARAM_NO_REDIRECT_AFTER_ACTION = "_noredir_";
 
     /**
-     * @scr.property value="/sling"
+     * @scr.property valueRef="PROP_MANAGER_ROOT"
      */
     private static final String PROP_MANAGER_ROOT = "manager.root";
 
@@ -580,7 +580,7 @@ public class SlingManager extends GenericServlet {
     /**
      * Returns the named property from the configuration. If the property does
      * not exist, the default value <code>def</code> is returned.
-     * 
+     *
      * @param config The properties from which to returned the named one
      * @param name The name of the property to return
      * @param def The default value if the named property does not exist
