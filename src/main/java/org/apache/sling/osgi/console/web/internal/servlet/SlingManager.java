@@ -92,7 +92,7 @@ public class SlingManager extends GenericServlet {
     public static final String PARAM_NO_REDIRECT_AFTER_ACTION = "_noredir_";
 
     /**
-     * @scr.property valueRef="PROP_MANAGER_ROOT"
+     * @scr.property valueRef="DEFAULT_MANAGER_ROOT"
      */
     private static final String PROP_MANAGER_ROOT = "manager.root";
 
