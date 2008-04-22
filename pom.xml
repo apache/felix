@@ -27,17 +27,17 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.0.4</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>1.1.0-SNAPSHOT</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>org.osgi.compendium</artifactId>
-      <version>1.1.0-SNAPSHOT</version>
+      <version>1.0.1</version>
     </dependency>
   </dependencies>
   <build>
@@ -55,10 +55,16 @@
             <Export-Package>org.osgi.framework;-split-package:=merge-first,org.osgi.service.packageadmin,org.osgi.service.url,org.osgi.service.startlevel,org.osgi.util.tracker</Export-Package>
             <Private-Package>org.apache.felix.moduleloader.*,org.apache.felix.framework.*</Private-Package>
             <Import-Package>!*</Import-Package>
-            <Include-Resource>{src/main/resources/},org/osgi/framework/=target/classes/org/osgi/framework/</Include-Resource> 
+            <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,{src/main/resources/},org/osgi/framework/=target/classes/org/osgi/framework/</Include-Resource> 
           </instructions>
         </configuration>
       </plugin>
     </plugins>
-  </build>  
+  </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.0.4</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.0.4</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.0.4</url>
+  </scm>
 </project>
