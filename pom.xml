@@ -31,13 +31,13 @@
   <name>OSGi OBR Service API</name>
   <description>OSGi OBR Service API</description>
   <artifactId>org.osgi.service.obr</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.0.2</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>1.1.0-SNAPSHOT</version>
+      <version>1.0.1</version>
     </dependency>
   </dependencies>
   <build>
@@ -59,4 +59,10 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.osgi.service.obr-1.0.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.osgi.service.obr-1.0.2</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.osgi.service.obr-1.0.2</url>
+  </scm>
 </project>
