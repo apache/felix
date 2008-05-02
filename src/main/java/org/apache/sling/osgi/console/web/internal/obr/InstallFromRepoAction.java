@@ -16,17 +16,9 @@
  */
 package org.apache.sling.osgi.console.web.internal.obr;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.sling.osgi.assembly.installer.Installer;
-import org.apache.sling.osgi.assembly.installer.InstallerException;
-import org.apache.sling.osgi.assembly.installer.InstallerService;
-import org.apache.sling.osgi.assembly.installer.VersionRange;
 import org.apache.sling.osgi.console.web.Action;
-import org.osgi.service.log.LogService;
 
-public class InstallFromRepoAction extends AbstractObrPlugin implements Action {
+public abstract class InstallFromRepoAction extends AbstractObrPlugin implements Action {
 
     public static final String NAME = "installFromOBR";
 
@@ -40,10 +32,9 @@ public class InstallFromRepoAction extends AbstractObrPlugin implements Action {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Action#performAction(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
-     */
     public boolean performAction(HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -91,5 +82,6 @@ public class InstallFromRepoAction extends AbstractObrPlugin implements Action {
         // redirect to bundle list
         return true;
     }
+     */
 
 }

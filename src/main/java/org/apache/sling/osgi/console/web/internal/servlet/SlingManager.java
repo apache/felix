@@ -56,11 +56,7 @@ import org.apache.sling.osgi.console.web.internal.core.StartAction;
 import org.apache.sling.osgi.console.web.internal.core.StopAction;
 import org.apache.sling.osgi.console.web.internal.core.UninstallAction;
 import org.apache.sling.osgi.console.web.internal.core.UpdateAction;
-import org.apache.sling.osgi.console.web.internal.misc.AssemblyListRender;
 import org.apache.sling.osgi.console.web.internal.misc.ConfigurationRender;
-import org.apache.sling.osgi.console.web.internal.obr.BundleRepositoryRender;
-import org.apache.sling.osgi.console.web.internal.obr.InstallFromRepoAction;
-import org.apache.sling.osgi.console.web.internal.obr.RefreshRepoAction;
 import org.apache.sling.osgi.console.web.internal.system.GCAction;
 import org.apache.sling.osgi.console.web.internal.system.ShutdownAction;
 import org.apache.sling.osgi.console.web.internal.system.ShutdownRender;
@@ -128,9 +124,8 @@ public class SlingManager extends GenericServlet {
         AjaxBundleDetailsAction.class, BundleListRender.class,
         InstallAction.class, RefreshPackagesAction.class,
         SetStartLevelAction.class, StartAction.class, StopAction.class,
-        UninstallAction.class, UpdateAction.class, AssemblyListRender.class,
-        ConfigurationRender.class, BundleRepositoryRender.class,
-        InstallFromRepoAction.class, RefreshRepoAction.class, GCAction.class,
+        UninstallAction.class, UpdateAction.class,
+        ConfigurationRender.class, GCAction.class,
         ShutdownAction.class, ShutdownRender.class, VMStatRender.class };
 
     private BundleContext bundleContext;

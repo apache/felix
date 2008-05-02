@@ -20,14 +20,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.osgi.assembly.installer.InstallerService;
-import org.apache.sling.osgi.assembly.installer.Resource;
 import org.apache.sling.osgi.console.web.Render;
 import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 import org.apache.sling.osgi.console.web.internal.Util;
@@ -70,7 +66,7 @@ public class BundleListRender extends BaseManagementPlugin implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#getName()
      */
     public String getName() {
@@ -79,7 +75,7 @@ public class BundleListRender extends BaseManagementPlugin implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.Render#getLabel()
      */
     public String getLabel() {
@@ -88,7 +84,7 @@ public class BundleListRender extends BaseManagementPlugin implements Render {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.internal.Render#render(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
@@ -317,7 +313,7 @@ public class BundleListRender extends BaseManagementPlugin implements Render {
         if (bundle.getSymbolicName() == null) {
             return false;
         }
-
+/*
         Version bundleVersion = Version.parseVersion((String) bundle.getHeaders().get(
             Constants.BUNDLE_VERSION));
 
@@ -330,6 +326,7 @@ public class BundleListRender extends BaseManagementPlugin implements Render {
                 }
             }
         }
+*/
 
         return false;
     }

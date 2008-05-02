@@ -19,13 +19,8 @@ package org.apache.sling.osgi.console.web.internal.core;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.osgi.assembly.installer.Installer;
-import org.apache.sling.osgi.assembly.installer.InstallerException;
-import org.apache.sling.osgi.assembly.installer.InstallerService;
-import org.apache.sling.osgi.assembly.installer.VersionRange;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -61,7 +56,7 @@ public class UpdateAction extends BundleAction {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.manager.web.internal.internal.Action#performAction(javax.servlet.http.HttpServletRequest)
      */
     public boolean performAction(HttpServletRequest request,
@@ -84,12 +79,12 @@ public class UpdateAction extends BundleAction {
     }
 
     private void updateFromRepo(final Bundle bundle) {
-
+/*
         final InstallerService is = (InstallerService) installerService.getService();
         if (is == null) {
             return;
         }
-        
+
         final String name = bundle.getSymbolicName();
         final String version = (String) bundle.getHeaders().get(
             Constants.BUNDLE_VERSION);
@@ -127,6 +122,7 @@ public class UpdateAction extends BundleAction {
 
         t.setDaemon(true); // make a daemon thread (detach from current thread)
         t.start();
+        */
     }
 
 }

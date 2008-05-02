@@ -16,29 +16,13 @@
  */
 package org.apache.sling.osgi.console.web.internal.obr;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.osgi.assembly.installer.InstallerService;
-import org.apache.sling.osgi.assembly.installer.Repository;
-import org.apache.sling.osgi.assembly.installer.Resource;
 import org.apache.sling.osgi.console.web.Render;
 import org.apache.sling.osgi.console.web.internal.Util;
 import org.osgi.framework.Bundle;
@@ -46,7 +30,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
-public class BundleRepositoryRender extends AbstractObrPlugin implements Render {
+public abstract class BundleRepositoryRender extends AbstractObrPlugin implements Render {
 
     public static final String NAME = "bundlerepo";
 
@@ -83,7 +67,7 @@ public class BundleRepositoryRender extends AbstractObrPlugin implements Render 
     public String getLabel() {
         return LABEL;
     }
-
+/*
     public void render(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -153,7 +137,7 @@ public class BundleRepositoryRender extends AbstractObrPlugin implements Render 
 
         this.listResources(pw);
     }
-
+*/
     private void header(PrintWriter pw) {
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
         pw.println("<tr class='content'>");
@@ -189,7 +173,7 @@ public class BundleRepositoryRender extends AbstractObrPlugin implements Render 
         pw.println("<th class='content'>Version</th>");
         pw.println("</tr>");
     }
-
+/*
     private void listResources(PrintWriter pw) {
         InstallerService is = getInstallerService();
         if (is == null) {
@@ -254,7 +238,7 @@ public class BundleRepositoryRender extends AbstractObrPlugin implements Render 
 
         pw.println("</tr>");
     }
-
+*/
     private void resourcesButtons(PrintWriter pw) {
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>&nbsp;</td>");

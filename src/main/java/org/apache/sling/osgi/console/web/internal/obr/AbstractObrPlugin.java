@@ -18,8 +18,8 @@
  */
 package org.apache.sling.osgi.console.web.internal.obr;
 
-import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.osgi.assembly.installer.InstallerService;
+//import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
+//import org.apache.sling.osgi.assembly.installer.InstallerService;
 import org.apache.sling.osgi.console.web.internal.BaseManagementPlugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
@@ -33,7 +33,7 @@ public class AbstractObrPlugin extends BaseManagementPlugin {
         super.setBundleContext(bundleContext);
 
     }
-
+/*
     protected InstallerService getInstallerService() {
         if (installerService == null) {
             try {
@@ -53,5 +53,5 @@ public class AbstractObrPlugin extends BaseManagementPlugin {
     protected BundleRepositoryAdmin getBundleRepositoryAdmin() {
         InstallerService is = getInstallerService();
         return (is != null) ? is.getBundleRepositoryAdmin() : null;
-    }
+    }*/
 }

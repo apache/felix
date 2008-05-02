@@ -16,17 +16,9 @@
  */
 package org.apache.sling.osgi.console.web.internal.obr;
 
-import java.net.URL;
-import java.util.Iterator;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
-import org.apache.sling.osgi.assembly.installer.Repository;
 import org.apache.sling.osgi.console.web.Action;
 
-public class RefreshRepoAction extends AbstractObrPlugin implements Action {
+public abstract class RefreshRepoAction extends AbstractObrPlugin implements Action {
 
     public static final String NAME = "refreshOBR";
 
@@ -39,7 +31,7 @@ public class RefreshRepoAction extends AbstractObrPlugin implements Action {
     public String getLabel() {
         return NAME;
     }
-
+/*
     public boolean performAction(HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -91,5 +83,5 @@ public class RefreshRepoAction extends AbstractObrPlugin implements Action {
 
         return null;
     }
-
+*/
 }
