@@ -16,9 +16,7 @@
 	specific language governing permissions and limitations
 	under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix</artifactId>
@@ -28,7 +26,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.apache.felix.ipojo.annotations</artifactId>
 	<groupId>org.apache.felix</groupId>
-	<version>0.8.0-SNAPSHOT</version>
+	<version>0.8.0</version>
 	<packaging>bundle</packaging>
 	<name>Apache Felix iPOJO Annotations</name>
 	<build>
@@ -48,7 +46,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Name>iPOJO Annotation</Bundle-Name>
+						<Bundle-Name>iPOJO Annotations</Bundle-Name>
 						<Bundle-Vendor>
 							The Apache Software Foundation
 						</Bundle-Vendor>
@@ -67,17 +65,10 @@
 			</plugin>
 		</plugins>
 	</build>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<configuration>
-					<configLocation>
-						http://people.apache.org/~clement/styles/checkstyle_ipojo.xml
-					</configLocation>
-				</configuration>
-			</plugin>
-		</plugins>
-	</reporting>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.annotations-0.8.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.annotations-0.8.0</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.annotations-0.8.0</url>
+  </scm>
 </project>
