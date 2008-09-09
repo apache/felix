@@ -17,14 +17,14 @@
 	specific language governing permissions and limitations
 	under the License.
 -->
-<iPOJO>
-	<Component className="org.apache.felix.ipojo.arch.ArchCommandImpl"
-		factory="false">
+<ipojo>
+	<component classname="org.apache.felix.ipojo.arch.ArchCommandImpl"
+		public="false">
 		<Provides />
-		<Requires field="m_archs" optional="true" />
-		<Requires field="m_factories" optional="true"/>
-		<Requires field="m_handlers" optional="true"/>
-	</Component>
+		<requires field="m_archs" optional="true" />
+		<requires field="m_factories" optional="true"/>
+		<requires field="m_handlers" optional="true"/>
+	</component>
 	<instance component="org.apache.felix.ipojo.arch.ArchCommandImpl"
 		name="ArchCommand" />
-</iPOJO>
+</ipojo>
