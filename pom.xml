@@ -32,7 +32,7 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.2</version>
       <exclusions>
         <exclusion>
           <groupId>${pom.groupId}</groupId>
@@ -131,7 +131,7 @@
                 <artifactItem>
                   <groupId>${pom.groupId}</groupId>
                   <artifactId>org.apache.felix.framework</artifactId>
-                  <version>1.2.1</version>
+                  <version>1.2.2</version>
                 </artifactItem>
               </artifactItems>
             </configuration>
