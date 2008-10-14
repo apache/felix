@@ -1,3 +1,8 @@
+Changes form 1.2.1 to 1.2.2
+---------------------------
+
+* [2008-10-14] Update to latest framework version 1.2.2.
+
 Changes from 1.2.0 to 1.2.1
 ---------------------------
 
