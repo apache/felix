@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>1.2.2-SNAPSHOT</version>
+  <version>1.2.2</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -63,8 +63,8 @@
   </build>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.2.1</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.2.1</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.2.1</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.2.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.2.2</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-1.2.2</url>
   </scm>
 </project>
