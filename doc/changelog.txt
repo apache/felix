@@ -1,3 +1,9 @@
+Changes from 1.2.1 to 1.2.2
+---------------------------
+
+* [2008-10-14] Fixed a NullPointer exception that could happen when 
+  running with a SecurityManager as a backport of FELIX-766.
+
 Changes from 1.2.0 to 1.2.1
 ---------------------------
 
