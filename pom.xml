@@ -73,12 +73,13 @@
 							junit.*
 						</Export-Package>
 						<Import-Package>!javax.swing*, *</Import-Package>
-						<Test-Suite>
+						<!-- <Test-Suite>
 							org.apache.felix.ipojo.junit4osgi.test.TestTestCase,
 							org.apache.felix.ipojo.junit4osgi.test.TestOSGiTestCase,
 							org.apache.felix.ipojo.junit4osgi.test.TestTestSuite,
-							org.apache.felix.ipojo.junit4osgi.test.TestOSGiTestSuite
-						</Test-Suite>
+							org.apache.felix.ipojo.junit4osgi.test.TestOSGiTestSuite,
+							org.apache.felix.ipojo.junit4osgi.test.MyTestCase
+						</Test-Suite>  -->
 					</instructions>
 				</configuration>
 			</plugin>
