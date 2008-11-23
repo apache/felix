@@ -33,6 +33,7 @@ package org.apache.felix.ipojo.junit4osgi.plugin;/*
  */
 
 import java.io.File;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,6 +53,7 @@ import junit.framework.TestListener;
 import junit.framework.TestResult;
 
 import org.apache.felix.framework.Felix;
+import org.apache.felix.ipojo.junit4osgi.plugin.log.LogServiceImpl;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
@@ -120,6 +122,11 @@ public class Junit4osgiPlugin extends AbstractMojo {
     List failures = new ArrayList();
     List results = new ArrayList();
     
+    /**
+     * Log Service exposed by the plugin framework.
+     */
+    private LogServiceImpl logService;
+    
    
     public void execute() throws MojoFailureException {
         
@@ -127,12 +134,14 @@ public class Junit4osgiPlugin extends AbstractMojo {
         bundles.addAll(getTestBundle());
         
         List activators = new ArrayList();
+        logService = new LogServiceImpl();
+        activators.add(logService);
         activators.add(new Installer(pluginArtifacts, bundles, project, deployProjectArtifact));
         Map map = new HashMap();
         map.put("felix.systembundle.activators", activators);
         map.put("org.osgi.framework.storage.clean", "onFirstInit");
         map.put("ipojo.log.level", "WARNING");
-        map.put("org.osgi.framework.bootdelegation", "junit.framework");
+        map.put("org.osgi.framework.bootdelegation", "junit.framework, org.osgi.service.log");
         map.put("org.osgi.framework.storage", targetDir.getAbsolutePath() + "/felix-cache"); 
 
         
@@ -147,14 +156,13 @@ public class Junit4osgiPlugin extends AbstractMojo {
         } catch (BundleException e) {
             e.printStackTrace();
         }
-        // dumpBundles(felix.getBundleContext());
         
         waitForStability(felix.getBundleContext());
         
+
         Object runner = waitForRunnerService(felix.getBundleContext());
-        
         invokeRun(runner, felix.getBundleContext());
-        
+                
         try {
             felix.stop();
             felix.waitForStop(5000);
@@ -365,8 +373,6 @@ public class Junit4osgiPlugin extends AbstractMojo {
         test.run(tr);        
         results.add(tr);
         
-        
-        
         if (tr.wasSuccessful()) {
             System.out.println("Tests run: " + tr.runCount() + ", Failures: " + tr.failureCount() + ", Errors: " + tr.errorCount() + ", Time elapsed: " + report.elapsedTimeAsString(report.endTime - report.endTime) + " sec");
         } else {
@@ -401,24 +407,34 @@ public class Junit4osgiPlugin extends AbstractMojo {
         }
     }
     
+    public LogServiceImpl getLogService() {
+        return logService;
+    }
+    
     
     private class ResultListener implements TestListener {
         
         private XMLReport report;
-        boolean abort;
+        private boolean abort;
+        
+        private PrintStream outBackup = System.out;
+        private PrintStream errBackup = System.err;
+        
+        private StringOutputStream out = new StringOutputStream();
+        private StringOutputStream err = new StringOutputStream();;
         
         public ResultListener(XMLReport report) {
             this.report = report;
         }
 
         public void addError(Test test, Throwable throwable) {
-            report.testError(test, throwable);
+            report.testError(test, throwable, out.toString(), err.toString(), getLogService().getLoggedMessages());
             abort = true;
         }
 
         public void addFailure(Test test,
                 AssertionFailedError assertionfailederror) {
-            report.testFailed(test, assertionfailederror);
+            report.testFailed(test, assertionfailederror, out.toString(), err.toString(), getLogService().getLoggedMessages());
             abort = true;
             
         }
@@ -427,12 +443,19 @@ public class Junit4osgiPlugin extends AbstractMojo {
            if (!abort) {
                report.testSucceeded(test);
            }
+           System.setErr(errBackup);
+           System.setOut(outBackup);
+           getLogService().reset();
         }
 
         public void startTest(Test test) {
             abort = false;
             report.testStarting();
+            System.setErr(new PrintStream(err));
+            System.setOut(new PrintStream(out));
+            getLogService().enableOutputStream();
         }
         
     }
+    
 }

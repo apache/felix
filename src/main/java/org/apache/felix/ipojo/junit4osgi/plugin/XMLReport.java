@@ -72,10 +72,10 @@ public class XMLReport extends Report {
      * @param test the test in error
      * @param e the thrown exception
      */
-    public void testError(Test test, Throwable e) {
+    public void testError(Test test, Throwable e, String out, String err, String log) {
         super.testError(test);
 
-        writeTestProblems(test, e, "error");
+        writeTestProblems(test, e, "error", out, err, log);
     }
 
     /**
@@ -83,10 +83,10 @@ public class XMLReport extends Report {
      * @param test the failing test
      * @param e the thrown failure
      */
-    public void testFailed(Test test, Throwable e) {
+    public void testFailed(Test test, Throwable e, String out, String err, String log) {
         super.testFailed(test);
 
-        writeTestProblems(test, e, "failure");
+        writeTestProblems(test, e, "failure", out, err, log);
     }
 
     /**
@@ -95,7 +95,7 @@ public class XMLReport extends Report {
      * @param e the thrown error
      * @param name type of failure ("error" or "failure")
      */
-    private void writeTestProblems(Test test, Throwable e, String name) {
+    private void writeTestProblems(Test test, Throwable e, String name, String out, String err, String log) {
 
         long runTime = endTime - startTime;
 
@@ -126,6 +126,12 @@ public class XMLReport extends Report {
         if (stackTrace != null) {
             element.setValue(stackTrace);
         }
+        
+        addOutputStreamElement( out, "system-out", testCase );
+
+        addOutputStreamElement( err, "system-err", testCase );
+        
+        addOutputStreamElement( log, "log-service", testCase );
 
         results.add(testCase);
     }
@@ -294,6 +300,13 @@ public class XMLReport extends Report {
             bundle.setAttribute("state", state);
         }
 
+    }
+    
+    private void addOutputStreamElement(String stdOut, String name,
+            Xpp3Dom testCase) {
+        if (stdOut != null && stdOut.trim().length() > 0) {
+            createElement(testCase, name).setValue(stdOut);
+        }
     }
 
 }
