@@ -1,0 +1,10 @@
+<ipojo>
+<component classname="org.apache.felix.ipojo.api.test.APITest">
+	<callback transition="validate" method="start"/>
+	<callback transition="invalidate" method="stop"/>
+	<requires field="fs" optional="true"/>
+	<requires field="bs" optional="true"/>
+	
+</component>
+<instance component="org.apache.felix.ipojo.api.test.APITest"/>
+</ipojo>
