@@ -1,3 +1,21 @@
+/* 
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.felix.ipojo.api;
 
 import java.io.IOException;
@@ -14,118 +32,268 @@ import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.osgi.framework.BundleContext;
 
+/**
+ * Allows defining primitive component types.
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class PrimitiveComponentType extends ComponentType {
 
+    /**
+     * The bundle context.
+     */
     private BundleContext m_context;
+    
+    /**
+     * The implementation class name. 
+     */
     private String m_classname;
+    
+    /**
+     * The component type name. 
+     */
     private String m_name;
+    
+    /**
+     * Is the component type immediate. 
+     */
     private boolean m_immediate;
+    
+    /**
+     * Manipulation metadata of the component type.  
+     */
     private Element m_manipulation;
+    
+    /**
+     * Component factory attached to the component
+     * type. 
+     */
     private ComponentFactory m_factory;
+    
+    /**
+     * Component type metadata. 
+     */
     private Element m_metadata;
+    
+    /**
+     * List of provided services. 
+     */
     private List m_services = new ArrayList(1);
+    
+    /**
+     * List of service dependencies. 
+     */
     private List m_dependencies = new ArrayList();
+    
+    /**
+     * List of configuration properties. 
+     */
     private List m_properties = new ArrayList();
+    
+    /**
+     * The validate callback. 
+     */
     private String m_validate;
+    
+    /**
+     * The invalidate callback. 
+     */
     private String m_invalidate;
+    
+    /**
+     * Are the properties propagated to provided services? 
+     */
     private boolean m_propagation;
+    
+    /**
+     * The factory method. 
+     */
     private String m_factoryMethod;
+    
+    /**
+     * Is the factory public? 
+     */
     private boolean m_public = true;
+    
+    /**
+     * The Managed Service PID.
+     */
     private String m_msPID;
     
+    /**
+     * Checks that the component type is not already
+     * started.
+     */
     private void ensureNotInitialized() {
         if (m_factory != null) {
             throw new IllegalStateException("The component type was already initialized, cannot modify metadata");
         }
     }
     
+    /**
+     * Checks that the component type description is valid.
+     */
     private void ensureValidity() {
         if (m_classname == null) {
-            throw new IllegalStateException("The primitive component type as no implementation class");
+            throw new IllegalStateException("The primitive component type has no implementation class");
+        }
+        if (m_context == null) {
+            throw new IllegalStateException("The primitive component type has no bundle context");
         }
     }
 
+    /**
+     * Gets the component factory.
+     * @return the factory attached to this component type.
+     * @see org.apache.felix.ipojo.api.ComponentType#getFactory()
+     */
     public Factory getFactory() {
         initializeFactory();
         return m_factory;
     }
 
+    /**
+     * Starts the component type.
+     * @see org.apache.felix.ipojo.api.ComponentType#start()
+     */
     public void start() {
         initializeFactory();
         m_factory.start();
     }
 
+    /**
+     * Stops the component type.
+     * @see org.apache.felix.ipojo.api.ComponentType#stop()
+     */
     public void stop() {
         initializeFactory();
         m_factory.stop();
     }
     
+    /**
+     * Initializes the factory.
+     */
     private void initializeFactory() {
         if (m_factory == null) {
             createFactory();
         }
     }
     
+    /**
+     * Sets the bundle context.
+     * @param bc the bundle context
+     * @return the current component type
+     */
     public PrimitiveComponentType setBundleContext(BundleContext bc) {
         ensureNotInitialized();
         m_context = bc;
         return this;
     }
     
+    /**
+     * Sets the implementation class.
+     * @param classname the class name 
+     * @return the current component type
+     */
     public PrimitiveComponentType setClassName(String classname) {
         ensureNotInitialized();
         m_classname = classname;
         return this;
     }
     
+    /**
+     * Sets the component type name.
+     * @param name the factory name
+     * @return the current component type
+     */
     public PrimitiveComponentType setComponentTypeName(String name) {
         ensureNotInitialized();
         m_name = name;
         return this;
     }
     
+    /**
+     * Sets if the component type is immediate or not.
+     * @param immediate <code>true</code> to set the component
+     * type to immediate
+     * @return the current component type
+     */
     public PrimitiveComponentType setImmediate(boolean immediate) {
         ensureNotInitialized();
         m_immediate = immediate;
         return this;
     }
     
+    /**
+     * Sets the dependency factory method.
+     * @param method the method used to create pojo object.
+     * @return the current component type
+     */
     public PrimitiveComponentType setFactoryMethod(String method) {
         ensureNotInitialized();
         m_factoryMethod = method;
         return this;
     }
     
+    /**
+     * Sets if the component type propagates properties to service properties.
+     * @param propagation <code>true</code> to enable propagation
+     * @return the current component type
+     */
     public PrimitiveComponentType setPropagation(boolean propagation) {
         ensureNotInitialized();
         m_propagation = propagation;
         return this;
     }
     
+    /**
+     * Sets the factory public aspect.
+     * @param visible <code>false</code> to create a private factory. 
+     * @return the current component type
+     */
     public PrimitiveComponentType setPublic(boolean visible) {
         ensureNotInitialized();
         m_public = visible;
         return this;
     }
     
+    /**
+     * Sets the managed service pid.
+     * @param pid the managed service pid
+     * @return the current component type
+     */
     public PrimitiveComponentType setManagedServicePID(String pid) {
         ensureNotInitialized();
         m_msPID = pid;
         return this;
     }
     
+    /**
+     * Sets the validate method.
+     * @param method the validate method
+     * @return the current component type
+     */
     public PrimitiveComponentType setValidateMethod(String method) {
         ensureNotInitialized();
         m_validate = method;
         return this;
     }
     
+    /**
+     * Sets the invalidate method.
+     * @param method the invalidate method
+     * @return the current component type
+     */
     public PrimitiveComponentType setInvalidateMethod(String method) {
         ensureNotInitialized();
         m_invalidate = method;
         return this;
     }
     
+    /**
+     * Generates the component description.
+     * @return the component type description of 
+     * the current component type
+     */
     private Element generateComponentMetadata() {
         Element element = new Element("component", "");
         element.addAttribute(new Attribute("classname", m_classname));
@@ -182,6 +350,9 @@ public class PrimitiveComponentType extends ComponentType {
         return element;
     }
     
+    /**
+     * Creates the component factory.
+     */
     private void createFactory() {
         ensureValidity();
         byte[] clazz = manipulate();
@@ -196,6 +367,10 @@ public class PrimitiveComponentType extends ComponentType {
        
     }
     
+    /**
+     * Manipulates the implementation class.
+     * @return the manipulated class
+     */
     private byte[] manipulate() {
         Manipulator manipulator = new Manipulator();
         try {
@@ -208,6 +383,11 @@ public class PrimitiveComponentType extends ComponentType {
         }
     }
     
+    /**
+     * Gets a class file as a byte array.
+     * @return the byte array.
+     * @throws IOException the class file cannot be read.
+     */
     private byte[] getClassByteArray() throws IOException {
         String filename = m_classname.replace('.', '/') + ".class";
         URL url = m_context.getBundle().getResource(filename);
@@ -223,18 +403,33 @@ public class PrimitiveComponentType extends ComponentType {
         return b;
     }
 
+    /**
+     * Adds a provided service.
+     * @param svc the service to add
+     * @return the current component type
+     */
     public PrimitiveComponentType addService(Service svc) {
         ensureNotInitialized();
         m_services.add(svc);
-       return this;
+        return this;
     }
     
+    /**
+     * Adds a service dependency.
+     * @param dep the dependency to add
+     * @return the current component type
+     */
     public PrimitiveComponentType addDependency(Dependency dep) {
         ensureNotInitialized();
         m_dependencies.add(dep);
         return this;
     }
     
+    /**
+     * Adds a configuration property.
+     * @param prop the property to add
+     * @return the current component type
+     */
     public PrimitiveComponentType addProperty(Property prop) {
         ensureNotInitialized();
         m_properties.add(prop);
