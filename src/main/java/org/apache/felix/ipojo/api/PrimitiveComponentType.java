@@ -118,6 +118,11 @@ public class PrimitiveComponentType extends ComponentType {
      * The Managed Service PID.
      */
     private String m_msPID;
+
+    /**
+     * The temporal dependencies.
+     */
+    private ArrayList m_temporals = new ArrayList();;
     
     /**
      * Checks that the component type is not already
@@ -317,6 +322,10 @@ public class PrimitiveComponentType extends ComponentType {
             Dependency dep = (Dependency) m_dependencies.get(i);
             element.addElement(dep.getElement());
         }
+        for (int i = 0; i < m_temporals.size(); i++) {
+            TemporalDependency dep = (TemporalDependency) m_temporals.get(i);
+            element.addElement(dep.getElement());
+        }
         if (m_validate != null) {
             Element callback = new Element("callback", "");
             callback.addAttribute(new Attribute("transition", "validate"));
@@ -422,6 +431,17 @@ public class PrimitiveComponentType extends ComponentType {
     public PrimitiveComponentType addDependency(Dependency dep) {
         ensureNotInitialized();
         m_dependencies.add(dep);
+        return this;
+    }
+    
+    /**
+     * Adds a temporal service dependency.
+     * @param dep the temporal dependency to add
+     * @return the current component type
+     */
+    public PrimitiveComponentType addDependency(TemporalDependency dep) {
+        ensureNotInitialized();
+        m_temporals.add(dep);
         return this;
     }
     
