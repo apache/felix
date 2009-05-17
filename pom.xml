@@ -19,8 +19,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.apache.felix</groupId>
-    <artifactId>felix</artifactId>
-    <version>1.0.4</version>
+    <artifactId>felix-parent</artifactId>
+    <version>1.2.0</version>
     <relativePath>../../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -28,7 +28,7 @@
   <groupId>org.apache.felix</groupId>
   <name>Apache Felix UPnP Extra </name>
   <artifactId>org.apache.felix.upnp.extra</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.4.0</version>
   <!-- <url>http://maven.apache.org</url> -->
   <dependencies>
     <dependency>
@@ -43,7 +43,6 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -61,4 +60,10 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.upnp.extra-0.4.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.upnp.extra-0.4.0</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.upnp.extra-0.4.0</url>
+  </scm>
 </project>
