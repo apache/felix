@@ -27,8 +27,6 @@ import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLStreamHandler;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.ArrayList;
@@ -480,13 +478,6 @@ public class ModuleImpl implements IModule
 
     public Class getClassByDelegation(String name) throws ClassNotFoundException
     {
-        // We do not call getClassLoader().loadClass() for arrays because
-        // it does not correctly handle array types, which is necessary in
-        // cases like deserialization using a wrapper class loader.
-        if (name.charAt(0) == '[')
-        {
-            return Class.forName(name, false, getClassLoader());
-        }
         return getClassLoader().loadClass(name);
     }
 
@@ -1174,21 +1165,8 @@ public class ModuleImpl implements IModule
     {
         if (m_classLoader == null)
         {
-            if (System.getSecurityManager() != null)
-            {
-                m_classLoader = (ModuleClassLoader)
-                    AccessController.doPrivileged(new PrivilegedAction() {
-                        public Object run()
-                        {
-                            return new ModuleClassLoader();
-                        }
-                    });
-            }
-            else
-            {
-                m_classLoader = new ModuleClassLoader();
-            }
-// TODO: SECURITY - Would be nice if this could use SecureAction again.
+// TODO: REFACTOR - SecureAction fix needed.
+              m_classLoader = new ModuleClassLoader();
 //            m_classLoader = m_secureAction.createModuleClassLoader(
 //                this, m_protectionDomain);
         }
@@ -1435,7 +1413,6 @@ public class ModuleImpl implements IModule
 
         public ModuleClassLoader()
         {
-            super(ModuleImpl.this.getClass().getClassLoader());
             if (m_dexFileClassConstructor != null)
             {
                 m_jarContentToDexFile = new HashMap();

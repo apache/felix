@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.8.0</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>

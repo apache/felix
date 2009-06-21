@@ -1384,8 +1384,6 @@ ex.printStackTrace();
                     + " cannot be started, since it is either starting or stopping.");
             }
         }
-
-        BundleException rethrow = null;
         try
         {
             // The spec doesn't say whether it is possible to start an extension
@@ -1441,17 +1439,16 @@ ex.printStackTrace();
                     resolveBundle(bundle);
                     // No break.
                 case Bundle.RESOLVED:
-                    // Set the bundle's context.
-                    bundle.setBundleContext(new BundleContextImpl(m_logger, this, bundle));
-                    // Change bundle state and notify any waiting threads.
                     setBundleStateAndNotify(bundle, Bundle.STARTING);
-                    // Fire STARTING event with valid bundle context.
                     fireBundleEvent(BundleEvent.STARTING, bundle);
                     break;
             }
 
             try
             {
+                // Set the bundle's context.
+                bundle.setBundleContext(new BundleContextImpl(m_logger, this, bundle));
+
                 // Set the bundle's activator.
                 bundle.setActivator(createBundleActivator(bundle));
 
@@ -1469,9 +1466,6 @@ ex.printStackTrace();
             }
             catch (Throwable th)
             {
-                // Spec says we must fire STOPPING event.
-                fireBundleEvent(BundleEvent.STOPPING, bundle);
-
                 // If there was an error starting the bundle,
                 // then reset its state to RESOLVED.
                 setBundleStateAndNotify(bundle, Bundle.RESOLVED);
@@ -1509,7 +1503,7 @@ ex.printStackTrace();
                 }
 
                 // Rethrow all other exceptions as a BundleException.
-                rethrow = new BundleException("Activator start error in bundle " + bundle + ".", th);
+                throw new BundleException("Activator start error in bundle " + bundle + ".", th);
             }
         }
         finally
@@ -1519,16 +1513,8 @@ ex.printStackTrace();
         }
 
         // If there was no exception, then we should fire the STARTED event
-        // here without holding the lock, otherwise fire STOPPED and rethrow.
-        if (rethrow == null)
-        {
-            fireBundleEvent(BundleEvent.STARTED, bundle);
-        }
-        else
-        {
-            fireBundleEvent(BundleEvent.STOPPED, bundle);
-            throw rethrow;
-        }
+        // here without holding the lock.
+        fireBundleEvent(BundleEvent.STARTED, bundle);
     }
 
     void updateBundle(BundleImpl bundle, InputStream is)
