@@ -1,3 +1,9 @@
+Changes form 1.8.0 to 1.8.1
+---------------------------
+
+** Improvement
+    * Update to latest framework version 1.8.1
+
 Changes form 1.6.1 to 1.8.0
 ---------------------------
 
