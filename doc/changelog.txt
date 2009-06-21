@@ -1,3 +1,11 @@
+Changes from 1.8.0 to 1.8.1
+---------------------------
+** Bug
+    * [FELIX-1154] - Module class loader must be created in privileged block
+    * [FELIX-1190] - Set parent classloader of bundle classloader to be same as what is actually used for delegation
+    * [FELIX-1233] - Bundle class loader should delegate using Class.forName(String, boolean, ClassLoader) to support array types
+    * [FELIX-1237] - STOPPING & STOPPED events not fired when activator throws exception
+
 Changes form 1.6.1 to 1.8.0
 ---------------------------
 ** Bug
