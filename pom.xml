@@ -27,12 +27,12 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>1.8.0</version>
+  <version>1.8.1-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>1.8.0</version>
+      <version>1.8.1</version>
       <exclusions>
         <exclusion>
           <groupId>${pom.groupId}</groupId>
@@ -157,7 +157,7 @@
                 <artifactItem>
                   <groupId>${pom.groupId}</groupId>
                   <artifactId>org.apache.felix.framework</artifactId>
-                  <version>1.8.0</version>
+                  <version>1.8.1</version>
                 </artifactItem>
               </artifactItems>
             </configuration>
