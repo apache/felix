@@ -59,7 +59,6 @@
                             org.osgi.service.threadio; version=1.0.0
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.service.component*; resolution:=optional,
                             org.osgi.service.log*; resolution:=optional,
                             org.osgi.service.packageadmin*; resolution:=optional,
                             org.osgi.service.startlevel*; resolution:=optional,
@@ -69,6 +68,7 @@
                         <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Activator>org.apache.felix.gogo.runtime.Activator</Bundle-Activator>
+                        <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                     </instructions>
                 </configuration>
             </plugin>
