@@ -19,7 +19,6 @@
 package org.apache.felix.gogo.console.stdio;
 
 import org.osgi.service.command.CommandProcessor;
-import org.osgi.service.component.ComponentContext;
 
 public class StdioConsole extends Thread
 {
