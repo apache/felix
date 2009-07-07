@@ -48,5 +48,10 @@ public class Context extends CommandShellImpl
         put("test:" + name, target);
     }
 
+    public void set(String name, Object value)
+    {
+        session.put(name, value);
+    }
+
 
 }
