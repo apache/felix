@@ -26,7 +26,7 @@
   <modelVersion>4.0.0</modelVersion>
   <packaging>bundle</packaging>
   <artifactId>org.apache.felix.ipojo.webconsole</artifactId>
-  <version>1.4.2</version>
+  <version>1.4.4</version>
   <name>Apache Felix iPOJO WebConsole Plugins</name>
   
   <description>
@@ -58,7 +58,7 @@
               http://felix.apache.org/site/ipojo-webconsole-plugin.html
             </Bundle-DocURL>
             <Private-Package>
-              org.apache.felix.org.apache.felix.ipojo.webconsole
+              org.apache.felix.ipojo.webconsole
             </Private-Package>
             <Import-Package>*</Import-Package>
             <Include-Resource> META-INF/LICENSE=LICENSE,
@@ -70,6 +70,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-ipojo-plugin</artifactId>
+        <version>1.4.0</version>
         <executions>
           <execution>
             <goals>
@@ -124,8 +125,8 @@
   </dependencies>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.4.2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.4.2</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.4.2</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.4.4</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.4.4</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.4.4</url>
   </scm>
 </project>
