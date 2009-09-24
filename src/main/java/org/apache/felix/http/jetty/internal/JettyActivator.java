@@ -16,16 +16,17 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.apache.felix.http.base.internal.AbstractActivator;
+import org.apache.felix.http.base.internal.AbstractHttpActivator;
 
 public final class JettyActivator
-    extends AbstractActivator 
+    extends AbstractHttpActivator 
 {
     private JettyService jetty;
 
     protected void doStart()
         throws Exception
     {
+        super.doStart();
         this.jetty = new JettyService(getBundleContext(), getDispatcherServlet());
         this.jetty.start();
     }
@@ -34,5 +35,6 @@ public final class JettyActivator
         throws Exception
     {
         this.jetty.stop();
+        super.doStop();
     }
 }
