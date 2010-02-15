@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>2.0.4</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -109,7 +109,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>2.0.3</framework.version>
+    <framework.version>2.0.4</framework.version>
     <shell.version>1.4.2</shell.version>
     <shell.tui.version>1.4.1</shell.tui.version>
     <obr.version>1.4.3</obr.version>
@@ -249,4 +249,10 @@
     </resources> 
   </build>
 
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-2.0.4</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-2.0.4</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-2.0.4</url>
+  </scm>
 </project>
