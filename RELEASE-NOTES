@@ -397,7 +397,7 @@
      * [SMX4KNL-163] - Provide default jdbc lock impl for master/slave deployments
      * [SMX4KNL-167] - Upgrade to spring 2.5.6
      * [SMX4KNL-171] - Include RFC0139 (JMX management of OSGi)
-     * [SMX4KNL-179] - Upgrade to felix 1.5.0-SNAPSHOT
+     * [SMX4KNL-179] - Upgrade to felix 1.3.0-SNAPSHOT
      * [SMX4KNL-214] - Hot deployment of features through the deploy folder
 
  ** Task
