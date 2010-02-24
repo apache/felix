@@ -14,6 +14,81 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+     
+                    Apache Felix Karaf 1.4.0
+                    ========================
+
+  Overview
+  --------
+
+This release contains several improvements and bug fixes since Karaf 1.2.0.  
+The core Felix framework bundle included is now version 2.0.4 which includes
+much improved bundle fragment support.  The features service includes improved
+handling of errors and provides better feedback on the console when a features
+install fails.  There are also numerous improvements to terminal handling
+in the console and SSH server.
+
+Additional fixes and improvements below.
+
+  Changelog
+  ---------
+
+ The following list shows the bug fixes and enhancements included in this release:
+
+** Bug
+    * [FELIX-1768] - should catch exception for FeaturesServiceImpl.internalAddRepository per uri
+    * [FELIX-1843] - Karaf shell doens't work properly under windows
+    * [FELIX-1852] - [karaf] admin:create should support a -r, --rmi-registry-port option to allow the RMI registry port to be configured
+    * [FELIX-1932] - Possible NullPointerException when itest fails
+    * [FELIX-1937] - History command function does not work with a karaf instance created after executing command admin:create xxx
+    * [FELIX-1939] - [karaf] Ssh client out put is poorly formatted.
+    * [FELIX-1964] - Unable to choose the framework using system properties
+    * [FELIX-1970] - The stop script should always work even if the default user / password / host has been changed
+    * [FELIX-1994] - Web Console admin,features and gogo plugins do not work with Equinox
+    * [FELIX-1995] - Spring status does not show properly after osgi:list command
+    * [FELIX-2012] - NullPointerException when some links clicked if karaf.framework=equinox
+    * [FELIX-2025] - grep -v doesn't filter linefeed on Windows
+    * [FELIX-2026] - Remove org.ops4j.pax.logging.DefaultServiceLog.level from system.properties
+    * [FELIX-2027] - The custom deployers leveraging url handlers must not be registered before the url handler is actually registered in the osgi framework
+    * [FELIX-2032] - file host.key is not correctly written for a new instance(s)
+    * [FELIX-2043] - When launching Karaf with equinox, the osgi framework state is not written until 30s after the boot
+    * [FELIX-2044] - System bundles are started out of order if the karaf.lock.level is > 1
+    * [FELIX-2045] - Restarting the framework from the web console (or using update on the system bundle) does not work
+    * [FELIX-2053] - Completion does not reprint previous characters in some circumstances
+    * [FELIX-2054] - Logo is garbled when connecting using putty
+    * [FELIX-2063] - [karaf] hardcoding org.ops4j.pax.exam.rbc.rmi.port property in raw pax runner --vmOptions is problematic when 1099 is not the next free port
+    * [FELIX-2065] - BootstrapLogManager doesn't load etc/org.ops4j.pax.logging.cfg file
+    * [FELIX-2072] - [Karaf] OracleJDBCLock filling UNDO segment.
+    * [FELIX-2074] - Bring back the history command
+
+** Improvement
+    * [FELIX-1303] - add an osgi/imports and osgi/exports to show a pretty-printed output of the imports/exports packages for a bundle
+    * [FELIX-1914] - Add a development subshell to ease troubleshooting classloading/resolution issues
+    * [FELIX-1947] - [Karaf] Remove import java.util.* from karaf.main.StringMap and replace with proper import list.
+    * [FELIX-2001] - Add more info to log and console when feature bundles fail to resolve
+    * [FELIX-2011] - admin:create use the ${karaf.home}/etc configure files
+    * [FELIX-2018] - features-maven-plugin add-features-to-repo should suport the bundle start with wrap: in features.xml
+    * [FELIX-2028] - Upgrade to preferences services 1.0.4
+    * [FELIX-2046] - Upgrade web bundles to their latest version (jetty, pax-web, felix console)
+    * [FELIX-2049] - extend org.apache.felix.karaf.testing.Helper to emit a karaf-specific execution environment file for pax-runner
+    * [FELIX-2055] - Use a nicer shutdown mechanism when stopping a managed instance
+    * [FELIX-2061] - [karaf] use waitForFrameworkStartup pax-exam option in the integration tests
+    * [FELIX-2070] - Upgrade to felix framework 2.0.3
+    * [FELIX-2075] - Add a "new" command to create java objects from the command line
+    * [FELIX-2084] - Make the display of exception stack traces available through a variable in the shell
+
+** New Feature
+    * [FELIX-1815] - Introduce 'shell:logout' command to close the current shell
+    * [FELIX-1975] - [Karaf] Add oracle database support to Karaf jdbc locking feature.
+    * [FELIX-2033] - Provide an easy to use layer for writing pax-exam test for Karaf
+    * [FELIX-2047] - Support for WAR files
+
+** Task
+    * [FELIX-1709] - Create a maven archetype for creating shell commands
+    * [FELIX-1902] - [karaf] sanitize web demo README of references to FUSE SNAPSHOT version
+    * [FELIX-1915] - [karaf] allow overridding of etc/system.properties via environment
+
+
 
                     Apache Felix Karaf 1.2.0
                     ========================
