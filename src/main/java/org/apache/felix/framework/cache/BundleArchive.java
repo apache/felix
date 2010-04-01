@@ -156,7 +156,7 @@ public class BundleArchive
      * </p>
      * @param logger the logger to be used by the archive.
      * @param archiveRootDir the archive root directory for storing state.
-     * @param id the bundle identifier associated with the archive.
+     * @param configMap configMap for BundleArchive
      * @throws Exception if any error occurs.
     **/
     public BundleArchive(Logger logger, Map configMap, File archiveRootDir)
@@ -985,7 +985,7 @@ public class BundleArchive
                 }
 
                 // Decode any URL escaped sequences.
-                location = URLDecoder.decode(location, "UTF-8");
+                location = decode(location);
 
                 // Make sure the referenced file exists.
                 File file = new File(location.substring(FILE_PROTOCOL.length()));
@@ -1038,6 +1038,47 @@ public class BundleArchive
         }
 
         return result;
+    }
+
+    // Method from Harmony java.net.URIEncoderDecoder (luni subproject)
+    // used by URI to decode uri components.
+    private static String decode(String s) throws UnsupportedEncodingException
+    {
+        StringBuffer result = new StringBuffer();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        for (int i = 0; i < s.length(); )
+        {
+            char c = s.charAt(i);
+            if (c == '%')
+            {
+                out.reset();
+                do
+                {
+                    if (i + 2 >= s.length())
+                    {
+                        throw new IllegalArgumentException(
+                            "Incomplete % sequence at: " + i);
+                    }
+                    int d1 = Character.digit(s.charAt(i + 1), 16);
+                    int d2 = Character.digit(s.charAt(i + 2), 16);
+                    if ((d1 == -1) || (d2 == -1))
+                    {
+                        throw new IllegalArgumentException(
+                            "Invalid % sequence ("
+                            + s.substring(i, i + 3)
+                            + ") at: " + String.valueOf(i));
+                    }
+                    out.write((byte) ((d1 << 4) + d2));
+                    i += 3;
+                }
+                while ((i < s.length()) && (s.charAt(i) == '%'));
+                result.append(out.toString("UTF8"));
+                continue;
+            }
+            result.append(c);
+            i++;
+        }
+        return result.toString();
     }
 
     /**
