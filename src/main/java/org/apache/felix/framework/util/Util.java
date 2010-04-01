@@ -587,7 +587,6 @@ loop:   for (;;)
                 {
                     leftstar = true;
                 }
-                ss.setLength(0);
                 wasStar = true;
             }
             else
@@ -619,16 +618,30 @@ loop:   for (;;)
         // assert (pieces.length > 1)
         // minimal case is <string>*<string>
 
-        boolean result = false;
+        boolean result = true;
         int len = pieces.length;
+
+        int index = 0;
 
 loop:   for (int i = 0; i < len; i++)
         {
             String piece = pieces[i];
-            int index = 0;
+
+            // If this is the first piece, then make sure the
+            // string starts with it.
+            if (i == 0)
+            {
+                if (!s.startsWith(piece))
+                {
+                    result = false;
+                    break loop;
+                }
+            }
+
+            // If this is the last piece, then make sure the
+            // string ends with it.
             if (i == len - 1)
             {
-                // this is the last piece
                 if (s.endsWith(piece))
                 {
                     result = true;
@@ -639,19 +652,11 @@ loop:   for (int i = 0; i < len; i++)
                 }
                 break loop;
             }
-            // initial non-star; assert index == 0
-            else if (i == 0)
+
+            // If this is neither the first or last piece, then
+            // make sure the string contains it.
+            if ((i > 0) && (i < (len - 1)))
             {
-                if (!s.startsWith(piece))
-                {
-                    result = false;
-                    break loop;
-                }
-            }
-            // assert i > 0 && i < len-1
-            else
-            {
-                // Sure wish stringbuffer supported e.g. indexOf
                 index = s.indexOf(piece, index);
                 if (index < 0)
                 {
@@ -659,7 +664,8 @@ loop:   for (int i = 0; i < len; i++)
                     break loop;
                 }
             }
-            // start beyond the matching piece
+
+            // Move string index beyond the matching piece.
             index += piece.length();
         }
 
