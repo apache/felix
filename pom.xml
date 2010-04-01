@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>2.0.4</version>
+  <version>2.0.5-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -109,7 +109,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>2.0.4</framework.version>
+    <framework.version>2.0.5-SNAPSHOT</framework.version>
     <shell.version>1.4.2</shell.version>
     <shell.tui.version>1.4.1</shell.tui.version>
     <obr.version>1.4.3</obr.version>
