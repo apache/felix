@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>2.0.5</version>
+  <version>2.0.6-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -82,10 +82,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-2.0.5</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-2.0.5</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-2.0.5</url>
-  </scm>
 </project>
