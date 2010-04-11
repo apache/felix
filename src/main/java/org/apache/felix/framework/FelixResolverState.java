@@ -391,7 +391,7 @@ public class FelixResolverState implements Resolver.ResolverState
         // Create a list of all matching hosts for this fragment.
         List matchingHosts = new ArrayList();
         SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
+        if ((sm != null) && (fragment.getSymbolicName() != null))
         {
             if (!((BundleProtectionDomain) fragment.getSecurityContext()).impliesDirect(new BundlePermission(
                 fragment.getSymbolicName(), BundlePermission.FRAGMENT)))
@@ -421,7 +421,7 @@ public class FelixResolverState implements Resolver.ResolverState
                 continue;
             }
             
-            if (sm != null)
+            if ((sm != null) && (host.getSymbolicName() != null))
             {
                 if (!((BundleProtectionDomain) host.getSecurityContext()).impliesDirect(new BundlePermission(host.getSymbolicName(), 
                     BundlePermission.HOST)))
@@ -805,7 +805,7 @@ public class FelixResolverState implements Resolver.ResolverState
         // find ones that match.
         List fragmentList = new ArrayList();
         SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
+        if ((sm != null) && (host.getSymbolicName() != null))
         {
             if (!((BundleProtectionDomain) host.getSecurityContext()).impliesDirect(new BundlePermission(host.getSymbolicName(), BundlePermission.HOST)))
             {
@@ -832,7 +832,7 @@ public class FelixResolverState implements Resolver.ResolverState
                 continue;
             }
             
-            if (sm != null)
+            if ((sm != null) && (fragment.getSymbolicName() != null))
             {
                 if (!((BundleProtectionDomain) fragment.getSecurityContext()).impliesDirect(new BundlePermission(fragment.getSymbolicName(), BundlePermission.FRAGMENT)))
                 {
