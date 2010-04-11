@@ -1,3 +1,13 @@
+Changes from 2.0.4 to 2.0.5
+---------------------------
+
+** Bug
+    * [FELIX-1753] - The start level should check that the bundle still exists before starting it to avoid an ugly exception
+    * [FELIX-2087] - NPE "name can't be null" when trying to install a bundle in Felix 2.0.3
+    * [FELIX-2107] - Bundle.findEntries() matches '*<filePattern>' instead of '<filePattern>'
+    * [FELIX-2195] - Using URLDecoder.decode on locations is wrong
+    * [FELIX-2222] - Failure to reinstall a cached bundle will corrupt the bundle cache
+
 Changes from 2.0.3 to 2.0.4
 ---------------------------
 
