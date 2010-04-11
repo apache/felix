@@ -107,7 +107,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <log.level>4</log.level>
+    <log.level>1</log.level>
     <dollar>$</dollar>
     <framework.version>2.0.5-SNAPSHOT</framework.version>
     <shell.version>1.4.2</shell.version>
@@ -248,11 +248,4 @@
       </resource>
     </resources> 
   </build>
-
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-2.0.4</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-2.0.4</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-2.0.4</url>
-  </scm>
 </project>
