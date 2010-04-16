@@ -20,7 +20,7 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <relativePath>../../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -28,7 +28,7 @@
   <name>Apache Felix iPOJO Arch Command</name>
   <artifactId>org.apache.felix.ipojo.arch</artifactId>
   <groupId>org.apache.felix</groupId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.6.0</version>
   
   <description>Arch command to collect and print information about iPOJO instances.</description>
   <url>http://felix.apache.org/site/ipojo-arch-command.html</url>
@@ -37,7 +37,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>${pom.version}</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
@@ -71,7 +71,7 @@
   <plugin>
     <groupId>org.apache.felix</groupId>
     <artifactId>maven-ipojo-plugin</artifactId>
-    <version>${pom.version}</version>
+    <version>1.6.0</version>
     <executions>
       <execution>
         <goals>
@@ -84,9 +84,9 @@
             <ipojo>
               <component classname="org.apache.felix.ipojo.arch.ArchCommandImpl" public="false">
                 <Provides />
-                <requires field="m_archs" optional="true" proxy="false"/>
-                <requires field="m_factories" optional="true" proxy="false"/>
-                <requires field="m_handlers" optional="true" proxy="false"/>
+                <requires field="m_archs" optional="true" proxy="false" />
+                <requires field="m_factories" optional="true" proxy="false" />
+                <requires field="m_handlers" optional="true" proxy="false" />
               </component>
               <instance component="org.apache.felix.ipojo.arch.ArchCommandImpl" name="ArchCommand" />
             </ipojo>
@@ -123,4 +123,10 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.arch-1.6.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.arch-1.6.0</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.arch-1.6.0</url>
+  </scm>
 </project>
