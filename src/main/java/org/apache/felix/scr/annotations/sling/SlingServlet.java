@@ -18,15 +18,11 @@
  */
 package org.apache.felix.scr.annotations.sling;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * Marks servlet classes as felix SCR component, and allows to configure sling
- * resource resolving mapping.
+ * Marks servlet classes as SCR component, and allows to configure
+ * Sling's resource resolver mapping.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
@@ -34,7 +30,7 @@ import java.lang.annotation.Target;
 public @interface SlingServlet {
 
     /**
-     * Whether to generate a default SCR component tag with "immediate=true". If
+     * Whether to generate a default SCR component tag. If
      * set to false, a {@link org.apache.felix.scr.annotations.Component}
      * annotation can be added manually with defined whatever configuration
      * needed.
@@ -42,7 +38,7 @@ public @interface SlingServlet {
     boolean generateComponent() default true;
 
     /**
-     * Whether to generate a default SCR service tag with with
+     * Whether to generate a default SCR service tag with
      * "interface=javax.servlet.Servlet". If set to false, a
      * {@link org.apache.felix.scr.annotations.Service} annotation can be added
      * manually with defined whatever configuration needed.
