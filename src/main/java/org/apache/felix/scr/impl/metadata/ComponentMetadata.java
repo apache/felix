@@ -381,23 +381,7 @@ public class ComponentMetadata
      */
     public String getName()
     {
-        /*
-         * Generally the default value for the name (the implementation class
-         * name) is set by the validate method if the descriptor declares a
-         * DS 1.1 or newer component. This method, though, is called before
-         * validate is called to reserve the component name. To properly
-         * support this reservation even in the absence of the name attribute
-         * this method should just return the implementation class name in
-         * this case and leave the actual version validation to the validate
-         * method. See also FELIX-2325.
-         */
-
-        if (m_name != null) {
-            return m_name;
-        }
-
-        // return the implementation class name if the name is not set
-        return getImplementationClassName();
+        return m_name;
     }
 
 
