@@ -2,20 +2,22 @@ This sample illustrates the usage of the new DependencyManager annotations.
 
 Sample description:
 
-  This sample shows a basic "SpellChecker" application which provides a Felix "spellcheck" shell
-  command. The SpellChecker class is a Felix Shell command (it provides a "Command" service),
-  which accepts a string as parameter. So, when you type a string, the command just says if the
-  specified string has been found from one of its injected dictionaries. The SpellChecker class has a
-  required/multiple (1..N) dependency over any available DictionaryService.
+  This sample shows a basic "SpellChecker" application which provides a Felix "spellcheck" GOGO shell
+  command. The GOGO "spellcheck" command accepts a string as parameter, which is checked for proper 
+  existance. The SpellChecker class has a required/multiple (1..N) dependency over every available 
+  "DictionaryService" services, which are internally used by the SpellChecker command, when checking 
+  word existance).
   
   A DictionaryService is defined using a FactoryConfigurationAdapterService annotation, allowing to
-  instantiate many DictionaryService service instances from webconsole. This annotation actually registers
-  a ManagedServiceFactory into the Registry, and you can specify the meta type informations regarding
-  the properties metadata.
-   
-  So, before testing, you first have to go to webconsole Configuration panel, and specify some
-  dictionaries (see the DictionaryService Factory PID). 
-  Then, go to the felix shell, and you will then see the "spellcheck" command (when typing "help").
+  instantiate many "DictionaryService" service instances from webconsole. This annotation actually
+  registers a ManagedServiceFactory into the Registry, and you can specify some meta type
+  informations in the annotation, allowing to display the configuration parameters from WebConsole. 
+  From WebConsole, each time you instantiate a factory configuration from the pid "Dictionary
+  Services", then a corresponding "DictionaryService" service is instantiated and is then injected
+  into the SpellChecker service. So, before testing, you first have to go to webconsole
+  Configuration panel, and specify some dictionaries (see the DictionaryService Factory PID).  
+  Then, go to the felix GOGO shell, and you will then see the "spellcheck" command (when typing
+  "help"). 
   
   Notice that in the sample, you will also find a DictionaryAspect Service (DictionaryAspect.java), which
   decorates the EnglishDictionary service, by adding some additional words to *all* provided 
@@ -38,12 +40,12 @@ How to test:
      org.apache.felix.dependencymanager.samples.annotation
 
   2) Start felix
-  3) Go to web console, in the Configuration pannel
-  4) Edit the "Dictionary Services" Configuration, add some dictionaries. By default, an English dictionary is 
-     displayed. Just click on "save", then click on your refresh web browser: you will see a new dictionary service
-     instance. At this point, a DictionaryService service will be enabled (with the service property "lang=en"), 
-     and the SpellCheck component will be injected with it. Then you should see the "spellcheck" command, when typing 
-     "help" on the shell.
+  3) Go to web console, in the Configuration pannel, and edit the "Dictionary Services"
+     Configuration, add some dictionaries. By default, an English dictionary is displayed. Just 
+     click on "save", then click on your refresh web browser: you will see a new dictionary service
+     instance. At this point, a DictionaryService service will be enabled (with the service property "lang=en"),  
+     and the SpellCheck component will be injected with it. Then you should see the "spellcheck"
+     command, when typing  "help" on the shell. 
 
   5) Just type "spellcheck hello", and the command should reply a fantastic message, like "word hello is correct".
   

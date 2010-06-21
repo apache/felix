@@ -18,21 +18,27 @@
  */
 package org.apache.felix.dm.samples.annotation;
 
-import java.io.PrintStream;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
-import org.apache.felix.dm.annotation.api.ServiceDependency;
-import org.apache.felix.shell.Command;
+import org.apache.felix.service.command.CommandProcessor;
+import org.apache.felix.service.command.Descriptor;
 import org.osgi.service.log.LogService;
 
 /**
- * Felix "spellcheck" Shell Command, used to check correct word spelling.
+ * Felix "spellcheck" Gogo Shell Command. This command allows to check if some given words are valid or not.
+ * This command will be activated only if (at least) one DictionaryService has been injected.
+ * To create a Dictionary Service, you have to go the the web console and define a "Dictionary Services" factory
+ * configuration instance, which will fire an instantiation of the corresponding dictionary service.
  */
-@Service
-public class SpellChecker implements Command
+@Service(provide={SpellChecker.class}, 
+         properties={@Property(name=CommandProcessor.COMMAND_SCOPE, value="dmsample.annotation"),
+                     @Property(name=CommandProcessor.COMMAND_FUNCTION, values={"spellcheck"})})
+public class SpellChecker
 {
     /**
      * We'll use the OSGi log service for logging. If no log service is available, then we'll use a NullObject.
@@ -81,44 +87,22 @@ public class SpellChecker implements Command
         m_dictionaries.remove(dictionary);
     }
 
-    // --- Felix Shell Command interface ---
+    // --- Gogo Shell command
 
-    public String getName()
+    @Descriptor("checks if word is found from an available dictionary")
+    public void spellcheck(@Descriptor("the word to check")String word)
     {
-        return "spellcheck";
-    }
-
-    public String getUsage()
-    {
-        return "spellcheck word";
-    }
-
-    public String getShortDescription()
-    {
-        return "Spell checker application using DependencyManager annotations";
-    }
-
-    public void execute(String commandLine, PrintStream out, PrintStream err)
-    {
-        String[] tokens = commandLine.split(" ");
-        if (tokens == null || tokens.length < 2)
-        {
-            err.println("Invalid parameters: " + commandLine + ". Usage: " + getUsage());
-            return;
-        }
-        String word = tokens[1];
-
         m_log.log(LogService.LOG_DEBUG, "Checking spelling of word \"" + word
             + "\" using the following dictionaries: " + m_dictionaries);
 
         for (DictionaryService dictionary : m_dictionaries)
         {
-            if (dictionary.checkWord(tokens[1]))
+            if (dictionary.checkWord(word))
             {
-                out.println("word " + word + " is correct");
+                System.out.println("word " + word + " is correct");
                 return;
             }
         }
-        err.println("word " + word + " is incorrect");
+        System.err.println("word " + word + " is incorrect");
     }
 }
