@@ -49,8 +49,7 @@ import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
             cardinality=1),
         @PropertyMetaData(
             heading="Dictionary words",
-            description="Declare here the list of words supported by this dictionary. " +
-                "This property is private and won't be propagated along with the dictionary service property.",
+            description="Declare here the list of words supported by this dictionary.",
             defaults={"hello", "world"},
             id="words",
             cardinality=Integer.MAX_VALUE)
