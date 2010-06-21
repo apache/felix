@@ -59,9 +59,16 @@ public class TestParser2 extends TestCase
     {
         Context c = new Context();
         c.addCommand("echo", this);
-
         // FELIX-2432
         assertEquals("null x", c.execute("echo $expandsToNull x"));
+    }
+
+    public void testStringExecution() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("echo", this);
+        // FELIX-2433
+        assertEquals("helloworld", c.execute("echo \"$(echo hello)world\""));
     }
 
     public CharSequence echo(Object args[])
