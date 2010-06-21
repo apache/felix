@@ -35,7 +35,7 @@ public class TestParser2 extends TestCase
 
         assertEquals("file://wibble#tag", c.execute("echo file://wibble#tag"));
         assertEquals("file:", c.execute("echo file: //wibble#tag"));
-        
+
         assertEquals("PWD/*.java", c.execute("echo PWD/*.java"));
         try
         {
@@ -46,31 +46,37 @@ public class TestParser2 extends TestCase
         {
             // expected
         }
-        
+
         assertEquals("ok", c.execute("// can't quote\necho ok\n"));
-        
+
         // quote in comment in closure
         assertEquals("ok", c.execute("x = { // can't quote\necho ok\n}; x"));
         assertEquals("ok", c.execute("x = {\n// can't quote\necho ok\n}; x"));
         assertEquals("ok", c.execute("x = {// can't quote\necho ok\n}; x"));
     }
 
+    public void testCoercion() throws Exception
+    {
+        Context c = new Context();
+        c.addCommand("echo", this);
+
+        // FELIX-2432
+        assertEquals("null x", c.execute("echo $expandsToNull x"));
+    }
+
     public CharSequence echo(Object args[])
     {
         if (args == null)
         {
-            return "";
+            return "null args!";
         }
 
         StringBuilder sb = new StringBuilder();
         for (Object arg : args)
         {
-            if (arg != null)
-            {
-                if (sb.length() > 0)
-                    sb.append(' ');
-                sb.append(arg);
-            }
+            if (sb.length() > 0)
+                sb.append(' ');
+            sb.append(String.valueOf(arg));
         }
         return sb.toString();
     }
