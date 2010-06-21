@@ -18,7 +18,6 @@
  */
 package org.apache.felix.gogo.runtime;
 
-
 /**
  * Bash-like tokenizer.
  * 
@@ -469,14 +468,14 @@ public class Tokenizer
      * expand variables, quotes and escapes in word.
      * @param vars
      * @return
+     * @throws Exception 
      */
-    public static Object expand(CharSequence word, Evaluate eval)
+    public static Object expand(CharSequence word, Evaluate eval) throws Exception
     {
         return expand(word, eval, false);
     }
 
-    private static Object expand(CharSequence word, Evaluate eval,
-        boolean inQuote)
+    private static Object expand(CharSequence word, Evaluate eval, boolean inQuote) throws Exception
     {
         final String special = "$\\\"'";
         int i = word.length();
@@ -492,7 +491,7 @@ public class Tokenizer
         return new Tokenizer(word, eval, inQuote).expand();
     }
 
-    public Object expand(CharSequence word, short line, short column)
+    public Object expand(CharSequence word, short line, short column) throws Exception
     {
         return expand(new Token(Type.WORD, word, line, column), evaluate, inQuote);
     }
@@ -502,7 +501,7 @@ public class Tokenizer
         return new Token(Type.WORD, value, line, column);
     }
 
-    private Object expand()
+    private Object expand() throws Exception
     {
         StringBuilder buf = new StringBuilder();
 
@@ -581,27 +580,37 @@ public class Tokenizer
         return buf.toString();
     }
 
-    private Object expandVar()
+    private Object expandVar() throws Exception
     {
         assert '$' == ch;
         Object val;
 
         if (getch() != '{')
         {
-            int start = index - 1;
-            while (isName(ch))
-            {
+            if ('(' == ch)
+            { // support $(...) FELIX-2433
+                short sLine = line;
+                short sCol = column;
+                val = evaluate.eval(new Token(Type.EXECUTION, group(), sLine, sCol));
                 getch();
-            }
-
-            if (index - 1 == start)
-            {
-                val = "$";
             }
             else
             {
-                String name = text.subSequence(start, index - 1).toString();
-                val = evaluate.get(name);
+                int start = index - 1;
+                while (isName(ch))
+                {
+                    getch();
+                }
+
+                if (index - 1 == start)
+                {
+                    val = "$";
+                }
+                else
+                {
+                    String name = text.subSequence(start, index - 1).toString();
+                    val = evaluate.get(name);
+                }
             }
         }
         else
