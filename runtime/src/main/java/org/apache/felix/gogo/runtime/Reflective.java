@@ -171,7 +171,7 @@ public final class Reflective
                 {
                     params.append(", ");
                 }
-                params.append(arg.getClass().getSimpleName());
+                params.append(arg == null ? "null" : arg.getClass().getSimpleName());
             }
 
             throw new IllegalArgumentException(String.format(
@@ -275,6 +275,13 @@ public final class Reflective
                 else
                 {
                     out[i] = coerce(session, target, types[i], in.get(0));
+                    
+                    if (out[i] == null && types[i].isArray() && in.size() > 0)
+                    {
+                        // don't coerce null to array FELIX-2432
+                        out[i] = NO_MATCH;
+                    }
+                    
                     if (out[i] != NO_MATCH)
                     {
                         in.remove(0);
