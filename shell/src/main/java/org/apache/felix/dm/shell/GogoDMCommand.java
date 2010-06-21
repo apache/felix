@@ -17,47 +17,12 @@ public class GogoDMCommand extends DMCommand
     }
     
     public void dmhelp() {
-        System.out.println("dependencymanager:dm -> list DM component diagnostics.");
-        System.out.println("dependencymanager:dm bundleId -> list DM component diagnostics for a given bundle.");
-        System.out.println("dependencymanager:dmnotavail -> list unavailable DM components.");
-        System.out.println("dependencymanager:dmnotavail bundleId -> list unavailable DM components for a given bundle.");
-        System.out.println("dependencymanager:dmnodeps -> list DM component diagnostics without dependencies.");
-        System.out.println("dependencymanager:dmnodeps bundleId-> list DM component diagnostics without dependencies for a given bundle.");
-        System.out.println("dependencymanager:dmcompact -> list DM component compact diagnostics.");
-        System.out.println("dependencymanager:dmcompact bundleId -> list DM component compact diagnostics for a given bundle.");
+        System.out.println("list Dependency Manager component diagnostics. Usage: dm [nodeps] [notavail] [compact] [<bundleid> ...]");
     }
     
-    public void dm() {
-        execute("dm", new String[0]);
+    public void dm(String[] args) {
+        execute("dm", args);
     }
-
-    public void dm(int bundleId) {
-        execute("dm", new String[] { String.valueOf(bundleId) });
-    }
-
-    public void dmnodeps() {
-        execute("dm nodeps", new String[0]);
-    }
-    
-    public void dmnodeps(int bundleId) {
-        execute("dm nodeps", new String[] { String.valueOf(bundleId) });
-    }
-    
-    public void dmnotavail() {
-        execute("dm notavail", new String[0]);
-    }
-   
-   public void dmnotavail(int bundleId) {
-       execute("dm notavail", new String[] { String.valueOf(bundleId) });
-   }
-
-   public void dmcompact() {
-       execute("dm compact", new String[0]);
-   }    
-
-   public void dmcompact(int bundleId) {
-        execute("dm compact", new String[] { String.valueOf(bundleId) });
-   }    
         
    private void execute(String line, String[] args) {
        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -65,8 +30,8 @@ public class GogoDMCommand extends DMCommand
        PrintStream out = new PrintStream(bytes);
        PrintStream err = new PrintStream(errorBytes);
         
-       if (args != null && args.length > 0) {
-           line += " " + args[0]; // Add bundle Id
+       for (int i = 0; i < args.length; i ++) {
+           line += " " + args[i];
        }
         
        super.execute(line.toString(), out, err);
