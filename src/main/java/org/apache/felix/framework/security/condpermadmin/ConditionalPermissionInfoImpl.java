@@ -44,44 +44,270 @@ public final class ConditionalPermissionInfoImpl implements
     private volatile ConditionalPermissionAdminImpl m_cpai;
     private ConditionInfo[] m_conditions;
     private PermissionInfo[] m_permissions;
+    
+    private int parseConditionInfo(char[] encoded, int idx, List conditions) {
+        String type;
+        String[] args;
+        try {
+            int pos = idx;
+
+            /* skip whitespace */
+            while (Character.isWhitespace(encoded[pos])) {
+                    pos++;
+            }
+
+            /* the first character must be '[' */
+            if (encoded[pos] != '[') {
+                    throw new IllegalArgumentException("expecting open bracket");
+            }
+            pos++;
+
+            /* skip whitespace */
+            while (Character.isWhitespace(encoded[pos])) {
+                    pos++;
+            }
+
+            /* type is not quoted or encoded */
+            int begin = pos;
+            while (!Character.isWhitespace(encoded[pos])
+                            && (encoded[pos] != ']')) {
+                    pos++;
+            }
+            if (pos == begin || encoded[begin] == '"') {
+                    throw new IllegalArgumentException("expecting type");
+            }
+            type = new String(encoded, begin, pos - begin);
+
+            /* skip whitespace */
+            while (Character.isWhitespace(encoded[pos])) {
+                    pos++;
+            }
+
+            /* type may be followed by args which are quoted and encoded */
+            ArrayList argsList = new ArrayList();
+            while (encoded[pos] == '"') {
+                    pos++;
+                    begin = pos;
+                    while (encoded[pos] != '"') {
+                            if (encoded[pos] == '\\') {
+                                    pos++;
+                            }
+                            pos++;
+                    }
+                    argsList.add(unescapeString(encoded, begin, pos));
+                    pos++;
+
+                    if (Character.isWhitespace(encoded[pos])) {
+                            /* skip whitespace */
+                            while (Character.isWhitespace(encoded[pos])) {
+                                    pos++;
+                            }
+                    }
+            }
+            args = (String[]) argsList
+                            .toArray(new String[argsList.size()]);
+
+            /* the final character must be ']' */
+            char c = encoded[pos++];
+            if (c != ']') {
+                    throw new IllegalArgumentException("expecting close bracket");
+            }
+            conditions.add(new ConditionInfo(type, args));
+            return pos;
+    }
+    catch (ArrayIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("parsing terminated abruptly");
+    }
+    }
+    
+    private int parsePermissionInfo(char[] encoded, int idx, List permissions) 
+    {
+        String parsedType = null;
+        String parsedName = null;
+        String parsedActions = null;
+        try {
+                int pos = idx;
+
+                /* skip whitespace */
+                while (Character.isWhitespace(encoded[pos])) {
+                        pos++;
+                }
+
+                /* the first character must be '(' */
+                if (encoded[pos] != '(') {
+                        throw new IllegalArgumentException("expecting open parenthesis");
+                }
+                pos++;
+
+                /* skip whitespace */
+                while (Character.isWhitespace(encoded[pos])) {
+                        pos++;
+                }
+
+                /* type is not quoted or encoded */
+                int begin = pos;
+                while (!Character.isWhitespace(encoded[pos])
+                                && (encoded[pos] != ')')) {
+                        pos++;
+                }
+                if (pos == begin || encoded[begin] == '"') {
+                        throw new IllegalArgumentException("expecting type");
+                }
+                parsedType = new String(encoded, begin, pos - begin);
+
+                /* skip whitespace */
+                while (Character.isWhitespace(encoded[pos])) {
+                        pos++;
+                }
+
+                /* type may be followed by name which is quoted and encoded */
+                if (encoded[pos] == '"') {
+                        pos++;
+                        begin = pos;
+                        while (encoded[pos] != '"') {
+                                if (encoded[pos] == '\\') {
+                                        pos++;
+                                }
+                                pos++;
+                        }
+                        parsedName = unescapeString(encoded, begin, pos);
+                        pos++;
+
+                        if (Character.isWhitespace(encoded[pos])) {
+                                /* skip whitespace */
+                                while (Character.isWhitespace(encoded[pos])) {
+                                        pos++;
+                                }
+
+                                /*
+                                 * name may be followed by actions which is quoted and
+                                 * encoded
+                                 */
+                                if (encoded[pos] == '"') {
+                                        pos++;
+                                        begin = pos;
+                                        while (encoded[pos] != '"') {
+                                                if (encoded[pos] == '\\') {
+                                                        pos++;
+                                                }
+                                                pos++;
+                                        }
+                                        parsedActions = unescapeString(encoded, begin, pos);
+                                        pos++;
+
+                                        /* skip whitespace */
+                                        while (Character.isWhitespace(encoded[pos])) {
+                                                pos++;
+                                        }
+                                }
+                        }
+                }
+
+                /* the final character must be ')' */
+                char c = encoded[pos++];
+                if (c != ')') {
+                        throw new IllegalArgumentException(
+                                        "expecting close parenthesis");
+                }
+                permissions.add(new PermissionInfo(parsedType,parsedName, parsedActions));
+                return pos;
+        }
+        catch (ArrayIndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("parsing terminated abruptly");
+        }
+    }
+    /**
+     * Takes an encoded character array and decodes it into a new String.
+     */
+    private static String unescapeString(char[] str, int begin, int end) {
+            StringBuffer output = new StringBuffer(end - begin);
+            for (int i = begin; i < end; i++) {
+                    char c = str[i];
+                    if (c == '\\') {
+                            i++;
+                            if (i < end) {
+                                    c = str[i];
+                                    switch (c) {
+                                            case '"' :
+                                            case '\\' :
+                                                    break;
+                                            case 'r' :
+                                                    c = '\r';
+                                                    break;
+                                            case 'n' :
+                                                    c = '\n';
+                                                    break;
+                                            default :
+                                                    c = '\\';
+                                                    i--;
+                                                    break;
+                                    }
+                            }
+                    }
+                    output.append(c);
+            }
+
+            return output.toString();
+    }
 
     public ConditionalPermissionInfoImpl(String encoded)
     {
-        StringTokenizer tok = new StringTokenizer(encoded, "\n");
-        String access = tok.nextToken().trim();
-        if (!(access.equals("ALLOW {") || access.equals("DENY {")))
+        encoded = encoded.trim();
+        if (!(encoded.startsWith("ALLOW {") || encoded.startsWith("DENY {")))
         {
             throw new IllegalArgumentException();
         }
-        m_allow = access.equals("ALLOW {");
+        m_allow = encoded.startsWith("ALLOW {");
         m_cpai = null;
-        m_name = tok.nextToken().trim().substring(1);
         List conditions = new ArrayList();
         List permissions = new ArrayList();
-        for (String current = tok.nextToken().trim();; current = tok
-            .nextToken().trim())
+        try {
+        char[] chars = encoded.substring((m_allow ? "ALLOW {".length() : "DENY {".length())).toCharArray();
+        int idx = 0;
+        while (idx <  chars.length)
         {
-            if (current.equals("}"))
-            {
-                break;
+            if (Character.isWhitespace(chars[idx])) {
+                idx++;
             }
-            else if (current.startsWith("["))
+            else if (chars[idx] == '[')
             {
-                conditions.add(new ConditionInfo(current));
+                idx = parseConditionInfo(chars, idx, conditions);
             }
-            else if (current.startsWith("("))
+            else if (chars[idx] == '(')
             {
-                permissions.add(new PermissionInfo(current));
+                idx = parsePermissionInfo(chars, idx, permissions);
             }
             else
             {
-                if (!current.startsWith("#"))
+                if (chars[idx] != '}')
                 {
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException("Expected } but was: " + chars[idx]);
                 }
+                idx++;
+                break;
             }
         }
-
+        while (Character.isWhitespace(chars[idx])) {
+            idx++;
+        }
+        if (chars[idx] == '"') {
+            idx++;
+            int begin = idx;
+            while (chars[idx] != '"') {
+                    if (chars[idx] == '\\') {
+                            idx++;
+                    }
+                    idx++;
+            }
+            m_name = unescapeString(chars, begin, idx);
+        }
+        else {
+            throw new IllegalArgumentException("Expected conditional permission info name");
+        }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            ex.printStackTrace();
+            throw new IllegalArgumentException("Unable to parse conditional permission info: " + ex.getMessage());
+        }
         m_conditions = conditions.isEmpty() ? CONDITION_INFO
             : (ConditionInfo[]) conditions.toArray(new ConditionInfo[conditions
                 .size()]);
@@ -191,17 +417,45 @@ public final class ConditionalPermissionInfoImpl implements
         StringBuffer buffer = new StringBuffer();
         buffer.append(m_allow ? "ALLOW " : "DENY ");
         buffer.append('{');
-        buffer.append('\n');
-        buffer.append('#');
-        buffer.append(m_name);
-        buffer.append('\n');
+        buffer.append(' ');
         synchronized (m_lock)
         {
             writeTo(m_conditions, buffer);
             writeTo(m_permissions, buffer);
         }
         buffer.append('}');
+        buffer.append(' ');
+        buffer.append('"');
+        escapeString(m_name, buffer);
+        buffer.append('"');
         return buffer.toString();
+    }
+    
+    /**
+     * This escapes the quotes, backslashes, \n, and \r in the string using a
+     * backslash and appends the newly escaped string to a StringBuffer.
+     */
+    private static void escapeString(String str, StringBuffer output) {
+            int len = str.length();
+            for (int i = 0; i < len; i++) {
+                    char c = str.charAt(i);
+                    switch (c) {
+                            case '"' :
+                            case '\\' :
+                                    output.append('\\');
+                                    output.append(c);
+                                    break;
+                            case '\r' :
+                                    output.append("\\r");
+                                    break;
+                            case '\n' :
+                                    output.append("\\n");
+                                    break;
+                            default :
+                                    output.append(c);
+                                    break;
+                    }
+            }
     }
 
     private void writeTo(Object[] elements, StringBuffer buffer)
@@ -209,7 +463,7 @@ public final class ConditionalPermissionInfoImpl implements
         for (int i = 0; i < elements.length; i++)
         {
             buffer.append(elements[i]);
-            buffer.append('\n');
+            buffer.append(' ');
         }
     }
 
