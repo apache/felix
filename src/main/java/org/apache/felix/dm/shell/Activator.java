@@ -47,7 +47,7 @@ public class Activator implements BundleActivator {
             Hashtable props = new Hashtable();
             props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, "dependencymanager");
             props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION, 
-                      new String[] { "dmhelp", "dm", "dmnodeps", "dmnotavail", "dmcompact" });
+                      new String[] { "dm", "dmhelp" });
             context.registerService(GogoDMCommand.class.getName(), new GogoDMCommand(context), props);
         }
         catch (Throwable t) {            
