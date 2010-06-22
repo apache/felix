@@ -150,7 +150,16 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
             }
             
             String prox = deps[i].getAttribute("proxy");
-            boolean proxy = prox != null && prox.equals("true");
+            //boolean proxy = prox != null && prox.equals("true");
+            // Use proxy by default except for array:
+            boolean proxy = prox == null  || prox.equals("true");
+            
+            if (prox == null  && proxy) { // Proxy set because of the default.
+                if (agg  && ! collection) { // Aggregate and array
+                    proxy = false;
+                }
+            }
+            
             if (proxy && agg) {
                 if (! collection) {
                     error("Proxied aggregate temporal dependencies cannot be an array. Only collections are supported");
