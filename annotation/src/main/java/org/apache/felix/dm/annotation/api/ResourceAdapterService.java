@@ -56,4 +56,9 @@ public @interface ResourceAdapterService
      * <code>true</code> if properties from the resource should be propagated to the service.
      */
     boolean propagate() default false;
+    
+    /**
+     * Sets the static method used to create the AdapterService implementation instance.
+     */
+    String factoryMethod() default "";
 }
