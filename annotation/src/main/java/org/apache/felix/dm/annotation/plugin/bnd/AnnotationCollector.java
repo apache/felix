@@ -274,11 +274,14 @@ public class AnnotationCollector extends ClassDataCollector
         // provide attribute
         writer.putClassArray(annotation, EntryParam.provide, m_interfaces);
 
-        // factory attribute
-        writer.putString(annotation, EntryParam.factory, null);
+        // factorySet attribute
+        writer.putString(annotation, EntryParam.factorySet, null);
 
-        // factoryPropertiesCallback attribute
+        // factoryConfigure attribute
         writer.putString(annotation, EntryParam.factoryConfigure, null);
+        
+        // factoryMethod attribute
+        writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
     private void addCommonServiceParams(EntryWriter writer)
@@ -457,8 +460,11 @@ public class AnnotationCollector extends ClassDataCollector
         }
         else
         {
-            writer.putClassArray(annotation, EntryParam.service, null);
+            writer.putClass(annotation, EntryParam.service, null);
         }
+        
+        // Parse factoryMethod attribute
+        writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
     /**
@@ -492,6 +498,9 @@ public class AnnotationCollector extends ClassDataCollector
 
         // Parse the optional adapter service (use directly implemented interface by default).
         writer.putClassArray(annotation, EntryParam.adapterService, m_interfaces);
+        
+        // Parse factoryMethod attribute
+        writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
     /**
@@ -529,6 +538,9 @@ public class AnnotationCollector extends ClassDataCollector
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
+        
+        // Parse factoryMethod attribute
+        writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
     /**
@@ -597,6 +609,9 @@ public class AnnotationCollector extends ClassDataCollector
         // Parse optional meta types for configuration description.
         String factoryPid = get(annotation, EntryParam.factoryPid.toString(), m_className);
         parseMetaTypes(annotation, factoryPid, true);
+        
+        // Parse factoryMethod attribute
+        writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
     private void parseBundleDependencyAnnotation(Annotation annotation)
@@ -636,6 +651,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.removed, null);
         writer.putString(annotation, EntryParam.required, null);
         writer.putString(annotation, EntryParam.propagate, null);
+        writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
     /**
