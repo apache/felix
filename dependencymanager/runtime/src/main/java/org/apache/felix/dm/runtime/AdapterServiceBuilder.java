@@ -43,14 +43,22 @@ public class AdapterServiceBuilder extends ServiceComponentBuilder
     public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
-        Class<?> adapterImpl = b.loadClass(srvMeta.getString(Params.impl));
+        Class<?> adapterImplClass = b.loadClass(srvMeta.getString(Params.impl));
         String[] adapterService = srvMeta.getStrings(Params.adapterService, null);
         Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.adapterProperties, null);
         Class<?> adapteeService = b.loadClass(srvMeta.getString(Params.adapteeService));
         String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);     
         Service service = dm.createAdapterService(adapteeService, adapteeFilter)
-                            .setInterface(adapterService, adapterProperties)
-                            .setImplementation(adapterImpl);
+                            .setInterface(adapterService, adapterProperties);
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
+        if (factoryMethod == null)
+        {
+            service.setImplementation(adapterImplClass);
+        } 
+        else
+        {
+            service.setFactory(adapterImplClass, factoryMethod);
+        }
         service.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.

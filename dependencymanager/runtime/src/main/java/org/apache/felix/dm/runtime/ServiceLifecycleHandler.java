@@ -164,28 +164,6 @@ public class ServiceLifecycleHandler
     public void start(Object serviceInstance, DependencyManager dm, Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        // Remove "instance bound" flag from all dependencies, because we want to be deactivated
-        // once we lose one of the deps ...
-        Iterator it = m_namedDeps.iterator();
-        while (it.hasNext())
-        {
-            Dependency d = (Dependency) it.next();
-            if (d instanceof ServiceDependency) {
-                ((ServiceDependency)d).setInstanceBound(false);
-            } else if (d instanceof BundleDependency)
-            {
-                ((BundleDependency)d).setInstanceBound(false);
-            } else  if (d instanceof ResourceDependency) 
-            {
-                ((ResourceDependency) d).setInstanceBound(false);
-            } else if (d instanceof ConfigurationDependency) 
-            {
-                ((ConfigurationDependency) d).setInstanceBound(false);
-            } else if (d instanceof TemporalServiceDependency) 
-            {
-                ((TemporalServiceDependency) d).setInstanceBound(false);
-            }
-        }
         invokeMethod(serviceInstance, m_start, dm, service);
     }
 
@@ -228,29 +206,16 @@ public class ServiceLifecycleHandler
             // The annotated class did not provide an annotation for this lifecycle callback.
             return null;
         }
-
-        Class clazz = instance.getClass();
-
-        while (clazz != null)
+        
+        try 
         {
-            for (int i = 0; i < signatures.length; i++)
-            {
-                Class<?>[] signature = signatures[i];
-                try
-                {
-                    // Don't use getMethod because getMethod only look for public methods !
-                    Method m = instance.getClass().getDeclaredMethod(method, signature);
-                    m.setAccessible(true);
-                    return m.invoke(instance, params[i]);
-                }
-                catch (NoSuchMethodException e)
-                {
-                    // ignore this and keep looking
-                }
-            }
-            clazz = clazz.getSuperclass();
+            return InvocationUtil.invokeCallbackMethod(instance, method, signatures, params);
+        } 
+        
+        catch (NoSuchMethodException e) 
+        {
+            // ignore this
+            return null;
         }
-
-        return null;
     }
 }
