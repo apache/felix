@@ -32,8 +32,9 @@ public enum EntryParam
     adapteeFilter,
     stateMask,
     ranking,
-    factory,
+    factorySet,
     factoryConfigure,
+    factoryMethod,
     field,
     name
 }
