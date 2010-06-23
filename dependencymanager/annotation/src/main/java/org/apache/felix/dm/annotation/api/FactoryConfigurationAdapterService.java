@@ -82,4 +82,9 @@ public @interface FactoryConfigurationAdapterService
      * @return The list of properties types used to expose properties in web console. 
      */
     PropertyMetaData[] metadata() default {};
+    
+    /**
+     * Sets the static method used to create the adapter instance.
+     */
+    String factoryMethod() default "";
 }
