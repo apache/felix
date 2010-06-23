@@ -63,12 +63,13 @@ public class ServiceProviderAspect implements ServiceInterface
     @Stop()
     void stop()
     {
-        m_sequencer.step(5);
+        // At this point, the AspectLifecycleTest class has been rebound to the original ServiceProvider.
+        m_sequencer.step(6);
     }
 
     @Destroy
     void destroy()
     {
-        m_sequencer.step(6);
+        m_sequencer.step(7);
     }
 }

@@ -30,6 +30,6 @@ public class ServiceProvider implements ServiceInterface
 
     public void run()
     {
-        m_sequencer.step(1);
+        m_sequencer.step();
     }
 }
