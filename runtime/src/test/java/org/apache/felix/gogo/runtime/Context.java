@@ -19,7 +19,7 @@
 package org.apache.felix.gogo.runtime;
 
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
-import org.apache.felix.service.command.CommandSession;
+import org.osgi.service.command.CommandSession;
 
 public class Context extends CommandProcessorImpl
 {

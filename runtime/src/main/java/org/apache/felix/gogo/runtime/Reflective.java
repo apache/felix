@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.service.command.CommandSession;
+import org.osgi.service.command.CommandSession;
 import org.apache.felix.service.command.Parameter;
 
 public final class Reflective
