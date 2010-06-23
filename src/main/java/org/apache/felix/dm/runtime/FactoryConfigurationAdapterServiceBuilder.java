@@ -39,15 +39,23 @@ public class FactoryConfigurationAdapterServiceBuilder extends ServiceComponentB
     public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
         throws Exception
     {
-        Class<?> impl = b.loadClass(srvMeta.getString(Params.impl));
+        Class<?> implClass = b.loadClass(srvMeta.getString(Params.impl));
         String factoryPid = srvMeta.getString(Params.factoryPid);
         String updated = srvMeta.getString(Params.updated);
         String[] services = srvMeta.getStrings(Params.service, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         Service srv = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate)
-                        .setInterface(services, properties)
-                        .setImplementation(impl);
+                        .setInterface(services, properties);
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
+        if (factoryMethod == null)
+        {
+            srv.setImplementation(implClass);
+        } 
+        else
+        {
+            srv.setFactory(implClass, factoryMethod);
+        }
         srv.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(srv, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.
