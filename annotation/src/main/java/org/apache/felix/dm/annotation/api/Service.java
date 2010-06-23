@@ -145,7 +145,7 @@ public @interface Service
     /**
      * Returns the name of the <code>Factory Set</code> used to dynamically instantiate this Service.
      * When you set this attribute, a <code>java.util.Set&lt;java.lang.Dictionary&gt;</code> Service will 
-     * be provided with a <code>dm.factory.name</code> service property matching your specified <code>factory</code> attribute.
+     * be provided with a <code>dm.factory.name</code> service property matching your specified <code>factorySet</code> attribute.
      * This Set will be provided once the Service's bundle is started, even if required dependencies are not available, and the
      * Set will be unregistered from the OSGi registry once the Service's bundle is stopped or being updated.<p>
      * So, basically, another component may then be injected with this set in order to dynamically instantiate some Service instances:
