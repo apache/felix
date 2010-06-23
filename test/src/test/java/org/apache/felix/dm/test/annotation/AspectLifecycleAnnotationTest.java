@@ -27,6 +27,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.service.Service;
 import org.apache.felix.dm.test.BundleGenerator;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
@@ -67,19 +68,20 @@ public class AspectLifecycleAnnotationTest extends AnnotationBase
     public void testAnnotatedAspect(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        // Provide the Sequencer server to the AspectLifecycleTest$ServiceProvider service
+        // Provide the Sequencer server to the ServiceProvider service
         Dictionary props = new Hashtable() {{ put("test", "aspectLifecycle.ServiceProvider"); }};
         m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         // Check if the ServiceProvider has been injected in the AspectTest service.
         m_ensure.waitForStep(1, 10000);
-        // Provide the Sequencer server to the AspectLifecycleTest$ServiceProviderAspect service
+        // Provide the Sequencer server to the ServiceProviderAspect service
         props = new Hashtable() {{ put("test", "aspectLifecycle.ServiceProviderAspect"); }};
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
+        Service seq = m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props);
+        m.add(seq);
         // Check if the AspectTest has been injected with the aspect
         m_ensure.waitForStep(3, 10000);
-        // Stop the test.annotation bundle.
-        stopBundle("AspectLifecycleTest", context);
+        // Stop the ServiceProviderAspect service.
+        m.remove(seq);
         // And check if the aspect has been called in its stop/destroy methods.
-        m_ensure.waitForStep(6, 10000);
+        m_ensure.waitForStep(7, 10000);
     }
 }
