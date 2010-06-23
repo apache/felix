@@ -25,12 +25,16 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-@Service(provide = { ServiceProvider2.class })
+@Service(provide = { ServiceProvider2.class }, factoryMethod="create")
 public class ServiceProvider2
 {
     Composite m_composite = new Composite();
     Sequencer m_sequencer;
 
+    static ServiceProvider2 create() {
+        return new ServiceProvider2();
+    }
+    
     @ServiceDependency(required = false, filter = "(foo=bar)") // NullObject
     Runnable m_runnable;
 
