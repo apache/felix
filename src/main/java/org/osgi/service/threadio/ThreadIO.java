@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.service.threadio;
+package org.osgi.service.threadio;
 
 import java.io.InputStream;
 import java.io.PrintStream;
