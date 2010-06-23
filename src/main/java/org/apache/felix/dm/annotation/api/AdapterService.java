@@ -59,4 +59,9 @@ public @interface AdapterService
      * @return the filter condition to use with the adapted ervice interface
      */
     String adapteeFilter() default "";
+    
+    /**
+     * Sets the static method used to create the AdapterService implementation instance.
+     */
+    String factoryMethod() default "";
 }

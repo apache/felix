@@ -63,4 +63,9 @@ public @Retention(RetentionPolicy.CLASS)
      * Specifies if properties from the bundle should be propagated to the service.
      */
     boolean propagate() default true;
+    
+    /**
+     * Sets the static method used to create the BundleAdapterService implementation instance.
+     */
+    String factoryMethod() default "";
 }
