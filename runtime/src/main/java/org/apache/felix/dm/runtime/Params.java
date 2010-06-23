@@ -51,8 +51,9 @@ public enum Params
     stateMask,
     ranking,
     factoryPid,    
-    factory,
+    factorySet,
     factoryConfigure,
+    factoryMethod,
     name,
     field
 }

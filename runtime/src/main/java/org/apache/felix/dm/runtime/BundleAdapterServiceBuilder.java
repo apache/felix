@@ -41,13 +41,22 @@ public class BundleAdapterServiceBuilder extends ServiceComponentBuilder
     {
         int stateMask = srvMeta.getInt(Params.stateMask, Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE);
         String filter = srvMeta.getString(Params.filter, null);
-        Class<?> adapterImpl = b.loadClass(srvMeta.getString(Params.impl));
+        Class<?> adapterImplClass = b.loadClass(srvMeta.getString(Params.impl));
         String[] service = srvMeta.getStrings(Params.service, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         Service srv = dm.createBundleAdapterService(stateMask, filter, propagate)
-                            .setInterface(service, properties)
-                            .setImplementation(adapterImpl);
+                            .setInterface(service, properties);
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
+        if (factoryMethod == null)
+        {
+            srv.setImplementation(adapterImplClass);
+        } 
+        else
+        {
+            srv.setFactory(adapterImplClass, factoryMethod);
+        }
+
         srv.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(srv, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.

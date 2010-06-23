@@ -44,7 +44,7 @@ public class ServiceBuilder extends ServiceComponentBuilder
         throws Exception
     {
         Service service = dm.createService();
-        String factory = srvMeta.getString(Params.factory, null);
+        String factory = srvMeta.getString(Params.factorySet, null);
 
         // Check if we must provide a Set Factory.
         if (factory == null)
@@ -57,7 +57,14 @@ public class ServiceBuilder extends ServiceComponentBuilder
             String composition = srvMeta.getString(Params.composition, null);
             Dictionary<String, Object> serviceProperties = srvMeta.getDictionary(Params.properties, null);
             String[] provide = srvMeta.getStrings(Params.provide, null);
-            service.setImplementation(b.loadClass(impl));
+            String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
+            if (factoryMethod == null)
+            {
+                service.setImplementation(b.loadClass(impl));
+            } else
+            {
+                service.setFactory(b.loadClass(impl), factoryMethod);
+            }
             service.setComposition(composition);
             service.setInterface(provide, serviceProperties);
             // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).

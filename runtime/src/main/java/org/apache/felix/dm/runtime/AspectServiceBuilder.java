@@ -48,12 +48,21 @@ public class AspectServiceBuilder extends ServiceComponentBuilder
         String serviceFilter = srvMeta.getString(Params.filter, null);
         Dictionary<String, Object> aspectProperties = srvMeta.getDictionary(Params.properties, null);
         int ranking = srvMeta.getInt(Params.ranking, 1);
-        String implClass = srvMeta.getString(Params.impl);
-        Object impl = b.loadClass(implClass);        
-        String field = srvMeta.getString(Params.field, null);        
+        String implClassName = srvMeta.getString(Params.impl);
+        Object implClass = b.loadClass(implClassName);        
+        String field = srvMeta.getString(Params.field, null);  
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         Service service = dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
-                            .setImplementation(impl)
                             .setServiceProperties(aspectProperties);
+        if (factoryMethod == null)
+        {
+            service.setImplementation(implClass);
+        } 
+        else
+        {
+            service.setFactory(implClass, factoryMethod);
+        }
+        
         service.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.

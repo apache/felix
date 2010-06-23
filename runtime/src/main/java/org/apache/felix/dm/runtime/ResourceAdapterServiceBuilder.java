@@ -40,13 +40,21 @@ public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
         throws Exception
     {
         String filter = srvMeta.getString(Params.filter, null);
-        Class<?> impl = b.loadClass(srvMeta.getString(Params.impl));
+        Class<?> implClass = b.loadClass(srvMeta.getString(Params.impl));
         String[] service = srvMeta.getStrings(Params.service, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         Service srv = dm.createResourceAdapterService(filter, propagate)
-                        .setInterface(service, properties)
-                        .setImplementation(impl);
+                        .setInterface(service, properties);       
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
+        if (factoryMethod == null)
+        {
+            srv.setImplementation(implClass);
+        } 
+        else
+        {
+            srv.setFactory(implClass, factoryMethod);
+        }
         srv.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(srv, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.

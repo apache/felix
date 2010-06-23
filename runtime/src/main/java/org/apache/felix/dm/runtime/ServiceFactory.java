@@ -100,7 +100,7 @@ public class ServiceFactory extends AbstractSet<Dictionary>
      * The bundle containing the Service annotated with the factory attribute.
      */
     private Bundle m_bundle;
-    
+
     /**
      * Flag used to check if a service is being created
      */
@@ -154,7 +154,7 @@ public class ServiceFactory extends AbstractSet<Dictionary>
      */
     public ServiceFactory(Bundle b, MetaData srvMeta, List<MetaData> depsMeta)
     {
-        m_serviceProperties = srvMeta.getDictionary(Params.properties, null);;
+        m_serviceProperties = srvMeta.getDictionary(Params.properties, null);
         m_provide = srvMeta.getStrings(Params.provide, null);
         m_configure = srvMeta.getString(Params.factoryConfigure, null);
         m_bundle = b;
@@ -343,7 +343,17 @@ public class ServiceFactory extends AbstractSet<Dictionary>
                 // Create the Service / impl
                 Service s = m_dm.createService();
                 Class implClass = m_bundle.loadClass(m_srvMeta.getString(Params.impl));
-                m_impl = implClass.newInstance();
+                String factoryMethod = m_srvMeta.getString(Params.factoryMethod, null);
+                if (factoryMethod == null)
+                {
+                    m_impl = implClass.newInstance();
+                }
+                else
+                {
+                    Method m = implClass.getDeclaredMethod(factoryMethod);
+                    m.setAccessible(true);
+                    m_impl = m.invoke(null);
+                }
 
                 // Invoke "configure" callback
                 if (m_configure != null)
@@ -359,26 +369,29 @@ public class ServiceFactory extends AbstractSet<Dictionary>
                     Dictionary serviceProperties = mergeSettings(m_serviceProperties, configuration);
                     s.setInterface(m_provide, serviceProperties);
                 }
-                
+
                 s.setComposition(m_srvMeta.getString(Params.composition, null));
-                ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(s, m_bundle, m_dm, m_srvMeta, m_depsMeta);
+                ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(s, m_bundle, m_dm,
+                    m_srvMeta, m_depsMeta);
                 // The dependencies will be plugged by our lifecycle handler.
                 s.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
 
                 // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
-                for (MetaData dependency : m_depsMeta) 
+                for (MetaData dependency: m_depsMeta)
                 {
                     String name = dependency.getString(Params.name, null);
-                    if (name == null) {
+                    if (name == null)
+                    {
                         DependencyBuilder depBuilder = new DependencyBuilder(dependency);
-                        Log.instance().log(LogService.LOG_INFO, 
+                        Log.instance().log(
+                                           LogService.LOG_INFO,
                                            "ServiceLifecycleHandler.init: adding dependency %s into service %s",
                                            dependency, m_srvMeta);
                         Dependency d = depBuilder.build(m_bundle, m_dm, false);
                         s.add(d);
                     }
                 }
-                
+
                 // Register the Service instance, and keep track of it.
                 Log.instance().log(LogService.LOG_INFO, "ServiceFactory: created service %s", m_srvMeta);
                 m_dm.add(s);
@@ -388,7 +401,8 @@ public class ServiceFactory extends AbstractSet<Dictionary>
             {
                 // Make sure the SERVICE_CREATING flag is also removed
                 m_services.remove(serviceKey);
-                Log.instance().log(LogService.LOG_ERROR, "ServiceFactory: could not instantiate service %s", t, m_srvMeta);
+                Log.instance().log(LogService.LOG_ERROR, "ServiceFactory: could not instantiate service %s",
+                                   t, m_srvMeta);
             }
         }
         else
@@ -424,7 +438,7 @@ public class ServiceFactory extends AbstractSet<Dictionary>
     {
         try
         {
-            for (Object service : m_services.values())
+            for (Object service: m_services.values())
             {
                 if (service instanceof Service)
                 {
@@ -458,7 +472,7 @@ public class ServiceFactory extends AbstractSet<Dictionary>
                 Object key = keys.nextElement();
                 Object val = serviceProperties.get(key);
                 props.put(key, val);
-            }        
+            }
         }
 
         Enumeration keys = factoryConfiguration.keys();
@@ -478,16 +492,16 @@ public class ServiceFactory extends AbstractSet<Dictionary>
     /**
      * Invokes the configure callback method on the service instance implemenatation.
      * @param impl
-     * @param factoryConfige
+     * @param configure
      * @param config
      */
-    private void invokeConfigure(Object impl, String factoryConfige, Dictionary config)
+    private void invokeConfigure(Object impl, String configure, Dictionary config)
     {
         try
         {
-            Method m = impl.getClass().getMethod(factoryConfige, Dictionary.class);
-            m.setAccessible(true);
-            m.invoke(impl, new Object[] { config });
+            InvocationUtil.invokeCallbackMethod(impl, configure,
+                                                new Class[][] { { Dictionary.class } },
+                                                new Object[][] { { config } });
         }
 
         catch (Throwable t)
@@ -498,8 +512,8 @@ public class ServiceFactory extends AbstractSet<Dictionary>
             }
             else
             {
-                throw new RuntimeException("Could not invoke method " + factoryConfige
-                    + " on object " + impl);
+                throw new RuntimeException("Could not invoke method " + configure
+                                           + " on object " + impl);
             }
         }
     }
