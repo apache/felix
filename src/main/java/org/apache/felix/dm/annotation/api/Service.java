@@ -67,14 +67,14 @@ import java.lang.annotation.Target;
  * </blockquote>
  * 
  * Here is a sample showing how a Y service may dynamically instantiate several X Service instances, 
- * using the {@link #factory()} attribute:<p>
+ * using the {@link #factorySet()} attribute:<p>
  * <blockquote>
  * 
  * <pre>
  *  &#47;**
  *    * All Service instances will be created/updated/removed by the "Y" Service
  *    *&#47;
- *  &#64;Service(factory="MyServiceFactory", factoryConfigure="configure")
+ *  &#64;Service(factorySet="MyServiceFactory", factoryConfigure="configure")
  *  class X implements Z {                 
  *      void configure(Dictionary conf) {
  *          // Configure or reconfigure our service. The conf is provided by the factory,
@@ -133,17 +133,17 @@ import java.lang.annotation.Target;
 public @interface Service
 {
     /**
-     * Returns the list of provided interfaces. By default, the directly implemented interfaces are provided.
+     * Sets list of provided interfaces. By default, the directly implemented interfaces are provided.
      */
     Class<?>[] provide() default {};
 
     /**
-     * Returns the list of provided service properties.
+     * Sets list of provided service properties.
      */
     Property[] properties() default {};
 
     /**
-     * Returns the <code>factory</code> name used to dynamically instantiate the Service annotated by this class.
+     * Returns the name of the <code>Factory Set</code> used to dynamically instantiate this Service.
      * When you set this attribute, a <code>java.util.Set&lt;java.lang.Dictionary&gt;</code> Service will 
      * be provided with a <code>dm.factory.name</code> service property matching your specified <code>factory</code> attribute.
      * This Set will be provided once the Service's bundle is started, even if required dependencies are not available, and the
@@ -158,13 +158,18 @@ public @interface Service
      * optionally specify in the {@link Service#factoryConfigure()} attribute. Each public properties from that dictionary 
      * (which don't start with a dot) will be propagated along with the annotated Service properties.
      */
-    String factory() default "";
+    String factorySet() default "";
 
     /**
-     * Returns the "configure" callback method name to be called with the factory configuration. This attribute only makes sense if the 
-     * {@link #factory()} attribute is used. If specified, then this attribute references a Service callback method, which is called 
+     * Sets "configure" callback method name to be called with the factory configuration. This attribute only makes sense if the 
+     * {@link #factorySet()} attribute is used. If specified, then this attribute references a Service callback method, which is called 
      * for providing the configuration supplied by the factory that instantiated this Service. The current Service properties will be 
      * also updated with all public properties (which don't start with a dot).
      */
     String factoryConfigure() default "";
+    
+    /**
+     * Sets the static method used to create the Service implementation instance.
+     */
+    String factoryMethod() default "";
 }
