@@ -68,4 +68,9 @@ public @interface AspectService
      * in any attributes in the aspect implementation that are of the same type as the aspect interface.
      */
     String field() default "";
+    
+    /**
+     * Sets the static method used to create the AspectService implementation instance.
+     */
+    String factoryMethod() default "";
 }
