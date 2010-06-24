@@ -197,15 +197,10 @@ public class ServiceLifecycleHandler
             {
                 // ignore this
             }
-            catch (InvocationTargetException e) {
-                // TODO should we log this?
-                // the method itself threw an exception, log that
-//                m_logger.log(Logger.LOG_WARNING, "Invocation of '" + methodName + "' failed.", e.getCause());
-            }
-            catch (Exception e) {
-                // TODO should we log this?
-//                m_logger.log(Logger.LOG_WARNING, "Could not invoke '" + methodName + "'.", e);
-            }
+            
+            // Other exception will be thrown up to the ServiceImpl.invokeCallbackMethod(), which is 
+            // currently invoking our method. So, no need to log something here, since the invokeCallbackMethod 
+            // method is already logging any thrown exception.
         }
         return null;
     }
