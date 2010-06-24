@@ -21,6 +21,7 @@ package org.apache.felix.dm.service;
 import java.util.Dictionary;
 import java.util.List;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.dependencies.Dependency;
 import org.osgi.framework.ServiceRegistration;
 
@@ -227,4 +228,16 @@ public interface Service {
 	 * @param getMethod the method to invoke
 	 */
 	public Service setComposition(String getMethod);
+	
+	/**
+	 * Returns the composition instances that make up this service, or just the
+	 * service instance if it does not have a composition, or an empty array if
+	 * the service has not even been instantiated.
+	 */
+	public Object[] getCompositionInstances();
+	
+	/**
+	 * Returns the dependency manager associated with this service.
+	 */
+	public DependencyManager getDependencyManager();
 }

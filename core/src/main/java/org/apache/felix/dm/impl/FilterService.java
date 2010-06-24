@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.service.Service;
 import org.apache.felix.dm.service.ServiceStateListener;
@@ -250,5 +251,13 @@ public class FilterService implements Service
     public void stop()
     {
         m_service.stop();
+    }
+    
+    public Object[] getCompositionInstances() {
+        return m_service.getCompositionInstances();
+    }
+    
+    public DependencyManager getDependencyManager() {
+        return m_service.getDependencyManager();
     }
 }

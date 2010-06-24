@@ -99,7 +99,8 @@ public class FELIX2344_ExtraDependencyWithAutoConfigTest extends Base {
             m_startStep = startStep;
         }
         
-        public void init(DependencyManager dm, Service s) {
+        public void init(Service s) {
+            DependencyManager dm = s.getDependencyManager();
             s.add(dm.createServiceDependency()
                 .setInstanceBound(true)
                 .setService(ProviderInterface.class)
