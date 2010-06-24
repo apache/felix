@@ -27,6 +27,7 @@ import org.apache.felix.dm.dependencies.ResourceDependency;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.resources.ResourceHandler;
+import org.apache.felix.dm.service.Service;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -158,35 +159,26 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	}
 	
     public void invokeAdded(DependencyService ds, Resource serviceInstance) {
-        Object[] callbackInstances = getCallbackInstances(ds);
-        if ((callbackInstances != null) && (m_callbackAdded != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackAdded, 
-                new Class[][] {{ Resource.class }, { Object.class }, {}},
-                new Object[][] {{ serviceInstance}, { serviceInstance }, {}}
-            );
-        }
+        invoke(ds, serviceInstance, m_callbackAdded);
     }
 
     public void invokeChanged(DependencyService ds, Resource serviceInstance) {
-        Object[] callbackInstances = getCallbackInstances(ds);
-        if ((callbackInstances != null) && (m_callbackChanged != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackChanged,
-                new Class[][] {{ Resource.class }, { Object.class }, {}},
-                new Object[][] {{ serviceInstance}, { serviceInstance }, {}}
-            );
-        }
+        invoke(ds, serviceInstance, m_callbackChanged);
     }
 
     public void invokeRemoved(DependencyService ds, Resource serviceInstance) {
-        Object[] callbackInstances = getCallbackInstances(ds);
-        if ((callbackInstances != null) && (m_callbackRemoved != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackRemoved,
-                new Class[][] {{ Resource.class }, { Object.class }, {}},
-                new Object[][] {{ serviceInstance}, { serviceInstance }, {}}
+        invoke(ds, serviceInstance, m_callbackRemoved);
+    }
+    
+    private void invoke(DependencyService ds, Resource serviceInstance, String name) {
+        if (name != null) {
+            ds.invokeCallbackMethod(getCallbackInstances(ds), name,
+                new Class[][] {{ Service.class, Resource.class }, { Service.class, Object.class }, { Service.class },  { Resource.class }, { Object.class }, {}},
+                new Object[][] {{ ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface() }, { serviceInstance }, { serviceInstance }, {}}
             );
         }
     }
-
+    
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
      * dependency is added or removed. When you specify callbacks, the auto configuration 

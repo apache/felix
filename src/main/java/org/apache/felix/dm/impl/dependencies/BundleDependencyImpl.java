@@ -207,29 +207,20 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
     }
     
     public void invokeAdded(DependencyService dependencyService, Bundle service) {
-        Object[] callbackInstances = getCallbackInstances(dependencyService);
-        if ((callbackInstances != null) && (m_callbackAdded != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackAdded, 
-                new Class[][] {{Bundle.class}, {Object.class}, {}},
-                new Object[][] {{service}, {service}, {}}
-            );
-        }
+        invoke(dependencyService, service, m_callbackAdded);
     }
 
     public void invokeChanged(DependencyService dependencyService, Bundle service) {
-        Object[] callbackInstances = getCallbackInstances(dependencyService);
-        if ((callbackInstances != null) && (m_callbackChanged != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackChanged, 
-                new Class[][] {{Bundle.class}, {Object.class}, {}},
-                new Object[][] {{service}, {service}, {}}
-            );
-        }
+        invoke(dependencyService, service, m_callbackChanged);
     }
     
     public void invokeRemoved(DependencyService dependencyService, Bundle service) {
-        Object[] callbackInstances = getCallbackInstances(dependencyService);
-        if ((callbackInstances != null) && (m_callbackRemoved != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackRemoved,
+        invoke(dependencyService, service, m_callbackRemoved);
+    }
+    
+    public void invoke(DependencyService dependencyService, Bundle service, String name) {
+        if (name != null) {
+            dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name,
               new Class[][] {{Bundle.class}, {Object.class}, {}},
               new Object[][] {{service}, {service}, {}}
             );

@@ -409,16 +409,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
 
-    public void invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
-        Object[] callbackInstances = getCallbackInstances(dependencyService);
-        if ((callbackInstances != null) && (m_callbackAdded != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackAdded, 
-                new Class[][] {{ServiceReference.class, m_trackedServiceName}, {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {}, {Map.class, m_trackedServiceName}},
-                new Object[][] {{reference, service}, {reference, service}, {reference}, {service}, {service}, {}, {new ServicePropertiesMap(reference), service}}    
-            );
-        }
-    }
-
     public void modifiedService(ServiceReference ref, Object service) {
         Object[] services;
         synchronized (this) {
@@ -430,16 +420,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             if (ds.isRegistered()) {
                 invokeChanged(ds, ref, service);
             }
-        }
-    }
-
-    public void invokeChanged(DependencyService dependencyService, ServiceReference reference, Object service) {
-        Object[] callbackInstances = getCallbackInstances(dependencyService);
-        if ((callbackInstances != null) && (m_callbackChanged != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackChanged, 
-                new Class[][] {{ServiceReference.class, m_trackedServiceName}, {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {}, {Map.class, m_trackedServiceName}},
-                new Object[][] {{reference, service}, {reference, service}, {reference}, {service}, {service}, {}, {new ServicePropertiesMap(reference), service}}    
-            );
         }
     }
 
@@ -468,10 +448,21 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     }
 
+    public void invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
+        invoke(dependencyService, reference, service, m_callbackAdded);
+    }
+    
+    public void invokeChanged(DependencyService dependencyService, ServiceReference reference, Object service) {
+        invoke(dependencyService, reference, service, m_callbackChanged);
+    }
+
     public void invokeRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
-        Object[] callbackInstances = getCallbackInstances(dependencyService);
-        if ((callbackInstances != null) && (m_callbackRemoved != null)) {
-            invokeCallbackMethod(callbackInstances, m_callbackRemoved, 
+        invoke(dependencyService, reference, service, m_callbackRemoved);
+    }
+
+    public void invoke(DependencyService dependencyService, ServiceReference reference, Object service, String name) {
+        if (name != null) {
+            dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name, 
                 new Class[][] {{ServiceReference.class, m_trackedServiceName}, {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {}, {Map.class, m_trackedServiceName}},
                 new Object[][] {{reference, service}, {reference, service}, {reference}, {service}, {service}, {}, {new ServicePropertiesMap(reference), service}}    
             );
