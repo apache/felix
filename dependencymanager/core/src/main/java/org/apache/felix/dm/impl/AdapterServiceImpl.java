@@ -43,7 +43,7 @@ public class AdapterServiceImpl extends FilterService
         super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
         m_service.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter))
                  .add(dm.createServiceDependency()
-                      .setService(adapteeInterface)
+                      .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
                       .setCallbacks("added", "removed"));
     }
