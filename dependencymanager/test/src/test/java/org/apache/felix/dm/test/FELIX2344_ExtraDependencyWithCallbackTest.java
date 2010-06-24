@@ -102,7 +102,8 @@ public class FELIX2344_ExtraDependencyWithCallbackTest extends Base {
             m_startStep = startStep;
         }
 
-        public void init(DependencyManager dm, Service s) {
+        public void init(Service s) {
+            DependencyManager dm = s.getDependencyManager();
             m_ensure.step(m_startStep);
             s.add(dm.createServiceDependency()
                 .setInstanceBound(true)

@@ -19,20 +19,13 @@
 package org.apache.felix.dm.runtime;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.dependencies.BundleDependency;
-import org.apache.felix.dm.dependencies.ConfigurationDependency;
 import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.dependencies.ResourceDependency;
-import org.apache.felix.dm.dependencies.ServiceDependency;
-import org.apache.felix.dm.dependencies.TemporalServiceDependency;
 import org.apache.felix.dm.service.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
@@ -112,9 +105,11 @@ public class ServiceLifecycleHandler
     }
 
     @SuppressWarnings("unchecked")
-    public void init(Object serviceInstance, DependencyManager dm, Service service)
+    public void init(Service service)
         throws Exception
     {
+        Object serviceInstance = service.getService();
+        DependencyManager dm = service.getDependencyManager(); 
         // Invoke the service instance init method, and check if it returns a dependency
         // customization map. This map will be used to configure some dependency filters
         // (or required flag).
@@ -161,61 +156,57 @@ public class ServiceLifecycleHandler
         }
     }
 
-    public void start(Object serviceInstance, DependencyManager dm, Service service)
+    public void start(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
+        Object serviceInstance = service.getService();
+        DependencyManager dm = service.getDependencyManager(); 
         invokeMethod(serviceInstance, m_start, dm, service);
     }
 
-    public void stop(Object serviceInstance, DependencyManager dm, Service service)
+    public void stop(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
+        Object serviceInstance = service.getService();
+        DependencyManager dm = service.getDependencyManager(); 
         invokeMethod(serviceInstance, m_stop, dm, service);
     }
 
-    public void destroy(Object serviceInstance, DependencyManager dm, Service service)
+    public void destroy(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
+        Object serviceInstance = service.getService();
+        DependencyManager dm = service.getDependencyManager(); 
         invokeMethod(serviceInstance, m_destroy, dm, service);
     }
 
     private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        return invokeMethod(serviceInstance,
-                            method,
-                            new Class[][] {
-                                    { Object.class, DependencyManager.class, Service.class },
-                                    { DependencyManager.class, Service.class },
-                                    { Object.class },
-                                    {}
-            },
-                            new Object[][] {
-                                    { serviceInstance, dm, service },
-                                    { dm, service },
-                                    { serviceInstance },
-                                    {}
-            });
-    }
-
-    private Object invokeMethod(Object instance, String method, Class<?>[][] signatures, Object[][] params)
-        throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
-    {
-        if (method == null)
-        {
-            // The annotated class did not provide an annotation for this lifecycle callback.
-            return null;
+        if (method != null) {
+            try 
+            {
+                return InvocationUtil.invokeCallbackMethod(
+                    serviceInstance, method, 
+                    new Class[][] { { Service.class }, {} }, 
+                    new Object[][] { { service }, {} }
+                    );
+            } 
+            
+            catch (NoSuchMethodException e) 
+            {
+                // ignore this
+            }
+            catch (InvocationTargetException e) {
+                // TODO should we log this?
+                // the method itself threw an exception, log that
+//                m_logger.log(Logger.LOG_WARNING, "Invocation of '" + methodName + "' failed.", e.getCause());
+            }
+            catch (Exception e) {
+                // TODO should we log this?
+//                m_logger.log(Logger.LOG_WARNING, "Could not invoke '" + methodName + "'.", e);
+            }
         }
-        
-        try 
-        {
-            return InvocationUtil.invokeCallbackMethod(instance, method, signatures, params);
-        } 
-        
-        catch (NoSuchMethodException e) 
-        {
-            // ignore this
-            return null;
-        }
+        return null;
     }
 }

@@ -20,6 +20,7 @@ package org.apache.felix.dm.impl;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -293,6 +294,10 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 
     public Object getService() {
         return m_serviceInstance;
+    }
+    
+    public Service getServiceInterface() {
+        return this;
     }
 
     public void dependencyAvailable(final Dependency dependency) {
@@ -623,21 +628,29 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     
     private void invoke(String name) {
         if (name != null) {
-            // invoke method if it exists
+            // if a callback instance was specified, look for the method there, if not,
+            // ask the service for its composition instances
+            Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
+            invokeCallbackMethod(instances, name, 
+                new Class[][] {{ Service.class }, {}}, 
+                new Object[][] {{ this }, {}});
+        }
+    }
+    
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters) {
+        for (int i = 0; i < instances.length; i++) {
             try {
-                // if a callback instance was specified, look for the method there, if not, look for the method in the
-                // instance itself
-                Object instance = m_callbackInstance != null ? m_callbackInstance : m_serviceInstance;
-                InvocationUtil.invokeCallbackMethod(instance, name, 
-                    new Class[][] {{ Object.class, DependencyManager.class, Service.class }, { DependencyManager.class, Service.class }, { Object.class }, {}}, 
-                    new Object[][] {{ m_serviceInstance, m_manager, this }, { m_manager, this }, { m_serviceInstance }, {}});
+                InvocationUtil.invokeCallbackMethod(instances[i], methodName, signatures, parameters);
             }
             catch (NoSuchMethodException e) {
-            	// we ignore the fact that the method was not found
+                // if the method does not exist, ignore it
+            }
+            catch (InvocationTargetException e) {
+                // the method itself threw an exception, log that
+                m_logger.log(Logger.LOG_WARNING, "Invocation of '" + methodName + "' failed.", e.getCause());
             }
             catch (Exception e) {
-            	// but any other exception means that the method was invoked but somehow failed
-                m_logger.log(Logger.LOG_WARNING, "Error trying to invoke method named " + name + ".", e);
+                m_logger.log(Logger.LOG_WARNING, "Could not invoke '" + methodName + "'.", e);
             }
         }
     }
@@ -725,9 +738,6 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 		        	}
 		        	else {
     		        	try {
-//    						Method m = factory.getClass().getDeclaredMethod(m_instanceFactoryCreateMethod, null);
-//    						m_serviceInstance = m.invoke(factory, null);
-//    						
     						m_serviceInstance = InvocationUtil.invokeMethod(factory, factory.getClass(), m_instanceFactoryCreateMethod, new Class[][] {{}}, new Object[][] {{}}, false);
     					}
     		        	catch (Exception e) {
@@ -1046,6 +1056,10 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 
     public int getState() {
         return (isRegistered() ? 1 : 0);
+    }
+    
+    public DependencyManager getDependencyManager() {
+        return m_manager;
     }
     
     static {

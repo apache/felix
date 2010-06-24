@@ -19,6 +19,7 @@
 package org.apache.felix.dm.impl.dependencies;
 
 import org.apache.felix.dm.dependencies.Dependency;
+import org.apache.felix.dm.service.Service;
 
 public interface DependencyService {
     /**
@@ -43,7 +44,14 @@ public interface DependencyService {
     public void dependencyChanged(Dependency dependency);
     
     public Object getService(); // is also defined on the Service interface
-    public void initService(); // was an implementation method
+    public void initService(); // was an implementation method TODO we use it in ConfDepImpl but should not (probably)
     public boolean isRegistered(); // impl method
     public Object[] getCompositionInstances(); // impl method
+    
+    /**
+     * Can be called by the dependency whenever it wants to invoke callback methods.
+     */
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
+    
+    public Service getServiceInterface();
 }
