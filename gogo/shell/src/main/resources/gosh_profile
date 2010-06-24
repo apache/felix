@@ -11,8 +11,7 @@ SCOPE = gogo:*
 addcommand context ${.context}
 
 # add methods on System object as commands
-# FELIX-2335 prevents the use of (bundle 0) loadclass
-addcommand system ((bundle 1) loadclass java.lang.System)
+addcommand system ((context:bundle 0) loadclass java.lang.System)
 
 # alias to print full stack trace
 e = { $exception printStackTrace }
