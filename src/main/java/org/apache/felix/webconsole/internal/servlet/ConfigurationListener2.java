@@ -80,6 +80,16 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             final ArrayList adList = new ArrayList();
             adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_MANAGER_ROOT, "Root URI",
                 "The root path to the OSGi Management Console.", OsgiManager.DEFAULT_MANAGER_ROOT ) );
+            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_HTTP_SERVICE_SELECTOR, "Http Service Selector",
+                "The Http Service Selector is an OSGi filter used to select the Http Service to "
+                    + "which the Web Console binds. The value of this property (if not empty) is "
+                    + "combined the object class selection term to get the actual service selection "
+                    + "filter like (&(objectClass=org.osgi.service.http.HttpService)(selector)). This "
+                    + "property must not have leading an trailing parentheses. For example, to bind "
+                    + "to the service with service ID 15 set the selector to 'service.id=15' (without "
+                    + "the quotes). By default (if this property is not set or set to an empty "
+                    + "string) the Web Console binds with an Http Service available.",
+                OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR ) );
             adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_DEFAULT_RENDER, "Default Page",
                 "The name of the default configuration page when invoking the OSGi Management console.",
                 OsgiManager.DEFAULT_PAGE ) );
@@ -94,9 +104,12 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_PASSWORD, "Password",
                 "The password for the user allowed to access the OSGi Management Console.",
                 OsgiManager.DEFAULT_PASSWORD ) );
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOCALE, "Locale",
-                "If set, this locale forces the localization to use this locale instead of the one, requested by the web browser",
-                "" ) );
+            adList
+                .add( new AttributeDefinitionImpl(
+                    OsgiManager.PROP_LOCALE,
+                    "Locale",
+                    "If set, this locale forces the localization to use this locale instead of the one, requested by the web browser",
+                    "" ) );
             adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, "Log Level", "Logging Level",
                 AttributeDefinition.INTEGER, new String[]
                     { String.valueOf( OsgiManager.DEFAULT_LOG_LEVEL ) }, 0, new String[]
