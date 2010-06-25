@@ -91,9 +91,18 @@ public class ServiceLifecycleHandler
     private List<Dependency> m_namedDeps = new ArrayList<Dependency>();
     private Bundle m_bundle;
 
+    /**
+     * Makes a new ServiceLifecycleHandler object. This objects allows to decorate the "init" service callback, in
+     * order to see if "init" callback returns a dependency customization map.
+     * 
+     * @param srv The Service for the annotated class
+     * @param srvBundle the Service bundle
+     * @param dm The DependencyManager bundle
+     * @param srvMeta The Service MetaData
+     * @param depMeta The Dependencies MetaData
+     */
     public ServiceLifecycleHandler(Service srv, Bundle srvBundle, DependencyManager dm,
                                    MetaData srvMeta, List<MetaData> depMeta)
-        throws Exception
     {
         m_srvMeta = srvMeta;
         m_init = srvMeta.getString(Params.init, null);
@@ -104,19 +113,34 @@ public class ServiceLifecycleHandler
         m_depsMeta = depMeta;
     }
 
+    /**
+     * Handles an "init" lifecycle service callback. We just catch the "init" method, and callback ourself 
+     * the actual Service' init method, to see if it returns a dependency customization map.
+     * 
+     * @param service The Annotated Service
+     * @throws Exception on any errors
+     */
     @SuppressWarnings("unchecked")
     public void init(Service service)
         throws Exception
     {
         Object serviceInstance = service.getService();
         DependencyManager dm = service.getDependencyManager(); 
-        // Invoke the service instance init method, and check if it returns a dependency
-        // customization map. This map will be used to configure some dependency filters
-        // (or required flag).
+        
+        // Invoke all composites' init methods, and for each one, check if a dependency
+        // customization map is returned by the method. This map will be used to configure 
+        // some dependency filters (or required flag).
       
-        Object o = invokeMethod(serviceInstance, m_init, dm, service);      
-        Map<String, String> customization = (o != null && Map.class.isAssignableFrom(o.getClass())) ?
-            (Map<String, String>) o : new HashMap<String, String>();
+        Map<String, String> customization = new HashMap<String, String>();
+        Object[] composites = service.getCompositionInstances();
+        for (Object composite : composites)
+        {
+            Object o = invokeMethod(composite, m_init, dm, service);
+            if (o != null && Map.class.isAssignableFrom(o.getClass()))
+            {
+                customization.putAll((Map) o);
+            }
+        }
        
         Log.instance().log(LogService.LOG_DEBUG,
                            "ServiceLifecycleHandler.init: invoked init method from service %s " +
@@ -153,33 +177,74 @@ public class ServiceLifecycleHandler
                 m_namedDeps.add(d);
                 service.add(d);
             }
-        }
+        }        
     }
-
+    
+    /**
+     * Catches the Service's start lifecycle callback. We just invoke ourself the service "start" callback on 
+     * the service instance, as well as on all eventual service composites.
+     * 
+     * @param service The Annotated Service
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
     public void start(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        Object serviceInstance = service.getService();
-        DependencyManager dm = service.getDependencyManager(); 
-        invokeMethod(serviceInstance, m_start, dm, service);
+        callbackComposites(service, m_start);
     }
 
+    /**
+     * Catches the Service's stop lifecycle callback. We just invoke ourself the service "stop" callback on 
+     * the service instance, as well as on all eventual service composites.
+     * 
+     * @param service The Annotated Service
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
     public void stop(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        Object serviceInstance = service.getService();
-        DependencyManager dm = service.getDependencyManager(); 
-        invokeMethod(serviceInstance, m_stop, dm, service);
+        callbackComposites(service, m_stop);
     }
 
+    /**
+     * Catches the Service's destroy lifecycle callback. We just invoke ourself the service "destroy" callback on 
+     * the service instance, as well as on all eventual service composites.
+     * 
+     * @param service The Annotated Service
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
     public void destroy(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        Object serviceInstance = service.getService();
-        DependencyManager dm = service.getDependencyManager(); 
-        invokeMethod(serviceInstance, m_destroy, dm, service);
+        callbackComposites(service, m_destroy);
     }
 
+    /**
+     * Invoke a callback on the actual Service.
+     * 
+     * @param service the Service used to managed the annotated Service
+     * @param callback the callback to invoke (init, start, stop, or destroy)
+     */
+    private void callbackComposites(Service service, String callback) 
+        throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+    {
+        Object serviceInstance = service.getService();
+        Object[] composites = service.getCompositionInstances();
+        for (Object composite: composites)
+        {
+            invokeMethod(composite, callback, service.getDependencyManager(), service);
+        }
+    }
+
+    /**
+     * Invoke a callback on an Object instance.
+     */
     private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
