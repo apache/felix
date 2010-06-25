@@ -204,29 +204,6 @@ public class OsgiManager extends GenericServlet
         this.bundleContext = bundleContext;
         this.holder = new PluginHolder( bundleContext );
 
-        securityProviderTracker = new ServiceTracker( bundleContext, WebConsoleSecurityProvider.class.getName(), null );
-        securityProviderTracker.open();
-
-        updateConfiguration( null );
-
-        try
-        {
-            this.configurationListener = ConfigurationListener2.create( this );
-        }
-        catch ( Throwable t2 )
-        {
-            // might be caused by Metatype API not available
-            // try without MetaTypeProvider
-            try
-            {
-                this.configurationListener = ConfigurationListener.create( this );
-            }
-            catch ( Throwable t )
-            {
-                // might be caused by CM API not available
-            }
-        }
-
         // setup the included plugins
         ClassLoader classLoader = getClass().getClassLoader();
         for ( int i = 0; i < PLUGIN_CLASSES.length; i++ )
@@ -295,6 +272,31 @@ public class OsgiManager extends GenericServlet
         // accept new console branding service
         brandingTracker = new BrandingServiceTracker( this );
         brandingTracker.open();
+
+        // add support for pluggable security
+        securityProviderTracker = new ServiceTracker( bundleContext, WebConsoleSecurityProvider.class.getName(), null );
+        securityProviderTracker.open();
+
+        // configure and start listening for configuration
+        updateConfiguration( null );
+
+        try
+        {
+            this.configurationListener = ConfigurationListener2.create( this );
+        }
+        catch ( Throwable t2 )
+        {
+            // might be caused by Metatype API not available
+            // try without MetaTypeProvider
+            try
+            {
+                this.configurationListener = ConfigurationListener.create( this );
+            }
+            catch ( Throwable t )
+            {
+                // might be caused by CM API not available
+            }
+        }
     }
 
 
