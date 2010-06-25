@@ -41,7 +41,7 @@ public class ServiceFactoryAnnotationTest extends AnnotationBase
     public static Option[] configuration()
     {
         return options(
-            systemProperty("dm.runtime.log").value( "true" ),
+            systemProperty(DMLOG_PROPERTY).value( "true" ),
             provision(
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),

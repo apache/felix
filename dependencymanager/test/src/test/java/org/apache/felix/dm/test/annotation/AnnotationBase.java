@@ -33,6 +33,13 @@ import org.osgi.framework.BundleException;
 public class AnnotationBase extends Base implements Sequencer
 {
     /**
+     * Name of the system property telling if the DM runtime bundle must wait for the log service 
+     * availability before starting. By default, the log service is replaced by a NullObject 
+     * if it is not available.
+     */
+    public static String DMLOG_PROPERTY = "dm.runtime.log";
+    
+    /**
      * The object used to check if expected steps happen in the correct order.
      */
     protected Ensure m_ensure = new Ensure();
