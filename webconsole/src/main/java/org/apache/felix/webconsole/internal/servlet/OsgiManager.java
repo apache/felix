@@ -18,7 +18,6 @@ package org.apache.felix.webconsole.internal.servlet;
 
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,6 +51,9 @@ import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpContext;
@@ -119,6 +121,8 @@ public class OsgiManager extends GenericServlet
 
     static final String PROP_LOCALE = "locale";
 
+    static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter";
+
     public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
 
     static final String DEFAULT_PAGE = BundlesServlet.NAME;
@@ -128,6 +132,8 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_USER_NAME = "admin";
 
     static final String DEFAULT_PASSWORD = "admin";
+
+    static final String DEFAULT_HTTP_SERVICE_SELECTOR = "";
 
     /**
      * The default value for the {@link #PROP_MANAGER_ROOT} configuration
@@ -157,7 +163,7 @@ public class OsgiManager extends GenericServlet
 
     private BundleContext bundleContext;
 
-    private ServiceTracker httpServiceTracker;
+    private HttpServiceTracker httpServiceTracker;
 
     private HttpService httpService;
 
@@ -220,11 +226,6 @@ public class OsgiManager extends GenericServlet
                 // might be caused by CM API not available
             }
         }
-
-        // get at the HttpService first, this should initialize
-        // the OSGi Manager and start the initial setup
-        httpServiceTracker = new HttpServiceTracker( this );
-        httpServiceTracker.open();
 
         // setup the included plugins
         ClassLoader classLoader = getClass().getClassLoader();
@@ -568,13 +569,60 @@ public class OsgiManager extends GenericServlet
     private static class HttpServiceTracker extends ServiceTracker
     {
 
+        private static final String HTTP_SERVICE = "org.osgi.service.http.HttpService";
+
         private final OsgiManager osgiManager;
 
+        private final String httpServiceSelector;
 
-        HttpServiceTracker( OsgiManager osgiManager )
+
+        static HttpServiceTracker create( OsgiManager osgiManager, String httpServiceSelector )
         {
-            super( osgiManager.getBundleContext(), HttpService.class.getName(), null );
+            // got a service selector filter
+            if ( httpServiceSelector != null && httpServiceSelector.length() > 0 )
+            {
+                try
+                {
+                    final String filterString = "(&(" + Constants.OBJECTCLASS + "=" + HTTP_SERVICE + ")("
+                        + httpServiceSelector + "))";
+                    Filter filter = osgiManager.getBundleContext().createFilter( filterString );
+                    return new HttpServiceTracker( osgiManager, httpServiceSelector, filter );
+                }
+                catch ( InvalidSyntaxException ise )
+                {
+                    // TODO: log or throw or ignore ....
+                }
+            }
+
+            // no filter or illegal filter string
+            return new HttpServiceTracker( osgiManager );
+        }
+
+
+        private HttpServiceTracker( final OsgiManager osgiManager )
+        {
+            super( osgiManager.getBundleContext(), HTTP_SERVICE, null );
             this.osgiManager = osgiManager;
+            this.httpServiceSelector = null;
+        }
+
+
+        private HttpServiceTracker( final OsgiManager osgiManager, final String httpServiceSelector,
+            final Filter httpServiceFilter )
+        {
+            super( osgiManager.getBundleContext(), httpServiceFilter, null );
+            this.osgiManager = osgiManager;
+            this.httpServiceSelector = httpServiceSelector;
+        }
+
+
+        boolean isSameSelector( final String newHttpServiceSelector )
+        {
+            if ( newHttpServiceSelector != null )
+            {
+                return newHttpServiceSelector.equals( httpServiceSelector );
+            }
+            return httpServiceSelector == null;
         }
 
 
@@ -747,6 +795,16 @@ public class OsgiManager extends GenericServlet
             newWebManagerRoot = "/" + newWebManagerRoot;
         }
 
+        // get the HTTP Service selector (and dispose tracker for later
+        // recreation)
+        final String newHttpServiceSelector = getProperty( config, PROP_HTTP_SERVICE_SELECTOR,
+            DEFAULT_HTTP_SERVICE_SELECTOR );
+        if ( httpServiceTracker != null && !httpServiceTracker.isSameSelector( newHttpServiceSelector ) )
+        {
+            httpServiceTracker.close();
+            httpServiceTracker = null;
+        }
+
         // get enabled plugins
         Object pluginValue = config.get( PROP_ENABLED_PLUGINS );
         if ( pluginValue == null )
@@ -785,6 +843,13 @@ public class OsgiManager extends GenericServlet
         {
             // just set the configured location (FELIX-2034)
             this.webManagerRoot = newWebManagerRoot;
+        }
+
+        // create or recreate the HTTP service tracker with the new selector
+        if ( httpServiceTracker == null )
+        {
+            httpServiceTracker = HttpServiceTracker.create( this, newHttpServiceSelector );
+            httpServiceTracker.open();
         }
     }
 
