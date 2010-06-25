@@ -51,7 +51,7 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
     public static Option[] configuration()
     {
         return options(
-            systemProperty("dm.log").value( "true" ),
+            systemProperty("dm.runtime.log").value( "true" ),
             provision(
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.4"),
