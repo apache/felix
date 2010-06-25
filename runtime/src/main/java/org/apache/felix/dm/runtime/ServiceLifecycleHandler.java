@@ -33,13 +33,13 @@ import org.osgi.service.log.LogService;
 /**
  * Allow Services to configure dynamically their dependency filters from their init() method.
  * Basically, this class acts as a service implementation lifecycle handler. When we detect that the Service is
- * called in its init() method, and if its init() method returns a Map, then the Map is assumed to contain
- * dependency filters, which will be applied to all named service dependencies. The Map optionally returned by
- * Service's init method has to contains the following keys:
+ * called in its init() method, and if init() returns a Map, then the Map is assumed to contain
+ * dependency filters, which will be applied to all named dependencies. The Map optionally returned by
+ * Service's init method may contain the following keys:
  * <ul>
- *   <li>name.filter: the value must be a valid OSGi filter. the "name" prefix must match a ServiceDependency 
+ *   <li>name.filter: the value must be a valid OSGi filter, and the "name" prefix must match a ServiceDependency 
  *   name attribute</li>
- *   <li>name.required: the value is a boolean ("true"|"false") and must the "name" prefix must match a 
+ *   <li>name.required: the value is a boolean ("true"|"false") and the "name" prefix must match a 
  *   ServiceDependency name attribute</li>
  * </ul>
  * 
@@ -63,6 +63,11 @@ import org.osgi.service.log.LogService;
  *           // And store the config for later usage (from our init method)
  *           m_config = config;
  *      }
+ *      
+ *      &#64;ServiceDependency(name="dependency1") 
+ *      void bindOtherService(OtherService other) {
+ *         // the filter and required flag will be configured from our init method.
+ *      }
  *
  *      // The returned Map will be used to configure our "dependency1" Dependency.
  *      &#64;Init
@@ -72,11 +77,6 @@ import org.osgi.service.log.LogService;
  *              put("dependency1.required", m_config.get("required"));
  *          }};
  *      } 
- *      
- *      &#64;ServiceDependency(name="dependency1") 
- *      void bindOtherService(OtherService other) {
- *         // the filter and required flag will be configured from our init method.
- *      }
  *  }
  *  </pre></blockquote>
  */
@@ -97,7 +97,7 @@ public class ServiceLifecycleHandler
      * 
      * @param srv The Service for the annotated class
      * @param srvBundle the Service bundle
-     * @param dm The DependencyManager bundle
+     * @param dm The DependencyManager that was used to create the service
      * @param srvMeta The Service MetaData
      * @param depMeta The Dependencies MetaData
      */
@@ -114,11 +114,10 @@ public class ServiceLifecycleHandler
     }
 
     /**
-     * Handles an "init" lifecycle service callback. We just catch the "init" method, and callback ourself 
-     * the actual Service' init method, to see if it returns a dependency customization map.
+     * Handles an "init" lifecycle service callback. We just catch the "init" method, and callback 
+     * the actual Service' init method, to see if a dependency customization map is returned.
      * 
      * @param service The Annotated Service
-     * @throws Exception on any errors
      */
     @SuppressWarnings("unchecked")
     public void init(Service service)
@@ -181,13 +180,8 @@ public class ServiceLifecycleHandler
     }
     
     /**
-     * Catches the Service's start lifecycle callback. We just invoke ourself the service "start" callback on 
+     * Handles the Service's start lifecycle callback. We just invoke the service "start" service callback on 
      * the service instance, as well as on all eventual service composites.
-     * 
-     * @param service The Annotated Service
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
      */
     public void start(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
@@ -196,13 +190,8 @@ public class ServiceLifecycleHandler
     }
 
     /**
-     * Catches the Service's stop lifecycle callback. We just invoke ourself the service "stop" callback on 
+     * Handles the Service's stop lifecycle callback. We just invoke the service "stop" callback on 
      * the service instance, as well as on all eventual service composites.
-     * 
-     * @param service The Annotated Service
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
      */
     public void stop(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
@@ -211,13 +200,8 @@ public class ServiceLifecycleHandler
     }
 
     /**
-     * Catches the Service's destroy lifecycle callback. We just invoke ourself the service "destroy" callback on 
+     * Handles the Service's destroy lifecycle callback. We just invoke the service "destroy" callback on 
      * the service instance, as well as on all eventual service composites.
-     * 
-     * @param service The Annotated Service
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
      */
     public void destroy(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
@@ -226,10 +210,7 @@ public class ServiceLifecycleHandler
     }
 
     /**
-     * Invoke a callback on the actual Service.
-     * 
-     * @param service the Service used to managed the annotated Service
-     * @param callback the callback to invoke (init, start, stop, or destroy)
+     * Invoke a callback on all Service compositions.
      */
     private void callbackComposites(Service service, String callback) 
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
