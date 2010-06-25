@@ -339,13 +339,23 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
     {
         pw.title( desc.title );
         final ConfigurationPrinter cp = desc.printer;
-        if ( cp instanceof ModeAwareConfigurationPrinter )
+        try
         {
-            ( ( ModeAwareConfigurationPrinter ) cp ).printConfiguration( pw, mode );
+            if ( cp instanceof ModeAwareConfigurationPrinter )
+            {
+                ( ( ModeAwareConfigurationPrinter ) cp ).printConfiguration( pw, mode );
+            }
+            else
+            {
+                cp.printConfiguration( pw );
+            }
         }
-        else
+        catch ( Throwable t )
         {
-            cp.printConfiguration( pw );
+            pw.println();
+            pw.println( "Configuration Printer failed: " + t.toString() );
+            pw.println();
+            log( "Configuration Printer " + desc.title + " (" + cp.getClass() + ") failed", t );
         }
         pw.end();
     }

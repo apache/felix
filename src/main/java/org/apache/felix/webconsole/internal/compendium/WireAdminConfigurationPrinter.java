@@ -31,13 +31,16 @@ import org.osgi.service.wireadmin.Wire;
 import org.osgi.service.wireadmin.WireAdmin;
 
 /**
- * WireAdminConfigurationPrinter reads the configured wires in WireAdmin service, and 
+ * WireAdminConfigurationPrinter reads the configured wires in WireAdmin service, and
  * prints them along their properties and values.
  */
 public final class WireAdminConfigurationPrinter extends AbstractConfigurationPrinter
 {
 
     private static final String TITLE = "Wire Admin";
+
+    private static final String WIRE_ADMIN_NAME = "org.osgi.service.wireadmin.WireAdmin";
+
 
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
@@ -53,7 +56,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
     public final void printConfiguration(PrintWriter pw)
     {
         final BundleContext bc = getBundleContext();
-        final ServiceReference ref = bc.getServiceReference(WireAdmin.class.getName());
+        final ServiceReference ref = bc.getServiceReference( WIRE_ADMIN_NAME );
         final WireAdmin wireAdmin = (WireAdmin) (ref != null ? bc.getService(ref) : null);
 
         try

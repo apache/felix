@@ -31,13 +31,18 @@ import org.osgi.service.permissionadmin.PermissionAdmin;
 import org.osgi.service.permissionadmin.PermissionInfo;
 
 /**
- * PermissionsPrinter reads the given permissions from PermissionAdmin and 
+ * PermissionsPrinter reads the given permissions from PermissionAdmin and
  * ConditionalPermissionAdmin and prints them.
  */
 public final class PermissionsConfigurationPrinter extends AbstractConfigurationPrinter
 {
 
     private static final String TITLE = "Permissions";
+
+    private static final String PERMISSION_ADMIN_NAME = "org.osgi.service.permissionadmin.PermissionAdmin";
+
+    private static final String CONDITIONAL_PERMISSION_ADMIN_NAME = "org.osgi.service.condpermadmin.ConditionalPermissionAdmin";
+
 
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
@@ -53,8 +58,8 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
     public final void printConfiguration(PrintWriter pw)
     {
         final BundleContext bc = getBundleContext();
-        final ServiceReference paRef = bc.getServiceReference(PermissionAdmin.class.getName());
-        final ServiceReference cpaRef = bc.getServiceReference(ConditionalPermissionAdmin.class.getName());
+        final ServiceReference paRef = bc.getServiceReference( PERMISSION_ADMIN_NAME );
+        final ServiceReference cpaRef = bc.getServiceReference( CONDITIONAL_PERMISSION_ADMIN_NAME );
         final PermissionAdmin pa = paRef != null ? (PermissionAdmin) bc.getService(paRef)
             : null;
         final ConditionalPermissionAdmin cpa = cpaRef != null ? (ConditionalPermissionAdmin) bc.getService(cpaRef)
