@@ -38,16 +38,17 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator
 {
-    private CommandProcessorImpl processor;
+    protected CommandProcessorImpl processor;
     private ThreadIOImpl threadio;
     private ServiceTracker commandTracker;
     private ServiceTracker converterTracker;
     private ServiceRegistration processorRegistration;
     private ServiceRegistration threadioRegistration;
     
-    protected CommandProcessorImpl newProcessor(ThreadIO tio, BundleContext context)
+    protected ServiceRegistration newProcessor(ThreadIO tio, BundleContext context)
     {
-        return new CommandProcessorImpl(tio, context);
+        processor = new CommandProcessorImpl(tio, context);
+        return context.registerService(CommandProcessor.class.getName(), processor, null);
     }
 
     public void start(final BundleContext context) throws Exception
@@ -57,9 +58,7 @@ public class Activator implements BundleActivator
         threadioRegistration = context.registerService(ThreadIO.class.getName(),
             threadio, null);
 
-        processor = newProcessor(threadio, context);
-        processorRegistration = context.registerService(CommandProcessor.class.getName(),
-            processor, null);
+        processorRegistration = newProcessor(threadio, context);
         
         commandTracker = trackOSGiCommands(context);
         commandTracker.open();
