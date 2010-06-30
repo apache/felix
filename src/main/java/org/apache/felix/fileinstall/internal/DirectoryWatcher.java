@@ -87,6 +87,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String TMPDIR = "felix.fileinstall.tmpdir";
     public final static String FILTER = "felix.fileinstall.filter";
     public final static String START_NEW_BUNDLES = "felix.fileinstall.bundles.new.start";
+    public final static String USE_START_TRANSIENT = "felix.fileinstall.bundles.startTransient";
     public final static String NO_INITIAL_DELAY = "felix.fileinstall.noInitialDelay";
 
     static final SecureRandom random = new SecureRandom();
@@ -99,6 +100,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     long poll;
     int logLevel;
     boolean startBundles;
+    boolean useStartTransient;
     String filter;
     BundleContext context;
     String originatingFileName;
@@ -129,6 +131,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         tmpDir = getFile(properties, TMPDIR, null);
         prepareTempDir();
         startBundles = getBoolean(properties, START_NEW_BUNDLES, true);  // by default, we start bundles.
+        useStartTransient = getBoolean(properties, USE_START_TRANSIENT, false);  // by default, we start bundles persistently.
         filter = (String) properties.get(FILTER);
         noInitialDelay = getBoolean(properties, NO_INITIAL_DELAY, false);
         this.context.addBundleListener(this);
@@ -1101,7 +1104,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 if (bundle != null)
                 {
                     if (bundle.getState() != Bundle.STARTING && bundle.getState() != Bundle.ACTIVE
-                        && FileInstall.getStartLevel().isBundlePersistentlyStarted(bundle)
+                        && (useStartTransient || FileInstall.getStartLevel().isBundlePersistentlyStarted(bundle))
                         && FileInstall.getStartLevel().getStartLevel() >= FileInstall.getStartLevel().getBundleStartLevel(bundle))
                     {
                         bundles.add(bundle);
@@ -1130,7 +1133,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             try
             {
-                bundle.start();
+                bundle.start(useStartTransient ? Bundle.START_TRANSIENT : 0);
                 log(Logger.LOG_INFO, "Started bundle: " + bundle.getLocation(), null);
             }
             catch (BundleException e)
