@@ -109,6 +109,7 @@ public class FileInstall implements BundleActivator
         set(ht, DirectoryWatcher.FILTER);
         set(ht, DirectoryWatcher.TMPDIR);
         set(ht, DirectoryWatcher.START_NEW_BUNDLES);
+        set(ht, DirectoryWatcher.USE_START_TRANSIENT);
         set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
         updated("initial", ht);
     }
