@@ -69,6 +69,15 @@ public class TestParser2 extends TestCase
         c.addCommand("echo", this);
         // FELIX-2433
         assertEquals("helloworld", c.execute("echo \"$(echo hello)world\""));
+        
+         // FELIX-1473 - allow method calls on String objects
+        assertEquals("hello", c.execute("cmd = echo; eval $cmd hello"));
+        assertEquals(4, c.execute("'four' length"));
+        try {
+            c.execute("four length");
+            fail("expected: command not found: four");
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     public CharSequence echo(Object args[])

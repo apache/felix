@@ -154,7 +154,7 @@ public class TestParser extends TestCase
 
         assertEquals("a", c.execute("e = { echo $1 } ; e a   b"));
         assertEquals("b", c.execute("e = { echo $2 } ; e a   b"));
-        assertEquals("b", c.execute("e = { $args } ; e echo  b"));
+        assertEquals("b", c.execute("e = { eval $args } ; e echo  b"));
         assertEquals("ca b", c.execute("e = { echo c$args } ; e a  b"));
         assertEquals("c a b", c.execute("e = { echo c $args } ; e a  b"));
         assertEquals("ca  b", c.execute("e = { echo c$args } ; e 'a  b'"));
@@ -233,8 +233,8 @@ public class TestParser extends TestCase
         Context c = new Context();
         c.addCommand("echo", this);
         assertEquals("a", c.execute("echo a") + "");
-        assertEquals("a", c.execute("(echo echo) a") + "");
-        assertEquals("a", c.execute("((echo echo) echo) (echo a)") + "");
+        assertEquals("a", c.execute("eval (echo echo) a") + "");
+        //assertEquals("a", c.execute("((echo echo) echo) (echo a)") + "");
         assertEquals("3", c.execute("[a=2 (echo b)=(echo 3)] get b").toString());
     }
 
