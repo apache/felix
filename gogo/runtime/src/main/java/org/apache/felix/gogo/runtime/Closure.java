@@ -222,6 +222,28 @@ public class Closure implements Function, Evaluate
         return last == null ? null : last.result;
     }
 
+    private Object eval(Object v)
+    {
+        String s = v.toString();
+        if ("null".equals(s))
+        {
+            v = null;
+        }
+        else if ("false".equals(s))
+        {
+            v = false;
+        }
+        else if ("true".equals(s))
+        {
+            v = true;
+        }
+        else
+        {
+            v = s;
+        }
+        return v;
+    }
+
     public Object eval(final Token t) throws Exception
     {
         Object v = null;
@@ -230,26 +252,10 @@ public class Closure implements Function, Evaluate
         {
             case WORD:
                 v = Tokenizer.expand(t, this);
-                
+
                 if (t == v)
                 {
-                    String s = v.toString();
-                    if ("null".equals(s))
-                    {
-                        v = null;
-                    }
-                    else if ("false".equals(s))
-                    {
-                        v = false;
-                    }
-                    else if ("true".equals(s))
-                    {
-                        v = true;
-                    }
-                    else
-                    {
-                        v = s;
-                    }
+                    v = eval(v);
                 }
                 else if (v instanceof CharSequence)
                 {
@@ -280,18 +286,30 @@ public class Closure implements Function, Evaluate
         return v;
     }
 
+    /*
+     * executeStatement handles the following cases:
+     *    <string> '=' word // simple assignment
+     *    <string> '=' word word.. // complex assignment
+     *    <bareword> word.. // command invocation
+     *    <object> // value of <object>
+     *    <object> word.. // method call
+     */
     public Object executeStatement(List<Token> statement) throws Exception
     {
-        // add set -x facility if echo is set
-        if (Boolean.TRUE.equals(session.get("echo")))
+        Object echo = session.get("echo");
+        String xtrace = null;
+        
+        if (echo != null && !"false".equals(echo.toString()))
         {
+            // set -x execution trace
             StringBuilder buf = new StringBuilder("+");
             for (Token token : statement)
             {
                 buf.append(' ');
                 buf.append(token.source());
             }
-            session.err.println(buf);
+            xtrace = buf.toString();
+            session.err.println(xtrace);
         }
 
         List<Object> values = new ArrayList<Object>();
@@ -332,138 +350,167 @@ public class Closure implements Function, Evaluate
             throw new RuntimeException("Command name evaluates to null: " + errTok);
         }
 
-        return execute(cmd, values);
+        if (cmd instanceof CharSequence && values.size() > 0
+            && Type.ASSIGN.equals(values.get(0)))
+        {
+            values.remove(0);
+            String scmd = cmd.toString();
+            Object value;
+
+            if (values.size() == 0)
+            {
+                return session.variables.remove(scmd);
+            }
+
+            if (values.size() == 1)
+            {
+                value = values.get(0);
+            }
+            else
+            {
+                cmd = values.remove(0);
+                if (null == cmd)
+                {
+                    throw new RuntimeException("Command name evaluates to null: "
+                        + errTok2);
+                }
+
+                trace2(xtrace, cmd, values);
+
+                value = bareword(statement.get(2)) ? executeCmd(cmd.toString(), values)
+                    : executeMethod(cmd, values);
+            }
+
+            return assignment(scmd, value);
+        }
+
+        trace2(xtrace, cmd, values);
+
+        return bareword(statement.get(0)) ? executeCmd(cmd.toString(), values)
+            : executeMethod(cmd, values);
     }
 
-    private Object execute(Object cmd, List<Object> values) throws Exception
+    // second level expanded execution trace
+    private void trace2(String trace1, Object cmd, List<Object> values)
     {
-        // Now there are the following cases
-        // <string> '=' statement // complex assignment
-        // <string> statement // cmd call
-        // <object> // value of <object>
-        // <object> statement // method call
+        if ("verbose".equals(session.get("echo")))
+        {
+            StringBuilder buf = new StringBuilder("+ " + cmd);
+
+            for (Object value : values)
+            {
+                buf.append(' ');
+                buf.append(value);
+            }
+
+            String trace2 = buf.toString();
+
+            if (!trace2.equals(trace1))
+            {
+                session.err.println("+" + trace2);
+            }
+        }
+    }
+
+    private boolean bareword(Token t) throws Exception
+    {
+        return ((t.type == Type.WORD) && (t == Tokenizer.expand(t, this)) && (eval((Object) t) instanceof String));
+    }
+
+    private Object executeCmd(String scmd, List<Object> values) throws Exception
+    {
+        String scopedFunction = scmd;
+        Object x = get(scmd);
+
+        if (!(x instanceof Function))
+        {
+            if (scmd.indexOf(':') < 0)
+            {
+                scopedFunction = "*:" + scmd;
+            }
+
+            x = get(scopedFunction);
+
+            if (x == null || !(x instanceof Function))
+            {
+                // try default command handler
+                if (session.get(DEFAULT_LOCK) == null)
+                {
+                    x = get("default");
+                    if (x == null)
+                    {
+                        x = get("*:default");
+                    }
+
+                    if (x instanceof Function)
+                    {
+                        try
+                        {
+                            session.put(DEFAULT_LOCK, true);
+                            values.add(0, scmd);
+                            return ((Function) x).execute(session, values);
+                        }
+                        finally
+                        {
+                            session.variables.remove(DEFAULT_LOCK);
+                        }
+                    }
+                }
+
+                throw new IllegalArgumentException("Command not found: " + scmd);
+            }
+        }
+        return ((Function) x).execute(session, values);
+    }
+
+    private Object executeMethod(Object cmd, List<Object> values) throws Exception
+    {
+        if (values.isEmpty())
+        {
+            return cmd;
+        }
 
         boolean dot = values.size() > 1 && ".".equals(String.valueOf(values.get(0)));
 
-        if (cmd instanceof CharSequence && !dot)
+        // FELIX-1473 - allow method chaining using dot pseudo-operator, e.g.
+        //  (bundle 0) . loadClass java.net.InetAddress . localhost . hostname
+        //  (((bundle 0) loadClass java.net.InetAddress ) localhost ) hostname
+        if (dot)
         {
-            String scmd = cmd.toString();
+            Object target = cmd;
+            ArrayList<Object> args = new ArrayList<Object>();
+            values.remove(0);
 
-            if (values.size() > 0 && Type.ASSIGN.equals(values.get(0)))
+            for (Object arg : values)
             {
-                Object value;
-
-                if (values.size() == 1)
+                if (".".equals(arg))
                 {
-                    return session.variables.remove(scmd);
-                }
-
-                if (values.size() == 2)
-                {
-                    value = values.get(1);
+                    target = Reflective.method(session, target,
+                        args.remove(0).toString(), args);
+                    args.clear();
                 }
                 else
                 {
-                    cmd = values.get(1);
-                    if (null == cmd)
-                    {
-                        throw new RuntimeException("Command name evaluates to null: "
-                            + errTok2);
-                    }
-                    value = execute(cmd, values.subList(2, values.size()));
+                    args.add(arg);
                 }
-
-                return assignment(scmd, value);
             }
-            else
+
+            if (args.size() == 0)
             {
-                String scopedFunction = scmd;
-                Object x = get(scmd);
-
-                if (!(x instanceof Function))
-                {
-                    if (scmd.indexOf(':') < 0)
-                    {
-                        scopedFunction = "*:" + scmd;
-                    }
-
-                    x = get(scopedFunction);
-
-                    if (x == null || !(x instanceof Function))
-                    {
-                        // try default command handler
-                        if (session.get(DEFAULT_LOCK) == null)
-                        {
-                            x = get("default");
-                            if (x == null)
-                            {
-                                x = get("*:default");
-                            }
-
-                            if (x instanceof Function)
-                            {
-                                try
-                                {
-                                    session.put(DEFAULT_LOCK, true);
-                                    values.add(0, scmd);
-                                    return ((Function) x).execute(session, values);
-                                }
-                                finally
-                                {
-                                    session.variables.remove(DEFAULT_LOCK);
-                                }
-                            }
-                        }
-
-                        throw new IllegalArgumentException("Command not found: " + scmd);
-                    }
-                }
-                return ((Function) x).execute(session, values);
+                return target;
             }
+
+            return Reflective.method(session, target, args.remove(0).toString(), args);
+        }
+        else if (cmd.getClass().isArray() && values.size() == 1)
+        {
+            Object[] cmdv = (Object[]) cmd;
+            String index = values.get(0).toString();
+            return "length".equals(index) ? cmdv.length : cmdv[Integer.parseInt(index)];
         }
         else
         {
-            if (values.isEmpty())
-            {
-                return cmd;
-            }
-            else if (dot)
-            {
-                // FELIX-1473 - allow methods calls on String objects
-                Object target = cmd;
-                ArrayList<Object> args = new ArrayList<Object>();
-                values.remove(0);
-
-                for (Object arg : values)
-                {
-                    if (".".equals(arg))
-                    {
-                        target = Reflective.method(session, target, args.remove(0).toString(), args);
-                        args.clear();
-                    }
-                    else
-                    {
-                        args.add(arg);
-                    }
-                }
-
-                if (args.size() == 0)
-                {
-                    return target;
-                }
-
-                return Reflective.method(session, target, args.remove(0).toString(), args);
-            }
-            else if (cmd.getClass().isArray() && values.size() == 1)
-            {
-                Object[] cmdv = (Object[])cmd;
-                String index = values.get(0).toString();
-                return "length".equals(index) ? cmdv.length : cmdv[Integer.parseInt(index)];
-            }
-            else
-            {
-                return Reflective.method(session, cmd, values.remove(0).toString(), values);
-            }
+            return Reflective.method(session, cmd, values.remove(0).toString(), values);
         }
     }
 
@@ -487,7 +534,7 @@ public class Closure implements Function, Evaluate
                 Object oval = eval(t);
                 if (oval.getClass().isArray())
                 {
-                    for (Object o : (Object[])oval)
+                    for (Object o : (Object[]) oval)
                     {
                         olist.add(o);
                     }

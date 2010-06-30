@@ -49,6 +49,7 @@ public class CommandProcessorImpl implements CommandProcessor
         this.context = context;
         addCommand("osgi", this, "addCommand");
         addCommand("osgi", this, "removeCommand");
+        addCommand("osgi", this, "eval");
     }
 
     public CommandSession createSession(InputStream in, PrintStream out, PrintStream err)
@@ -65,12 +66,12 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         converters.remove(c);
     }
-    
+
     public Set<String> getCommands()
     {
         return commands.keySet();
     }
-    
+
     BundleContext getContext()
     {
         return context;
@@ -84,16 +85,16 @@ public class CommandProcessorImpl implements CommandProcessor
         {
             return null;
         }
-        
+
         name = name.toLowerCase();
         Object cmd = commands.get(name);
         String cfunction = name.substring(colon);
         boolean anyScope = (colon == 1 && name.charAt(0) == '*');
-        
+
         if (null == cmd && anyScope)
         {
             String scopePath = (null == path ? "*" : path.toString());
-            
+
             for (String scope : scopePath.split(":"))
             {
                 if (scope.equals("*"))
@@ -111,7 +112,7 @@ public class CommandProcessorImpl implements CommandProcessor
                 {
                     cmd = commands.get(scope + cfunction);
                 }
-                
+
                 if (cmd != null)
                 {
                     break;
@@ -219,5 +220,20 @@ public class CommandProcessorImpl implements CommandProcessor
             }
         }
         return null;
+    }
+
+    // eval is needed to force expansions to be treated as commands (FELIX-1473)
+    public Object eval(CommandSession session, Object[] argv) throws Exception
+    {
+        StringBuilder buf = new StringBuilder();
+
+        for (Object arg : argv)
+        {
+            if (buf.length() > 0)
+                buf.append(' ');
+            buf.append(arg);
+        }
+
+        return session.execute(buf);
     }
 }
