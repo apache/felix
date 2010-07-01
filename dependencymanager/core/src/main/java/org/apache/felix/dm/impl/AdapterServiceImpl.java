@@ -85,8 +85,8 @@ public class AdapterServiceImpl extends FilterService
                      .setService(m_adapteeInterface, ref)
                      .setRequired(true));
             
-            for (Object d : dependencies) {
-                service.add(((Dependency) d).createCopy());
+            for (int i = 0; i < dependencies.size(); i++) {
+                service.add(((Dependency) dependencies.get(i)).createCopy());
             }
             
             for (int i = 0; i < m_stateListeners.size(); i ++) {

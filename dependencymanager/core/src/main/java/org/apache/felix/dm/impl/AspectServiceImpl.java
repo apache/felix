@@ -88,8 +88,8 @@ public class AspectServiceImpl extends FilterService
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
                 .add(getAspectDependency());
             
-            for (Object d : dependencies) {
-                service.add(((Dependency) d).createCopy());
+            for (int i = 0; i < dependencies.size(); i++) {
+                service.add(((Dependency) dependencies.get(i)).createCopy());
             }
 
             for (int i = 0; i < m_stateListeners.size(); i ++) {
