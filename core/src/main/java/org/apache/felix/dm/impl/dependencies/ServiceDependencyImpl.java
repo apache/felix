@@ -371,7 +371,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 m_isStarted = true;
                 needsStarting = true;
             }
-            else { System.out.println("ALREADY STARTED..."); } // TODO REMOVE, FOR DEBUGGING
         }
         if (needsStarting) {
             m_tracker.open();
