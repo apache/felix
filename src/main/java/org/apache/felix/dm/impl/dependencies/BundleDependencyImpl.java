@@ -24,6 +24,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.dependencies.BundleDependency;
+import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.tracker.BundleTracker;
@@ -62,6 +63,27 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
 		m_context = context;
 		m_autoConfig = true;
 	}
+    
+    public BundleDependencyImpl(BundleDependencyImpl prototype) {
+        super(prototype);
+        m_context = prototype.m_context;
+        m_autoConfig = prototype.m_autoConfig;
+        m_stateMask = prototype.m_stateMask;
+        m_nullObject = prototype.m_nullObject;
+        m_bundleInstance = prototype.m_bundleInstance;
+        m_filter = prototype.m_filter;
+        m_bundleId = prototype.m_bundleId;
+        m_propagate = prototype.m_propagate;
+        m_callbackInstance = prototype.m_callbackInstance;
+        m_callbackAdded = prototype.m_callbackAdded;
+        m_callbackChanged = prototype.m_callbackChanged;
+        m_callbackRemoved = prototype.m_callbackRemoved;
+        m_autoConfigInstance = prototype.m_autoConfigInstance;
+    }
+    
+    public Dependency createCopy() {
+        return new BundleDependencyImpl(this);
+    }
 
     public BundleDependency setInstanceBound(boolean isInstanceBound) {
         setIsInstanceBound(isInstanceBound);
@@ -104,23 +126,26 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
 
 	public String getName() {
         StringBuilder sb = new StringBuilder();
-        if (m_bundleInstance != null) {
-            sb.append(m_bundleInstance.getSymbolicName());
-            sb.append(' ');
-            sb.append(m_bundleInstance.getHeaders().get("Bundle-Version"));
-            sb.append(' ');
+        if ((m_stateMask & Bundle.ACTIVE) != 0) {
+            sb.append("active ");
         }
-        sb.append(Integer.toString(m_stateMask, 2));
+        if ((m_stateMask & Bundle.INSTALLED) != 0) {
+            sb.append("installed ");
+        }
+        if ((m_stateMask & Bundle.RESOLVED) != 0) {
+            sb.append("resolved ");
+        }
         if (m_filter != null) {
-            sb.append(' ');
             sb.append(m_filter.toString());
+        }
+        if (m_bundleId != -1) {
+            sb.append("bundle.id=" + m_bundleId);
         }
         return sb.toString();
 	}
 
 	public int getState() {
-		// TODO Auto-generated method stub
-		return 0;
+        return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
 	}
 
 	public String getType() {

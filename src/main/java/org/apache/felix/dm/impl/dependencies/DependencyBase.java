@@ -11,6 +11,12 @@ public abstract class DependencyBase implements Dependency, DependencyActivation
     public DependencyBase(Logger logger) {
         m_logger = logger;
     }
+    
+    public DependencyBase(DependencyBase prototype) {
+        m_logger = prototype.m_logger;
+        m_isRequired = prototype.isRequired();
+        m_isInstanceBound = prototype.m_isInstanceBound;
+    }
 
     public synchronized boolean isRequired() {
         return m_isRequired;

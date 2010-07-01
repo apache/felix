@@ -109,4 +109,9 @@ public interface Dependency {
     
     public boolean isPropagated();
     public Dictionary getProperties();
+    
+    /**
+     * Creates a copy of this dependency, cloning all declared state, but not the runtime state.
+     */
+    public Dependency createCopy();
 }

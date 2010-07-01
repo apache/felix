@@ -86,8 +86,12 @@ public class AspectServiceImpl extends FilterService
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-                .add(dependencies)
                 .add(getAspectDependency());
+            
+            for (Object d : dependencies) {
+                service.add(((Dependency) d).createCopy());
+            }
+
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
             }
