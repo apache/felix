@@ -86,8 +86,8 @@ public class BundleAdapterServiceImpl extends FilterService
                     .setAutoConfig(true)
                     .setRequired(true));
 
-            for (Object d : dependencies) {
-                service.add(((Dependency) d).createCopy());
+            for (int i = 0; i < dependencies.size(); i++) {
+                service.add(((Dependency) dependencies.get(i)).createCopy());
             }
 
             for (int i = 0; i < m_stateListeners.size(); i ++) {

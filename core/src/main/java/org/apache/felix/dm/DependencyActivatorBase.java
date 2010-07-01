@@ -18,7 +18,6 @@
  */
 package org.apache.felix.dm;
 
-import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.dependencies.BundleDependency;
@@ -165,8 +164,8 @@ public abstract class DependencyActivatorBase implements BundleActivator {
         return m_manager.createAdapterService(serviceInterface, serviceFilter);
     }
     
-    public Service createResourceAdapter(String resourceFilter, boolean propagate) {
-        return m_manager.createResourceAdapterService(resourceFilter, propagate);
+    public Service createResourceAdapter(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
+        return m_manager.createResourceAdapterService(resourceFilter, propagate, callbackInstance, callbackChanged);
     }
     
     public Service createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
