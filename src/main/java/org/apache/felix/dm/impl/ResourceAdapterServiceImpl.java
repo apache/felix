@@ -32,21 +32,25 @@ import org.apache.felix.dm.service.ServiceStateListener;
  * Resource adapter service implementation. This class extends the FilterService in order to catch
  * some Service methods for configuring actual resource adapter service implementation.
  */
-public class ResourceAdapterServiceImpl extends FilterService
-{
+public class ResourceAdapterServiceImpl extends FilterService {
+    private Object m_callbackInstance = null;
+    private String m_callbackChanged = "changed";
+    
     /**
      * Creates a new Resource Adapter Service implementation.
      * @param dm the dependency manager used to create our internal adapter service
      */
-    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, boolean propagate)    {
+    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
         super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        m_callbackInstance = callbackInstance;
+        m_callbackChanged = callbackChanged;
         m_service.setImplementation(new ResourceAdapterImpl(resourceFilter, propagate))
-                 .add(dm.createResourceDependency()
-                      .setFilter(resourceFilter)
-                      .setAutoConfig(false)
-                      .setCallbacks("added", "removed"));
+            .add(dm.createResourceDependency()
+                 .setFilter(resourceFilter)
+                 .setAutoConfig(false)
+                 .setCallbacks("added", "removed"));
     }
-    
+
     public class ResourceAdapterImpl extends AbstractDecorator {
         private final String m_resourceFilter;
         private final boolean m_propagate;
@@ -79,12 +83,12 @@ public class ResourceAdapterServiceImpl extends FilterService
                 .add(m_manager.createResourceDependency()
                      .setResource(resource)
                      .setPropagate(m_propagate)
-                     .setCallbacks(null, "changed", null)
+                     .setCallbacks(m_callbackInstance, null, m_callbackChanged, null)
                      .setAutoConfig(true)
                      .setRequired(true));
             
-            for (Object d : dependencies) {
-                service.add(((Dependency) d).createCopy());
+            for (int i = 0; i < dependencies.size(); i++) {
+                service.add(((Dependency) dependencies.get(i)).createCopy());
             }
 
             for (int i = 0; i < m_stateListeners.size(); i ++) {

@@ -189,7 +189,7 @@ public class DependencyManager {
     public Service createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
         return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, attributeName);
     }
-
+    
     /**
      * Creates a new adapter. The adapter will be applied to any service that
      * matches the specified interface and filter. For each matching service
@@ -237,11 +237,13 @@ public class DependencyManager {
      *
      * @param resourceFilter the filter condition to use with the resource
      * @param propagate <code>true</code> if properties from the resource should be propagated to the service
+     * @param callbackInstance 
+     * @param callbackChanged 
      * @return a service that acts as a factory for generating resource adapters
      * @see Resource
      */
-    public Service createResourceAdapterService(String resourceFilter, boolean propagate) {
-        return new ResourceAdapterServiceImpl(this, resourceFilter, propagate);
+    public Service createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
+        return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, callbackChanged);
     }
     
     /**
