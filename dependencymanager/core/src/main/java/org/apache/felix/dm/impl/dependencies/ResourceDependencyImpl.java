@@ -23,15 +23,17 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.dependencies.ResourceDependency;
 import org.apache.felix.dm.impl.Logger;
+import org.apache.felix.dm.management.ServiceComponentDependency;
 import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.resources.ResourceHandler;
 import org.apache.felix.dm.service.Service;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-public class ResourceDependencyImpl extends DependencyBase implements ResourceDependency, ResourceHandler, DependencyActivation {
+public class ResourceDependencyImpl extends DependencyBase implements ResourceDependency, ResourceHandler, DependencyActivation, ServiceComponentDependency {
 	private volatile BundleContext m_context;
 	private volatile ServiceRegistration m_registration;
 //	private long m_resourceCounter;
@@ -43,7 +45,6 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     private boolean m_autoConfig;
     private String m_autoConfigInstance;
     protected List m_services = new ArrayList();
-	private boolean m_isRequired;
 	private String m_resourceFilter;
 	private Resource m_trackedResource;
     private boolean m_isStarted;
@@ -55,6 +56,24 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         super(logger);
     	m_context = context;
     	m_autoConfig = true;
+    }
+    
+    public ResourceDependencyImpl(ResourceDependencyImpl prototype) {
+        super(prototype);
+        m_context = prototype.m_context;
+        m_autoConfig = prototype.m_autoConfig;
+        m_callbackInstance = prototype.m_callbackInstance;
+        m_callbackAdded = prototype.m_callbackAdded;
+        m_callbackChanged = prototype.m_callbackChanged;
+        m_callbackRemoved = prototype.m_callbackRemoved;
+        m_autoConfigInstance = prototype.m_autoConfigInstance;
+        m_resourceFilter = prototype.m_resourceFilter;
+        m_trackedResource = prototype.m_trackedResource;
+        m_propagate = prototype.m_propagate;
+    }
+    
+    public Dependency createCopy() {
+        return new ResourceDependencyImpl(this);
     }
     
 	public synchronized boolean isAvailable() {
@@ -432,5 +451,24 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     public ResourceDependency setInstanceBound(boolean isInstanceBound) {
         setIsInstanceBound(isInstanceBound);
         return this;
+    }
+
+    public String getName() {
+        StringBuilder sb = new StringBuilder();
+        if (m_resourceFilter != null) {
+            sb.append(m_resourceFilter);
+        }
+        if (m_trackedResource != null) {
+            sb.append(m_trackedResource.getID());
+        }
+        return sb.toString();
+    }
+
+    public int getState() {
+        return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
+    }
+
+    public String getType() {
+        return "resource";
     }
 }

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.dependencies.ServiceDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.Logger;
@@ -179,6 +180,28 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         m_autoConfig = true;
     }
     
+    /** Copying constructor that clones an existing instance. */
+    public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
+        super(prototype);
+        m_context = prototype.m_context;
+        m_autoConfig = prototype.m_autoConfig;
+        m_trackedServiceName = prototype.m_trackedServiceName;
+        m_nullObject = prototype.m_nullObject;
+        m_trackedServiceFilter = prototype.m_trackedServiceFilter;
+        m_trackedServiceFilterUnmodified = prototype.m_trackedServiceFilterUnmodified;
+        m_trackedServiceReference = prototype.m_trackedServiceReference;
+        m_callbackInstance = prototype.m_callbackInstance;
+        m_callbackAdded = prototype.m_callbackAdded;
+        m_callbackChanged = prototype.m_callbackChanged;
+        m_callbackRemoved = prototype.m_callbackRemoved;
+        m_autoConfigInstance = prototype.m_autoConfigInstance;
+        m_defaultImplementation = prototype.m_defaultImplementation;
+    }
+    
+    public Dependency createCopy() {
+        return new ServiceDependencyImpl(this);
+    }
+    
     public synchronized boolean isAutoConfig() {
         return m_autoConfig;
     }
@@ -244,7 +267,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
         return service;
     }
-    
+
     // TODO lots of duplication in lookupService()
     public ServiceReference lookupServiceReference() {
         ServiceReference service = null;
@@ -348,6 +371,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 m_isStarted = true;
                 needsStarting = true;
             }
+            else { System.out.println("ALREADY STARTED..."); } // TODO REMOVE, FOR DEBUGGING
         }
         if (needsStarting) {
             m_tracker.open();
@@ -736,10 +760,15 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     public String getName() {
         StringBuilder sb = new StringBuilder();
-        sb.append(m_trackedServiceName.getName());
-        if (m_trackedServiceFilterUnmodified != null) {
-            sb.append(' ');
-            sb.append(m_trackedServiceFilterUnmodified);
+        if (m_trackedServiceName != null) {
+            sb.append(m_trackedServiceName.getName());
+            if (m_trackedServiceFilterUnmodified != null) {
+                sb.append(' ');
+                sb.append(m_trackedServiceFilterUnmodified);
+            }
+        }
+        if (m_trackedServiceReference != null) {
+            sb.append("service.id=" + m_trackedServiceReference.getProperty(Constants.SERVICE_ID));
         }
         return sb.toString();
     }
