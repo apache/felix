@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.service.Service;
 import org.apache.felix.dm.service.ServiceStateListener;
 import org.osgi.framework.ServiceReference;
@@ -79,10 +80,15 @@ public class AdapterServiceImpl extends FilterService
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-                .add(dependencies)
+//                .add(dependencies)
                 .add(m_manager.createServiceDependency()
                      .setService(m_adapteeInterface, ref)
                      .setRequired(true));
+            
+            for (Object d : dependencies) {
+                service.add(((Dependency) d).createCopy());
+            }
+            
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
             }

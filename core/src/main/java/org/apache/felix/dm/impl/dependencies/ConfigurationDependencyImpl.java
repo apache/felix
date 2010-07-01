@@ -27,6 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.felix.dm.dependencies.ConfigurationDependency;
+import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.dependencies.PropertyMetaData;
 import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
@@ -73,6 +74,18 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
 	public ConfigurationDependencyImpl(BundleContext context, Logger logger) {
 	    super(logger);
 		m_context = context;
+	}
+	
+	public ConfigurationDependencyImpl(ConfigurationDependencyImpl prototype) {
+	    super(prototype);
+	    m_context = prototype.m_context;
+	    m_pid = prototype.m_pid;
+	    m_propagate = prototype.m_propagate;
+	    m_callback = prototype.m_callback;
+	}
+	
+	public Dependency createCopy() {
+	    return new ConfigurationDependencyImpl(this);
 	}
 	
 	public synchronized boolean isAvailable() {
