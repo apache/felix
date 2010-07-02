@@ -404,6 +404,7 @@ public class ResolverImpl implements Resolver
             Requirement req = remainingReqs.remove(0);
 
             // Get satisfying candidates and populate their candidates if necessary.
+            ResolveException rethrow = null;
             Set<Capability> candidates = state.getCandidates(module, req, true);
             for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
             {
@@ -417,6 +418,10 @@ public class ResolverImpl implements Resolver
                     }
                     catch (ResolveException ex)
                     {
+                        if (rethrow == null)
+                        {
+                            rethrow = ex;
+                        }
                         // Remove the candidate since we weren't able to
                         // populate its candidates.
                         itCandCap.remove();
@@ -429,12 +434,15 @@ public class ResolverImpl implements Resolver
             // a resolve exception.
             if ((candidates.size() == 0) && !req.isOptional())
             {
-                ResolveException ex =
-                    new ResolveException("Unable to resolve " + module
-                        + ": missing requirement " + req, module, req);
-                resultCache.put(module, ex);
-                m_logger.log(Logger.LOG_DEBUG, "No viable candidates", ex);
-                throw ex;
+                if (rethrow == null)
+                {
+                    rethrow =
+                        new ResolveException("Unable to resolve " + module
+                            + ": missing requirement " + req, module, req);
+                }
+                resultCache.put(module, rethrow);
+                m_logger.log(Logger.LOG_DEBUG, "No viable candidates", rethrow);
+                throw rethrow;
             }
             // If we actually have candidates for the requirement, then
             // add them to the local candidate map.
@@ -470,6 +478,7 @@ public class ResolverImpl implements Resolver
         // There should be one entry in the candidate map, which are the
         // the candidates for the matching dynamic requirement. Get the
         // matching candidates and populate their candidates if necessary.
+        ResolveException rethrow = null;
         Entry<Requirement, Set<Capability>> entry = candidateMap.entrySet().iterator().next();
         Requirement dynReq = entry.getKey();
         Set<Capability> candidates = entry.getValue();
@@ -485,6 +494,10 @@ public class ResolverImpl implements Resolver
                 }
                 catch (ResolveException ex)
                 {
+                    if (rethrow == null)
+                    {
+                        rethrow = ex;
+                    }
                     itCandCap.remove();
                 }
             }
@@ -493,7 +506,11 @@ public class ResolverImpl implements Resolver
         if (candidates.size() == 0)
         {
             candidateMap.remove(dynReq);
-            throw new ResolveException("Dynamic import failed.", module, dynReq);
+            if (rethrow == null)
+            {
+                rethrow = new ResolveException("Dynamic import failed.", module, dynReq);
+            }
+            throw rethrow;
         }
     }
 
