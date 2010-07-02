@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import org.apache.felix.dm.DependencyActivatorBase;
-import org.apache.felix.dm.dependencies.TemporalServiceDependency;
+import org.apache.felix.dm.TemporalServiceDependency;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;

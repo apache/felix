@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.service;
+package org.apache.felix.dm;
 
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.dependencies.Dependency;
 import org.osgi.framework.ServiceRegistration;
 
 /**

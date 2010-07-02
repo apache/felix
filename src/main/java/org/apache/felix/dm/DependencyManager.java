@@ -22,12 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.felix.dm.dependencies.BundleDependency;
-import org.apache.felix.dm.dependencies.ConfigurationDependency;
-import org.apache.felix.dm.dependencies.PropertyMetaData;
-import org.apache.felix.dm.dependencies.ResourceDependency;
-import org.apache.felix.dm.dependencies.ServiceDependency;
-import org.apache.felix.dm.dependencies.TemporalServiceDependency;
 import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.AspectServiceImpl;
 import org.apache.felix.dm.impl.BundleAdapterServiceImpl;
@@ -41,7 +35,6 @@ import org.apache.felix.dm.impl.dependencies.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.TemporalServiceDependencyImpl;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
-import org.apache.felix.dm.service.Service;
 import org.osgi.framework.BundleContext;
 
 /**

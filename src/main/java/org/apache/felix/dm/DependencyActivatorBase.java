@@ -20,15 +20,8 @@ package org.apache.felix.dm;
 
 import java.util.List;
 
-import org.apache.felix.dm.dependencies.BundleDependency;
-import org.apache.felix.dm.dependencies.ConfigurationDependency;
-import org.apache.felix.dm.dependencies.PropertyMetaData;
-import org.apache.felix.dm.dependencies.ResourceDependency;
-import org.apache.felix.dm.dependencies.ServiceDependency;
-import org.apache.felix.dm.dependencies.TemporalServiceDependency;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.ServiceImpl;
-import org.apache.felix.dm.service.Service;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
