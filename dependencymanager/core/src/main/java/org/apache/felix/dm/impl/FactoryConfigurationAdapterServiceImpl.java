@@ -26,11 +26,11 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.service.Service;
-import org.apache.felix.dm.service.ServiceStateListener;
+import org.apache.felix.dm.PropertyMetaData;
+import org.apache.felix.dm.Service;
+import org.apache.felix.dm.ServiceStateListener;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedServiceFactory;
-import org.apache.felix.dm.dependencies.PropertyMetaData;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.MetaTypeProvider;

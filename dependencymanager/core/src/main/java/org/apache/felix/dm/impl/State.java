@@ -20,7 +20,7 @@ package org.apache.felix.dm.impl;
 
 import java.util.List;
 
-import org.apache.felix.dm.dependencies.Dependency;
+import org.apache.felix.dm.Dependency;
 
 /**
  * Encapsulates the current state of the dependencies of a service. A state is

@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.dm.dependencies.PropertyMetaData;
+import org.apache.felix.dm.PropertyMetaData;
 import org.osgi.service.metatype.AttributeDefinition;
 
 /**

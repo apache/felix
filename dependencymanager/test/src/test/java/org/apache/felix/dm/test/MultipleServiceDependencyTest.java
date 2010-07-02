@@ -25,7 +25,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.service.Service;
+import org.apache.felix.dm.Service;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;

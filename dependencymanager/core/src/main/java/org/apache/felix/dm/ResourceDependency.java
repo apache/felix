@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.dependencies;
+package org.apache.felix.dm;
 
 import java.net.URL;
 
-import org.apache.felix.dm.resources.ResourceHandler;
 
 public interface ResourceDependency extends Dependency, ResourceHandler {
     /**

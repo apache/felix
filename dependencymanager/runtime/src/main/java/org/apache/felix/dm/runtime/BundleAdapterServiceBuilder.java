@@ -22,7 +22,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.service.Service;
+import org.apache.felix.dm.Service;
 import org.osgi.framework.Bundle;
 
 public class BundleAdapterServiceBuilder extends ServiceComponentBuilder

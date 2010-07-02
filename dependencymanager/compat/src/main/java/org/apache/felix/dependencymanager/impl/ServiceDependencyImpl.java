@@ -24,7 +24,7 @@ import org.osgi.framework.ServiceReference;
 
 public class ServiceDependencyImpl extends ServiceDependency
 {
-    org.apache.felix.dm.dependencies.ServiceDependency m_delegate;
+    org.apache.felix.dm.ServiceDependency m_delegate;
 
     public ServiceDependencyImpl(DependencyManager dm)
     {
@@ -32,7 +32,7 @@ public class ServiceDependencyImpl extends ServiceDependency
         m_delegate = dmDelegate.createServiceDependency();
     }
 
-    public org.apache.felix.dm.dependencies.ServiceDependency getDelegate()
+    public org.apache.felix.dm.ServiceDependency getDelegate()
     {
         return m_delegate;
     }

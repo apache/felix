@@ -27,7 +27,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.service.Service;
+import org.apache.felix.dm.Service;
 import org.apache.felix.dm.test.BundleGenerator;
 import org.apache.felix.dm.test.Ensure;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;

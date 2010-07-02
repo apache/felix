@@ -18,8 +18,8 @@
  */
 package org.apache.felix.dm.impl.dependencies;
 
-import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.service.Service;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.Service;
 
 public interface DependencyService {
     /**

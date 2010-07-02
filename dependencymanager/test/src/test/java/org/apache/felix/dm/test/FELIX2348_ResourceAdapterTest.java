@@ -34,8 +34,8 @@ import java.util.Map.Entry;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.resources.ResourceHandler;
-import org.apache.felix.dm.resources.ResourceUtil;
+import org.apache.felix.dm.ResourceHandler;
+import org.apache.felix.dm.ResourceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;

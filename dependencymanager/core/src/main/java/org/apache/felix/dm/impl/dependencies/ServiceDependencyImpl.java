@@ -29,13 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.dependencies.ServiceDependency;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.ServiceComponentDependency;
+import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.tracker.ServiceTracker;
 import org.apache.felix.dm.impl.tracker.ServiceTrackerCustomizer;
-import org.apache.felix.dm.management.ServiceComponentDependency;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;

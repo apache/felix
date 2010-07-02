@@ -24,8 +24,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.StringTokenizer;
 
-import org.apache.felix.dm.management.ServiceComponent;
-import org.apache.felix.dm.management.ServiceComponentDependency;
+import org.apache.felix.dm.ServiceComponent;
+import org.apache.felix.dm.ServiceComponentDependency;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;

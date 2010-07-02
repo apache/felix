@@ -18,13 +18,13 @@
  */
 package org.apache.felix.dm.runtime;
 
+import org.apache.felix.dm.BundleDependency;
+import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.dependencies.BundleDependency;
-import org.apache.felix.dm.dependencies.ConfigurationDependency;
-import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.dependencies.ResourceDependency;
-import org.apache.felix.dm.dependencies.ServiceDependency;
-import org.apache.felix.dm.dependencies.TemporalServiceDependency;
+import org.apache.felix.dm.ResourceDependency;
+import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.TemporalServiceDependency;
 import org.osgi.framework.Bundle;
 
 /**
