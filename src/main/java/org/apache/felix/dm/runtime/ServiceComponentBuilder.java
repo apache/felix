@@ -20,9 +20,9 @@ package org.apache.felix.dm.runtime;
 
 import java.util.List;
 
+import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.service.Service;
+import org.apache.felix.dm.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
