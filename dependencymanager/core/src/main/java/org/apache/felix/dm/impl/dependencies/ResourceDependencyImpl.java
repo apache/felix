@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl.dependencies;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
@@ -27,7 +28,6 @@ import org.apache.felix.dm.dependencies.Dependency;
 import org.apache.felix.dm.dependencies.ResourceDependency;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.management.ServiceComponentDependency;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.resources.ResourceHandler;
 import org.apache.felix.dm.service.Service;
 import org.osgi.framework.BundleContext;
@@ -46,10 +46,10 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     private String m_autoConfigInstance;
     protected List m_services = new ArrayList();
 	private String m_resourceFilter;
-	private Resource m_trackedResource;
+	private URL m_trackedResource;
     private boolean m_isStarted;
     private List m_resources = new ArrayList();
-    private Resource m_resourceInstance;
+    private URL m_resourceInstance;
     private boolean m_propagate;
 	
     public ResourceDependencyImpl(BundleContext context, Logger logger) {
@@ -93,7 +93,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	        Properties props = null;
 	        if (m_resourceFilter != null) {
 	            props = new Properties();
-	            props.setProperty(Resource.FILTER, m_resourceFilter);
+	            props.setProperty(ResourceHandler.FILTER, m_resourceFilter);
 	        }
 	        m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
 	    }
@@ -114,7 +114,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	    }
 	}
 
-	public void added(Resource resource) {
+	public void added(URL resource) {
 	    if (m_trackedResource == null || m_trackedResource.equals(resource)) {
     		long counter;
     		Object[] services;
@@ -139,7 +139,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	    }
 	}
 
-	public void changed(Resource resource) {
+	public void changed(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             Object[] services;
             synchronized (this) {
@@ -152,7 +152,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         }
 	}
 
-	public void removed(Resource resource) {
+	public void removed(URL resource) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
     		long counter;
     		Object[] services;
@@ -177,22 +177,22 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         }
 	}
 	
-    public void invokeAdded(DependencyService ds, Resource serviceInstance) {
+    public void invokeAdded(DependencyService ds, URL serviceInstance) {
         invoke(ds, serviceInstance, m_callbackAdded);
     }
 
-    public void invokeChanged(DependencyService ds, Resource serviceInstance) {
+    public void invokeChanged(DependencyService ds, URL serviceInstance) {
         invoke(ds, serviceInstance, m_callbackChanged);
     }
 
-    public void invokeRemoved(DependencyService ds, Resource serviceInstance) {
+    public void invokeRemoved(DependencyService ds, URL serviceInstance) {
         invoke(ds, serviceInstance, m_callbackRemoved);
     }
     
-    private void invoke(DependencyService ds, Resource serviceInstance, String name) {
+    private void invoke(DependencyService ds, URL serviceInstance, String name) {
         if (name != null) {
             ds.invokeCallbackMethod(getCallbackInstances(ds), name,
-                new Class[][] {{ Service.class, Resource.class }, { Service.class, Object.class }, { Service.class },  { Resource.class }, { Object.class }, {}},
+                new Class[][] {{ Service.class, URL.class }, { Service.class, Object.class }, { Service.class },  { URL.class }, { Object.class }, {}},
                 new Object[][] {{ ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface() }, { serviceInstance }, { serviceInstance }, {}}
             );
         }
@@ -368,7 +368,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         }
     }
 
-	public ResourceDependency setResource(Resource resource) {
+	public ResourceDependency setResource(URL resource) {
 		m_trackedResource = resource;
 		return this;
 	}
@@ -388,13 +388,13 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         return m_autoConfig;
     }
     
-    public Resource getResource() {
+    public URL getResource() {
     	return lookupResource();
     }
 
-    private Resource lookupResource() {
+    private URL lookupResource() {
         try {
-            return (Resource) m_resources.get(0);
+            return (URL) m_resources.get(0);
         }
         catch (IndexOutOfBoundsException e) {
             return null;
@@ -410,7 +410,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     }
 
     public Class getAutoConfigType() {
-        return Resource.class;
+        return URL.class;
     }
 
     public void invokeAdded(DependencyService service) {
@@ -431,12 +431,13 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     }
     
     public Dictionary getProperties() {
-        Resource resource = lookupResource();
+        URL resource = lookupResource();
         if (resource != null) {
             Properties props = new Properties();
-            props.put(Resource.NAME, resource.getName());
-            props.put(Resource.PATH, resource.getPath());
-            props.put(Resource.REPOSITORY, resource.getRepository());
+            props.setProperty(ResourceHandler.HOST, resource.getHost());
+            props.setProperty(ResourceHandler.PATH, resource.getPath());
+            props.setProperty(ResourceHandler.PROTOCOL, resource.getProtocol());
+            props.setProperty(ResourceHandler.PORT, Integer.toString(resource.getPort()));
             return props;
         }
         else {
@@ -459,7 +460,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
             sb.append(m_resourceFilter);
         }
         if (m_trackedResource != null) {
-            sb.append(m_trackedResource.getID());
+            sb.append(m_trackedResource.toString());
         }
         return sb.toString();
     }

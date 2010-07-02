@@ -18,14 +18,28 @@
  */
 package org.apache.felix.dm.resources;
 
+import java.net.URL;
+
 /** 
  * Service interface for anybody wanting to be notified of changes to resources. 
  */
 public interface ResourceHandler {
+    /** Name of the property that's used to describe the filter condition for a resource. */
+    public static final String FILTER = "filter";
+    
+    /** The host part of the URL. */
+    public static final String HOST = "host";
+    /** The path part of the URL. */
+    public static final String PATH = "path";
+    /** The protocol part of the URL. */
+    public static final String PROTOCOL = "protocol";
+    /** The port part of the URL. */
+    public static final String PORT = "port";
+
     /** Invoked whenever a new resource is added. */
-	public void added(Resource resource);
+	public void added(URL resource);
 	/** Invoked whenever an existing resource changes. */
-	public void changed(Resource resource);
+	public void changed(URL resource);
 	/** Invoked whenever an existing resource is removed. */
-	public void removed(Resource resource);
+	public void removed(URL resource);
 }

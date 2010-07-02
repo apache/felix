@@ -18,7 +18,8 @@
  */
 package org.apache.felix.dm.dependencies;
 
-import org.apache.felix.dm.resources.Resource;
+import java.net.URL;
+
 import org.apache.felix.dm.resources.ResourceHandler;
 
 public interface ResourceDependency extends Dependency, ResourceHandler {
@@ -94,7 +95,7 @@ public interface ResourceDependency extends Dependency, ResourceHandler {
      */
      public ResourceDependency setAutoConfig(String instanceName);
     
-     public ResourceDependency setResource(Resource resource);
+     public ResourceDependency setResource(URL resource);
 	
      public ResourceDependency setRequired(boolean required);
 
