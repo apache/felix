@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.felix.dm.dependencies.ConfigurationDependency;
-import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.dependencies.PropertyMetaData;
+import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.PropertyMetaData;
+import org.apache.felix.dm.ServiceComponentDependency;
 import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
-import org.apache.felix.dm.management.ServiceComponentDependency;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;

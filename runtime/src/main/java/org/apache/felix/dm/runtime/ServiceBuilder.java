@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.service.Service;
+import org.apache.felix.dm.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 

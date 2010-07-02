@@ -1,4 +1,4 @@
-package org.apache.felix.dm.resources;
+package org.apache.felix.dm;
 
 import java.net.URL;
 import java.util.Dictionary;

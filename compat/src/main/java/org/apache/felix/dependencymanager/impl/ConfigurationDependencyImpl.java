@@ -45,7 +45,7 @@ import org.apache.felix.dependencymanager.DependencyManager;
  */
 public class ConfigurationDependencyImpl extends ConfigurationDependency
 {
-    org.apache.felix.dm.dependencies.ConfigurationDependency m_delegate;
+    org.apache.felix.dm.ConfigurationDependency m_delegate;
 
     public ConfigurationDependencyImpl(DependencyManager dm)
     {
@@ -53,7 +53,7 @@ public class ConfigurationDependencyImpl extends ConfigurationDependency
         m_delegate = dmDelegate.createConfigurationDependency();
     }
 
-    public org.apache.felix.dm.dependencies.ConfigurationDependency getDelegate()
+    public org.apache.felix.dm.ConfigurationDependency getDelegate()
     {
         return m_delegate;
     }

@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.dependencies;
+package org.apache.felix.dm;
 
-import org.apache.felix.dm.management.ServiceComponentDependency;
 import org.osgi.framework.ServiceReference;
 
 /**
