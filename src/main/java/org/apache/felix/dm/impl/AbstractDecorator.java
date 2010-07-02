@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,7 +27,6 @@ import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.service.Service;
 import org.apache.felix.dm.service.ServiceStateListener;
 import org.osgi.framework.Bundle;
@@ -173,13 +173,13 @@ public abstract class AbstractDecorator  {
     }
 
     // callbacks for resources
-    public void added(Resource resource) {
+    public void added(URL resource) {
         Service newService = createService(new Object[] { resource });
         m_services.put(resource, newService);
         m_manager.add(newService);
     }
 
-    public void removed(Resource resource) {
+    public void removed(URL resource) {
         Service newService = (Service) m_services.remove(resource);
         if (newService == null) {
             System.out.println("Service should not be null here, dumping stack.");
