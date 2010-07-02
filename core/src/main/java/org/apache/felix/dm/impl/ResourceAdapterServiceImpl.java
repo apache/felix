@@ -18,13 +18,13 @@
  */
 package org.apache.felix.dm.impl;
 
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.dependencies.Dependency;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.service.Service;
 import org.apache.felix.dm.service.ServiceStateListener;
 
@@ -61,7 +61,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
         }
 
         public Service createService(Object[] properties) {
-            Resource resource = (Resource) properties[0]; 
+            URL resource = (URL) properties[0]; 
             Properties props = new Properties();
             if (m_serviceProperties != null) {
                 Enumeration e = m_serviceProperties.keys();

@@ -18,25 +18,26 @@
 */
 package org.apache.felix.dm.test.bundle.annotation.resource;
 
+import java.net.URL;
+
 import junit.framework.Assert;
 
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
  * Our ServiceInterface provider, which service is activated by a ResourceAdapter.
  */
 @ResourceAdapterService(
-    filter = "(&(path=/test)(name=test1.txt)(repository=TestRepository))", 
+    filter = "(&(path=/path/to/test1.txt)(host=localhost))", 
     properties = {@Property(name="foo", value="bar")},
     propagate = true)
 public class ServiceProvider implements ServiceInterface
 {
     // Injected by reflection
-    Resource m_resource;
+    URL m_resource;
         
     @ServiceDependency(filter="(test=adapter)")
     Sequencer m_sequencer;
@@ -44,9 +45,7 @@ public class ServiceProvider implements ServiceInterface
     public void run()
     {
         Assert.assertNotNull("Resource has not been injected in the adapter", m_resource);
-        Assert.assertEquals("ServiceProvider did not get expected resource", "test1.txt", m_resource.getName());
-        Assert.assertEquals("ServiceProvider did not get expected resource", "/test", m_resource.getPath());
-        Assert.assertEquals("ServiceProvider did not get expected resource", "TestRepository", m_resource.getRepository());
+        Assert.assertEquals("ServiceProvider did not get expected resource", "file://localhost/path/to/test1.txt", m_resource.toString());
         m_sequencer.step(2);
     }
 }

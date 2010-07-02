@@ -18,8 +18,7 @@
 */
 package org.apache.felix.dm.test.bundle.annotation.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,6 +29,7 @@ import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.Service;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.resources.ResourceHandler;
+import org.apache.felix.dm.resources.ResourceUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -42,28 +42,16 @@ public class ResourceProvider
 {
     private volatile BundleContext m_context;
     private final Map m_handlers = new HashMap();
-    private StaticResource[] m_resources = {
-            new StaticResource("test1.txt", "/test", "TestRepository")
-            {
-                public InputStream openStream() throws IOException
-                {
-                    return null;
-                };
-            }, new StaticResource("test2.txt", "/test", "TestRepository")
-            {
-                public InputStream openStream() throws IOException
-                {
-                    return null;
-                };
-            }, new StaticResource("README.doc", "/", "TestRepository")
-            {
-                public InputStream openStream() throws IOException
-                {
-                    Assert.fail("resource should not have matched the filter");
-                    return null;
-                };
-            } };
-
+    private URL[] m_resources;
+    
+    public ResourceProvider() throws Exception {
+        m_resources = new URL[] {
+            new URL("file://localhost/path/to/test1.txt"),
+            new URL("file://localhost/path/to/test2.txt"),
+            new URL("file://localhost/path/to/README.doc")
+            };
+    }
+    
     /**
      * Handles a new Resource consumer
      * @param serviceProperties
@@ -91,7 +79,7 @@ public class ResourceProvider
         }
         for (int i = 0; i < m_resources.length; i++)
         {
-            if (filter == null || filter.match(m_resources[i].getProperties()))
+            if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i])))
             {
                 handler.added(m_resources[i]);
             }
@@ -116,7 +104,7 @@ public class ResourceProvider
     {
         for (int i = 0; i < m_resources.length; i++)
         {
-            if (filter == null || filter.match(m_resources[i].getProperties()))
+            if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i])))
             {
                 handler.removed(m_resources[i]);
             }

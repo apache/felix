@@ -22,22 +22,20 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Dictionary;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.resources.ResourceHandler;
+import org.apache.felix.dm.resources.ResourceUtil;
 import org.apache.felix.dm.service.Service;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,16 +65,16 @@ public class ResourceDependencyTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        ResourceConsumer c = new ResourceConsumer();
+        ResourceConsumer c = new ResourceConsumer(e);
         Service consumer = m.createService()
             .setImplementation(c)
             .add(m.createResourceDependency()
-                .setFilter("(&(path=/test)(name=*.txt)(repository=TestRepository))")
+                .setFilter("(&(path=/path/to/*.txt)(host=localhost))")
                 .setCallbacks("add", "remove"));
         Service dynamicProxyConsumer = m.createService()
             .setFactory(new ResourceConsumerFactory(e), "create")
             .add(m.createResourceDependency()
-                    .setFilter("(name=*.doc)")
+                    .setFilter("(path=*.doc)")
                     .setCallbacks("add", null)); 
         Service resourceProvider = m.createService()
             .setImplementation(new ResourceProvider(e))
@@ -110,16 +108,17 @@ public class ResourceDependencyTest extends Base {
     
     static class ResourceConsumer {
         private volatile int m_counter;
-        public void add(Resource resource) {
-            m_counter++;
-            try {
-                resource.openStream();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+        private Ensure m_ensure;
+        
+        public ResourceConsumer(Ensure ensure) {
+            m_ensure = ensure;
         }
-        public void remove(Resource resource) {
+        
+        public void add(URL resource) {
+            m_counter++;
+            m_ensure.step();
+        }
+        public void remove(URL resource) {
             m_counter--;
         }
         public void ensure() {
@@ -131,29 +130,20 @@ public class ResourceDependencyTest extends Base {
         private volatile BundleContext m_context;
         private final Ensure m_ensure;
         private final Map m_handlers = new HashMap();
-        private StaticResource[] m_resources = {
-            new StaticResource("test1.txt", "/test", "TestRepository") {
-                public InputStream openStream() throws IOException {
-                    m_ensure.step(1);
-                    return null;
-                };
-            },
-            new StaticResource("test2.txt", "/test", "TestRepository") {
-                public InputStream openStream() throws IOException {
-                    m_ensure.step(2);
-                    return null;
-                };
-            },
-            new StaticResource("README.doc", "/", "TestRepository") {
-                public InputStream openStream() throws IOException {
-                    Assert.fail("resource should not have matched the filter");
-                    return null;
-                };
-            }
-        };
-
+        private URL[] m_resources;
+        
         public ResourceProvider(Ensure ensure) {
             m_ensure = ensure;
+            try {
+                m_resources = new URL[] {
+                    new URL("file://localhost/path/to/file1.txt"),
+                    new URL("file://localhost/path/to/file2.txt"),
+                    new URL("file://localhost/path/to/file3.doc")
+                };
+            }
+            catch (MalformedURLException e) {
+                throw new IllegalStateException(e);
+            }
         }
         
         public void add(ServiceReference ref, ResourceHandler handler) {
@@ -170,7 +160,7 @@ public class ResourceDependencyTest extends Base {
                 m_handlers.put(handler, filter);
             }
                 for (int i = 0; i < m_resources.length; i++) {
-                    if (filter.match(m_resources[i].getProperties())) {
+                    if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                         handler.added(m_resources[i]);
                     }
                 }
@@ -186,7 +176,7 @@ public class ResourceDependencyTest extends Base {
 
         private void removeResources(ResourceHandler handler, Filter filter) {
                 for (int i = 0; i < m_resources.length; i++) {
-                    if (filter.match(m_resources[i].getProperties())) {
+                    if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                         handler.removed(m_resources[i]);
                     }
                 }
@@ -205,49 +195,6 @@ public class ResourceDependencyTest extends Base {
         }
     }
     
-    static class StaticResource implements Resource {
-        private String m_id;
-        private String m_name;
-        private String m_path;
-        private String m_repository;
-
-        public StaticResource(String name, String path, String repository) {
-            m_id = repository + ":" + path + "/" + name;
-            m_name = name;
-            m_path = path;
-            m_repository = repository;
-        }
-        
-        public String getID() {
-            return m_id;
-        }
-
-        public String getName() {
-            return m_name;
-        }
-
-        public String getPath() {
-            return m_path;
-        }
-
-        public String getRepository() {
-            return m_repository;
-        }
-        
-        public Dictionary getProperties() {
-            return new Properties() {{
-                put(Resource.ID, getID());
-                put(Resource.NAME, getName());
-                put(Resource.PATH, getPath());
-                put(Resource.REPOSITORY, getRepository());
-            }};
-        }
-
-        public InputStream openStream() throws IOException {
-            return null;
-        }
-    }
-    
     static class ResourceConsumerFactory {
         private final Ensure m_ensure;
         public ResourceConsumerFactory(Ensure ensure) {
@@ -255,7 +202,7 @@ public class ResourceDependencyTest extends Base {
         }
         public Object create() {
             System.out.println("create");
-            ResourceConsumer resourceConsumer = new ResourceConsumer();
+            ResourceConsumer resourceConsumer = new ResourceConsumer(m_ensure);
             // create a dynamic proxy for the ResourceProvider
             return Proxy.newProxyInstance(resourceConsumer.getClass().getClassLoader(), resourceConsumer.getClass().getInterfaces(), new DynamicProxyHandler(resourceConsumer, m_ensure));
         }
@@ -270,7 +217,7 @@ public class ResourceDependencyTest extends Base {
             m_ensure = ensure;
         }
 
-        public void add(Resource resource) {
+        public void add(URL resource) {
             m_ensure.step(4);
             System.out.println("Add resource: " + resource);
         }

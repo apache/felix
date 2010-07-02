@@ -22,8 +22,7 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Properties;
 
@@ -32,8 +31,8 @@ import org.apache.felix.dm.dependencies.BundleDependency;
 import org.apache.felix.dm.dependencies.ConfigurationDependency;
 import org.apache.felix.dm.dependencies.ResourceDependency;
 import org.apache.felix.dm.dependencies.ServiceDependency;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.resources.ResourceHandler;
+import org.apache.felix.dm.resources.ResourceUtil;
 import org.apache.felix.dm.service.Service;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,12 +131,12 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
     }
     
     @Test
-    public void testShareResourceDependencyWithMultipleServices(BundleContext context) {
+    public void testShareResourceDependencyWithMultipleServices(BundleContext context) throws Exception {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        ResourceDependency dependency = m.createResourceDependency().setFilter("(" + Resource.REPOSITORY + "=TestRepository)").setRequired(true);
+        ResourceDependency dependency = m.createResourceDependency().setFilter("(" + ResourceHandler.HOST + "=localhost)").setRequired(true);
         Service consumer1 = m.createService().setImplementation(new ResourceConsumer(e, 1)).add(dependency);
         Service consumer2 = m.createService().setImplementation(new ResourceConsumer(e, 2)).add(dependency);
         Service resourceProvider = m.createService().setImplementation(new ResourceProvider()).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove"));;
@@ -250,17 +249,22 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
     
     static class ResourceProvider {
         private volatile BundleContext m_context;
-        private StaticResource[] m_resources = {
-            new StaticResource("test1.txt", "/test", "TestRepository"),
-            new StaticResource("test2.txt", "/test", "TestRepository")
-        };
+        private URL[] m_resources;
+        
+        public ResourceProvider() throws Exception {
+            m_resources = new URL[] {
+                new URL("file://localhost/path/to/test1.txt"),
+                new URL("file://localhost/path/to/test2.txt")        
+                };
+            
+        }
 
         public void add(ServiceReference ref, ResourceHandler handler) {
             String filterString = (String) ref.getProperty("filter");
             try {
                 Filter filter = m_context.createFilter(filterString);
                 for (int i = 0; i < m_resources.length; i++) {
-                    if (filter.match(m_resources[i].getProperties())) {
+                    if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                         handler.added(m_resources[i]);
                     }
                 }
@@ -275,7 +279,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
             try {
                 Filter filter = m_context.createFilter(filterString);
                 for (int i = 0; i < m_resources.length; i++) {
-                    if (filter.match(m_resources[i].getProperties())) {
+                    if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                         handler.removed(m_resources[i]);
                     }
                 }
@@ -283,48 +287,6 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
             catch (InvalidSyntaxException e) {
                 e.printStackTrace();
             }
-        }
-    }
-    
-    static class StaticResource implements Resource {
-        private String m_id;
-        private String m_name;
-        private String m_path;
-        private String m_repository;
-
-        public StaticResource(String name, String path, String repository) {
-            m_id = repository + ":" + path + "/" + name;
-            m_name = name;
-            m_path = path;
-            m_repository = repository;
-        }
-        
-        public String getID() {
-            return m_id;
-        }
-
-        public String getName() {
-            return m_name;
-        }
-
-        public String getPath() {
-            return m_path;
-        }
-
-        public String getRepository() {
-            return m_repository;
-        }
-        
-        public Dictionary getProperties() {
-            return new Properties() {{
-                put(Resource.NAME, getName());
-                put(Resource.PATH, getPath());
-                put(Resource.REPOSITORY, getRepository());
-            }};
-        }
-
-        public InputStream openStream() throws IOException {
-            return null;
         }
     }
 }

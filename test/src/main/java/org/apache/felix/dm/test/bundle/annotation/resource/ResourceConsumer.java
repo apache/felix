@@ -18,6 +18,8 @@
 */
 package org.apache.felix.dm.test.bundle.annotation.resource;
 
+import java.net.URL;
+
 import junit.framework.Assert;
 
 import org.apache.felix.dm.annotation.api.ResourceDependency;
@@ -25,7 +27,6 @@ import org.apache.felix.dm.annotation.api.Service;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
@@ -45,30 +46,28 @@ public class ResourceConsumer
         System.out.println("ResourceConsumer.start: sequencer=" + m_sequencer);
     }
     
-    @ResourceDependency(required = false, filter = "(&(path=/test)(name=*.txt)(repository=TestRepository))")
-    public void add(Resource resource)
+    @ResourceDependency(required = false, filter = "(&(path=/path/to/*.txt)(host=localhost))")
+    public void add(URL resource)
     {
-        System.out.println("ResourceConsumer.add: resource=" + resource.getName() + ", m_sequencer=" + m_sequencer);
-        if (match(resource, "test1.txt", "/test", "TestRepository"))
+        System.out.println("ResourceConsumer.add: resource=" + resource + ", m_sequencer=" + m_sequencer);
+        if (match(resource, "file://localhost/path/to/test1.txt"))
         {
             m_resourcesSeen ++;
             return;
         }
 
-        if (match(resource, "test2.txt", "/test", "TestRepository"))
+        if (match(resource, "file://localhost/path/to/test2.txt"))
         {
             m_resourcesSeen ++;
             return;
         }
 
-        Assert.fail("Got unexpected resource: " + resource.getName() + "/" + resource.getPath()
-            + "/" + resource.getRepository());
+        Assert.fail("Got unexpected resource: " + resource);
     }
 
-    private boolean match(Resource resource, String name, String path, String repo)
+    private boolean match(URL resource, String url)
     {
-        return name.equals(resource.getName()) && path.equals(resource.getPath())
-            && repo.equals(resource.getRepository());
+        return url.equals(resource.toString());
     }
     
     @Stop

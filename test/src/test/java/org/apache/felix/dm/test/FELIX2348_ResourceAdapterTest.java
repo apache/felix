@@ -22,21 +22,20 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Dictionary;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.resources.Resource;
 import org.apache.felix.dm.resources.ResourceHandler;
+import org.apache.felix.dm.resources.ResourceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -60,18 +59,18 @@ public class FELIX2348_ResourceAdapterTest extends Base {
     }    
 
     @Test
-    public void testBasicResourceAdapter(BundleContext context) {
+    public void testBasicResourceAdapter(BundleContext context) throws Exception {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
-        m.add(m.createResourceAdapterService("(&(path=/test)(name=*.txt)(repository=TestRepository))", false, null, "changed")
+        m.add(m.createResourceAdapterService("(&(path=/path/to/*.txt)(host=localhost))", false, null, "changed")
               .setImplementation(new ResourceAdapter(e)));
         m.add(m.createService().setImplementation(new ResourceProvider(e)).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove")));
         e.waitForStep(3, 5000);
      }
     
     static class ResourceAdapter {
-        protected Resource m_resource; // injected by reflection.
+        protected URL m_resource; // injected by reflection.
         private Ensure m_ensure;
         
         ResourceAdapter(Ensure e) {
@@ -83,19 +82,14 @@ public class FELIX2348_ResourceAdapterTest extends Base {
             Assert.assertNotNull("resource not injected", m_resource);
             m_ensure.step(2);
             try {
-                InputStream in= m_resource.openStream();
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                int c;
-                while ((c = in.read()) != -1) {
-                    out.write(c);
-                }
-                String msg = new String(out.toByteArray(), "UTF8");
-                Assert.assertEquals("resource", msg);
-            } catch (Throwable t) {
-                t.printStackTrace();
-                Assert.fail();
+                InputStream in = m_resource.openStream();
+            } 
+            catch (FileNotFoundException e) {
+                m_ensure.step(3);
             }
-            m_ensure.step(3);
+            catch (IOException e) {
+                Assert.fail("We should not have gotten this exception.");
+            }
         }
     }
     
@@ -103,16 +97,13 @@ public class FELIX2348_ResourceAdapterTest extends Base {
         private volatile BundleContext m_context;
         private final Ensure m_ensure;
         private final Map m_handlers = new HashMap();
-        private StaticResource[] m_resources = {
-            new StaticResource("test1.txt", "/test", "TestRepository") {
-                public InputStream openStream() throws IOException {
-                    return new ByteArrayInputStream("resource".getBytes("UTF8"));
-                };
-            }
-        };
+        private URL[] m_resources;
 
-        public ResourceProvider(Ensure ensure) {
+        public ResourceProvider(Ensure ensure) throws MalformedURLException {
             m_ensure = ensure;
+            m_resources = new URL[] {
+                new URL("file://localhost/path/to/file1.txt")
+            };
         }
         
         public void add(ServiceReference ref, ResourceHandler handler) {
@@ -131,7 +122,7 @@ public class FELIX2348_ResourceAdapterTest extends Base {
                 m_handlers.put(handler, filter);
             }
             for (int i = 0; i < m_resources.length; i++) {
-                if (filter == null || filter.match(m_resources[i].getProperties())) {
+                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                     handler.added(m_resources[i]);
                 }
             }
@@ -147,7 +138,7 @@ public class FELIX2348_ResourceAdapterTest extends Base {
 
         private void removeResources(ResourceHandler handler, Filter filter) {
                 for (int i = 0; i < m_resources.length; i++) {
-                    if (filter == null || filter.match(m_resources[i].getProperties())) {
+                    if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                         handler.removed(m_resources[i]);
                     }
                 }
@@ -163,49 +154,6 @@ public class FELIX2348_ResourceAdapterTest extends Base {
             }
             
             System.out.println("DESTROY..." + m_handlers.size());
-        }
-    }
-    
-    static class StaticResource implements Resource {
-        private String m_id;
-        private String m_name;
-        private String m_path;
-        private String m_repository;
-
-        public StaticResource(String name, String path, String repository) {
-            m_id = repository + ":" + path + "/" + name;
-            m_name = name;
-            m_path = path;
-            m_repository = repository;
-        }
-        
-        public String getID() {
-            return m_id;
-        }
-
-        public String getName() {
-            return m_name;
-        }
-
-        public String getPath() {
-            return m_path;
-        }
-
-        public String getRepository() {
-            return m_repository;
-        }
-        
-        public Dictionary getProperties() {
-            return new Properties() {{
-                put(Resource.ID, getID());
-                put(Resource.NAME, getName());
-                put(Resource.PATH, getPath());
-                put(Resource.REPOSITORY, getRepository());
-            }};
-        }
-
-        public InputStream openStream() throws IOException {
-            return null;
         }
     }
 }
