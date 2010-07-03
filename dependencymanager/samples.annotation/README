@@ -6,7 +6,7 @@ Sample description:
   command. The GOGO "spellcheck" command accepts a string as parameter, which is checked for proper 
   existence. The SpellChecker class has a required/multiple (1..N) dependency over every available 
   "DictionaryService" services, which are internally used by the SpellChecker command, when checking 
-  word existence).
+  word existence.
   
   A DictionaryService is defined using a FactoryConfigurationAdapterService annotation, allowing to
   instantiate many "DictionaryService" service instances from webconsole. This annotation actually
@@ -21,8 +21,8 @@ Sample description:
   
   Notice that in the sample, you will also find a DictionaryAspect Service (DictionaryAspect.java), which
   decorates the EnglishDictionary service, by adding some additional words to *all* provided 
-  DictionaryService services. The DictionaryAspect also show how to use a ConfigurationDependency annotation, 
-  allowing to configure the words from webconsole. A ConfigurationDependency actually registers a ManagedService 
+  DictionaryService services. The DictionaryAspect also shows how to use a ConfigurationDependency annotation, 
+  allowing to configure some words from webconsole. A ConfigurationDependency actually registers a ManagedService 
   object in the Registry, which also implements a MetaTypeProvider service for metatype support.
 
 How to test:
@@ -40,7 +40,7 @@ How to test:
      org.apache.felix.dependencymanager.samples.annotation
 
   2) Start felix
-  3) Go to web console: in the Configuration pannel, edit the "Dictionary Services"
+  3) Go to web console: in the Configuration panel, edit the "Dictionary Services"
      Configuration, add some dictionaries. By default, an English dictionary is displayed. Just 
      click on "save", then click on your refresh web browser: you will see a new dictionary service
      instance. At this point, a DictionaryService service will be enabled (with the service property "lang=en"),  
