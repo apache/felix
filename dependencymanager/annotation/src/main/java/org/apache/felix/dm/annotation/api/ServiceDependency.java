@@ -32,7 +32,8 @@ import java.lang.annotation.Target;
 public @interface ServiceDependency
 {
     /**
-     * The type if the service this dependency is applying on. By default, the type is method parameter or the class field type.
+     * The type if the service this dependency is applying on. By default, the method parameter 
+     * (or the class field) is used as the type.
      */
     Class<?> service() default Object.class;
 
@@ -131,6 +132,12 @@ public @interface ServiceDependency
      *           m_config = config;
      *      }
      * 
+     *      // This named dependency will be configured by our init method (see below).
+     *      &#64;ServiceDependency(name="dependency1") 
+     *      void bindOtherService(OtherService other) {
+     *         // the filter and required flag will be configured from our init method.
+     *      }
+
      *      // The returned Map will be used to configure our "dependency1" Dependency.
      *      &#64;Init
      *      Map init() {
@@ -139,11 +146,6 @@ public @interface ServiceDependency
      *              put("dependency1.required", m_config.get("required"));
      *          }};
      *      } 
-     *      
-     *      &#64;ServiceDependency(name="dependency1") 
-     *      void bindOtherService(OtherService other) {
-     *         // the filter and required flag will be configured from our init method.
-     *      }
      *  }
      *  </pre></blockquote>
      */

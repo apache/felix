@@ -28,9 +28,9 @@ import java.lang.annotation.Target;
  * By default, all directly implemented interfaces are registered into the OSGi registry,
  * and the Service is instantiated automatically, when the Service' bundle is started and 
  * when the Service dependencies are available. If you need to take control of when and how 
- * much Service instance must be created, then you can use the <code>factory</code> 
+ * much Service instances must be created, then you can use the <code>factorySet</code> 
  * Service attribute.<p> 
- * If a <code>factory</code> attribute is set, the Service is not started automatically 
+ * If a <code>factorySet</code> attribute is set, the Service is not started automatically 
  * during bundle startup, and a <code>java.util.Set&lt;Dictionary&gt;</code> 
  * object is registered into the OSGi registry on behalf of the Service. This Set will act 
  * as a Factory API, and another component may use this Set and add some configuration 
@@ -58,11 +58,12 @@ import java.lang.annotation.Target;
  *     &#64;Start
  *     void start() {
  *         // Our Service is starting and is about to be registered in the OSGi registry as a Z service.
- *   }
+ *     }
  *   
- *   public void doService() {
+ *     public void doService() {
  *         // ...
- *   }   
+ *     }   
+ * }
  * </pre>
  * </blockquote>
  * 
@@ -151,10 +152,11 @@ public @interface Service
      * So, basically, another component may then be injected with this set in order to dynamically instantiate some Service instances:
      * <ul>
      * <li> Each time a new Dictionary is added into the Set, then a new instance of the annotated service will be instantiated.</li>
-     * <li> Each time an existing Dictionary is updated from the Set, then the corresponding Service instance will be updated.</li>
+     * <li> Each time an existing Dictionary is re-added into the Set, then the corresponding Service instance will be updated.</li>
      * <li> Each time an existing Dictionary is removed from the Set, then the corresponding Service instance will be destroyed.</li>
      * </ul>
-     * The dictionary registered in the Set will be provided to the created Service instance using a callback method that you can 
+     * 
+     * <p>The dictionary registered in the Set will be provided to the created Service instance using a callback method that you can 
      * optionally specify in the {@link Service#factoryConfigure()} attribute. Each public properties from that dictionary 
      * (which don't start with a dot) will be propagated along with the annotated Service properties.
      */
