@@ -1,3 +1,12 @@
+Changes from the 1.6.2 to 1.6.4
+-------------------------------
+** Bug
+    * [FELIX-2430] - IPOJO manipulation (ant task) results in invalid classes throwing java.lang.VerifyError at runtime in InstanceManager
+
+** Improvement
+    * [FELIX-2420] - Enum support for @Property annotation
+    * [FELIX-2461] - Allow specifying the targeted service interface in the @ServiceController
+    
 Changes from the 1.6.0 to 1.6.2
 -------------------------------
 ** Improvement
