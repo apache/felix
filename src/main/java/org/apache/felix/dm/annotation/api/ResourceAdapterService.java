@@ -58,6 +58,11 @@ public @interface ResourceAdapterService
     boolean propagate() default false;
     
     /**
+     * The callback method to be invoked when the Resource has changed.
+     */
+    String changed() default "";
+
+    /**
      * Sets the static method used to create the AdapterService implementation instance.
      */
     String factoryMethod() default "";

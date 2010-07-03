@@ -574,6 +574,9 @@ public class AnnotationCollector extends ClassDataCollector
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
+        
+        // Parse changed attribute
+        writer.putString(annotation, EntryParam.changed, null);
     }
 
     /**
