@@ -26,42 +26,39 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates an Adapater Service. The adapter will be applied to any service that
- * matches the implemented interface and filter. For each matching service
- * an adapter will be created based on the adapter implementation class.
- * The adapter will be registered with the specified interface and existing properties
- * from the original service plus any extra properties you supply here.
- * It will also inherit all dependencies, and if you declare the original
- * service as a member it will be injected.
+ * matches the implemented interface and filter. The adapter will be registered 
+ * with the specified interface and existing properties from the original service 
+ * plus any extra properties you supply here. It will also inherit all dependencies, 
+ * and if you declare the original service as a member it will be injected.
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface AdapterService
 {
     /**
-     * Returns the adapter service interface(s). By default, the directly implemented interface(s) is (are) used.
-     * @return The service interface(s) provided by this adapter.
+     * Sets the adapter service interface(s). By default, the directly implemented interface(s) is (are) used.
      */
     Class<?>[] adapterService() default {};
 
     /**
-     * The adapter service properites. They will be added to the adapted service properties.
-     * @return additional properties to use with the adapter service registration
+     * Sets some additional properties to use with the adapter service registration. By default, 
+     * the adapter will inherit all adaptee service properties.
      */
     Property[] adapterProperties() default {};
 
     /**
-     * The adapted service interface
+     * Sets the adaptee service interface this adapter is applying to.
      */
     Class<?> adapteeService();
     
     /**
-     * the filter condition to use with the adapted service interface.
-     * @return the filter condition to use with the adapted ervice interface
+     * Sets the filter condition to use with the adapted service interface.
      */
     String adapteeFilter() default "";
     
     /**
-     * Sets the static method used to create the AdapterService implementation instance.
+     * Sets the static method used to create the adapter service implementation instance.
+     * By default, the default constructor of the annotated class is used.
      */
     String factoryMethod() default "";
 }
