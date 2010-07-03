@@ -127,6 +127,100 @@ public class ServiceControllerTest extends OSGiTestCase {
         ci.dispose();
     }
     
+    public void testComponentWithTwoControllersUsingBothSpecificationsTrueFalse() {
+        ComponentInstance ci = helper.createComponentInstance("PS-Controller-2-spec1");
+
+        waitForService(CheckService.class.getName(), null, 5000);
+        
+        assertFalse(isServiceAvailable(FooService.class.getName()));
+
+        CheckService check = (CheckService) getServiceObject(CheckService.class.getName(), null);
+        assertNotNull(check);
+        
+        check.getProps();
+        
+        assertFalse(isServiceAvailable(CheckService.class.getName()));
+        assertTrue(isServiceAvailable(FooService.class.getName()));
+       
+        FooService fs = (FooService) getServiceObject(FooService.class.getName(), null);
+        fs.fooProps();
+        
+        assertTrue(isServiceAvailable(CheckService.class.getName()));
+        assertTrue(isServiceAvailable(FooService.class.getName()));
+        
+        ci.dispose();
+    }
+    
+    public void testComponentWithTwoControllersUsingBothSpecificationsTrueTrue() {
+        ComponentInstance ci = helper.createComponentInstance("PS-Controller-2-spec2");
+
+        waitForService(CheckService.class.getName(), null, 5000);
+        waitForService(FooService.class.getName(), null, 5000);
+
+        CheckService check = (CheckService) getServiceObject(CheckService.class.getName(), null);
+        assertNotNull(check);
+        
+        check.check();
+        // CheckService not available
+        assertNull(getServiceReference(CheckService.class.getName()));
+        assertNotNull(getServiceReference(FooService.class.getName()));
+
+        FooService fs = (FooService) getServiceObject(FooService.class.getName(), null);
+        fs.foo();
+        
+        assertNull(getServiceReference(CheckService.class.getName()));
+        assertNull(getServiceReference(FooService.class.getName()));
+        
+        ci.dispose();
+    }
+    
+    public void testComponentWithTwoControllersUsingSpecificationAndAllTrueTrue() {
+        ComponentInstance ci = helper.createComponentInstance("PS-Controller-2-spec3");
+
+        waitForService(CheckService.class.getName(), null, 5000);
+        waitForService(FooService.class.getName(), null, 5000);
+
+        CheckService check = (CheckService) getServiceObject(CheckService.class.getName(), null);
+        assertNotNull(check);
+        
+        check.check();
+        // CheckService not available
+        assertNull(getServiceReference(CheckService.class.getName()));
+        assertNotNull(getServiceReference(FooService.class.getName()));
+
+        FooService fs = (FooService) getServiceObject(FooService.class.getName(), null);
+        fs.foo();
+        
+        assertNull(getServiceReference(CheckService.class.getName()));
+        assertNull(getServiceReference(FooService.class.getName()));
+        
+        ci.dispose();
+    }
+    
+    public void testComponentWithTwoControllersUsingSpecificationAndAllTrueFalse() {
+        ComponentInstance ci = helper.createComponentInstance("PS-Controller-2-spec4");
+
+        waitForService(CheckService.class.getName(), null, 5000);
+        
+        assertFalse(isServiceAvailable(FooService.class.getName()));
+
+        CheckService check = (CheckService) getServiceObject(CheckService.class.getName(), null);
+        assertNotNull(check);
+        
+        check.getProps();
+        
+        assertFalse(isServiceAvailable(CheckService.class.getName()));
+        assertTrue(isServiceAvailable(FooService.class.getName()));
+       
+        FooService fs = (FooService) getServiceObject(FooService.class.getName(), null);
+        fs.fooProps();
+        
+        assertTrue(isServiceAvailable(CheckService.class.getName()));
+        assertTrue(isServiceAvailable(FooService.class.getName()));
+        
+        ci.dispose();
+    }
+    
     public void testArchitecture() {
         ComponentInstance ci = helper.createComponentInstance("PS-Controller-1-default");
         // Controller set to true.

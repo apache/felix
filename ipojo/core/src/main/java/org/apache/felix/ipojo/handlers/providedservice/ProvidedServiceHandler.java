@@ -35,6 +35,7 @@ import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.handlers.dependency.Dependency;
 import org.apache.felix.ipojo.handlers.dependency.DependencyHandler;
+import org.apache.felix.ipojo.handlers.providedservice.ProvidedService.ServiceController;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.FieldMetadata;
@@ -189,20 +190,22 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
 
             Element[] controllers = providedServices[i].getElements("Controller");
             if (controllers != null) {
-                if (controllers.length > 1) {
-                    throw new ConfigurationException("Cannot have several controller per 'provides' element");
+                for (int k = 0; k < controllers.length; k++) {
+                    String field = controllers[k].getAttribute("field");
+                    if (field == null) {
+                        throw new ConfigurationException("The field attribute of a controller is mandatory");
+                    }
+
+                    String v = controllers[k].getAttribute("value");
+                    boolean value = ! (v != null  && v.equalsIgnoreCase("false"));
+                    String s = controllers[k].getAttribute("specification");
+                    if (s == null) {
+                        s ="ALL";
+                    }
+                    svc.setController(field, value, s);
+
+                    getInstanceManager().register(new FieldMetadata(field, "boolean"), this);
                 }
-
-                String field = controllers[0].getAttribute("field");
-                if (field == null) {
-                    throw new ConfigurationException("The field attribute of a controller is mandatory");
-                }
-
-                String v = controllers[0].getAttribute("value");
-                boolean value = ! (v != null  && v.equalsIgnoreCase("false"));
-                svc.setController(field, value);
-
-                getInstanceManager().register(new FieldMetadata(field, "boolean"), this);
             }
 
             if (checkProvidedService(svc)) {
@@ -428,9 +431,10 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             if (update) {
                 svc.update();
             }
-            if (svc.getController() != null  && svc.getController().getField().equals(fieldName)) {
+            ServiceController ctrl = svc.getController(fieldName);
+            if (ctrl != null) {
                 if (value instanceof Boolean) {
-                    svc.getController().setValue((Boolean) value);
+                    ctrl.setValue((Boolean) value);
                 } else {
                     warn("Boolean value expected for the service controler " + fieldName);
                 }
@@ -459,8 +463,9 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                     return prop.onGet(pojo, fieldName, value);
                 }
             }
-            if (svc.getController() != null  && svc.getController().getField().equals(fieldName)) {
-                return new Boolean(svc.getController().getValue());
+            ServiceController ctrl = svc.getController(fieldName);
+            if (ctrl != null) {
+                return new Boolean(ctrl.getValue());
             }
         }
         // Else it is not a property

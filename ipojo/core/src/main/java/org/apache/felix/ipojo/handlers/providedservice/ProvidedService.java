@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.handlers.providedservice;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -117,7 +118,7 @@ public class ProvidedService implements ServiceFactory {
     /**
      * Service Controller.
      */
-    private ServiceController m_controller;
+    private Map /*<Specification, ServiceController>*/ m_controllers = new HashMap/*<Specification, ServiceController>*/();
 
     /**
      * Post-Registration callback.
@@ -327,16 +328,21 @@ public class ProvidedService implements ServiceFactory {
      * This method also notifies the creation strategy of the publication.
      */
     protected synchronized void registerService() {
+        // Unregister if registered
+        if (m_serviceRegistration != null) {
+            unregisterService();
+        }
+        
         if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
-                && m_serviceRegistration == null  && (m_controller == null || m_controller.getValue())) {
+                && m_serviceRegistration == null  && isAtLeastAServiceControllerValid()) {
             // Build the service properties list
 
             BundleContext bc = m_handler.getInstanceManager().getContext();
             // Security check
             if (SecurityHelper.hasPermissionToRegisterServices(m_serviceSpecifications, bc)) {
                 Properties serviceProperties = getServiceProperties();
-                m_strategy.onPublication(getInstanceManager(), m_serviceSpecifications, serviceProperties);
-                m_serviceRegistration = bc.registerService(m_serviceSpecifications, this, serviceProperties);
+                m_strategy.onPublication(getInstanceManager(), getServiceSpecificationsToRegister(), serviceProperties);
+                m_serviceRegistration = bc.registerService(getServiceSpecificationsToRegister(), this, serviceProperties);
                 // An update may happen during the registration, re-check and apply.
                 if (m_wasUpdated) {
                     m_serviceRegistration.setProperties(getServiceProperties());
@@ -366,7 +372,7 @@ public class ProvidedService implements ServiceFactory {
     protected synchronized void unregisterService() {
     	// Create a copy of the service reference in the case we need
     	// to inject it to the post-unregistration callback.
-
+        
     	ServiceReference ref = null;
         if (m_serviceRegistration != null) {
     		ref = m_serviceRegistration.getReference();
@@ -497,13 +503,87 @@ public class ProvidedService implements ServiceFactory {
      * Sets the service controller on this provided service.
      * @param field the field attached to this controller
      * @param value the value the initial value
+     * @param specification the target specification, if <code>null</code>
+     * affect all specifications.
      */
-    public void setController(String field, boolean value) {
-        m_controller = new ServiceController(field, value);
+    public void setController(String field, boolean value, String specification) {
+        if (specification == null) {
+            m_controllers.put("ALL", new ServiceController(field, value));
+        } else {
+            m_controllers.put(specification, new ServiceController(field, value));
+
+        }
     }
 
-    public ServiceController getController() {
-        return m_controller;
+    public ServiceController getController(String field) {
+        Collection controllers = m_controllers.values();
+        Iterator iterator = controllers.iterator();
+        while (iterator.hasNext()) {
+            ServiceController controller = (ServiceController) iterator.next();
+            if (field.equals(controller.m_field)) {
+                return controller;
+            }
+        }
+        return null;
+    }
+    
+    public ServiceController getControllerBySpecification(String spec) {
+        return (ServiceController) m_controllers.get(spec);
+    }
+    
+    /**
+     * Checks if at least one service controller is valid.
+     * @return <code>true</code> if one service controller at least
+     * is valid.
+     */
+    private boolean isAtLeastAServiceControllerValid() {
+        Collection controllers = m_controllers.values();
+        
+        // No controller
+        if (controllers.isEmpty()) {
+            return true;
+        }
+        
+        Iterator iterator = controllers.iterator();
+        while (iterator.hasNext()) {
+            ServiceController controller = (ServiceController) iterator.next();
+            if (controller.getValue()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private String[] getServiceSpecificationsToRegister() {
+        if (m_controllers.isEmpty()) {
+            return m_serviceSpecifications;
+        }
+        
+        ArrayList l = new ArrayList();
+        if (m_controllers.containsKey("ALL")) {
+            ServiceController ctrl = (ServiceController) m_controllers.get("ALL");
+            if (ctrl.m_value) {
+                l.addAll(Arrays.asList(m_serviceSpecifications));
+            }
+        }
+        
+        Iterator iterator = m_controllers.keySet().iterator();
+        while (iterator.hasNext()) {
+            String spec = (String) iterator.next();
+            ServiceController ctrl = (ServiceController) m_controllers.get(spec);
+            if (ctrl.m_value) {
+                if (! "ALL".equals(spec)) { // Already added.
+                    if (! l.contains(spec)) {
+                        l.add(spec);
+                    }
+                }
+            } else {
+                l.remove(spec);
+            }
+        }
+                
+        return (String[]) l.toArray(new String[l.size()]);
+        
     }
 
     public void setPostRegistrationCallback(Callback cb) {
@@ -562,7 +642,14 @@ public class ProvidedService implements ServiceFactory {
                     if (m_value) {
                         registerService();
                     } else {
-                        unregisterService();
+                        // If we are still some specification valid, register those one
+                        // The registerService will call unregister.
+                        if (getServiceSpecificationsToRegister().length != 0) {
+                            registerService();
+                        } else {
+                            // If not, then unregister all
+                            unregisterService();
+                        }
                     }
                 }
             }
