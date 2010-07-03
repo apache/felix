@@ -109,10 +109,23 @@ public class ProvidedServiceDescription {
      * @return the value
      */
     public String getController() {
-        if (m_ps.getController() == null) {
+        if (m_ps.getControllerBySpecification("ALL") == null) {
             return null; 
         } else {
-            return String.valueOf(m_ps.getController().getValue());
+            return String.valueOf(m_ps.getControllerBySpecification("ALL").getValue());
+        }
+    }
+    
+    /**
+     * Gets the controller value as a String.
+     * @param specification
+     * @return the value
+     */
+    public String getController(String specification) {
+        if (m_ps.getControllerBySpecification(specification) == null) {
+            return null; 
+        } else {
+            return String.valueOf(m_ps.getControllerBySpecification(specification).getValue());
         }
     }
 
