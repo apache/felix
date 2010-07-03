@@ -408,7 +408,12 @@ public class FieldCollector extends EmptyVisitor implements FieldVisitor {
         /**
          * Property value.  
          */
-        private String m_value;        
+        private String m_value;
+        
+        /**
+         * Specification value.  
+         */
+        private String m_spec;   
         
         /**
          * Constructor.
@@ -431,6 +436,10 @@ public class FieldCollector extends EmptyVisitor implements FieldVisitor {
                 m_value = arg1.toString();
                 return;
             }
+            if (arg0.equals("specification")) {
+                m_spec = ((Type) arg1).getClassName();
+                return;
+            } 
         }
 
         /**
@@ -445,6 +454,9 @@ public class FieldCollector extends EmptyVisitor implements FieldVisitor {
             controller.addAttribute(new Attribute("field", m_field));
             if (m_value != null) {
                 controller.addAttribute(new Attribute("value", m_value));
+            }
+            if (m_spec != null) {
+                controller.addAttribute(new Attribute("specification", m_spec));
             }
         }
     }
