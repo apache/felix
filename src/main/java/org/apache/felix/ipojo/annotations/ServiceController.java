@@ -32,5 +32,12 @@ public @interface ServiceController {
      * Sets the initial value of the controller.
      */
     boolean value() default true;
+    
+    
+    /**
+     * Sets the targeted specification.
+     * If not set, target all specifications.
+     */
+    Class specification() default Object.class;
 
 }
