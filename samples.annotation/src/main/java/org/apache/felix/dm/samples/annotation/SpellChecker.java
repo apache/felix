@@ -92,7 +92,7 @@ public class SpellChecker
     @Descriptor("checks if word is found from an available dictionary")
     public void spellcheck(@Descriptor("the word to check")String word)
     {
-        m_log.log(LogService.LOG_DEBUG, "Checking spelling of word \"" + word
+        m_log.log(LogService.LOG_INFO, "Checking spelling of word \"" + word
             + "\" using the following dictionaries: " + m_dictionaries);
 
         for (DictionaryService dictionary : m_dictionaries)

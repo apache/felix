@@ -9,10 +9,11 @@ Sample description:
   word existence.
   
   A DictionaryService is defined using a FactoryConfigurationAdapterService annotation, allowing to
-  instantiate many "DictionaryService" service instances from webconsole. This annotation actually
+  instantiate many "DictionaryService" instances from webconsole. This annotation actually
   registers a ManagedServiceFactory into the Registry, and you can specify some meta type
-  informations in the annotation, allowing to display the configuration parameters from WebConsole. 
-  Each time you instantiate a factory configuration whose factory pid is "Dictionary Services", 
+  informations in the annotation, allowing to configure the DictionaryService words and language from 
+  WebConsole. 
+  Each time you instantiate a factory configuration whose factory pid equals "Dictionary Services", 
   then a corresponding "DictionaryService" service is instantiated and is then injected
   into the SpellChecker service. So, before testing, you first have to go to webconsole
   Configuration panel, and specify some dictionaries (see the "Dictionary Services" Factory PID).  
@@ -20,11 +21,8 @@ Sample description:
   "help"). 
   
   Notice that in the sample, you will also find a DictionaryAspect Service (DictionaryAspect.java), which
-  decorates the EnglishDictionary service, by adding some additional words to *all* provided 
-  DictionaryService services. The DictionaryAspect also shows how to use a ConfigurationDependency annotation, 
-  allowing to configure some words from webconsole. A ConfigurationDependency actually registers a ManagedService 
-  object in the Registry, which also implements a MetaTypeProvider service for metatype support.
-
+  decorates the EnglishDictionary service, by adding some additional words to it. 
+  
 How to test:
 
   1) Install the following bundles:
@@ -42,14 +40,15 @@ How to test:
   2) Start felix
   3) Go to web console: in the Configuration panel, edit the "Dictionary Services"
      Configuration, add some dictionaries. By default, an English dictionary is displayed. Just 
-     click on "save", then click on your refresh web browser: you will see a new dictionary service
+     click on "save", *then click on your refresh web browser*: you will see a new dictionary service
      instance. At this point, a DictionaryService service will be enabled (with the service property "lang=en"),  
      and the SpellCheck component will be injected with it. Then you should see the "spellcheck"
      command, when typing  "help" on the gogo shell.
 
   5) Just type "spellcheck hello", and the command should reply a fantastic message, like "word hello is correct".
   
-  6) You can also click on the "Aspect Dictionary" button, in order to decorate *all* Dictionaries using some custom words.
+  6) You can also click on the "Aspect Dictionary" button, in order to decorate the english dictionary with some 
+     custom words.
      By default, the "aspect" word is pre configured, but you can click on the "+" button in order to add more words. 
-     Then click on Save. At this point, all DictionaryService instances will be decorated with the aspect service.
+     Then click on Save. At this point, the English DictionaryService will be decorated with the aspect service.
      So, now, if you type "spellcheck aspect", then the message: "word aspect is correct" should be displayed. 
