@@ -22,8 +22,8 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.osgi.service.log.LogService;
 
 /**
- * This aspect applies to the English DictionaryService, and allow to decorate it with some
- * custom english words, which are configurable from webconsole.
+ * This aspect applies to the English DictionaryService, and allows to decorate it with some
+ * custom English words, which are configurable from WebConsole.
  */
 @AspectService(ranking = 10, filter = "(lang=en)")
 public class DictionaryAspect implements DictionaryService
