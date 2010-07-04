@@ -23,12 +23,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.dm.annotation.api.PropertyMetaData;
 import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
+import org.osgi.service.log.LogService;
 
 /**
  * A Dictionary Service. This service uses a FactoryConfigurationAdapterService annotation, 
  * allowing to instantiate this service from webconsole. This annotation will actually register
- * a ManagedServiceFactory in the registry, and also supports meta types for describing metadata of
- * all configuration properties.
+ * a ManagedServiceFactory in the registry, and also supports meta types for configuring this
+ * service from WebConsole.
  * 
  * You must configure at least one Dictionary from web console, since the SpellCheck won't start if no Dictionary
  * Service is available.
@@ -46,7 +49,7 @@ import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
                 "This property will be propagated with the Dictionary Service properties.",
             defaults={"en"},
             id="lang",
-            cardinality=1),
+            cardinality=0),
         @PropertyMetaData(
             heading="Dictionary words",
             description="Declare here the list of words supported by this dictionary.",
@@ -64,15 +67,37 @@ public class DictionaryImpl implements DictionaryService
     private CopyOnWriteArrayList<String> m_words = new CopyOnWriteArrayList<String>();
     
     /**
+     * We'll use the OSGi log service for logging. If no log service is available, then we'll use a NullObject.
+     */
+    @ServiceDependency(required = false)
+    private LogService m_log;
+
+    /**
+     * Our Dictionary language.
+     */
+    private String m_lang;
+
+    /**
      * Our service will be initialized from ConfigAdmin.
      * @param config The configuration where we'll lookup our words list (key="words").
      */
     protected void updated(Dictionary<String, ?> config) {
+        m_lang = (String) config.get("lang");
         m_words.clear();
         String[] words = (String[]) config.get("words");
         for (String word : words) {
             m_words.add(word);
         }
+    }
+
+    /**
+     * A new Dictionary Service is starting (because a new factory configuration has been created
+     * from webconsole).
+     */
+    @Start
+    protected void start() 
+    {
+        m_log.log(LogService.LOG_INFO, "Starting Dictionary Service with language: " + m_lang);
     }
            
     /**
@@ -81,5 +106,11 @@ public class DictionaryImpl implements DictionaryService
     public boolean checkWord(String word)
     {
         return m_words.contains(word);
+    }
+    
+    @Override
+    public String toString() 
+    {
+        return "Dictionary: language=" + m_lang + ", words=" + m_words;
     }
 }
