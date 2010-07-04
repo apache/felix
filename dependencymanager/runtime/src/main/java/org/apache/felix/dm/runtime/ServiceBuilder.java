@@ -82,8 +82,8 @@ public class ServiceBuilder extends ServiceComponentBuilder
             // We don't instantiate the service, but instead we provide a Set in the registry.
             // This Set will act as a factory and another component may registers some
             // service configurations into it in order to fire some service instantiations.
-            ServiceFactory serviceFactory =  new ServiceFactory(b, srvMeta, depsMeta);
-            service.setImplementation(serviceFactory);
+            FactorySet factorySet =  new FactorySet(b, srvMeta, depsMeta);
+            service.setImplementation(factorySet);
             service.setCallbacks(null, "start", "stop", null);
             Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(DM_FACTORY_NAME, factory);

@@ -42,7 +42,7 @@ import org.osgi.service.log.LogService;
  * Service instance.
  */
 @SuppressWarnings( { "unchecked" })
-public class ServiceFactory extends AbstractSet<Dictionary>
+public class FactorySet extends AbstractSet<Dictionary>
 {
     /**
      * The actual Service instance that is allocated for each dictionaries added in this Set.
@@ -152,7 +152,7 @@ public class ServiceFactory extends AbstractSet<Dictionary>
      * @param provide The Services provided by this Service
      * @param factoryConfigure The configure callback invoked in order to pass configurations added in this Set.
      */
-    public ServiceFactory(Bundle b, MetaData srvMeta, List<MetaData> depsMeta)
+    public FactorySet(Bundle b, MetaData srvMeta, List<MetaData> depsMeta)
     {
         m_serviceProperties = srvMeta.getDictionary(Params.properties, null);
         m_provide = srvMeta.getStrings(Params.provide, null);
@@ -299,7 +299,7 @@ public class ServiceFactory extends AbstractSet<Dictionary>
     @Override
     public String toString()
     {
-        return ServiceFactory.class.getName() + "(" + m_services.size() + " active instances)";
+        return FactorySet.class.getName() + "(" + m_services.size() + " active instances)";
     }
 
     /**
