@@ -41,7 +41,7 @@ public class CompositeService
     private Sequencer m_sequencer;
 
     /**
-     *  Dynamically configure our "D" dependency, using a dependency cusomization map 
+     *  Dynamically configure our "D" dependency, using a dependency customization map 
      */
     @Init
     Map<String, String> init()
