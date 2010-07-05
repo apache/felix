@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -961,7 +962,7 @@ public class BldProject implements IBldProject, IRepositoryConfig
 
         public Map<String, String> getResources()
         {
-            HashMap<String, String> map = new HashMap<String, String>();
+            Map<String, String> map = new LinkedHashMap<String, String>();
             List<String> resources = getList(BldConfig.L_RESOURCES);
 
             if (resources != null)
