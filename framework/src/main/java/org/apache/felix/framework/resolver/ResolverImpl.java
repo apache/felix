@@ -111,7 +111,10 @@ public class ResolverImpl implements Resolver
                     catch (ResolveException ex)
                     {
                         rethrow = ex;
-                        System.out.println("RE: " + ex);
+                        m_logger.log(
+                            Logger.LOG_DEBUG,
+                            "Current candidate permutation failed, will try another if possible.",
+                            ex);
                     }
                 }
                 while ((rethrow != null)
@@ -188,7 +191,10 @@ public class ResolverImpl implements Resolver
                     catch (ResolveException ex)
                     {
                         rethrow = ex;
-                        System.out.println("RE: " + ex);
+                        m_logger.log(
+                            Logger.LOG_DEBUG,
+                            "Current candidate permutation failed, will try another if possible.",
+                            ex);
                     }
                 }
                 while ((rethrow != null)
@@ -1356,7 +1362,7 @@ public class ResolverImpl implements Resolver
                 Set<Capability> candidates = candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
                 {
-                        System.out.println("    " + req + ": " + candidates);
+                    System.out.println("    " + req + ": " + candidates);
                 }
             }
             for (Requirement req : module.getDynamicRequirements())
