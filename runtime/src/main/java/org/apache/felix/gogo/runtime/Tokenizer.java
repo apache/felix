@@ -544,9 +544,10 @@ public class Tokenizer
                     value = ww;
                     Object expand = expand(value, evaluate, true);
 
-                    if (eot() && buf.length() == 0 && value.equals(expand))
+                    if (eot() && buf.length() == 0 && value == expand)
                     {
-                        return ww.value;
+                        // FELIX-2468 avoid returning CharSequence implementation
+                        return ww.value.toString();
                     }
 
                     if (null != expand)
