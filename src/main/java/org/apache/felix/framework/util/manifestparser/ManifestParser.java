@@ -1142,21 +1142,26 @@ public class ManifestParser
                             + headerMap.get(Constants.FRAGMENT_HOST));
                 }
 
-                // If the bundle version matching attribute is specified, then
-                // convert it to the proper type.
-                for (int attrIdx = 0;
-                    attrIdx < clauses.get(0).m_attrs.size();
-                    attrIdx++)
+                // Strip all attributes other than bundle-version.
+                for (Iterator<Attribute> it = clauses.get(0).m_attrs.iterator(); it.hasNext(); )
                 {
-                    Attribute attr = clauses.get(0).m_attrs.get(attrIdx);
-                    if (attr.getName().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
+                    Attribute attr = it.next();
+                    if (!attr.getName().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
                     {
-                        clauses.get(0).m_attrs.set(attrIdx,
-                            new Attribute(
-                                Constants.BUNDLE_VERSION_ATTRIBUTE,
-                                VersionRange.parse(attr.getValue().toString()),
-                                attr.isMandatory()));
+                        it.remove();
                     }
+                }
+
+                // If the bundle-version attribute is specified, then convert
+                // it to the proper type.
+                if (clauses.get(0).m_attrs.size() == 1)
+                {
+                    Attribute attr = clauses.get(0).m_attrs.get(0);
+                    clauses.get(0).m_attrs.set(0,
+                        new Attribute(
+                            Constants.BUNDLE_VERSION_ATTRIBUTE,
+                            VersionRange.parse(attr.getValue().toString()),
+                            attr.isMandatory()));
                 }
 
                 // Prepend the host symbolic name to the array of attributes.
