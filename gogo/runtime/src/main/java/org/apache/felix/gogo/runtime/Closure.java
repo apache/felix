@@ -111,7 +111,6 @@ public class Closure implements Function, Evaluate
     }
 
     // implements Function interface
-    // XXX: session arg x not used?
     public Object execute(CommandSession x, List<Object> values) throws Exception
     {
         try
@@ -256,10 +255,6 @@ public class Closure implements Function, Evaluate
                 if (t == v)
                 {
                     v = eval(v);
-                }
-                else if (v instanceof CharSequence)
-                {
-                    v = v.toString();
                 }
                 break;
 

@@ -67,6 +67,8 @@ public class TestParser2 extends TestCase
     {
         Context c = new Context();
         c.addCommand("echo", this);
+        c.addCommand("new", this);
+        
         // FELIX-2433
         assertEquals("helloworld", c.execute("echo \"$(echo hello)world\""));
         
@@ -78,6 +80,11 @@ public class TestParser2 extends TestCase
             fail("expected: command not found: four");
         } catch (IllegalArgumentException e) {
         }
+        
+        // check CharSequence types are preserved
+        Object b = c.execute("b = new java.lang.StringBuilder");
+        assertTrue(b instanceof StringBuilder);
+        assertEquals(b, c.execute("c = $b"));
     }
 
     public CharSequence echo(Object args[])
@@ -95,6 +102,10 @@ public class TestParser2 extends TestCase
             sb.append(String.valueOf(arg));
         }
         return sb.toString();
+    }
+    
+    public Object _new(String className) throws Exception {
+        return Class.forName(className).newInstance();
     }
 
 }
