@@ -6,12 +6,11 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 
 public class InvocationUtil {
-    public static void invokeCallbackMethod(Object instance, String methodName, Class[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    public static Object invokeCallbackMethod(Object instance, String methodName, Class[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Class currentClazz = instance.getClass();
         while (currentClazz != null) {
             try {
-                invokeMethod(instance, currentClazz, methodName, signatures, parameters, false);
-                return;
+                return invokeMethod(instance, currentClazz, methodName, signatures, parameters, false);
             }
             catch (NoSuchMethodException nsme) {
                 // ignore
