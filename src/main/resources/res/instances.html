@@ -1,0 +1,42 @@
+﻿<script type="text/javascript" src="${pluginRoot}/res/ui/ipojo.js"></script>
+
+<!-- status line -->
+<p class="statline">&nbsp;</p>
+
+<!-- top header -->
+<form method="post" enctype="multipart/form-data" action="">
+	<div class="ui-widget-header ui-corner-top buttonGroup">
+		<button class="instancesButton" type="button">Instances</button>
+		<button class="factoriesButton" type="button">Factories</button>
+		<button class="handlersButton" type="button">Handlers</button>
+	</div>
+</form>
+
+<table id="plugin_table" class="tablesorter nicetable noauto">
+	<thead>
+		<tr>
+			<th class="col_Name">Instance Name</th>
+			<th class="col_Factory">Factory</th>
+			<th class="col_State">State</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr><!-- template -->
+			<td class="name">&nbsp;	</td>
+			<td class="factory">&nbsp;</td><!-- factory -->
+			<td class="state">&nbsp;</td><!-- state -->
+		</tr>
+	</tbody>
+</table>
+
+<!-- bottom header -->
+<form method="post" enctype="multipart/form-data" action="">
+    <div class="ui-widget-header ui-corner-bottom buttonGroup">
+        <button class="instancesButton" type="button">Instances</button>
+        <button class="factoriesButton" type="button">Factories</button>
+        <button class="handlersButton" type="button">Handlers</button>
+    </div>
+</form>
+
+<!-- status line -->
+<p class="statline">&nbsp;</p>

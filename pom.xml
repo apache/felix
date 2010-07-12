@@ -48,7 +48,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.3</version>
+        <version>2.0.1</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -62,15 +62,19 @@
             </Private-Package>
             <Import-Package>*</Import-Package>
             <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE
+              META-INF/NOTICE=NOTICE, res=src/main/resources/res
              </Include-Resource>
+             <Embed-Dependency>
+                <!-- Required for JSON data transfer -->
+                json
+              </Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-ipojo-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>1.6.0</version>
         <executions>
           <execution>
             <goals>
@@ -133,5 +137,11 @@
         <version>2.3</version>
         <scope>provided</scope>
     </dependency>
+     <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20070829</version>
+        <scope>compile</scope>
+     </dependency>
   </dependencies>
 </project>
