@@ -49,12 +49,11 @@ function loadInstancesData() {
 }
 
 function loadFactoriesData() {
-    console.log("Go to factories data");
-    window.location=window.location.pathname + '?view=factories'; 
+    window.location = factories_url; 
 }
 
 function loadHandlersData() {
-    window.location=window.location.pathname + "?view=handlers"
+    window.location = handlers_url;
 }
 
 var tableBody = false;
