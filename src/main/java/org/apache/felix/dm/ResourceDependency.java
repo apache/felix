@@ -102,5 +102,7 @@ public interface ResourceDependency extends Dependency, ResourceHandler {
      
      public ResourceDependency setPropagate(boolean propagate);
      
+     public ResourceDependency setPropagate(Object instance, String method);
+     
      public ResourceDependency setInstanceBound(boolean isInstanceBound);
 }

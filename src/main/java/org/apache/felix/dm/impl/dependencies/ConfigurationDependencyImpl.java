@@ -38,6 +38,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import org.osgi.service.log.LogService;
 
 /**
  * Configuration dependency that can track the availability of a (valid) configuration.
@@ -65,11 +66,13 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
 	private ServiceRegistration m_registration;
     protected List m_services = new ArrayList();
 	private Dictionary m_settings;
-	private boolean m_propagate;
     private String m_callback;
     private boolean m_isStarted;
 	private final Set m_updateInvokedCache = new HashSet();
     private MetaTypeProviderImpl m_metaType;
+    private boolean m_propagate;
+    private Object m_propagateCallbackInstance;
+    private String m_propagateCallbackMethod;
 	
 	public ConfigurationDependencyImpl(BundleContext context, Logger logger) {
 	    super(logger);
@@ -324,8 +327,35 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
         return false;
     }
 
+    public ConfigurationDependency setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return this;
+    }
+    
     public Dictionary getProperties() {
-        return getConfiguration();
+        Dictionary config = getConfiguration();
+        if (config != null) {
+            if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
+                try {
+                    return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Dictionary.class }, {}}, new Object[][] {{ config }, {}});
+                }
+                catch (InvocationTargetException e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                }
+                catch (Exception e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                }
+                throw new IllegalStateException("Could not invoke callback");
+            }
+            else {
+                return config;
+            }
+        }
+        else {
+            throw new IllegalStateException("cannot find configuration");
+        }
     }
     
     public BundleContext getBundleContext() {

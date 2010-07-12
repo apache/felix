@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl.dependencies;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -27,6 +28,7 @@ import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.ServiceComponentDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
+import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.tracker.BundleTracker;
 import org.apache.felix.dm.impl.tracker.BundleTrackerCustomizer;
@@ -35,6 +37,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.service.log.LogService;
 
 public class BundleDependencyImpl extends DependencyBase implements BundleDependency, BundleTrackerCustomizer, ServiceComponentDependency {
 	private final BundleContext m_context;
@@ -43,7 +46,6 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
 	private int m_stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
 	private List m_services = new ArrayList();
 	private boolean m_isAvailable;
-	
     private Object m_callbackInstance;
     private String m_callbackAdded;
     private String m_callbackChanged;
@@ -52,12 +54,13 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
 	private Bundle m_bundleInstance;
 	private Filter m_filter;
 	private long m_bundleId = -1;
-	private boolean m_propagate;
 	private String m_autoConfigInstance;
     private Object m_nullObject;
     private boolean m_autoConfigInvoked;
+    private boolean m_propagate;
+    private Object m_propagateCallbackInstance;
+    private String m_propagateCallbackMethod;
 
-    
     public BundleDependencyImpl(BundleContext context, Logger logger) {
         super(logger);
 		m_context = context;
@@ -356,12 +359,6 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
         return this;
     }
     
-    public BundleDependency setPropagate(boolean propagate) {
-        ensureNotActive();
-        m_propagate = propagate;
-        return this;
-    }
-    
 	public BundleDependency setBundle(Bundle bundle) {
 		m_bundleId = bundle.getBundleId();
 		return this;
@@ -461,10 +458,42 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
         invokeRemoved(service, m_bundleInstance);
         m_bundleInstance = null;
     }
-
+    
+    public BundleDependency setPropagate(boolean propagate) {
+        ensureNotActive();
+        m_propagate = propagate;
+        return this;
+    }
+    
+    public BundleDependency setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return this;
+    }
+    
     public Dictionary getProperties() {
-        // TODO Auto-generated method stub
-        return null;
+        Bundle bundle = lookupBundle();
+        if (bundle != null) {
+            if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
+                try {
+                    return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ Bundle.class }}, new Object[][] {{ bundle }});
+                }
+                catch (InvocationTargetException e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                }
+                catch (Exception e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                }
+                throw new IllegalStateException("Could not invoke callback");
+            }
+            else {
+                return bundle.getHeaders();
+            }
+        }
+        else {
+            throw new IllegalStateException("cannot find bundle");
+        }
     }
 
     public boolean isPropagated() {

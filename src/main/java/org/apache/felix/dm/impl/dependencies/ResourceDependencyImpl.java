@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl.dependencies;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -29,9 +30,11 @@ import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.Service;
 import org.apache.felix.dm.ServiceComponentDependency;
+import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 
 public class ResourceDependencyImpl extends DependencyBase implements ResourceDependency, ResourceHandler, DependencyActivation, ServiceComponentDependency {
 	private volatile BundleContext m_context;
@@ -51,6 +54,8 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     private List m_resources = new ArrayList();
     private URL m_resourceInstance;
     private boolean m_propagate;
+    private Object m_propagateCallbackInstance;
+    private String m_propagateCallbackMethod;
 	
     public ResourceDependencyImpl(BundleContext context, Logger logger) {
         super(logger);
@@ -430,15 +435,36 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         return this;
     }
     
+    public ResourceDependency setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return this;
+    }
+    
     public Dictionary getProperties() {
         URL resource = lookupResource();
         if (resource != null) {
-            Properties props = new Properties();
-            props.setProperty(ResourceHandler.HOST, resource.getHost());
-            props.setProperty(ResourceHandler.PATH, resource.getPath());
-            props.setProperty(ResourceHandler.PROTOCOL, resource.getProtocol());
-            props.setProperty(ResourceHandler.PORT, Integer.toString(resource.getPort()));
-            return props;
+            if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
+                try {
+                    return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ URL.class }}, new Object[][] {{ resource }});
+                }
+                catch (InvocationTargetException e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                }
+                catch (Exception e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                }
+                throw new IllegalStateException("Could not invoke callback");
+            }
+            else {
+                Properties props = new Properties();
+                props.setProperty(ResourceHandler.HOST, resource.getHost());
+                props.setProperty(ResourceHandler.PATH, resource.getPath());
+                props.setProperty(ResourceHandler.PROTOCOL, resource.getProtocol());
+                props.setProperty(ResourceHandler.PORT, Integer.toString(resource.getPort()));
+                return props;
+            }
         }
         else {
             throw new IllegalStateException("cannot find resource");
