@@ -38,10 +38,17 @@ public class CheckServiceProviderHelper implements CheckService {
         if (fs != null) { // Cannot be null
             try {
                 return fs.foo();
-            } catch (NullPointerException e) {
-                // Can throw a NPE for null policy.
-                System.out.println(e.getMessage());
-                return false;
+            } catch (RuntimeException e) { // Now it's a runtime exception (FELIX-2472)
+                // Can throw a RTE for null policy and for time out
+                if (e.getMessage().equals("No service available")) {
+                    // Has detected a null policy.
+                    System.out.println(e.getMessage());
+                    return false;
+                } else {
+                    // Timeout
+                    // Propagate the exception
+                    throw e;
+                }
             }
         }
         return false;
