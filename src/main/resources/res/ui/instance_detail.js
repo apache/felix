@@ -38,7 +38,7 @@ function createDetail(instance) {
     _.find('td.Vstate').text(instance.state);
     
     // Set the factory
-    _.find('td.Vfactory').html(instance.factory); //TODO Link
+    _.find('td.Vfactory').html('<a href="' + factories_url + '/' + instance.factory + '">' + instance.factory + '</a>');
     
     if (instance.services) {
         $(tableServiceBody).empty();
