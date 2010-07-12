@@ -123,7 +123,7 @@ public class ProxyGenerator implements Opcodes {
         int varSvc = freeRoom; 
         freeRoom = freeRoom + 1; // Object Reference.
         mv.visitVarInsn(ASTORE, varSvc); // Store the service object.
-        
+                
         // Invoke the method on the service object.
         mv.visitVarInsn(ALOAD, varSvc);
         // Push argument on the stack.

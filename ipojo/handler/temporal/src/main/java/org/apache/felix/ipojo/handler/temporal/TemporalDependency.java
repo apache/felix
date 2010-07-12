@@ -350,7 +350,7 @@ public class TemporalDependency extends DependencyModel implements
             if (exhausted) {
                 Object obj =  onTimeout(); // Throw the Runtime Exception
                 if (obj == null) {
-                    throw new NullPointerException("No service available"); // NPE if null.
+                    throw new RuntimeException("No service available"); // Runtime Exception to be consistent with iPOJO Core.
                 } else {
                     return obj; // Return a nullable or DI
                 }
