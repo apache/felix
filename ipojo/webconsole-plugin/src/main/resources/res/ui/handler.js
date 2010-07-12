@@ -60,11 +60,11 @@ function loadHandlersData() {
 }
 
 function loadInstancesData() {
-    window.location=window.location.pathname + "?view=instances"
+    window.location = instances_url;
 }
 
 function loadFactoriesData() {
-    window.location=window.location.pathname + "?view=factories"
+    window.location = factories_url;
 }
 
 var tableBody = false;

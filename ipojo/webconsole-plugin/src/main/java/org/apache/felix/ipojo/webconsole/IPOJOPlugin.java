@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -22,7 +24,6 @@ import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,11 +34,12 @@ import org.json.JSONObject;
 @Instantiate
 public class IPOJOPlugin extends AbstractWebConsolePlugin {
     
-    private static final String CSS[] = { "/res/ui/bundles.css" };
+    private static final String CSS[] = { "/res/ui/bundles.css" , "/iPOJO_2/res/ui/ipojo.css" }; // TODO Change
 
     private final String INSTANCES;
     private final String FACTORIES;
     private final String HANDLERS;
+    private final String FACTORY_DETAILS;
 
     
     /**
@@ -53,7 +55,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     private String m_title = "iPOJO_2";  // TODO CHANGE
     
     @ServiceProperty(name= "felix.webconsole.css")
-    private String m_css = CSS[0];
+    protected String[] m_css = CSS;
 
     /**
      * List of available Architecture service.
@@ -77,38 +79,30 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         INSTANCES = readTemplateFile(this.getClass(), "/res/instances.html" );
         FACTORIES = readTemplateFile(this.getClass(), "/res/factories.html" );
         HANDLERS = readTemplateFile(this.getClass(), "/res/handlers.html" );
+        FACTORY_DETAILS = readTemplateFile(this.getClass(), "/res/factory.html" );
     }
     
-    private final String readTemplateFile(final Class clazz, final String templateFile)
-    {
-        InputStream templateStream = getClass().getResourceAsStream(templateFile);
-        if (templateStream != null)
-        {
+    private final String readTemplateFile(final Class clazz,
+            final String templateFile) {
+        InputStream templateStream = getClass().getResourceAsStream(
+                templateFile);
+        if (templateStream != null) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] data = new byte[1024];
-            try
-            {
+            try {
                 int len = 0;
-                while ((len = templateStream.read(data)) > 0)
-                {
+                while ((len = templateStream.read(data)) > 0) {
                     baos.write(data, 0, len);
                 }
                 return baos.toString("UTF-8");
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 // don't use new Exception(message, cause) because cause is 1.4+
                 throw new RuntimeException("readTemplateFile: Error loading "
-                    + templateFile + ": " + e);
-            }
-            finally
-            {
-                try
-                {
+                        + templateFile + ": " + e);
+            } finally {
+                try {
                     templateStream.close();
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     /* ignore */
                 }
 
@@ -116,8 +110,8 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         }
 
         // template file does not exist, return an empty string
-        log("readTemplateFile: File '" + templateFile + "' not found through class "
-            + clazz);
+        log("readTemplateFile: File '" + templateFile
+                + "' not found through class " + clazz);
         return "";
     }
 
@@ -128,15 +122,28 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         final RequestInfo reqInfo = getRequestInfo(request);
         // prepare variables
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
-        String view = request.getParameter("view");
         
-        if (view == null || view.equals("instances")) {
-            response.getWriter().print( INSTANCES );
-        } else if (view.equals("factories")) {
-            response.getWriter().print( FACTORIES );
-        } else if (view.equals("handlers")) {
+        System.out.println("Render content for " + request.getPathInfo());
+        
+        if (reqInfo.instances) {
+            if (reqInfo.name == null) {
+                response.getWriter().print( INSTANCES );
+            } else {
+                // TODO
+            }
+        } else if (reqInfo.factories) {
+            if (reqInfo.name == null) {
+                response.getWriter().print( FACTORIES );
+            } else {
+                vars.put("name", reqInfo.name);
+                response.getWriter().print( FACTORY_DETAILS );
+            }
+        } else if (reqInfo.handlers) {
             response.getWriter().print( HANDLERS );
-        }             
+        } else {
+            // Default
+            response.getWriter().print( INSTANCES );
+        }
     }
     
     private void renderAllInstances(PrintWriter pw) {
@@ -233,6 +240,72 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         }
     }
     
+    private void renderFactoryDetail(PrintWriter pw, String name) {
+        System.out.println("Render factory detail for " + name);
+        // Find the factory
+        Factory factory = null;
+        for (Factory fact : m_factories) {
+            if (fact.getName().equals(name)) {
+                factory = fact;
+            }
+        }
+        
+        if (factory == null) {
+            // TODO Error management
+            System.err.println("factory " + name + "  not found");
+            return;
+        }
+        
+        try {
+            JSONObject resp = new JSONObject();
+            resp.put("count", m_factories.size());
+            resp.put("valid_count", getValidFactoriesCount());
+            resp.put("invalid_count", getInvalidFactoriesCount());
+            
+            // Factory object
+            JSONObject data = new JSONObject();
+            data.put("name", factory.getName());
+            data.put("state", getFactoryState(factory.getState()));
+            
+            String bundle = factory.getBundleContext().getBundle().getSymbolicName()
+            + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
+            data.put("bundle", bundle);
+            
+            if (factory.getComponentDescription().getprovidedServiceSpecification().length != 0) {
+                JSONArray services = new JSONArray
+                    (Arrays.asList(factory.getComponentDescription().getprovidedServiceSpecification()));
+                data.put("services", services);
+            }
+            
+            if (! factory.getRequiredHandlers().isEmpty()) {
+                JSONArray req = new JSONArray
+                    (factory.getRequiredHandlers());
+                data.put("requiredHandlers", req);
+            }
+            
+            if (! factory.getMissingHandlers().isEmpty()) {
+                JSONArray req = new JSONArray
+                    (factory.getMissingHandlers());
+                data.put("missingHandlers", req);
+            }
+            
+            List instances = getInstanceList(name);
+            if (! instances.isEmpty()) {
+                JSONArray req = new JSONArray(instances);
+                data.put("instances", req);
+            }
+            
+            data.put("architecture", factory.getDescription().toString());
+            resp.put("data", data);
+            
+            pw.print(resp.toString());
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+    }
+    
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
@@ -257,7 +330,8 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                     this.renderAllFactories(response.getWriter());
                     return;
                 } else {
-                    // TODO
+                    System.out.println("Render details for " + reqInfo.name);
+                    this.renderFactoryDetail(response.getWriter(), reqInfo.name);
                     return;
                 }
             }
@@ -383,6 +457,22 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         }
     }
     
+    /**
+     * Gets the instance list created by the given factory.
+     * @param factory the factory name
+     * @return the list containing the created instances (name)
+     */
+    private List getInstanceList(String factory) {
+        List list = new ArrayList();
+        for (Architecture arch : m_archs) { // Cannot be null, an empty list is returned.
+            String n = arch.getInstanceDescription().getComponentDescription().getName();
+            if (factory.equals(n)) {
+                list.add(arch.getInstanceDescription().getName());
+            }
+        }
+        return list;
+    }
+    
     private final class RequestInfo {
         public final String extension;
         public final String path;
@@ -408,15 +498,18 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
 
             if (info.startsWith("/")) {
                 path = info.substring(1);
+                System.out.println("Info " + info);
+
                 instances = path.startsWith("instances");
                 factories = path.startsWith("factories");
                 handlers = path.startsWith("handlers");
                
+                System.out.println("Path " + path);
                 
                 if (instances  && path.startsWith("instances/")) {
-                    name = path.substring(0, "instances".length() + 1);
+                    name = path.substring("instances".length() + 1);
                 } else if (factories  && path.startsWith("factories/")) {
-                    name = path.substring(0, "factories".length() + 1);
+                    name = path.substring("factories".length() + 1);
                 } else {
                     name = null;
                 }

@@ -38,7 +38,7 @@ function factoriesEntry(factory) {
 
     var _ = tableEntryTemplate.clone().appendTo(tableBody).attr('id', 'factory-' + factory.name);
 
-    _.find('td.name').html('<a href="' + window.location.pathname + '/factories/' + name + '">' + name + '</a>');
+    _.find('td.name').html('<a href="' + factories_url + '/' + name + '">' + name + '</a>');
     _.find('td.bundle').text(bundle);
     _.find('td.state').text(state);
 }
@@ -53,11 +53,11 @@ function loadFactoriesData() {
 
 function loadInstancesData() {
     console.log("Go to instances"); 
-    window.location=window.location.pathname + "?view=instances"
+    window.location = instances_url;
 }
 
 function loadHandlersData() {
-    window.location=window.location.pathname + "?view=handlers"
+    window.location = handlers_url;
 }
 
 var tableBody = false;
