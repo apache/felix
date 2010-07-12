@@ -270,7 +270,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         }
         
         if (factory == null) {
-            // TODO Error management
+            pw.println("The factory " + name + " does not exist or is private");
             System.err.println("factory " + name + "  not found");
             return;
         }
@@ -353,7 +353,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         }
         
         if (instance == null) {
-            // TODO Error management
+            pw.println("The instance " + name + " does not exist or does not exposed its architecture");
             System.err.println("instance " + name + "  not found");
             return;
         }
