@@ -36,8 +36,8 @@ function instancesEntry(instance) {
 
     var _ = tableEntryTemplate.clone().appendTo(tableBody).attr('id', 'instance-' + instance.name);
 
-    _.find('td.name').html('<a href="' + window.location.pathname + '/instance/' + name + '">' + name + '</a>');
-    _.find('td.factory').html('<a href="' + window.location.pathname + '/factory/' + factory + '">' + factory + '</a>');;
+    _.find('td.name').html('<a href="' + instances_url + '/' + name + '">' + name + '</a>');
+    _.find('td.factory').html('<a href="' + factories_url + '/' + factory + '">' + factory + '</a>');;
     _.find('td.state').text(state);
 }
 

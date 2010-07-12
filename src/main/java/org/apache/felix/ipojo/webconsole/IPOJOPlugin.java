@@ -7,7 +7,9 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,13 +24,23 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.architecture.Architecture;
+import org.apache.felix.ipojo.architecture.HandlerDescription;
+import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
+import org.apache.felix.ipojo.handlers.dependency.DependencyDescription;
+import org.apache.felix.ipojo.handlers.dependency.DependencyHandlerDescription;
+import org.apache.felix.ipojo.handlers.providedservice.ProvidedService;
+import org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceDescription;
+import org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceHandlerDescription;
+import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 
 @Component(immediate=true)
 @Provides
@@ -41,6 +53,8 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     private final String FACTORIES;
     private final String HANDLERS;
     private final String FACTORY_DETAILS;
+    private final String INSTANCE_DETAILS;
+
 
     
     /**
@@ -81,6 +95,8 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         FACTORIES = readTemplateFile(this.getClass(), "/res/factories.html" );
         HANDLERS = readTemplateFile(this.getClass(), "/res/handlers.html" );
         FACTORY_DETAILS = readTemplateFile(this.getClass(), "/res/factory.html" );
+        INSTANCE_DETAILS = readTemplateFile(this.getClass(), "/res/instance.html" );
+
     }
     
     private final String readTemplateFile(final Class clazz,
@@ -130,7 +146,9 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             if (reqInfo.name == null) {
                 response.getWriter().print( INSTANCES );
             } else {
-                // TODO
+                System.out.println("Details for " + reqInfo.name);
+                vars.put("name", reqInfo.name);
+                response.getWriter().print( INSTANCE_DETAILS );
             }
         } else if (reqInfo.factories) {
             if (reqInfo.name == null) {
@@ -324,6 +342,55 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         
     }
     
+    private void renderInstanceDetail(PrintWriter pw, String name) {
+        System.out.println("Render instance detail for " + name);
+        // Find the factory
+        InstanceDescription instance = null;
+        for (Architecture arch : m_archs) {
+            if (arch.getInstanceDescription().getName().equals(name)) {
+                instance = arch.getInstanceDescription();
+            }
+        }
+        
+        if (instance == null) {
+            // TODO Error management
+            System.err.println("instance " + name + "  not found");
+            return;
+        }
+        
+        try {
+            JSONObject resp = new JSONObject();
+            resp.put("count", m_factories.size());
+            resp.put("valid_count", getValidFactoriesCount());
+            resp.put("invalid_count", getInvalidFactoriesCount());
+            
+            // instance object
+            JSONObject data = new JSONObject();
+            data.put("name", instance.getName());
+            data.put("state", getInstanceState(instance.getState()));
+            data.put("factory", instance.getComponentDescription().getName());
+            
+            JSONArray services = getProvidedServiceDetail(instance.getHandlerDescription("org.apache.felix.ipojo:provides"));
+            if (services != null) {
+                data.put("services", services);
+            }
+            
+            JSONArray reqs = getRequiredServiceDetail(instance.getHandlerDescription("org.apache.felix.ipojo:requires"));
+            if (reqs != null) {
+                data.put("req", reqs);
+            }
+            
+            data.put("architecture", instance.getDescription().toString());
+            resp.put("data", data);
+            
+            pw.print(resp.toString());
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+    }
+    
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
@@ -338,7 +405,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                     this.renderAllInstances(response.getWriter());
                     return;
                 } else {
-                    // TODO
+                    this.renderInstanceDetail(response.getWriter(), reqInfo.name);
                     return;
                 }
             }
@@ -369,6 +436,105 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                     path.substring(m_label.length() + 1));
         }
         return null;
+    }
+    
+    private JSONArray getProvidedServiceDetail(HandlerDescription hd) throws JSONException {
+        if (hd == null) {
+            return null;
+        }
+
+        JSONArray array = new JSONArray();
+        ProvidedServiceHandlerDescription desc = (ProvidedServiceHandlerDescription) hd;
+
+        for (ProvidedServiceDescription ps : desc.getProvidedServices()) {
+            JSONObject svc = new JSONObject();
+            String spec = Arrays.toString(ps.getServiceSpecifications());
+            if (spec.startsWith("[")) {
+                spec = spec.substring(1, spec.length() - 1);
+            }
+            svc.put("specification", spec);
+            svc.put("state", getProvidedServiceState(ps.getState()));
+            
+            if (ps.getServiceReference() != null) {
+                svc.put("id", (Long) ps.getServiceReference().getProperty(Constants.SERVICE_ID));
+            }
+            
+            if (ps.getProperties() != null  &&!  ps.getProperties().isEmpty()) {
+                svc.put("properties", getServiceProperties(ps.getProperties()));
+            }
+
+            array.put(svc);
+        }
+        
+        return array;
+    }
+    
+    private JSONArray getServiceProperties(Properties properties) throws JSONException {
+        JSONArray array = new JSONArray();
+        Enumeration<Object> e = properties.keys();
+        while (e.hasMoreElements()) {
+            String key = (String) e.nextElement();
+            Object value = properties.get(key);
+            JSONObject prop = new JSONObject();
+            prop.put("name", key);
+            if (value != null  && value.getClass().isArray()) {
+                // TODO Test with primitive types
+                prop.put("value", Arrays.toString((Object[]) value));
+            } else if (value != null) {
+                prop.put("value", value.toString());
+            } else {
+                prop.put("value", "no value");
+            }
+            array.put(prop);
+        }
+        return array;
+    }
+    
+    private JSONArray getRequiredServiceDetail(
+            HandlerDescription hd) throws JSONException {
+        if (hd == null) {
+            return null;
+        }
+        JSONArray array = new JSONArray();
+        DependencyHandlerDescription desc = (DependencyHandlerDescription) hd;
+        for (DependencyDescription dep : desc.getDependencies()) {
+            JSONObject req = new JSONObject();
+            req.put("specification",dep.getSpecification());
+            req.put("id", dep.getId());
+            req.put("state", getDependencyState(dep.getState()));
+            req.put("policy", getDependencyBindingPolicy(dep.getPolicy()));
+            req.put("optional", dep.isOptional());
+            req.put("aggregate", dep.isMultiple());
+            //TODO Add filter support
+            if (dep.getServiceReferences() != null  && dep.getServiceReferences().size() != 0) {
+                req.put("matching",  getServiceReferenceList(dep.getServiceReferences()));
+            }
+            
+            if (dep.getUsedServices() != null  && dep.getUsedServices().size() != 0) {
+                req.put("used",  getServiceReferenceList(dep.getUsedServices()));
+            }
+            
+            array.put(req);
+        }
+
+        return array;
+    }
+    
+    private JSONArray getServiceReferenceList(List<ServiceReference> refs) throws JSONException {
+        JSONArray array = new JSONArray();
+        if (refs != null) {
+            for (ServiceReference ref : refs) {
+                JSONObject reference = new JSONObject();
+                if (ref.getProperty("instance.name") == null) {
+                    reference.put("id", ref.getProperty(Constants.SERVICE_ID));
+                } else {
+                    reference.put("id", ref.getProperty(Constants.SERVICE_ID));
+                    reference.put("instance", ref.getProperty("instance.name"));
+                }
+                array.put(reference);
+            }
+        }
+        return array;
     }
     
     /**
@@ -561,6 +727,58 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     @Override
     protected String[] getCssReferences() {
         return CSS;
+    }
+    
+    /**
+     * Gets the dependency state as a String.
+     * @param state the state.
+     * @return the String form of the state.
+     */
+    private static String getDependencyState(int state) {
+        switch(state) {
+            case DependencyModel.RESOLVED :
+                return "resolved";
+            case DependencyModel.UNRESOLVED :
+                return "unresolved";
+            case DependencyModel.BROKEN :
+                return "broken";
+            default :
+                return "unknown (" + state + ")";
+        }
+    }
+
+    /**
+     * Gets the dependency binding policy as a String.
+     * @param policy the policy.
+     * @return the String form of the policy.
+     */
+    private static String getDependencyBindingPolicy(int policy) {
+        switch(policy) {
+            case DependencyModel.DYNAMIC_BINDING_POLICY :
+                return "dynamic";
+            case DependencyModel.DYNAMIC_PRIORITY_BINDING_POLICY :
+                return "dynamic-priority";
+            case DependencyModel.STATIC_BINDING_POLICY :
+                return "static";
+            default :
+                return "unknown (" + policy + ")";
+        }
+    }
+
+    /**
+     * Gets the provided service state as a String.
+     * @param state the state.
+     * @return the String form of the state.
+     */
+    private static String getProvidedServiceState(int state) {
+        switch(state) {
+            case ProvidedService.REGISTERED :
+                return "registered";
+            case ProvidedService.UNREGISTERED :
+                return "unregistered";
+            default :
+                return "unknown (" + state + ")";
+        }
     }
 
 }

@@ -52,7 +52,6 @@ function loadFactoriesData() {
 }
 
 function loadInstancesData() {
-    console.log("Go to instances"); 
     window.location = instances_url;
 }
 
