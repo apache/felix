@@ -21,6 +21,7 @@ package org.apache.felix.sigil.eclipse.internal.resources;
 import java.util.LinkedList;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.job.ResolveProjectsJob;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.model.ICapabilityModelElement;
 import org.apache.felix.sigil.model.IModelElement;
@@ -33,10 +34,10 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
+//import org.eclipse.core.runtime.IProgressMonitor;
+//import org.eclipse.core.runtime.IStatus;
+//import org.eclipse.core.runtime.Status;
+//import org.eclipse.core.runtime.jobs.Job;
 
 public class ProjectResourceListener implements IResourceChangeListener
 {
@@ -53,6 +54,9 @@ public class ProjectResourceListener implements IResourceChangeListener
         try
         {
             switch ( event.getType() ) {
+                case IResourceChangeEvent.PRE_REFRESH:
+                    handleRefresh(event);
+                    break;
                 case IResourceChangeEvent.PRE_DELETE:
                     handlePreDelete(event);
                     break;
@@ -60,12 +64,51 @@ public class ProjectResourceListener implements IResourceChangeListener
                     handlePostChange(event);
                     break;
             }
+            
+            handleUpdate();
         }
         catch (CoreException e)
         {
             SigilCore.error( "Failed to process resource change", e );
         }
     }
+
+    private void handleUpdate()
+    {
+        if( capabilities.size() > 0 ) {
+            final LinkedList<ICapabilityModelElement> changes = new LinkedList<ICapabilityModelElement>(capabilities);
+            capabilities.clear();
+            
+            ResolveProjectsJob job = new ResolveProjectsJob(ResourcesPlugin.getWorkspace(), changes);
+            job.schedule();        
+        }
+    }
+    
+    private void handleRefresh(IResourceChangeEvent event) throws CoreException
+    {
+        IResourceDelta delta = event.getDelta();
+        if ( delta != null )
+        {
+            delta.accept( new IResourceDeltaVisitor()
+            {
+                public boolean visit( IResourceDelta delta ) throws CoreException
+                {
+                    IResource resource = delta.getResource();
+                    if ( resource instanceof IProject )
+                    {
+                        IProject project = ( IProject ) resource;
+                        if ( SigilCore.isSigilProject( project ) )
+                        {
+                            readCapabilities(project);
+                        }
+                        // Recurse no more
+                        return false;
+                    }
+                    return true;
+                }
+            } );            
+        }
+    }    
 
     private LinkedList<ICapabilityModelElement> capabilities = new LinkedList<ICapabilityModelElement>();
     
@@ -97,25 +140,7 @@ public class ProjectResourceListener implements IResourceChangeListener
                     }
                     return true;
                 }
-            } );
-            
-            if( capabilities.size() > 0 ) {
-                final LinkedList<ICapabilityModelElement> changes = new LinkedList<ICapabilityModelElement>(capabilities);
-                capabilities.clear();
-                
-                Job job = new Job("Rebuild project dependencies")
-                {
-                    
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor)
-                    {
-                        SigilCore.rebuildBundleDependencies(null, changes, monitor);
-                        return Status.OK_STATUS;
-                    }
-                };
-                job.setRule(ResourcesPlugin.getWorkspace().getRoot());
-                job.schedule();
-            }
+            } );            
         }
     }
 
@@ -147,6 +172,4 @@ public class ProjectResourceListener implements IResourceChangeListener
             }
         });
     }
-
-
 }

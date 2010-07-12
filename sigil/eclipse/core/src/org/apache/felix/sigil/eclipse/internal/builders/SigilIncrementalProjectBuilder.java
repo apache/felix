@@ -44,6 +44,9 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.JavaCore;
@@ -56,7 +59,6 @@ import org.eclipse.ui.console.MessageConsoleStream;
 
 public class SigilIncrementalProjectBuilder extends IncrementalProjectBuilder
 {
-
     @Override
     protected IProject[] build( int kind, @SuppressWarnings("unchecked") Map args, IProgressMonitor monitor )
         throws CoreException
@@ -216,25 +218,34 @@ public class SigilIncrementalProjectBuilder extends IncrementalProjectBuilder
 
     private static void loginfo( String message )
     {
-        BuildConsole console = findConsole();
-        MessageConsoleStream stream = console.getMessageStream();
-        stream.println( "INFO: " + message );
+        log("INFO: " + message);
     }
-
 
     private static void logwarn( String message )
     {
-        BuildConsole console = findConsole();
-        MessageConsoleStream stream = console.getMessageStream();
-        stream.println( "WARN: " + message );
+        log( "WARN: " + message );
     }
 
 
     private static void logerror( String message )
     {
-        BuildConsole console = findConsole();
-        MessageConsoleStream stream = console.getMessageStream();
-        stream.println( "ERROR: " + message );
+        log( "ERROR: " + message );
+    }
+
+    private static void log(final String message)
+    {
+        // do this in background to avoid deadlock with ui 
+        Job job = new Job("log") {
+            @Override
+            protected IStatus run(IProgressMonitor arg0)
+            {
+                BuildConsole console = findConsole();
+                MessageConsoleStream stream = console.getMessageStream();
+                stream.println( message );
+                return Status.OK_STATUS;
+            }
+        };
+        job.schedule();
     }
 
 

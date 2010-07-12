@@ -54,6 +54,8 @@ public class SigilUI extends AbstractUIPlugin
 
     public static final String ID_REPOSITORY_VIEW = "org.apache.felix.sigil.ui.repositoryBrowser";
     public static final String ID_DEPENDENCY_VIEW = "org.apache.felix.sigil.ui.bundleDependencyView";
+    
+    public static final String WORKSPACE_REPOSITORY_ID = "org.apache.felix.sigil.core.workspaceprovider";
 
     // The shared instance
     private static SigilUI plugin;

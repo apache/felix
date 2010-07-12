@@ -238,9 +238,6 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         try
         {
             switch (event.getType()) {
-                case IResourceChangeEvent.PRE_REFRESH:
-                    handleRefresh(event);
-                    break;
                 case IResourceChangeEvent.POST_BUILD:
                     handleBuild(event);
                     break;
@@ -259,13 +256,6 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
     private void handleBuild(IResourceChangeEvent event) throws CoreException
     {
         refreshView();
-    }
-
-
-    private void handleRefresh(IResourceChangeEvent event)
-    {
-        ResolveProjectsJob job = new ResolveProjectsJob(project);
-        job.schedule();        
     }
 
 
@@ -386,8 +376,6 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         tempProject.setBundle(null);
         project.setBundle( null );
         refreshAllPages();
-        ResolveProjectsJob job = new ResolveProjectsJob(project);
-        job.schedule();        
     }
 
 

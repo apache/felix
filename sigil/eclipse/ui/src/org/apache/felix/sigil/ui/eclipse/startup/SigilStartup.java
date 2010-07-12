@@ -26,6 +26,7 @@ import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.ResolveProjectsJob;
 import org.apache.felix.sigil.repository.IRepositoryChangeListener;
 import org.apache.felix.sigil.repository.RepositoryChangeEvent;
+import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -47,24 +48,29 @@ public class SigilStartup implements IStartup
         {
             public void repositoryChanged( RepositoryChangeEvent event )
             {
-                final int update = updateCounter.incrementAndGet();
-                
-                Job job = new Job("Pending repository update") {
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor)
-                    {
-                        if ( update == updateCounter.get() ) {
-                            IWorkspace workspace = ResourcesPlugin.getWorkspace();
-                            ResolveProjectsJob job = new ResolveProjectsJob( workspace );
-                            job.setSystem( true );
-                            job.schedule();
-                        }
-                        return Status.OK_STATUS;
-                    }
+                if ( !SigilUI.WORKSPACE_REPOSITORY_ID.equals( event.getRepository().getId() ) ) {
+                    final int update = updateCounter.incrementAndGet();
                     
-                };
-                job.setSystem(true);
-                job.schedule(100);
+                    Job job = new Job("Pending repository update") {
+                        @Override
+                        protected IStatus run(IProgressMonitor monitor)
+                        {
+                            if ( update == updateCounter.get() ) {
+                                IWorkspace workspace = ResourcesPlugin.getWorkspace();
+                                ResolveProjectsJob job = new ResolveProjectsJob( workspace );
+                                job.setSystem( true );
+                                job.schedule();
+                            }
+                            return Status.OK_STATUS;
+                        }
+                        
+                    };
+                    job.setSystem(true);
+                    job.schedule(100);
+                } 
+                //else {
+                //   Repository changes are handled by ProjectResourceListener 
+                //}
             }
         } );
     }
