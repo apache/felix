@@ -39,7 +39,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
 
     private static final String TITLE = "Wire Admin";
 
-    private static final String WIRE_ADMIN_NAME = "org.osgi.service.wireadmin.WireAdmin";
+    private static final String WIRE_ADMIN_NAME = "org.osgi.service.wireadmin.WireAdmin"; //$NON-NLS-1$
 
 
     /**
@@ -57,17 +57,18 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
     {
         final BundleContext bc = getBundleContext();
         final ServiceReference ref = bc.getServiceReference( WIRE_ADMIN_NAME );
-        final WireAdmin wireAdmin = (WireAdmin) (ref != null ? bc.getService(ref) : null);
 
         try
         {
 
-            if (wireAdmin == null)
+            final Object service = ref != null ? bc.getService(ref) : null;
+            if (service == null)
             {
                 pw.println("No Wire Admin service available");
             }
             else
             {
+                final WireAdmin wireAdmin = (WireAdmin) service;
                 final Wire wires[] = wireAdmin.getWires(null);
 
                 if (null == wires || 0 == wires.length)
@@ -102,7 +103,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
                     // print wires
                     for (int i = 0; i < len; i++)
                     {
-                        pw.print("#");
+                        pw.print("#"); //$NON-NLS-1$
                         pw.print(i);
                         print(wires[i], pw);
                     }
@@ -149,9 +150,9 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
         {
             pw.print("  Value: ");
             pw.print(val);
-            pw.print(" (");
+            pw.print(" ("); //$NON-NLS-1$
             pw.print(val.getClass().getName());
-            pw.println(")");
+            pw.println(")"); //$NON-NLS-1$
         }
 
         String[] scope = wire.getScope();
@@ -164,7 +165,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             pw.println("  Scope: ");
             for (int i = 0, len = scope.length; i < len; i++)
             {
-                pw.print("              ");
+                pw.print("              "); //$NON-NLS-1$
                 pw.println(scope[i]);
             }
         }
@@ -181,7 +182,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             {
                 pw.print(flavors[i].getName());
                 if (i < len - 1)
-                    pw.print(", ");
+                    pw.print(", "); //$NON-NLS-1$
             }
             pw.println();
         }
@@ -197,7 +198,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             for (Enumeration e = props.keys(); e.hasMoreElements();)
             {
                 final Object key = e.nextElement();
-                pw.print("    ");
+                pw.print("    "); //$NON-NLS-1$
                 pw.print(key.toString());
                 pw.print('=');
                 pw.println(props.get(key));
