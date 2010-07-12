@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -124,6 +125,22 @@ public class ProxyGenerator implements Opcodes {
         freeRoom = freeRoom + 1; // Object Reference.
         mv.visitVarInsn(ASTORE, varSvc); // Store the service object.
         
+        Label notNull = new Label();
+        Label isNull = new Label();
+        mv.visitVarInsn(ALOAD, varSvc); // Load the service
+        mv.visitJumpInsn(IFNONNULL, notNull); // If not null go to not null
+        // Null branch - throw the exception
+        mv.visitLabel(isNull);
+        mv.visitTypeInsn(NEW, "java/lang/RuntimeException");
+        mv.visitInsn(DUP);
+        mv.visitLdcInsn("No service available");
+        mv.visitMethodInsn(INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/String;)V");
+        mv.visitInsn(ATHROW);
+        // End of the null branch
+        
+        // Not null, go one the execution
+        mv.visitLabel(notNull);
+                
         // Invoke the method on the service object.
         mv.visitVarInsn(ALOAD, varSvc);
         // Push argument on the stack.
