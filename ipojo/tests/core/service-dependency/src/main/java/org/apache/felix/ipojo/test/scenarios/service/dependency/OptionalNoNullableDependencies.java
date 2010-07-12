@@ -105,7 +105,9 @@ public class OptionalNoNullableDependencies extends OSGiTestCase {
 		Properties props = cs.getProps();
 		
 		//Check properties
-		assertNull("check CheckService invocation - 1 (" + props.get("result") + ")", props.get("result")); // Null no provider
+		// no service, no nullable => runtime exception expected
+		assertTrue("check excepted exception", ((Boolean) props.get("exception")).booleanValue());
+		assertNull("check CheckService invocation - 1 (" + props.get("result") + ")", props.get("result")); // Null
 		assertEquals("check void bind invocation - 1", ((Integer)props.get("voidB")).intValue(), 0);
 		assertEquals("check void unbind callback invocation - 1", ((Integer)props.get("voidU")).intValue(), 0);
 		assertEquals("check object bind callback invocation - 1", ((Integer)props.get("objectB")).intValue(), 0);
@@ -125,6 +127,8 @@ public class OptionalNoNullableDependencies extends OSGiTestCase {
 		
 		//Check properties
 		assertTrue("check CheckService invocation - 2", ((Boolean)props.get("result")).booleanValue()); // True, a provider is there
+		// No exception expected
+		assertFalse("check unexcepted exception", ((Boolean) props.get("exception")).booleanValue());
 		assertEquals("check void bind invocation - 2", ((Integer)props.get("voidB")).intValue(), 0);
 		assertEquals("check void unbind callback invocation - 2", ((Integer)props.get("voidU")).intValue(), 0);
 		assertEquals("check object bind callback invocation - 2", ((Integer)props.get("objectB")).intValue(), 0);

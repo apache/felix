@@ -58,12 +58,19 @@ public class CheckServiceProvider extends CheckProviderParentClass implements Ch
         props.put("mapU", new Integer(mapU));
         props.put("dictU", new Integer(dictU));
         if (fs != null) {
-            props.put("result", new Boolean(fs.foo()));
-            props.put("boolean", new Boolean(fs.getBoolean()));
-            props.put("int", new Integer(fs.getInt()));
-            props.put("long", new Long(fs.getLong()));
-            props.put("double", new Double(fs.getDouble()));
-            if(fs.getObject() != null) { props.put("object", fs.getObject()); }
+            // If nullable = false and proxy, a runtime exception may be launched here
+            // catch the exception and add this to props.
+            try {
+                props.put("exception", Boolean.FALSE); // Set exception to false for checking.
+                props.put("result", new Boolean(fs.foo()));
+                props.put("boolean", new Boolean(fs.getBoolean()));
+                props.put("int", new Integer(fs.getInt()));
+                props.put("long", new Long(fs.getLong()));
+                props.put("double", new Double(fs.getDouble()));
+                if(fs.getObject() != null) { props.put("object", fs.getObject()); }
+            } catch (RuntimeException e) {
+                props.put("exception", Boolean.TRUE);
+            }
         }
         props.put("static", CheckService.foo);
         props.put("class", CheckService.class.getName());
