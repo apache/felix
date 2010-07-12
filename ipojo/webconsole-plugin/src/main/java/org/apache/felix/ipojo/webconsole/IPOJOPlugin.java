@@ -22,6 +22,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.architecture.Architecture;
+import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
@@ -275,6 +276,23 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                 JSONArray services = new JSONArray
                     (Arrays.asList(factory.getComponentDescription().getprovidedServiceSpecification()));
                 data.put("services", services);
+            }
+            
+            PropertyDescription[] props = factory.getComponentDescription().getProperties();
+            if (props != null  && props.length != 0) {
+                JSONArray properties = new JSONArray();
+                for (int i = 0; i < props.length; i++) {
+                    JSONObject prop = new JSONObject();
+                    prop.put("name", props[i].getName());
+                    prop.put("type", props[i].getType());
+                    prop.put("mandatory", props[i].isMandatory());
+                    prop.put("immutable", props[i].isImmutable());
+                    if (props[i].getValue() != null) {
+                        prop.put("value", props[i].getValue());
+                    }
+                    properties.put(prop);
+                }
+                data.put("properties", properties);
             }
             
             if (! factory.getRequiredHandlers().isEmpty()) {
