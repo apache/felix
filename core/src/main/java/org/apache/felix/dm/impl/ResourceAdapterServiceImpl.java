@@ -25,6 +25,7 @@ import java.util.Properties;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.Service;
 import org.apache.felix.dm.ServiceStateListener;
 
@@ -51,13 +52,36 @@ public class ResourceAdapterServiceImpl extends FilterService {
                  .setCallbacks("added", "removed"));
     }
 
+    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
+        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        m_callbackInstance = callbackInstance;
+        m_callbackChanged = callbackChanged;
+        m_service.setImplementation(new ResourceAdapterImpl(resourceFilter, propagateCallbackInstance, propagateCallbackMethod))
+            .add(dm.createResourceDependency()
+                 .setFilter(resourceFilter)
+                 .setAutoConfig(false)
+                 .setCallbacks("added", "removed"));
+    }
+
     public class ResourceAdapterImpl extends AbstractDecorator {
         private final String m_resourceFilter;
         private final boolean m_propagate;
+        private final Object m_propagateCallbackInstance;
+        private final String m_propagateCallbackMethod;
 
         public ResourceAdapterImpl(String resourceFilter, boolean propagate) {
+            this(resourceFilter, propagate, null, null);
+        }
+
+        public ResourceAdapterImpl(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod) {
+            this(resourceFilter, true, propagateCallbackInstance, propagateCallbackMethod);
+        }
+        
+        private ResourceAdapterImpl(String resourceFilter, boolean propagate, Object propagateCallbackInstance, String propagateCallbackMethod) {
             m_resourceFilter = resourceFilter;
             m_propagate = propagate;
+            m_propagateCallbackInstance = propagateCallbackInstance;
+            m_propagateCallbackMethod = propagateCallbackMethod;
         }
 
         public Service createService(Object[] properties) {
@@ -74,18 +98,21 @@ public class ResourceAdapterServiceImpl extends FilterService {
             // the first dependency is always the dependency on the resource, which
             // will be replaced with a more specific dependency below
             dependencies.remove(0);
+            ResourceDependency resourceDependency = m_manager.createResourceDependency()
+                 .setResource(resource)
+                 .setPropagate(m_propagate)
+                 .setCallbacks(m_callbackInstance, null, m_callbackChanged, null)
+                 .setAutoConfig(true)
+                 .setRequired(true);
+            resourceDependency.setPropagate(m_propagate);
+            resourceDependency.setPropagate(m_propagateCallbackInstance, m_propagateCallbackMethod);
             Service service = m_manager.createService()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-                .add(m_manager.createResourceDependency()
-                     .setResource(resource)
-                     .setPropagate(m_propagate)
-                     .setCallbacks(m_callbackInstance, null, m_callbackChanged, null)
-                     .setAutoConfig(true)
-                     .setRequired(true));
+                .add(resourceDependency);
             
             for (int i = 0; i < dependencies.size(); i++) {
                 service.add(((Dependency) dependencies.get(i)).createCopy());

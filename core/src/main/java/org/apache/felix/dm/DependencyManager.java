@@ -238,6 +238,10 @@ public class DependencyManager {
         return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, callbackChanged);
     }
     
+    public Service createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
+        return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackChanged);
+    }
+    
     /**
      * Creates a new bundle adapter. The adapter will be applied to any bundle that
      * matches the specified bundle state mask and filter condition. For each matching

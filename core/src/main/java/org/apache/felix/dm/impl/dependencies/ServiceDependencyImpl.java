@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl.dependencies;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -27,12 +28,14 @@ import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.ServiceComponentDependency;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
+import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.tracker.ServiceTracker;
 import org.apache.felix.dm.impl.tracker.ServiceTrackerCustomizer;
@@ -40,6 +43,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
 /**
  * Service dependency that can track an OSGi service.
@@ -69,6 +73,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     private Object m_defaultImplementationInstance;
     private boolean m_isAvailable;
     private ServiceReference[] m_references;
+    private boolean m_propagate;
+    private Object m_propagateCallbackInstance;
+    private String m_propagateCallbackMethod;
     
     private static final Comparator COMPARATOR = new Comparator() {
         public int getRank(ServiceReference ref) {
@@ -805,12 +812,51 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
 
     public Dictionary getProperties() {
-        // TODO Auto-generated method stub
-        return null;
+        ServiceReference reference = lookupServiceReference();
+        Object service = lookupService();
+        if (reference != null) {
+            if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
+                try {
+                    return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod, new Class[][] {{ ServiceReference.class, Object.class }, { ServiceReference.class }}, new Object[][] {{ reference, service }, { reference }});
+                }
+                catch (InvocationTargetException e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                }
+                catch (Exception e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                }
+                throw new IllegalStateException("Could not invoke callback");
+            }
+            else {
+                Properties props = new Properties();
+                String[] keys = reference.getPropertyKeys();
+                for (int i = 0; i < keys.length; i++) {
+                    if (!(keys[i].equals(Constants.SERVICE_ID) || keys[i].equals(Constants.SERVICE_PID))) {
+                        props.put(keys[i], reference.getProperty(keys[i]));
+                    }
+                }
+                return props;
+            }
+        }
+        else {
+            throw new IllegalStateException("cannot find service reference");
+        }
     }
 
     public boolean isPropagated() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_propagate;
+    }
+    
+    public ServiceDependency setPropagate(boolean propagate) {
+        ensureNotActive();
+        m_propagate = propagate;
+        return this;
+    }
+    
+    public ServiceDependency setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return this;
     }
 }
