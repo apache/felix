@@ -256,7 +256,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             String type = meta.getFieldType();
             if (type.endsWith("[]")) {
                 if (dep.isProxy()) {
-                    info("Arrays cannot be used for proxied dependencies - Disable the proxy mode");
+                    info("Arrays cannot be used for proxied dependencies - Disabling the proxy mode");
                     dep.setProxy(false);
                 }
                 // Set the dependency to multiple
@@ -268,7 +268,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             } else if (type.equals(Vector.class.getName())) {
                 dep.setType(VECTOR);
                 if (dep.isProxy()) {
-                    warn("Vectors cannot be used for proxied dependencies - Disable the proxy mode");
+                    warn("Vectors cannot be used for proxied dependencies - Disabling the proxy mode");
                     dep.setProxy(false);
                 }
                 type = null;
@@ -286,10 +286,10 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         }
         
         // Disables proxy on null (nullable=false)
-        if (dep.isProxy()  && dep.isOptional() && ! dep.supportsNullable()) {
-            dep.setProxy(false);
-            warn("Optional Null Dependencies do not support proxying - Disable the proxy mode");
-        }
+//        if (dep.isProxy()  && dep.isOptional() && ! dep.supportsNullable()) {
+//            dep.setProxy(false);
+//            warn("Optional Null Dependencies do not support proxying - Disable the proxy mode");
+//        }
 
         // Check that all required info are set
         return dep.getSpecification() != null;
@@ -403,7 +403,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     isProxy = false;
                 } else if (proxy.equals("true")) {
                     if (! isProxy) { // The configuration overrides the system setting
-                        warn("The configuration of a service dependency overides the proxy mode");
+                        warn("The configuration of a service dependency overrides the proxy mode");
                     }
                     isProxy = true;
                 }   
