@@ -104,7 +104,8 @@ function createDetail(factory) {
     if (factory.instances) {
         var list = $('<ul>');
         for (var s in factory.instances) {
-            list.append($('<li>').append(factory.instances[s]));
+            var link = $('<a href=\'' + instances_url + '/' + factory.instances[s] +'\'>' + factory.instances[s] + '</a>');
+            list.append($('<li>').append(link));
         }
         _.find('td.VcreatedInstances').html(list);
     } else { // Undefined
