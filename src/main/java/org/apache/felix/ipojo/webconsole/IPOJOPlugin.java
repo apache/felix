@@ -505,7 +505,9 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             req.put("policy", getDependencyBindingPolicy(dep.getPolicy()));
             req.put("optional", dep.isOptional());
             req.put("aggregate", dep.isMultiple());
-            //TODO Add filter support
+            if (dep.getFilter() != null) {
+                req.put("filter", dep.getFilter());
+            }
             if (dep.getServiceReferences() != null  && dep.getServiceReferences().size() != 0) {
                 req.put("matching",  getServiceReferenceList(dep.getServiceReferences()));
             }

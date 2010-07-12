@@ -79,7 +79,12 @@ function createDetail(instance) {
             // For each service clone the template
             var entry = reqEntryTemplate.clone().appendTo(tableReqBody).attr('id', 'req-' + service.id);
             entry.find('td.name').text(service.specification);
-            entry.find('td.id').text(service.id);
+            if (service.filter) {
+                entry.find('td.filter').text(service.filter);    
+            } else {
+                entry.find('td.filter').html('<i>no filter</i>');
+            }
+            
             entry.find('td.state').text(service.state);
             
             entry.find('td.policy').text(service.policy);
