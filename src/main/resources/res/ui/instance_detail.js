@@ -95,7 +95,13 @@ function createDetail(instance) {
             if (service.matching) {
                 var list = $('<ul>');
                 for (var x in service.matching) {
-                    list.append($('<li>').append(service.matching[x].id)); // TODO Link
+                    if (service.matching[x].instance) {
+                        var text = service.matching[x].instance + ' [' + service.matching[x].id + ']';
+                        var link = $('<a href=\'' + instances_url + '/' + service.matching[x].instance +'\'>' + text + '</a>');
+                        list.append($('<li>').append(link));
+                    } else {
+                        list.append($('<li>').append(service.matching[x].id));
+                    }
                 }
                 entry.find('td.matching').html(list);
             } else {
@@ -105,7 +111,13 @@ function createDetail(instance) {
              if (service.used) {
                 var list = $('<ul>');
                 for (var x in service.used) {
-                    list.append($('<li>').append(service.used[x].id)); // TODO Link
+                    if (service.used[x].instance) {
+                        var text = service.used[x].instance + ' [' + service.used[x].id + ']';
+                        var link = $('<a href=\'' + instances_url + '/' + service.used[x].instance +'\'>' + text + '</a>');
+                        list.append($('<li>').append(link));
+                    } else {
+                        list.append($('<li>').append(service.used[x].id));
+                    }
                 }
                 entry.find('td.used').html(list);
             } else {
