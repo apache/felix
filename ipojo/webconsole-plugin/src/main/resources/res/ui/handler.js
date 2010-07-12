@@ -14,47 +14,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-function renderInstancesData(instances)  {
-    $(".statline").html(getInstancesStatLine(instances));
+function renderHandlersData(handlers)  {
+    $(".statline").html(getHandlersStatLine(handlers));
     tableBody.empty();
-    for ( var idx in instances.data ) {
-        instancesEntry( instances.data[idx] );
+    for ( var idx in handlers.data ) {
+        handlersEntry( handlers.data[idx] );
     }
     $("#plugin_table").trigger("update");
 }
 
-function getInstancesStatLine(instances) {
-    return instances.count + " instances in total, "
-        + instances.valid_count + " valid instances, "
-        + instances.invalid_count + " invalid instances.";
+function getHandlersStatLine(handlers) {
+    return handlers.count + " handlers in total, "
+        + handlers.valid_count + " valid handlers, "
+        + handlers.invalid_count + " invalid handlers.";
 }
 
-function instancesEntry(instance) {
-    var name = instance.name;
-    var state = instance.state;
-    var factory = instance.factory;
+function handlersEntry(handler) {
+    var name = handler.name;
+    var state = handler.state;
+    var bundle = handler.bundle;
+    var type = handler.type;
 
-    var _ = tableEntryTemplate.clone().appendTo(tableBody).attr('id', 'instance-' + instance.name);
+    console.log("Create entry : " + handler);
 
-    _.find('td.name').html('<a href="' + window.location.pathname + '/instance/' + name + '">' + name + '</a>');
-    _.find('td.factory').html('<a href="' + window.location.pathname + '/factory/' + factory + '">' + factory + '</a>');;
+    var _ = tableEntryTemplate.clone().appendTo(tableBody).attr('id', 'handler-' + handler.name);
+
+    _.find('td.name').text(name);
+    _.find('td.type').text(type);
+    _.find('td.bundle').text(bundle);
     _.find('td.state').text(state);
+    if (handler.missing) {
+        _.find('td.missing').html(handler.missing);    
+    } else {
+        _.find('td.missing').html('<i>No missing handlers</i>');
+    }
+    
 }
 
 
-function loadInstancesData() {
-	$.get(pluginRoot + "/instances.json", null, function(data) {
-		renderInstancesData(data);
+function loadHandlersData() {
+    console.log("Load handlers data");
+	$.get(pluginRoot + "/handlers.json", null, function(data) {
+		renderHandlersData(data);
 	}, "json");	
 }
 
-function loadFactoriesData() {
-    console.log("Go to factories data");
-    window.location=window.location.pathname + '?view=factories'; 
+function loadInstancesData() {
+    window.location=window.location.pathname + "?view=instances"
 }
 
-function loadHandlersData() {
-    window.location=window.location.pathname + "?view=handlers"
+function loadFactoriesData() {
+    window.location=window.location.pathname + "?view=factories"
 }
 
 var tableBody = false;
@@ -64,7 +74,7 @@ $(document).ready(function(){
 	tableBody = $('#plugin_table tbody');
 	tableEntryTemplate = tableBody.find('tr').clone();
 
-    loadInstancesData();
+    loadHandlersData();
 	
     $(".instancesButton").click(loadInstancesData);
     $(".factoriesButton").click(loadFactoriesData);

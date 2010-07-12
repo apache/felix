@@ -57,7 +57,7 @@ function loadInstancesData() {
 }
 
 function loadHandlersData() {
-    console.log("Load handlers data"); 
+    window.location=window.location.pathname + "?view=handlers"
 }
 
 var tableBody = false;

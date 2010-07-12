@@ -37,6 +37,8 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
 
     private final String INSTANCES;
     private final String FACTORIES;
+    private final String HANDLERS;
+
     
     /**
      * Label used by the web console.
@@ -74,7 +76,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     public IPOJOPlugin() {
         INSTANCES = readTemplateFile(this.getClass(), "/res/instances.html" );
         FACTORIES = readTemplateFile(this.getClass(), "/res/factories.html" );
-
+        HANDLERS = readTemplateFile(this.getClass(), "/res/handlers.html" );
     }
     
     private final String readTemplateFile(final Class clazz, final String templateFile)
@@ -132,7 +134,9 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             response.getWriter().print( INSTANCES );
         } else if (view.equals("factories")) {
             response.getWriter().print( FACTORIES );
-        }                
+        } else if (view.equals("handlers")) {
+            response.getWriter().print( HANDLERS );
+        }             
     }
     
     private void renderAllInstances(PrintWriter pw) {
@@ -164,7 +168,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             JSONObject resp = new JSONObject();
             resp.put("count", m_factories.size());
             resp.put("valid_count", getValidFactoriesCount());
-            resp.put("invalid_count", getValidFactoriesCount());
+            resp.put("invalid_count", getInvalidFactoriesCount());
             
             JSONArray factories = new JSONArray();
             for (Factory factory : m_factories) {
@@ -181,6 +185,43 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
                 }
                 fact.put("bundle", bundle);
                 fact.put("state", state);
+                factories.put(fact);
+            }
+            resp.put("data", factories);
+            
+            pw.print(resp.toString());
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    
+    private void renderAllHandlers(PrintWriter pw) {
+        try {
+            JSONObject resp = new JSONObject();
+            resp.put("count", m_handlers.size());
+            resp.put("valid_count", getValidHandlersCount());
+            resp.put("invalid_count", getInvalidHandlersCount());
+            
+            JSONArray factories = new JSONArray();
+            for (HandlerFactory factory : m_handlers) {
+                String version = factory.getVersion();
+                String name = factory.getHandlerName();
+                
+                String state = getFactoryState(factory.getState());
+                String bundle = factory.getBundleContext().getBundle().getSymbolicName()
+                    + " (" + factory.getBundleContext().getBundle().getBundleId() + ")";
+                JSONObject fact = new JSONObject();
+                fact.put("name", name);
+                if (version != null) {
+                    fact.put("version", version);
+                }
+                fact.put("bundle", bundle);
+                fact.put("state", state);
+                fact.put("type", factory.getType());
+                if (! factory.getMissingHandlers().isEmpty()) {
+                    fact.put("missing", factory.getMissingHandlers().toString());
+                }
                 factories.put(fact);
             }
             resp.put("data", factories);
@@ -222,8 +263,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
             }
             
             if (reqInfo.handlers) {
-                //TODO
-                return;
+                this.renderAllHandlers(response.getWriter());
             }
             // nothing more to do
             return;
@@ -280,6 +320,26 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     private int getInvalidFactoriesCount() {
         int i = 0;
         for (Factory a : m_factories) { // Cannot be null, an empty list is returned.
+            if (a.getState() == Factory.INVALID) {
+                i ++;
+            }
+        }
+        return i;
+    }
+    
+    private int getValidHandlersCount() {
+        int i = 0;
+        for (Factory a : m_handlers) { // Cannot be null, an empty list is returned.
+            if (a.getState() == Factory.VALID) {
+                i ++;
+            }
+        }
+        return i;
+    }
+    
+    private int getInvalidHandlersCount() {
+        int i = 0;
+        for (Factory a : m_handlers) { // Cannot be null, an empty list is returned.
             if (a.getState() == Factory.INVALID) {
                 i ++;
             }
