@@ -1,0 +1,17 @@
+td.lheader {
+    width: 20em;
+    font-weight: bold;
+}
+
+div.architecture {
+    border-color: #CCC;
+    border-width: 1px;
+    border-style: solid;
+    border-spacing: 5px;
+    font-family: Courier;
+    margin: 5px;
+    background: #CCC;
+    width: 80em;
+    overflow: auto;
+    padding: 8px;
+}
