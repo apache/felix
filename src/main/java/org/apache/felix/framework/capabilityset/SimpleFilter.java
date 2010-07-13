@@ -471,6 +471,16 @@ loop:   for (;;)
         boolean result = true;
         int len = pieces.size();
 
+        // Special case, if there is only one piece, then
+        // we must perform an equality test.
+        if (len == 1)
+        {
+            return s.equals(pieces.get(0));
+        }
+
+        // Otherwise, check whether the pieces match
+        // the specified string.
+
         int index = 0;
 
 loop:   for (int i = 0; i < len; i++)

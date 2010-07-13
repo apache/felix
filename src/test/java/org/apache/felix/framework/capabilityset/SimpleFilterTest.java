@@ -27,6 +27,16 @@ public class SimpleFilterTest extends TestCase
     {
         List<String> pieces;
 
+        pieces = SimpleFilter.parseSubstring("*");
+        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, ""));
+
+        pieces = SimpleFilter.parseSubstring("foo");
+        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, ""));
+
+        pieces = SimpleFilter.parseSubstring("");
+        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, ""));
+        assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "foo"));
+
         pieces = SimpleFilter.parseSubstring("foo");
         assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foo"));
         assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "barfoo"));
