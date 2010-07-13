@@ -47,7 +47,7 @@ import org.osgi.framework.ServiceReference;
 @Instantiate
 public class IPOJOPlugin extends AbstractWebConsolePlugin {
     
-    private static final String CSS[] = { "/res/ui/bundles.css" , "/iPOJO_2/res/ui/ipojo.css" }; // TODO Change
+    private static final String CSS[] = { "/res/ui/bundles.css" , "/iPOJO/res/ui/ipojo.css" };
 
     private final String INSTANCES;
     private final String FACTORIES;
@@ -61,13 +61,13 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * Label used by the web console.
      */
     @ServiceProperty(name = "felix.webconsole.label")
-    private String m_label = "iPOJO_2"; // TODO CHANGE
+    private String m_label = "iPOJO"; // TODO CHANGE
 
     /**
      * Title used by the web console.
      */
     @ServiceProperty(name = "felix.webconsole.title")
-    private String m_title = "iPOJO_2";  // TODO CHANGE
+    private String m_title = "iPOJO";  // TODO CHANGE
     
     @ServiceProperty(name= "felix.webconsole.css")
     protected String[] m_css = CSS;
@@ -96,7 +96,6 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
         HANDLERS = readTemplateFile(this.getClass(), "/res/handlers.html" );
         FACTORY_DETAILS = readTemplateFile(this.getClass(), "/res/factory.html" );
         INSTANCE_DETAILS = readTemplateFile(this.getClass(), "/res/instance.html" );
-
     }
     
     private final String readTemplateFile(final Class clazz,
