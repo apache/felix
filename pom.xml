@@ -68,8 +68,11 @@
               org.apache.felix.ipojo.handlers.event,
               org.apache.felix.ipojo.transaction
              </Export-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE </Include-Resource>
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES
+             </Include-Resource>
           </instructions>
           <obrRepository>NONE</obrRepository>
         </configuration>
