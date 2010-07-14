@@ -61,8 +61,12 @@
               org.apache.felix.ipojo.webconsole
             </Private-Package>
             <Import-Package>*</Import-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE, res=src/main/resources/res
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/LICENSE.json=LICENSE.json,
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES,
+              res=src/main/resources/res
              </Include-Resource>
              <Embed-Dependency>
                 <!-- Required for JSON data transfer -->
