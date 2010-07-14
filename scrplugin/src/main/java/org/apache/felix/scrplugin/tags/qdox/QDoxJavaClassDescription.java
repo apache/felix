@@ -18,30 +18,18 @@
  */
 package org.apache.felix.scrplugin.tags.qdox;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 import org.apache.felix.scrplugin.JavaClassDescriptorManager;
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
+import org.apache.felix.scrplugin.tags.*;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaMethod;
-import org.apache.felix.scrplugin.tags.JavaTag;
-import org.apache.felix.scrplugin.tags.ModifiableJavaClassDescription;
-import org.objectweb.asm.ClassAdapter;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.ClassNode;
 
-import com.thoughtworks.qdox.model.DocletTag;
-import com.thoughtworks.qdox.model.JavaClass;
+import com.thoughtworks.qdox.model.*;
 import com.thoughtworks.qdox.model.JavaParameter;
 import com.thoughtworks.qdox.model.Type;
 
@@ -417,7 +405,9 @@ public class QDoxJavaClassDescription
         final JavaParameter[] params = new JavaParameter[] {param};
         final com.thoughtworks.qdox.model.JavaMethod meth = new com.thoughtworks.qdox.model.JavaMethod();
         meth.setName(methodName);
-        meth.setParameters(params);
+        for(int i=0;i<params.length;i++) {
+            meth.addParameter(params[i]);
+        }
         meth.setModifiers(new String[] {"protected"});
         this.javaClass.addMethod(meth);
     }
