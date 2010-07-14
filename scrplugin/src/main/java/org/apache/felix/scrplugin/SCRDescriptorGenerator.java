@@ -20,33 +20,12 @@ package org.apache.felix.scrplugin;
 
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.helper.PropertyHandler;
-import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.om.Implementation;
-import org.apache.felix.scrplugin.om.Interface;
-import org.apache.felix.scrplugin.om.Property;
-import org.apache.felix.scrplugin.om.Reference;
-import org.apache.felix.scrplugin.om.Service;
-import org.apache.felix.scrplugin.om.metatype.Designate;
-import org.apache.felix.scrplugin.om.metatype.MTObject;
-import org.apache.felix.scrplugin.om.metatype.MetaData;
-import org.apache.felix.scrplugin.om.metatype.OCD;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaClassDescriptionInheritanceComparator;
-import org.apache.felix.scrplugin.tags.JavaField;
-import org.apache.felix.scrplugin.tags.JavaTag;
-import org.apache.felix.scrplugin.tags.ModifiableJavaClassDescription;
+import org.apache.felix.scrplugin.helper.*;
+import org.apache.felix.scrplugin.om.*;
+import org.apache.felix.scrplugin.om.metatype.*;
+import org.apache.felix.scrplugin.tags.*;
 import org.apache.felix.scrplugin.tags.qdox.QDoxJavaClassDescription;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.felix.scrplugin.xml.MetaTypeIO;
@@ -637,7 +616,7 @@ public class SCRDescriptorGenerator
         final String metaType = tag.getNamedParameter( Constants.COMPONENT_METATYPE );
         final boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase( metaType )
             || "true".equalsIgnoreCase( metaType );
-        if ( hasMetaType )
+        if ( !component.isAbstract() && hasMetaType )
         {
             // ocd
             final OCD ocd = new OCD();

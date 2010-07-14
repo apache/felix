@@ -24,9 +24,7 @@ import java.util.List;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaMethod;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.tags.*;
 
 /**
  * <code>Component</code>
@@ -486,5 +484,25 @@ public class Component extends AbstractObject {
      */
     public void setConfigurationPolicy(final String value) {
         this.configurationPolicy = value;
+    }
+
+    @Override
+    public String toString() {
+        return "Component " + this.name + " (" +
+          "enabled=" + (enabled==null?"<notset>":enabled) +
+          ", immediate=" + (immediate == null?"<notset>":immediate) +
+          ", abstract=" + isAbstract +
+          ", isDS=" + isDs +
+          (factory != null ? ", factory="+factory:"")+
+          (configurationPolicy != null ? ", configurationPolicy=" + configurationPolicy : "") +
+          (activate != null ? ", activate=" + activate : "") +
+          (deactivate != null ? ", deactivate=" + deactivate : "") +
+          (modified != null ? ", modified=" + modified : "") +
+          ", specVersion=" + specVersion +
+          ", implementation=" + implementation +
+          ", service=" + service +
+          ", properties=" + properties +
+          ", references=" + references +
+          ")";
     }
 }
