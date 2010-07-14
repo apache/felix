@@ -85,8 +85,11 @@
               org.apache.xerces.dom.*, org.apache.xerces.dom3.*
             </Private-Package>
             <Export-Package> org.apache.felix.ipojo.task </Export-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE, META-INF/LICENSE.asm=LICENSE.asm
+            <Include-Resource> 
+                  META-INF/LICENSE=LICENSE,
+                  META-INF/NOTICE=NOTICE, 
+                  META-INF/LICENSE.asm=LICENSE.asm,
+                  META-INF/DEPENDENCIES=DEPENDENCIES
             </Include-Resource>
             <Import-Package>!org.objectweb.asm.signature, !org.objectweb.asm.tree, !org.objectweb.asm.tree.analysis, *</Import-Package>
           </instructions>
