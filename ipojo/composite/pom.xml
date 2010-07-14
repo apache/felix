@@ -94,8 +94,11 @@
               org.objectweb.asm*;version=3.0;-split-package:=merge-first ,
               org.apache.felix.ipojo.manipulation
             </Export-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE, META-INF/LICENSE.asm=LICENSE.asm
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/NOTICE=NOTICE, 
+              META-INF/LICENSE.asm=LICENSE.asm,
+              META-INF/DEPENDENCIES=DEPENDENCIES
             </Include-Resource>
             <IPOJO-Extension>
               composite:org.apache.felix.ipojo.composite.CompositeFactory

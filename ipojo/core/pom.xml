@@ -118,7 +118,8 @@
             </Export-Package>
             <Include-Resource>
               META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE, META-INF/LICENSE.asm=LICENSE.asm
+              META-INF/NOTICE=NOTICE, META-INF/LICENSE.asm=LICENSE.asm,
+              META-INF/DEPENDENCIES=DEPENDENCIES
             </Include-Resource>
             <_donotcopy> (CVS|.svn|.+.bak|~.+|metadata.xml) </_donotcopy>
           </instructions>

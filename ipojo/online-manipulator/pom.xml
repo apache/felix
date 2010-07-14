@@ -55,9 +55,11 @@
               org.objectweb.asm.commons, org.objectweb.asm </Export-Package>
             <Import-Package> !org.objectweb.asm.tree, !sun.io, org.osgi.framework;version=1.3, *
             </Import-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
               META-INF/LICENSE.asm=LICENSE.asm,
-              META-INF/NOTICE=NOTICE
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES
              </Include-Resource>
             <!-- <Embed-Dependency>xercesImpl|xml-resolver</Embed-Dependency> -->
           </instructions>

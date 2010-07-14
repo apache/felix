@@ -70,8 +70,11 @@
              http://felix.apache.org/site/event-admin-handlers.html
             </Bundle-DocURL>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE </Include-Resource>
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES 
+            </Include-Resource>
           </instructions>
         </configuration>
       </plugin>

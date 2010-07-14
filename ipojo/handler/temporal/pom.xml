@@ -80,10 +80,12 @@
             <Bundle-DocURL>
               http://felix.apache.org/site/temporal-service-dependency.html
             </Bundle-DocURL>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
               META-INF/LICENSE.asm=LICENSE.asm,
-              META-INF/NOTICE=NOTICE
-             </Include-Resource>
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES
+            </Include-Resource>
           </instructions>
         </configuration>
       </plugin>

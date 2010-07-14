@@ -65,8 +65,11 @@
             </Private-Package>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Name>${project.name}</Bundle-Name>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE </Include-Resource>
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES 
+            </Include-Resource>
           </instructions>
         </configuration>
       </plugin>
