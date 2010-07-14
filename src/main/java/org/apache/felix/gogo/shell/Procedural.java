@@ -46,7 +46,6 @@ public class Procedural
         return results;
     }
 
-    @SuppressWarnings("unchecked")
     public Object _if(CommandSession session, Function[] fns) throws Exception
     {
         int length = fns.length;
@@ -56,20 +55,17 @@ public class Procedural
                 "Usage: if {condition} {if-action} ... {else-action}");
         }
 
-        List<Object> args = (List<Object>) session.get("args");
-
         for (int i = 0; i < length; ++i)
         {
-            if (i == length - 1 || isTrue(fns[i++].execute(session, args)))
+            if (i == length - 1 || isTrue(fns[i++].execute(session, null)))
             {
-                return fns[i].execute(session, args);
+                return fns[i].execute(session, null);
             }
         }
 
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public boolean not(CommandSession session, Function condition) throws Exception
     {
         if (null == condition)
@@ -77,8 +73,7 @@ public class Procedural
             return true;
         }
         
-        List<Object> args = (List<Object>) session.get("args");
-        return !isTrue(condition.execute(session, args));
+        return !isTrue(condition.execute(session, null));
     }
 
     // Reflective.coerce() prefers to construct a new Throwable(String)
@@ -102,13 +97,11 @@ public class Procedural
             throw new IllegalArgumentException("exception not set or not Throwable.");
     }
 
-    @SuppressWarnings("unchecked")
     public Object _try(CommandSession session, Function func) throws Exception
     {
-        List<Object> args = (List<Object>) session.get("args");
         try
         {
-            return func.execute(session, args);
+            return func.execute(session, null);
         }
         catch (Exception e)
         {
@@ -117,41 +110,35 @@ public class Procedural
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Object _try(CommandSession session, Function func, Function error)
         throws Exception
     {
-        List<Object> args = (List<Object>) session.get("args");
         try
         {
-            return func.execute(session, args);
+            return func.execute(session, null);
         }
         catch (Exception e)
         {
             session.put("exception", e);
-            return error.execute(session, args);
+            return error.execute(session, null);
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void _while(CommandSession session, Function condition, Function ifTrue)
         throws Exception
     {
-        List<Object> args = (List<Object>) session.get("args");
-        while (isTrue(condition.execute(session, args)))
+        while (isTrue(condition.execute(session, null)))
         {
-            ifTrue.execute(session, args);
+            ifTrue.execute(session, null);
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void until(CommandSession session, Function condition, Function ifTrue)
         throws Exception
     {
-        List<Object> args = (List<Object>) session.get("args");
-        while (!isTrue(condition.execute(session, args)))
+        while (!isTrue(condition.execute(session, null)))
         {
-            ifTrue.execute(session, args);
+            ifTrue.execute(session, null);
         }
     }
 
