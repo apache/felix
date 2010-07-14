@@ -91,8 +91,11 @@
                             http://felix.apache.org/site/ipojo-arch-command.html
                         </Bundle-DocURL>
                         <Private-Package>org.apache.felix.ipojo.arch.gogo</Private-Package>
-                        <Include-Resource> META-INF/LICENSE=LICENSE,
-                            META-INF/NOTICE=NOTICE </Include-Resource>
+                        <Include-Resource> 
+                          META-INF/LICENSE=LICENSE,
+                          META-INF/NOTICE=NOTICE,
+                          META-INF/DEPENDENCIES=DEPENDENCIES
+                         </Include-Resource>
                             <Import-Package>
                                 org.apache.felix.service.command;version=0.6.0, *
                             </Import-Package>
