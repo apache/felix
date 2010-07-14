@@ -71,9 +71,13 @@
               org.apache.felix.ipojo.manipulation.annotations,
               org.apache.felix.ipojo.xml.parser, org.objectweb.asm,
               org.objectweb.asm.commons </Private-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/LICENSE.asm=LICENSE.asm, META-INF/NOTICE=NOTICE,
-              xsd=src/main/resources </Include-Resource>
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/LICENSE.asm=LICENSE.asm, 
+              META-INF/NOTICE=NOTICE,
+              xsd=src/main/resources, 
+              META-INF/DEPENDENCIES=DEPENDENCIES
+            </Include-Resource>
             <Import-Package>!org.objectweb.asm.tree, *</Import-Package>
           </instructions>
           <obrRepository>NONE</obrRepository>
