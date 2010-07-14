@@ -48,8 +48,11 @@
             <Bundle-Vendor> The Apache Software Foundation </Bundle-Vendor>
             <Bundle-Description> iPOJO Metadata </Bundle-Description>
             <Export-Package> org.apache.felix.ipojo.metadata </Export-Package>
-            <Include-Resource> META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE </Include-Resource>
+            <Include-Resource> 
+              META-INF/LICENSE=LICENSE,
+              META-INF/NOTICE=NOTICE,
+              META-INF/DEPENDENCIES=DEPENDENCIES
+            </Include-Resource>
           </instructions>
           <obrRepository>NONE</obrRepository>
         </configuration>
