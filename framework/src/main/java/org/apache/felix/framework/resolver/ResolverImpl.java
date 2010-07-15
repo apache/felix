@@ -440,12 +440,13 @@ public class ResolverImpl implements Resolver
             // a resolve exception.
             if ((candidates.size() == 0) && !req.isOptional())
             {
-                if (rethrow == null)
+                String msg = "Unable to resolve " + module
+                    + ": missing requirement " + req;
+                if (rethrow != null)
                 {
-                    rethrow =
-                        new ResolveException("Unable to resolve " + module
-                            + ": missing requirement " + req, module, req);
+                    msg = msg + " [caused by: " + rethrow.getMessage() + "]";
                 }
+                rethrow = new ResolveException(msg, module, req);
                 resultCache.put(module, rethrow);
                 m_logger.log(Logger.LOG_DEBUG, "No viable candidates", rethrow);
                 throw rethrow;
