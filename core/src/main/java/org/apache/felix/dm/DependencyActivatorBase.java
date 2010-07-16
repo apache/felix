@@ -92,6 +92,35 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
     
     /**
+     * Returns the bundle context that is associated with this bundle.
+     * 
+     * @return the bundle context
+     */
+    public BundleContext getBundleContext() {
+        return m_context;
+    }
+
+    /**
+     * Returns the dependency manager that is associated with this bundle.
+     * 
+     * @return the dependency manager
+     */
+    public DependencyManager getDependencyManager() {
+        return m_manager;
+    }
+    
+    /**
+     * Returns the logger that is associated with this bundle. A logger instance
+     * is a proxy that will log to a real OSGi logservice if available and standard
+     * out if not.
+     * 
+     * @return the logger
+     */
+    public Logger getLogger() {
+        return m_logger;
+    }
+    
+    /**
      * Creates a new service.
      * 
      * @return the new service
