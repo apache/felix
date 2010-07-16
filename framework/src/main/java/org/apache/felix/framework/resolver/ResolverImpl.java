@@ -415,7 +415,18 @@ public class ResolverImpl implements Resolver
             for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
             {
                 Capability candCap = itCandCap.next();
-                if (!candCap.getModule().isResolved())
+
+                // If the candidate module is not resolved and not the current
+                // module we are trying to populate, then try to populate the
+                // candidate module as well.
+                // NOTE: Technically, we don't have to check to see if the
+                // candidate module is equal to the current module, but this
+                // saves us from recursing and also simplifies exceptions messages
+                // since we effectively chain exception messages for each level
+                // of recursion; thus, any avoided recursion results in fewer
+                // exceptions to chain when an error does occur.
+                if (!candCap.getModule().isResolved()
+                    && !candCap.getModule().equals(module))
                 {
                     try
                     {

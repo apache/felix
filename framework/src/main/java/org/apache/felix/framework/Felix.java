@@ -3419,9 +3419,8 @@ ex.printStackTrace();
             {
                 Bundle b = ((ModuleImpl) ex.getModule()).getBundle();
                 throw new BundleException(
-                    "Unresolved constraint in bundle " + b + ": "
-                    + ((ex.getRequirement() == null)
-                        ? ex.getMessage() : ex.getMessage() + " - " + ex.getRequirement().toString()));
+                    "Unresolved constraint in bundle "
+                    + b + ": " + ex.getMessage());
             }
             else
             {
