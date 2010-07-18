@@ -34,7 +34,7 @@
     <description>
       Arch command to collect and print information about iPOJO instances.
       This command is made for Gogo.
-  </description>
+    </description>
     <url>http://felix.apache.org/site/ipojo-arch-command.html</url>
 
     <dependencies>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.6.0</version>
         </dependency>
     </dependencies>
     <build>
