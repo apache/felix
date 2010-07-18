@@ -127,6 +127,7 @@
                         <param>.checkstyle</param>
                         <param>.externalToolBuilders/*</param>
                         <param>LICENSE.asm</param>
+                        <param>DEPENDENCIES</param>
                     </excludes>
                 </configuration>
             </plugin>
