@@ -599,7 +599,7 @@ public class ResolverImpl implements Resolver
         }
 
         // First, add all exported packages to our package space.
-        calculateExportedPackages(module, modulePkgMap);
+        calculateExportedPackages(module, modulePkgMap, candidateMap);
         Packages modulePkgs = modulePkgMap.get(module);
 
         // Second, add all imported packages to our candidate space.
@@ -607,7 +607,7 @@ public class ResolverImpl implements Resolver
         {
             Requirement req = reqs.get(i);
             Capability cap = caps.get(i);
-            calculateExportedPackages(cap.getModule(), modulePkgMap);
+            calculateExportedPackages(cap.getModule(), modulePkgMap, candidateMap);
             mergeCandidatePackages(module, req, cap, modulePkgMap, candidateMap);
             addCapabilityDependency(cap, req, capDepSet);
         }
@@ -674,7 +674,7 @@ public class ResolverImpl implements Resolver
         else if (candCap.getNamespace().equals(Capability.MODULE_NAMESPACE))
         {
 // TODO: FELIX3 - THIS NEXT LINE IS A HACK. IMPROVE HOW/WHEN WE CALCULATE EXPORTS.
-            calculateExportedPackages(candCap.getModule(), modulePkgMap);
+            calculateExportedPackages(candCap.getModule(), modulePkgMap, candidateMap);
 
             // Get the candidate's package space to determine which packages
             // will be visible to the current module.
@@ -1110,7 +1110,8 @@ public class ResolverImpl implements Resolver
     }
 
     private static void calculateExportedPackages(
-        Module module, Map<Module, Packages> modulePkgMap)
+        Module module, Map<Module, Packages> modulePkgMap,
+        Map<Requirement, Set<Capability>> candidateMap)
     {
         Packages packages = modulePkgMap.get(module);
         if (packages != null)
@@ -1123,6 +1124,7 @@ public class ResolverImpl implements Resolver
 
         if (caps.size() > 0)
         {
+            // Grab all exported packages that are not also imported.
             for (int i = 0; i < caps.size(); i++)
             {
 // TODO: FELIX3 - Assume if a module imports the same package it
@@ -1133,6 +1135,24 @@ public class ResolverImpl implements Resolver
                     packages.m_exportedPkgs.put(
                         (String) caps.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue(),
                         new Blame(caps.get(i), null));
+                }
+            }
+            // Grab all imported packages for which the module imports from itself.
+            for (Requirement req : module.getRequirements())
+            {
+                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                {
+                    Set<Capability> cands = candidateMap.get(req);
+                    if ((cands != null) && (cands.size() > 0))
+                    {
+                        Capability cand = cands.iterator().next();
+                        if (cand.getModule().equals(module))
+                        {
+                            packages.m_exportedPkgs.put(
+                                (String) cand.getAttribute(Capability.PACKAGE_ATTR).getValue(),
+                                new Blame(cand, null));
+                        }
+                    }
                 }
             }
         }
@@ -1434,22 +1454,16 @@ public class ResolverImpl implements Resolver
         {
         }
 
-        public Packages(Packages packages)
-        {
-            m_exportedPkgs.putAll(packages.m_exportedPkgs);
-            m_importedPkgs.putAll(packages.m_importedPkgs);
-            m_requiredPkgs.putAll(packages.m_requiredPkgs);
-            m_usedPkgs.putAll(packages.m_usedPkgs);
-        }
-
         public List<String> getExportedAndReexportedPackages()
         {
             List<String> pkgs = new ArrayList();
+            // Grab all exported packages.
             for (Entry<String, Blame> entry : m_exportedPkgs.entrySet())
             {
                 pkgs.add((String)
                     entry.getValue().m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
             }
+            // Grab all required and reexported required packages.
             for (Entry<String, List<Blame>> entry : m_requiredPkgs.entrySet())
             {
                 for (Blame blame : entry.getValue())
