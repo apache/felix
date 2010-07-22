@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -190,6 +192,33 @@ public class SigilUI extends AbstractUIPlugin
         getActiveDisplay().asyncExec( runnable );
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T runInUISync(final Callable<T> callable) throws Exception
+    {
+        final Object[] result = new Object[1];
+        final Exception[] exception = new Exception[1];
+        runInUISync(new Runnable() {
+            public void run()
+            {
+                try
+                {
+                    result[0] = callable.call();
+                }
+                catch (Exception e)
+                {
+                    exception[0] = e;
+                }
+            }
+            
+        });
+        if ( exception[0] == null ) {
+            return (T) result[0];
+        }
+        else {
+            throw exception[0];
+        }
+    }
+
 
     public static void runInUISync( Runnable runnable )
     {
@@ -230,4 +259,6 @@ public class SigilUI extends AbstractUIPlugin
             return null;
         }
     }
+
+
 }
