@@ -282,4 +282,21 @@
        </enablement>
      </renameParticipant>
    </extension>  
+   <extension point="org.eclipse.ltk.core.refactoring.moveParticipants">
+     <moveParticipant
+        id="org.apache.felix.sigil.movePackageParticipant"
+        name="%MovePackageParticipant.name" 
+        class="org.apache.felix.sigil.ui.eclipse.refactor.MovePackageParticipant">
+       <enablement>
+         <with variable="affectedNatures">
+           <iterate operator="or">
+             <equals value="org.apache.felix.sigil.sigilnature"/>
+           </iterate>
+         </with>
+         <with variable="element">
+           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+         </with>
+       </enablement>
+     </moveParticipant>
+   </extension>  
 </plugin>
