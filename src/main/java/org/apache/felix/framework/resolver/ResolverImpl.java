@@ -599,7 +599,7 @@ public class ResolverImpl implements Resolver
         }
 
         // First, add all exported packages to our package space.
-        calculateExportedPackages(module, modulePkgMap, candidateMap);
+        calculateExportedPackages(module, modulePkgMap);
         Packages modulePkgs = modulePkgMap.get(module);
 
         // Second, add all imported packages to our candidate space.
@@ -607,7 +607,7 @@ public class ResolverImpl implements Resolver
         {
             Requirement req = reqs.get(i);
             Capability cap = caps.get(i);
-            calculateExportedPackages(cap.getModule(), modulePkgMap, candidateMap);
+            calculateExportedPackages(cap.getModule(), modulePkgMap);
             mergeCandidatePackages(module, req, cap, modulePkgMap, candidateMap);
             addCapabilityDependency(cap, req, capDepSet);
         }
@@ -674,7 +674,7 @@ public class ResolverImpl implements Resolver
         else if (candCap.getNamespace().equals(Capability.MODULE_NAMESPACE))
         {
 // TODO: FELIX3 - THIS NEXT LINE IS A HACK. IMPROVE HOW/WHEN WE CALCULATE EXPORTS.
-            calculateExportedPackages(candCap.getModule(), modulePkgMap, candidateMap);
+            calculateExportedPackages(candCap.getModule(), modulePkgMap);
 
             // Get the candidate's package space to determine which packages
             // will be visible to the current module.
@@ -1110,8 +1110,7 @@ public class ResolverImpl implements Resolver
     }
 
     private static void calculateExportedPackages(
-        Module module, Map<Module, Packages> modulePkgMap,
-        Map<Requirement, Set<Capability>> candidateMap)
+        Module module, Map<Module, Packages> modulePkgMap)
     {
         Packages packages = modulePkgMap.get(module);
         if (packages != null)
