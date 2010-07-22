@@ -1118,7 +1118,7 @@ public class ResolverImpl implements Resolver
         {
             return;
         }
-        packages = new Packages();
+        packages = new Packages(module);
 
         List<Capability> caps = module.getCapabilities();
 
@@ -1135,24 +1135,6 @@ public class ResolverImpl implements Resolver
                     packages.m_exportedPkgs.put(
                         (String) caps.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue(),
                         new Blame(caps.get(i), null));
-                }
-            }
-            // Grab all imported packages for which the module imports from itself.
-            for (Requirement req : module.getRequirements())
-            {
-                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
-                {
-                    Set<Capability> cands = candidateMap.get(req);
-                    if ((cands != null) && (cands.size() > 0))
-                    {
-                        Capability cand = cands.iterator().next();
-                        if (cand.getModule().equals(module))
-                        {
-                            packages.m_exportedPkgs.put(
-                                (String) cand.getAttribute(Capability.PACKAGE_ATTR).getValue(),
-                                new Blame(cand, null));
-                        }
-                    }
                 }
             }
         }
@@ -1445,23 +1427,32 @@ public class ResolverImpl implements Resolver
 
     private static class Packages
     {
+        private final Module m_module;
         public final Map<String, Blame> m_exportedPkgs = new HashMap();
         public final Map<String, List<Blame>> m_importedPkgs = new HashMap();
         public final Map<String, List<Blame>> m_requiredPkgs = new HashMap();
         public final Map<String, List<Blame>> m_usedPkgs = new HashMap();
 
-        public Packages()
+        public Packages(Module module)
         {
+            m_module = module;
         }
 
         public List<String> getExportedAndReexportedPackages()
         {
             List<String> pkgs = new ArrayList();
-            // Grab all exported packages.
-            for (Entry<String, Blame> entry : m_exportedPkgs.entrySet())
+            // Grab the module's actual exported packages.
+            // Note that we ignore the calculated exported packages here,
+            // because bundles that import their own exports still continue
+            // to provide access to their exports when they are required; i.e.,
+            // the implicitly reexport the packages if wired to another provider.
+            for (Capability cap : m_module.getCapabilities())
             {
-                pkgs.add((String)
-                    entry.getValue().m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                {
+                    pkgs.add((String)
+                        cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                }
             }
             // Grab all required and reexported required packages.
             for (Entry<String, List<Blame>> entry : m_requiredPkgs.entrySet())
