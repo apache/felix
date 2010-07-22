@@ -60,8 +60,13 @@ public class ExportPackageChange extends Change
     @Override
     public Change perform(IProgressMonitor progress) throws CoreException
     {   
-        sigil.getBundle().getBundleInfo().removeChild(oldExport);
-        sigil.getBundle().getBundleInfo().addExport(newExport);
+        if (oldExport != null) {
+            sigil.getBundle().getBundleInfo().removeChild(oldExport);
+        }
+        
+        if (newExport != null) {
+            sigil.getBundle().getBundleInfo().addExport(newExport);
+        }
         
         sigil.save(progress);
         

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.IModelElement;
 import org.apache.felix.sigil.model.IModelWalker;
 import org.apache.felix.sigil.model.ModelElementFactory;
@@ -37,57 +38,44 @@ public class RenamePackageParticipant extends RenameParticipant
     {   
         RefactoringStatus status = new RefactoringStatus();
         
-        try
-        {
-            ISigilProjectModel sigil = SigilCore.create(packageFragment.getJavaProject().getProject());
-            final String packageName = packageFragment.getElementName();
-            
-            SigilCore.log("Rename checkConditions " + packageName);
-            
-            final IPackageExport[] found = new IPackageExport[1];
-            sigil.visit(new IModelWalker()
-            {            
-                public boolean visit(IModelElement element)
-                {
-                    if (element instanceof IPackageExport) {
-                        IPackageExport pe = (IPackageExport) element;
-                        if (pe.getPackageName().equals(packageName)) {
-                            found[0] = pe;
+        if (getArguments().getUpdateReferences()) {
+            try
+            {
+                ISigilProjectModel sigil = SigilCore.create(packageFragment.getJavaProject().getProject());
+                final String packageName = packageFragment.getElementName();
+                
+                SigilCore.log("Rename checkConditions " + packageName);
+                
+                IPackageExport oldExport = ModelHelper.findExport(sigil, packageName);
+                
+                if (oldExport != null) {
+                    // record change to check if out of sync...
+                    touch(context, sigil);
+                                
+                    status = RefactoringStatus.createWarningStatus("Package " + packageName + " is exported. Renaming this package may effect bundles outside of this workspace");
+                    SigilCore.log("Export Package " + packageName + " renamed to " + getArguments().getNewName());
+    
+                    IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(IPackageExport.class);
+                    newExport.setPackageName(getArguments().getNewName());
+                    newExport.setVersion(oldExport.getVersion());
+    
+                    changes.add(new ExportPackageChange(sigil, oldExport, newExport));                    
+    
+                    for ( ISigilProjectModel other : SigilCore.getRoot().getProjects() ) {
+                        if ( !sigil.equals(other) ) {
+                            // record change to check if out of sync...
+                            touch(context, other);
                         }
+                        changes.add(createImportChange(status, other, oldExport, newExport));
                     }
-                    return found[0] == null;
-                }
-            });
-            
-            if (found[0] != null) {
-                // record change to check if out of sync...
-                touch(context, sigil);
-                            
-                status = RefactoringStatus.createWarningStatus("Package " + packageName + " is exported. Renaming this package may effect bundles outside of this workspace");
-                SigilCore.log("Export Package " + packageName + " renamed to " + getArguments().getNewName());
-
-                IPackageExport oldExport = found[0];
-                IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(IPackageExport.class);
-                newExport.setPackageName(getArguments().getNewName());
-                newExport.setVersion(oldExport.getVersion());
-
-                changes.add(new ExportPackageChange(sigil, oldExport, newExport));                    
-
-                for ( ISigilProjectModel other : SigilCore.getRoot().getProjects() ) {
-                    if ( !sigil.equals(other) ) {
-                        // record change to check if out of sync...
-                        touch(context, other);
-                    }
-                    changes.add(createImportChange(status, other, oldExport, newExport));
                 }
             }
-        }
-        catch (CoreException e)
-        {
-            SigilCore.warn("Failed to create export package refactor", e);
-            throw new OperationCanceledException("Failed to create export package refactor");
-        }
-        
+            catch (CoreException e)
+            {
+                SigilCore.warn("Failed to create export package refactor", e);
+                throw new OperationCanceledException("Failed to create export package refactor");
+            }
+        }        
         return status;
     }
 

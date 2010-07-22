@@ -53,8 +53,13 @@ public class ImportPackageChange extends Change
     @Override
     public Change perform(IProgressMonitor progress) throws CoreException
     {
-        sigil.getBundle().getBundleInfo().removeImport(oldImport);
-        sigil.getBundle().getBundleInfo().addImport(newImport);
+        if (oldImport!=null) {
+            sigil.getBundle().getBundleInfo().removeImport(oldImport);
+        }
+        
+        if (newImport != null) {
+            sigil.getBundle().getBundleInfo().addImport(newImport);
+        }
         
         sigil.save(progress);
         
