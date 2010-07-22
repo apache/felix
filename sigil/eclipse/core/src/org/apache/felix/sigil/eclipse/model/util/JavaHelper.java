@@ -65,6 +65,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.content.IContentDescription;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeManager;
@@ -78,9 +79,11 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IParent;
@@ -1150,14 +1153,8 @@ public class JavaHelper
 
         String packageName = pe.getPackageName();
 
-        IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-        VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf( store
-            .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
-        VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf( store
-            .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
-
         Version version = pe.getVersion();
-        VersionRange versions = VersionRange.newInstance( version, lowerBoundRule, upperBoundRule );
+        VersionRange versions = ModelHelper.getDefaultRange(version);
 
         IPackageImport pi = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
         pi.setPackageName( packageName );
@@ -1257,5 +1254,56 @@ public class JavaHelper
         }
 
         throw new JavaModelException( new IllegalStateException( "Missing type for " + root ), IStatus.ERROR );
+    }
+
+
+    public static Set<String> findLocalPackageDependencies(
+        ISigilProjectModel project, String packageName, IProgressMonitor monitor) throws JavaModelException
+    {
+        Set<String> imports = findJavaImports( project, monitor );
+        imports.remove(packageName);
+        return imports;
+    }
+
+
+    public static Set<String> findLocalPackageUsers(
+        ISigilProjectModel project, String packageName, IProgressMonitor monitor) throws JavaModelException
+    {
+        Set<String> imports = new HashSet<String>();
+        Set<String> check = new HashSet<String>();
+        for ( IPackageFragment root : project.getJavaModel().getPackageFragments() )
+        {
+            IPackageFragmentRoot rt = ( IPackageFragmentRoot ) root
+                .getAncestor( IJavaElement.PACKAGE_FRAGMENT_ROOT );
+
+            if ( isInClassPath( project, rt ) )
+            {
+                for ( ICompilationUnit cu : root.getCompilationUnits() )
+                {
+                    IPackageFragment pack = (IPackageFragment) cu.getAncestor(IJavaModel.PACKAGE_FRAGMENT);
+                    if ( !pack.getElementName().equals(packageName)) {
+                        scanImports( cu, check );
+                        if (check.contains(packageName)) {
+                            imports.add(pack.getElementName());
+                        }
+                    }
+                    check.clear();
+                }
+
+                for ( IClassFile cf : root.getClassFiles() )
+                {
+                    IPackageFragment pack = (IPackageFragment) cf.getAncestor(IJavaModel.PACKAGE_FRAGMENT);
+                    if ( !pack.getElementName().equals(packageName)) {
+                        scanImports( cf, check );
+                        if (check.contains(packageName)) {
+                            imports.add(pack.getElementName());
+                        }
+                    }
+                    check.clear();
+                }
+            }
+        }
+        
+        return imports;
     }
 }

@@ -20,15 +20,24 @@
 package org.apache.felix.sigil.eclipse.model.util;
 
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.felix.sigil.common.osgi.VersionRange;
+import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.model.ICapabilityModelElement;
 import org.apache.felix.sigil.model.ICompoundModelElement;
 import org.apache.felix.sigil.model.IModelElement;
 import org.apache.felix.sigil.model.IModelWalker;
 import org.apache.felix.sigil.model.IRequirementModelElement;
+import org.apache.felix.sigil.model.ModelElementFactory;
+import org.apache.felix.sigil.model.osgi.IPackageExport;
+import org.apache.felix.sigil.model.osgi.IPackageImport;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.osgi.framework.Version;
 
 
 public class ModelHelper
@@ -76,6 +85,36 @@ public class ModelHelper
                 findUsers( ee, users );
             }
         }
+    }
+    
+    public static VersionRange getDefaultRange(Version version) {
+        IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
+        
+        VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf( store
+            .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
+        VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf( store
+            .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
+
+        VersionRange selectedVersions = VersionRange.newInstance( version, lowerBoundRule, upperBoundRule );
+        return selectedVersions;
+    }
+    
+    public static IPackageExport findExport(ISigilProjectModel sigil, final String packageName) {
+        final ArrayList<IPackageExport> found = new ArrayList<IPackageExport>(1);
+        sigil.visit(new IModelWalker()
+        {            
+            public boolean visit(IModelElement element)
+            {
+                if (element instanceof IPackageExport) {
+                    IPackageExport pe = (IPackageExport) element;
+                    if (pe.getPackageName().equals(packageName)) {
+                        found.add(pe);
+                    }
+                }
+                return found.isEmpty();
+            }
+        });
+        return found.isEmpty() ? null : found.get(0);
     }
 
 }
