@@ -264,5 +264,22 @@
             </with>
          </activeWhen>
       </handler>      
-   </extension>   
+   </extension>
+   <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
+     <renameParticipant
+        id="org.apache.felix.sigil.renamePackageParticipant"
+        name="%RenamePackageParticipant.name" 
+        class="org.apache.felix.sigil.ui.eclipse.refactor.RenamePackageParticipant">
+       <enablement>
+         <with variable="affectedNatures">
+           <iterate operator="or">
+             <equals value="org.apache.felix.sigil.sigilnature"/>
+           </iterate>
+         </with>
+         <with variable="element">
+           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+         </with>
+       </enablement>
+     </renameParticipant>
+   </extension>  
 </plugin>
