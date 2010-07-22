@@ -24,6 +24,7 @@ import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
@@ -112,14 +113,7 @@ public class ImportSearchResultProposal implements IJavaCompletionProposal
 
         final IPackageImport i = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
         i.setPackageName( e.getPackageName() );
-        IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-        VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf( store
-            .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
-        VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf( store
-            .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
-
-        Version version = e.getVersion();
-        VersionRange selectedVersions = VersionRange.newInstance( version, lowerBoundRule, upperBoundRule );
+        VersionRange selectedVersions = ModelHelper.getDefaultRange(e.getVersion());
         i.setVersions( selectedVersions );
 
         WorkspaceModifyOperation op = new WorkspaceModifyOperation()

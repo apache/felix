@@ -27,9 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
-import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
-import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
@@ -51,7 +50,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -167,13 +165,6 @@ public class DependencyManagementSection extends SigilSection
             return;
         }
 
-        // Get the version rules
-        IPreferenceStore prefStore = SigilCore.getDefault().getPreferenceStore();
-        VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf( prefStore
-            .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
-        VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf( prefStore
-            .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
-
         // Get the existing imports for the bundle
         IBundleModelElement bundleInfo = getProjectModel().getBundle().getBundleInfo();
         Collection<IPackageImport> existingImports = bundleInfo.getImports();
@@ -191,8 +182,7 @@ public class DependencyManagementSection extends SigilSection
             IPackageExport export = exports.get( pkgImport );
             if ( export != null && !existingImportsMap.containsKey( pkgImport ) )
             {
-                VersionRange versionRange = VersionRange.newInstance( export.getVersion(), lowerBoundRule,
-                    upperBoundRule );
+                VersionRange versionRange = ModelHelper.getDefaultRange(export.getVersion());
                 IPackageImport newImport = elementFactory.newModelElement( IPackageImport.class );
                 newImport.setPackageName( pkgImport );
                 newImport.setVersions( versionRange );

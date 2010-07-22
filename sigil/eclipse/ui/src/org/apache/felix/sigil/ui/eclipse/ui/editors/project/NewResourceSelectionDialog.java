@@ -21,12 +21,10 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
-import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
-import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.osgi.IVersionedModelElement;
 import org.apache.felix.sigil.ui.eclipse.ui.util.BackgroundLoadingSelectionDialog;
 import org.apache.felix.sigil.ui.eclipse.ui.util.IValidationListener;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -146,14 +144,8 @@ public class NewResourceSelectionDialog<E extends IVersionedModelElement> extend
     {
         if ( selection != null )
         {
-            IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-            VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf( store
-                .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
-            VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf( store
-                .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
-
             Version version = selection.getVersion();
-            selectedVersions = VersionRange.newInstance( version, lowerBoundRule, upperBoundRule );
+            selectedVersions = ModelHelper.getDefaultRange(version);
             pnlVersionRange.setVersions( selectedVersions );
         }
     }

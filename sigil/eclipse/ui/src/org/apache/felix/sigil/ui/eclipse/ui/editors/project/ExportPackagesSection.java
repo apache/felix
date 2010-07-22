@@ -24,9 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
-import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.ModelElementFactoryException;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
@@ -122,16 +122,12 @@ public class ExportPackagesSection extends BundleDependencySection
                         IPackageImport pkgImport = ModelElementFactory.getInstance().newModelElement(
                             IPackageImport.class );
                         pkgImport.setPackageName( pkgFragment.getElementName() );
-                        VersionRangeBoundingRule lowerBound = VersionRangeBoundingRule.valueOf( store
-                            .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
-                        VersionRangeBoundingRule upperBound = VersionRangeBoundingRule.valueOf( store
-                            .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
                         Version version = dialog.getVersion();
                         if ( version == null )
                         {
                             version = getBundle().getVersion();
                         }
-                        VersionRange versionRange = VersionRange.newInstance( version, lowerBound, upperBound );
+                        VersionRange versionRange = ModelHelper.getDefaultRange(version);
                         pkgImport.setVersions( versionRange );
 
                         getBundle().getBundleInfo().addImport( pkgImport );
