@@ -112,8 +112,6 @@ public class SigilCore extends AbstractUIPlugin
     public static final String DEFAULT_VERSION_UPPER_BOUND = BASE + ".versionUpperBound";
 
     public static final String DEFAULT_EXCLUDED_RESOURCES = BASE + ".excludedResources";
-    public static final String PREFERENCES_NOASK_OSGI_INSTALL = BASE + ".noAskOSGIHome";
-    public static final String PREFERENCES_ADD_IMPORT_FOR_EXPORT = BASE + ".addImportForExport";
     public static final String INCLUDE_OPTIONAL_DEPENDENCIES = BASE + ".includeOptionalDependencies";
 
     public static final String INSTALL_BUILDER_EXTENSION_POINT_ID = BASE + ".installbuilder";
@@ -123,7 +121,11 @@ public class SigilCore extends AbstractUIPlugin
     public static final String MARKER_UNRESOLVED_IMPORT_PACKAGE = BASE + ".unresolvedDependencyMarker.importPackage";
     public static final String MARKER_UNRESOLVED_REQUIRE_BUNDLE = BASE + ".unresolvedDependencyMarker.requireBundle";
     public static final String REPOSITORY_SET = PLUGIN_ID + ".repository.set";
+    
+    public static final String PREFERENCES_NOASK_OSGI_INSTALL = BASE + ".noAskOSGIHome";
+    public static final String PREFERENCES_ADD_IMPORT_FOR_EXPORT = BASE + ".addImportForExport";
     public static final String PREFERENCES_INCLUDE_OPTIONAL = PLUGIN_ID + ".include.optional";
+    public static final String PREFERENCES_REMOVE_IMPORT_FOR_EXPORT = BASE + ".removeImportForExport";
 
     private static final Object NULL = new Object();
 
