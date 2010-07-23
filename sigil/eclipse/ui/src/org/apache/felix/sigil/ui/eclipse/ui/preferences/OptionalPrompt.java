@@ -34,7 +34,7 @@ public class OptionalPrompt
     {
         boolean result = false;
 
-        PromptablePreference value = PromptablePreference.valueOf( prefStore.getString( prefName ) );
+        PromptablePreference value = preference(prefStore, prefName);
         switch ( value )
         {
             case Always:
@@ -64,7 +64,7 @@ public class OptionalPrompt
     {
         int result = IDialogConstants.NO_ID;
 
-        PromptablePreference value = PromptablePreference.valueOf( prefStore.getString( prefName ) );
+        PromptablePreference value = preference(prefStore, prefName);
         switch ( value )
         {
             case Always:
@@ -91,4 +91,15 @@ public class OptionalPrompt
 
         return result;
     }
+    
+    /**
+     * @param prefStore 
+     * @param prefName
+     * @return
+     */
+    private static PromptablePreference preference(IPreferenceStore prefStore, String prefName)
+    {
+        String val = prefStore.getString( prefName );
+        return (val == null || val.trim().length() == 0) ? PromptablePreference.Prompt : PromptablePreference.valueOf( val );
+    }    
 }
