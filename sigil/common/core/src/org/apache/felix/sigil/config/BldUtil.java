@@ -23,8 +23,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// taken from Newton Launcher
-
 public class BldUtil
 {
     /**
