@@ -30,6 +30,7 @@ import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.ModelElementFactoryException;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilPage;
@@ -138,7 +139,7 @@ public class ExportPackagesSection extends BundleDependencySection
 
                 if ( importsAdded )
                 {
-                    ( ( SigilProjectEditorPart ) getPage().getEditor() ).refreshAllPages();
+                    refreshAllPages();
                     markDirty();
                 }
                 else if ( exportsAdded )
@@ -193,17 +194,54 @@ public class ExportPackagesSection extends BundleDependencySection
     protected void handleRemoved()
     {
         IStructuredSelection selection = ( IStructuredSelection ) getSelection();
-
+        
         if ( !selection.isEmpty() )
         {
+            boolean importsRemoved = false;
+
+            IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
+            boolean shouldRemoveImports = OptionalPrompt.optionallyPrompt( store,
+                SigilCore.PREFERENCES_REMOVE_IMPORT_FOR_EXPORT, "Remove Exports",
+                "Should corresponding imports be removed?", getSection().getShell() );
+            
+            IBundleModelElement info = getBundle().getBundleInfo();
+            
             for ( Iterator<IPackageExport> i = selection.iterator(); i.hasNext(); )
             {
-                getBundle().getBundleInfo().removeExport( i.next() );
+                IPackageExport pe = i.next();
+                info.removeExport( pe );
+                
+                // Remove corresponding imports (maybe)
+                if (shouldRemoveImports) 
+                {                    
+                    for(IPackageImport pi : info.getImports() ) {
+                        if (pi.getPackageName().equals(pe.getPackageName())) {
+                            importsRemoved = true;
+                            info.removeImport(pi);
+                        }
+                    }
+                }
             }
 
-            refresh();
+            if ( importsRemoved )
+            {
+                refreshAllPages();
+            }
+            else {
+                refresh();
+            }
+            
             markDirty();
         }
+    }
+
+
+    /**
+     * 
+     */
+    private void refreshAllPages()
+    {
+        ( ( SigilProjectEditorPart ) getPage().getEditor() ).refreshAllPages();
     }
 
 
