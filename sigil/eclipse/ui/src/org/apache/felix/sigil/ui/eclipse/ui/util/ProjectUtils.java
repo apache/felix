@@ -94,7 +94,7 @@ public class ProjectUtils
         }
         else
         {
-            return OptionalPrompt.optionallyPromptWithCancel( SigilCore.getDefault().getPreferenceStore(),
+            return OptionalPrompt.optionallyPromptWithCancel(
                 SigilCore.PREFERENCES_REBUILD_PROJECTS, "Rebuild", "Do you wish to rebuild all Sigil projects", shell );
         }
     }

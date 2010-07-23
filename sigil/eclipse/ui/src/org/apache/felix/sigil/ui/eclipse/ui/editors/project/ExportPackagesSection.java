@@ -112,8 +112,7 @@ public class ExportPackagesSection extends BundleDependencySection
                 // Add corresponding imports (maybe)
                 boolean importsAdded = false;
 
-                IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-                boolean shouldAddImports = OptionalPrompt.optionallyPrompt( store,
+                boolean shouldAddImports = OptionalPrompt.optionallyPrompt(
                     SigilCore.PREFERENCES_ADD_IMPORT_FOR_EXPORT, "Add Exports",
                     "Should corresponding imports be added?", getSection().getShell() );
                 if ( shouldAddImports )
@@ -199,8 +198,7 @@ public class ExportPackagesSection extends BundleDependencySection
         {
             boolean importsRemoved = false;
 
-            IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-            boolean shouldRemoveImports = OptionalPrompt.optionallyPrompt( store,
+            boolean shouldRemoveImports = OptionalPrompt.optionallyPrompt( 
                 SigilCore.PREFERENCES_REMOVE_IMPORT_FOR_EXPORT, "Remove Exports",
                 "Should corresponding imports be removed?", getSection().getShell() );
             

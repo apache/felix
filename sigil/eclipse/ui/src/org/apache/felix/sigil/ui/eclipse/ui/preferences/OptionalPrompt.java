@@ -20,6 +20,7 @@
 package org.apache.felix.sigil.ui.eclipse.ui.preferences;
 
 
+import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.preferences.PromptablePreference;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -29,6 +30,11 @@ import org.eclipse.swt.widgets.Shell;
 
 public class OptionalPrompt
 {
+    public static boolean optionallyPrompt( String prefName, String title, String text, Shell parentShell) 
+    {
+        return optionallyPrompt(SigilCore.getDefault().getPreferenceStore(), prefName, title, text, parentShell);
+    }
+    
     public static boolean optionallyPrompt( IPreferenceStore prefStore, String prefName, String title, String text,
         Shell parentShell )
     {
@@ -58,7 +64,12 @@ public class OptionalPrompt
         return result;
     }
 
-
+    public static int optionallyPromptWithCancel( String prefName, String title,
+        String text, Shell parentShell )
+    {
+        return optionallyPromptWithCancel(SigilCore.getDefault().getPreferenceStore(), prefName, title, text, parentShell);
+    }
+    
     public static int optionallyPromptWithCancel( IPreferenceStore prefStore, String prefName, String title,
         String text, Shell parentShell )
     {
