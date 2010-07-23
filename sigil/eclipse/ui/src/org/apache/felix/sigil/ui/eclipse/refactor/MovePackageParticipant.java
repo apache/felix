@@ -61,6 +61,9 @@ public class MovePackageParticipant extends MoveParticipant
                 
                 RefactoringStatus status = new RefactoringStatus();
                 if ( !sourceProject.equals(destProject) ) {                    
+                    RefactorUtil.touch(context, sourceProject);
+                    RefactorUtil.touch(context, destProject);
+                    
                     final String packageName = packageFragment.getElementName();
                     IPackageExport oldExport = ModelHelper.findExport(sourceProject, packageName);
                     

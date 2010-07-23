@@ -30,8 +30,6 @@ import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.mapping.IResourceChangeDescriptionFactory;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -42,7 +40,6 @@ import org.eclipse.ltk.core.refactoring.NullChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
-import org.eclipse.ltk.core.refactoring.participants.ResourceChangeChecker;
 
 public class RenamePackageParticipant extends RenameParticipant
 {
@@ -67,7 +64,7 @@ public class RenamePackageParticipant extends RenameParticipant
                 
                 if (oldExport != null) {
                     // record change to check if out of sync...
-                    touch(context, sigil);
+                    RefactorUtil.touch(context, sigil);
                                 
                     status = RefactoringStatus.createWarningStatus("Package " + packageName + " is exported. Renaming this package may effect bundles outside of this workspace");
                     SigilCore.log("Export Package " + packageName + " renamed to " + getArguments().getNewName());
@@ -81,7 +78,7 @@ public class RenamePackageParticipant extends RenameParticipant
                     for ( ISigilProjectModel other : SigilCore.getRoot().getProjects() ) {
                         if ( !sigil.equals(other) ) {
                             // record change to check if out of sync...
-                            touch(context, other);
+                            RefactorUtil.touch(context, other);
                         }
                         changes.add(createImportChange(status, other, oldExport, newExport));
                     }
@@ -124,14 +121,6 @@ public class RenamePackageParticipant extends RenameParticipant
     {
         this.packageFragment = (IPackageFragment) element;
         return true;
-    }
-
-    private static final void touch(CheckConditionsContext context, ISigilProjectModel sigil)
-    {
-        ResourceChangeChecker checker = (ResourceChangeChecker) context.getChecker(ResourceChangeChecker.class);
-        IResourceChangeDescriptionFactory deltaFactory= checker.getDeltaFactory();        
-        IFile file = sigil.getProject().getFile(SigilCore.SIGIL_PROJECT_FILE);
-        deltaFactory.change(file);
     }
 
     private Change createImportChange(RefactoringStatus status, ISigilProjectModel sigil, IPackageExport oldExport, IPackageExport newExport)
