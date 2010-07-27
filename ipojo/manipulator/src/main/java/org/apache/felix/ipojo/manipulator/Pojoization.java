@@ -326,6 +326,19 @@ public class Pojoization {
             }
         }
     }
+    
+    /**
+     * Copies an input stream into an output stream but does not close the streams.
+     * @param in the input stream
+     * @param out the output stream
+     * @throws IOException if the stream cannot be copied
+     */
+    private static void copyStreamWithoutClosing(InputStream in, OutputStream out) throws IOException {
+        byte[] b = new byte[4096];
+        for (int n; (n = in.read(b)) != -1;) {
+            out.write(b, 0, n);
+        }
+    }
 
     /**
      * Manipulate the input bundle.
@@ -368,12 +381,8 @@ public class Pojoization {
                     } else { // The class is already manipulated
                         jos.putNextEntry(curEntry);
                         InputStream currIn = m_inputJar.getInputStream(curEntry);
-                        int c;
-                        int i = 0;
-                        while ((c = currIn.read()) >= 0) {
-                            jos.write(c);
-                            i++;
-                        }
+                        copyStreamWithoutClosing(currIn, jos);
+                        
                         currIn.close();
                         jos.closeEntry();
                     }
@@ -383,12 +392,7 @@ public class Pojoization {
                         // copy the entry header to jos
                         jos.putNextEntry(curEntry);
                         InputStream currIn = m_inputJar.getInputStream(curEntry);
-                        int c;
-                        int i = 0;
-                        while ((c = currIn.read()) >= 0) {
-                            jos.write(c);
-                            i++;
-                        }
+                        copyStreamWithoutClosing(currIn, jos);
                         currIn.close();
                         jos.closeEntry();
                     }
