@@ -240,20 +240,15 @@ public class ClassLoaderJavaClassDescription implements JavaClassDescription {
         if ( this.clazz.getName().equals(type) ) {
             return true;
         }
-        return this.testClass(this.clazz, type);
-    }
 
-    protected boolean testClass(Class<?> c, String type) {
-        final Class<?>[] interfaces = c.getInterfaces();
-        for(int i=0; i<interfaces.length; i++) {
-            if ( interfaces[i].getName().equals(type) ) {
-                return true;
-            }
-            if ( this.testClass(interfaces[i], type) ) {
-                return true;
-            }
+        try {
+            Class<?> typeClass = this.clazz.getClassLoader().loadClass( type );
+            return typeClass.isAssignableFrom( this.clazz );
+        } catch (ClassNotFoundException cnfe) {
+            // cannot load the check type through the class' class loader
+            // thus we assume clazz is not a type
+            return false;
         }
-        return false;
     }
 
     /**
