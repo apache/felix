@@ -42,8 +42,6 @@ import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.model.osgi.IRequiredBundle;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 
 import aQute.lib.osgi.Constants;
 
@@ -139,15 +137,10 @@ public class BldConverter
 
         // resources
         // FIXME: UI doesn't support -resources: path1=path2
-        Map<String, String> resources = bundle.getResources();
-        for ( String resource : resources.keySet() )
+        List<Resource> resources = bundle.getResources();
+        for ( Resource resource : resources )
         {
-            String fsPath = resources.get( resource );
-            if ( !"".equals( fsPath ) )
-            {
-                BldCore.error( "FIXME: can't convert resource: " + resource + "=" + fsPath );
-            }
-            sigilBundle.addSourcePath( new Path( resource ) );
+            sigilBundle.addSourcePath( resource );
         }
 
         ////////////////////
@@ -328,7 +321,7 @@ public class BldConverter
     {
         // resources
         ArrayList<String> resources = new ArrayList<String>();
-        for ( IPath ipath : bundle.getSourcePaths() )
+        for ( Resource ipath : bundle.getSourcePaths() )
         {
             resources.add( ipath.toString() );
         }

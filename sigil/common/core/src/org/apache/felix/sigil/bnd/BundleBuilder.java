@@ -36,6 +36,7 @@ import java.util.jar.Attributes;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.config.BldAttr;
 import org.apache.felix.sigil.config.IBldProject;
+import org.apache.felix.sigil.config.Resource;
 import org.apache.felix.sigil.config.IBldProject.IBldBundle;
 import org.apache.felix.sigil.core.repository.SystemRepositoryProvider;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
@@ -188,7 +189,12 @@ public class BundleBuilder
 
         if (log != null)
         {
-            log.verbose("BND instructions: " + spec.toString());
+            log.verbose("Generated " + bundle.getSymbolicName());
+            log.verbose("-----------------------------");
+            for(Map.Entry<Object, Object> e : spec.entrySet()) {
+                log.verbose(e.getKey() + "=" + e.getValue());
+                log.verbose("-----------------------------");
+            }
             log.verbose("BND classpath: " + Arrays.asList(classpath));
         }
 
@@ -449,7 +455,7 @@ public class BundleBuilder
             addVersions(fh.getVersions(), sb);
             spec.setProperty(Constants.FRAGMENT_HOST, sb.toString());
         }
-
+        
         return spec;
     }
 
@@ -540,107 +546,19 @@ public class BundleBuilder
 
     private void addResources(IBldBundle bundle, Properties spec)
     {
-        Map<String, String> resources = bundle.getResources();
+        List<Resource> resources = bundle.getResources();
         StringBuilder sb = new StringBuilder();
 
-        for (String bPath : resources.keySet())
+        for (Resource bPath : resources)
         {
-            if (bPath.startsWith("@"))
-            {
-                handleInlineJar(bundle, sb, bPath);
-            }
-            else if (bPath.startsWith("{"))
-            {
-                handlePreprocessedResource(bundle, resources, sb, bPath);
-            }
-            else
-            {
-                handleStandardResource(bundle, resources, sb, bPath);
-            }
+            if (sb.length() > 0)
+                sb.append(",");
+            
+            sb.append(bPath.toBNDInstruction(classpath));
         }
 
         if (sb.length() > 0)
             spec.setProperty(Constants.INCLUDE_RESOURCE, sb.toString());
-    }
-
-    private void handlePreprocessedResource(IBldBundle bundle,
-        Map<String, String> resources, StringBuilder sb, String bPath)
-    {
-        String fsPath = resources.get(bPath);
-
-        bPath = bPath.substring(1, bPath.length() - 1);
-
-        if ("".equals(fsPath))
-            fsPath = bPath;
-
-        fsPath = findFileSystemPath(bundle, fsPath);
-
-        if (sb.length() > 0)
-            sb.append(",");
-        sb.append("{");
-        sb.append(bPath);
-        sb.append('=');
-        sb.append(fsPath);
-        sb.append("}");
-    }
-
-    private void handleStandardResource(IBldBundle bundle, Map<String, String> resources,
-        StringBuilder sb, String bPath)
-    {
-        String fsPath = resources.get(bPath);
-        if ("".equals(fsPath))
-            fsPath = bPath;
-
-        fsPath = findFileSystemPath(bundle, fsPath);
-
-        if (sb.length() > 0)
-            sb.append(",");
-        sb.append(bPath);
-        sb.append('=');
-        sb.append(fsPath);
-    }
-
-    private String findFileSystemPath(IBldBundle bundle, String fsPath)
-    {
-        File resolved = bundle.resolve(fsPath);
-
-        // fsPath may contain Bnd variable, making path appear to not exist
-
-        if (!resolved.exists())
-        {
-            // Bnd already looks for classpath jars
-            File found = findInClasspathDir(fsPath);
-            if (found != null)
-            {
-                fsPath = found.getPath();
-            }
-            else
-            {
-                fsPath = resolved.getAbsolutePath();
-            }
-        }
-        else
-        {
-            fsPath = resolved.getAbsolutePath();
-        }
-
-        return fsPath;
-    }
-
-    private void handleInlineJar(IBldBundle bundle, StringBuilder sb, String bPath)
-    {
-        if (sb.length() > 0)
-            sb.append(",");
-
-        File f = bundle.resolve(bPath.substring(1));
-
-        if (f.exists())
-        {
-            sb.append('@');
-            sb.append(f);
-        }
-        else
-            sb.append(bPath);
     }
 
     private List<IPackageImport> getImports(IBldBundle bundle)

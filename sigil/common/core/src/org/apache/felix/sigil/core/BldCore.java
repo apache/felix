@@ -99,6 +99,5 @@ public class BldCore implements BundleActivator
     {
         // TODO Auto-generated method stub
 
-    }
-
+    }    
 }

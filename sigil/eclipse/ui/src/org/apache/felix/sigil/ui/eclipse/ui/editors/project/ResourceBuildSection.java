@@ -20,9 +20,11 @@
 package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
+import org.apache.felix.sigil.config.Resource;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
@@ -33,6 +35,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -128,22 +131,32 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
 
         bundle.clearSourcePaths();
 
-        SigilUI.runInUISync( new Runnable()
+        try
         {
-            public void run()
+            SigilUI.runInUISync( new Callable<Void>()
             {
-                for ( Object o : viewer.getCheckedElements() )
+                public Void call() throws Exception
                 {
-                    if ( !viewer.getGrayed( o ) )
+                    for ( Object o : viewer.getCheckedElements() )
                     {
-                        IResource r = ( IResource ) o;
-                        getProjectModel().getBundle().addSourcePath( r.getProjectRelativePath() );
+                        if ( !viewer.getGrayed( o ) )
+                        {
+                            IResource r = ( IResource ) o;
+                            
+                            getProjectModel().getBundle().addSourcePath( toBldResource(r) );
+                        }
                     }
+                    
+                    return null;
                 }
-            }
-        } );
+            } );
 
-        super.commit( onSave );
+            super.commit( onSave );
+        }
+        catch (Exception e)
+        {
+            SigilCore.warn("Failed to update resource", e);
+        }
     }
 
 
@@ -151,9 +164,9 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
     protected void refreshSelections()
     {
         // zero the state
-        for ( IPath path : getProjectModel().getBundle().getSourcePaths() )
+        for ( Resource path : getProjectModel().getBundle().getSourcePaths() )
         {
-            IResource r = findResource( path );
+            IResource r = findResource( new Path(path.getLocalFile()) );
             if ( r != null )
             {
                 viewer.expandToLevel( r, 0 );
@@ -172,16 +185,35 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
     @Override
     protected void syncResourceModel( IResource element, boolean checked )
     {
-        if ( checked )
+        try
         {
-            getProjectModel().getBundle().addSourcePath( element.getProjectRelativePath() );
-        }
-        else
-        {
-            getProjectModel().getBundle().removeSourcePath( element.getProjectRelativePath() );
-        }
+            Resource resource = toBldResource(element);
+            
+            if ( checked )
+            {
+                getProjectModel().getBundle().addSourcePath( resource );
+            }
+            else
+            {
+                getProjectModel().getBundle().removeSourcePath( resource );
+            }
 
-        markDirty();
+            markDirty();
+        }
+        catch (CoreException e)
+        {
+            SigilCore.warn("Failed to sync resource " + element, e);
+        }
+    }
+
+    /**
+     * @param element
+     * @return
+     * @throws CoreException 
+     */
+    private Resource toBldResource(IResource element) throws CoreException
+    {
+        return getProjectModel().getBldProject().newResource(element.getProjectRelativePath().toString());
     }
 
     private AtomicBoolean disposed = new AtomicBoolean();

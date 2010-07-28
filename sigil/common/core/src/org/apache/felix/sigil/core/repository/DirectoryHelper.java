@@ -32,17 +32,13 @@ import org.apache.felix.sigil.model.ModelElementFactoryException;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.repository.AbstractBundleRepository;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 
 
 public class DirectoryHelper
 {
-    public static void scanBundles( AbstractBundleRepository repository, List<ISigilBundle> bundles, IPath path,
-        IPath source, boolean recursive )
+    public static void scanBundles( AbstractBundleRepository repository, List<ISigilBundle> bundles, File dir,
+        File source, boolean recursive )
     {
-        File dir = path.toFile();
-
         if ( dir.exists() )
         {
             for ( File f : dir.listFiles() )
@@ -51,7 +47,7 @@ public class DirectoryHelper
                 {
                     if ( recursive )
                     {
-                        scanBundles( repository, bundles, new Path( f.getAbsolutePath() ), source, recursive );
+                        scanBundles( repository, bundles, f, source, recursive );
                     }
                 }
                 else if ( f.isFile() && f.getName().endsWith( ".jar" ) )
@@ -64,7 +60,8 @@ public class DirectoryHelper
                         if ( bundle != null )
                         {
                             bundle.setSourcePathLocation( source );
-                            bundle.setSourceRootPath( new Path( "src" ) );
+                            // TODO shouldn't be hard coded
+                            bundle.setSourceRootPath( "src" );
                             bundles.add( bundle );
                         }
                     }
@@ -110,7 +107,7 @@ public class DirectoryHelper
         {
             bundle = ModelElementFactory.getInstance().newModelElement( ISigilBundle.class );
             bundle.addChild( info );
-            bundle.setLocation( new Path( f.getAbsolutePath() ) );
+            bundle.setLocation( f );
         }
 
         return bundle;

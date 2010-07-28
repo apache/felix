@@ -20,6 +20,7 @@
 package org.apache.felix.sigil.core.repository;
 
 
+import java.io.File;
 import java.io.IOException;
 
 import java.io.InputStream;
@@ -28,7 +29,6 @@ import java.util.Properties;
 import org.apache.felix.sigil.repository.IBundleRepository;
 import org.apache.felix.sigil.repository.IRepositoryProvider;
 import org.apache.felix.sigil.repository.RepositoryException;
-import org.eclipse.core.runtime.Path;
 
 public class SystemRepositoryProvider implements IRepositoryProvider
 {
@@ -36,7 +36,7 @@ public class SystemRepositoryProvider implements IRepositoryProvider
     public IBundleRepository createRepository( String id, Properties properties ) throws RepositoryException
     {
         String fw = properties.getProperty( "framework" );
-        Path frameworkPath = fw == null ? null : new Path( fw );
+        File frameworkPath = fw == null ? null : new File( fw );
         String extraPkgs = properties.getProperty( "packages" );
         String profile = properties.getProperty( "profile" );
         

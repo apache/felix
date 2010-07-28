@@ -62,7 +62,7 @@ public class RuntimeBundleResolver implements ResolutionContext
                     }
                     else {
                         b.synchronize(null);
-                        uris.add( b.getLocation().toFile().toURI() );
+                        uris.add( b.getLocation().toURI() );
                     }
                 }
             }

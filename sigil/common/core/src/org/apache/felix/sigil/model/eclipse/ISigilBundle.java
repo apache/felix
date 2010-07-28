@@ -20,11 +20,12 @@
 package org.apache.felix.sigil.model.eclipse;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.apache.felix.sigil.config.Resource;
 import org.apache.felix.sigil.model.ICompoundModelElement;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
@@ -53,13 +54,14 @@ public interface ISigilBundle extends ICompoundModelElement, IVersionedModelElem
     void setBundleInfo( IBundleModelElement bundle );
 
 
-    void addSourcePath( IPath path );
+    // TODO rename this method...
+    void addSourcePath( Resource path );
 
 
-    void removeSourcePath( IPath path );
+    void removeSourcePath( Resource path );
 
 
-    Collection<IPath> getSourcePaths();
+    Collection<Resource> getSourcePaths();
 
 
     void clearSourcePaths();
@@ -74,28 +76,30 @@ public interface ISigilBundle extends ICompoundModelElement, IVersionedModelElem
     void removeClasspathEntry( String encodedClasspath );
 
 
-    IPath getLocation();
+    // XXX must be file due to SiglCore.isBundlePath
+    File getLocation();
 
 
-    void setLocation( IPath location );
+    // XXX must be file due to SiglCore.isBundlePath
+    void setLocation( File location );
 
 
-    IPath getSourcePathLocation();
+    File getSourcePathLocation();
 
 
-    void setSourcePathLocation( IPath location );
+    void setSourcePathLocation( File location );
 
 
-    IPath getSourceRootPath();
+    String getSourceRootPath();
 
 
-    void setSourceRootPath( IPath location );
+    void setSourceRootPath( String location );
 
 
-    void setLicencePathLocation( IPath cacheSourceLocation );
+    void setLicencePathLocation( File cacheSourceLocation );
 
 
-    IPath getLicencePathLocation();
+    File getLicencePathLocation();
 
 
     /**

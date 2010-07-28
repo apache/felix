@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
@@ -162,7 +163,7 @@ public class SigilSearch extends AbstractUIPlugin
                 {
                     if ( bundle.isSynchronized() )
                     {
-                        IPath loc = bundle.getLocation();
+                        IPath loc = PathUtil.newPathIfExists(bundle.getLocation());
                         if ( loc == null ) {
                             SigilCore.error("Location is null for " + bundle);
                         }

@@ -22,6 +22,7 @@ package org.apache.felix.sigil.eclipse.internal.model.project;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -34,6 +35,7 @@ import java.util.regex.Matcher;
 
 import org.apache.felix.sigil.config.BldFactory;
 import org.apache.felix.sigil.config.IBldProject;
+import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.ThreadProgressMonitor;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
@@ -504,7 +506,7 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
 
     public IPath findBundleLocation() throws CoreException
     {
-        IPath p = getBundle().getLocation();
+        IPath p = PathUtil.newPathIfExists(getBundle().getLocation());
         if ( p == null )
         {
             p = SigilCore.getDefault().findDefaultBundleLocation( this );

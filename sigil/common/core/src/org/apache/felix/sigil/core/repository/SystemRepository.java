@@ -20,6 +20,7 @@
 package org.apache.felix.sigil.core.repository;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
 
@@ -31,17 +32,16 @@ import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.repository.IRepositoryVisitor;
-import org.eclipse.core.runtime.IPath;
 
 
 public class SystemRepository extends AbstractBundleRepository
 {
 
     private final String packages;
-    private final IPath frameworkPath;
+    private final File frameworkPath;
 
 
-    public SystemRepository( String id, IPath frameworkPath, String packages )
+    public SystemRepository( String id, File frameworkPath, String packages )
     {
         super( id );
         this.frameworkPath = frameworkPath;
@@ -77,7 +77,7 @@ public class SystemRepository extends AbstractBundleRepository
                 if ( frameworkPath != null )
                 {
                     systemBundle.setLocation( frameworkPath );
-                    jar = new JarFile( frameworkPath.toFile() );
+                    jar = new JarFile(frameworkPath);
                     info = buildBundleModelElement( jar.getManifest() );
                 }
                 else

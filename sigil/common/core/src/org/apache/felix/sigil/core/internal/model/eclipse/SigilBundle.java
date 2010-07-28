@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.jar.JarFile;
 
+import org.apache.felix.sigil.config.Resource;
 import org.apache.felix.sigil.core.BldCore;
 import org.apache.felix.sigil.core.util.ManifestUtil;
 import org.apache.felix.sigil.model.AbstractCompoundModelElement;
@@ -43,7 +44,6 @@ import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.osgi.framework.Version;
@@ -59,19 +59,19 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
     private static final long serialVersionUID = 1L;
 
     private IBundleModelElement bundle;
-    private IPath[] sourcePaths;
+    private Resource[] sourcePaths;
     private String[] classpath;
     private String[] packages;
-    private IPath location;
+    private File location;
 
-    private IPath sourcePathLocation;
-    private IPath licencePathLocation;
-    private IPath sourceRootPath;
+    private File sourcePathLocation;
+    private File licencePathLocation;
+    private String sourceRootPath;
 
     public SigilBundle()
     {
         super( "Sigil Bundle" );
-        sourcePaths = new IPath[0];
+        sourcePaths = new Resource[0];
         classpath = new String[0];
         packages = new String[0];
     }
@@ -113,10 +113,10 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
     }
 
 
-    private void updateManifest(IPath location) throws IOException
+    private void updateManifest(File location) throws IOException
     {
         if ( location != null ) {
-            JarFile f = new JarFile(location.toFile());
+            JarFile f = new JarFile(location);
             try {
                 setBundleInfo(ManifestUtil.buildBundleModelElement(f.getManifest()));
             }
@@ -129,17 +129,17 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
 
     public boolean isSynchronized()
     {
-        return location == null || location.toFile().exists();
+        return location == null || location.exists();
     }
 
 
-    private static void sync( IPath local, URI remote, IProgressMonitor monitor ) throws IOException
+    private static void sync( File local, URI remote, IProgressMonitor monitor ) throws IOException
     {
         try
         {
             if ( remote != null )
             {
-                if ( local != null && !local.toFile().exists() )
+                if ( local != null && !local.exists() )
                 {
                     URL url = remote.toURL();
                     URLConnection connection = url.openConnection();
@@ -159,9 +159,8 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
                             http.setReadTimeout( 5000 );
                         }
                         in = conn.getInputStream();
-                        File f = local.toFile();
-                        f.getParentFile().mkdirs();
-                        out = new FileOutputStream( f );
+                        local.getParentFile().mkdirs();
+                        out = new FileOutputStream( local );
                         stream( in, out, monitor );
                     }
                     finally
@@ -181,7 +180,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         }
         catch ( IOException e )
         {
-            local.toFile().delete();
+            local.delete();
             throw e;
         }
     }
@@ -230,24 +229,24 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
     }
 
 
-    public void addSourcePath( IPath path )
+    public void addSourcePath( Resource path )
     {
-        ArrayList<IPath> tmp = new ArrayList<IPath>(getSourcePaths());
+        ArrayList<Resource> tmp = new ArrayList<Resource>(getSourcePaths());
         tmp.add(path);
-        sourcePaths = tmp.toArray( new IPath[tmp.size()] );
+        sourcePaths = tmp.toArray( new Resource[tmp.size()] );
     }
 
 
-    public void removeSourcePath( IPath path )
+    public void removeSourcePath( Resource path )
     {
-        ArrayList<IPath> tmp = new ArrayList<IPath>(getSourcePaths());
+        ArrayList<Resource> tmp = new ArrayList<Resource>(getSourcePaths());
         if ( tmp.remove(path) ) {
-            sourcePaths = tmp.toArray( new IPath[tmp.size()] );
+            sourcePaths = tmp.toArray( new Resource[tmp.size()] );
         }
     }
 
 
-    public Collection<IPath> getSourcePaths()
+    public Collection<Resource> getSourcePaths()
     {
         return Arrays.asList(sourcePaths);
     }
@@ -255,7 +254,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
 
     public void clearSourcePaths()
     {
-        sourcePaths = new IPath[0];
+        sourcePaths = new Resource[0];
     }
 
 
@@ -282,49 +281,49 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
     }
 
 
-    public IPath getLocation()
+    public File getLocation()
     {
         return location;
     }
 
 
-    public void setLocation( IPath location )
+    public void setLocation( File location )
     {
         this.location = location;
     }
 
 
-    public IPath getSourcePathLocation()
+    public File getSourcePathLocation()
     {
         return sourcePathLocation;
     }
 
 
-    public IPath getSourceRootPath()
-    {
-        return sourceRootPath;
-    }
-
-
-    public void setSourcePathLocation( IPath location )
+    public void setSourcePathLocation( File location )
     {
         this.sourcePathLocation = location;
     }
 
 
-    public void setSourceRootPath( IPath location )
+    public String getSourceRootPath()
+    {
+        return sourceRootPath;
+    }
+
+
+    public void setSourceRootPath( String location )
     {
         this.sourceRootPath = location;
     }
 
 
-    public IPath getLicencePathLocation()
+    public File getLicencePathLocation()
     {
         return licencePathLocation;
     }
 
 
-    public void setLicencePathLocation( IPath licencePathLocation )
+    public void setLicencePathLocation( File licencePathLocation )
     {
         this.licencePathLocation = licencePathLocation;
     }
@@ -443,7 +442,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         SigilBundle b = (SigilBundle) super.clone();
         b.bundle = (IBundleModelElement) b.bundle.clone();
         
-        IPath[] newPaths = new IPath[b.sourcePaths.length];
+        Resource[] newPaths = new Resource[b.sourcePaths.length];
         System.arraycopy(b.sourcePaths, 0, newPaths, 0, b.sourcePaths.length);
         b.sourcePaths = newPaths;
         

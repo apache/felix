@@ -17,30 +17,40 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.core.repository;
-
+package org.apache.felix.sigil.eclipse;
 
 import java.io.File;
-import java.util.Properties;
 
-import org.apache.felix.sigil.repository.IBundleRepository;
-import org.apache.felix.sigil.repository.IRepositoryProvider;
-import org.apache.felix.sigil.repository.RepositoryException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 
-
-public class FileSystemRepositoryProvider implements IRepositoryProvider
+/**
+ * @author dave
+ *
+ */
+public class PathUtil
 {
-
-    public IBundleRepository createRepository( String id, Properties preferences ) throws RepositoryException
+    /**
+     * @param sourceRootPath
+     * @return
+     */
+    public static IPath newPathIfNotNull(String path)
     {
-        String dirStr = preferences.getProperty( "dir" );
-        File dir = new File( dirStr );
-        if ( !dir.isDirectory() )
-        {
-            throw new RepositoryException( "directory '" + dir + "' does not exist." );
-        }
-        boolean recurse = Boolean.valueOf( preferences.getProperty( "recurse" ) );
-        return new FileSystemRepository( id, dir, recurse );
+        return path == null ? null : new Path(path);
     }
+
+
+    /**
+     * @param absolutePath
+     * @return
+     */
+    public static IPath newPathIfExists(File file)
+    {
+        if (file == null) return null;
+        if (file.exists()) return new Path(file.getAbsolutePath());
+        // fine
+        return null;
+    }
+
 
 }

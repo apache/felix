@@ -42,7 +42,8 @@ import java.util.jar.JarInputStream;
 import java.util.regex.Pattern;
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
-import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
+import org.apache.felix.sigil.config.Resource;
+import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.model.IModelElement;
@@ -65,7 +66,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.content.IContentDescription;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeManager;
@@ -83,7 +83,6 @@ import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IParent;
@@ -93,7 +92,6 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.framework.Version;
 
 
@@ -484,7 +482,7 @@ public class JavaHelper
 
             if ( entries == null )
             {
-                IPath path = bundle.getLocation();
+                Path path = new Path(bundle.getLocation().getAbsolutePath());
 
                 if ( path == null )
                 {
@@ -527,7 +525,8 @@ public class JavaHelper
                 IPath cache = bundleCache.append( name );
                 Collection<String> classpath = bundle.getBundleInfo().getClasspaths();
                 ArrayList<IClasspathEntry> entries = new ArrayList<IClasspathEntry>( classpath.size() );
-                IPath source = bundle.getSourcePathLocation();
+                IPath source = PathUtil.newPathIfExists(bundle.getSourcePathLocation());
+                IPath rootPath = PathUtil.newPathIfNotNull(bundle.getSourceRootPath());
 
                 if ( source != null && !source.toFile().exists() )
                 {
@@ -542,7 +541,7 @@ public class JavaHelper
                         IPath p = ".".equals( cp ) ? path : cache.append( cp );
                         if ( p.toFile().exists() )
                         {
-                            IClasspathEntry e = JavaCore.newLibraryEntry( p, source, bundle.getSourceRootPath(), rules,
+                            IClasspathEntry e = JavaCore.newLibraryEntry( p, source, rootPath, rules,
                                 attributes, exported );
                             entries.add( e );
                         }
@@ -550,7 +549,7 @@ public class JavaHelper
                 }
                 else
                 { // default classpath is .
-                    IClasspathEntry e = JavaCore.newLibraryEntry( path, source, bundle.getSourceRootPath(), rules,
+                    IClasspathEntry e = JavaCore.newLibraryEntry( path, source, rootPath, rules,
                         attributes, exported );
                     entries.add( e );
                 }
@@ -587,7 +586,7 @@ public class JavaHelper
                 FileInputStream fin = null;
                 try
                 {
-                    fin = new FileInputStream( bundle.getLocation().toFile() );
+                    fin = new FileInputStream( bundle.getLocation() );
                     JarInputStream in = new JarInputStream( fin );
                     JarEntry entry;
                     while ( ( entry = in.getNextJarEntry() ) != null )
@@ -867,9 +866,9 @@ public class JavaHelper
     {
         IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
         IContentType txt = contentTypeManager.getContentType( "org.eclipse.core.runtime.text" );
-        for ( IPath p : project.getBundle().getSourcePaths() )
+        for ( Resource p : project.getBundle().getSourcePaths() )
         {
-            IFile f = project.getProject().getFile( p );
+            IFile f = project.getProject().getFile( p.getLocalFile() );
             if ( f.exists() )
             {
                 try

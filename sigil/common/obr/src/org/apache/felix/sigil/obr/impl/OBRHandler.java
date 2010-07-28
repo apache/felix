@@ -148,7 +148,7 @@ final class OBRHandler extends DefaultHandler
                 URI l = makeAbsolute( uri );
                 info.setUpdateLocation( l );
                 if ( "file".equals(  l.getScheme() ) ) {
-                    b.setLocation( new Path( new File( l ).getAbsolutePath() ) );
+                    b.setLocation( new File( l ) );
                 }
                 else {
                     b.setLocation( cachePath( info ) );
@@ -181,10 +181,9 @@ final class OBRHandler extends DefaultHandler
     }
 
 
-    private IPath cachePath( IBundleModelElement info )
+    private File cachePath( IBundleModelElement info )
     {
-        return new Path( cacheDir.getAbsolutePath() )
-            .append( info.getSymbolicName() + "_" + info.getVersion() + ".jar" );
+        return new File( cacheDir, info.getSymbolicName() + "_" + info.getVersion() + ".jar" );
     }
 
 

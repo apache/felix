@@ -55,7 +55,6 @@ import org.apache.ivy.plugins.repository.url.URLResource;
 import org.apache.ivy.plugins.resolver.BasicResolver;
 import org.apache.ivy.plugins.resolver.util.ResolvedResource;
 import org.apache.ivy.util.FileUtil;
-import org.eclipse.core.runtime.IPath;
 
 
 /**
@@ -212,7 +211,7 @@ public class SigilResolver extends BasicResolver implements IBldResolver
 
         try
         {
-            URL url = ( uri != null ) ? uri.toURL() : bundle.getLocation().toFile().toURL();
+            URL url = ( uri != null ) ? uri.toURL() : bundle.getLocation().toURL();
             if ( name.contains( "!" ) )
             {
                 String[] split = name.split( "!" );
@@ -466,11 +465,11 @@ public class SigilResolver extends BasicResolver implements IBldResolver
                 return uri.toURL();
             }
             else {
-                IPath path = bundle.getLocation();
+                File path = bundle.getLocation();
                 if ( path == null ) {
                     throw new NullPointerException( "Missing location for " + bundle.getSymbolicName() );
                 }
-                return path.toFile().toURI().toURL();
+                return path.toURI().toURL();
             }
         }
 

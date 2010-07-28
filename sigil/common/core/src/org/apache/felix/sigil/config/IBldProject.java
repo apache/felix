@@ -136,6 +136,13 @@ public interface IBldProject
      * resolves a relative path against the project file location.
      */
     File resolve( String path );
+    
+    /**
+     * Creates a new resource for this bundle
+     * @param location
+     * @return
+     */
+    Resource newResource(String location);
 
 
     /**
@@ -211,9 +218,8 @@ public interface IBldProject
          * @return map with key as path in bundle, value as path in file system.
          * Paths are resolved relative to location of project file and also from classpath.
          */
-        Map<String, String> getResources();
-
-
+        List<Resource> getResources();
+        
         /**
          * gets additional bundle headers.
          */

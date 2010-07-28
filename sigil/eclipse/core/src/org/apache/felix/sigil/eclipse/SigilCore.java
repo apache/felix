@@ -20,6 +20,7 @@
 package org.apache.felix.sigil.eclipse;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -364,8 +365,8 @@ public class SigilCore extends AbstractUIPlugin
         {
             public boolean visit( ISigilBundle b )
             {
-                IPath path = b.getLocation();
-                if ( path != null && path.toOSString().equals( bp ) )
+                File path = b.getLocation();
+                if ( path != null && path.getAbsolutePath().equals( bp ) )
                 {
                     flag.set( true );
                     return false;

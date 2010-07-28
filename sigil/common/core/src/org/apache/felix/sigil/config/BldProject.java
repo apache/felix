@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -44,6 +43,9 @@ import java.util.TreeSet;
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionTable;
+import org.apache.felix.sigil.config.internal.InlineResource;
+import org.apache.felix.sigil.config.internal.PreprocessedResource;
+import org.apache.felix.sigil.config.internal.StandardResource;
 import org.apache.felix.sigil.core.internal.model.osgi.BundleModelElement;
 import org.apache.felix.sigil.core.internal.model.osgi.PackageExport;
 import org.apache.felix.sigil.core.internal.model.osgi.PackageImport;
@@ -183,7 +185,7 @@ public class BldProject implements IBldProject, IRepositoryConfig
                 }
                 file = file.getCanonicalFile();
                 
-                URL url = file.toURL();
+                URL url = file.toURI().toURL();
                 BldProperties bp = new BldProperties(file.getParentFile(), bldOverrides);
 
                 if (dflt == null)
@@ -287,6 +289,23 @@ public class BldProject implements IBldProject, IRepositoryConfig
         }
         return file;
     }
+    
+    public Resource newResource(String location) {
+        String[] paths = location.split("=", 2);
+        String bPath = paths[0];
+        String fsPath = (paths.length > 1 ? paths[1] : null);
+        if (bPath.startsWith("@")) {
+            bPath = bPath.substring(1);
+            return new InlineResource(BldProject.this, bPath);
+        }
+        else if (bPath.startsWith("{")) {
+            bPath = bPath.substring(1, bPath.length() -1);
+            return new PreprocessedResource(BldProject.this, bPath, fsPath);
+        }
+        else {
+            return new StandardResource(BldProject.this, bPath, fsPath);
+        }
+    }    
 
     public String getVersion()
     {
@@ -960,23 +979,21 @@ public class BldProject implements IBldProject, IRepositoryConfig
             return getList(BldConfig.L_CONTENTS);
         }
 
-        public Map<String, String> getResources()
+        public List<Resource> getResources()
         {
-            Map<String, String> map = new LinkedHashMap<String, String>();
             List<String> resources = getList(BldConfig.L_RESOURCES);
-
-            if (resources != null)
-            {
-                for (String resource : resources)
-                {
-                    String[] paths = resource.split("=", 2);
-                    String fsPath = (paths.length > 1 ? paths[1] : "");
-                    map.put(paths[0], fsPath);
-                }
+            if (resources == null) {
+                return Collections.emptyList();
             }
-            return map;
+            
+            List<Resource> ret = new ArrayList<Resource>(resources.size());
+            for (String resource : resources)
+            {
+                ret.add(newResource(resource));
+            }
+            return ret;
         }
-
+        
         public Properties getHeaders()
         {
             Properties headers = config.getProps(id, BldConfig.P_HEADER);

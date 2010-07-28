@@ -117,9 +117,10 @@ public class OSGiInstallRepository extends AbstractBundleRepository
             ISigilBundle bundle = buildBundle( jar.getManifest(), f );
             if ( bundle != null )
             {
-                bundle.setLocation( p );
-                bundle.setSourcePathLocation( source );
-                bundle.setSourceRootPath( new Path( "src" ) );
+                bundle.setLocation( f );
+                bundle.setSourcePathLocation( source.toFile() );
+                // XXX hard coded src location
+                bundle.setSourceRootPath( "src" );
                 bundles.add( bundle );
             }
         }
@@ -162,7 +163,7 @@ public class OSGiInstallRepository extends AbstractBundleRepository
         {
             bundle = ModelElementFactory.getInstance().newModelElement( ISigilBundle.class );
             bundle.addChild( info );
-            bundle.setLocation( new Path( f.getAbsolutePath() ) );
+            bundle.setLocation( f );
         }
 
         return bundle;

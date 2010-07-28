@@ -20,26 +20,26 @@
 package org.apache.felix.sigil.core.repository;
 
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.repository.IRepositoryVisitor;
-import org.eclipse.core.runtime.IPath;
 
 
 public class FileSystemRepository extends AbstractBundleRepository
 {
 
     private ArrayList<ISigilBundle> bundles;
-    private IPath path;
+    private File dir;
     private boolean recurse;
 
 
-    public FileSystemRepository( String id, IPath path, boolean recurse )
+    public FileSystemRepository( String id, File dir, boolean recurse )
     {
         super( id );
-        this.path = path;
+        this.dir = dir;
         this.recurse = recurse;
     }
 
@@ -52,7 +52,7 @@ public class FileSystemRepository extends AbstractBundleRepository
             if ( bundles == null )
             {
                 bundles = new ArrayList<ISigilBundle>();
-                DirectoryHelper.scanBundles( this, bundles, path, null, recurse );
+                DirectoryHelper.scanBundles( this, bundles, dir, null, recurse );
             }
         }
 
