@@ -33,6 +33,12 @@ import org.apache.felix.sigil.repository.RepositoryException;
 
 public class OBRRepositoryProvider implements IRepositoryProvider
 {
+    private static final String IN_MEMORY = "inmemory";
+    private static final String UPDATE_PERIOD = "updatePeriod";
+    private static final String AUTH_FILE = "auth";
+    private static final String CACHE_DIRECTORY = "cache";
+    private static final String INDEX_CACHE_FILE = "index";
+
     public IBundleRepository createRepository(String id, Properties preferences)
         throws RepositoryException
     {
@@ -45,10 +51,11 @@ public class OBRRepositoryProvider implements IRepositoryProvider
             File urlFile = new File(urlStr);
             URL repositoryURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(urlStr);
             URL testURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(urlStr);
-            File indexCache = new File(preferences.getProperty("index"));
-            File localCache = new File(preferences.getProperty("cache"));
-            String auth = preferences.getProperty("auth");
+            File indexCache = new File(preferences.getProperty(INDEX_CACHE_FILE));
+            File localCache = new File(preferences.getProperty(CACHE_DIRECTORY));
+            String auth = preferences.getProperty(AUTH_FILE);
             File authFile = auth == null ? null : new File(auth);
+            Long up = preferences.containsKey(UPDATE_PERIOD) ? Long.parseLong( preferences.getProperty(UPDATE_PERIOD) ) : 60 * 60 * 24 * 7; 
 
             if (testURL.openConnection().getLastModified() == 0)
             {
@@ -58,10 +65,8 @@ public class OBRRepositoryProvider implements IRepositoryProvider
                 System.err.println("WARNING: " + msg + "using cache: " + urlStr);
             }
 
-            // TODO create user configurable updatePeriod
-            long updatePeriod = TimeUnit.MILLISECONDS.convert(60 * 60 * 24 * 7,
-                TimeUnit.SECONDS);
-            if (preferences.getProperty("inmemory") == null)
+            long updatePeriod = TimeUnit.MILLISECONDS.convert(up,TimeUnit.SECONDS);
+            if (preferences.getProperty(IN_MEMORY) == null)
             {
                 return new NonCachingOBRBundleRepository(id, repositoryURL, indexCache,
                     localCache, updatePeriod, authFile);
