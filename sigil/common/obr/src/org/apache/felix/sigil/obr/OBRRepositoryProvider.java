@@ -43,8 +43,8 @@ public class OBRRepositoryProvider implements IRepositoryProvider
         try
         {
             File urlFile = new File(urlStr);
-            URL repositoryURL = urlFile.exists() ? urlFile.toURL() : new URL(urlStr);
-            URL testURL = urlFile.exists() ? urlFile.toURL() : new URL(urlStr);
+            URL repositoryURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(urlStr);
+            URL testURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(urlStr);
             File indexCache = new File(preferences.getProperty("index"));
             File localCache = new File(preferences.getProperty("cache"));
             String auth = preferences.getProperty("auth");
