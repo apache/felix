@@ -482,7 +482,7 @@ public class JavaHelper
 
             if ( entries == null )
             {
-                Path path = new Path(bundle.getLocation().getAbsolutePath());
+                IPath path = PathUtil.newPathIfExists(bundle.getLocation());
 
                 if ( path == null )
                 {
