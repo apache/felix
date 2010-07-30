@@ -400,7 +400,7 @@ public class BundleBuilder
         // use it for exported
         // content too.
 
-        spec.setProperty(Constants.REMOVE_HEADERS, junkHeaders);
+        spec.setProperty(Constants.REMOVEHEADERS, junkHeaders);
         spec.setProperty(Constants.NOEXTRAHEADERS, "true"); // Created-By,
         // Bnd-LastModified
         // and Tool
