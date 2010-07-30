@@ -161,7 +161,7 @@ public class BldConfig
             }
             else
             {
-                String dval = (dflt == null ? dflt.getString(null, key) : null);
+                String dval = (dflt != null ? dflt.getString(null, key) : null);
                 if (value.equals("") && (dval == null || dval.equals("")))
                 {
                     string.remove(key);

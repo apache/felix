@@ -358,11 +358,11 @@ public class BldProject implements IBldProject, IRepositoryConfig
     /**
      * set internal OSGiImport and isDependency flags, based on external
      * resolve= attribute.
-     * 
-     * OSGiImport: AUTO ALWAYS NEVER dependency: default - compile !dependency:
-     * auto runtime ignore
-     * 
      */
+     // OSGiImport:    AUTO    ALWAYS     NEVER
+     // dependency:    default -          compile
+     // !dependency:   auto    runtime    ignore
+
     private void setResolve(IPackageImport pi, String resolve) throws IOException
     {
         if (pi.isOptional())

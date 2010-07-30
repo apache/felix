@@ -254,8 +254,11 @@ public class BldConverter
         
         setSimpleHeaders(id, info);
         setExports(id, bundleVersion, info, exports);
-        setImports(id, bundleVersion, info, exports);
-        setRequires(id, bundleVersion, info);
+        
+        // -imports and -requires are global to all bundles
+        setImports(null, bundleVersion, info, exports);
+        setRequires(null, bundleVersion, info);
+        
         setFragments(id, info);
         setContents(id, info, bundle);
         setLibraries(id, info, bundle);
@@ -383,9 +386,10 @@ public class BldConverter
             config.setMap( id, BldConfig.M_LIBS, libs );
         }
 
-        if ( !sources.isEmpty() || !config.getList( id, BldConfig.L_SRC_CONTENTS ).isEmpty() )
+        // -sourcedirs is global to all bundles
+        if ( !sources.isEmpty() || !config.getList( null, BldConfig.L_SRC_CONTENTS ).isEmpty() )
         {
-            config.setList( id, BldConfig.L_SRC_CONTENTS, sources );
+            config.setList( null, BldConfig.L_SRC_CONTENTS, sources );
         }
 
     }
