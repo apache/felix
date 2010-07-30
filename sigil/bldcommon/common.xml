@@ -320,7 +320,6 @@
   <property name="sigil.jar.dir" value="${sigil.home}/lib" />
   <property name="ivy.jar.file" value="${sigil.jar.dir}/ivy.jar" />
   <property name="sigil.jar.file" value="${sigil.jar.dir}/sigil-ivy-plugin.jar" />
-  <property name="bnd.jar.file" value="${sigil.jar.dir}/bndlib.jar" />
   <property name="equinox.common.jar.file" value="${sigil.jar.dir}/equinox.common.jar" />
 
 
@@ -333,9 +332,6 @@
     <!-- sigil -->
     <get src="http://people.apache.org/~dsavage/sigil/sigil-ivy-plugin.jar"
          dest="${sigil.jar.file}" usetimestamp="true" verbose="true"/>
-    <!-- bnd -->
-    <get src="http://www.aQute.biz/repo/biz/aQute/bndlib/${bnd.install.version}/bndlib-${bnd.install.version}.jar"
-         dest="${bnd.jar.file}" usetimestamp="true" verbose="true"/>
     <!-- equinox.common -->
     <get src=" http://download.eclipse.org/releases/${equinox.release}/plugins/org.eclipse.equinox.common_${equinox.install.version}.jar"
          dest="${equinox.common.jar.file}" usetimestamp="true" verbose="true"/>

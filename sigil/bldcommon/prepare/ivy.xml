@@ -62,7 +62,7 @@
           <artifact name="bcel" type="jar" />
         </dependency>
 
-        <dependency org="biz.aQute" name="bndlib" rev="0.0.312">
+        <dependency org="biz.aQute" name="bndlib" rev="0.0.401">
           <artifact name="bndlib" type="jar" />
         </dependency>
 
