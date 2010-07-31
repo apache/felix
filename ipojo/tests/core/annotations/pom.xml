@@ -102,7 +102,7 @@
               ${project.artifactId}
             </Bundle-SymbolicName>
             <Private-Package>
-              org.apache.felix.ipojo.test*
+              org.apache.felix.ipojo.test*, foo
             </Private-Package>
             <Test-Suite>
               org.apache.felix.ipojo.test.scenarios.annotations.AnnotationsTestSuite

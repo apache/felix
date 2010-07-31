@@ -65,6 +65,8 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      */
     private boolean m_containsComponentAnnotation = false;
     
+    private boolean m_ignoredBecauseOfMissingComponent = false;
+    
     /**
      * Map of [element ids, element].
      * This map is used to easily get an already created element.
@@ -99,6 +101,14 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
     
     public boolean isComponentType() {
         return m_containsComponentAnnotation;
+    }
+    
+    public boolean isIgnoredBecauseOfMissingComponent() {
+        return m_ignoredBecauseOfMissingComponent;
+    }
+    
+    public String getClassName() {
+        return m_className;
     }
     
     /**
@@ -205,6 +215,12 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
      */
     public void visitEnd() {
+        // If m_elem (Component) is null, print a warning and ignore.
+        if (m_elem == null  && ! m_elements.isEmpty()) {
+            m_ignoredBecauseOfMissingComponent = true;
+            return;
+        }
+        
         // Recompute the tree
         Set elems = getElements().keySet();
         Iterator it = elems.iterator();
@@ -218,7 +234,6 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
                 if (ref == null) {
                     // Add to the root
                     m_elem.addElement(current);
-                  // System.err.println("The element " + reference + " is not declared - skipping the element " + current.toXMLString());
                 } else {
                     ref.addElement(current);
                 }
