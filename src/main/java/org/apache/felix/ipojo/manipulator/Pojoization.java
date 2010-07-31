@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -290,23 +291,26 @@ public class Pojoization {
      */
     private void computeAnnotations(byte[] inC) {
         ClassReader cr = new ClassReader(inC);
-        MetadataCollector xml = new MetadataCollector();
-        cr.accept(xml, 0);
-        if (xml.isComponentType()) {
+        MetadataCollector collector = new MetadataCollector();
+        cr.accept(collector, 0);
+        
+        if (collector.isIgnoredBecauseOfMissingComponent()) {
+            warn("Annotation processing ignored in " + collector.getClassName() + " - @Component missing");
+        } else if (collector.isComponentType()) {
             boolean toskip = false;
             for (int i = 0; !toskip && i < m_metadata.size(); i++) {
                 Element meta = (Element)  m_metadata.get(i);
                 if (! meta.getName().equals("instance") // Only if its a component type definition, 
                                                                  // so skip instance declaration 
                         && meta.containsAttribute("name")
-                        && meta.getAttribute("name").equalsIgnoreCase(xml.getComponentTypeDeclaration().getAttribute("name"))) {
+                        && meta.getAttribute("name").equalsIgnoreCase(collector.getComponentTypeDeclaration().getAttribute("name"))) {
                     toskip = true;
-                    warn("The component type " + xml.getComponentTypeDeclaration().getAttribute("name") + " is overriden by the metadata file");
+                    warn("The component type " + collector.getComponentTypeDeclaration().getAttribute("name") + " is overriden by the metadata file");
                 }
             }
             if (!toskip) {
                 // if no metadata or empty one, create a new array.
-                Element elem = xml.getComponentTypeDeclaration();
+                Element elem = collector.getComponentTypeDeclaration();
                 m_metadata.add(elem);
                 
                 String name = elem.getAttribute("classname");
@@ -319,9 +323,9 @@ public class Pojoization {
                 m_components.add(info);
                 
                 // Instantiate ?
-                if (xml.getInstanceDeclaration() != null) {
+                if (collector.getInstanceDeclaration() != null) {
                     warn("Declaring an empty instance of " + elem.getAttribute("classname"));
-                    m_metadata.add(xml.getInstanceDeclaration());
+                    m_metadata.add(collector.getInstanceDeclaration());
                 }
             }
         }
