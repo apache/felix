@@ -46,7 +46,6 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
     // the service m_registration of the ConfigurationListener service
     private ServiceRegistration m_registration;
 
-
     public ConfigurationComponentRegistry( final BundleContext context )
     {
         super( context );
@@ -104,25 +103,32 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
             final ConfigurationAdmin ca = ( ConfigurationAdmin ) bundleContext.getService( caRef );
             if ( ca != null )
             {
-                final Configuration[] factory = findFactoryConfigurations( ca, name );
-                if ( factory != null )
+                try
                 {
-                    for ( int i = 0; i < factory.length; i++ )
+                    final Configuration[] factory = findFactoryConfigurations( ca, name );
+                    if ( factory != null )
                     {
-                        final String pid = factory[i].getPid();
-                        final Dictionary props = getConfiguration( ca, pid, bundleLocation );
-                        holder.configurationUpdated( pid, props );
+                        for ( int i = 0; i < factory.length; i++ )
+                        {
+                            final String pid = factory[i].getPid();
+                            final Dictionary props = getConfiguration( ca, pid, bundleLocation );
+                            holder.configurationUpdated( pid, props );
+                        }
+                    }
+                    else
+                    {
+                        // check for configuration and configure the holder
+                        final Configuration singleton = findSingletonConfiguration( ca, name );
+                        if ( singleton != null )
+                        {
+                            final Dictionary props = getConfiguration( ca, name, bundleLocation );
+                            holder.configurationUpdated( name, props );
+                        }
                     }
                 }
-                else
+                finally
                 {
-                    // check for configuration and configure the holder
-                    final Configuration singleton = findSingletonConfiguration( ca, name );
-                    if ( singleton != null )
-                    {
-                        final Dictionary props = getConfiguration( ca, name, bundleLocation );
-                        holder.configurationUpdated( name, props );
-                    }
+                    bundleContext.ungetService( caRef );
                 }
             }
         }
@@ -141,11 +147,11 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
         final ComponentHolder cm;
         if ( factoryPid == null )
         {
-            cm = getComponent( pid );
+            cm = getComponentHolder( pid );
         }
         else
         {
-            cm = getComponent( factoryPid );
+            cm = getComponentHolder( factoryPid );
         }
 
         if ( cm != null && !cm.getComponentMetadata().isConfigurationIgnored() )

@@ -244,7 +244,7 @@ public class BundleComponentActivator implements Logger
                     ComponentHolder holder = m_componentRegistry.createComponentHolder( this, metadata );
 
                     // register the component after validation
-                    m_componentRegistry.registerComponent( metadata.getName(), holder );
+                    m_componentRegistry.registerComponentHolder( metadata.getName(), holder );
                     m_managers.add( holder );
 
                     // enable the component
@@ -260,7 +260,7 @@ public class BundleComponentActivator implements Logger
                     log( LogService.LOG_ERROR, "Cannot register Component", metadata, t );
 
                     // make sure the name is not reserved any more
-                    m_componentRegistry.unregisterComponent( metadata.getName() );
+                    m_componentRegistry.unregisterComponentHolder( metadata.getName() );
                 }
             }
         }
@@ -325,7 +325,7 @@ public class BundleComponentActivator implements Logger
             }
             finally
             {
-                m_componentRegistry.unregisterComponent( holder.getComponentMetadata().getName() );
+                m_componentRegistry.unregisterComponentHolder( holder.getComponentMetadata().getName() );
             }
 
         }
@@ -498,7 +498,7 @@ public class BundleComponentActivator implements Logger
             return ( ComponentHolder[] ) m_managers.toArray( new ComponentHolder[m_managers.size()] );
         }
 
-        if ( m_componentRegistry.getComponent( name ) != null )
+        if ( m_componentRegistry.getComponentHolder( name ) != null )
         {
             // otherwise just find it
             Iterator it = m_managers.iterator();
