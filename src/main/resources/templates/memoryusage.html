@@ -172,6 +172,16 @@ $(document).ready(function() {
                 </form>
             </td>
         </tr>
+        <tr>
+            <td>${dump.interval}</td>
+            <td>
+                <form method="post" action="">
+                    <input type="hidden" name="command" value="interval" />
+                    <input type="text" name="interval" value="${__interval__}" />
+                    <input type="submit" name="submit" value="${dump.interval.set}" />
+                </form>
+            </td>
+        </tr>
     </tbody>
 </table>
 

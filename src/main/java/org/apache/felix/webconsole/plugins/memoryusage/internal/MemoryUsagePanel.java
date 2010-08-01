@@ -40,7 +40,6 @@ import org.apache.felix.webconsole.AttachmentProvider;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 @SuppressWarnings("serial")
@@ -113,6 +112,7 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
         resolver.put("__files__", filesBuf.toString());
         resolver.put("__status__", statusBuf.toString());
         resolver.put("__threshold__", String.valueOf(support.getThreshold()));
+        resolver.put("__interval__", String.valueOf(support.getInterval()));
         resolver.put("__overall__", jph.getString());
         resolver.put("__pools__", support.getMemoryPoolsJson());
 
@@ -207,6 +207,19 @@ class MemoryUsagePanel extends AbstractWebConsolePlugin implements Configuration
                 {
                     int threshold = Integer.parseInt(req.getParameter("threshold"));
                     support.setThreshold(threshold);
+                }
+                catch (Exception e)
+                {
+                    // ignore
+                }
+                resp.sendRedirect(req.getRequestURI());
+            }
+            else if ("interval".equals(command))
+            {
+                try
+                {
+                    int interval = Integer.parseInt(req.getParameter("interval"));
+                    support.setInterval(interval);
                 }
                 catch (Exception e)
                 {
