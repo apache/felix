@@ -26,7 +26,7 @@ import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.ResolveProjectsJob;
 import org.apache.felix.sigil.repository.IRepositoryChangeListener;
 import org.apache.felix.sigil.repository.RepositoryChangeEvent;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;

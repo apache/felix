@@ -34,7 +34,7 @@ import org.apache.felix.sigil.model.IModelElement;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.model.osgi.IRequiredBundle;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;

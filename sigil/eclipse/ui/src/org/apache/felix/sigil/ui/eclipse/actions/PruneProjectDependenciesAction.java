@@ -26,7 +26,7 @@ import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.ui.util.ResourceReviewDialog;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;

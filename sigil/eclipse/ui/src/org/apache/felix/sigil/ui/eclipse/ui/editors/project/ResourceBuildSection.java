@@ -28,7 +28,7 @@ import org.apache.felix.sigil.config.Resource;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilPage;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

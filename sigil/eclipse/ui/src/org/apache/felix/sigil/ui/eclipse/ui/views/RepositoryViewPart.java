@@ -34,7 +34,7 @@ import org.apache.felix.sigil.repository.IBundleRepository;
 import org.apache.felix.sigil.repository.IRepositoryChangeListener;
 import org.apache.felix.sigil.repository.IRepositoryVisitor;
 import org.apache.felix.sigil.repository.RepositoryChangeEvent;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultTreeContentProvider;
 import org.apache.felix.sigil.ui.eclipse.ui.util.ModelLabelProvider;
 import org.eclipse.jface.action.Action;

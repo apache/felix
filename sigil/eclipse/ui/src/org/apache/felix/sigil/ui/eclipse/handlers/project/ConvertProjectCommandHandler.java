@@ -22,8 +22,8 @@ package org.apache.felix.sigil.ui.eclipse.handlers.project;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.handlers.IResourceCommandHandler;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;

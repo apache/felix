@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstallType;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.ui.preferences.ProjectDependentPreferencesPage;
 import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultTableProvider;
 import org.eclipse.jface.dialogs.MessageDialog;

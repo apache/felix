@@ -29,7 +29,7 @@ import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.search.ISearchResult;
 import org.apache.felix.sigil.search.SigilSearch;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;

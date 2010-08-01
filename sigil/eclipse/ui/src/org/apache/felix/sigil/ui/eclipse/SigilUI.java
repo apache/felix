@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.ui.eclipse.ui;
+package org.apache.felix.sigil.ui.eclipse;
 
 
 import java.io.InputStream;

@@ -23,7 +23,7 @@ package org.apache.felix.sigil.ui.eclipse.ui.util;
 import java.util.concurrent.Callable;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.ui.preferences.OptionalPrompt;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogConstants;

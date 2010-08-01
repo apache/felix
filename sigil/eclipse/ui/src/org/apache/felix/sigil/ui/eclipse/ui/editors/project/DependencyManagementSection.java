@@ -34,7 +34,7 @@ import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.model.osgi.IRequiredBundle;
-import org.apache.felix.sigil.ui.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilPage;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilSection;
 import org.apache.felix.sigil.ui.eclipse.ui.util.AccumulatorAdapter;
