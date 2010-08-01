@@ -21,8 +21,6 @@ package org.apache.felix.sigil.ui.eclipse.ui.quickfix;
 
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
-import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
-import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.model.ModelElementFactory;
@@ -33,13 +31,11 @@ import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
-import org.osgi.framework.Version;
 
 
 public class ImportPackageProposal implements IJavaCompletionProposal
