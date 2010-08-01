@@ -578,7 +578,7 @@ public class SigilCore extends AbstractUIPlugin
         if ( java.exists() )
         {
             IClasspathEntry[] cp = java.getRawClasspath();
-            // XXX fix for http://jira.codecauldron.org/browse/SIGIL-304
+            // check if sigil container is already on classpath - if not add it
             if ( !isSigilOnClasspath( cp ) )
             {
                 ArrayList<IClasspathEntry> entries = new ArrayList<IClasspathEntry>( Arrays.asList( cp ) );
