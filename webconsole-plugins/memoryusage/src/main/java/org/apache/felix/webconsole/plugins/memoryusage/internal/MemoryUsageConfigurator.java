@@ -67,7 +67,7 @@ class MemoryUsageConfigurator implements ManagedService, MetaTypeProvider
                 }
                 catch (NumberFormatException nfe)
                 {
-                    throw failure(thresholdValue);
+                    throw thresholdFailure(thresholdValue);
                 }
             }
 
@@ -77,12 +77,47 @@ class MemoryUsageConfigurator implements ManagedService, MetaTypeProvider
             }
             catch (IllegalArgumentException iae)
             {
-                throw failure(iae.getMessage());
+                throw thresholdFailure(iae.getMessage());
             }
         }
         else
         {
             support.setThreshold(-1);
+        }
+
+        final Object intervalValue = properties.get(MemoryUsageConstants.PROP_DUMP_INTERVAL);
+        if (intervalValue != null)
+        {
+            final int interval;
+            if (intervalValue instanceof Number)
+            {
+                interval = ((Number) intervalValue).intValue();
+            }
+            else
+            {
+                // try to convert
+                try
+                {
+                    interval = Integer.parseInt(intervalValue.toString());
+                }
+                catch (NumberFormatException nfe)
+                {
+                    throw intervalFailure(intervalValue);
+                }
+            }
+
+            try
+            {
+                support.setInterval(interval);
+            }
+            catch (IllegalArgumentException iae)
+            {
+                throw intervalFailure(iae.getMessage());
+            }
+        }
+        else
+        {
+            support.setInterval(-1);
         }
 
         final Object locationValue = properties.get(MemoryUsageConstants.PROP_DUMP_LOCATION);
@@ -112,11 +147,12 @@ class MemoryUsageConfigurator implements ManagedService, MetaTypeProvider
         {
 
             final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
+
             adList.add(new AttributeDefinitionImpl(MemoryUsageConstants.PROP_DUMP_THRESHOLD, "Dump Threshold",
                 "Threshold at which to automatically create a memory dump as a percentage in the range "
-                    + MemoryUsageConstants.MIN_DUMP_THRESHOLD + " to " + MemoryUsageConstants.MAX_DUMP_THRESHOLD
-                    + " or zero to disable automatic dump creation.", AttributeDefinition.INTEGER, new String[]
-                    { String.valueOf(MemoryUsageConstants.DEFAULT_DUMP_THRESHOLD) }, 0, null, null)
+                + MemoryUsageConstants.MIN_DUMP_THRESHOLD + " to " + MemoryUsageConstants.MAX_DUMP_THRESHOLD
+                + " or zero to disable automatic dump creation.", AttributeDefinition.INTEGER, new String[]
+                                                                                                          { String.valueOf(MemoryUsageConstants.DEFAULT_DUMP_THRESHOLD) }, 0, null, null)
             {
                 @Override
                 public String validate(String value)
@@ -126,17 +162,49 @@ class MemoryUsageConfigurator implements ManagedService, MetaTypeProvider
                         int threshold = Integer.parseInt(value);
                         if (!MemoryUsageConstants.isThresholdValid(threshold))
                         {
-                            return "Threshold must in the range " + MemoryUsageConstants.MIN_DUMP_THRESHOLD + " to "
-                                + MemoryUsageConstants.MAX_DUMP_THRESHOLD + " or zero";
+                            return "Dump Threshold must in the range " + MemoryUsageConstants.MIN_DUMP_THRESHOLD
+                                + " to " + MemoryUsageConstants.MAX_DUMP_THRESHOLD + " or zero";
                         }
                         return ""; // everything ok
                     }
                     catch (NumberFormatException nfe)
                     {
-                        return "Threshhold must be numeric";
+                        return "Dump Threshhold must be numeric";
                     }
                 }
             });
+
+            adList.add(new AttributeDefinitionImpl(MemoryUsageConstants.PROP_DUMP_INTERVAL, "Dump Interval",
+                "The minimum interval between two consecutive memory dumps being taken in seconds. "
+                    + "This property allows the limitation of the number of memory dumps being taken. "
+                    + "The default value for the interval is 6 hours. This means that a memory threshold "
+                    + "event is ignored unless the last memory dump has been taken at least 6 hours earlier. "
+                    + "This property allows limiting the number of memory dumps in case memory consumption is "
+                    + "oscillating around the threshold point. The property must be an integer value or be "
+                    + "parseable to an integer value. This should be a positive value or zero to force each "
+                    + "memory threshold event to cause a memory dump (discouraged).", AttributeDefinition.INTEGER,
+                new String[]
+                    { String.valueOf(MemoryUsageConstants.DEFAULT_DUMP_INTERVAL) }, 0, null, null)
+            {
+                @Override
+                public String validate(String value)
+                {
+                    try
+                    {
+                        int interval = Integer.parseInt(value);
+                        if (interval < 0)
+                        {
+                            return "Dump Interval must be zero or a positive number";
+                        }
+                        return ""; // everything ok
+                    }
+                    catch (NumberFormatException nfe)
+                    {
+                        return "Dump Interval must be numeric";
+                    }
+                }
+            });
+
             adList.add(new AttributeDefinitionImpl(MemoryUsageConstants.PROP_DUMP_LOCATION, "Dumpe Location",
                 "The filesystem location where heap dumps are stored. If this is null or empty (the default) the dumps are stored in "
                     + support.getDefaultDumpLocation(), ""));
@@ -176,11 +244,17 @@ class MemoryUsageConfigurator implements ManagedService, MetaTypeProvider
         return ocd;
     }
 
-    private ConfigurationException failure(final Object invalidValue)
+    private ConfigurationException thresholdFailure(final Object invalidValue)
     {
         return new ConfigurationException(MemoryUsageConstants.PROP_DUMP_THRESHOLD, "Invalid Dump Threshold value '"
             + invalidValue + "': Must be an integer number in the range " + MemoryUsageConstants.MIN_DUMP_THRESHOLD
             + " to " + MemoryUsageConstants.MAX_DUMP_THRESHOLD + " or zero to disable");
+    }
+
+    private ConfigurationException intervalFailure(final Object invalidValue)
+    {
+        return new ConfigurationException(MemoryUsageConstants.PROP_DUMP_INTERVAL, "Invalid Dump Interval value '"
+            + invalidValue + "': Must be a positive integer number or zero to disable");
     }
 
     private static class AttributeDefinitionImpl implements AttributeDefinition

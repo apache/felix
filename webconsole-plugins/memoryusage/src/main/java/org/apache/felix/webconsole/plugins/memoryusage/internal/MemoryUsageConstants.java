@@ -64,18 +64,45 @@ final class MemoryUsageConstants
     static final String PROP_DUMP_THRESHOLD = "felix.memoryusage.dump.threshold";
 
     /**
+     * The minimum interval between two consecutive memory dumps being taken
+     * in seconds. This property allows the limitation of the number of memory
+     * dumps being taken. The default value for the interval is 6 hours. This
+     * means that
+     * a memory threshold event is ignored unless the last memory dump has been
+     * taken
+     * at least 6 hours earlier.
+     * <p>
+     * This property allows limiting the number of memory dumps in case memory
+     * consumption is oscillating around the threshold point.
+     * <p>
+     * The property must be an integer value or be parseable to an integer
+     * value. This should be a positive value or zero to force each memory
+     * threshold event to cause a memory dump (discouraged). If the value is
+     * negative or not parseable to an int, the default value of
+     * {@link #DEFAULT_DUMP_INTERVAL 6 hours} applies.
+     */
+    static final String PROP_DUMP_INTERVAL = "felix.memoryusage.dump.interval";
+
+    /**
      * The default automatic heap dump threshold if none has been configured
      * (or no configuration has yet been provided).
      */
-    static final int DEFAULT_DUMP_THRESHOLD = 95;
+    static final int DEFAULT_DUMP_THRESHOLD = 0;
+
     /**
      * The maximum allowed automatic heap dump threshold.
      */
     static final int MAX_DUMP_THRESHOLD = 99;
+
     /**
      * The minimum allowed automatic heap dump threshold.
      */
     static final int MIN_DUMP_THRESHOLD = 50;
+
+    /**
+     * The default interval betwen consecutive dumps (6 hours).
+     */
+    static final long DEFAULT_DUMP_INTERVAL = 6 * 3600 * 1000;
 
     /**
      * Returns <code>true</code> if the given <code>threshold</code>value is

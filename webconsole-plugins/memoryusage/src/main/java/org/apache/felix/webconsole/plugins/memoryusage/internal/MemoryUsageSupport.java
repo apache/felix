@@ -64,11 +64,21 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
     // the default threshold value
     private final int defaultThreshold;
 
+    // the minimum number of milliseconds between two consecutive memory
+    // dumps written. this setting allows limitting the generation of memory
+    // dumps if memory consumption is oscillating around the memory
+    // threshold value
+    private long minDumpInterval;
+
     // the configured dump location
     private File dumpLocation;
 
     // the actual threshold (configured or dynamically set in the console UI)
     private int threshold;
+
+    // the system time of the last memory snapshot written; initialized so as
+    // at least write one dump
+    private long nextDumpTime = -1;
 
     // log service
     private ServiceReference logServiceReference;
@@ -151,6 +161,29 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
         }
 
         this.defaultThreshold = defaultThreshold;
+
+        // set the initial automatic dump threshold
+        int interval;
+        String propInterval = context.getProperty(MemoryUsageConstants.PROP_DUMP_INTERVAL);
+        if (propInterval != null)
+        {
+            try
+            {
+                interval = Integer.parseInt(propInterval);
+            }
+            catch (Exception e)
+            {
+                // NumberFormatException - if propTreshold cannot be parsed to
+                // int
+                // IllegalArgumentException - if threshold is invalid
+                interval = -1;
+            }
+        }
+        else
+        {
+            interval = -1;
+        }
+        setInterval(interval);
     }
 
     void dispose()
@@ -233,10 +266,30 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
         return threshold;
     }
 
+    final void setInterval(long interval)
+    {
+        if (interval < 0)
+        {
+            interval = MemoryUsageConstants.DEFAULT_DUMP_INTERVAL;
+        }
+        else
+        {
+            interval = 1000L * interval;
+        }
+        this.minDumpInterval = interval;
+        log(LogService.LOG_INFO, "Setting Automatic Memory Dump Interval to %d seconds", getInterval());
+    }
+
+    final long getInterval()
+    {
+        return minDumpInterval / 1000L;
+    }
+
     final void printMemory(final PrintHelper pw)
     {
         pw.title("Overall Memory Use", 0);
         pw.keyVal("Heap Dump Threshold", getThreshold() + "%");
+        pw.keyVal("Heap Dump Interval", getInterval() + " seconds");
         printOverallMemory(pw);
 
         pw.title("Memory Pools", 0);
@@ -502,16 +555,25 @@ final class MemoryUsageSupport implements NotificationListener, ServiceListener
         String notifType = notification.getType();
         if (notifType.equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED))
         {
-            log(LogService.LOG_WARNING, "Received Memory Threshold Exceed Notification, dumping Heap");
-            try
+            if (System.currentTimeMillis() >= nextDumpTime)
             {
-                File file = dumpHeap(null, true);
-                log(LogService.LOG_WARNING, "Heap dumped to " + file);
+                log(LogService.LOG_WARNING, "Received Memory Threshold Exceeded Notification, dumping Heap");
+                try
+                {
+                    File file = dumpHeap(null, true);
+                    log(LogService.LOG_WARNING, "Heap dumped to " + file);
+                    nextDumpTime = System.currentTimeMillis() + minDumpInterval;
+                }
+                catch (NoSuchElementException e)
+                {
+                    log(LogService.LOG_ERROR,
+                        "Failed dumping the heap, JVM does not provide known mechanism to create a Heap Dump");
+                }
             }
-            catch (NoSuchElementException e)
+            else
             {
-                log(LogService.LOG_ERROR,
-                    "Failed dumping the heap, JVM does not provide known mechanism to create a Heap Dump");
+                log(LogService.LOG_WARNING,
+                    "Ignoring Memory Threshold Exceeded Notification, minimum dump interval since last dump has not passed yet");
             }
         }
     }
