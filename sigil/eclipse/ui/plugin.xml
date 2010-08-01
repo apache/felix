@@ -146,13 +146,6 @@
       </wizard>
    </extension>
    <extension
-         point="org.eclipse.ui.commands">
-      <command
-            id="org.apache.felix.sigil.ui.commands.renameComposite"
-            name="Rename Composite">
-      </command>
-   </extension>
-   <extension
          point="org.eclipse.ui.propertyPages">
       <page
             class="org.apache.felix.sigil.ui.eclipse.ui.preferences.project.ProjectPropertyPage"
