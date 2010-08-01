@@ -61,10 +61,10 @@ public class ComponentRegistry implements ScrService
      * {@link ComponentHolder}.
      *
      * @see #checkComponentName(String)
-     * @see #registerComponent(String, ComponentHolder)
-     * @see #unregisterComponent(String)
+     * @see #registerComponentHolder(String, ComponentHolder)
+     * @see #unregisterComponentHolder(String)
      */
-    private final Map m_componentsByName;
+    private final Map m_componentHoldersByName;
 
     /**
      * Map of components by component ID. This map indexed by the component
@@ -92,7 +92,7 @@ public class ComponentRegistry implements ScrService
 
     protected ComponentRegistry( BundleContext context )
     {
-        m_componentsByName = new HashMap();
+        m_componentHoldersByName = new HashMap();
         m_componentsById = new HashMap();
         m_componentCounter = -1;
 
@@ -233,12 +233,12 @@ public class ComponentRegistry implements ScrService
     {
         // register the name if no registration for that name exists already
         final Object existingRegistration;
-        synchronized ( m_componentsByName )
+        synchronized ( m_componentHoldersByName )
         {
-            existingRegistration = m_componentsByName.get( name );
+            existingRegistration = m_componentHoldersByName.get( name );
             if ( existingRegistration == null )
             {
-                m_componentsByName.put( name, name );
+                m_componentHoldersByName.put( name, name );
             }
         }
 
@@ -280,18 +280,18 @@ public class ComponentRegistry implements ScrService
      * @throws ComponentException if the name has not been reserved through
      *      {@link #checkComponentName(String)} yet.
      */
-    final void registerComponent( String name, ComponentHolder component )
+    final void registerComponentHolder( String name, ComponentHolder component )
     {
-        synchronized ( m_componentsByName )
+        synchronized ( m_componentHoldersByName )
         {
             // only register the component if there is a m_registration for it !
-            if ( !name.equals( m_componentsByName.get( name ) ) )
+            if ( !name.equals( m_componentHoldersByName.get( name ) ) )
             {
                 // this is not expected if all works ok
                 throw new ComponentException( "The component name '" + name + "' has already been registered." );
             }
 
-            m_componentsByName.put( name, component );
+            m_componentHoldersByName.put( name, component );
         }
     }
 
@@ -300,12 +300,12 @@ public class ComponentRegistry implements ScrService
      * Returns the component registered under the given name or <code>null</code>
      * if no component is registered yet.
      */
-    public final ComponentHolder getComponent( String name )
+    public final ComponentHolder getComponentHolder( String name )
     {
         Object entry;
-        synchronized ( m_componentsByName )
+        synchronized ( m_componentHoldersByName )
         {
-            entry = m_componentsByName.get( name );
+            entry = m_componentHoldersByName.get( name );
         }
 
         // only return the entry if non-null and not a reservation
@@ -319,16 +319,31 @@ public class ComponentRegistry implements ScrService
 
 
     /**
+     * Returns an array of all values currently stored in the component holders
+     * map. The entries in the array are either String types for component
+     * name reservations or {@link ComponentHolder} instances for actual
+     * holders of components.
+     */
+    private Object[] getComponentHolders()
+    {
+        synchronized ( m_componentHoldersByName )
+        {
+            return m_componentHoldersByName.values().toArray();
+        }
+    }
+
+
+    /**
      * Removes the component registered under that name. If no component is
      * yet registered but the name is reserved, it is unreserved.
      * <p>
      * After calling this method, the name can be reused by other components.
      */
-    final void unregisterComponent( String name )
+    final void unregisterComponentHolder( String name )
     {
-        synchronized ( m_componentsByName )
+        synchronized ( m_componentHoldersByName )
         {
-            m_componentsByName.remove( name );
+            m_componentHoldersByName.remove( name );
         }
     }
 
