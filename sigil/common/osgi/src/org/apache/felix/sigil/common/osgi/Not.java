@@ -23,11 +23,6 @@ import java.util.Map;
 
 public class Not extends AbstractExpr
 {
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
     private LDAPExpr[] children;
 
     public static LDAPExpr apply(LDAPExpr e)

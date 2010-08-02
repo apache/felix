@@ -26,11 +26,6 @@ import java.util.Vector;
 
 public class SimpleTerm extends AbstractExpr
 {
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
     public static final char WILDCARD = 2 ^ 16 - 1;
     private static final String WILDCARD_STRING = new String(
         new char[] { SimpleTerm.WILDCARD });

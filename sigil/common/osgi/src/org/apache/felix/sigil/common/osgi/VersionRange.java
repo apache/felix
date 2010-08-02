@@ -19,16 +19,11 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-import java.io.Serializable;
-
 import org.osgi.framework.Version;
 
-public class VersionRange implements Serializable
+public class VersionRange
 {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     public static final Version INFINITE_VERSION = new Version(Integer.MAX_VALUE,
         Integer.MAX_VALUE, Integer.MAX_VALUE, "");

@@ -19,10 +19,9 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-import java.io.Serializable;
 import java.util.Map;
 
-public interface LDAPExpr extends Serializable
+public interface LDAPExpr 
 {
 
     public static final LDAPExpr[] CHILDLESS = new LDAPExpr[0];
