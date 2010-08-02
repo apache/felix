@@ -79,7 +79,7 @@ public class MoveActivatorParticipant extends MoveParticipant
     private static String qualifiedName(IPackageFragment pf, String name)
     {
         name = name.substring(0, name.lastIndexOf('.'));
-        return pf.getElementName() + '.' + name;
+        return "".equals(pf.getElementName()) ? name : pf.getElementName() + '.' + name;
     }
 
     @Override
