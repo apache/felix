@@ -48,8 +48,6 @@ public class VersionsPreferencePage extends PreferencePage implements IWorkbench
     private static final Version SAMPLE_VERSION = VersionTable.getVersion(1, 2, 3,
         "qualifier");
 
-    private IWorkbench workbench;
-
     private Button btnLowerBoundExact;
     private Button btnLowerBoundMicro;
     private Button btnLowerBoundMinor;
@@ -395,7 +393,6 @@ public class VersionsPreferencePage extends PreferencePage implements IWorkbench
 
     public void init(IWorkbench workbench)
     {
-        this.workbench = workbench;
     }
 
     @Override

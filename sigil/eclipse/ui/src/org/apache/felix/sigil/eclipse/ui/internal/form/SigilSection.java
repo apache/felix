@@ -39,7 +39,6 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 
-@SuppressWarnings("restriction")
 public abstract class SigilSection extends SectionPart implements IHyperlinkListener, IPartSelectionListener
 {
 

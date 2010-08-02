@@ -43,7 +43,7 @@ public abstract class DefaultTableProvider extends DefaultContentProvider implem
         {
             return new Object[] {};
         }
-        else if (inputElement instanceof Collection)
+        else if (inputElement instanceof Collection<?>)
         {
             Collection<?> col = (Collection<?>) inputElement;
             return col.toArray();

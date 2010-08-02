@@ -48,7 +48,6 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 
-@SuppressWarnings("restriction")
 public class ImportQuickFixProcessor implements IQuickFixProcessor
 {
 

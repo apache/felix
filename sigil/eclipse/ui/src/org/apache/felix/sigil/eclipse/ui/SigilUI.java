@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;

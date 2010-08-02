@@ -304,6 +304,7 @@ public class LibraryConfigurationDialog extends TitleAreaDialog
         } */
     }
 
+    @SuppressWarnings("unchecked")
     private void handleRemove()
     {
         IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();

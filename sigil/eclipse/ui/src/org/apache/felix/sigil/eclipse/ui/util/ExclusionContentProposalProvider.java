@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.utils.GlobCompiler;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;

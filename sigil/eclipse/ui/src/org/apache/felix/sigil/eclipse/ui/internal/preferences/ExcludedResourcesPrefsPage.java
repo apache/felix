@@ -49,7 +49,6 @@ public class ExcludedResourcesPrefsPage extends PreferencePage implements IWorkb
 {
 
     private TableViewer viewer;
-    private IWorkbench workbench;
     private ArrayList<String> resources;
 
     public ExcludedResourcesPrefsPage()
@@ -161,7 +160,6 @@ public class ExcludedResourcesPrefsPage extends PreferencePage implements IWorkb
 
     public void init(IWorkbench workbench)
     {
-        this.workbench = workbench;
     }
 
     @Override
