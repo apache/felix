@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import org.apache.felix.sigil.common.model.IModelElement;
-
 
 public class ResolutionException extends Exception
 {
@@ -30,47 +28,41 @@ public class ResolutionException extends Exception
 
     private IModelElement[] parsed;
 
-
-    public ResolutionException( String message, Throwable cause )
+    public ResolutionException(String message, Throwable cause)
     {
-        super( message, cause );
+        super(message, cause);
     }
 
-
-    public ResolutionException( String message )
+    public ResolutionException(String message)
     {
-        super( message );
+        super(message);
     }
 
-
-    public ResolutionException( Throwable cause )
+    public ResolutionException(Throwable cause)
     {
-        super( cause );
+        super(cause);
     }
 
-
-    public ResolutionException( IModelElement root, IModelElement[] parsed )
+    public ResolutionException(IModelElement root, IModelElement[] parsed)
     {
-        super( buildMessage( root, parsed ) );
+        super(buildMessage(root, parsed));
         this.parsed = parsed;
     }
 
-
-    private static String buildMessage( IModelElement root, IModelElement[] parsed )
+    private static String buildMessage(IModelElement root, IModelElement[] parsed)
     {
         StringBuilder b = new StringBuilder();
-        b.append( "Failed to resolve " );
-        b.append( root );
+        b.append("Failed to resolve ");
+        b.append(root);
 
-        if ( parsed.length > 0 )
+        if (parsed.length > 0)
         {
-            b.append( " due to missing provider for " );
-            b.append( parsed[parsed.length - 1] );
+            b.append(" due to missing provider for ");
+            b.append(parsed[parsed.length - 1]);
         }
 
         return b.toString();
     }
-
 
     public IModelElement[] getParsed()
     {

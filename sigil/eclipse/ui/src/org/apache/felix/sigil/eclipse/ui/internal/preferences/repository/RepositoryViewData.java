@@ -19,42 +19,35 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
-
 
 class RepositoryViewData
 {
     private String name;
     private IRepositoryModel[] reps;
 
-
-    RepositoryViewData( String name, IRepositoryModel[] reps )
+    RepositoryViewData(String name, IRepositoryModel[] reps)
     {
         this.name = name;
         this.reps = reps;
     }
-
 
     String getName()
     {
         return name;
     }
 
-
     IRepositoryModel[] getRepositories()
     {
         return reps;
     }
 
-
-    void setName( String name )
+    void setName(String name)
     {
         this.name = name;
     }
 
-
-    void setRepositories( IRepositoryModel[] reps )
+    void setRepositories(IRepositoryModel[] reps)
     {
         this.reps = reps;
     }

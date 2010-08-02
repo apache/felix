@@ -92,7 +92,8 @@ public class PosixParser extends Parser
      * when an non option is found.
      * @return The flattened <code>arguments</code> String array.
      */
-    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    protected String[] flatten(Options options, String[] arguments,
+        boolean stopAtNonOption)
     {
         init();
         this.options = options;
@@ -119,7 +120,7 @@ public class PosixParser extends Parser
                 else
                 {
                     currentOption = options.getOption(opt);
-                    
+
                     tokens.add(opt);
                     if (pos != -1)
                     {

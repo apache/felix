@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
 
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -49,91 +48,93 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
 {
 
     private static final int UPDATE_MASK = IResourceDelta.CONTENT | IResourceDelta.OPEN;
-    
-    static final int EVENT_MASKS = IResourceChangeEvent.PRE_DELETE | IResourceChangeEvent.POST_CHANGE | IResourceChangeEvent.PRE_REFRESH;
 
-    public WorkspaceRepository( String id )
+    static final int EVENT_MASKS = IResourceChangeEvent.PRE_DELETE
+        | IResourceChangeEvent.POST_CHANGE | IResourceChangeEvent.PRE_REFRESH;
+
+    public WorkspaceRepository(String id)
     {
-        super( id );
-    }    
-      
-    
+        super(id);
+    }
+
     @Override
-    public void accept( IRepositoryVisitor visitor, int options )
+    public void accept(IRepositoryVisitor visitor, int options)
     {
         List<ISigilProjectModel> models = SigilCore.getRoot().getProjects();
-        for ( ISigilProjectModel project : models )
+        for (ISigilProjectModel project : models)
         {
             ISigilBundle b = project.getBundle();
-            if ( b == null )
+            if (b == null)
             {
-                SigilCore.error( "No bundle found for project " + project.getProject().getName() );
+                SigilCore.error("No bundle found for project "
+                    + project.getProject().getName());
             }
             else
             {
-                if ( (options & ResolutionConfig.COMPILE_TIME) != 0 ) {
+                if ((options & ResolutionConfig.COMPILE_TIME) != 0)
+                {
                     b = compileTimeFilter(project, b);
                 }
-                visitor.visit( b );
+                visitor.visit(b);
             }
         }
     }
-
 
     private ISigilBundle compileTimeFilter(ISigilProjectModel project, ISigilBundle bundle)
     {
         bundle = (ISigilBundle) bundle.clone();
 
         Collection<String> packages = findPackages(project);
-        
-        for ( IPackageExport pe : bundle.getBundleInfo().getExports() ) {
+
+        for (IPackageExport pe : bundle.getBundleInfo().getExports())
+        {
             final String packagePath = pe.getPackageName().replace('.', '/');
-            if ( !packages.contains(packagePath) ) {
+            if (!packages.contains(packagePath))
+            {
                 bundle.getBundleInfo().removeExport(pe);
             }
         }
-        
+
         return bundle;
     }
-
-
 
     private Collection<String> findPackages(ISigilProjectModel project)
     {
         final IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
         final IContentType javaContentType = contentTypeManager.getContentType("org.eclipse.jdt.core.javaSource");
         final HashSet<String> packages = new HashSet<String>();
-        
+
         try
         {
             project.getProject().accept(new IResourceVisitor()
             {
                 public boolean visit(IResource resource) throws CoreException
                 {
-                    if ( resource instanceof IFile ) {
+                    if (resource instanceof IFile)
+                    {
                         IFile f = (IFile) resource;
                         IContentType ct = contentTypeManager.findContentTypeFor(f.getName());
-                        if ( ct != null && ct.isKindOf(javaContentType) ) {
+                        if (ct != null && ct.isKindOf(javaContentType))
+                        {
                             IPath p = f.getProjectRelativePath();
                             p = p.removeLastSegments(1);
                             p = p.removeFirstSegments(1);
-                            packages.add( p.toString() );
+                            packages.add(p.toString());
                         }
                     }
-                    
+
                     return true;
                 }
             });
         }
         catch (CoreException e)
         {
-            SigilCore.error( "Failed to read packages for " + project.getProject().getName() );
+            SigilCore.error("Failed to read packages for "
+                + project.getProject().getName());
         }
-        
+
         return packages;
-     }
-
-
+    }
 
     public void refresh()
     {
@@ -143,11 +144,12 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
         // potential performance improvement in future?
     }
 
-    public void resourceChanged( IResourceChangeEvent event )
+    public void resourceChanged(IResourceChangeEvent event)
     {
         try
         {
-            switch (event.getType()) {
+            switch (event.getType())
+            {
                 case IResourceChangeEvent.PRE_DELETE:
                     handleDelete(event);
                     break;
@@ -159,9 +161,9 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
                     break;
             }
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Workspace repository update failed", e );
+            SigilCore.error("Workspace repository update failed", e);
         }
     }
 
@@ -169,21 +171,22 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
 
     private void handleDelete(IResourceChangeEvent event)
     {
-        if ( event.getResource() instanceof IProject ) {
+        if (event.getResource() instanceof IProject)
+        {
             IProject project = (IProject) event.getResource();
-            if ( isSigilProject(project) )
+            if (isSigilProject(project))
             {
                 deleted.add(project);
             }
         }
     }
 
-
     private void handleRefresh(IResourceChangeEvent event)
     {
-        if ( event.getResource() instanceof IProject ) {
+        if (event.getResource() instanceof IProject)
+        {
             IProject project = (IProject) event.getResource();
-            if ( isSigilProject(project) )
+            if (isSigilProject(project))
             {
                 SigilCore.log("Refreshing workspace repository");
                 notifyChange();
@@ -191,28 +194,27 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
         }
     }
 
-
     private void handleChange(IResourceChangeEvent event) throws CoreException
     {
         final boolean[] notify = new boolean[1];
-        
-        event.getDelta().accept( new IResourceDeltaVisitor()
+
+        event.getDelta().accept(new IResourceDeltaVisitor()
         {
-            public boolean visit( IResourceDelta delta ) throws CoreException
+            public boolean visit(IResourceDelta delta) throws CoreException
             {
                 boolean checkMembers = true;
 
                 IResource resource = delta.getResource();
-                if ( resource instanceof IProject )
+                if (resource instanceof IProject)
                 {
-                    IProject project = ( IProject ) resource;
-                    if ( isSigilProject(project) )
+                    IProject project = (IProject) resource;
+                    if (isSigilProject(project))
                     {
-                        switch ( delta.getKind() )
+                        switch (delta.getKind())
                         {
                             case IResourceDelta.CHANGED:
                                 int flag = delta.getFlags();
-                                if ( ( flag & UPDATE_MASK ) == 0 )
+                                if ((flag & UPDATE_MASK) == 0)
                                 {
                                     break;
                                 }
@@ -230,9 +232,9 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
                         checkMembers = false;
                     }
                 }
-                else if ( resource.getName().equals( SigilCore.SIGIL_PROJECT_FILE ) )
+                else if (resource.getName().equals(SigilCore.SIGIL_PROJECT_FILE))
                 {
-                    switch ( delta.getKind() )
+                    switch (delta.getKind())
                     {
                         case IResourceDelta.CHANGED:
                         case IResourceDelta.ADDED:
@@ -243,17 +245,17 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
                 }
                 return checkMembers && !notify[0];
             }
-        } );
-        
-        if (notify[0]) {
+        });
+
+        if (notify[0])
+        {
             notifyChange();
         }
     }
 
-
     private boolean isSigilProject(IProject project)
     {
-        return SigilCore.isSigilProject( project ) || deleted.remove(project);
+        return SigilCore.isSigilProject(project) || deleted.remove(project);
     }
 
 }

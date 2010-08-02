@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.handlers;
 
-
 import org.eclipse.core.commands.AbstractHandler;
-
 
 public abstract class AbstractResourceCommandHandler extends AbstractHandler
 {

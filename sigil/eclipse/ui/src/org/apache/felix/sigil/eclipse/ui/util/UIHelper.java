@@ -2,25 +2,27 @@ package org.apache.felix.sigil.eclipse.ui.util;
 
 public class UIHelper
 {
-    public static <T> IElementDescriptor<T> getDefaultElementDescriptor() {
+    public static <T> IElementDescriptor<T> getDefaultElementDescriptor()
+    {
         return new IElementDescriptor<T>()
         {
-            public String getLabel( T element )
+            public String getLabel(T element)
             {
                 return element == null ? "null" : element.toString();
             }
 
-
-            public String getName( T element )
+            public String getName(T element)
             {
-                return getLabel( element );
+                return getLabel(element);
             }
         };
     }
-    
-    public static <T> IFilter<T> getDefaultFilter() {
-        return new IFilter<T> () {
-            public boolean select( T element )
+
+    public static <T> IFilter<T> getDefaultFilter()
+    {
+        return new IFilter<T>()
+        {
+            public boolean select(T element)
             {
                 return true;
             }

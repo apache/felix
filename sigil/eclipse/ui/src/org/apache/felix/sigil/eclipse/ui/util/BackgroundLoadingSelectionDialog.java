@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,24 +70,23 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.progress.IJobRunnable;
 
-
 public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog implements IAccumulator<E>
 {
 
     private final ILabelProvider DEFAULT_LABEL_PROVIDER = new LabelProvider()
     {
         @SuppressWarnings("unchecked")
-        public String getText( Object element )
+        public String getText(Object element)
         {
             String result;
-            if ( element instanceof WrappedContentProposal<?> )
+            if (element instanceof WrappedContentProposal<?>)
             {
-                WrappedContentProposal<E> contentProposal = (org.apache.felix.sigil.eclipse.ui.util.WrappedContentProposal<E> ) element;
+                WrappedContentProposal<E> contentProposal = (org.apache.felix.sigil.eclipse.ui.util.WrappedContentProposal<E>) element;
                 result = contentProposal.getLabel();
             }
             else
             {
-                result = descriptor.getLabel( ( E ) element );
+                result = descriptor.getLabel((E) element);
             }
             return result;
         }
@@ -96,13 +94,12 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
 
     private final IElementDescriptor<E> DEFAULT_DESCRIPTOR = new IElementDescriptor<E>()
     {
-        public String getLabel( E element )
+        public String getLabel(E element)
         {
-            return getName( element );
+            return getName(element);
         }
 
-
-        public String getName( E element )
+        public String getName(E element)
         {
             return element == null ? "null" : element.toString();
         }
@@ -124,25 +121,22 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
 
     private HashMap<String, IJobRunnable> background = new HashMap<String, IJobRunnable>();
 
-
-    public BackgroundLoadingSelectionDialog( Shell parentShell, String selectionLabel, boolean multi )
+    public BackgroundLoadingSelectionDialog(Shell parentShell, String selectionLabel, boolean multi)
     {
-        super( parentShell );
+        super(parentShell);
         elements = new ArrayList<E>();
         this.selectionLabel = selectionLabel;
         this.multi = multi;
     }
 
-
-    public void setFilter( IFilter<? super E> filter )
+    public void setFilter(IFilter<? super E> filter)
     {
         this.filter = filter;
     }
 
-
-    public void setDescriptor( final IElementDescriptor<? super E> descriptor )
+    public void setDescriptor(final IElementDescriptor<? super E> descriptor)
     {
-        if ( descriptor != null )
+        if (descriptor != null)
         {
             this.descriptor = descriptor;
         }
@@ -152,22 +146,19 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
         }
     }
 
-
     public IElementDescriptor<? super E> getDescriptor()
     {
         return descriptor;
     }
 
-
-    public void setComparator( Comparator<? super E> comparator )
+    public void setComparator(Comparator<? super E> comparator)
     {
         this.comparator = comparator;
     }
 
-
-    public void setLabelProvider( ILabelProvider labelProvider )
+    public void setLabelProvider(ILabelProvider labelProvider)
     {
-        if ( labelProvider != null )
+        if (labelProvider != null)
         {
             this.labelProvider = labelProvider;
         }
@@ -177,12 +168,10 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
         }
     }
 
-
-    public void addBackgroundJob( String name, IJobRunnable job )
+    public void addBackgroundJob(String name, IJobRunnable job)
     {
-        background.put( name, job );
+        background.put(name, job);
     }
-
 
     @Override
     public int open()
@@ -194,215 +183,210 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
         }
         finally
         {
-            for ( Job j : jobs )
+            for (Job j : jobs)
             {
                 j.cancel();
             }
         }
     }
 
-
     private Job[] scheduleJobs()
     {
-        if ( background.isEmpty() )
+        if (background.isEmpty())
         {
-            return new Job[]
-                {};
+            return new Job[] {};
         }
         else
         {
-            ArrayList<Job> jobs = new ArrayList<Job>( background.size() );
-            for ( Map.Entry<String, IJobRunnable> e : background.entrySet() )
+            ArrayList<Job> jobs = new ArrayList<Job>(background.size());
+            for (Map.Entry<String, IJobRunnable> e : background.entrySet())
             {
                 final IJobRunnable run = e.getValue();
-                Job job = new Job( e.getKey() )
+                Job job = new Job(e.getKey())
                 {
                     @Override
-                    protected IStatus run( IProgressMonitor monitor )
+                    protected IStatus run(IProgressMonitor monitor)
                     {
-                        return run.run( monitor );
+                        return run.run(monitor);
                     }
                 };
                 job.schedule();
             }
 
-            return jobs.toArray( new Job[jobs.size()] );
+            return jobs.toArray(new Job[jobs.size()]);
         }
     }
 
-
     @Override
-    protected Control createDialogArea( Composite parent )
+    protected Control createDialogArea(Composite parent)
     {
         // Create Controls
-        Composite container = ( Composite ) super.createDialogArea( parent );
-        Composite composite = new Composite( container, SWT.NONE );
+        Composite container = (Composite) super.createDialogArea(parent);
+        Composite composite = new Composite(container, SWT.NONE);
 
-        new Label( composite, SWT.NONE ).setText( selectionLabel );
+        new Label(composite, SWT.NONE).setText(selectionLabel);
 
         ContentProposalAdapter proposalAdapter = null;
         Text txtSelection = null;
 
         Table table = null;
-        if ( multi )
+        if (multi)
         {
-            table = new Table( composite, SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER );
-            viewer = new TableViewer( table );
-            viewer.setContentProvider( new ArrayContentProvider() );
-            viewer.addFilter( new ViewerFilter()
+            table = new Table(composite, SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
+            viewer = new TableViewer(table);
+            viewer.setContentProvider(new ArrayContentProvider());
+            viewer.addFilter(new ViewerFilter()
             {
-                public boolean select( Viewer viewer, Object parentElement, Object element )
+                public boolean select(Viewer viewer, Object parentElement, Object element)
                 {
                     @SuppressWarnings("unchecked")
-                    E castedElement = ( E ) element;
-                    return filter == null || filter.select( castedElement );
+                    E castedElement = (E) element;
+                    return filter == null || filter.select(castedElement);
                 }
-            } );
-            if ( comparator != null )
+            });
+            if (comparator != null)
             {
-                viewer.setSorter( new ViewerSorter()
+                viewer.setSorter(new ViewerSorter()
                 {
                     @Override
-                    public int compare( Viewer viewer, Object o1, Object o2 )
+                    public int compare(Viewer viewer, Object o1, Object o2)
                     {
                         @SuppressWarnings("unchecked")
-                        E e1 = ( E ) o1;
+                        E e1 = (E) o1;
                         @SuppressWarnings("unchecked")
-                        E e2 = ( E ) o2;
-                        return comparator.compare( e1, e2 );
+                        E e2 = (E) o2;
+                        return comparator.compare(e1, e2);
                     }
-                } );
+                });
             }
-            synchronized ( elements )
+            synchronized (elements)
             {
-                viewer.setInput( elements );
+                viewer.setInput(elements);
             }
 
-            if ( labelProvider != null )
+            if (labelProvider != null)
             {
-                viewer.setLabelProvider( labelProvider );
+                viewer.setLabelProvider(labelProvider);
             }
         }
         else
         {
-            txtSelection = new Text( composite, SWT.BORDER );
-            ControlDecoration selectionDecor = new ControlDecoration( txtSelection, SWT.LEFT | SWT.TOP );
+            txtSelection = new Text(composite, SWT.BORDER);
+            ControlDecoration selectionDecor = new ControlDecoration(txtSelection,
+                SWT.LEFT | SWT.TOP);
             FieldDecoration proposalDecor = FieldDecorationRegistry.getDefault().getFieldDecoration(
-                FieldDecorationRegistry.DEC_CONTENT_PROPOSAL );
-            selectionDecor.setImage( proposalDecor.getImage() );
-            selectionDecor.setDescriptionText( proposalDecor.getDescription() );
+                FieldDecorationRegistry.DEC_CONTENT_PROPOSAL);
+            selectionDecor.setImage(proposalDecor.getImage());
+            selectionDecor.setDescriptionText(proposalDecor.getDescription());
 
-            ExclusionContentProposalProvider<E> proposalProvider = new ExclusionContentProposalProvider<E>( elements,
-                filter, descriptor );
+            ExclusionContentProposalProvider<E> proposalProvider = new ExclusionContentProposalProvider<E>(
+                elements, filter, descriptor);
 
-            proposalAdapter = new ContentProposalAdapter( txtSelection, new TextContentAdapter(), proposalProvider,
-                null, null );
-            proposalAdapter.setProposalAcceptanceStyle( ContentProposalAdapter.PROPOSAL_REPLACE );
-            if ( labelProvider != null )
+            proposalAdapter = new ContentProposalAdapter(txtSelection,
+                new TextContentAdapter(), proposalProvider, null, null);
+            proposalAdapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
+            if (labelProvider != null)
             {
-                proposalAdapter.setLabelProvider( labelProvider );
+                proposalAdapter.setLabelProvider(labelProvider);
             }
 
-            if ( selectedName != null )
+            if (selectedName != null)
             {
-                txtSelection.setText( selectedName );
+                txtSelection.setText(selectedName);
             }
         }
         updateSelection();
         updateButtons();
 
         // Hookup listeners
-        if ( proposalAdapter != null )
+        if (proposalAdapter != null)
         {
-            proposalAdapter.addContentProposalListener( new IContentProposalListener()
+            proposalAdapter.addContentProposalListener(new IContentProposalListener()
             {
-                public void proposalAccepted( IContentProposal proposal )
+                public void proposalAccepted(IContentProposal proposal)
                 {
                     @SuppressWarnings("unchecked")
-                    WrappedContentProposal<E> valueProposal = (org.apache.felix.sigil.eclipse.ui.util.WrappedContentProposal<E> ) proposal;
+                    WrappedContentProposal<E> valueProposal = (org.apache.felix.sigil.eclipse.ui.util.WrappedContentProposal<E>) proposal;
                     E selected = valueProposal.getElement();
-                    selection = new ArrayList<E>( 1 );
-                    selection.add( selected );
+                    selection = new ArrayList<E>(1);
+                    selection.add(selected);
 
-                    elementSelected( selected );
+                    elementSelected(selected);
 
                     updateButtons();
                 }
-            } );
+            });
         }
-        if ( txtSelection != null )
+        if (txtSelection != null)
         {
-            txtSelection.addModifyListener( new ModifyListener()
+            txtSelection.addModifyListener(new ModifyListener()
             {
-                public void modifyText( ModifyEvent e )
+                public void modifyText(ModifyEvent e)
                 {
-                    selectedName = ( ( Text ) e.widget ).getText();
+                    selectedName = ((Text) e.widget).getText();
                     updateButtons();
                 }
-            } );
+            });
         }
-        if ( viewer != null )
+        if (viewer != null)
         {
-            viewer.addSelectionChangedListener( new ISelectionChangedListener()
+            viewer.addSelectionChangedListener(new ISelectionChangedListener()
             {
-                public void selectionChanged( SelectionChangedEvent event )
+                public void selectionChanged(SelectionChangedEvent event)
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) event.getSelection();
-                    selection = new ArrayList<E>( sel.size() );
-                    for ( Iterator<?> iter = sel.iterator(); iter.hasNext(); )
+                    IStructuredSelection sel = (IStructuredSelection) event.getSelection();
+                    selection = new ArrayList<E>(sel.size());
+                    for (Iterator<?> iter = sel.iterator(); iter.hasNext();)
                     {
                         @SuppressWarnings("unchecked")
-                        E element = ( E ) iter.next();
-                        selection.add( element );
+                        E element = (E) iter.next();
+                        selection.add(element);
                     }
                     updateButtons();
                 }
-            } );
-            viewer.addOpenListener( new IOpenListener()
+            });
+            viewer.addOpenListener(new IOpenListener()
             {
-                public void open( OpenEvent event )
+                public void open(OpenEvent event)
                 {
-                    if ( canComplete() )
+                    if (canComplete())
                     {
-                        setReturnCode( IDialogConstants.OK_ID );
+                        setReturnCode(IDialogConstants.OK_ID);
                         close();
                     }
                 }
-            } );
+            });
         }
 
         // Layout
-        composite.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        if ( multi )
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        if (multi)
         {
-            composite.setLayout( new GridLayout( 1, false ) );
-            GridData layoutTable = new GridData( SWT.FILL, SWT.FILL, true, true );
+            composite.setLayout(new GridLayout(1, false));
+            GridData layoutTable = new GridData(SWT.FILL, SWT.FILL, true, true);
             layoutTable.heightHint = 200;
-            table.setLayoutData( layoutTable );
+            table.setLayoutData(layoutTable);
         }
         else
         {
-            composite.setLayout( new GridLayout( 2, false ) );
-            txtSelection.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
+            composite.setLayout(new GridLayout(2, false));
+            txtSelection.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         }
 
         return container;
     }
 
-
-    protected void elementSelected( E selection )
+    protected void elementSelected(E selection)
     {
     }
 
-
     @Override
-    protected Control createButtonBar( Composite parent )
+    protected Control createButtonBar(Composite parent)
     {
-        Control bar = super.createButtonBar( parent );
+        Control bar = super.createButtonBar(parent);
         updateButtons();
         return bar;
     }
-
 
     /**
      * Can be called from any thread
@@ -414,23 +398,22 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
             public void run()
             {
                 Shell shell = getShell();
-                if ( shell != null && !shell.isDisposed() )
+                if (shell != null && !shell.isDisposed())
                 {
-                    Button okButton = getButton( IDialogConstants.OK_ID );
-                    if ( okButton != null && !okButton.isDisposed() )
+                    Button okButton = getButton(IDialogConstants.OK_ID);
+                    if (okButton != null && !okButton.isDisposed())
                     {
-                        okButton.setEnabled( canComplete() );
+                        okButton.setEnabled(canComplete());
                     }
                 }
             }
         };
         Shell shell = getShell();
-        if ( shell != null )
+        if (shell != null)
         {
-            onUIThread( shell, updateButtonsRunnable );
+            onUIThread(shell, updateButtonsRunnable);
         }
     }
-
 
     /**
      * Subclasses may override but must call super.canComplete
@@ -440,60 +423,58 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
     {
         boolean result = false;
 
-        if ( selection != null )
+        if (selection != null)
         {
-            if ( multi )
+            if (multi)
             {
                 result = selection.size() > 0;
             }
             else
             {
                 E sel = getSelectedElement();
-                result = sel != null && descriptor.getName( sel ).equals( selectedName );
+                result = sel != null && descriptor.getName(sel).equals(selectedName);
             }
         }
 
         return result;
     }
 
-
-    public final void addElement( E added )
+    public final void addElement(E added)
     {
-        addElements( Collections.singleton( added ) );
+        addElements(Collections.singleton(added));
     }
-
 
     /**
      * Can be called from any thread
      */
-    public final void addElements( Collection<? extends E> added )
+    public final void addElements(Collection<? extends E> added)
     {
         final LinkedList<E> toAdd = new LinkedList<E>();
-        synchronized ( elements )
+        synchronized (elements)
         {
-            for ( E e : added )
+            for (E e : added)
             {
-                if ( !elements.contains( e ) )
+                if (!elements.contains(e))
                 {
-                    elements.add( e );
-                    toAdd.add( e );
+                    elements.add(e);
+                    toAdd.add(e);
                 }
             }
-            Collections.sort( elements, comparator );
+            Collections.sort(elements, comparator);
         }
-        if ( viewer != null )
+        if (viewer != null)
         {
-            onUIThread( viewer.getControl(), new Runnable()
+            onUIThread(viewer.getControl(), new Runnable()
             {
                 public void run()
                 {
-                    if ( !viewer.getControl().isDisposed() )
+                    if (!viewer.getControl().isDisposed())
                     {
-                        viewer.add( toAdd.toArray() );
+                        viewer.add(toAdd.toArray());
                         viewer.refresh();
                     }
                 }
-            } );
+            });
         }
         else
         {
@@ -503,23 +484,22 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
         updateButtons();
     }
 
-
     protected void updateSelection()
     {
-        onUIThread( getShell(), new Runnable()
+        onUIThread(getShell(), new Runnable()
         {
             public void run()
             {
-                if ( selectedName != null )
+                if (selectedName != null)
                 {
                     ArrayList<E> newSelection = new ArrayList<E>();
-                    synchronized ( elements )
+                    synchronized (elements)
                     {
-                        for ( E e : elements )
+                        for (E e : elements)
                         {
-                            if ( selectedName.equals( descriptor.getName( e ) ) )
+                            if (selectedName.equals(descriptor.getName(e)))
                             {
-                                newSelection.add( e );
+                                newSelection.add(e);
                                 break;
                             }
                         }
@@ -530,24 +510,23 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
                 {
                     selection = Collections.emptyList();
                 }
-                if ( viewer != null && !viewer.getControl().isDisposed() )
+                if (viewer != null && !viewer.getControl().isDisposed())
                 {
-                    viewer.setSelection( selection.isEmpty() ? StructuredSelection.EMPTY : new StructuredSelection(
-                        selection ) );
+                    viewer.setSelection(selection.isEmpty() ? StructuredSelection.EMPTY
+                        : new StructuredSelection(selection));
                 }
             }
-        } );
+        });
     }
 
-
-    private static final void onUIThread( Control control, Runnable r )
+    private static final void onUIThread(Control control, Runnable r)
     {
-        if ( control != null && !control.isDisposed() )
+        if (control != null && !control.isDisposed())
         {
             try
             {
                 Display display = control.getDisplay();
-                if ( Thread.currentThread() == display.getThread() )
+                if (Thread.currentThread() == display.getThread())
                 {
                     // We are on the UI thread already, just do the work
                     r.run();
@@ -555,12 +534,12 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
                 else
                 {
                     // Not on the UI thread, need to bung over the runnable
-                    display.asyncExec( r );
+                    display.asyncExec(r);
                 }
             }
-            catch ( SWTError e )
+            catch (SWTError e)
             {
-                if ( e.code == SWT.ERROR_WIDGET_DISPOSED )
+                if (e.code == SWT.ERROR_WIDGET_DISPOSED)
                 {
                     // ignore
                 }
@@ -572,60 +551,57 @@ public class BackgroundLoadingSelectionDialog<E> extends TitleAreaDialog impleme
         }
     }
 
-
     public String getSelectedName()
     {
         return selectedName;
     }
 
-
-    public void setSelectedName( String selectedName )
+    public void setSelectedName(String selectedName)
     {
         this.selectedName = selectedName;
         boolean change = false;
-        if ( selectedName == null )
+        if (selectedName == null)
         {
-            if ( selection != null && !selection.isEmpty() )
+            if (selection != null && !selection.isEmpty())
             {
                 change = true;
             }
         }
         else
         {
-            if ( selection == null )
+            if (selection == null)
             {
                 change = true;
             }
-            else if ( selection.size() != 1 || !descriptor.getLabel( selection.get( 0 ) ).equals( selectedName ) )
+            else if (selection.size() != 1
+                || !descriptor.getLabel(selection.get(0)).equals(selectedName))
             {
                 change = true;
             }
         }
 
-        if ( change )
+        if (change)
         {
             updateSelection();
             updateButtons();
         }
     }
 
-
     public List<E> getSelectedElements()
     {
         return selection;
     }
 
-
     public E getSelectedElement()
     {
         E result;
-        if ( selection == null || selection.isEmpty() )
+        if (selection == null || selection.isEmpty())
         {
             result = null;
         }
         else
         {
-            result = selection.get( 0 );
+            result = selection.get(0);
         }
         return result;
     }

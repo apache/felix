@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 public enum Ops
 {
     EQ, GE, LE, GT, LT, APPROX;
@@ -27,7 +26,7 @@ public enum Ops
     @Override
     public String toString()
     {
-        switch ( this )
+        switch (this)
         {
             case EQ:
                 return "=";

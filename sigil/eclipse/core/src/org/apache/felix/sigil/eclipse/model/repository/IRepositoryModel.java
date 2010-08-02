@@ -19,24 +19,18 @@
 
 package org.apache.felix.sigil.eclipse.model.repository;
 
-
 import org.eclipse.jface.preference.PreferenceStore;
-
 
 public interface IRepositoryModel
 {
 
     String getId();
 
-
-    void setName( String stringValue );
-
+    void setName(String stringValue);
 
     String getName();
 
-
     PreferenceStore getPreferences();
-
 
     IRepositoryType getType();
 }

@@ -34,35 +34,37 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunchConfiguration;
 
-public class LaunchHelper {
+public class LaunchHelper
+{
 
-	public static IOSGiInstall getInstall(ILaunchConfiguration config) {
-	    return null;
-	}
+    public static IOSGiInstall getInstall(ILaunchConfiguration config)
+    {
+        return null;
+    }
 
-    public static int getRetries( ILaunchConfiguration config )
+    public static int getRetries(ILaunchConfiguration config)
     {
         return 5;
     }
 
-    public static Properties buildClientProps( ILaunchConfiguration config )
+    public static Properties buildClientProps(ILaunchConfiguration config)
     {
         Properties props = new Properties();
-        props.put( Runtime.ADDRESS_PROPERTY, "localhost" );
-        props.put( Runtime.PORT_PROPERTY, "9090" );
+        props.put(Runtime.ADDRESS_PROPERTY, "localhost");
+        props.put(Runtime.PORT_PROPERTY, "9090");
         return props;
     }
 
-    public static String[] getProgramArgs( ILaunchConfiguration config )
+    public static String[] getProgramArgs(ILaunchConfiguration config)
     {
         return new String[] { "-p", "9090", "-a", "localhost", "-c" };
     }
 
-    public static long getBackoff( ILaunchConfiguration config )
+    public static long getBackoff(ILaunchConfiguration config)
     {
         return 1000;
     }
-    
+
     public static URL toURL(String loc) throws MalformedURLException
     {
         URL url = null;
@@ -73,19 +75,23 @@ public class LaunchHelper {
         catch (MalformedURLException e)
         {
             IFile f = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(loc));
-            if ( f.exists() ) {
+            if (f.exists())
+            {
                 url = f.getLocation().toFile().toURL();
             }
-            else {
-                throw new MalformedURLException("Unknown file " + loc );
+            else
+            {
+                throw new MalformedURLException("Unknown file " + loc);
             }
         }
         return url;
     }
 
-    public static BundleForm getBundleForm(ILaunchConfiguration config) throws CoreException
+    public static BundleForm getBundleForm(ILaunchConfiguration config)
+        throws CoreException
     {
-        String loc = config.getAttribute(OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION, (String) null);
+        String loc = config.getAttribute(
+            OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION, (String) null);
         try
         {
             URL url = toURL(loc);

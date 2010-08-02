@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.Collection;
 
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-
 
 public abstract class DefaultTableProvider extends DefaultContentProvider implements IStructuredContentProvider
 {
@@ -39,25 +37,25 @@ public abstract class DefaultTableProvider extends DefaultContentProvider implem
      *  
      * @throws IllegalArgumentException if the element cannot be converted. 
      */
-    public Object[] toArray( Object inputElement )
+    public Object[] toArray(Object inputElement)
     {
-        if ( inputElement == null )
+        if (inputElement == null)
         {
-            return new Object[]
-                {};
+            return new Object[] {};
         }
-        else if ( inputElement instanceof Collection )
+        else if (inputElement instanceof Collection)
         {
-            Collection<?> col = ( Collection<?> ) inputElement;
+            Collection<?> col = (Collection<?>) inputElement;
             return col.toArray();
         }
-        else if ( inputElement.getClass().isArray() )
+        else if (inputElement.getClass().isArray())
         {
-            return ( Object[] ) inputElement;
+            return (Object[]) inputElement;
         }
         else
         {
-            throw new IllegalArgumentException( "Invalid inputElement " + inputElement.getClass() );
+            throw new IllegalArgumentException("Invalid inputElement "
+                + inputElement.getClass());
         }
     }
 

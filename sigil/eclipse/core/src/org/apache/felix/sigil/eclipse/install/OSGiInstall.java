@@ -19,12 +19,10 @@
 
 package org.apache.felix.sigil.eclipse.install;
 
-
 import java.util.Arrays;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
-
 
 public class OSGiInstall implements IOSGiInstall
 {
@@ -36,81 +34,69 @@ public class OSGiInstall implements IOSGiInstall
     private IPath varDirectory;
     private IOSGiInstallType type;
 
-
     public IPath getVarDirectory()
     {
         return varDirectory;
     }
 
-
-    public void setVarDirectory( IPath varDirectory )
+    public void setVarDirectory(IPath varDirectory)
     {
         this.varDirectory = varDirectory;
     }
 
-
-    public OSGiInstall( String id )
+    public OSGiInstall(String id)
     {
         this.id = id;
     }
-
 
     public String getId()
     {
         return id;
     }
 
-
     public IPath getInstallLocation()
     {
         return installLocation;
     }
 
-
-    public void setInstallLocation( IPath installLocation )
+    public void setInstallLocation(IPath installLocation)
     {
         this.installLocation = installLocation;
     }
-
 
     public String[] getLaunchArguments()
     {
         return launchArgs;
     }
 
-
-    public void setLaunchArguments( String[] launchArgs )
+    public void setLaunchArguments(String[] launchArgs)
     {
         this.launchArgs = launchArgs;
     }
-
 
     public Map<String, String> getProperties()
     {
         return properties;
     }
 
-
-    public void setProperties( Map<String, String> properties )
+    public void setProperties(Map<String, String> properties)
     {
         this.properties = properties;
     }
 
-
     public String toString()
     {
-        return "OSGiInstall[\n" + "id=" + id + "\n" + "type=" + type + "\n" + "installLocation=" + installLocation
-            + "\n" + "launchArgs=" + Arrays.asList( launchArgs ) + "\n" + "properties=" + properties + "\n" + "]";
+        return "OSGiInstall[\n" + "id=" + id + "\n" + "type=" + type + "\n"
+            + "installLocation=" + installLocation + "\n" + "launchArgs="
+            + Arrays.asList(launchArgs) + "\n" + "properties=" + properties + "\n" + "]";
     }
-
 
     public IOSGiInstallType getType()
     {
         return type;
     }
 
-
-    public void setType( IOSGiInstallType type )
+    public void setType(IOSGiInstallType type)
     {
         this.type = type;
     }

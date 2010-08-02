@@ -47,19 +47,22 @@ public class MoveActivatorParticipant extends MoveParticipant
         CheckConditionsContext ctx) throws OperationCanceledException
     {
         RefactoringStatus status = null;
-        if(getArguments().getUpdateReferences()) {
+        if (getArguments().getUpdateReferences())
+        {
             IPackageFragment pf = (IPackageFragment) compilationUnit.getAncestor(IJavaModel.PACKAGE_FRAGMENT);
             String oldName = qualifiedName(pf, compilationUnit.getElementName());
             try
             {
                 ISigilProjectModel sigil = SigilCore.create(compilationUnit.getJavaProject().getProject());
-                if (oldName.equals(sigil.getBundle().getBundleInfo().getActivator())) {
+                if (oldName.equals(sigil.getBundle().getBundleInfo().getActivator()))
+                {
                     IPackageFragment dest = (IPackageFragment) getArguments().getDestination();
                     String newName = qualifiedName(dest, compilationUnit.getElementName());
-                    
+
                     RefactorUtil.touch(ctx, sigil);
                     changes.add(new BundleActivatorChange(sigil, oldName, newName));
-                    status = RefactoringStatus.createInfoStatus("Updating bundle activator from " + oldName + " to " + newName );
+                    status = RefactoringStatus.createInfoStatus("Updating bundle activator from "
+                        + oldName + " to " + newName);
                 }
             }
             catch (CoreException e)
@@ -67,7 +70,7 @@ public class MoveActivatorParticipant extends MoveParticipant
                 SigilCore.warn("Failed to update activator", e);
             }
         }
-        
+
         return status;
     }
 
@@ -86,15 +89,16 @@ public class MoveActivatorParticipant extends MoveParticipant
     public Change createChange(IProgressMonitor monitor) throws CoreException,
         OperationCanceledException
     {
-        if (changes.isEmpty()) {
+        if (changes.isEmpty())
+        {
             return new NullChange();
         }
-        else 
+        else
         {
             CompositeChange ret = new CompositeChange("Export-Package update");
-            
+
             ret.addAll(changes.toArray(new Change[changes.size()]));
-            
+
             return ret;
         }
     }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime;
 
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -43,7 +42,6 @@ import org.osgi.framework.BundleException;
 import static org.apache.felix.sigil.common.runtime.Runtime.PORT_PROPERTY;
 import static org.apache.felix.sigil.common.runtime.Runtime.ADDRESS_PROPERTY;
 
-
 /**
  * @author dave
  *
@@ -54,36 +52,37 @@ public class Client
     private DataInputStream in;
     private DataOutputStream out;
 
-
     public Client()
     {
     }
-    
+
     public void connect(Properties props) throws IOException
     {
-        String v = props.getProperty( ADDRESS_PROPERTY );
-        InetAddress address = v == null ? null : InetAddress.getByName( v );
-        int port = Integer.parseInt( props.getProperty( PORT_PROPERTY, "0" ) );
-        
-        if ( port < 1 ) {
-            throw new IOException( "Missing or invalid port" );
+        String v = props.getProperty(ADDRESS_PROPERTY);
+        InetAddress address = v == null ? null : InetAddress.getByName(v);
+        int port = Integer.parseInt(props.getProperty(PORT_PROPERTY, "0"));
+
+        if (port < 1)
+        {
+            throw new IOException("Missing or invalid port");
         }
-        
+
         InetSocketAddress endpoint = new InetSocketAddress(address, port);
-        
+
         socket = new Socket();
-        socket.connect( endpoint );
-        
-        Main.log( "Connected to " + endpoint );
-        
-        in = new DataInputStream( socket.getInputStream() );
-        out = new DataOutputStream( socket.getOutputStream() );        
+        socket.connect(endpoint);
+
+        Main.log("Connected to " + endpoint);
+
+        in = new DataInputStream(socket.getInputStream());
+        out = new DataOutputStream(socket.getOutputStream());
     }
 
-    public boolean isConnected() {
+    public boolean isConnected()
+    {
         return socket != null;
     }
-    
+
     public void disconnect() throws IOException
     {
         socket.close();
@@ -92,148 +91,174 @@ public class Client
         out = null;
     }
 
-    public void apply(BundleForm.BundleStatus[] newStatus) throws IOException, BundleException {
+    public void apply(BundleForm.BundleStatus[] newStatus) throws IOException,
+        BundleException
+    {
         BundleStatus[] currentStatus = status();
-        
+
         stopOldBundles(currentStatus, newStatus);
-        
+
         boolean change = uninstallOldBundles(currentStatus, newStatus);
         change |= installNewBundles(currentStatus, newStatus);
-        
-        if ( change )
+
+        if (change)
             refresh();
-        
+
         startNewBundles(newStatus);
     }
 
     public void refresh() throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
-        new RefreshAction( in, out ).client();
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
+        new RefreshAction(in, out).client();
     }
 
-    public long install( String url ) throws IOException, BundleException
+    public long install(String url) throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
-        return new InstallAction( in, out ).client( url );
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
+        return new InstallAction(in, out).client(url);
     }
 
-
-    public void start( long bundle ) throws IOException, BundleException
+    public void start(long bundle) throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
-        new StartAction( in, out ).client( bundle );
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
+        new StartAction(in, out).client(bundle);
     }
 
-
-    public void stop( long bundle ) throws IOException, BundleException
+    public void stop(long bundle) throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
-        new StopAction( in, out ).client( bundle );
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
+        new StopAction(in, out).client(bundle);
     }
 
-
-    public void uninstall( long bundle ) throws IOException, BundleException
+    public void uninstall(long bundle) throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
-        new UninstallAction( in, out ).client( bundle );
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
+        new UninstallAction(in, out).client(bundle);
     }
 
-
-    public void update( long bundle ) throws IOException, BundleException
+    public void update(long bundle) throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
         Update update = new UpdateAction.Update(bundle, null);
-        new UpdateAction( in, out ).client(update);
+        new UpdateAction(in, out).client(update);
     }
 
-
-    public void update( long bundle, String url ) throws IOException, BundleException
+    public void update(long bundle, String url) throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
         Update update = new UpdateAction.Update(bundle, url);
-        new UpdateAction( in, out ).client(update);
+        new UpdateAction(in, out).client(update);
     }
-
 
     public BundleStatus[] status() throws IOException, BundleException
     {
-        if ( socket == null ) throw new IllegalStateException( "Not connected" );
-        return new StatusAction( in, out ).client();
+        if (socket == null)
+            throw new IllegalStateException("Not connected");
+        return new StatusAction(in, out).client();
     }
-    
-    private boolean installNewBundles(BundleStatus[] status, BundleStatus[] newStatus) throws IOException, BundleException
+
+    private boolean installNewBundles(BundleStatus[] status, BundleStatus[] newStatus)
+        throws IOException, BundleException
     {
         boolean change = false;
-        for (BundleStatus n : newStatus) {
+        for (BundleStatus n : newStatus)
+        {
             boolean found = false;
-            for ( BundleStatus o : status ) {
-                if ( o.isMatch(n) ) {
+            for (BundleStatus o : status)
+            {
+                if (o.isMatch(n))
+                {
                     update(o.getId(), n.getLocation());
                     found = true;
                     change = true;
                     break;
                 }
             }
-            
-            if ( !found ) {
+
+            if (!found)
+            {
                 install(n.getLocation());
                 change = true;
             }
         }
-        
+
         return change;
     }
 
-    private void startNewBundles(BundleStatus[] newStatus) throws IOException, BundleException
+    private void startNewBundles(BundleStatus[] newStatus) throws IOException,
+        BundleException
     {
         BundleStatus[] status = status();
-        for (BundleStatus n : newStatus) {
-            if ( n.getStatus() == Bundle.ACTIVE ) {
-                for ( BundleStatus o : status ) {
-                    if ( o.isMatch(n) ) {
+        for (BundleStatus n : newStatus)
+        {
+            if (n.getStatus() == Bundle.ACTIVE)
+            {
+                for (BundleStatus o : status)
+                {
+                    if (o.isMatch(n))
+                    {
                         start(o.getId());
                     }
                 }
-            }            
+            }
         }
     }
 
-    private void stopOldBundles(BundleStatus[] status, BundleStatus[] newStatus) throws IOException, BundleException
+    private void stopOldBundles(BundleStatus[] status, BundleStatus[] newStatus)
+        throws IOException, BundleException
     {
-        for (BundleStatus n : newStatus) {
-            if ( n.getStatus() == Bundle.INSTALLED ) {
-                for ( BundleStatus o : status ) {
-                    if ( o.getId() != 0 ) {
-                        if ( o.isMatch(n) ) {
+        for (BundleStatus n : newStatus)
+        {
+            if (n.getStatus() == Bundle.INSTALLED)
+            {
+                for (BundleStatus o : status)
+                {
+                    if (o.getId() != 0)
+                    {
+                        if (o.isMatch(n))
+                        {
                             stop(o.getId());
-                        }                        
+                        }
                     }
                 }
-            }            
+            }
         }
     }
 
-    private boolean uninstallOldBundles(BundleStatus[] status, BundleStatus[] newStatus) throws IOException, BundleException
+    private boolean uninstallOldBundles(BundleStatus[] status, BundleStatus[] newStatus)
+        throws IOException, BundleException
     {
         boolean change = false;
-        for ( BundleStatus o : status ) {
-            if ( o.getId() != 0 ) {
+        for (BundleStatus o : status)
+        {
+            if (o.getId() != 0)
+            {
                 boolean found = false;
-                
-                for (BundleStatus n : newStatus) {
-                    if ( o.isMatch(n) ) {
+
+                for (BundleStatus n : newStatus)
+                {
+                    if (o.isMatch(n))
+                    {
                         found = true;
                         break;
                     }
                 }
-                
-                if ( !found ) {
+
+                if (!found)
+                {
                     change = true;
                     uninstall(o.getId());
                 }
             }
         }
         return change;
-    }    
+    }
 }

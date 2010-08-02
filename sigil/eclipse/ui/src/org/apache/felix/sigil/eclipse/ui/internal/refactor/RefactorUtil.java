@@ -35,7 +35,7 @@ class RefactorUtil
     static final void touch(CheckConditionsContext context, ISigilProjectModel sigil)
     {
         ResourceChangeChecker checker = (ResourceChangeChecker) context.getChecker(ResourceChangeChecker.class);
-        IResourceChangeDescriptionFactory deltaFactory= checker.getDeltaFactory();        
+        IResourceChangeDescriptionFactory deltaFactory = checker.getDeltaFactory();
         IFile file = sigil.getProject().getFile(SigilCore.SIGIL_PROJECT_FILE);
         deltaFactory.change(file);
     }

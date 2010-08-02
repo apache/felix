@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -29,7 +28,6 @@ import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
-
 
 public class Link
 {
@@ -45,13 +43,13 @@ public class Link
     private static final Comparator<IModelElement> comparator = new Comparator<IModelElement>()
     {
 
-        public int compare( IModelElement o1, IModelElement o2 )
+        public int compare(IModelElement o1, IModelElement o2)
         {
-            if ( o1 instanceof IRequiredBundle )
+            if (o1 instanceof IRequiredBundle)
             {
-                if ( o2 instanceof IRequiredBundle )
+                if (o2 instanceof IRequiredBundle)
                 {
-                    return compareBundles( ( IRequiredBundle ) o1, ( IRequiredBundle ) o2 );
+                    return compareBundles((IRequiredBundle) o1, (IRequiredBundle) o2);
                 }
                 else
                 {
@@ -60,25 +58,24 @@ public class Link
             }
             else
             {
-                if ( o2 instanceof IRequiredBundle )
+                if (o2 instanceof IRequiredBundle)
                 {
                     return 1;
                 }
                 else
                 {
-                    return compareNonBundles( o1, o2 );
+                    return compareNonBundles(o1, o2);
                 }
             }
         }
 
-
-        private int compareNonBundles( IModelElement o1, IModelElement o2 )
+        private int compareNonBundles(IModelElement o1, IModelElement o2)
         {
-            if ( o1 instanceof IPackageImport )
+            if (o1 instanceof IPackageImport)
             {
-                if ( o2 instanceof IPackageImport )
+                if (o2 instanceof IPackageImport)
                 {
-                    return compareImports( ( IPackageImport ) o1, ( IPackageImport ) o2 );
+                    return compareImports((IPackageImport) o1, (IPackageImport) o2);
                 }
                 else
                 {
@@ -87,7 +84,7 @@ public class Link
             }
             else
             {
-                if ( o2 instanceof IPackageImport )
+                if (o2 instanceof IPackageImport)
                 {
                     return 1;
                 }
@@ -98,81 +95,71 @@ public class Link
             }
         }
 
-
-        private int compareImports( IPackageImport o1, IPackageImport o2 )
+        private int compareImports(IPackageImport o1, IPackageImport o2)
         {
-            return o1.getPackageName().compareTo( o2.getPackageName() );
+            return o1.getPackageName().compareTo(o2.getPackageName());
         }
 
-
-        private int compareBundles( IRequiredBundle o1, IRequiredBundle o2 )
+        private int compareBundles(IRequiredBundle o1, IRequiredBundle o2)
         {
-            return o1.getSymbolicName().compareTo( o2.getSymbolicName() );
+            return o1.getSymbolicName().compareTo(o2.getSymbolicName());
         }
 
     };
 
-
-    public Link( ISigilBundle source, ISigilBundle target )
+    public Link(ISigilBundle source, ISigilBundle target)
     {
         this.source = source;
         this.target = target;
     }
-
 
     public ISigilBundle getSource()
     {
         return source;
     }
 
-
     public ISigilBundle getTarget()
     {
         return target;
     }
-
 
     public boolean isSatisfied()
     {
         return target != null;
     }
 
-
-    public void addRequirement( IModelElement requirement )
+    public void addRequirement(IModelElement requirement)
     {
-        requirements.add( requirement );
-        Collections.sort( requirements, comparator );
+        requirements.add(requirement);
+        Collections.sort(requirements, comparator);
     }
-
 
     public String toString()
     {
         return "Link[" + source + "->" + target + "]";
     }
 
-
     public List<IModelElement> getRequirements()
     {
         return requirements;
     }
 
-
     public boolean isOptional()
     {
-        for ( IModelElement e : requirements )
+        for (IModelElement e : requirements)
         {
-            if ( e instanceof IPackageImport )
+            if (e instanceof IPackageImport)
             {
-                IPackageImport pi = ( IPackageImport ) e;
-                if ( !pi.isOptional() )
+                IPackageImport pi = (IPackageImport) e;
+                if (!pi.isOptional())
                 {
                     return false;
                 }
             }
-            else if ( e instanceof IRequiredBundle )
+            else if (e instanceof IRequiredBundle)
             {
-                IRequiredBundle rb = ( IRequiredBundle ) e;
-                if ( !rb.isOptional() )
+                IRequiredBundle rb = (IRequiredBundle) e;
+                if (!rb.isOptional())
                 {
                     return false;
                 }

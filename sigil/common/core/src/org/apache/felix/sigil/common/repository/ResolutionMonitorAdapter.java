@@ -19,39 +19,34 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
-
 
 public class ResolutionMonitorAdapter implements IResolutionMonitor
 {
 
     private IProgressMonitor monitor;
 
-
-    public ResolutionMonitorAdapter( IProgressMonitor monitor )
+    public ResolutionMonitorAdapter(IProgressMonitor monitor)
     {
         this.monitor = monitor;
     }
-
 
     public boolean isCanceled()
     {
         return monitor.isCanceled();
     }
 
-
-    public void startResolution( IModelElement requirement )
+    public void startResolution(IModelElement requirement)
     {
-        monitor.subTask( "Resolving " + requirement );
+        monitor.subTask("Resolving " + requirement);
     }
 
-
-    public void endResolution( IModelElement requirement, ISigilBundle provider )
+    public void endResolution(IModelElement requirement, ISigilBundle provider)
     {
-        monitor.subTask( ( provider == null ? "Failed to resolve " : "Resolved " ) + requirement );
+        monitor.subTask((provider == null ? "Failed to resolve " : "Resolved ")
+            + requirement);
     }
 
 }

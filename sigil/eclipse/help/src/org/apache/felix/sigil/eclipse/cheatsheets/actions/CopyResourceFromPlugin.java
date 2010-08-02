@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.cheatsheets.actions;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -47,7 +46,6 @@ import org.eclipse.ui.cheatsheets.ICheatSheetManager;
 import org.eclipse.ui.part.FileEditorInput;
 import org.osgi.framework.Bundle;
 
-
 public class CopyResourceFromPlugin extends Action implements ICheatSheetAction
 {
 
@@ -57,10 +55,9 @@ public class CopyResourceFromPlugin extends Action implements ICheatSheetAction
     private String sourcePath;
     private String editorID;
 
-
-    public void run( String[] params, ICheatSheetManager manager )
+    public void run(String[] params, ICheatSheetManager manager)
     {
-        if ( params != null && params.length > 4 )
+        if (params != null && params.length > 4)
         {
             targetProject = params[0];
             targetFolder = params[1];
@@ -72,31 +69,31 @@ public class CopyResourceFromPlugin extends Action implements ICheatSheetAction
         WorkspaceModifyOperation op = new WorkspaceModifyOperation()
         {
             @Override
-            protected void execute( IProgressMonitor monitor ) throws CoreException
+            protected void execute(IProgressMonitor monitor) throws CoreException
             {
                 try
                 {
-                    Bundle b = Platform.getBundle( sourceBundle );
+                    Bundle b = Platform.getBundle(sourceBundle);
 
                     IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-                    IProject project = workspaceRoot.getProject( targetProject );
-                    IPath path = new Path( targetFolder )
-                        .append( sourcePath.substring( sourcePath.lastIndexOf( '/' ) ) );
-                    IFile file = project.getFile( path );
+                    IProject project = workspaceRoot.getProject(targetProject);
+                    IPath path = new Path(targetFolder).append(sourcePath.substring(sourcePath.lastIndexOf('/')));
+                    IFile file = project.getFile(path);
 
-                    if ( !file.exists() )
+                    if (!file.exists())
                     {
-                        mkdirs( ( IFolder ) file.getParent(), monitor );
+                        mkdirs((IFolder) file.getParent(), monitor);
 
-                        InputStream in = FileLocator.openStream( b, new Path( sourcePath ), false );
-                        file.create( in, true, monitor );
+                        InputStream in = FileLocator.openStream(b, new Path(sourcePath),
+                            false);
+                        file.create(in, true, monitor);
                     }
 
                     IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-                    FileEditorInput input = new FileEditorInput( file );
-                    window.getActivePage().openEditor( input, editorID );
+                    FileEditorInput input = new FileEditorInput(file);
+                    window.getActivePage().openEditor(input, editorID);
                 }
-                catch ( IOException e )
+                catch (IOException e)
                 {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -106,32 +103,32 @@ public class CopyResourceFromPlugin extends Action implements ICheatSheetAction
 
         try
         {
-            new ProgressMonitorDialog( Display.getCurrent().getActiveShell() ).run( false, false, op );
+            new ProgressMonitorDialog(Display.getCurrent().getActiveShell()).run(false,
+                false, op);
         }
-        catch ( InvocationTargetException e )
+        catch (InvocationTargetException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        catch ( InterruptedException e )
+        catch (InterruptedException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-
-    private void mkdirs( IFolder folder, IProgressMonitor monitor ) throws CoreException
+    private void mkdirs(IFolder folder, IProgressMonitor monitor) throws CoreException
     {
         IContainer parent = folder.getParent();
-        if ( !parent.exists() )
+        if (!parent.exists())
         {
-            mkdirs( ( IFolder ) parent, monitor );
+            mkdirs((IFolder) parent, monitor);
         }
 
-        if ( !folder.exists() )
+        if (!folder.exists())
         {
-            folder.create( true, true, monitor );
+            folder.create(true, true, monitor);
         }
 
     }

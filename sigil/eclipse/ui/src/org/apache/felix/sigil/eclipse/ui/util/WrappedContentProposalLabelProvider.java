@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-
 
 public class WrappedContentProposalLabelProvider<E> extends LabelProvider
 {
@@ -30,42 +28,38 @@ public class WrappedContentProposalLabelProvider<E> extends LabelProvider
     private final IElementDescriptor<? super E> descriptor;
     private final ModelLabelProvider projectLabelProvider;
 
-
-    public WrappedContentProposalLabelProvider( IElementDescriptor<? super E> descriptor )
+    public WrappedContentProposalLabelProvider(IElementDescriptor<? super E> descriptor)
     {
         this.descriptor = descriptor;
         projectLabelProvider = new ModelLabelProvider();
     }
 
-
     @SuppressWarnings("unchecked")
-    private E adapt( Object element )
+    private E adapt(Object element)
     {
         E result;
-        if ( element instanceof WrappedContentProposal<?> )
+        if (element instanceof WrappedContentProposal<?>)
         {
-            WrappedContentProposal<?> proposal = (org.apache.felix.sigil.eclipse.ui.util.WrappedContentProposal<?> ) element;
-            result = ( E ) proposal.getElement();
+            WrappedContentProposal<?> proposal = (org.apache.felix.sigil.eclipse.ui.util.WrappedContentProposal<?>) element;
+            result = (E) proposal.getElement();
         }
         else
         {
-            result = ( E ) element;
+            result = (E) element;
         }
         return result;
     }
 
-
     @Override
-    public Image getImage( Object element )
+    public Image getImage(Object element)
     {
-        Object value = adapt( element );
-        return projectLabelProvider.getImage( value );
+        Object value = adapt(element);
+        return projectLabelProvider.getImage(value);
     }
 
-
     @Override
-    public String getText( Object element )
+    public String getText(Object element)
     {
-        return descriptor.getLabel( adapt( element ) );
+        return descriptor.getLabel(adapt(element));
     }
 }

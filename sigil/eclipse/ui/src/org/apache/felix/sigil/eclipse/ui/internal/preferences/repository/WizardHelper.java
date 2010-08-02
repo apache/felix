@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
@@ -31,38 +30,36 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 
-
 public class WizardHelper
 {
-    public static RepositoryWizard loadWizard( IRepositoryType type ) throws CoreException
+    public static RepositoryWizard loadWizard(IRepositoryType type) throws CoreException
     {
-        IConfigurationElement e = findWizardConfig( type.getId() );
+        IConfigurationElement e = findWizardConfig(type.getId());
 
-        if ( e == null )
+        if (e == null)
         {
-            throw SigilCore.newCoreException( "No wizard registered for repository " + type, null );
+            throw SigilCore.newCoreException("No wizard registered for repository "
+                + type, null);
         }
 
-        return ( RepositoryWizard ) e.createExecutableExtension( "class" );
+        return (RepositoryWizard) e.createExecutableExtension("class");
     }
 
-
-    public static boolean hasWizard( IRepositoryType type )
+    public static boolean hasWizard(IRepositoryType type)
     {
-        return findWizardConfig( type.getId() ) != null;
+        return findWizardConfig(type.getId()) != null;
     }
 
-
-    private static IConfigurationElement findWizardConfig( String id )
+    private static IConfigurationElement findWizardConfig(String id)
     {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint p = registry.getExtensionPoint( SigilUI.REPOSITORY_WIZARD_EXTENSION_POINT_ID );
+        IExtensionPoint p = registry.getExtensionPoint(SigilUI.REPOSITORY_WIZARD_EXTENSION_POINT_ID);
 
-        for ( IExtension e : p.getExtensions() )
+        for (IExtension e : p.getExtensions())
         {
-            for ( IConfigurationElement c : e.getConfigurationElements() )
+            for (IConfigurationElement c : e.getConfigurationElements())
             {
-                if ( id.equals( c.getAttribute( "repository" ) ) )
+                if (id.equals(c.getAttribute("repository")))
                 {
                     return c;
                 }

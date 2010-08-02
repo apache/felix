@@ -19,45 +19,38 @@
 
 package org.apache.felix.sigil.common.core.internal.license;
 
-
 import org.apache.felix.sigil.common.core.licence.ILicensePolicy;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.core.runtime.IProgressMonitor;
-
 
 public class LicensePolicy implements ILicensePolicy
 {
 
     private LicenseManager licenseManager;
 
-
-    public LicensePolicy( LicenseManager licenseManager )
+    public LicensePolicy(LicenseManager licenseManager)
     {
         this.licenseManager = licenseManager;
     }
 
-
-    public boolean accept( ISigilBundle bundle )
+    public boolean accept(ISigilBundle bundle)
     {
         return true;
     }
 
-
-    public void addAllowed( String licenseName )
+    public void addAllowed(String licenseName)
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    public void removeAllowed( String licenseName )
+    public void removeAllowed(String licenseName)
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    public void save( IProgressMonitor monitor )
+    public void save(IProgressMonitor monitor)
     {
         // TODO Auto-generated method stub
 

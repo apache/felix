@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +57,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
-
 public class ResourceSelectDialog extends Dialog
 {
 
@@ -69,22 +67,20 @@ public class ResourceSelectDialog extends Dialog
     {
         private int check;
 
-
-        public UpdateViewerRunnable( int check )
+        public UpdateViewerRunnable(int check)
         {
             this.check = check;
         }
 
-
         public void run()
         {
-            if ( check == keyCheck.get() )
+            if (check == keyCheck.get())
             {
                 try
                 {
                     viewer.refresh();
                 }
-                catch ( SWTException e )
+                catch (SWTException e)
                 {
                     // discard
                 }
@@ -119,11 +115,9 @@ public class ResourceSelectDialog extends Dialog
     private IContentProvider content;
     private ILabelProvider labelProvider;
 
-
-    public ResourceSelectDialog( Shell parentShell, IContentProvider content, ViewerFilter filter, Object scope,
-        String title, String selectionText, boolean isCombo )
+    public ResourceSelectDialog(Shell parentShell, IContentProvider content, ViewerFilter filter, Object scope, String title, String selectionText, boolean isCombo)
     {
-        super( parentShell );
+        super(parentShell);
         this.title = title;
         this.selectionText = selectionText;
         this.content = content;
@@ -132,18 +126,16 @@ public class ResourceSelectDialog extends Dialog
         this.isCombo = isCombo;
     }
 
-
-    public void setJob( Job job )
+    public void setJob(Job job)
     {
         this.job = job;
     }
-
 
     public void refreshResources()
     {
         try
         {
-            getShell().getDisplay().asyncExec( new Runnable()
+            getShell().getDisplay().asyncExec(new Runnable()
             {
                 public void run()
                 {
@@ -151,65 +143,63 @@ public class ResourceSelectDialog extends Dialog
                     {
                         viewer.refresh();
                     }
-                    catch ( SWTException e )
+                    catch (SWTException e)
                     {
                         // attempt to exec after dialog closed - discard
                     }
                 }
-            } );
+            });
         }
-        catch ( NullPointerException e )
+        catch (NullPointerException e)
         {
             // attempt to exec after dialog closed - discard
         }
-        catch ( SWTException e )
+        catch (SWTException e)
         {
             // attempt to exec after dialog closed - discard
         }
     }
-
 
     /*
      * (non-Javadoc)
      * 
      * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
      */
-    protected void configureShell( Shell shell )
+    protected void configureShell(Shell shell)
     {
-        super.configureShell( shell );
-        if ( title != null )
+        super.configureShell(shell);
+        if (title != null)
         {
-            shell.setText( title );
+            shell.setText(title);
         }
     }
-
 
     @Override
     public void create()
     {
         super.create();
-        if ( getItemCount() == 0 )
+        if (getItemCount() == 0)
         {
-            setErrorMessage( "No resources available" );
-            getButton( IDialogConstants.OK_ID ).setEnabled( false );
+            setErrorMessage("No resources available");
+            getButton(IDialogConstants.OK_ID).setEnabled(false);
         }
         else
         {
-            ISelection selection = selected == null ? EMPTY_SELECTION : new SingletonSelection( selected );
-            setSelected( new SelectionChangedEvent( viewer, selection ), true );
+            ISelection selection = selected == null ? EMPTY_SELECTION
+                : new SingletonSelection(selected);
+            setSelected(new SelectionChangedEvent(viewer, selection), true);
         }
 
-        if ( job != null )
+        if (job != null)
         {
             job.schedule();
         }
     }
 
-
     @Override
     public boolean close()
     {
-        if ( job != null )
+        if (job != null)
         {
             job.cancel();
         }
@@ -217,10 +207,9 @@ public class ResourceSelectDialog extends Dialog
         return super.close();
     }
 
-
     private int getItemCount()
     {
-        if ( isCombo )
+        if (isCombo)
         {
             return resourceNameCombo.getItemCount();
         }
@@ -230,135 +219,131 @@ public class ResourceSelectDialog extends Dialog
         }
     }
 
-
     @Override
-    protected Control createDialogArea( Composite parent )
+    protected Control createDialogArea(Composite parent)
     {
-        Composite body = ( Composite ) super.createDialogArea( parent );
+        Composite body = (Composite) super.createDialogArea(parent);
 
-        GridLayout layout = ( GridLayout ) body.getLayout();
+        GridLayout layout = (GridLayout) body.getLayout();
         layout.numColumns = 2;
         GridData data;
 
         labelProvider = new ModelLabelProvider();
 
-        Label l = new Label( body, SWT.LEFT );
-        l.setText( selectionText );
-        data = new GridData( GridData.HORIZONTAL_ALIGN_BEGINNING );
-        if ( !isCombo )
+        Label l = new Label(body, SWT.LEFT);
+        l.setText(selectionText);
+        data = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
+        if (!isCombo)
         {
             data.horizontalSpan = 2;
         }
-        l.setLayoutData( data );
+        l.setLayoutData(data);
 
-        if ( isCombo )
+        if (isCombo)
         {
-            createCombo( body );
+            createCombo(body);
         }
         else
         {
-            createTable( body );
+            createTable(body);
         }
 
-        viewer.addFilter( filter );
-        viewer.setContentProvider( content );
-        viewer.setLabelProvider( getLabelProvider() );
-        viewer.setComparator( new ViewerComparator() );
-        viewer.setInput( scope );
+        viewer.addFilter(filter);
+        viewer.setContentProvider(content);
+        viewer.setLabelProvider(getLabelProvider());
+        viewer.setComparator(new ViewerComparator());
+        viewer.setInput(scope);
 
-        viewer.addSelectionChangedListener( new ISelectionChangedListener()
+        viewer.addSelectionChangedListener(new ISelectionChangedListener()
         {
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
-                setSelected( event, false );
+                setSelected(event, false);
             }
-        } );
-        createCustom( body );
+        });
+        createCustom(body);
 
-        errorMessageText = new Text( body, SWT.READ_ONLY | SWT.WRAP );
-        data = new GridData( GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL );
+        errorMessageText = new Text(body, SWT.READ_ONLY | SWT.WRAP);
+        data = new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL);
         data.horizontalSpan = 2;
-        errorMessageText.setLayoutData( data );
-        errorMessageText.setBackground( errorMessageText.getDisplay().getSystemColor( SWT.COLOR_WIDGET_BACKGROUND ) );
-        setErrorMessage( errorMessage );
+        errorMessageText.setLayoutData(data);
+        errorMessageText.setBackground(errorMessageText.getDisplay().getSystemColor(
+            SWT.COLOR_WIDGET_BACKGROUND));
+        setErrorMessage(errorMessage);
 
         return body;
     }
 
-
-    protected void createCustom( Composite body )
+    protected void createCustom(Composite body)
     {
     }
 
-
-    private void createCombo( Composite body )
+    private void createCombo(Composite body)
     {
-        resourceNameCombo = new Combo( body, SWT.SINGLE | SWT.BORDER );
-        GridData data = new GridData( GridData.HORIZONTAL_ALIGN_END );
+        resourceNameCombo = new Combo(body, SWT.SINGLE | SWT.BORDER);
+        GridData data = new GridData(GridData.HORIZONTAL_ALIGN_END);
         data.widthHint = 200;
-        resourceNameCombo.setLayoutData( data );
+        resourceNameCombo.setLayoutData(data);
 
-        viewer = new ComboViewer( resourceNameCombo );
+        viewer = new ComboViewer(resourceNameCombo);
     }
 
-
-    private void createTable( Composite body )
+    private void createTable(Composite body)
     {
-        final Text txtFilter = new Text( body, SWT.BORDER );
-        GridData data = new GridData( GridData.HORIZONTAL_ALIGN_END );
+        final Text txtFilter = new Text(body, SWT.BORDER);
+        GridData data = new GridData(GridData.HORIZONTAL_ALIGN_END);
         data.horizontalSpan = 2;
         data.widthHint = 400;
-        txtFilter.setLayoutData( data );
+        txtFilter.setLayoutData(data);
 
-        resourceNameTable = new Table( body, SWT.MULTI | SWT.BORDER );
-        data = new GridData( GridData.HORIZONTAL_ALIGN_END );
+        resourceNameTable = new Table(body, SWT.MULTI | SWT.BORDER);
+        data = new GridData(GridData.HORIZONTAL_ALIGN_END);
         data.widthHint = 400;
         data.heightHint = 400;
-        resourceNameTable.setLayoutData( data );
+        resourceNameTable.setLayoutData(data);
 
-        viewer = new TableViewer( resourceNameTable );
+        viewer = new TableViewer(resourceNameTable);
 
-        txtFilter.addKeyListener( new KeyAdapter()
+        txtFilter.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyReleased( KeyEvent e )
+            public void keyReleased(KeyEvent e)
             {
-                switch ( e.keyCode )
+                switch (e.keyCode)
                 {
                     case SWT.ARROW_UP:
-                        scrollTable( -1 );
+                        scrollTable(-1);
                         break;
                     case SWT.ARROW_DOWN:
-                        scrollTable( +1 );
+                        scrollTable(+1);
                         break;
                     default:
-                        Runnable r = new UpdateViewerRunnable( keyCheck.incrementAndGet() );
-                        background.schedule( r, 100, TimeUnit.MILLISECONDS );
+                        Runnable r = new UpdateViewerRunnable(keyCheck.incrementAndGet());
+                        background.schedule(r, 100, TimeUnit.MILLISECONDS);
                         break;
                 }
             }
-        } );
+        });
 
         ViewerFilter filter = new ViewerFilter()
         {
             @Override
-            public boolean select( Viewer viewer, Object parentElement, Object element )
+            public boolean select(Viewer viewer, Object parentElement, Object element)
             {
-                return getLabelProvider().getText( element ).startsWith( txtFilter.getText() );
+                return getLabelProvider().getText(element).startsWith(txtFilter.getText());
             }
         };
 
-        viewer.addFilter( filter );
+        viewer.addFilter(filter);
     }
 
-
-    private void scrollTable( int delta )
+    private void scrollTable(int delta)
     {
         int i = resourceNameTable.getSelectionIndex();
 
-        if ( i == -1 )
+        if (i == -1)
         {
-            if ( delta < 0 )
+            if (delta < 0)
             {
                 i = resourceNameTable.getItemCount() - 1;
             }
@@ -372,87 +357,80 @@ public class ResourceSelectDialog extends Dialog
             i += delta;
         }
 
-        if ( i > -1 && i < resourceNameTable.getItemCount() )
+        if (i > -1 && i < resourceNameTable.getItemCount())
         {
-            Item item = resourceNameTable.getItem( i );
-            resourceNameTable.select( i );
-            selected = new Object[]
-                { item.getData() };
-            ISelection selection = new SingletonSelection( selected );
-            selectionChanged( new SelectionChangedEvent( viewer, selection ) );
-            viewer.reveal( selected );
+            Item item = resourceNameTable.getItem(i);
+            resourceNameTable.select(i);
+            selected = new Object[] { item.getData() };
+            ISelection selection = new SingletonSelection(selected);
+            selectionChanged(new SelectionChangedEvent(viewer, selection));
+            viewer.reveal(selected);
         }
     }
 
-
-    private void setSelected( SelectionChangedEvent event, boolean reveal )
+    private void setSelected(SelectionChangedEvent event, boolean reveal)
     {
-        if ( event.getSelection().isEmpty() )
+        if (event.getSelection().isEmpty())
         {
             selected = null;
-            setErrorMessage( "No resource selected" );
+            setErrorMessage("No resource selected");
         }
         else
         {
-            selected = ( ( IStructuredSelection ) event.getSelection() ).toArray();
-            setErrorMessage( null );
+            selected = ((IStructuredSelection) event.getSelection()).toArray();
+            setErrorMessage(null);
         }
 
-        selectionChanged( event );
+        selectionChanged(event);
 
-        if ( reveal && !event.getSelection().isEmpty() )
+        if (reveal && !event.getSelection().isEmpty())
         {
-            if ( resourceNameCombo != null )
+            if (resourceNameCombo != null)
             {
-                IStructuredSelection sel = ( IStructuredSelection ) event.getSelection();
-                resourceNameCombo.select( resourceNameCombo.indexOf( ( String ) sel.getFirstElement() ) );
+                IStructuredSelection sel = (IStructuredSelection) event.getSelection();
+                resourceNameCombo.select(resourceNameCombo.indexOf((String) sel.getFirstElement()));
             }
             else
             {
-                viewer.setSelection( event.getSelection(), true );
+                viewer.setSelection(event.getSelection(), true);
             }
         }
     }
-
 
     protected ILabelProvider getLabelProvider()
     {
         return labelProvider;
     }
 
-
     public Object[] getSelected()
     {
         return selected;
     }
 
-
-    public void setSelected( Object[] selected )
+    public void setSelected(Object[] selected)
     {
         this.selected = selected;
     }
 
-
-    protected void selectionChanged( SelectionChangedEvent event )
+    protected void selectionChanged(SelectionChangedEvent event)
     {
     }
 
-
-    public void setErrorMessage( String errorMessage )
+    public void setErrorMessage(String errorMessage)
     {
         this.errorMessage = errorMessage;
-        if ( errorMessageText != null && !errorMessageText.isDisposed() )
+        if (errorMessageText != null && !errorMessageText.isDisposed())
         {
-            errorMessageText.setText( errorMessage == null ? " \n " : errorMessage );
+            errorMessageText.setText(errorMessage == null ? " \n " : errorMessage);
             boolean hasError = errorMessage != null
-                && ( StringConverter.removeWhiteSpaces( errorMessage ) ).length() > 0;
-            errorMessageText.setEnabled( hasError );
-            errorMessageText.setVisible( hasError );
+                && (StringConverter.removeWhiteSpaces(errorMessage)).length() > 0;
+            errorMessageText.setEnabled(hasError);
+            errorMessageText.setVisible(hasError);
             errorMessageText.getParent().update();
-            Control ok = getButton( IDialogConstants.OK_ID );
-            if ( ok != null )
+            Control ok = getButton(IDialogConstants.OK_ID);
+            if (ok != null)
             {
-                ok.setEnabled( !hasError );
+                ok.setEnabled(!hasError);
             }
         }
     }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.wizard.project;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.ui.internal.wizard.SigilNewResourceWizard;
 import org.eclipse.core.resources.IFile;
@@ -41,7 +40,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.wizards.newresource.BasicNewProjectResourceWizard;
 
-
 /**
  * @author dave
  *
@@ -54,49 +52,47 @@ public class SigilProjectWizard extends SigilNewResourceWizard implements IExecu
 
     private String name;
 
-    public static final IPath SIGIL_PROJECT_PATH = new Path( SigilCore.SIGIL_PROJECT_FILE );
+    public static final IPath SIGIL_PROJECT_PATH = new Path(SigilCore.SIGIL_PROJECT_FILE);
     private IConfigurationElement config;
 
-
-    public void init( IWorkbench workbench, IStructuredSelection currentSelection )
+    public void init(IWorkbench workbench, IStructuredSelection currentSelection)
     {
-        super.init( workbench, currentSelection );
+        super.init(workbench, currentSelection);
 
         firstPage = new SigilProjectWizardFirstPage();
-        firstPage.setInitialProjectName( name );
-        secondPage = new SigilProjectWizardSecondPage( firstPage );
+        firstPage.setInitialProjectName(name);
+        secondPage = new SigilProjectWizardSecondPage(firstPage);
 
-        addPage( firstPage );
-        addPage( secondPage );
+        addPage(firstPage);
+        addPage(secondPage);
     }
 
-
-    private void finishPage( IProgressMonitor monitor ) throws CoreException, InterruptedException
+    private void finishPage(IProgressMonitor monitor) throws CoreException,
+        InterruptedException
     {
-        secondPage.performFinish( monitor );
+        secondPage.performFinish(monitor);
 
         IProject newProject = firstPage.getProjectHandle();
 
-        if ( newProject != null && newProject.exists() )
+        if (newProject != null && newProject.exists())
         {
-            IFile file = newProject.getFile( SigilProjectWizard.SIGIL_PROJECT_PATH );
+            IFile file = newProject.getFile(SigilProjectWizard.SIGIL_PROJECT_PATH);
 
-            selectRevealAndShow( file );
+            selectRevealAndShow(file);
 
             // don't do this check for now - see FELIX-1924
-//            new Job( "Check OSGi Install" )
-//            {
-//                @Override
-//                protected IStatus run( IProgressMonitor monitor )
-//                {
-//                    // prompt for osgi home if not already set.
-//                    SigilCore.getInstallManager().getDefaultInstall();
-//                    return Status.OK_STATUS;
-//                }
-//            }.schedule();
+            //            new Job( "Check OSGi Install" )
+            //            {
+            //                @Override
+            //                protected IStatus run( IProgressMonitor monitor )
+            //                {
+            //                    // prompt for osgi home if not already set.
+            //                    SigilCore.getInstallManager().getDefaultInstall();
+            //                    return Status.OK_STATUS;
+            //                }
+            //            }.schedule();
         }
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.jface.wizard.Wizard#performFinish()
@@ -108,45 +104,42 @@ public class SigilProjectWizard extends SigilNewResourceWizard implements IExecu
 
         IWorkspaceRunnable op = new IWorkspaceRunnable()
         {
-            public void run( IProgressMonitor monitor ) throws CoreException
+            public void run(IProgressMonitor monitor) throws CoreException
             {
                 try
                 {
-                    finishPage( monitor );
+                    finishPage(monitor);
                 }
-                catch ( InterruptedException e )
+                catch (InterruptedException e)
                 {
-                    throw new OperationCanceledException( e.getMessage() );
+                    throw new OperationCanceledException(e.getMessage());
                 }
             }
         };
 
         try
         {
-            workspace.run( op, Job.getJobManager().createProgressGroup() );
+            workspace.run(op, Job.getJobManager().createProgressGroup());
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to complete project wizard", e );
+            SigilCore.error("Failed to complete project wizard", e);
             return false;
         }
 
-        BasicNewProjectResourceWizard.updatePerspective( config );
+        BasicNewProjectResourceWizard.updatePerspective(config);
         return true;
     }
 
-
-    public void setName( String name )
+    public void setName(String name)
     {
         this.name = name;
     }
-
 
     public String getName()
     {
         return name;
     }
-
 
     @Override
     public boolean performCancel()
@@ -155,9 +148,8 @@ public class SigilProjectWizard extends SigilNewResourceWizard implements IExecu
         return super.performCancel();
     }
 
-
-    public void setInitializationData( IConfigurationElement config, String propertyName, Object data )
-        throws CoreException
+    public void setInitializationData(IConfigurationElement config, String propertyName,
+        Object data) throws CoreException
     {
         this.config = config;
     }

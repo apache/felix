@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.runtime;
 
-
 import java.io.IOException;
 
 import java.net.ConnectException;
@@ -45,49 +44,48 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
-
-public class OSGiLauncher extends AbstractJavaLaunchConfigurationDelegate implements ILaunchConfigurationDelegate,
-    ILaunchConfigurationDelegate2
+public class OSGiLauncher extends AbstractJavaLaunchConfigurationDelegate implements ILaunchConfigurationDelegate, ILaunchConfigurationDelegate2
 {
 
-    public void launch( ILaunchConfiguration config, String mode, ILaunch launch, IProgressMonitor monitor )
-        throws CoreException
+    public void launch(ILaunchConfiguration config, String mode, ILaunch launch,
+        IProgressMonitor monitor) throws CoreException
     {
-        IOSGiInstall osgi = LaunchHelper.getInstall( config );
+        IOSGiInstall osgi = LaunchHelper.getInstall(config);
 
-        VMRunnerConfiguration vmconfig = new VMRunnerConfiguration( Main.class.getName(), buildClasspath( osgi, config ) );
+        VMRunnerConfiguration vmconfig = new VMRunnerConfiguration(Main.class.getName(),
+            buildClasspath(osgi, config));
 
-        String vm = getVMArguments( config );
-        if ( vm != null && vm.trim().length() > 0 )
-            vmconfig.setVMArguments( vm.split( " " ) );
-                
-        IPath path = getWorkingDirectoryPath( config );
-        vmconfig.setWorkingDirectory( path == null ? null : path.toOSString() );
-        
-        vmconfig.setBootClassPath( getBootpath( config ) );
-        vmconfig.setEnvironment( getEnvironment( config ) );
-        vmconfig.setProgramArguments( LaunchHelper.getProgramArgs( config ) );
+        String vm = getVMArguments(config);
+        if (vm != null && vm.trim().length() > 0)
+            vmconfig.setVMArguments(vm.split(" "));
 
-        IVMInstall install = getVMInstall( config );
+        IPath path = getWorkingDirectoryPath(config);
+        vmconfig.setWorkingDirectory(path == null ? null : path.toOSString());
 
-        IVMRunner runner = install.getVMRunner( mode );
+        vmconfig.setBootClassPath(getBootpath(config));
+        vmconfig.setEnvironment(getEnvironment(config));
+        vmconfig.setProgramArguments(LaunchHelper.getProgramArgs(config));
 
-        setDefaultSourceLocator( launch, config );
+        IVMInstall install = getVMInstall(config);
 
-        SigilCore.log( "VM=" + install.getName() );
-        SigilCore.log( "Main=" + vmconfig.getClassToLaunch() );
-        SigilCore.log( "VMArgs=" + Arrays.asList( vmconfig.getVMArguments() ) );
-        SigilCore.log( "Boot Classpath=" + Arrays.asList( vmconfig.getBootClassPath() ) );
-        SigilCore.log( "Classpath=" + Arrays.asList( vmconfig.getClassPath() ) );
-        SigilCore.log( "Args=" + Arrays.asList( vmconfig.getProgramArguments() ) );
-        SigilCore.log( "Working Dir=" + vmconfig.getWorkingDirectory() );
+        IVMRunner runner = install.getVMRunner(mode);
 
-        runner.run( vmconfig, launch, monitor );
+        setDefaultSourceLocator(launch, config);
 
-        Client client = connect( config );
-        
+        SigilCore.log("VM=" + install.getName());
+        SigilCore.log("Main=" + vmconfig.getClassToLaunch());
+        SigilCore.log("VMArgs=" + Arrays.asList(vmconfig.getVMArguments()));
+        SigilCore.log("Boot Classpath=" + Arrays.asList(vmconfig.getBootClassPath()));
+        SigilCore.log("Classpath=" + Arrays.asList(vmconfig.getClassPath()));
+        SigilCore.log("Args=" + Arrays.asList(vmconfig.getProgramArguments()));
+        SigilCore.log("Working Dir=" + vmconfig.getWorkingDirectory());
+
+        runner.run(vmconfig, launch, monitor);
+
+        Client client = connect(config);
+
         BundleForm form = LaunchHelper.getBundleForm(config);
-        
+
         try
         {
             String name = LaunchHelper.getRepositoryManagerName(config);
@@ -99,96 +97,95 @@ public class OSGiLauncher extends AbstractJavaLaunchConfigurationDelegate implem
             throw SigilCore.newCoreException("Failed to apply bundle form", e);
         }
 
-        SigilCore.log( "Connected " + client.isConnected() );
+        SigilCore.log("Connected " + client.isConnected());
     }
 
-
-    private Client connect( ILaunchConfiguration config ) throws CoreException
+    private Client connect(ILaunchConfiguration config) throws CoreException
     {
-        Properties props = LaunchHelper.buildClientProps( config );
+        Properties props = LaunchHelper.buildClientProps(config);
 
-        int retry = LaunchHelper.getRetries( config );
+        int retry = LaunchHelper.getRetries(config);
 
         Client client = null;
 
-        for ( int i = 0; i < retry; i++ )
+        for (int i = 0; i < retry; i++)
         {
             client = new Client();
             try
             {
-                client.connect( props );
+                client.connect(props);
                 break;
             }
-            catch ( ConnectException e )
+            catch (ConnectException e)
             {
-                SigilCore.log( "Failed to connect to client: " + e.getMessage() );
+                SigilCore.log("Failed to connect to client: " + e.getMessage());
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                throw SigilCore.newCoreException( "Failed to connect client", e );
+                throw SigilCore.newCoreException("Failed to connect client", e);
             }
 
             try
             {
-                Thread.sleep( LaunchHelper.getBackoff( config ) );
+                Thread.sleep(LaunchHelper.getBackoff(config));
             }
-            catch ( InterruptedException e )
+            catch (InterruptedException e)
             {
-                SigilCore.log( "Interrupted during backoff" );
+                SigilCore.log("Interrupted during backoff");
             }
         }
 
-        if ( client == null )
+        if (client == null)
         {
-            throw SigilCore.newCoreException( "Failed to connect client after retries, check error log for details",
-                null );
+            throw SigilCore.newCoreException(
+                "Failed to connect client after retries, check error log for details",
+                null);
         }
 
         return client;
     }
 
-
-    public String[] getBootpath( ILaunchConfiguration configuration ) throws CoreException
+    public String[] getBootpath(ILaunchConfiguration configuration) throws CoreException
     {
-        String[] bootpath = super.getBootpath( configuration );
+        String[] bootpath = super.getBootpath(configuration);
 
         ArrayList<String> filtered = new ArrayList<String>();
 
-        if ( bootpath != null )
+        if (bootpath != null)
         {
-            for ( String bp : bootpath )
+            for (String bp : bootpath)
             {
-                if ( !SigilCore.isBundledPath( bp ) )
+                if (!SigilCore.isBundledPath(bp))
                 {
-                    filtered.add( bp );
+                    filtered.add(bp);
                 }
             }
         }
 
-        return filtered.toArray( new String[filtered.size()] );
+        return filtered.toArray(new String[filtered.size()]);
     }
 
-
-    private String[] buildClasspath( IOSGiInstall osgi, ILaunchConfiguration config ) throws CoreException
+    private String[] buildClasspath(IOSGiInstall osgi, ILaunchConfiguration config)
+        throws CoreException
     {
         ArrayList<String> cp = new ArrayList<String>();
 
-        cp.add( Main.class.getProtectionDomain().getCodeSource().getLocation().getFile() );
+        cp.add(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile());
 
-        for ( String c : getClasspath( config ) )
+        for (String c : getClasspath(config))
         {
-            cp.add( c );
+            cp.add(c);
         }
 
-        if ( osgi != null )
+        if (osgi != null)
         {
-            for ( String c : osgi.getType().getClassPath() )
+            for (String c : osgi.getType().getClassPath())
             {
-                cp.add( c );
+                cp.add(c);
             }
         }
 
-        return cp.toArray( new String[cp.size()] );
+        return cp.toArray(new String[cp.size()]);
     }
 
 }

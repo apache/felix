@@ -32,18 +32,19 @@ public abstract class AbstractResource implements Resource
 {
     protected final String bPath;
     protected final IBldProject project;
-    
-    protected AbstractResource(IBldProject project, String bPath) {
-        if (bPath == null) 
+
+    protected AbstractResource(IBldProject project, String bPath)
+    {
+        if (bPath == null)
             throw new NullPointerException();
-        
-        if(project == null)
+
+        if (project == null)
             throw new NullPointerException();
-        
+
         this.bPath = bPath;
         this.project = project;
     }
-    
+
     protected String findFileSystemPath(String fsPath, File[] classpath)
     {
         File resolved = project.resolve(fsPath);

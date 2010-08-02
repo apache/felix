@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 
-
 import org.apache.felix.sigil.common.model.ModelElementFactory;
 import org.apache.felix.sigil.common.model.ModelElementFactoryException;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
@@ -37,62 +36,57 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
-
 public class ImportPackageProposal implements IJavaCompletionProposal
 {
 
     private IPackageExport e;
     private ISigilProjectModel n;
 
-
-    public ImportPackageProposal( IPackageExport e, ISigilProjectModel n )
+    public ImportPackageProposal(IPackageExport e, ISigilProjectModel n)
     {
         this.e = e;
         this.n = n;
     }
-
 
     public int getRelevance()
     {
         return 100;
     }
 
-
-    public void apply( IDocument document )
+    public void apply(IDocument document)
     {
         try
         {
 
-            final IPackageImport i = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
-            i.setPackageName( e.getPackageName() );
+            final IPackageImport i = ModelElementFactory.getInstance().newModelElement(
+                IPackageImport.class);
+            i.setPackageName(e.getPackageName());
             VersionRange selectedVersions = ModelHelper.getDefaultRange(e.getVersion());
-            i.setVersions( selectedVersions );
+            i.setVersions(selectedVersions);
 
             WorkspaceModifyOperation op = new WorkspaceModifyOperation()
             {
                 @Override
-                protected void execute( IProgressMonitor monitor ) throws CoreException
+                protected void execute(IProgressMonitor monitor) throws CoreException
                 {
-                    n.getBundle().getBundleInfo().addImport( i );
-                    n.save( monitor );
+                    n.getBundle().getBundleInfo().addImport(i);
+                    n.save(monitor);
                 }
             };
 
-            SigilUI.runWorkspaceOperation( op, null );
+            SigilUI.runWorkspaceOperation(op, null);
         }
-        catch ( ModelElementFactoryException e )
+        catch (ModelElementFactoryException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-
     public String getAdditionalProposalInfo()
     {
         return null;
     }
-
 
     public IContextInformation getContextInformation()
     {
@@ -100,12 +94,11 @@ public class ImportPackageProposal implements IJavaCompletionProposal
         return null;
     }
 
-
     public String getDisplayString()
     {
-        return "Import package " + e.getPackageName() + " version " + e.getVersion() + " to bundle";
+        return "Import package " + e.getPackageName() + " version " + e.getVersion()
+            + " to bundle";
     }
-
 
     public Image getImage()
     {
@@ -113,8 +106,7 @@ public class ImportPackageProposal implements IJavaCompletionProposal
         return null;
     }
 
-
-    public Point getSelection( IDocument document )
+    public Point getSelection(IDocument document)
     {
         return null;
     }

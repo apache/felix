@@ -19,18 +19,14 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
-
 
 public interface IResolutionMonitor
 {
     boolean isCanceled();
 
+    void startResolution(IModelElement requirement);
 
-    void startResolution( IModelElement requirement );
-
-
-    void endResolution( IModelElement requirement, ISigilBundle sigilBundle );
+    void endResolution(IModelElement requirement, ISigilBundle sigilBundle);
 }

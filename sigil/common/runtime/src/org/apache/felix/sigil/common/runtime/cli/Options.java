@@ -126,7 +126,8 @@ public class Options implements Serializable
      * @param description Self-documenting description
      * @return the resulting Options instance
      */
-    public Options addOption(String opt, String longOpt, boolean hasArg, String description)
+    public Options addOption(String opt, String longOpt, boolean hasArg,
+        String description)
     {
         addOption(new Option(opt, longOpt, hasArg, description));
 

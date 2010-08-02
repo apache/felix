@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.internal.install;
 
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -49,7 +48,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
-
 public class OSGiInstallManager implements IOSGiInstallManager, IPropertyChangeListener
 {
     private static final int NORMAL_PRIORITY = 0;
@@ -63,70 +61,63 @@ public class OSGiInstallManager implements IOSGiInstallManager, IPropertyChangeL
 
     private boolean initialised;
 
-
-    public IOSGiInstall findInstall( String id )
+    public IOSGiInstall findInstall(String id)
     {
         init();
-        return idToInstall.get( id );
+        return idToInstall.get(id);
     }
-
 
     public String[] getInstallIDs()
     {
         init();
-        return idToInstall.keySet().toArray( new String[idToInstall.size()] );
+        return idToInstall.keySet().toArray(new String[idToInstall.size()]);
     }
-
 
     public IOSGiInstall[] getInstalls()
     {
         init();
-        return idToInstall.values().toArray( new IOSGiInstall[idToInstall.size()] );
+        return idToInstall.values().toArray(new IOSGiInstall[idToInstall.size()]);
     }
-
 
     public IOSGiInstall getDefaultInstall()
     {
         init();
-        return findInstall( defaultId );
+        return findInstall(defaultId);
     }
 
-
-    public IOSGiInstallType findInstallType( String location )
+    public IOSGiInstallType findInstallType(String location)
     {
         IOSGiInstallType type = null;
 
         try
         {
-            IOSGiInstall install = buildInstall( "tmp", new Path( location ) );
+            IOSGiInstall install = buildInstall("tmp", new Path(location));
             type = install == null ? null : install.getType();
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to build install", e );
+            SigilCore.error("Failed to build install", e);
         }
 
         return type;
     }
 
-
-    public void propertyChange( PropertyChangeEvent event )
+    public void propertyChange(PropertyChangeEvent event)
     {
-        synchronized ( this )
+        synchronized (this)
         {
-            if ( event.getProperty().equals( SigilCore.OSGI_INSTALLS ) )
+            if (event.getProperty().equals(SigilCore.OSGI_INSTALLS))
             {
                 clearInstalls();
-                String val = ( String ) event.getNewValue();
-                addInstalls( val );
+                String val = (String) event.getNewValue();
+                addInstalls(val);
             }
-            else if ( event.getProperty().equals( SigilCore.OSGI_DEFAULT_INSTALL_ID ) )
+            else if (event.getProperty().equals(SigilCore.OSGI_DEFAULT_INSTALL_ID))
             {
-                defaultId = ( String ) event.getNewValue();
+                defaultId = (String) event.getNewValue();
             }
         }
     }
-
 
     private void init()
     {
@@ -134,124 +125,121 @@ public class OSGiInstallManager implements IOSGiInstallManager, IPropertyChangeL
 
         IPreferenceStore prefs = getPreferenceStore();
 
-        synchronized ( this )
+        synchronized (this)
         {
-            if ( !initialised )
+            if (!initialised)
             {
                 initialised = true;
 
-                prefs.addPropertyChangeListener( this );
+                prefs.addPropertyChangeListener(this);
 
-                String val = prefs.getString( SigilCore.OSGI_INSTALLS );
+                String val = prefs.getString(SigilCore.OSGI_INSTALLS);
 
-                boolean noAsk = prefs.getBoolean( SigilCore.PREFERENCES_NOASK_OSGI_INSTALL );
-                if ( val == null || val.trim().length() == 0 )
+                boolean noAsk = prefs.getBoolean(SigilCore.PREFERENCES_NOASK_OSGI_INSTALL);
+                if (val == null || val.trim().length() == 0)
                 {
                     show = !noAsk;
                 }
                 else
                 {
-                    addInstalls( val );
-                    defaultId = prefs.getString( SigilCore.OSGI_DEFAULT_INSTALL_ID );
+                    addInstalls(val);
+                    defaultId = prefs.getString(SigilCore.OSGI_DEFAULT_INSTALL_ID);
                 }
             }
         }
 
-        if ( show )
+        if (show)
         {
-            showInstallPrefs( prefs );
+            showInstallPrefs(prefs);
         }
     }
 
-
-    private void addInstalls( String prop )
+    private void addInstalls(String prop)
     {
-        if ( prop != null && prop.trim().length() > 0 )
+        if (prop != null && prop.trim().length() > 0)
         {
             IPreferenceStore prefs = getPreferenceStore();
 
-            for ( String id : prop.split( "," ) )
+            for (String id : prop.split(","))
             {
-                String path = prefs.getString( SigilCore.OSGI_INSTALL_PREFIX + id );
-                addInstall( id, new Path( path ) );
+                String path = prefs.getString(SigilCore.OSGI_INSTALL_PREFIX + id);
+                addInstall(id, new Path(path));
             }
         }
     }
-
 
     private IPreferenceStore getPreferenceStore()
     {
         return SigilCore.getDefault().getPreferenceStore();
     }
 
-
-    private void showInstallPrefs( final IPreferenceStore prefs )
+    private void showInstallPrefs(final IPreferenceStore prefs)
     {
         Runnable r = new Runnable()
         {
             public void run()
             {
-                MessageDialogWithToggle questionDialog = MessageDialogWithToggle.openYesNoQuestion( PlatformUI
-                    .getWorkbench().getActiveWorkbenchWindow().getShell(), "Sigil Configuration",
+                MessageDialogWithToggle questionDialog = MessageDialogWithToggle.openYesNoQuestion(
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                    "Sigil Configuration",
                     "Missing OSGi installation. Open preferences to configure it now?",
-                    "Do not show this message again", false, null, null );
-                prefs.setValue( SigilCore.PREFERENCES_NOASK_OSGI_INSTALL, questionDialog.getToggleState() );
-                if ( questionDialog.getReturnCode() == IDialogConstants.YES_ID )
+                    "Do not show this message again", false, null, null);
+                prefs.setValue(SigilCore.PREFERENCES_NOASK_OSGI_INSTALL,
+                    questionDialog.getToggleState());
+                if (questionDialog.getReturnCode() == IDialogConstants.YES_ID)
                 {
-                    PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn( null,
-                        SigilCore.OSGI_INSTALLS_PREFERENCES_ID, null, null );
+                    PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(
+                        null, SigilCore.OSGI_INSTALLS_PREFERENCES_ID, null, null);
                     dialog.open();
                 }
             }
         };
         Display d = Display.getCurrent();
-        if ( d == null )
+        if (d == null)
         {
             d = Display.getDefault();
-            d.asyncExec( r );
+            d.asyncExec(r);
         }
         else
         {
-            d.syncExec( r );
+            d.syncExec(r);
         }
     }
 
-
-    private IOSGiInstall addInstall( String id, IPath path )
+    private IOSGiInstall addInstall(String id, IPath path)
     {
-        IOSGiInstall install = pathToinstall.get( path );
+        IOSGiInstall install = pathToinstall.get(path);
 
-        if ( install == null )
+        if (install == null)
         {
             try
             {
-                install = buildInstall( id, path );
-                if ( install != null )
+                install = buildInstall(id, path);
+                if (install != null)
                 {
-                    pathToinstall.put( path, install );
-                    idToInstall.put( install.getId(), install );
+                    pathToinstall.put(path, install);
+                    idToInstall.put(install.getId(), install);
                 }
             }
-            catch ( CoreException e )
+            catch (CoreException e)
             {
-                SigilCore.error( "Failed to build install for " + path, e );
+                SigilCore.error("Failed to build install for " + path, e);
             }
         }
 
         return install;
     }
 
-
-    private IOSGiInstall buildInstall( String id, IPath path ) throws CoreException
+    private IOSGiInstall buildInstall(String id, IPath path) throws CoreException
     {
         initBuilders();
         IOSGiInstall install = null;
 
-        for ( IOSGiInstallBuilder b : builders )
+        for (IOSGiInstallBuilder b : builders)
         {
-            install = b.build( id, path );
+            install = b.build(id, path);
 
-            if ( install != null )
+            if (install != null)
             {
                 break;
             }
@@ -260,45 +248,43 @@ public class OSGiInstallManager implements IOSGiInstallManager, IPropertyChangeL
         return install;
     }
 
-
     private void clearInstalls()
     {
         idToInstall.clear();
         pathToinstall.clear();
     }
 
-
     private void initBuilders()
     {
-        synchronized ( builders )
+        synchronized (builders)
         {
-            if ( builders.isEmpty() )
+            if (builders.isEmpty())
             {
                 final HashMap<IOSGiInstallBuilder, Integer> tmp = new HashMap<IOSGiInstallBuilder, Integer>();
 
                 IExtensionRegistry registry = Platform.getExtensionRegistry();
-                IExtensionPoint p = registry.getExtensionPoint( SigilCore.INSTALL_BUILDER_EXTENSION_POINT_ID );
-                for ( IExtension e : p.getExtensions() )
+                IExtensionPoint p = registry.getExtensionPoint(SigilCore.INSTALL_BUILDER_EXTENSION_POINT_ID);
+                for (IExtension e : p.getExtensions())
                 {
-                    for ( IConfigurationElement c : e.getConfigurationElements() )
+                    for (IConfigurationElement c : e.getConfigurationElements())
                     {
-                        createBuilderFromElement( c, tmp );
+                        createBuilderFromElement(c, tmp);
                     }
                 }
 
-                builders = new LinkedList<IOSGiInstallBuilder>( tmp.keySet() );
-                Collections.sort( builders, new Comparator<IOSGiInstallBuilder>()
+                builders = new LinkedList<IOSGiInstallBuilder>(tmp.keySet());
+                Collections.sort(builders, new Comparator<IOSGiInstallBuilder>()
                 {
-                    public int compare( IOSGiInstallBuilder o1, IOSGiInstallBuilder o2 )
+                    public int compare(IOSGiInstallBuilder o1, IOSGiInstallBuilder o2)
                     {
-                        int p1 = tmp.get( o1 );
-                        int p2 = tmp.get( o2 );
+                        int p1 = tmp.get(o1);
+                        int p2 = tmp.get(o2);
 
-                        if ( p1 == p2 )
+                        if (p1 == p2)
                         {
                             return 0;
                         }
-                        else if ( p1 > p2 )
+                        else if (p1 > p2)
                         {
                             return -1;
                         }
@@ -307,38 +293,37 @@ public class OSGiInstallManager implements IOSGiInstallManager, IPropertyChangeL
                             return 1;
                         }
                     }
-                } );
+                });
             }
         }
     }
 
-
-    private void createBuilderFromElement( IConfigurationElement c, Map<IOSGiInstallBuilder, Integer> builder )
+    private void createBuilderFromElement(IConfigurationElement c,
+        Map<IOSGiInstallBuilder, Integer> builder)
     {
         try
         {
-            IOSGiInstallBuilder b = ( IOSGiInstallBuilder ) c.createExecutableExtension( "class" );
-            int priority = parsePriority( c );
-            builder.put( b, priority );
+            IOSGiInstallBuilder b = (IOSGiInstallBuilder) c.createExecutableExtension("class");
+            int priority = parsePriority(c);
+            builder.put(b, priority);
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to create builder", e );
+            SigilCore.error("Failed to create builder", e);
         }
     }
 
-
-    private int parsePriority( IConfigurationElement c )
+    private int parsePriority(IConfigurationElement c)
     {
-        String str = c.getAttribute( "priority" );
+        String str = c.getAttribute("priority");
 
-        if ( str == null )
+        if (str == null)
         {
             return NORMAL_PRIORITY;
         }
         else
         {
-            return Integer.parseInt( str );
+            return Integer.parseInt(str);
         }
     }
 }

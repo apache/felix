@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.apache.felix.sigil.common.osgi.VersionTable;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -32,57 +31,51 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.osgi.framework.Version;
 
-
 public class PackageExportDialog extends ResourceSelectDialog
 {
 
     private Text versionText;
     private Version version;
 
-
-    public PackageExportDialog( Shell parentShell, String title, IContentProvider content, ViewerFilter filter,
-        Object scope )
+    public PackageExportDialog(Shell parentShell, String title, IContentProvider content, ViewerFilter filter, Object scope)
     {
-        super( parentShell, content, filter, scope, title, "Package Name:", true );
+        super(parentShell, content, filter, scope, title, "Package Name:", true);
     }
 
-
     @Override
-    protected void createCustom( Composite body )
+    protected void createCustom(Composite body)
     {
-        Label l = new Label( body, SWT.NONE );
-        l.setText( "Version:" );
-        versionText = new Text( body, SWT.BORDER );
-        versionText.addKeyListener( new KeyAdapter()
+        Label l = new Label(body, SWT.NONE);
+        l.setText("Version:");
+        versionText = new Text(body, SWT.BORDER);
+        versionText.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyReleased( KeyEvent e )
+            public void keyReleased(KeyEvent e)
             {
                 try
                 {
-                    version = VersionTable.getVersion( versionText.getText() );
-                    setErrorMessage( null );
+                    version = VersionTable.getVersion(versionText.getText());
+                    setErrorMessage(null);
                 }
-                catch ( IllegalArgumentException ex )
+                catch (IllegalArgumentException ex)
                 {
-                    setErrorMessage( "Invalid version" );
+                    setErrorMessage("Invalid version");
                 }
             }
-        } );
-        if ( version != null )
+        });
+        if (version != null)
         {
-            versionText.setText( version.toString() );
+            versionText.setText(version.toString());
         }
     }
-
 
     public Version getVersion()
     {
         return version;
     }
 
-
-    public void setVersion( Version version )
+    public void setVersion(Version version)
     {
         this.version = version;
     }

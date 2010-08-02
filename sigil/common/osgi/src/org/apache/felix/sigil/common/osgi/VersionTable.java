@@ -33,40 +33,49 @@ import org.osgi.framework.Version;
 public class VersionTable
 {
     private static final WeakHashMap<String, Version> versions = new WeakHashMap<String, Version>();
-    
-    public static Version getVersion(String version) {
-        synchronized( versions ) {
+
+    public static Version getVersion(String version)
+    {
+        synchronized (versions)
+        {
             Version v = versions.get(version);
-            if ( v == null ) {
+            if (v == null)
+            {
                 v = Version.parseVersion(version);
                 versions.put(version, v);
             }
-            
+
             return v;
         }
     }
-    
-    public static Version getVersion(int major, int minor, int micro) {
+
+    public static Version getVersion(int major, int minor, int micro)
+    {
         return getVersion(major, minor, micro, null);
     }
 
-    public static Version getVersion(int major, int minor, int micro, String qualifier) {
+    public static Version getVersion(int major, int minor, int micro, String qualifier)
+    {
         String key;
-        
-        if ( qualifier == null || qualifier.length() == 0 ) {
+
+        if (qualifier == null || qualifier.length() == 0)
+        {
             key = major + "." + minor + "." + micro;
         }
-        else {
-            key = major + "." + minor + "." + micro + "." + qualifier;            
+        else
+        {
+            key = major + "." + minor + "." + micro + "." + qualifier;
         }
-        
-        synchronized( versions ) {
+
+        synchronized (versions)
+        {
             Version v = versions.get(key);
-            if ( v == null ) {
+            if (v == null)
+            {
                 v = new Version(major, minor, micro, qualifier);
                 versions.put(key, v);
             }
-            
+
             return v;
         }
     }

@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-
 
 public class DefaultContentProvider implements IContentProvider
 {
@@ -31,8 +29,7 @@ public class DefaultContentProvider implements IContentProvider
     {
     }
 
-
-    public void inputChanged( Viewer viewer, Object oldInput, Object newInput )
+    public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
     {
     }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.apache.felix.sigil.utils.GlobCompiler;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 
-
 public class ExclusionContentProposalProvider<T> implements IContentProposalProvider
 {
 
@@ -39,46 +37,44 @@ public class ExclusionContentProposalProvider<T> implements IContentProposalProv
     private final IFilter<? super T> filter;
     private final IElementDescriptor<? super T> descriptor;
 
-
-    public ExclusionContentProposalProvider( Collection<? extends T> elements, IFilter<? super T> filter,
-        IElementDescriptor<? super T> descriptor )
+    public ExclusionContentProposalProvider(Collection<? extends T> elements, IFilter<? super T> filter, IElementDescriptor<? super T> descriptor)
     {
         this.elements = elements;
         this.filter = filter;
         this.descriptor = descriptor;
     }
 
-
-    public IContentProposal[] getProposals( String contents, int position )
+    public IContentProposal[] getProposals(String contents, int position)
     {
-        String matchString = contents.substring( 0, position );
-        Pattern pattern = GlobCompiler.compile( matchString );
+        String matchString = contents.substring(0, position);
+        Pattern pattern = GlobCompiler.compile(matchString);
 
         // Get a snapshot of the elements
         T[] elementArray;
-        synchronized ( elements )
+        synchronized (elements)
         {
             @SuppressWarnings("unchecked")
-            T[] temp = ( T[] ) elements.toArray();
+            T[] temp = (T[]) elements.toArray();
             elementArray = temp;
         }
 
         List<IContentProposal> result = new ArrayList<IContentProposal>();
 
-        for ( T element : elementArray )
+        for (T element : elementArray)
         {
-            if ( filter == null || filter.select( element ) )
+            if (filter == null || filter.select(element))
             {
-                IContentProposal proposal = WrappedContentProposal.newInstance( element, descriptor );
-                Matcher matcher = pattern.matcher( proposal.getContent() );
-                if ( matcher.find() )
+                IContentProposal proposal = WrappedContentProposal.newInstance(element,
+                    descriptor);
+                Matcher matcher = pattern.matcher(proposal.getContent());
+                if (matcher.find())
                 {
-                    result.add( proposal );
+                    result.add(proposal);
                 }
             }
         }
 
-        return result.toArray( new IContentProposal[result.size()] );
+        return result.toArray(new IContentProposal[result.size()]);
     }
 
 }

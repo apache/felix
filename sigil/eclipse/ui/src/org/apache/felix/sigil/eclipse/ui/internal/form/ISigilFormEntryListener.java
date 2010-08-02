@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.form;
 
-
 public interface ISigilFormEntryListener
 {
-    void browseButtonSelected( SigilFormEntry form );
+    void browseButtonSelected(SigilFormEntry form);
 
-
-    void textValueChanged( SigilFormEntry form );
+    void textValueChanged(SigilFormEntry form);
 }

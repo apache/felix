@@ -127,16 +127,8 @@ public class PatternOptionBuilder
      */
     public static boolean isValueCode(char ch)
     {
-        return ch == '@'
-                || ch == ':'
-                || ch == '%'
-                || ch == '+'
-                || ch == '#'
-                || ch == '<'
-                || ch == '>'
-                || ch == '*'
-                || ch == '/'
-                || ch == '!';
+        return ch == '@' || ch == ':' || ch == '%' || ch == '+' || ch == '#' || ch == '<'
+            || ch == '>' || ch == '*' || ch == '/' || ch == '!';
     }
 
     /**

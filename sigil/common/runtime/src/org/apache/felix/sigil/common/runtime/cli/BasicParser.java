@@ -39,7 +39,8 @@ public class BasicParser extends Parser
      * when an non option is found.
      * @return The <code>arguments</code> String array.
      */
-    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    protected String[] flatten(Options options, String[] arguments,
+        boolean stopAtNonOption)
     {
         // just echo the arguments
         return arguments;

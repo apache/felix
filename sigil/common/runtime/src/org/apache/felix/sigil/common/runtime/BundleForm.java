@@ -41,31 +41,34 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
 public class BundleForm
-{    
-    public interface Resolver {
+{
+    public interface Resolver
+    {
         URI[] resolve(URI base) throws URISyntaxException;
     }
-    
-    public interface ResolutionContext {
+
+    public interface ResolutionContext
+    {
         Resolver findResolver(URI uri);
     }
-    
-    private static final Resolver NULL_RESOLVER = new Resolver() {
+
+    private static final Resolver NULL_RESOLVER = new Resolver()
+    {
 
         public URI[] resolve(URI base)
         {
             return new URI[] { base };
         }
-        
+
     };
     private static final ResolutionContext NULL_CONTEXT = new ResolutionContext()
-    {      
+    {
         public Resolver findResolver(URI uri)
         {
             return NULL_RESOLVER;
         }
     };
-    
+
     public static class BundleStatus
     {
         private String location;
@@ -73,99 +76,111 @@ public class BundleForm
         private String version;
         private long id;
         private int status;
-        
+
         public String getLocation()
         {
             return location;
         }
-        
+
         public void setLocation(String location)
         {
             this.location = location;
         }
-        
+
         public String getBundleSymbolicName()
         {
             return bundleSymbolicName;
         }
-        
+
         public void setBundleSymbolicName(String bundleSymbolicName)
         {
             this.bundleSymbolicName = bundleSymbolicName;
         }
-        
+
         public String getVersion()
         {
             return version;
         }
-        
+
         public void setVersion(String version)
         {
             this.version = version;
         }
-        
+
         public long getId()
         {
             return id;
         }
-        
+
         public void setId(long id)
         {
             this.id = id;
         }
-        
+
         public void setStatus(int status)
         {
             this.status = status;
-        }    
-        
-        public int getStatus() {
+        }
+
+        public int getStatus()
+        {
             return status;
         }
 
         public boolean isMatch(BundleStatus n)
         {
-            return bundleSymbolicName.equals( n.bundleSymbolicName ) && version.equals(n.version);
+            return bundleSymbolicName.equals(n.bundleSymbolicName)
+                && version.equals(n.version);
         }
     }
-    
+
     private URI[] bundles;
     private Set<URI> startMap = new HashSet<URI>();
 
-    public BundleForm() {
+    public BundleForm()
+    {
     }
-    
-    public BundleStatus[] resolve(ResolutionContext ctx) throws IOException, URISyntaxException {
-        if ( ctx == null ) {
+
+    public BundleStatus[] resolve(ResolutionContext ctx) throws IOException,
+        URISyntaxException
+    {
+        if (ctx == null)
+        {
             ctx = NULL_CONTEXT;
         }
-        
+
         ArrayList<BundleStatus> ret = new ArrayList<BundleStatus>(bundles.length);
-        
-        for ( int i = 0; i < bundles.length; i++ ) {
+
+        for (int i = 0; i < bundles.length; i++)
+        {
             Resolver resolver = ctx.findResolver(bundles[i]);
-            if ( resolver == null ) {
+            if (resolver == null)
+            {
                 resolver = NULL_RESOLVER;
             }
             URI[] resolved = resolver.resolve(bundles[i]);
-            for ( URI uri : resolved ) {
+            for (URI uri : resolved)
+            {
                 BundleStatus bundle = toBundle(uri, isStarted(bundles[i]));
-                if ( bundle == null ) {
+                if (bundle == null)
+                {
                     throw new IllegalStateException("Failed to read bundle " + uri);
                 }
-                ret.add( bundle );
+                ret.add(bundle);
             }
         }
-        
-        return ret.toArray(new BundleStatus[ret.size()] );
+
+        return ret.toArray(new BundleStatus[ret.size()]);
 
     }
-    
+
     private BundleStatus toBundle(URI uri, boolean started) throws IOException
     {
-        try {
+        try
+        {
             Manifest mf = findManifest(uri);
-            if ( mf == null ) return null;
+            if (mf == null)
+                return null;
             Attributes attr = mf.getMainAttributes();
             String bsn = attr.getValue(Constants.BUNDLE_SYMBOLICNAME);
             String ver = attr.getValue(Constants.BUNDLE_VERSION);
@@ -176,7 +191,8 @@ public class BundleForm
             st.setStatus(started ? Bundle.ACTIVE : Bundle.INSTALLED);
             return st;
         }
-        catch (IllegalArgumentException e) {
+        catch (IllegalArgumentException e)
+        {
             throw new IllegalArgumentException("Invalid uri " + uri, e);
         }
     }
@@ -185,71 +201,90 @@ public class BundleForm
     {
         Manifest mf = null;
 
-        try {
+        try
+        {
             File f = new File(uri);
-            if ( f.isDirectory() ) {
-                f = new File(f, "META-INF/MANIFEST.MF" );
-                if ( f.isFile() ) {
+            if (f.isDirectory())
+            {
+                f = new File(f, "META-INF/MANIFEST.MF");
+                if (f.isFile())
+                {
                     FileInputStream fin = new FileInputStream(f);
-                    try {
+                    try
+                    {
                         mf = new Manifest(fin);
                     }
-                    finally { 
+                    finally
+                    {
                         fin.close();
                     }
                 }
             }
         }
-        catch (IllegalArgumentException e) {
+        catch (IllegalArgumentException e)
+        {
             // fine
         }
-        
-        if ( mf == null) {
+
+        if (mf == null)
+        {
             InputStream in = uri.toURL().openStream();
-            try {
+            try
+            {
                 JarInputStream jin = new JarInputStream(in);
                 mf = jin.getManifest();
-                if ( mf == null ) {
-                    for(;;) {
+                if (mf == null)
+                {
+                    for (;;)
+                    {
                         JarEntry entry = jin.getNextJarEntry();
-                        if ( entry == null ) break;
-                        if ( "META-INF/MANIFEST.MF".equals(entry.getName()) ) {
+                        if (entry == null)
+                            break;
+                        if ("META-INF/MANIFEST.MF".equals(entry.getName()))
+                        {
                             mf = new Manifest(jin);
                             break;
                         }
                     }
                 }
-                
+
             }
-            finally {
+            finally
+            {
                 in.close();
             }
         }
         return mf;
     }
 
-    public static BundleForm create(URL formURL) throws IOException, URISyntaxException {
+    public static BundleForm create(URL formURL) throws IOException, URISyntaxException
+    {
         InputStream in = formURL.openStream();
-        try {
+        try
+        {
             BundleForm f = new BundleForm();
             BufferedReader r = new BufferedReader(new InputStreamReader(in));
             LinkedList<URI> locs = new LinkedList<URI>();
-            for(;;) {
+            for (;;)
+            {
                 String l = r.readLine();
-                if ( l == null ) break;
+                if (l == null)
+                    break;
                 l = l.trim();
-                if ( !l.startsWith( "#" ) ) {
+                if (!l.startsWith("#"))
+                {
                     URI uri = URI.create(l);
                     String status = uri.getScheme();
                     uri = URI.create(uri.getSchemeSpecificPart());
-                    locs.add( uri );
-                    f.setStarted(uri, "start".equalsIgnoreCase(status) );
+                    locs.add(uri);
+                    f.setStarted(uri, "start".equalsIgnoreCase(status));
                 }
             }
             f.setBundles(locs.toArray(new URI[locs.size()]));
             return f;
         }
-        finally {
+        finally
+        {
             try
             {
                 in.close();
@@ -262,10 +297,11 @@ public class BundleForm
         }
     }
 
-    public void setBundles(URI[] bundles) {
+    public void setBundles(URI[] bundles)
+    {
         this.bundles = bundles;
     }
-    
+
     public URI[] getBundles()
     {
         return bundles;
@@ -275,13 +311,16 @@ public class BundleForm
     {
         return startMap.contains(uri);
     }
-    
-    public void setStarted(URI uri, boolean started) {
-        if ( started ) {
+
+    public void setStarted(URI uri, boolean started)
+    {
+        if (started)
+        {
             startMap.add(uri);
         }
-        else {
+        else
+        {
             startMap.remove(uri);
         }
-    }    
+    }
 }

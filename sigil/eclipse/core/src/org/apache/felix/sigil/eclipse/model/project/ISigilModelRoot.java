@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.model.project;
 
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -30,15 +29,14 @@ import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-
 public interface ISigilModelRoot
 {
     List<ISigilProjectModel> getProjects();
 
+    Set<ISigilProjectModel> resolveDependentProjects(
+        Collection<ICapabilityModelElement> caps, IProgressMonitor monitor);
 
-    Set<ISigilProjectModel> resolveDependentProjects( Collection<ICapabilityModelElement> caps, IProgressMonitor monitor );
-
-
-    Collection<ISigilBundle> resolveBundles( ISigilProjectModel sigil, IModelElement element, boolean includeOptional,
-        IProgressMonitor monitor ) throws CoreException;
+    Collection<ISigilBundle> resolveBundles(ISigilProjectModel sigil,
+        IModelElement element, boolean includeOptional, IProgressMonitor monitor)
+        throws CoreException;
 }

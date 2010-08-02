@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilPage;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilSection;
@@ -31,42 +30,40 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.eclipse.ui.forms.widgets.Section;
 
-
 public class ContentSummarySection extends SigilSection
 {
 
-    public ContentSummarySection( SigilPage page, Composite parent, ISigilProjectModel project ) throws CoreException
+    public ContentSummarySection(SigilPage page, Composite parent, ISigilProjectModel project) throws CoreException
     {
-        super( page, parent, project );
+        super(page, parent, project);
     }
 
-
     @Override
-    protected void createSection( Section section, FormToolkit toolkit )
+    protected void createSection(Section section, FormToolkit toolkit)
     {
-        setTitle( "Project Content" );
+        setTitle("Project Content");
 
-        Composite body = createTableWrapBody( 2, toolkit );
-        Hyperlink link = toolkit.createHyperlink( body, "Contents:", SWT.NONE );
-        link.setHref( ContentsForm.PAGE_ID );
-        link.addHyperlinkListener( this );
-        toolkit.createLabel( body, "Manage the content that this bundle provides." );
+        Composite body = createTableWrapBody(2, toolkit);
+        Hyperlink link = toolkit.createHyperlink(body, "Contents:", SWT.NONE);
+        link.setHref(ContentsForm.PAGE_ID);
+        link.addHyperlinkListener(this);
+        toolkit.createLabel(body, "Manage the content that this bundle provides.");
 
-        link = toolkit.createHyperlink( body, "Dependencies:", SWT.NONE );
-        link.setHref( DependenciesForm.PAGE_ID );
-        link.addHyperlinkListener( this );
-        toolkit.createLabel( body, "Manage the dependencies that this bundle needs to run." );
+        link = toolkit.createHyperlink(body, "Dependencies:", SWT.NONE);
+        link.setHref(DependenciesForm.PAGE_ID);
+        link.addHyperlinkListener(this);
+        toolkit.createLabel(body,
+            "Manage the dependencies that this bundle needs to run.");
 
-        link = toolkit.createHyperlink( body, "Exports:", SWT.NONE );
-        link.setHref( ExportsForm.PAGE_ID );
-        link.addHyperlinkListener( this );
-        toolkit.createLabel( body, "Manage the resources that this bundle exports." );
+        link = toolkit.createHyperlink(body, "Exports:", SWT.NONE);
+        link.setHref(ExportsForm.PAGE_ID);
+        link.addHyperlinkListener(this);
+        toolkit.createLabel(body, "Manage the resources that this bundle exports.");
     }
 
-
     @Override
-    public void linkActivated( HyperlinkEvent e )
+    public void linkActivated(HyperlinkEvent e)
     {
-        getPage().getEditor().setActivePage( ( String ) e.getHref() );
+        getPage().getEditor().setActivePage((String) e.getHref());
     }
 }

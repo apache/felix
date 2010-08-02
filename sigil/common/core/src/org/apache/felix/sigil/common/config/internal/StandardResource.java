@@ -49,12 +49,14 @@ public class StandardResource extends AbstractResource
     {
         return fsPath == null ? bPath : fsPath;
     }
-    
+
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append(bPath);
-        if (fsPath != null) {
+        if (fsPath != null)
+        {
             sb.append('=');
             sb.append(fsPath);
         }
@@ -76,7 +78,7 @@ public class StandardResource extends AbstractResource
         sb.append(bPath);
         sb.append('=');
         sb.append(fsp);
-        
+
         return sb.toString();
     }
 

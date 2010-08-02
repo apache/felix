@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime.io;
 
-
 import java.io.DataInputStream;
 
 import java.io.DataOutputStream;
@@ -34,7 +33,6 @@ import static org.apache.felix.sigil.common.runtime.io.Constants.STATUS;
 import static org.osgi.framework.Constants.BUNDLE_VERSION;
 import static org.osgi.framework.Constants.BUNDLE_NAME;
 
-
 /**
  * @author dave
  *
@@ -42,21 +40,21 @@ import static org.osgi.framework.Constants.BUNDLE_NAME;
 public class StatusAction extends Action<Void, BundleStatus[]>
 {
 
-    public StatusAction( DataInputStream in, DataOutputStream out ) throws IOException
+    public StatusAction(DataInputStream in, DataOutputStream out) throws IOException
     {
-        super( in, out );
+        super(in, out);
     }
 
-
     @Override
-    public BundleStatus[] client( Void in ) throws IOException
+    public BundleStatus[] client(Void in) throws IOException
     {
         writeInt(STATUS);
         flush();
         int num = readInt();
         ArrayList<BundleStatus> ret = new ArrayList<BundleStatus>(num);
-        
-        for (int i = 0; i < num; i++) {
+
+        for (int i = 0; i < num; i++)
+        {
             BundleStatus s = new BundleStatus();
             s.setId(readLong());
             s.setBundleSymbolicName(readString());
@@ -65,29 +63,29 @@ public class StatusAction extends Action<Void, BundleStatus[]>
             s.setStatus(readInt());
             ret.add(s);
         }
-        
+
         return ret.toArray(new BundleStatus[num]);
     }
 
-
     @Override
-    public void server( Framework fw ) throws IOException
+    public void server(Framework fw) throws IOException
     {
-        log( "Read status" );
+        log("Read status");
         Bundle[] bundles = fw.getBundleContext().getBundles();
-        writeInt( bundles.length );
-        for ( Bundle b : bundles ) {
+        writeInt(bundles.length);
+        for (Bundle b : bundles)
+        {
             writeLong(b.getBundleId());
             String bsn = b.getSymbolicName();
-            if ( bsn == null )
+            if (bsn == null)
                 bsn = (String) b.getHeaders().get(BUNDLE_NAME);
-            
+
             writeString(bsn);
-            writeString((String) b.getHeaders().get( BUNDLE_VERSION ));
+            writeString((String) b.getHeaders().get(BUNDLE_VERSION));
             writeString(b.getLocation());
             writeInt(b.getState());
             flush();
         }
-        flush();        
+        flush();
     }
 }

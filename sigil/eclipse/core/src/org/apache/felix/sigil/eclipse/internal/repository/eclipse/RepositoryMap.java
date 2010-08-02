@@ -33,21 +33,20 @@ public class RepositoryMap
         final Properties pref;
         final IBundleRepository repo;
 
-
-        RepositoryCache( Properties pref, IBundleRepository repo )
+        RepositoryCache(Properties pref, IBundleRepository repo)
         {
             this.pref = pref;
             this.repo = repo;
         }
     }
-    
+
     private HashMap<String, RepositoryCache> cachedRepositories = new HashMap<String, RepositoryCache>();
 
     synchronized void retainAll(Collection<String> ids)
     {
-        for ( Iterator<String> i = cachedRepositories.keySet().iterator(); i.hasNext(); )
+        for (Iterator<String> i = cachedRepositories.keySet().iterator(); i.hasNext();)
         {
-            if ( !ids.contains( i.next() ) )
+            if (!ids.contains(i.next()))
             {
                 i.remove();
             }
@@ -63,8 +62,7 @@ public class RepositoryMap
     synchronized void put(String id, RepositoryCache cache)
     {
         // TODO Auto-generated method stub
-        
-    }
 
+    }
 
 }

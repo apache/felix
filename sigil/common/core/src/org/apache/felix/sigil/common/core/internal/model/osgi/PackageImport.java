@@ -19,14 +19,12 @@
 
 package org.apache.felix.sigil.common.core.internal.model.osgi;
 
-
 import org.apache.felix.sigil.common.model.AbstractModelElement;
 import org.apache.felix.sigil.common.model.ICapabilityModelElement;
 import org.apache.felix.sigil.common.model.InvalidModelException;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.osgi.VersionRange;
-
 
 public class PackageImport extends AbstractModelElement implements IPackageImport
 {
@@ -41,102 +39,90 @@ public class PackageImport extends AbstractModelElement implements IPackageImpor
     private boolean dependency = true;
     private OSGiImport osgiImport = OSGiImport.AUTO;
 
-
     public PackageImport()
     {
-        super( "OSGi Package Import" );
+        super("OSGi Package Import");
     }
-
 
     @Override
     public void checkValid() throws InvalidModelException
     {
-        if ( name == null )
+        if (name == null)
         {
-            throw new InvalidModelException( this, "Package name must be set" );
+            throw new InvalidModelException(this, "Package name must be set");
         }
     }
-
 
     public boolean isOptional()
     {
         return optional;
     }
 
-
-    public void setOptional( boolean optional )
+    public void setOptional(boolean optional)
     {
         this.optional = optional;
     }
-
 
     public boolean isDependency()
     {
         return dependency;
     }
 
-
-    public void setDependency( boolean dependency )
+    public void setDependency(boolean dependency)
     {
         this.dependency = dependency;
     }
-
 
     public OSGiImport getOSGiImport()
     {
         return osgiImport;
     }
 
-
-    public void setOSGiImport( OSGiImport osgiHeader )
+    public void setOSGiImport(OSGiImport osgiHeader)
     {
         this.osgiImport = osgiHeader;
     }
-
 
     public String getPackageName()
     {
         return name;
     }
 
-
-    public void setPackageName( String name )
+    public void setPackageName(String name)
     {
         this.name = name;
     }
-
 
     public VersionRange getVersions()
     {
         return versions;
     }
 
-
-    public void setVersions( VersionRange versions )
+    public void setVersions(VersionRange versions)
     {
         this.versions = versions == null ? VersionRange.ANY_VERSION : versions;
     }
 
-
     @Override
     public String toString()
     {
-        return "Package-Import[" + name + ":" + versions + ":" + ( optional ? "optional" : "mandatory" ) + "]";
+        return "Package-Import[" + name + ":" + versions + ":"
+            + (optional ? "optional" : "mandatory") + "]";
     }
 
-
     @Override
-    public boolean equals( Object obj )
+    public boolean equals(Object obj)
     {
-        if ( this == obj )
+        if (this == obj)
             return true;
-        if ( obj == null )
+        if (obj == null)
             return false;
 
-        if ( obj instanceof PackageImport )
+        if (obj instanceof PackageImport)
         {
-            PackageImport pi = ( PackageImport ) obj;
-            return name.equals( pi.name ) && versions.equals( pi.versions ) && optional == pi.optional;
+            PackageImport pi = (PackageImport) obj;
+            return name.equals(pi.name) && versions.equals(pi.versions)
+                && optional == pi.optional;
         }
         else
         {
@@ -144,13 +130,12 @@ public class PackageImport extends AbstractModelElement implements IPackageImpor
         }
     }
 
-
     @Override
     public int hashCode()
     {
         int hc = name.hashCode() * versions.hashCode();
 
-        if ( optional )
+        if (optional)
         {
             hc *= -1;
         }
@@ -158,13 +143,12 @@ public class PackageImport extends AbstractModelElement implements IPackageImpor
         return hc;
     }
 
-
-    public boolean accepts( ICapabilityModelElement provider )
+    public boolean accepts(ICapabilityModelElement provider)
     {
-        if ( provider instanceof IPackageExport )
+        if (provider instanceof IPackageExport)
         {
-            IPackageExport pe = ( IPackageExport ) provider;
-            return pe.getPackageName().equals( name ) && versions.contains( pe.getVersion() );
+            IPackageExport pe = (IPackageExport) provider;
+            return pe.getPackageName().equals(name) && versions.contains(pe.getVersion());
         }
         else
         {
@@ -172,25 +156,23 @@ public class PackageImport extends AbstractModelElement implements IPackageImpor
         }
     }
 
-
-    public int compareTo( IPackageImport o )
+    public int compareTo(IPackageImport o)
     {
-        int i = name.compareTo( o.getPackageName() );
+        int i = name.compareTo(o.getPackageName());
 
-        if ( i == 0 )
+        if (i == 0)
         {
-            i = compareVersion( o.getVersions() );
+            i = compareVersion(o.getVersions());
         }
 
         return i;
     }
 
-
-    private int compareVersion( VersionRange range )
+    private int compareVersion(VersionRange range)
     {
-        if ( versions == null )
+        if (versions == null)
         {
-            if ( range == null )
+            if (range == null)
             {
                 return 0;
             }
@@ -201,13 +183,13 @@ public class PackageImport extends AbstractModelElement implements IPackageImpor
         }
         else
         {
-            if ( range == null )
+            if (range == null)
             {
                 return -1;
             }
             else
             {
-                return versions.getCeiling().compareTo( range.getCeiling() );
+                return versions.getCeiling().compareTo(range.getCeiling());
             }
         }
     }

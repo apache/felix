@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.obr.impl;
 
-
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,7 +48,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
-
 final class OBRHandler extends DefaultHandler
 {
     private static final String PACKAGE = "package";
@@ -67,175 +65,178 @@ final class OBRHandler extends DefaultHandler
     private IPackageExport export;
     private int depth;
 
-
-    public OBRHandler( URL obrURL, File bundleCache, OBRListener listener )
+    public OBRHandler(URL obrURL, File bundleCache, OBRListener listener)
     {
         this.obrURL = obrURL;
         this.cacheDir = bundleCache;
         this.listener = listener;
     }
 
-
-    public void setDocumentLocator( Locator locator )
+    public void setDocumentLocator(Locator locator)
     {
         this.locator = locator;
     }
 
-
-    public void startElement( String uri, String localName, String qName, Attributes attributes ) throws SAXException
+    public void startElement(String uri, String localName, String qName,
+        Attributes attributes) throws SAXException
     {
-        if ( depth++ == 0 && !"repository".equals( qName ) ) {
-            throw new SAXParseException("Invalid OBR document, expected repository top level element", locator);
-        }
-        else if ( "resource".equals( qName ) )
+        if (depth++ == 0 && !"repository".equals(qName))
         {
-            startResource( attributes );
+            throw new SAXParseException(
+                "Invalid OBR document, expected repository top level element", locator);
         }
-        else if ( "capability".equals( qName ) )
+        else if ("resource".equals(qName))
         {
-            startCapability( attributes );
+            startResource(attributes);
         }
-        else if ( "require".equals( qName ) )
+        else if ("capability".equals(qName))
         {
-            startRequire( attributes );
+            startCapability(attributes);
         }
-        else if ( "p".equals( qName ) )
+        else if ("require".equals(qName))
         {
-            startProperty( attributes );
+            startRequire(attributes);
+        }
+        else if ("p".equals(qName))
+        {
+            startProperty(attributes);
         }
     }
 
-
-    public void endElement( String uri, String localName, String qName ) throws SAXException
+    public void endElement(String uri, String localName, String qName)
+        throws SAXException
     {
         depth--;
-        if ( "resource".equals( qName ) )
+        if ("resource".equals(qName))
         {
             endResource();
         }
-        else if ( "capability".equals( qName ) )
+        else if ("capability".equals(qName))
         {
             endCapability();
         }
-        else if ( "require".equals( qName ) )
+        else if ("require".equals(qName))
         {
             endRequire();
         }
-        else if ( "p".equals( qName ) )
+        else if ("p".equals(qName))
         {
             endProperty();
         }
     }
 
-
-    private void startResource( Attributes attributes ) throws SAXException
+    private void startResource(Attributes attributes) throws SAXException
     {
         try
         {
-            String uri = attributes.getValue( "", URI );
-            if ( uri.endsWith( ".jar" ) )
+            String uri = attributes.getValue("", URI);
+            if (uri.endsWith(".jar"))
             {
-                if ( !sanity.add( uri ) )
+                if (!sanity.add(uri))
                 {
-                    throw new RuntimeException( uri );
+                    throw new RuntimeException(uri);
                 }
-                ISigilBundle b = ModelElementFactory.getInstance().newModelElement( ISigilBundle.class );
-                IBundleModelElement info = ModelElementFactory.getInstance()
-                    .newModelElement( IBundleModelElement.class );
-                info.setSymbolicName( attributes.getValue( "", SYMBOLIC_NAME ) );
-                info.setVersion( VersionTable.getVersion(attributes.getValue( "", VERSION ) ) );
-                info.setName( attributes.getValue( "", PRESENTATION_NAME ) );
-                URI l = makeAbsolute( uri );
-                info.setUpdateLocation( l );
-                if ( "file".equals(  l.getScheme() ) ) {
-                    b.setLocation( new File( l ) );
+                ISigilBundle b = ModelElementFactory.getInstance().newModelElement(
+                    ISigilBundle.class);
+                IBundleModelElement info = ModelElementFactory.getInstance().newModelElement(
+                    IBundleModelElement.class);
+                info.setSymbolicName(attributes.getValue("", SYMBOLIC_NAME));
+                info.setVersion(VersionTable.getVersion(attributes.getValue("", VERSION)));
+                info.setName(attributes.getValue("", PRESENTATION_NAME));
+                URI l = makeAbsolute(uri);
+                info.setUpdateLocation(l);
+                if ("file".equals(l.getScheme()))
+                {
+                    b.setLocation(new File(l));
                 }
-                else {
-                    b.setLocation( cachePath( info ) );
+                else
+                {
+                    b.setLocation(cachePath(info));
                 }
-                b.setBundleInfo( info );
+                b.setBundleInfo(info);
                 bundle = b;
             }
         }
-        catch ( Exception e )
+        catch (Exception e)
         {
-            throw new SAXParseException( "Failed to build bundle info", locator, e );
+            throw new SAXParseException("Failed to build bundle info", locator, e);
         }
     }
 
-
-    private URI makeAbsolute( String uri ) throws URISyntaxException
+    private URI makeAbsolute(String uri) throws URISyntaxException
     {
-        URI l = new URI( uri );
-        if ( !l.isAbsolute() )
+        URI l = new URI(uri);
+        if (!l.isAbsolute())
         {
             String base = obrURL.toExternalForm();
-            int i = base.lastIndexOf( "/" );
-            if ( i != -1 )
+            int i = base.lastIndexOf("/");
+            if (i != -1)
             {
-                base = base.substring( 0, i );
-                l = new URI( base + ( uri.startsWith( "/" ) ? "" : "/" ) + uri );
+                base = base.substring(0, i);
+                l = new URI(base + (uri.startsWith("/") ? "" : "/") + uri);
             }
         }
         return l;
     }
 
-
-    private File cachePath( IBundleModelElement info )
+    private File cachePath(IBundleModelElement info)
     {
-        return new File( cacheDir, info.getSymbolicName() + "_" + info.getVersion() + ".jar" );
+        return new File(cacheDir, info.getSymbolicName() + "_" + info.getVersion()
+            + ".jar");
     }
 
-
-    private void startCapability( Attributes attributes )
+    private void startCapability(Attributes attributes)
     {
-        if ( bundle != null )
+        if (bundle != null)
         {
-            if ( PACKAGE.equals( attributes.getValue( "", "name" ) ) )
+            if (PACKAGE.equals(attributes.getValue("", "name")))
             {
-                export = ModelElementFactory.getInstance().newModelElement( IPackageExport.class );
+                export = ModelElementFactory.getInstance().newModelElement(
+                    IPackageExport.class);
             }
         }
     }
 
-
-    private void startRequire( Attributes attributes ) throws SAXParseException
+    private void startRequire(Attributes attributes) throws SAXParseException
     {
-        if ( bundle != null )
+        if (bundle != null)
         {
-            String name = attributes.getValue( "name" );
-            if ( PACKAGE.equals( name ) )
+            String name = attributes.getValue("name");
+            if (PACKAGE.equals(name))
             {
-                IPackageImport pi = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
+                IPackageImport pi = ModelElementFactory.getInstance().newModelElement(
+                    IPackageImport.class);
                 try
                 {
-                    LDAPExpr expr = LDAPParser.parseExpression( attributes.getValue( "filter" ) );
-                    pi.setPackageName( decodePackage( expr, locator ) );
-                    pi.setVersions( decodeVersions( expr, locator ) );
-                    pi.setOptional( Boolean.valueOf( attributes.getValue( "optional" ) ) );
-                    bundle.getBundleInfo().addImport( pi );
+                    LDAPExpr expr = LDAPParser.parseExpression(attributes.getValue("filter"));
+                    pi.setPackageName(decodePackage(expr, locator));
+                    pi.setVersions(decodeVersions(expr, locator));
+                    pi.setOptional(Boolean.valueOf(attributes.getValue("optional")));
+                    bundle.getBundleInfo().addImport(pi);
                 }
-                catch ( LDAPParseException e )
+                catch (LDAPParseException e)
                 {
-                    throw new SAXParseException( "Failed to parse filter", locator, e );
+                    throw new SAXParseException("Failed to parse filter", locator, e);
                 }
             }
-            else if ( "bundle".equals( name ) )
+            else if ("bundle".equals(name))
             {
-                IRequiredBundle b = ModelElementFactory.getInstance().newModelElement( IRequiredBundle.class );
+                IRequiredBundle b = ModelElementFactory.getInstance().newModelElement(
+                    IRequiredBundle.class);
                 try
                 {
-                    LDAPExpr expr = LDAPParser.parseExpression( attributes.getValue( "filter" ) );
-                    b.setSymbolicName( decodeSymbolicName( expr, locator ) );
-                    b.setVersions( decodeVersions( expr, locator ) );
-                    b.setOptional( Boolean.valueOf( attributes.getValue( "optional" ) ) );
-                    bundle.getBundleInfo().addRequiredBundle( b );
+                    LDAPExpr expr = LDAPParser.parseExpression(attributes.getValue("filter"));
+                    b.setSymbolicName(decodeSymbolicName(expr, locator));
+                    b.setVersions(decodeVersions(expr, locator));
+                    b.setOptional(Boolean.valueOf(attributes.getValue("optional")));
+                    bundle.getBundleInfo().addRequiredBundle(b);
                 }
-                catch ( Exception e )
+                catch (Exception e)
                 {
-                    System.err.println( "Failed to parse filter in bundle " + bundle.getBundleInfo().getSymbolicName() );
-                    throw new SAXParseException( "Failed to parse filter in bundle "
-                        + bundle.getBundleInfo().getSymbolicName(), locator, e );
+                    System.err.println("Failed to parse filter in bundle "
+                        + bundle.getBundleInfo().getSymbolicName());
+                    throw new SAXParseException("Failed to parse filter in bundle "
+                        + bundle.getBundleInfo().getSymbolicName(), locator, e);
                 }
             }
             //else if ( "ee".equals( name ) ) {
@@ -252,65 +253,61 @@ final class OBRHandler extends DefaultHandler
         }
     }
 
-
-    private static VersionRange decodeVersions( LDAPExpr expr, Locator locator ) throws SAXParseException
+    private static VersionRange decodeVersions(LDAPExpr expr, Locator locator)
+        throws SAXParseException
     {
         try
         {
-            return VersionRangeHelper.decodeVersions( expr );
+            return VersionRangeHelper.decodeVersions(expr);
         }
-        catch ( NumberFormatException e )
+        catch (NumberFormatException e)
         {
-            throw new SAXParseException( e.getMessage(), locator );
+            throw new SAXParseException(e.getMessage(), locator);
         }
     }
 
-
-    private void startProperty( Attributes attributes )
+    private void startProperty(Attributes attributes)
     {
-        if ( export != null )
+        if (export != null)
         {
-            String name = attributes.getValue( "", "n" );
-            String value = attributes.getValue( "", "v" );
-            if ( PACKAGE.equals( name ) )
+            String name = attributes.getValue("", "n");
+            String value = attributes.getValue("", "v");
+            if (PACKAGE.equals(name))
             {
-                export.setPackageName( value );
+                export.setPackageName(value);
             }
-            else if ( "uses".equals( name ) )
+            else if ("uses".equals(name))
             {
-                String[] split = value.split( "," );
-                export.setUses( Arrays.asList( split ) );
+                String[] split = value.split(",");
+                export.setUses(Arrays.asList(split));
             }
-            else if ( "version".equals( name ) )
+            else if ("version".equals(name))
             {
-                export.setVersion( VersionTable.getVersion( value ) );
+                export.setVersion(VersionTable.getVersion(value));
             }
         }
     }
-
 
     private void endResource()
     {
-        if ( bundle != null )
+        if (bundle != null)
         {
-            listener.handleBundle( bundle );
+            listener.handleBundle(bundle);
             bundle = null;
         }
     }
 
-
     private void endCapability()
     {
-        if ( bundle != null )
+        if (bundle != null)
         {
-            if ( export != null )
+            if (export != null)
             {
-                bundle.getBundleInfo().addExport( export );
+                bundle.getBundleInfo().addExport(export);
                 export = null;
             }
         }
     }
-
 
     private void endRequire()
     {
@@ -318,59 +315,58 @@ final class OBRHandler extends DefaultHandler
 
     }
 
-
     private void endProperty()
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    private static String decodePackage( LDAPExpr expr, Locator locator ) throws SAXParseException
+    private static String decodePackage(LDAPExpr expr, Locator locator)
+        throws SAXParseException
     {
-        ArrayList<SimpleTerm> terms = new ArrayList<SimpleTerm>( 1 );
+        ArrayList<SimpleTerm> terms = new ArrayList<SimpleTerm>(1);
 
-        findTerms( "package", expr, terms );
+        findTerms("package", expr, terms);
 
-        if ( terms.isEmpty() )
+        if (terms.isEmpty())
         {
-            throw new SAXParseException( "Missing name filter in " + expr, locator );
+            throw new SAXParseException("Missing name filter in " + expr, locator);
         }
 
-        return terms.get( 0 ).getRval();
+        return terms.get(0).getRval();
     }
 
-
-    private static String decodeSymbolicName( LDAPExpr expr, Locator locator ) throws SAXParseException
+    private static String decodeSymbolicName(LDAPExpr expr, Locator locator)
+        throws SAXParseException
     {
-        ArrayList<SimpleTerm> terms = new ArrayList<SimpleTerm>( 1 );
+        ArrayList<SimpleTerm> terms = new ArrayList<SimpleTerm>(1);
 
-        findTerms( "symbolicname", expr, terms );
+        findTerms("symbolicname", expr, terms);
 
-        if ( terms.isEmpty() )
+        if (terms.isEmpty())
         {
-            throw new SAXParseException( "Missing name filter in " + expr, locator );
+            throw new SAXParseException("Missing name filter in " + expr, locator);
         }
 
-        return terms.get( 0 ).getRval();
+        return terms.get(0).getRval();
     }
 
-
-    private static void findTerms( String string, LDAPExpr expr, List<SimpleTerm> terms ) throws SAXParseException
+    private static void findTerms(String string, LDAPExpr expr, List<SimpleTerm> terms)
+        throws SAXParseException
     {
-        if ( expr instanceof SimpleTerm )
+        if (expr instanceof SimpleTerm)
         {
-            SimpleTerm term = ( SimpleTerm ) expr;
-            if ( term.getName().equals( string ) )
+            SimpleTerm term = (SimpleTerm) expr;
+            if (term.getName().equals(string))
             {
-                terms.add( term );
+                terms.add(term);
             }
         }
         else
         {
-            for ( LDAPExpr c : expr.getChildren() )
+            for (LDAPExpr c : expr.getChildren())
             {
-                findTerms( string, c, terms );
+                findTerms(string, c, terms);
             }
         }
     }

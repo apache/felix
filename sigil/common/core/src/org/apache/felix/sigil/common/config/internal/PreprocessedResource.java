@@ -30,7 +30,7 @@ import org.apache.felix.sigil.common.config.IBldProject;
 public class PreprocessedResource extends AbstractResource
 {
     private final String fsPath;
-    
+
     public PreprocessedResource(IBldProject project, String bPath, String fsPath)
     {
         super(project, bPath);
@@ -44,13 +44,15 @@ public class PreprocessedResource extends AbstractResource
     {
         return fsPath == null ? bPath : fsPath;
     }
-    
+
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append('{');
         sb.append(bPath);
-        if (fsPath != null) {
+        if (fsPath != null)
+        {
             sb.append('=');
             sb.append(fsPath);
         }
@@ -75,7 +77,7 @@ public class PreprocessedResource extends AbstractResource
         sb.append('=');
         sb.append(fsp);
         sb.append('}');
-        
+
         return sb.toString();
     }
 

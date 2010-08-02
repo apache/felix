@@ -19,45 +19,33 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import java.util.Collection;
 
 import org.apache.felix.sigil.common.model.IModelWalker;
 import org.apache.felix.sigil.common.model.eclipse.ILibrary;
 import org.apache.felix.sigil.common.model.eclipse.ILibraryImport;
 
-
 public interface IRepositoryManager
 {
-    void addRepositoryChangeListener( IRepositoryChangeListener listener );
+    void addRepositoryChangeListener(IRepositoryChangeListener listener);
 
-
-    void removeRepositoryChangeListener( IRepositoryChangeListener listener );
-
+    void removeRepositoryChangeListener(IRepositoryChangeListener listener);
 
     Collection<IBundleRepository> getRepositories();
 
+    Collection<IBundleRepository> getRepositories(int level);
 
-    Collection<IBundleRepository> getRepositories( int level );
+    void addLibrary(ILibrary library);
 
-
-    void addLibrary( ILibrary library );
-
-
-    void removeLibrary( ILibrary library );
-
+    void removeLibrary(ILibrary library);
 
     Collection<ILibrary> getLibraries();
 
-
-    ILibrary resolveLibrary( final ILibraryImport l );
-
+    ILibrary resolveLibrary(final ILibraryImport l);
 
     IBundleResolver getBundleResolver();
 
-
     int[] getPriorityLevels();
 
-
-    void visit( IModelWalker modelWalker );
+    void visit(IModelWalker modelWalker);
 }

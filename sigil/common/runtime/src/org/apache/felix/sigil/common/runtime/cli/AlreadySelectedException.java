@@ -53,8 +53,9 @@ public class AlreadySelectedException extends ParseException
      */
     public AlreadySelectedException(OptionGroup group, Option option)
     {
-        this("The option '" + option.getKey() + "' was specified but an option from this group "
-                + "has already been selected: '" + group.getSelected() + "'");
+        this("The option '" + option.getKey()
+            + "' was specified but an option from this group "
+            + "has already been selected: '" + group.getSelected() + "'");
         this.group = group;
         this.option = option;
     }

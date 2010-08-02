@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.form;
 
-
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
@@ -40,7 +39,6 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 
-
 @SuppressWarnings("restriction")
 public abstract class SigilSection extends SectionPart implements IHyperlinkListener, IPartSelectionListener
 {
@@ -48,127 +46,122 @@ public abstract class SigilSection extends SectionPart implements IHyperlinkList
     private SigilPage page;
     private ISigilProjectModel project;
 
-
-    public SigilSection( SigilPage page, Composite parent, ISigilProjectModel project ) throws CoreException
+    public SigilSection(SigilPage page, Composite parent, ISigilProjectModel project) throws CoreException
     {
-        super( parent, page.getManagedForm().getToolkit(), ExpandableComposite.TITLE_BAR | ExpandableComposite.TWISTIE
-            | ExpandableComposite.EXPANDED );
+        super(parent, page.getManagedForm().getToolkit(), ExpandableComposite.TITLE_BAR
+            | ExpandableComposite.TWISTIE | ExpandableComposite.EXPANDED);
         this.project = project;
         this.page = page;
-        createSection( getSection(), page.getManagedForm().getToolkit() );
+        createSection(getSection(), page.getManagedForm().getToolkit());
     }
-
 
     public ISigilProjectModel getProjectModel()
     {
         return project;
     }
 
-
     public SigilPage getPage()
     {
         return page;
     }
 
-
-    public void setExpanded( boolean expanded )
+    public void setExpanded(boolean expanded)
     {
-        getSection().setExpanded( expanded );
+        getSection().setExpanded(expanded);
     }
 
+    protected abstract void createSection(Section section, FormToolkit toolkit)
+        throws CoreException;
 
-    protected abstract void createSection( Section section, FormToolkit toolkit ) throws CoreException;
-
-
-    protected void setTitle( String title )
+    protected void setTitle(String title)
     {
         Section section = getSection();
-        section.setText( title );
-        
-		TableWrapLayout layout = new TableWrapLayout();
+        section.setText(title);
 
-		layout.topMargin = 2;
-		layout.bottomMargin = 2;
-		layout.leftMargin = 2;
-		layout.rightMargin = 2;
+        TableWrapLayout layout = new TableWrapLayout();
 
-		layout.horizontalSpacing = 0;
-		layout.verticalSpacing = 0;
+        layout.topMargin = 2;
+        layout.bottomMargin = 2;
+        layout.leftMargin = 2;
+        layout.rightMargin = 2;
 
-		layout.makeColumnsEqualWidth = false;
-		layout.numColumns = 1;
+        layout.horizontalSpacing = 0;
+        layout.verticalSpacing = 0;
 
-        section.setLayout( layout );
-        
-        TableWrapData data = new TableWrapData( TableWrapData.FILL_GRAB );
-        section.setLayoutData( data );
+        layout.makeColumnsEqualWidth = false;
+        layout.numColumns = 1;
+
+        section.setLayout(layout);
+
+        TableWrapData data = new TableWrapData(TableWrapData.FILL_GRAB);
+        section.setLayoutData(data);
     }
 
-	protected void setMarker( String type, String message, int priority, int severity ) throws CoreException
+    protected void setMarker(String type, String message, int priority, int severity)
+        throws CoreException
     {
-        IFileEditorInput file = ( IFileEditorInput ) getPage().getEditor().getEditorInput();
-        IMarker marker = file.getFile().createMarker( type );
-        marker.setAttribute( IMarker.MESSAGE, message );
-        marker.setAttribute( IMarker.PRIORITY, priority );
-        marker.setAttribute( IMarker.SEVERITY, severity );
+        IFileEditorInput file = (IFileEditorInput) getPage().getEditor().getEditorInput();
+        IMarker marker = file.getFile().createMarker(type);
+        marker.setAttribute(IMarker.MESSAGE, message);
+        marker.setAttribute(IMarker.PRIORITY, priority);
+        marker.setAttribute(IMarker.SEVERITY, severity);
     }
-
 
     protected void clearMarkers() throws CoreException
     {
-        IFileEditorInput file = ( IFileEditorInput ) getPage().getEditor().getEditorInput();
-        file.getFile().deleteMarkers( null, true, IResource.DEPTH_INFINITE );
+        IFileEditorInput file = (IFileEditorInput) getPage().getEditor().getEditorInput();
+        file.getFile().deleteMarkers(null, true, IResource.DEPTH_INFINITE);
     }
 
-
-    protected Composite createTableWrapBody( int columns, FormToolkit toolkit )
+    protected Composite createTableWrapBody(int columns, FormToolkit toolkit)
     {
         Section section = getSection();
-        Composite client = toolkit.createComposite( section );
+        Composite client = toolkit.createComposite(section);
 
         TableWrapLayout layout = new TableWrapLayout();
-        layout.leftMargin = layout.rightMargin = toolkit.getBorderStyle() != SWT.NULL ? 0 : 2;
+        layout.leftMargin = layout.rightMargin = toolkit.getBorderStyle() != SWT.NULL ? 0
+            : 2;
         layout.numColumns = columns;
-        client.setLayout( layout );
-        client.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        client.setLayout(layout);
+        client.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
-        section.setClient( client );
+        section.setClient(client);
 
         return client;
     }
 
-
-    protected Composite createGridBody( int columns, boolean columnsSameWidth, FormToolkit toolkit )
+    protected Composite createGridBody(int columns, boolean columnsSameWidth,
+        FormToolkit toolkit)
     {
         Section section = getSection();
-        Composite client = toolkit.createComposite( section );
+        Composite client = toolkit.createComposite(section);
 
         GridLayout layout = new GridLayout();
 
         layout.makeColumnsEqualWidth = columnsSameWidth;
         layout.numColumns = columns;
-        client.setLayout( layout );
+        client.setLayout(layout);
 
-        client.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        client.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
-        section.setClient( client );
+        section.setClient(client);
 
         return client;
     }
 
-    public void linkActivated( HyperlinkEvent e )
-    {        
+    public void linkActivated(HyperlinkEvent e)
+    {
     }
-    
+
     public void linkExited(HyperlinkEvent e)
-    {	
+    {
     }
-    
+
     public void linkEntered(HyperlinkEvent e)
     {
     }
 
-    public void selectionChanged( IFormPart part, ISelection selection )
+    public void selectionChanged(IFormPart part, ISelection selection)
     {
     }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.repository;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
@@ -33,87 +32,85 @@ import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
 
-
 public class SystemRepository extends AbstractBundleRepository
 {
 
     private final String packages;
     private final File frameworkPath;
 
-
-    public SystemRepository( String id, File frameworkPath, String packages )
+    public SystemRepository(String id, File frameworkPath, String packages)
     {
-        super( id );
+        super(id);
         this.frameworkPath = frameworkPath;
         this.packages = packages;
     }
 
     private static ISigilBundle systemBundle;
 
-
     @Override
-    public void accept( IRepositoryVisitor visitor, int options )
+    public void accept(IRepositoryVisitor visitor, int options)
     {
         ISigilBundle bundle = loadSystemBundle();
 
-        if ( bundle != null )
+        if (bundle != null)
         {
-            visitor.visit( bundle );
+            visitor.visit(bundle);
         }
     }
 
-
     private synchronized ISigilBundle loadSystemBundle()
     {
-        if ( systemBundle == null )
+        if (systemBundle == null)
         {
-            systemBundle = ModelElementFactory.getInstance().newModelElement( ISigilBundle.class );
+            systemBundle = ModelElementFactory.getInstance().newModelElement(
+                ISigilBundle.class);
 
             JarFile jar = null;
 
             try
             {
                 final IBundleModelElement info;
-                if ( frameworkPath != null )
+                if (frameworkPath != null)
                 {
-                    systemBundle.setLocation( frameworkPath );
+                    systemBundle.setLocation(frameworkPath);
                     jar = new JarFile(frameworkPath);
-                    info = buildBundleModelElement( jar.getManifest() );
+                    info = buildBundleModelElement(jar.getManifest());
                 }
                 else
                 {
-                    info = ModelElementFactory.getInstance().newModelElement( IBundleModelElement.class );
+                    info = ModelElementFactory.getInstance().newModelElement(
+                        IBundleModelElement.class);
                 }
 
                 info.setSymbolicName("system bundle");
                 info.setName("Sigil system bundle");
-                
-                applyProfile( info );
-                systemBundle.addChild( info );
+
+                applyProfile(info);
+                systemBundle.addChild(info);
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                BldCore.error( "Failed to read jar file " + frameworkPath, e );
+                BldCore.error("Failed to read jar file " + frameworkPath, e);
             }
-            catch ( ModelElementFactoryException e )
+            catch (ModelElementFactoryException e)
             {
-                BldCore.error( "Failed to build bundle " + frameworkPath, e );
+                BldCore.error("Failed to build bundle " + frameworkPath, e);
             }
-            catch ( RuntimeException e )
+            catch (RuntimeException e)
             {
-                BldCore.error( "Failed to build bundle " + frameworkPath, e );
+                BldCore.error("Failed to build bundle " + frameworkPath, e);
             }
             finally
             {
-                if ( jar != null )
+                if (jar != null)
                 {
                     try
                     {
                         jar.close();
                     }
-                    catch ( IOException e )
+                    catch (IOException e)
                     {
-                        BldCore.error( "Failed to close jar file", e );
+                        BldCore.error("Failed to close jar file", e);
                     }
                 }
             }
@@ -122,20 +119,19 @@ public class SystemRepository extends AbstractBundleRepository
         return systemBundle;
     }
 
-
-    private void applyProfile( IBundleModelElement info )
+    private void applyProfile(IBundleModelElement info)
     {
-        if ( packages != null )
+        if (packages != null)
         {
-            for ( String name : packages.split( ",\\s*" ) )
+            for (String name : packages.split(",\\s*"))
             {
-                IPackageExport pe = ModelElementFactory.getInstance().newModelElement( IPackageExport.class );
-                pe.setPackageName( name );
-                info.addExport( pe );
+                IPackageExport pe = ModelElementFactory.getInstance().newModelElement(
+                    IPackageExport.class);
+                pe.setPackageName(name);
+                info.addExport(pe);
             }
         }
     }
-
 
     public synchronized void refresh()
     {

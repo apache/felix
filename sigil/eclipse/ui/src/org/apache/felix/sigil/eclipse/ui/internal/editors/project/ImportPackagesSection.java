@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,16 +42,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
-
 public class ImportPackagesSection extends BundleDependencySection
 {
 
-    public ImportPackagesSection( SigilPage page, Composite parent, ISigilProjectModel project,
-        Set<IModelElement> unresolvedPackages ) throws CoreException
+    public ImportPackagesSection(SigilPage page, Composite parent, ISigilProjectModel project, Set<IModelElement> unresolvedPackages) throws CoreException
     {
-        super( page, parent, project, unresolvedPackages );
+        super(page, parent, project, unresolvedPackages);
     }
-
 
     @Override
     protected String getTitle()
@@ -60,74 +56,71 @@ public class ImportPackagesSection extends BundleDependencySection
         return "Import Packages";
     }
 
-
     @Override
-    protected Label createLabel( Composite parent, FormToolkit toolkit )
+    protected Label createLabel(Composite parent, FormToolkit toolkit)
     {
-        return toolkit.createLabel( parent, "Specify which packages this bundle imports from other bundles." );
+        return toolkit.createLabel(parent,
+            "Specify which packages this bundle imports from other bundles.");
     }
-
 
     @Override
     protected IContentProvider getContentProvider()
     {
         return new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                ArrayList<IPackageImport> imports = new ArrayList<IPackageImport>( getBundle().getBundleInfo()
-                    .getImports() );
-                Collections.sort( imports, new Comparator<IPackageImport>()
+                ArrayList<IPackageImport> imports = new ArrayList<IPackageImport>(
+                    getBundle().getBundleInfo().getImports());
+                Collections.sort(imports, new Comparator<IPackageImport>()
                 {
-                    public int compare( IPackageImport o1, IPackageImport o2 )
+                    public int compare(IPackageImport o1, IPackageImport o2)
                     {
-                        return o1.getPackageName().compareTo( o2.getPackageName() );
+                        return o1.getPackageName().compareTo(o2.getPackageName());
                     }
-                } );
+                });
                 return imports.toArray();
             }
         };
     }
-
 
     protected ISigilBundle getBundle()
     {
         return getProjectModel().getBundle();
     }
 
-
     @Override
     protected void handleAdd()
     {
         NewResourceSelectionDialog<? extends IPackageModelElement> dialog = ResourcesDialogHelper.createImportDialog(
-            getSection().getShell(), "Add Imported Package", getProjectModel(), null, getBundle().getBundleInfo()
-                .getImports() );
+            getSection().getShell(), "Add Imported Package", getProjectModel(), null,
+            getBundle().getBundleInfo().getImports());
 
-        if ( dialog.open() == Window.OK )
+        if (dialog.open() == Window.OK)
         {
-            IPackageImport pi = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
-            pi.setPackageName( dialog.getSelectedName() );
-            pi.setVersions( dialog.getSelectedVersions() );
-            pi.setOptional( dialog.isOptional() );
+            IPackageImport pi = ModelElementFactory.getInstance().newModelElement(
+                IPackageImport.class);
+            pi.setPackageName(dialog.getSelectedName());
+            pi.setVersions(dialog.getSelectedVersions());
+            pi.setOptional(dialog.isOptional());
 
-            getBundle().getBundleInfo().addImport( pi );
+            getBundle().getBundleInfo().addImport(pi);
             refresh();
             markDirty();
         }
     }
-
 
     @SuppressWarnings("unchecked")
     @Override
     protected void handleRemoved()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) getSelection();
+        IStructuredSelection selection = (IStructuredSelection) getSelection();
 
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            for ( Iterator<IPackageImport> i = selection.iterator(); i.hasNext(); )
+            for (Iterator<IPackageImport> i = selection.iterator(); i.hasNext();)
             {
-                getBundle().getBundleInfo().removeImport( i.next() );
+                getBundle().getBundleInfo().removeImport(i.next());
             }
 
             refresh();
@@ -135,38 +128,38 @@ public class ImportPackagesSection extends BundleDependencySection
         }
     }
 
-
     @SuppressWarnings("unchecked")
     @Override
     protected void handleEdit()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) getSelection();
+        IStructuredSelection selection = (IStructuredSelection) getSelection();
 
         boolean changed = false;
 
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            for ( Iterator<IPackageImport> i = selection.iterator(); i.hasNext(); )
+            for (Iterator<IPackageImport> i = selection.iterator(); i.hasNext();)
             {
                 IPackageImport packageImport = i.next();
-                NewResourceSelectionDialog<? extends IPackageModelElement> dialog = ResourcesDialogHelper
-                    .createImportDialog( getSection().getShell(), "Edit Imported Package", getProjectModel(),
-                        packageImport, getBundle().getBundleInfo().getImports() );
-                if ( dialog.open() == Window.OK )
+                NewResourceSelectionDialog<? extends IPackageModelElement> dialog = ResourcesDialogHelper.createImportDialog(
+                    getSection().getShell(), "Edit Imported Package", getProjectModel(),
+                    packageImport, getBundle().getBundleInfo().getImports());
+                if (dialog.open() == Window.OK)
                 {
                     changed = true;
-                    IPackageImport newImport = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
-                    newImport.setPackageName( dialog.getSelectedName() );
-                    newImport.setVersions( dialog.getSelectedVersions() );
-                    newImport.setOptional( dialog.isOptional() );
+                    IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(
+                        IPackageImport.class);
+                    newImport.setPackageName(dialog.getSelectedName());
+                    newImport.setVersions(dialog.getSelectedVersions());
+                    newImport.setOptional(dialog.isOptional());
 
-                    getBundle().getBundleInfo().removeImport( packageImport );
-                    getBundle().getBundleInfo().addImport( newImport );
+                    getBundle().getBundleInfo().removeImport(packageImport);
+                    getBundle().getBundleInfo().addImport(newImport);
                 }
             }
         }
 
-        if ( changed )
+        if (changed)
         {
             refresh();
             markDirty();

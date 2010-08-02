@@ -24,5 +24,6 @@ import org.osgi.framework.Version;
 public interface IBundleCapability extends ICapabilityModelElement
 {
     String getSymbolicName();
+
     Version getVersion();
 }

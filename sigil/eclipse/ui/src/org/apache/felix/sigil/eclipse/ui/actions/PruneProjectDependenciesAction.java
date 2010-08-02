@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.actions;
 
-
 import java.util.Collection;
 
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -39,68 +38,68 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.progress.IProgressService;
 
-
 public class PruneProjectDependenciesAction extends DisplayAction
 {
 
     private ISigilProjectModel project;
 
-
-    public PruneProjectDependenciesAction( ISigilProjectModel project )
+    public PruneProjectDependenciesAction(ISigilProjectModel project)
     {
         this.project = project;
     }
-
 
     @Override
     public void run()
     {
         final Shell shell = findDisplay().getActiveShell();
 
-        Job job = new Job( "Resolving imports" )
+        Job job = new Job("Resolving imports")
         {
 
             @Override
-            protected IStatus run( IProgressMonitor monitor )
+            protected IStatus run(IProgressMonitor monitor)
             {
-                Collection<IModelElement> unused = JavaHelper.findUnusedReferences( project, monitor );
+                Collection<IModelElement> unused = JavaHelper.findUnusedReferences(
+                    project, monitor);
 
-                if ( unused.isEmpty() )
+                if (unused.isEmpty())
                 {
-                    info( shell, "No unused references found" );
+                    info(shell, "No unused references found");
                 }
                 else
                 {
-                    final ResourceReviewDialog<IModelElement> dialog = new ResourceReviewDialog<IModelElement>( shell,
-                        "Review Unused Imports", unused );
+                    final ResourceReviewDialog<IModelElement> dialog = new ResourceReviewDialog<IModelElement>(
+                        shell, "Review Unused Imports", unused);
 
-                    shell.getDisplay().asyncExec( new Runnable()
+                    shell.getDisplay().asyncExec(new Runnable()
                     {
                         public void run()
                         {
-                            if ( dialog.open() == Window.OK )
+                            if (dialog.open() == Window.OK)
                             {
                                 WorkspaceModifyOperation op = new WorkspaceModifyOperation()
                                 {
                                     @Override
-                                    protected void execute( IProgressMonitor monitor ) throws CoreException
+                                    protected void execute(IProgressMonitor monitor)
+                                        throws CoreException
                                     {
-                                        for ( IModelElement e : dialog.getResources() )
+                                        for (IModelElement e : dialog.getResources())
                                         {
-                                            if ( !project.getBundle().getBundleInfo().removeChild( e ) )
+                                            if (!project.getBundle().getBundleInfo().removeChild(
+                                                e))
                                             {
-                                                SigilCore.error( "Failed to remove " + e );
+                                                SigilCore.error("Failed to remove " + e);
                                             }
                                         }
 
-                                        project.save( monitor );
+                                        project.save(monitor);
                                     }
                                 };
 
-                                SigilUI.runWorkspaceOperation( op, shell );
+                                SigilUI.runWorkspaceOperation(op, shell);
                             }
                         }
-                    } );
+                    });
                 }
 
                 return Status.OK_STATUS;
@@ -110,6 +109,6 @@ public class PruneProjectDependenciesAction extends DisplayAction
         job.schedule();
 
         IProgressService p = PlatformUI.getWorkbench().getProgressService();
-        p.showInDialog( shell, job );
+        p.showInDialog(shell, job);
     }
 }

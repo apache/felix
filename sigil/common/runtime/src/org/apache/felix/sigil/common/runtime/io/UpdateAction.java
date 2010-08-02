@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime.io;
 
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,7 +31,6 @@ import org.osgi.framework.launch.Framework;
 
 import static org.apache.felix.sigil.common.runtime.io.Constants.UPDATE;
 
-
 /**
  * @author dave
  *
@@ -44,79 +42,79 @@ public class UpdateAction extends Action<UpdateAction.Update, Void>
         final long bundleID;
         final String location;
 
-
-        public Update( long bundleID, String location )
+        public Update(long bundleID, String location)
         {
             this.bundleID = bundleID;
             this.location = location;
         }
     }
 
-
-    public UpdateAction( DataInputStream in, DataOutputStream out ) throws IOException
+    public UpdateAction(DataInputStream in, DataOutputStream out) throws IOException
     {
-        super( in, out );
+        super(in, out);
         // TODO Auto-generated constructor stub
     }
 
-
     @Override
-    public Void client( Update update ) throws IOException, BundleException
+    public Void client(Update update) throws IOException, BundleException
     {
-        writeInt( UPDATE );
-        writeLong( update.bundleID );
-        if ( update.location == null )
+        writeInt(UPDATE);
+        writeLong(update.bundleID);
+        if (update.location == null)
         {
-            writeBoolean( false );
+            writeBoolean(false);
         }
         else
         {
-            writeBoolean( true );
-            writeString( update.location );
+            writeBoolean(true);
+            writeString(update.location);
         }
         flush();
 
-        if ( !checkOk() )
+        if (!checkOk())
         {
             String msg = readString();
-            throw new BundleException( msg );
+            throw new BundleException(msg);
         }
 
         return null;
     }
 
-
     @Override
-    public void server( Framework fw ) throws IOException
+    public void server(Framework fw) throws IOException
     {
         long id = readLong();
-        Bundle b = fw.getBundleContext().getBundle( id );
-        if ( b == null )
+        Bundle b = fw.getBundleContext().getBundle(id);
+        if (b == null)
         {
             writeError();
-            writeString( "Unknown bundle " + id );
+            writeString("Unknown bundle " + id);
         }
         else
         {
             try
             {
                 boolean remote = readBoolean();
-                if ( remote )
+                if (remote)
                 {
                     String loc = readString();
-                    try {
-                        InputStream in = open( loc );
-                        try {
+                    try
+                    {
+                        InputStream in = open(loc);
+                        try
+                        {
                             b.update(in);
                             writeOk();
                         }
-                        finally {
+                        finally
+                        {
                             in.close();
                         }
                     }
-                    catch (IOException e) {
+                    catch (IOException e)
+                    {
                         writeError();
-                        writeThrowable( e );
+                        writeThrowable(e);
                     }
                 }
                 else
@@ -125,20 +123,19 @@ public class UpdateAction extends Action<UpdateAction.Update, Void>
                     writeOk();
                 }
             }
-            catch ( BundleException e )
+            catch (BundleException e)
             {
                 writeError();
-                writeString( e.getMessage() );
+                writeString(e.getMessage());
             }
         }
 
         flush();
     }
 
-
-    private InputStream open( String loc ) throws IOException
+    private InputStream open(String loc) throws IOException
     {
-        URL url = new URL( loc );
+        URL url = new URL(loc);
         return url.openStream();
     }
 }

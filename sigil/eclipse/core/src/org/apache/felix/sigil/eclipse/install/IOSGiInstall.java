@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.install;
 
-
 import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
-
 
 /**
  * Encapsulates all information about a particular OSGi install.
@@ -40,31 +38,26 @@ public interface IOSGiInstall
      */
     String getId();
 
-
     /**
      * Where this install is located
      * @return
      */
     IPath getInstallLocation();
 
-
     /**
      * @return
      */
     Map<String, String> getProperties();
-
 
     /**
      * @return
      */
     String[] getLaunchArguments();
 
-
     /**
      * @return
      */
     IPath getVarDirectory();
-
 
     /**
      * @return

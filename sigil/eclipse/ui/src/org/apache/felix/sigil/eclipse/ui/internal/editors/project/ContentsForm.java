@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilPage;
@@ -32,7 +31,6 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 
-
 public class ContentsForm extends SigilPage
 {
 
@@ -40,21 +38,19 @@ public class ContentsForm extends SigilPage
 
     private ISigilProjectModel project;
 
-
-    public ContentsForm( FormEditor editor, ISigilProjectModel project )
+    public ContentsForm(FormEditor editor, ISigilProjectModel project)
     {
-        super( editor, PAGE_ID, "Contents" );
+        super(editor, PAGE_ID, "Contents");
         this.project = project;
     }
 
-
     @Override
-    protected void createFormContent( IManagedForm managedForm )
+    protected void createFormContent(IManagedForm managedForm)
     {
         FormToolkit toolkit = managedForm.getToolkit();
 
         ScrolledForm form = managedForm.getForm();
-        form.setText( "Contents" );
+        form.setText("Contents");
 
         Composite body = form.getBody();
         TableWrapLayout layout = new TableWrapLayout();
@@ -64,34 +60,35 @@ public class ContentsForm extends SigilPage
         layout.rightMargin = 10;
         layout.numColumns = 1;
         layout.horizontalSpacing = 10;
-        body.setLayout( layout );
-        body.setLayoutData( new TableWrapData( TableWrapData.FILL ) );
+        body.setLayout(layout);
+        body.setLayoutData(new TableWrapData(TableWrapData.FILL));
 
-        Composite top = toolkit.createComposite( body );
+        Composite top = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        top.setLayout( layout );
-        TableWrapData data = new TableWrapData( TableWrapData.FILL_GRAB );
+        top.setLayout(layout);
+        TableWrapData data = new TableWrapData(TableWrapData.FILL_GRAB);
         //data.colspan = 2;
-        top.setLayoutData( data );
+        top.setLayoutData(data);
 
-        Composite bottom = toolkit.createComposite( body );
+        Composite bottom = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        bottom.setLayout( layout );
-        bottom.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        bottom.setLayout(layout);
+        bottom.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
         try
         {
-            ClasspathSection classpath = new ClasspathSection( this, top, project );
-            managedForm.addPart( classpath );
+            ClasspathSection classpath = new ClasspathSection(this, top, project);
+            managedForm.addPart(classpath);
 
-            ResourceBuildSection runtimeBuild = new ResourceBuildSection( this, bottom, project );
-            managedForm.addPart( runtimeBuild );
+            ResourceBuildSection runtimeBuild = new ResourceBuildSection(this, bottom,
+                project);
+            managedForm.addPart(runtimeBuild);
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to create contents form", e );
+            SigilCore.error("Failed to create contents form", e);
         }
     }
 }

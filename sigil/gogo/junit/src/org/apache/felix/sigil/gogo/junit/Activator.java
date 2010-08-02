@@ -33,37 +33,40 @@ import org.osgi.util.tracker.ServiceTracker;
 public class Activator implements BundleActivator
 {
 
-    public void start( final BundleContext ctx ) throws Exception
+    public void start(final BundleContext ctx) throws Exception
     {
         final Hashtable props = new Hashtable();
         props.put(CommandProcessor.COMMAND_SCOPE, "sigil");
         props.put(CommandProcessor.COMMAND_FUNCTION, new String[] { "junit" });
-        
-        ServiceTracker tracker = new ServiceTracker(ctx, JUnitService.class.getName(), null) {
+
+        ServiceTracker tracker = new ServiceTracker(ctx, JUnitService.class.getName(),
+            null)
+        {
             private Map<ServiceReference, ServiceRegistration> regs;
 
             @Override
-            public Object addingService( ServiceReference reference )
+            public Object addingService(ServiceReference reference)
             {
-                JUnitService svc = ( JUnitService ) super.addingService( reference );
-                ServiceRegistration reg = ctx.registerService( SigilJunit.class.getName(), new SigilJunit(svc), props );
+                JUnitService svc = (JUnitService) super.addingService(reference);
+                ServiceRegistration reg = ctx.registerService(SigilJunit.class.getName(),
+                    new SigilJunit(svc), props);
                 regs.put(reference, reg);
                 return svc;
             }
 
             @Override
-            public void removedService( ServiceReference reference, Object service )
+            public void removedService(ServiceReference reference, Object service)
             {
-                ServiceRegistration reg = regs.remove( reference );
+                ServiceRegistration reg = regs.remove(reference);
                 reg.unregister();
-                super.removedService( reference, service );
+                super.removedService(reference, service);
             }
-            
+
         };
         tracker.open();
     }
 
-    public void stop( BundleContext ctx ) throws Exception
+    public void stop(BundleContext ctx) throws Exception
     {
     }
 

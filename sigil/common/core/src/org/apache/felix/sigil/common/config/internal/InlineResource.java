@@ -45,8 +45,9 @@ public class InlineResource extends AbstractResource
     {
         return bPath;
     }
-    
-    public String toString() {
+
+    public String toString()
+    {
         return '@' + bPath;
     }
 
@@ -57,7 +58,7 @@ public class InlineResource extends AbstractResource
     {
         StringBuilder sb = new StringBuilder();
         sb.append('@');
-        
+
         File f = project.resolve(bPath);
 
         if (f.exists())
@@ -66,7 +67,7 @@ public class InlineResource extends AbstractResource
         }
         else
             sb.append(bPath);
-        
+
         return sb.toString();
     }
 

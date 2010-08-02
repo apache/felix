@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.actions;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -33,18 +32,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
-
 public class RefreshRepositoryAction extends DisplayAction
 {
     private final IRepositoryModel[] model;
 
-
-    public RefreshRepositoryAction( IRepositoryModel... model )
+    public RefreshRepositoryAction(IRepositoryModel... model)
     {
-        super( "Refresh repository" );
+        super("Refresh repository");
         this.model = model;
     }
-
 
     @Override
     public void run()
@@ -53,16 +49,16 @@ public class RefreshRepositoryAction extends DisplayAction
         {
 
             @Override
-            protected void execute( IProgressMonitor monitor ) throws CoreException, InvocationTargetException,
-                InterruptedException
+            protected void execute(IProgressMonitor monitor) throws CoreException,
+                InvocationTargetException, InterruptedException
             {
                 boolean changed = false;
 
-                for ( IBundleRepository b : SigilCore.getGlobalRepositoryManager().getRepositories() )
+                for (IBundleRepository b : SigilCore.getGlobalRepositoryManager().getRepositories())
                 {
-                    for ( IRepositoryModel m : model )
+                    for (IRepositoryModel m : model)
                     {
-                        if ( b.getId().equals( m.getId() ) )
+                        if (b.getId().equals(m.getId()))
                         {
                             b.refresh();
                             changed = true;
@@ -70,18 +66,18 @@ public class RefreshRepositoryAction extends DisplayAction
                     }
                 }
 
-                if ( changed )
+                if (changed)
                 {
                     List<ISigilProjectModel> projects = SigilCore.getRoot().getProjects();
-                    SubMonitor sub = SubMonitor.convert( monitor, projects.size() * 10 );
-                    for ( ISigilProjectModel p : projects )
+                    SubMonitor sub = SubMonitor.convert(monitor, projects.size() * 10);
+                    for (ISigilProjectModel p : projects)
                     {
-                        p.resetClasspath( sub.newChild( 10 ) );
+                        p.resetClasspath(sub.newChild(10));
                     }
                 }
             }
         };
 
-        SigilUI.runWorkspaceOperation( op, null );
+        SigilUI.runWorkspaceOperation(op, null);
     }
 }

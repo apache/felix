@@ -19,23 +19,20 @@
 
 package org.apache.felix.sigil.eclipse.cheatsheets.actions;
 
-
 import org.apache.felix.sigil.eclipse.ui.wizard.project.SigilProjectWizard;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.cheatsheets.ICheatSheetAction;
 import org.eclipse.ui.cheatsheets.ICheatSheetManager;
 
-
 public class OpenEmptySigilProjectWizardAction extends AbstractNewWizardAction implements ICheatSheetAction
 {
 
     private String name;
 
-
-    public void run( String[] params, ICheatSheetManager manager )
+    public void run(String[] params, ICheatSheetManager manager)
     {
-        if ( params != null && params.length > 0 )
+        if (params != null && params.length > 0)
         {
             name = params[0];
         }
@@ -43,12 +40,11 @@ public class OpenEmptySigilProjectWizardAction extends AbstractNewWizardAction i
         run();
     }
 
-
     @Override
     protected INewWizard createWizard() throws CoreException
     {
         SigilProjectWizard wizard = new SigilProjectWizard();
-        wizard.setName( name );
+        wizard.setName(name);
         return wizard;
     }
 }

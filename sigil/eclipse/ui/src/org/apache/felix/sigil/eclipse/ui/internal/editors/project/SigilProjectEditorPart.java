@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -62,68 +61,68 @@ import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.IFormPage;
 
-
 public class SigilProjectEditorPart extends FormEditor implements IResourceChangeListener
 {
 
-    private final Set<IModelElement> unresolvedElements = Collections.synchronizedSet( new HashSet<IModelElement>() );
+    private final Set<IModelElement> unresolvedElements = Collections.synchronizedSet(new HashSet<IModelElement>());
     private ISigilProjectModel project;
     private ISigilProjectModel tempProject;
     private volatile boolean saving = false;
     private int dependenciesPageIndex;
 
-    private Image errorImage = PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJS_ERROR_TSK);
+    private Image errorImage = PlatformUI.getWorkbench().getSharedImages().getImage(
+        ISharedImages.IMG_OBJS_ERROR_TSK);
 
     private PropertiesForm textPage;
 
-
     public IProject getProject()
     {
-        IFileEditorInput fileInput = ( IFileEditorInput ) getEditorInput();
+        IFileEditorInput fileInput = (IFileEditorInput) getEditorInput();
         return fileInput.getFile().getProject();
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.part.EditorPart#doSave(org.eclipse.core.runtime.IProgressMonitor)
      */
     @Override
-    public void doSave( IProgressMonitor monitor )
+    public void doSave(IProgressMonitor monitor)
     {
-        monitor.beginTask( "Saving", IProgressMonitor.UNKNOWN );
+        monitor.beginTask("Saving", IProgressMonitor.UNKNOWN);
         try
         {
             saving = true;
-            new ProgressMonitorDialog( getSite().getShell() ).run( true, true, new IRunnableWithProgress()
-            {
-                public void run( IProgressMonitor monitor ) throws InvocationTargetException,
-                    InterruptedException
+            new ProgressMonitorDialog(getSite().getShell()).run(true, true,
+                new IRunnableWithProgress()
                 {
-                    try
+                    public void run(IProgressMonitor monitor)
+                        throws InvocationTargetException, InterruptedException
                     {
-                        if ( doInternalSave(monitor) ) {
-                            project.setBundle( null );
-                            tempProject.setBundle(null);
-                            project.rebuildDependencies(monitor);
-                            refreshAllPages();
-                        }
+                        try
+                        {
+                            if (doInternalSave(monitor))
+                            {
+                                project.setBundle(null);
+                                tempProject.setBundle(null);
+                                project.rebuildDependencies(monitor);
+                                refreshAllPages();
+                            }
 
-                        monitor.done();
+                            monitor.done();
+                        }
+                        catch (CoreException e)
+                        {
+                            throw new InvocationTargetException(e);
+                        }
                     }
-                    catch ( CoreException e )
-                    {
-                        throw new InvocationTargetException( e );
-                    }
-                }
-            } );
+                });
         }
-        catch ( InvocationTargetException e )
+        catch (InvocationTargetException e)
         {
-            SigilCore.error( "Failed to save " + project, e.getTargetException() );
+            SigilCore.error("Failed to save " + project, e.getTargetException());
         }
-        catch ( InterruptedException e )
+        catch (InterruptedException e)
         {
-            monitor.setCanceled( true );
+            monitor.setCanceled(true);
             return;
         }
         finally
@@ -133,39 +132,37 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         monitor.done();
     }
 
-
     private boolean doInternalSave(final IProgressMonitor monitor) throws CoreException
     {
-        if ( textPage.isDirty() )
+        if (textPage.isDirty())
         {
-            SigilUI.runInUISync( new Runnable()
+            SigilUI.runInUISync(new Runnable()
             {
                 public void run()
                 {
-                    textPage.doSave( monitor );
+                    textPage.doSave(monitor);
                 }
-            } );
+            });
             return true;
         }
-        else if ( isDirty() )
+        else if (isDirty())
         {
-            commitPages( true );
-            tempProject.save( monitor, false );
-            SigilUI.runInUISync( new Runnable()
+            commitPages(true);
+            tempProject.save(monitor, false);
+            SigilUI.runInUISync(new Runnable()
             {
                 public void run()
                 {
                     textPage.setInput(getEditorInput());
                     editorDirtyStateChanged();
                 }
-            } );
+            });
             return true;
         }
-        
+
         // ok no changes
         return false;
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
@@ -175,35 +172,34 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
     {
         try
         {
-            addPage( new OverviewForm( this, tempProject ) );
-            addPage( new ContentsForm( this, tempProject ) );
-            dependenciesPageIndex = addPage( new DependenciesForm( this, tempProject, unresolvedElements ) );
-            addPage( new ExportsForm( this, tempProject ) );
-            textPage = new PropertiesForm( this, tempProject );
-            addPage( textPage, getEditorInput() );
-            setPartName( project.getSymbolicName() );
+            addPage(new OverviewForm(this, tempProject));
+            addPage(new ContentsForm(this, tempProject));
+            dependenciesPageIndex = addPage(new DependenciesForm(this, tempProject,
+                unresolvedElements));
+            addPage(new ExportsForm(this, tempProject));
+            textPage = new PropertiesForm(this, tempProject);
+            addPage(textPage, getEditorInput());
+            setPartName(project.getSymbolicName());
 
             refreshTabImages();
         }
-        catch ( PartInitException e )
+        catch (PartInitException e)
         {
-            SigilCore.error( "Failed to build " + this, e );
+            SigilCore.error("Failed to build " + this, e);
         }
     }
-
 
     protected void refreshTabImages()
     {
-        if ( unresolvedElements.isEmpty() )
+        if (unresolvedElements.isEmpty())
         {
-            setPageImage( dependenciesPageIndex, null );
+            setPageImage(dependenciesPageIndex, null);
         }
         else
         {
-            setPageImage( dependenciesPageIndex, errorImage );
+            setPageImage(dependenciesPageIndex, errorImage);
         }
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.part.EditorPart#doSaveAs()
@@ -214,7 +210,6 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         // save as not allowed
     }
 
-
     /* (non-Javadoc)
      * @see org.eclipse.ui.part.EditorPart#isSaveAsAllowed()
      */
@@ -224,20 +219,19 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         return false;
     }
 
-
     @Override
     public void dispose()
     {
-        ResourcesPlugin.getWorkspace().removeResourceChangeListener( this );
+        ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
         super.dispose();
     }
 
-
-    public void resourceChanged( IResourceChangeEvent event )
+    public void resourceChanged(IResourceChangeEvent event)
     {
         try
         {
-            switch (event.getType()) {
+            switch (event.getType())
+            {
                 case IResourceChangeEvent.POST_BUILD:
                     handleBuild(event);
                     break;
@@ -246,36 +240,35 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
                     break;
             }
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            ErrorDialog.openError( getSite().getShell(), "Error", null, e.getStatus() );
+            ErrorDialog.openError(getSite().getShell(), "Error", null, e.getStatus());
         }
     }
-
 
     private void handleBuild(IResourceChangeEvent event) throws CoreException
     {
         refreshView();
     }
 
-
     private void handleChange(IResourceChangeEvent event) throws CoreException
     {
         IResourceDelta delta = event.getDelta();
-        final IFile editorFile = ( ( IFileEditorInput ) getEditorInput() ).getFile();
-        delta.accept( new IResourceDeltaVisitor()
+        final IFile editorFile = ((IFileEditorInput) getEditorInput()).getFile();
+        delta.accept(new IResourceDeltaVisitor()
         {
-            public boolean visit( IResourceDelta delta ) throws CoreException
+            public boolean visit(IResourceDelta delta) throws CoreException
             {
                 int kind = delta.getKind();
                 IResource resource = delta.getResource();
-                if ( resource instanceof IProject )
+                if (resource instanceof IProject)
                 {
                     int flags = delta.getFlags();
-                    return handleProjectChange(editorFile, (IProject) resource, kind, flags);
+                    return handleProjectChange(editorFile, (IProject) resource, kind,
+                        flags);
                 }
 
-                if ( resource instanceof IFile )
+                if (resource instanceof IFile)
                 {
                     handleFileChange(editorFile, (IFile) resource, kind);
                     // Recurse no more
@@ -284,53 +277,52 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
 
                 return true;
             }
-        } );
+        });
     }
-
 
     protected void handleFileChange(IFile editorFile, IFile affectedFile, int kind)
     {
-        if ( affectedFile.equals( editorFile ) )
+        if (affectedFile.equals(editorFile))
         {
-            switch ( kind )
+            switch (kind)
             {
                 case IResourceDelta.REMOVED:
-                    close( false );
+                    close(false);
                     break;
                 case IResourceDelta.CHANGED:
-                    if ( !saving )
+                    if (!saving)
                     {
                         reload();
                     }
-                    SigilUI.runInUISync( new Runnable()
+                    SigilUI.runInUISync(new Runnable()
                     {
                         public void run()
                         {
-                            setPartName( project.getSymbolicName() );
+                            setPartName(project.getSymbolicName());
                         }
-                    } );
+                    });
                     break;
             }
         }
     }
 
-
-    private boolean handleProjectChange(IResource editorFile, IProject project, int kind, int flags) throws CoreException
+    private boolean handleProjectChange(IResource editorFile, IProject project, int kind,
+        int flags) throws CoreException
     {
-        if ( !editorFile.getProject().equals( project ) )
+        if (!editorFile.getProject().equals(project))
         {
             return false;
         }
-        if ( kind == IResourceDelta.CHANGED )
+        if (kind == IResourceDelta.CHANGED)
         {
             int mask = flags & (IResourceDelta.MARKERS);
-            if ( mask > 0 ) {
+            if (mask > 0)
+            {
                 refreshView();
             }
         }
         return true;
     }
-
 
     private void refreshView() throws CoreException
     {
@@ -338,104 +330,102 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         refreshAllPages();
     }
 
-
     protected void refreshAllPages()
     {
         Runnable op = new Runnable()
         {
             public void run()
             {
-                for ( Iterator<?> iter = pages.iterator(); iter.hasNext(); )
+                for (Iterator<?> iter = pages.iterator(); iter.hasNext();)
                 {
-                    IFormPage page = ( IFormPage ) iter.next();
-                    if ( page != null )
+                    IFormPage page = (IFormPage) iter.next();
+                    if (page != null)
                     {
                         IManagedForm managedForm = page.getManagedForm();
-                        if ( managedForm != null )
+                        if (managedForm != null)
                         {
                             managedForm.refresh();
                             IFormPart[] parts = managedForm.getParts();
-                            for ( IFormPart part : parts )
+                            for (IFormPart part : parts)
                             {
                                 part.refresh();
                             }
                         }
                     }
                 }
-                firePropertyChange( IEditorPart.PROP_DIRTY );
-                setPartName( project.getSymbolicName() );
+                firePropertyChange(IEditorPart.PROP_DIRTY);
+                setPartName(project.getSymbolicName());
                 refreshTabImages();
             }
         };
-        getSite().getShell().getDisplay().syncExec( op );
+        getSite().getShell().getDisplay().syncExec(op);
     }
-
 
     private void reload()
     {
         tempProject.setBundle(null);
-        project.setBundle( null );
+        project.setBundle(null);
         refreshAllPages();
     }
 
-
     @Override
-    public void init( IEditorSite site, IEditorInput input ) throws PartInitException
+    public void init(IEditorSite site, IEditorInput input) throws PartInitException
     {
-        super.init( site, input );
+        super.init(site, input);
 
         try
         {
-            this.project = SigilCore.create( getProject() );
+            this.project = SigilCore.create(getProject());
             this.tempProject = (ISigilProjectModel) project.clone();
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            throw new PartInitException( "Error creating Sigil project", e );
+            throw new PartInitException("Error creating Sigil project", e);
         }
 
-        ResourcesPlugin.getWorkspace().addResourceChangeListener( this, IResourceChangeEvent.POST_CHANGE | IResourceChangeEvent.PRE_REFRESH );
-                
-        if ( input instanceof IFileEditorInput )
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
+            IResourceChangeEvent.POST_CHANGE | IResourceChangeEvent.PRE_REFRESH);
+
+        if (input instanceof IFileEditorInput)
         {
             try
             {
                 loadUnresolvedDependencies();
             }
-            catch ( CoreException e )
+            catch (CoreException e)
             {
-                throw new PartInitException( "Error retrieving dependency markers", e );
+                throw new PartInitException("Error retrieving dependency markers", e);
             }
         }
     }
 
-
     private void loadUnresolvedDependencies() throws CoreException
     {
         ModelElementFactory factory = ModelElementFactory.getInstance();
-        IMarker[] markers = getProject()
-            .findMarkers( SigilCore.MARKER_UNRESOLVED_DEPENDENCY, true, IResource.DEPTH_ONE );
+        IMarker[] markers = getProject().findMarkers(
+            SigilCore.MARKER_UNRESOLVED_DEPENDENCY, true, IResource.DEPTH_ONE);
         unresolvedElements.clear();
 
-        for ( IMarker marker : markers )
+        for (IMarker marker : markers)
         {
-            String elementName = ( String ) marker.getAttribute( "element" );
-            String versionRangeStr = ( String ) marker.getAttribute( "versionRange" );
-            if ( elementName != null && versionRangeStr != null )
+            String elementName = (String) marker.getAttribute("element");
+            String versionRangeStr = (String) marker.getAttribute("versionRange");
+            if (elementName != null && versionRangeStr != null)
             {
-                if ( marker.getType().equals( SigilCore.MARKER_UNRESOLVED_IMPORT_PACKAGE ) )
+                if (marker.getType().equals(SigilCore.MARKER_UNRESOLVED_IMPORT_PACKAGE))
                 {
-                    IPackageImport pkgImport = factory.newModelElement( IPackageImport.class );
-                    pkgImport.setPackageName( elementName );
-                    pkgImport.setVersions( VersionRange.parseVersionRange( versionRangeStr ) );
-                    unresolvedElements.add( pkgImport );
+                    IPackageImport pkgImport = factory.newModelElement(IPackageImport.class);
+                    pkgImport.setPackageName(elementName);
+                    pkgImport.setVersions(VersionRange.parseVersionRange(versionRangeStr));
+                    unresolvedElements.add(pkgImport);
                 }
-                else if ( marker.getType().equals( SigilCore.MARKER_UNRESOLVED_REQUIRE_BUNDLE ) )
+                else if (marker.getType().equals(
+                    SigilCore.MARKER_UNRESOLVED_REQUIRE_BUNDLE))
                 {
-                    IRequiredBundle req = factory.newModelElement( IRequiredBundle.class );
-                    req.setSymbolicName( elementName );
-                    req.setVersions( VersionRange.parseVersionRange( versionRangeStr ) );
-                    unresolvedElements.add( req );
+                    IRequiredBundle req = factory.newModelElement(IRequiredBundle.class);
+                    req.setSymbolicName(elementName);
+                    req.setVersions(VersionRange.parseVersionRange(versionRangeStr));
+                    unresolvedElements.add(req);
                 }
             }
         }

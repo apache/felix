@@ -29,9 +29,10 @@ public class FindUtil
 {
     static final String WILD_ANY = "[^.]?.*";
     static final String WILD_ONE = "[^.]?[^;]*"; // WILD_ONE.endsWith(WILD_ANY) == false
-    
+
     // example pattern: ${repository}/projects/abc*/*/project.sigil
-    public static Collection<File> findFiles(File workingDir, String pattern) throws IOException
+    public static Collection<File> findFiles(File workingDir, String pattern)
+        throws IOException
     {
         int star = pattern.indexOf("*");
         if (star == -1)
@@ -49,7 +50,8 @@ public class FindUtil
         String[] patterns = regex.split("/");
 
         TreeSet<File> list = new TreeSet<File>();
-        File root = slash == -1 ? workingDir : new File(pattern.substring(0, slash)).getAbsoluteFile();
+        File root = slash == -1 ? workingDir
+            : new File(pattern.substring(0, slash)).getAbsoluteFile();
 
         if (root.isDirectory())
         {

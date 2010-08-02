@@ -26,7 +26,7 @@ import java.io.File;
  *
  */
 public interface Resource
-{  
+{
     String toBNDInstruction(File[] classpath);
 
     /**

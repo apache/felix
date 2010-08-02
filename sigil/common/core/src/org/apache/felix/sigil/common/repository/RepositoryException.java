@@ -19,28 +19,24 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 public class RepositoryException extends Exception
 {
 
     private static final long serialVersionUID = 1L;
 
-
-    public RepositoryException( String msg, Throwable cause )
+    public RepositoryException(String msg, Throwable cause)
     {
-        super( msg, cause );
+        super(msg, cause);
     }
 
-
-    public RepositoryException( String message )
+    public RepositoryException(String message)
     {
-        super( message );
+        super(message);
     }
 
-
-    public RepositoryException( Throwable cause )
+    public RepositoryException(Throwable cause)
     {
-        super( cause );
+        super(cause);
     }
 
 }

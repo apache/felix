@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.internal.model.osgi;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +27,6 @@ import org.apache.felix.sigil.common.model.AbstractModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.osgi.framework.Version;
-
 
 public class PackageExport extends AbstractModelElement implements IPackageExport
 {
@@ -41,33 +39,30 @@ public class PackageExport extends AbstractModelElement implements IPackageExpor
 
     public PackageExport()
     {
-        super( "OSGi Package Export" );
+        super("OSGi Package Export");
     }
-
 
     public String getPackageName()
     {
         return name;
     }
 
-
-    public void setPackageName( String packageName )
+    public void setPackageName(String packageName)
     {
         this.name = packageName;
     }
 
-
     public Version getVersion()
     {
         Version result;
-        if ( version != null )
+        if (version != null)
         {
             result = version;
         }
         else
         {
-            ISigilBundle owningBundle = getAncestor( ISigilBundle.class );
-            if ( owningBundle == null )
+            ISigilBundle owningBundle = getAncestor(ISigilBundle.class);
+            if (owningBundle == null)
             {
                 result = Version.emptyVersion;
             }
@@ -79,40 +74,34 @@ public class PackageExport extends AbstractModelElement implements IPackageExpor
         return result;
     }
 
-
     public Version getRawVersion()
     {
         return version;
     }
 
-
-    public void setVersion( Version version )
+    public void setVersion(Version version)
     {
         this.version = version; // == null ? Version.emptyVersion : version;
     }
 
-
-    public void addUse( String use )
+    public void addUse(String use)
     {
         ArrayList<String> tmp = new ArrayList<String>(getUses());
         tmp.add(use);
-        uses = tmp.toArray( new String[tmp.size()] );
+        uses = tmp.toArray(new String[tmp.size()]);
     }
-
 
     public Collection<String> getUses()
     {
         return Arrays.asList(uses);
     }
 
-
-    public void removeUse( String use )
+    public void removeUse(String use)
     {
         ArrayList<String> tmp = new ArrayList<String>(getUses());
         tmp.remove(use);
-        uses = tmp.toArray( new String[tmp.size()] );
+        uses = tmp.toArray(new String[tmp.size()]);
     }
-
 
     @Override
     public String toString()
@@ -120,32 +109,29 @@ public class PackageExport extends AbstractModelElement implements IPackageExpor
         return "PackageExport[" + name + ":" + version + ":uses=" + uses + "]";
     }
 
-
-    public void setUses( Collection<String> uses )
+    public void setUses(Collection<String> uses)
     {
         ArrayList<String> tmp = new ArrayList<String>(uses);
-        this.uses = tmp.toArray( new String[tmp.size()] );
+        this.uses = tmp.toArray(new String[tmp.size()]);
     }
 
-
-    public int compareTo( IPackageExport o )
+    public int compareTo(IPackageExport o)
     {
-        int i = name.compareTo( o.getPackageName() );
+        int i = name.compareTo(o.getPackageName());
 
-        if ( i == 0 )
+        if (i == 0)
         {
-            i = compareVersion( o.getVersion() );
+            i = compareVersion(o.getVersion());
         }
 
         return i;
     }
 
-
-    private int compareVersion( Version other )
+    private int compareVersion(Version other)
     {
-        if ( version == null )
+        if (version == null)
         {
-            if ( other == null )
+            if (other == null)
             {
                 return 0;
             }
@@ -156,44 +142,45 @@ public class PackageExport extends AbstractModelElement implements IPackageExpor
         }
         else
         {
-            if ( other == null )
+            if (other == null)
             {
                 return -1;
             }
             else
             {
-                return version.compareTo( other );
+                return version.compareTo(other);
             }
         }
     }
 
-
     @Override
     public boolean equals(Object obj)
     {
-        if ( obj == this ) return true;
-        if ( obj == null ) return false;
-        
-        if ( obj instanceof PackageExport ) 
+        if (obj == this)
+            return true;
+        if (obj == null)
+            return false;
+
+        if (obj instanceof PackageExport)
         {
             PackageExport e = (PackageExport) obj;
-            return (name == null ? e.name == null : name.equals( e.name )) && 
-                (version == null ? e.version == null : version.equals( e.version ));
+            return (name == null ? e.name == null : name.equals(e.name))
+                && (version == null ? e.version == null : version.equals(e.version));
         }
-        else 
+        else
         {
             return false;
         }
     }
 
-
     @Override
     public int hashCode()
     {
         int hc = name.hashCode();
-        
-        if ( version != null ) hc *= version.hashCode();
-        
+
+        if (version != null)
+            hc *= version.hashCode();
+
         return hc;
     }
 }

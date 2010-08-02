@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import org.eclipse.jface.fieldassist.IContentProposal;
-
 
 public class WrappedContentProposal<T> implements IContentProposal
 {
@@ -29,49 +27,42 @@ public class WrappedContentProposal<T> implements IContentProposal
     private final T element;
     private final IElementDescriptor<? super T> descriptor;
 
-
-    private WrappedContentProposal( T element, IElementDescriptor<? super T> descriptor )
+    private WrappedContentProposal(T element, IElementDescriptor<? super T> descriptor)
     {
         this.element = element;
         this.descriptor = descriptor;
     }
 
-
-    public static <T> WrappedContentProposal<T> newInstance( T element, IElementDescriptor<? super T> descriptor )
+    public static <T> WrappedContentProposal<T> newInstance(T element,
+        IElementDescriptor<? super T> descriptor)
     {
-        return new WrappedContentProposal<T>( element, descriptor );
+        return new WrappedContentProposal<T>(element, descriptor);
     }
-
 
     public String getContent()
     {
-        return descriptor.getName( element );
+        return descriptor.getName(element);
     }
-
 
     public int getCursorPosition()
     {
         return 0;
     }
 
-
     public String getDescription()
     {
         return null;
     }
 
-
     public String getLabel()
     {
-        return descriptor.getLabel( element );
+        return descriptor.getLabel(element);
     }
-
 
     public T getElement()
     {
         return element;
     }
-
 
     @Override
     public String toString()

@@ -179,7 +179,8 @@ public class BundleBuilder
         if (bracket >= 0)
         {
             String token = dest.substring(bracket);
-            throw new Exception("destPattern: expected [id],  [name] or [revision]: " + token);
+            throw new Exception("destPattern: expected [id],  [name] or [revision]: "
+                + token);
         }
 
         errors.clear();
@@ -191,7 +192,8 @@ public class BundleBuilder
         {
             log.verbose("Generated " + bundle.getSymbolicName());
             log.verbose("-----------------------------");
-            for(Map.Entry<Object, Object> e : spec.entrySet()) {
+            for (Map.Entry<Object, Object> e : spec.entrySet())
+            {
                 log.verbose(e.getKey() + "=" + e.getValue());
                 log.verbose("-----------------------------");
             }
@@ -210,7 +212,7 @@ public class BundleBuilder
 
         convertErrors("BND: ", builder.getErrors());
         convertWarnings("BND: ", builder.getWarnings());
-        
+
         Attributes main = jar.getManifest().getMainAttributes();
         String expHeader = main.getValue(Constants.EXPORT_PACKAGE);
         log.verbose("BND exports: " + expHeader);
@@ -455,7 +457,7 @@ public class BundleBuilder
             addVersions(fh.getVersions(), sb);
             spec.setProperty(Constants.FRAGMENT_HOST, sb.toString());
         }
-        
+
         return spec;
     }
 
@@ -553,7 +555,7 @@ public class BundleBuilder
         {
             if (sb.length() > 0)
                 sb.append(",");
-            
+
             sb.append(bPath.toBNDInstruction(classpath));
         }
 

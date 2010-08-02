@@ -19,10 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 public interface IValidationListener
 {
 
-    void validationMessage( String message, int level );
+    void validationMessage(String message, int level);
 
 }

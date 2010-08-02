@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.search;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -53,7 +52,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-
 /**
  * The activator class controls the plug-in life cycle
  */
@@ -69,7 +67,6 @@ public class SigilSearch extends AbstractUIPlugin
     private static SigilSearch plugin;
     private static Index index;
 
-
     /**
      * The constructor
      */
@@ -77,44 +74,39 @@ public class SigilSearch extends AbstractUIPlugin
     {
     }
 
-
-    public static List<ISearchResult> findProviders( String fullyQualifiedName, ISigilProjectModel sigil,
-        IProgressMonitor monitor )
+    public static List<ISearchResult> findProviders(String fullyQualifiedName,
+        ISigilProjectModel sigil, IProgressMonitor monitor)
     {
-        listen( sigil );
-        return index.findProviders( fullyQualifiedName, monitor );
+        listen(sigil);
+        return index.findProviders(fullyQualifiedName, monitor);
     }
 
-
-    public static List<ISearchResult> findProviders( Pattern namePattern, ISigilProjectModel sigil,
-        IProgressMonitor monitor )
+    public static List<ISearchResult> findProviders(Pattern namePattern,
+        ISigilProjectModel sigil, IProgressMonitor monitor)
     {
-        listen( sigil );
-        return index.findProviders( namePattern, monitor );
+        listen(sigil);
+        return index.findProviders(namePattern, monitor);
     }
-
 
     /*
      * (non-Javadoc)
      * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
      */
-    public void start( BundleContext context ) throws Exception
+    public void start(BundleContext context) throws Exception
     {
-        super.start( context );
+        super.start(context);
         plugin = this;
     }
-
 
     /*
      * (non-Javadoc)
      * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
      */
-    public void stop( BundleContext context ) throws Exception
+    public void stop(BundleContext context) throws Exception
     {
         plugin = null;
-        super.stop( context );
+        super.stop(context);
     }
-
 
     /**
      * Returns the shared instance
@@ -126,156 +118,157 @@ public class SigilSearch extends AbstractUIPlugin
         return plugin;
     }
 
-
-    private static void listen( ISigilProjectModel sigil )
+    private static void listen(ISigilProjectModel sigil)
     {
-        synchronized ( plugin )
+        synchronized (plugin)
         {
-            if ( index == null )
+            if (index == null)
             {
                 index = new Index();
-                for ( IBundleRepository rep : SigilCore.getRepositoryManager( sigil ).getRepositories() )
+                for (IBundleRepository rep : SigilCore.getRepositoryManager(sigil).getRepositories())
                 {
-                    index( index, rep );
+                    index(index, rep);
                 }
 
-                SigilCore.getRepositoryManager( sigil ).addRepositoryChangeListener( new IRepositoryChangeListener()
-                {
-                    public void repositoryChanged( RepositoryChangeEvent event )
+                SigilCore.getRepositoryManager(sigil).addRepositoryChangeListener(
+                    new IRepositoryChangeListener()
                     {
-                        index( index, event.getRepository() );
-                    }
-                } );
+                        public void repositoryChanged(RepositoryChangeEvent event)
+                        {
+                            index(index, event.getRepository());
+                        }
+                    });
             }
         }
     }
 
-
-    private static void index( final Index index, final IBundleRepository rep )
+    private static void index(final Index index, final IBundleRepository rep)
     {
-        index.delete( rep );
-        rep.accept( new IRepositoryVisitor()
+        index.delete(rep);
+        rep.accept(new IRepositoryVisitor()
         {
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                ISigilProjectModel p = bundle.getAncestor( ISigilProjectModel.class );
-                if ( p == null )
+                ISigilProjectModel p = bundle.getAncestor(ISigilProjectModel.class);
+                if (p == null)
                 {
-                    if ( bundle.isSynchronized() )
+                    if (bundle.isSynchronized())
                     {
                         IPath loc = PathUtil.newPathIfExists(bundle.getLocation());
-                        if ( loc == null ) {
+                        if (loc == null)
+                        {
                             SigilCore.error("Location is null for " + bundle);
                         }
-                        else {
-                            if ( loc.isAbsolute() )
+                        else
+                        {
+                            if (loc.isAbsolute())
                             {
-                                indexJar( rep, bundle, loc );
+                                indexJar(rep, bundle, loc);
                             }
                         }
                     }
                 }
                 else
                 {
-                    indexProject( rep, p );
+                    indexProject(rep, p);
                 }
                 return true;
             }
-        } );
+        });
     }
 
-
-    private static void indexProject( IBundleRepository rep, ISigilProjectModel sigil )
+    private static void indexProject(IBundleRepository rep, ISigilProjectModel sigil)
     {
         try
         {
-            for ( ICompilationUnit unit : JavaHelper.findCompilationUnits( sigil ) )
+            for (ICompilationUnit unit : JavaHelper.findCompilationUnits(sigil))
             {
-                IPackageFragment p = ( IPackageFragment ) unit.getParent();
+                IPackageFragment p = (IPackageFragment) unit.getParent();
                 ISigilBundle b = sigil.getBundle();
-                IPackageExport export = b.findExport( p.getElementName() );
-                index.addEntry( unit, rep, b, export != null );
+                IPackageExport export = b.findExport(p.getElementName());
+                index.addEntry(unit, rep, b, export != null);
             }
         }
-        catch ( JavaModelException e )
+        catch (JavaModelException e)
         {
-            SigilCore.error( "Failed to index project", e);
+            SigilCore.error("Failed to index project", e);
         }
     }
 
-
-    private static void indexJar( IBundleRepository rep, ISigilBundle bundle, IPath loc )
+    private static void indexJar(IBundleRepository rep, ISigilBundle bundle, IPath loc)
     {
         JarFile jar = null;
         try
         {
-            jar = new JarFile( loc.toOSString() );
-            for ( Map.Entry<JarEntry, IPackageExport> export : findExportedClasses( bundle, jar ).entrySet() )
+            jar = new JarFile(loc.toOSString());
+            for (Map.Entry<JarEntry, IPackageExport> export : findExportedClasses(bundle,
+                jar).entrySet())
             {
                 JarEntry entry = export.getKey();
                 InputStream in = null;
                 try
                 {
-                    in = jar.getInputStream( entry );
-                    ClassParser parser = new ClassParser( in, entry.getName() );
+                    in = jar.getInputStream(entry);
+                    ClassParser parser = new ClassParser(in, entry.getName());
                     JavaClass c = parser.parse();
-                    index.addEntry( c, rep, bundle, true );
+                    index.addEntry(c, rep, bundle, true);
                 }
                 finally
                 {
-                    if ( in != null )
+                    if (in != null)
                     {
                         in.close();
                     }
                 }
             }
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
-            SigilCore.error( "Failed to read jar " + loc, e );
+            SigilCore.error("Failed to read jar " + loc, e);
         }
         finally
         {
-            if ( jar != null )
+            if (jar != null)
             {
                 try
                 {
                     jar.close();
                 }
-                catch ( IOException e )
+                catch (IOException e)
                 {
-                    SigilCore.error( "Failed to close jar " + loc, e );
+                    SigilCore.error("Failed to close jar " + loc, e);
                 }
             }
         }
     }
 
-
-    private static Map<JarEntry, IPackageExport> findExportedClasses( ISigilBundle bundle, JarFile jar )
+    private static Map<JarEntry, IPackageExport> findExportedClasses(ISigilBundle bundle,
+        JarFile jar)
     {
         HashMap<JarEntry, IPackageExport> found = new HashMap<JarEntry, IPackageExport>();
 
-        IPackageExport[] exports = bundle.getBundleInfo().childrenOfType( IPackageExport.class );
-        if ( exports.length > 0 )
+        IPackageExport[] exports = bundle.getBundleInfo().childrenOfType(
+            IPackageExport.class);
+        if (exports.length > 0)
         {
-            Arrays.sort( exports, new Comparator<IPackageExport>()
+            Arrays.sort(exports, new Comparator<IPackageExport>()
             {
-                public int compare( IPackageExport o1, IPackageExport o2 )
+                public int compare(IPackageExport o1, IPackageExport o2)
                 {
-                    return -1 * o1.compareTo( o2 );
+                    return -1 * o1.compareTo(o2);
                 }
-            } );
-            for ( Enumeration<JarEntry> e = jar.entries(); e.hasMoreElements(); )
+            });
+            for (Enumeration<JarEntry> e = jar.entries(); e.hasMoreElements();)
             {
                 JarEntry entry = e.nextElement();
-                String className = toClassName( entry );
-                if ( className != null )
+                String className = toClassName(entry);
+                if (className != null)
                 {
-                    IPackageExport ex = findExport( className, exports );
+                    IPackageExport ex = findExport(className, exports);
 
-                    if ( found != null )
+                    if (found != null)
                     {
-                        found.put( entry, ex );
+                        found.put(entry, ex);
                     }
                 }
             }
@@ -284,12 +277,11 @@ public class SigilSearch extends AbstractUIPlugin
         return found;
     }
 
-
-    private static IPackageExport findExport( String className, IPackageExport[] exports )
+    private static IPackageExport findExport(String className, IPackageExport[] exports)
     {
-        for ( IPackageExport e : exports )
+        for (IPackageExport e : exports)
         {
-            if ( className.startsWith( e.getPackageName() ) )
+            if (className.startsWith(e.getPackageName()))
             {
                 return e;
             }
@@ -297,14 +289,13 @@ public class SigilSearch extends AbstractUIPlugin
         return null;
     }
 
-
-    private static String toClassName( JarEntry entry )
+    private static String toClassName(JarEntry entry)
     {
         String name = entry.getName();
-        if ( name.endsWith( CLASS_EXTENSION ) )
+        if (name.endsWith(CLASS_EXTENSION))
         {
-            name = name.substring( 0, name.length() - CLASS_EXTENSION.length() );
-            name = name.replace( '/', '.' );
+            name = name.substring(0, name.length() - CLASS_EXTENSION.length());
+            name = name.replace('/', '.');
             return name;
         }
         else

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime.io;
 
-
 public interface Constants
 {
     public static final int OK = 0;

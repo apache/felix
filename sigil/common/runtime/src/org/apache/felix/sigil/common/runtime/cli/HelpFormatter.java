@@ -359,7 +359,8 @@ public class HelpFormatter
      * @param options the Options instance
      * @param footer the banner to display at the end of the help
      */
-    public void printHelp(String cmdLineSyntax, String header, Options options, String footer)
+    public void printHelp(String cmdLineSyntax, String header, Options options,
+        String footer)
     {
         printHelp(cmdLineSyntax, header, options, footer, false);
     }
@@ -376,7 +377,8 @@ public class HelpFormatter
      * @param autoUsage whether to print an automatically generated
      * usage statement
      */
-    public void printHelp(String cmdLineSyntax, String header, Options options, String footer, boolean autoUsage)
+    public void printHelp(String cmdLineSyntax, String header, Options options,
+        String footer, boolean autoUsage)
     {
         printHelp(defaultWidth, cmdLineSyntax, header, options, footer, autoUsage);
     }
@@ -392,7 +394,8 @@ public class HelpFormatter
      * @param options the Options instance
      * @param footer the banner to display at the end of the help
      */
-    public void printHelp(int width, String cmdLineSyntax, String header, Options options, String footer)
+    public void printHelp(int width, String cmdLineSyntax, String header,
+        Options options, String footer)
     {
         printHelp(width, cmdLineSyntax, header, options, footer, false);
     }
@@ -411,11 +414,12 @@ public class HelpFormatter
      * usage statement
      */
     public void printHelp(int width, String cmdLineSyntax, String header,
-                          Options options, String footer, boolean autoUsage)
+        Options options, String footer, boolean autoUsage)
     {
         PrintWriter pw = new PrintWriter(System.out);
 
-        printHelp(pw, width, cmdLineSyntax, header, options, defaultLeftPad, defaultDescPad, footer, autoUsage);
+        printHelp(pw, width, cmdLineSyntax, header, options, defaultLeftPad,
+            defaultDescPad, footer, autoUsage);
         pw.flush();
     }
 
@@ -436,13 +440,12 @@ public class HelpFormatter
      *
      * @throws IllegalStateException if there is no room to print a line
      */
-    public void printHelp(PrintWriter pw, int width, String cmdLineSyntax, 
-                          String header, Options options, int leftPad, 
-                          int descPad, String footer)
+    public void printHelp(PrintWriter pw, int width, String cmdLineSyntax, String header,
+        Options options, int leftPad, int descPad, String footer)
     {
-        printHelp(pw, width, cmdLineSyntax, header, options, leftPad, descPad, footer, false);
+        printHelp(pw, width, cmdLineSyntax, header, options, leftPad, descPad, footer,
+            false);
     }
-
 
     /**
      * Print the help for <code>options</code> with the specified
@@ -463,9 +466,8 @@ public class HelpFormatter
      *
      * @throws IllegalStateException if there is no room to print a line
      */
-    public void printHelp(PrintWriter pw, int width, String cmdLineSyntax,
-                          String header, Options options, int leftPad,
-                          int descPad, String footer, boolean autoUsage)
+    public void printHelp(PrintWriter pw, int width, String cmdLineSyntax, String header,
+        Options options, int leftPad, int descPad, String footer, boolean autoUsage)
     {
         if ((cmdLineSyntax == null) || (cmdLineSyntax.length() == 0))
         {
@@ -534,7 +536,6 @@ public class HelpFormatter
                     // add the group to the processed list
                     processedGroups.add(group);
 
-
                     // add the usage clause
                     appendOptionGroup(buff, group);
                 }
@@ -554,7 +555,6 @@ public class HelpFormatter
                 buff.append(" ");
             }
         }
-
 
         // call printWrapped
         printWrapped(pw, width, buff.toString().indexOf(' ') + 1, buff.toString());
@@ -602,7 +602,8 @@ public class HelpFormatter
      * @param option the Option to append
      * @param required whether the Option is required or not
      */
-    private static void appendOption(final StringBuffer buff, final Option option, final boolean required)
+    private static void appendOption(final StringBuffer buff, final Option option,
+        final boolean required)
     {
         if (!required)
         {
@@ -643,7 +644,8 @@ public class HelpFormatter
     {
         int argPos = cmdLineSyntax.indexOf(' ') + 1;
 
-        printWrapped(pw, width, defaultSyntaxPrefix.length() + argPos, defaultSyntaxPrefix + cmdLineSyntax);
+        printWrapped(pw, width, defaultSyntaxPrefix.length() + argPos,
+            defaultSyntaxPrefix + cmdLineSyntax);
     }
 
     /**
@@ -658,8 +660,8 @@ public class HelpFormatter
      * @param descPad the number of characters of padding to be prefixed
      * to each description line
      */
-    public void printOptions(PrintWriter pw, int width, Options options, 
-                             int leftPad, int descPad)
+    public void printOptions(PrintWriter pw, int width, Options options, int leftPad,
+        int descPad)
     {
         StringBuffer sb = new StringBuffer();
 
@@ -711,7 +713,8 @@ public class HelpFormatter
      *
      * @return the StringBuffer with the rendered Options contents.
      */
-    protected StringBuffer renderOptions(StringBuffer sb, int width, Options options, int leftPad, int descPad)
+    protected StringBuffer renderOptions(StringBuffer sb, int width, Options options,
+        int leftPad, int descPad)
     {
         final String lpad = createPadding(leftPad);
         final String dpad = createPadding(descPad);
@@ -735,7 +738,8 @@ public class HelpFormatter
 
             if (option.getOpt() == null)
             {
-                optBuf.append(lpad).append("   " + defaultLongOptPrefix).append(option.getLongOpt());
+                optBuf.append(lpad).append("   " + defaultLongOptPrefix).append(
+                    option.getLongOpt());
             }
             else
             {
@@ -743,7 +747,8 @@ public class HelpFormatter
 
                 if (option.hasLongOpt())
                 {
-                    optBuf.append(',').append(defaultLongOptPrefix).append(option.getLongOpt());
+                    optBuf.append(',').append(defaultLongOptPrefix).append(
+                        option.getLongOpt());
                 }
             }
 
@@ -806,8 +811,8 @@ public class HelpFormatter
      *
      * @return the StringBuffer with the rendered Options contents.
      */
-    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
-                                             int nextLineTabStop, String text)
+    protected StringBuffer renderWrappedText(StringBuffer sb, int width,
+        int nextLineTabStop, String text)
     {
         int pos = findWrapPos(text, width, 0);
 
@@ -840,8 +845,8 @@ public class HelpFormatter
 
                 return sb;
             }
-            
-            if ( (text.length() > width) && (pos == nextLineTabStop - 1) ) 
+
+            if ((text.length() > width) && (pos == nextLineTabStop - 1))
             {
                 pos = width;
             }
@@ -869,7 +874,7 @@ public class HelpFormatter
 
         // the line ends before the max wrap pos or a new line char found
         if (((pos = text.indexOf('\n', startPos)) != -1 && pos <= width)
-                || ((pos = text.indexOf('\t', startPos)) != -1 && pos <= width))
+            || ((pos = text.indexOf('\t', startPos)) != -1 && pos <= width))
         {
             return pos + 1;
         }
@@ -878,14 +883,13 @@ public class HelpFormatter
             return -1;
         }
 
-
         // look for the last whitespace character before startPos+width
         pos = startPos + width;
 
         char c;
 
-        while ((pos >= startPos) && ((c = text.charAt(pos)) != ' ')
-                && (c != '\n') && (c != '\r'))
+        while ((pos >= startPos) && ((c = text.charAt(pos)) != ' ') && (c != '\n')
+            && (c != '\r'))
         {
             --pos;
         }
@@ -895,13 +899,13 @@ public class HelpFormatter
         {
             return pos;
         }
-        
+
         // must look for the first whitespace chearacter after startPos 
         // + width
         pos = startPos + width;
 
-        while ((pos <= text.length()) && ((c = text.charAt(pos)) != ' ')
-               && (c != '\n') && (c != '\r'))
+        while ((pos <= text.length()) && ((c = text.charAt(pos)) != ' ') && (c != '\n')
+            && (c != '\r'))
         {
             ++pos;
         }

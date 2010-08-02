@@ -19,33 +19,30 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences;
 
-
 import org.apache.felix.sigil.eclipse.ui.util.ProjectUtils;
 import org.eclipse.jface.preference.PreferencePage;
-
 
 public abstract class ProjectDependentPreferencesPage extends PreferencePage
 {
 
-    public ProjectDependentPreferencesPage( String title )
+    public ProjectDependentPreferencesPage(String title)
     {
-        super( title );
+        super(title);
     }
-
 
     @Override
     public boolean performOk()
     {
-        if ( isDirty() )
+        if (isDirty())
         {
-            return ProjectUtils.runTaskWithRebuildCheck( new Runnable()
+            return ProjectUtils.runTaskWithRebuildCheck(new Runnable()
             {
                 public void run()
                 {
                     doSave();
                 }
 
-            }, getShell() );
+            }, getShell());
         }
         else
         {
@@ -53,9 +50,7 @@ public abstract class ProjectDependentPreferencesPage extends PreferencePage
         }
     }
 
-
     protected abstract void doSave();
-
 
     protected abstract boolean isDirty();
 }

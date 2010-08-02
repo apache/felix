@@ -19,12 +19,9 @@
 
 package org.apache.felix.sigil.common.model.osgi;
 
-
 import org.apache.felix.sigil.common.model.IRequirementModelElement;
 
-
-public interface IPackageImport extends IPackageModelElement, IVersionRangeModelElement, IRequirementModelElement,
-    Comparable<IPackageImport>
+public interface IPackageImport extends IPackageModelElement, IVersionRangeModelElement, IRequirementModelElement, Comparable<IPackageImport>
 {
     /**
      * indicates whether import is needed at compile-time.
@@ -33,9 +30,7 @@ public interface IPackageImport extends IPackageModelElement, IVersionRangeModel
      */
     boolean isDependency();
 
-
-    void setDependency( boolean dependency );
-
+    void setDependency(boolean dependency);
 
     /**
      * indicates whether import should be added to OSGi Package-Import header.
@@ -43,8 +38,7 @@ public interface IPackageImport extends IPackageModelElement, IVersionRangeModel
      */
     OSGiImport getOSGiImport();
 
-
-    void setOSGiImport( OSGiImport osgiImport );
+    void setOSGiImport(OSGiImport osgiImport);
 
     enum OSGiImport
     {

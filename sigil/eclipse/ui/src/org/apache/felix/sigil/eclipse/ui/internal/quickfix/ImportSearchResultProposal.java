@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 
-
 import org.apache.felix.sigil.common.model.ModelElementFactory;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
@@ -51,7 +50,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.osgi.framework.Version;
 
-
 public class ImportSearchResultProposal implements IJavaCompletionProposal
 {
 
@@ -60,98 +58,101 @@ public class ImportSearchResultProposal implements IJavaCompletionProposal
     private final ISearchResult result;
     private final Shell shell;
 
-
-    public ImportSearchResultProposal( Shell shell, ISearchResult result, Name node, ISigilProjectModel project )
+    public ImportSearchResultProposal(Shell shell, ISearchResult result, Name node, ISigilProjectModel project)
     {
         this.shell = shell;
         this.result = result;
         this.project = project;
-        if ( node != null )
+        if (node != null)
         {
-            CompilationUnit cu = ( CompilationUnit ) ASTNodes.getParent( node, ASTNode.COMPILATION_UNIT );
-            this.fCompilationUnit = ( ICompilationUnit ) cu.getJavaElement();
+            CompilationUnit cu = (CompilationUnit) ASTNodes.getParent(node,
+                ASTNode.COMPILATION_UNIT);
+            this.fCompilationUnit = (ICompilationUnit) cu.getJavaElement();
         }
     }
-
 
     public int getRelevance()
     {
         return 100;
     }
 
-
-    public void apply( IDocument document )
+    public void apply(IDocument document)
     {
         IPackageExport e = result.getExport();
-        if ( result.getExport() == null )
+        if (result.getExport() == null)
         {
-            if ( MessageDialog.openQuestion( shell, "Modify " + result.getProvider().getBundleInfo().getSymbolicName(),
-                result.getPackageName() + " is not exported. Do you want to export it now?" ) )
+            if (MessageDialog.openQuestion(shell, "Modify "
+                + result.getProvider().getBundleInfo().getSymbolicName(),
+                result.getPackageName()
+                    + " is not exported. Do you want to export it now?"))
             {
-                final IPackageExport pe = ModelElementFactory.getInstance().newModelElement( IPackageExport.class );
-                pe.setPackageName( result.getPackageName() );
+                final IPackageExport pe = ModelElementFactory.getInstance().newModelElement(
+                    IPackageExport.class);
+                pe.setPackageName(result.getPackageName());
                 //e.setVersion(version)
-                final ISigilProjectModel mod = result.getProvider().getAncestor( ISigilProjectModel.class );
-                if ( mod == null )
+                final ISigilProjectModel mod = result.getProvider().getAncestor(
+                    ISigilProjectModel.class);
+                if (mod == null)
                 {
-                    throw new IllegalStateException( "Attempt to modify binary package export" );
+                    throw new IllegalStateException(
+                        "Attempt to modify binary package export");
                 }
                 WorkspaceModifyOperation op = new WorkspaceModifyOperation()
                 {
                     @Override
-                    protected void execute( IProgressMonitor monitor ) throws CoreException
+                    protected void execute(IProgressMonitor monitor) throws CoreException
                     {
-                        mod.getBundle().getBundleInfo().addExport( pe );
-                        mod.save( monitor );
+                        mod.getBundle().getBundleInfo().addExport(pe);
+                        mod.save(monitor);
                     }
                 };
 
-                SigilUI.runWorkspaceOperation( op, null );
+                SigilUI.runWorkspaceOperation(op, null);
                 e = pe;
             }
         }
 
-        final IPackageImport i = ModelElementFactory.getInstance().newModelElement( IPackageImport.class );
-        i.setPackageName( e.getPackageName() );
+        final IPackageImport i = ModelElementFactory.getInstance().newModelElement(
+            IPackageImport.class);
+        i.setPackageName(e.getPackageName());
         VersionRange selectedVersions = ModelHelper.getDefaultRange(e.getVersion());
-        i.setVersions( selectedVersions );
+        i.setVersions(selectedVersions);
 
         WorkspaceModifyOperation op = new WorkspaceModifyOperation()
         {
             @Override
-            protected void execute( IProgressMonitor monitor ) throws CoreException
+            protected void execute(IProgressMonitor monitor) throws CoreException
             {
-                project.getBundle().getBundleInfo().addImport( i );
-                project.save( null );
+                project.getBundle().getBundleInfo().addImport(i);
+                project.save(null);
             }
         };
 
-        SigilUI.runWorkspaceOperation( op, null );
+        SigilUI.runWorkspaceOperation(op, null);
         addSourceImport();
     }
-
 
     private void addSourceImport()
     {
         // add import
         try
         {
-            ImportRewrite rewrite = CodeStyleConfiguration.createImportRewrite( fCompilationUnit, true );
-            rewrite.addImport( result.getClassName() );
-            JavaModelUtil.applyEdit( fCompilationUnit, rewrite.rewriteImports( null ), false, null );
+            ImportRewrite rewrite = CodeStyleConfiguration.createImportRewrite(
+                fCompilationUnit, true);
+            rewrite.addImport(result.getClassName());
+            JavaModelUtil.applyEdit(fCompilationUnit, rewrite.rewriteImports(null),
+                false, null);
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to add import", e );
+            SigilCore.error("Failed to add import", e);
         }
     }
-
 
     public String getAdditionalProposalInfo()
     {
         return null;
     }
-
 
     public IContextInformation getContextInformation()
     {
@@ -159,15 +160,14 @@ public class ImportSearchResultProposal implements IJavaCompletionProposal
         return null;
     }
 
-
     public String getDisplayString()
     {
         String type = result.getClassName();
-        String loc = result.getExport() == null ? " from " + result.getProvider().getBundleInfo().getSymbolicName()
-            : " version " + result.getExport().getVersion();
+        String loc = result.getExport() == null ? " from "
+            + result.getProvider().getBundleInfo().getSymbolicName() : " version "
+            + result.getExport().getVersion();
         return "Import " + type + loc;
     }
-
 
     public Image getImage()
     {
@@ -175,8 +175,7 @@ public class ImportSearchResultProposal implements IJavaCompletionProposal
         return null;
     }
 
-
-    public Point getSelection( IDocument document )
+    public Point getSelection(IDocument document)
     {
         return null;
     }

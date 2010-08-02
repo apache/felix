@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 public class RepositoryChangeEvent
 {
     public static enum Type
@@ -30,19 +29,16 @@ public class RepositoryChangeEvent
     private Type type;
     private IBundleRepository repository;
 
-
-    public RepositoryChangeEvent( IBundleRepository repository, Type type )
+    public RepositoryChangeEvent(IBundleRepository repository, Type type)
     {
         this.repository = repository;
         this.type = type;
     }
 
-
     public Type getType()
     {
         return type;
     }
-
 
     public IBundleRepository getRepository()
     {

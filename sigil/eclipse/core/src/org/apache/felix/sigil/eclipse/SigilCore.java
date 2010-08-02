@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,7 +80,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
-
 /**
  * The activator class controls the plug-in life cycle
  */
@@ -92,19 +90,25 @@ public class SigilCore extends AbstractUIPlugin
     // The plug-in ID
     public static final String PLUGIN_ID = BASE + ".eclipse.core";
     public static final String NATURE_ID = BASE + ".sigilnature";
-    public static final String PREFERENCES_ID = BASE + ".ui.preferences.SigilPreferencePage";
-    public static final String OSGI_INSTALLS_PREFERENCES_ID = BASE + ".ui.preferences.osgiInstalls";
-    public static final String EXCLUDED_RESOURCES_PREFERENCES_ID = BASE + ".ui.preferences.excludedResources";
-    public static final String REPOSITORIES_PREFERENCES_ID = BASE + ".ui.preferences.repositoriesPreferencePage";
+    public static final String PREFERENCES_ID = BASE
+        + ".ui.preferences.SigilPreferencePage";
+    public static final String OSGI_INSTALLS_PREFERENCES_ID = BASE
+        + ".ui.preferences.osgiInstalls";
+    public static final String EXCLUDED_RESOURCES_PREFERENCES_ID = BASE
+        + ".ui.preferences.excludedResources";
+    public static final String REPOSITORIES_PREFERENCES_ID = BASE
+        + ".ui.preferences.repositoriesPreferencePage";
     public static final String SIGIL_PROJECT_FILE = IBldProject.PROJECT_FILE;
     public static final String BUILDER_ID = PLUGIN_ID + ".sigilBuilder";
     public static final String CLASSPATH_CONTAINER_PATH = BASE + ".classpathContainer";
 
     public static final String OSGI_INSTALLS = BASE + ".osgi.installs";
-    public static final String OSGI_DEFAULT_INSTALL_ID = BASE + ".osgi.default.install.id";
+    public static final String OSGI_DEFAULT_INSTALL_ID = BASE
+        + ".osgi.default.install.id";
     public static final String OSGI_INSTALL_PREFIX = BASE + ".osgi.install.";
     public static final String OSGI_SOURCE_LOCATION = BASE + ".osgi.source.location";
-    public static final String OSGI_INSTALL_CHECK_PREFERENCE = BASE + ".osgi.install.check";
+    public static final String OSGI_INSTALL_CHECK_PREFERENCE = BASE
+        + ".osgi.install.check";
     public static final String LIBRARY_KEYS_PREF = BASE + ".library.keys";
     public static final String PREFERENCES_REBUILD_PROJECTS = BASE + ".rebuild.projects";
     public static final String QUALIFY_VERSIONS = BASE + ".qualify.versions";
@@ -113,20 +117,29 @@ public class SigilCore extends AbstractUIPlugin
     public static final String DEFAULT_VERSION_UPPER_BOUND = BASE + ".versionUpperBound";
 
     public static final String DEFAULT_EXCLUDED_RESOURCES = BASE + ".excludedResources";
-    public static final String INCLUDE_OPTIONAL_DEPENDENCIES = BASE + ".includeOptionalDependencies";
+    public static final String INCLUDE_OPTIONAL_DEPENDENCIES = BASE
+        + ".includeOptionalDependencies";
 
-    public static final String INSTALL_BUILDER_EXTENSION_POINT_ID = BASE + ".installbuilder";
-    public static final String REPOSITORY_PROVIDER_EXTENSION_POINT_ID = BASE + ".repositoryprovider";
+    public static final String INSTALL_BUILDER_EXTENSION_POINT_ID = BASE
+        + ".installbuilder";
+    public static final String REPOSITORY_PROVIDER_EXTENSION_POINT_ID = BASE
+        + ".repositoryprovider";
 
-    public static final String MARKER_UNRESOLVED_DEPENDENCY = BASE + ".unresolvedDependencyMarker";
-    public static final String MARKER_UNRESOLVED_IMPORT_PACKAGE = BASE + ".unresolvedDependencyMarker.importPackage";
-    public static final String MARKER_UNRESOLVED_REQUIRE_BUNDLE = BASE + ".unresolvedDependencyMarker.requireBundle";
+    public static final String MARKER_UNRESOLVED_DEPENDENCY = BASE
+        + ".unresolvedDependencyMarker";
+    public static final String MARKER_UNRESOLVED_IMPORT_PACKAGE = BASE
+        + ".unresolvedDependencyMarker.importPackage";
+    public static final String MARKER_UNRESOLVED_REQUIRE_BUNDLE = BASE
+        + ".unresolvedDependencyMarker.requireBundle";
     public static final String REPOSITORY_SET = PLUGIN_ID + ".repository.set";
-    
+
     public static final String PREFERENCES_NOASK_OSGI_INSTALL = BASE + ".noAskOSGIHome";
-    public static final String PREFERENCES_ADD_IMPORT_FOR_EXPORT = BASE + ".addImportForExport";
-    public static final String PREFERENCES_INCLUDE_OPTIONAL = PLUGIN_ID + ".include.optional";
-    public static final String PREFERENCES_REMOVE_IMPORT_FOR_EXPORT = BASE + ".removeImportForExport";
+    public static final String PREFERENCES_ADD_IMPORT_FOR_EXPORT = BASE
+        + ".addImportForExport";
+    public static final String PREFERENCES_INCLUDE_OPTIONAL = PLUGIN_ID
+        + ".include.optional";
+    public static final String PREFERENCES_REMOVE_IMPORT_FOR_EXPORT = BASE
+        + ".removeImportForExport";
 
     private static final Object NULL = new Object();
 
@@ -154,72 +167,64 @@ public class SigilCore extends AbstractUIPlugin
         return plugin;
     }
 
-
-    public static CoreException newCoreException( String msg, Throwable t )
+    public static CoreException newCoreException(String msg, Throwable t)
     {
-        return new CoreException( makeStatus( msg, t, IStatus.ERROR ) );
+        return new CoreException(makeStatus(msg, t, IStatus.ERROR));
     }
 
-
-    public static void log( String msg )
+    public static void log(String msg)
     {
-        DebugPlugin.log( makeStatus( msg, null, IStatus.INFO ) );
+        DebugPlugin.log(makeStatus(msg, null, IStatus.INFO));
     }
 
-
-    public static void error( String msg )
+    public static void error(String msg)
     {
-        DebugPlugin.log( makeStatus( msg, null, IStatus.ERROR ) );
+        DebugPlugin.log(makeStatus(msg, null, IStatus.ERROR));
     }
 
-
-    public static void error( String msg, Throwable t )
+    public static void error(String msg, Throwable t)
     {
-        DebugPlugin.log( makeStatus( msg, t, IStatus.ERROR ) );
+        DebugPlugin.log(makeStatus(msg, t, IStatus.ERROR));
     }
 
-
-    public static void warn( String msg )
+    public static void warn(String msg)
     {
-        DebugPlugin.log( makeStatus( msg, null, IStatus.WARNING ) );
+        DebugPlugin.log(makeStatus(msg, null, IStatus.WARNING));
     }
 
-
-    public static void warn( String msg, Throwable t )
+    public static void warn(String msg, Throwable t)
     {
-        DebugPlugin.log( makeStatus( msg, t, IStatus.WARNING ) );
+        DebugPlugin.log(makeStatus(msg, t, IStatus.WARNING));
     }
 
-
-    private static IStatus makeStatus( String msg, Throwable t, int status )
+    private static IStatus makeStatus(String msg, Throwable t, int status)
     {
-        if ( t instanceof CoreException )
+        if (t instanceof CoreException)
         {
-            CoreException c = ( CoreException ) t;
+            CoreException c = (CoreException) t;
             return c.getStatus();
         }
         else
         {
-            return new Status( status, SigilCore.PLUGIN_ID, status, msg, t );
+            return new Status(status, SigilCore.PLUGIN_ID, status, msg, t);
         }
     }
 
-
-    public static boolean isSigilProject( IProject resource )
+    public static boolean isSigilProject(IProject resource)
     {
-        if ( resource == null )
+        if (resource == null)
             return false;
 
-        if ( resource.isAccessible() && resource instanceof IProject )
+        if (resource.isAccessible() && resource instanceof IProject)
         {
-            IProject project = ( IProject ) resource;
+            IProject project = (IProject) resource;
             try
             {
-                return project.hasNature( NATURE_ID );
+                return project.hasNature(NATURE_ID);
             }
-            catch ( CoreException e )
+            catch (CoreException e)
             {
-                error( e.getMessage(), e );
+                error(e.getMessage(), e);
                 return false;
             }
         }
@@ -229,25 +234,21 @@ public class SigilCore extends AbstractUIPlugin
         }
     }
 
-
-    public static boolean hasProjectNature( IProject project ) throws CoreException
+    public static boolean hasProjectNature(IProject project) throws CoreException
     {
-        return project.getNature( NATURE_ID ) != null;
+        return project.getNature(NATURE_ID) != null;
     }
-
 
     public static ResourceBundle getResourceBundle()
     {
-        return ResourceBundle.getBundle( "resources." + SigilCore.class.getName(), Locale.getDefault(), SigilCore.class
-            .getClassLoader() );
+        return ResourceBundle.getBundle("resources." + SigilCore.class.getName(),
+            Locale.getDefault(), SigilCore.class.getClassLoader());
     }
 
-
-    public static ISigilProjectModel create( IProject project ) throws CoreException
+    public static ISigilProjectModel create(IProject project) throws CoreException
     {
         return projectManager.getSigilProject(project);
     }
-
 
     /**
      * The constructor
@@ -257,11 +258,9 @@ public class SigilCore extends AbstractUIPlugin
         plugin = this;
     }
 
-
     public void earlyStartup()
     {
     }
-
 
     /*
      * (non-Javadoc)
@@ -270,9 +269,9 @@ public class SigilCore extends AbstractUIPlugin
      * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
      * )
      */
-    public void start( final BundleContext context ) throws Exception
+    public void start(final BundleContext context) throws Exception
     {
-        super.start( context );
+        super.start(context);
 
         modelRoot = new SigilModelRoot();
 
@@ -283,13 +282,12 @@ public class SigilCore extends AbstractUIPlugin
         repositoryMap = new RepositoryMap();
         globalRepositoryManager = new GlobalRepositoryManager(repositoryMap);
         globalRepositoryManager.initialise();
-        
+
         projectManager = new SigilProjectManager();
 
-        registerModelElements( context );
+        registerModelElements(context);
         registerResourceListeners();
     }
-
 
     /*
      * (non-Javadoc)
@@ -298,27 +296,27 @@ public class SigilCore extends AbstractUIPlugin
      * org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext
      * )
      */
-    public void stop( BundleContext context ) throws Exception
+    public void stop(BundleContext context) throws Exception
     {
-        if ( descriptorTracker != null )
+        if (descriptorTracker != null)
         {
             descriptorTracker.close();
             descriptorTracker = null;
         }
 
-        if ( registryTracker != null )
+        if (registryTracker != null)
         {
             registryTracker.close();
             registryTracker = null;
         }
 
-        if ( serializerTracker != null )
+        if (serializerTracker != null)
         {
             serializerTracker.close();
             serializerTracker = null;
         }
 
-        for ( SigilRepositoryManager m : repositoryManagers.values() )
+        for (SigilRepositoryManager m : repositoryManagers.values())
         {
             m.destroy();
         }
@@ -330,24 +328,23 @@ public class SigilCore extends AbstractUIPlugin
 
         plugin = null;
 
-        super.stop( context );
+        super.stop(context);
     }
 
-
-    public static boolean isBundledPath( String bp ) throws CoreException
+    public static boolean isBundledPath(String bp) throws CoreException
     {
-        boolean bundle = JavaHelper.isCachedBundle( bp );
+        boolean bundle = JavaHelper.isCachedBundle(bp);
 
-        if ( !bundle )
+        if (!bundle)
         {
-            bundle = isProjectPath( bp );
+            bundle = isProjectPath(bp);
 
-            if ( !bundle )
+            if (!bundle)
             {
-                for ( IBundleRepository r : getGlobalRepositoryManager().getRepositories() )
+                for (IBundleRepository r : getGlobalRepositoryManager().getRepositories())
                 {
-                    bundle = isBundlePath( bp, r );
-                    if ( bundle )
+                    bundle = isBundlePath(bp, r);
+                    if (bundle)
                         break;
                 }
             }
@@ -356,19 +353,18 @@ public class SigilCore extends AbstractUIPlugin
         return bundle;
     }
 
-
-    private static boolean isBundlePath( final String bp, IBundleRepository r )
+    private static boolean isBundlePath(final String bp, IBundleRepository r)
     {
         final AtomicBoolean flag = new AtomicBoolean();
 
         IRepositoryVisitor visitor = new IRepositoryVisitor()
         {
-            public boolean visit( ISigilBundle b )
+            public boolean visit(ISigilBundle b)
             {
                 File path = b.getLocation();
-                if ( path != null && path.getAbsolutePath().equals( bp ) )
+                if (path != null && path.getAbsolutePath().equals(bp))
                 {
-                    flag.set( true );
+                    flag.set(true);
                     return false;
                 }
                 else
@@ -379,19 +375,18 @@ public class SigilCore extends AbstractUIPlugin
 
         };
 
-        r.accept( visitor, ResolutionConfig.INDEXED_ONLY | ResolutionConfig.LOCAL_ONLY );
+        r.accept(visitor, ResolutionConfig.INDEXED_ONLY | ResolutionConfig.LOCAL_ONLY);
 
         return flag.get();
     }
 
-
-    private static boolean isProjectPath( String bp ) throws CoreException
+    private static boolean isProjectPath(String bp) throws CoreException
     {
-        for ( ISigilProjectModel p : SigilCore.getRoot().getProjects() )
+        for (ISigilProjectModel p : SigilCore.getRoot().getProjects())
         {
             IPath path = p.findOutputLocation();
 
-            if ( path.toOSString().equals( bp ) )
+            if (path.toOSString().equals(bp))
             {
                 return true;
             }
@@ -400,205 +395,199 @@ public class SigilCore extends AbstractUIPlugin
         return false;
     }
 
-
     private void registerResourceListeners()
     {
-        Job job = new Job( "Initialising sigil resource listeners" )
+        Job job = new Job("Initialising sigil resource listeners")
         {
             @Override
-            protected IStatus run( IProgressMonitor monitor )
+            protected IStatus run(IProgressMonitor monitor)
             {
-                ResourcesPlugin.getWorkspace().addResourceChangeListener( new ProjectResourceListener(projectManager),
-                    ProjectResourceListener.EVENT_MASKS );
+                ResourcesPlugin.getWorkspace().addResourceChangeListener(
+                    new ProjectResourceListener(projectManager),
+                    ProjectResourceListener.EVENT_MASKS);
                 return Status.OK_STATUS;
             }
         };
-        job.setSystem( true );
+        job.setSystem(true);
         job.schedule();
     }
 
-
-    private void registerModelElements( BundleContext context )
+    private void registerModelElements(BundleContext context)
     {
         // trick to get eclipse to lazy load BldCore for model elements
         BldCore.getLicenseManager();
-        ModelElementFactory.getInstance().register( ISigilProjectModel.class, SigilProject.class, "project", "sigil", null );
+        ModelElementFactory.getInstance().register(ISigilProjectModel.class,
+            SigilProject.class, "project", "sigil", null);
     }
-
 
     public static IOSGiInstallManager getInstallManager()
     {
         return installs;
     }
 
-
     public static ISigilModelRoot getRoot()
     {
         return modelRoot;
     }
-
 
     public static IRepositoryManager getGlobalRepositoryManager()
     {
         return globalRepositoryManager;
     }
 
-
-    public static IRepositoryManager getRepositoryManager( String set )
+    public static IRepositoryManager getRepositoryManager(String set)
     {
         SigilRepositoryManager manager = null;
 
-        if ( set == null )
+        if (set == null)
         {
-            manager = repositoryManagers.get( NULL );
-            if ( manager == null )
+            manager = repositoryManagers.get(NULL);
+            if (manager == null)
             {
-                manager = new SigilRepositoryManager( null, repositoryMap );
+                manager = new SigilRepositoryManager(null, repositoryMap);
                 manager.initialise();
-                repositoryManagers.put( NULL, manager );
+                repositoryManagers.put(NULL, manager);
             }
         }
         else
         {
-            manager = repositoryManagers.get( set );
+            manager = repositoryManagers.get(set);
 
-            if ( manager == null )
+            if (manager == null)
             {
-                manager = new SigilRepositoryManager( set, repositoryMap );
+                manager = new SigilRepositoryManager(set, repositoryMap);
                 manager.initialise();
-                repositoryManagers.put( set, manager );
+                repositoryManagers.put(set, manager);
             }
         }
 
         return manager;
     }
 
-
-    public static IRepositoryManager getRepositoryManager( ISigilProjectModel model )
+    public static IRepositoryManager getRepositoryManager(ISigilProjectModel model)
     {
-        return getRepositoryManager( loadProjectRepositorySet( model ) );
+        return getRepositoryManager(loadProjectRepositorySet(model));
     }
 
-
-    private static String loadProjectRepositorySet( ISigilProjectModel model )
+    private static String loadProjectRepositorySet(ISigilProjectModel model)
     {
-        if ( model == null )
+        if (model == null)
         {
             return null;
         }
 
-        return model.getPreferences().get( REPOSITORY_SET, null );
+        return model.getPreferences().get(REPOSITORY_SET, null);
     }
-
 
     public static IRepositoryConfiguration getRepositoryConfiguration()
     {
         return repositoryConfig;
     }
 
-
-    public static void rebuildAllBundleDependencies( IProgressMonitor monitor )
+    public static void rebuildAllBundleDependencies(IProgressMonitor monitor)
     {
         Collection<ISigilProjectModel> projects = getRoot().getProjects();
-        if ( !projects.isEmpty() )
+        if (!projects.isEmpty())
         {
-            SubMonitor progress = SubMonitor.convert( monitor, projects.size() * 20 );
-            for ( ISigilProjectModel p : projects )
+            SubMonitor progress = SubMonitor.convert(monitor, projects.size() * 20);
+            for (ISigilProjectModel p : projects)
             {
-                rebuild( p, progress );
+                rebuild(p, progress);
             }
         }
 
         monitor.done();
     }
 
-
-    public static void rebuildBundleDependencies( ISigilProjectModel project, Collection<ICapabilityModelElement> caps, IProgressMonitor monitor )
+    public static void rebuildBundleDependencies(ISigilProjectModel project,
+        Collection<ICapabilityModelElement> caps, IProgressMonitor monitor)
     {
-        Set<ISigilProjectModel> affected = SigilCore.getRoot().resolveDependentProjects( caps, monitor );
+        Set<ISigilProjectModel> affected = SigilCore.getRoot().resolveDependentProjects(
+            caps, monitor);
 
-        if ( project != null ) {
-            affected.remove( project );
+        if (project != null)
+        {
+            affected.remove(project);
         }
 
-        SubMonitor progress = SubMonitor.convert( monitor, affected.size() * 20 );
-        for ( ISigilProjectModel dependent : affected )
+        SubMonitor progress = SubMonitor.convert(monitor, affected.size() * 20);
+        for (ISigilProjectModel dependent : affected)
         {
             //dependent.flushDependencyState();
-            rebuild( dependent, progress );
+            rebuild(dependent, progress);
         }
     }
 
-
-    public static void rebuild( ISigilProjectModel dependent, SubMonitor progress )
+    public static void rebuild(ISigilProjectModel dependent, SubMonitor progress)
     {
         try
         {
-            dependent.resetClasspath( progress.newChild( 10 ) );
-            dependent.getProject().build( IncrementalProjectBuilder.FULL_BUILD, progress.newChild( 10 ) );
+            dependent.resetClasspath(progress.newChild(10));
+            dependent.getProject().build(IncrementalProjectBuilder.FULL_BUILD,
+                progress.newChild(10));
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to rebuild " + dependent, e );
+            SigilCore.error("Failed to rebuild " + dependent, e);
         }
     }
 
-
-    public IPath findDefaultBundleLocation( ISigilProjectModel m ) throws CoreException
+    public IPath findDefaultBundleLocation(ISigilProjectModel m) throws CoreException
     {
         IPath loc = m.getProject().getLocation();
-        loc = loc.append( m.getJavaModel().getOutputLocation().removeFirstSegments( 1 ) );
-        loc = loc.removeLastSegments( 1 ).append( "lib" );
-        return loc.append( m.getSymbolicName() + ".jar" );
+        loc = loc.append(m.getJavaModel().getOutputLocation().removeFirstSegments(1));
+        loc = loc.removeLastSegments(1).append("lib");
+        return loc.append(m.getSymbolicName() + ".jar");
     }
 
-
-    public static void makeSigilProject( IProject project, IProgressMonitor monitor ) throws CoreException
+    public static void makeSigilProject(IProject project, IProgressMonitor monitor)
+        throws CoreException
     {
         IProjectDescription description = project.getDescription();
 
         String[] natures = description.getNatureIds();
         String[] newNatures = new String[natures.length + 1];
-        System.arraycopy( natures, 0, newNatures, 0, natures.length );
+        System.arraycopy(natures, 0, newNatures, 0, natures.length);
         newNatures[natures.length] = SigilCore.NATURE_ID;
-        description.setNatureIds( newNatures );
+        description.setNatureIds(newNatures);
 
         ICommand sigilBuild = description.newCommand();
-        sigilBuild.setBuilderName( SigilCore.BUILDER_ID );
+        sigilBuild.setBuilderName(SigilCore.BUILDER_ID);
 
         ICommand javaBuild = description.newCommand();
-        javaBuild.setBuilderName( JavaCore.BUILDER_ID );
+        javaBuild.setBuilderName(JavaCore.BUILDER_ID);
 
-        description.setBuildSpec( new ICommand[]
-            { javaBuild, sigilBuild } );
+        description.setBuildSpec(new ICommand[] { javaBuild, sigilBuild });
 
-        project.setDescription( description, new SubProgressMonitor( monitor, 2 ) );
+        project.setDescription(description, new SubProgressMonitor(monitor, 2));
 
-        IJavaProject java = JavaCore.create( project );
-        if ( java.exists() )
+        IJavaProject java = JavaCore.create(project);
+        if (java.exists())
         {
             IClasspathEntry[] cp = java.getRawClasspath();
             // check if sigil container is already on classpath - if not add it
-            if ( !isSigilOnClasspath( cp ) )
+            if (!isSigilOnClasspath(cp))
             {
-                ArrayList<IClasspathEntry> entries = new ArrayList<IClasspathEntry>( Arrays.asList( cp ) );
-                entries.add( JavaCore.newContainerEntry( new Path( SigilCore.CLASSPATH_CONTAINER_PATH ) ) );
-                java.setRawClasspath( entries.toArray( new IClasspathEntry[entries.size()] ), monitor );
+                ArrayList<IClasspathEntry> entries = new ArrayList<IClasspathEntry>(
+                    Arrays.asList(cp));
+                entries.add(JavaCore.newContainerEntry(new Path(
+                    SigilCore.CLASSPATH_CONTAINER_PATH)));
+                java.setRawClasspath(
+                    entries.toArray(new IClasspathEntry[entries.size()]), monitor);
             }
         }
     }
-
 
     /**
      * @param cp
      * @return
      */
-    private static boolean isSigilOnClasspath( IClasspathEntry[] cp )
+    private static boolean isSigilOnClasspath(IClasspathEntry[] cp)
     {
-        for ( IClasspathEntry e : cp )
+        for (IClasspathEntry e : cp)
         {
-            if ( e.getEntryKind() == IClasspathEntry.CPE_CONTAINER
-                && e.getPath().segment( 0 ).equals( SigilCore.CLASSPATH_CONTAINER_PATH ) )
+            if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER
+                && e.getPath().segment(0).equals(SigilCore.CLASSPATH_CONTAINER_PATH))
             {
                 return true;
             }
@@ -606,28 +595,26 @@ public class SigilCore extends AbstractUIPlugin
         return false;
     }
 
-
-    public static Image loadImage( URL url ) throws IOException
+    public static Image loadImage(URL url) throws IOException
     {
         ImageRegistry registry = getDefault().getImageRegistry();
 
         String key = url.toExternalForm();
-        Image img = registry.get( key );
+        Image img = registry.get(key);
 
-        if ( img == null )
+        if (img == null)
         {
-            img = openImage( url );
-            registry.put( key, img );
+            img = openImage(url);
+            registry.put(key, img);
         }
 
         return img;
     }
 
-
-    private static Image openImage( URL url ) throws IOException
+    private static Image openImage(URL url) throws IOException
     {
         Display display = Display.getCurrent();
-        if ( display == null )
+        if (display == null)
         {
             display = Display.getDefault();
         }
@@ -636,19 +623,19 @@ public class SigilCore extends AbstractUIPlugin
         try
         {
             in = url.openStream();
-            return new Image( display, in );
+            return new Image(display, in);
         }
         finally
         {
-            if ( in != null )
+            if (in != null)
             {
                 try
                 {
                     in.close();
                 }
-                catch ( IOException e )
+                catch (IOException e)
                 {
-                    error( "Failed to close stream", e );
+                    error("Failed to close stream", e);
                 }
             }
         }

@@ -19,14 +19,12 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.completion;
 
-
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-
 
 class CompletionProposal implements ICompletionProposal
 {
@@ -40,7 +38,6 @@ class CompletionProposal implements ICompletionProposal
     private String fDisplayString;
     private Image fImage;
 
-
     /**
      * Creates a new completion proposal based on the provided information. The replacement string is
      * considered being the display string too. All remaining fields are set to <code>null</code>.
@@ -50,12 +47,11 @@ class CompletionProposal implements ICompletionProposal
      * @param replacementLength the length of the text to be replaced
      * @param cursorPosition the position of the cursor following the insert relative to replacementOffset
      */
-    public CompletionProposal( String replacementString, int replacementOffset, int replacementLength,
-        int cursorPosition )
+    public CompletionProposal(String replacementString, int replacementOffset, int replacementLength, int cursorPosition)
     {
-        this( replacementString, replacementOffset, replacementLength, cursorPosition, null, null, null, null );
+        this(replacementString, replacementOffset, replacementLength, cursorPosition,
+            null, null, null, null);
     }
-
 
     /**
      * Creates a new completion proposal. All fields are initialized based on the provided information.
@@ -69,9 +65,7 @@ class CompletionProposal implements ICompletionProposal
      * @param contextInformation the context information associated with this proposal
      * @param additionalProposalInfo the additional information associated with this proposal
      */
-    public CompletionProposal( String replacementString, int replacementOffset, int replacementLength,
-        int cursorPosition, Image image, String displayString, IContextInformation contextInformation,
-        String additionalProposalInfo )
+    public CompletionProposal(String replacementString, int replacementOffset, int replacementLength, int cursorPosition, Image image, String displayString, IContextInformation contextInformation, String additionalProposalInfo)
     {
         fReplacementString = replacementString;
         fReplacementOffset = replacementOffset;
@@ -83,22 +77,20 @@ class CompletionProposal implements ICompletionProposal
         fAdditionalProposalInfo = additionalProposalInfo;
     }
 
-
     /* (non-Javadoc)
      * @see org.eclipse.jface.text.contentassist.ICompletionProposal#apply(org.eclipse.jface.text.IDocument)
      */
-    public void apply( IDocument document )
+    public void apply(IDocument document)
     {
         try
         {
-            document.replace( fReplacementOffset, fReplacementLength, fReplacementString );
+            document.replace(fReplacementOffset, fReplacementLength, fReplacementString);
         }
-        catch ( BadLocationException x )
+        catch (BadLocationException x)
         {
             // ignore
         }
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getAdditionalProposalInfo()
@@ -108,7 +100,6 @@ class CompletionProposal implements ICompletionProposal
         return fAdditionalProposalInfo;
     }
 
-
     /* (non-Javadoc)
      * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getContextInformation()
      */
@@ -117,17 +108,15 @@ class CompletionProposal implements ICompletionProposal
         return fContextInformation;
     }
 
-
     /* (non-Javadoc)
      * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getDisplayString()
      */
     public String getDisplayString()
     {
-        if ( fDisplayString != null )
+        if (fDisplayString != null)
             return fDisplayString;
         return fReplacementString;
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getImage()
@@ -137,13 +126,12 @@ class CompletionProposal implements ICompletionProposal
         return fImage;
     }
 
-
     /* (non-Javadoc)
      * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection(org.eclipse.jface.text.IDocument)
      */
-    public Point getSelection( IDocument document )
+    public Point getSelection(IDocument document)
     {
-        return new Point( fReplacementOffset + fCursorPosition, 0 );
+        return new Point(fReplacementOffset + fCursorPosition, 0);
     }
 
 }

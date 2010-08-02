@@ -19,34 +19,29 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
-
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.zest.core.viewers.IGraphContentProvider;
-
 
 public class BundleGraphContentProvider implements IGraphContentProvider
 {
 
-    public Object[] getElements( Object input )
+    public Object[] getElements(Object input)
     {
-        BundleGraph graph = ( BundleGraph ) input;
+        BundleGraph graph = (BundleGraph) input;
         return graph.getLinks().toArray();
     }
 
-
-    public Object getDestination( Object element )
+    public Object getDestination(Object element)
     {
-        Link l = ( Link ) element;
+        Link l = (Link) element;
         return l.isSatisfied() ? l.getTarget() : new Link.Unsatisfied();
     }
 
-
-    public Object getSource( Object element )
+    public Object getSource(Object element)
     {
-        Link l = ( Link ) element;
+        Link l = (Link) element;
         return l.getSource();
     }
-
 
     public void dispose()
     {
@@ -54,8 +49,7 @@ public class BundleGraphContentProvider implements IGraphContentProvider
 
     }
 
-
-    public void inputChanged( Viewer viewer, Object oldInput, Object newInput )
+    public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
     {
 
     }

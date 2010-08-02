@@ -19,8 +19,7 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 public interface IRepositoryChangeListener
 {
-    void repositoryChanged( RepositoryChangeEvent event );
+    void repositoryChanged(RepositoryChangeEvent event);
 }

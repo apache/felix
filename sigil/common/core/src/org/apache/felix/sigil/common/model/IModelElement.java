@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.common.model;
 
-
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * IModelElement represent static information about a part of a model.
@@ -39,7 +37,6 @@ public interface IModelElement extends Cloneable
      */
     String getElementDescription();
 
-
     /**
      * A set of key value pairs designed for use by a machine to classify a particular element.
      * 
@@ -47,15 +44,13 @@ public interface IModelElement extends Cloneable
      */
     Map<Object, Object> getMeta();
 
-
     /**
      * Set meta data on this descriptor. Meta data is designed for use by a machine to classify or further enhance a
      * particular element.
      * 
      * @param meta
      */
-    void setMeta( Map<Object, Object> meta );
-
+    void setMeta(Map<Object, Object> meta);
 
     /**
      * Check to see if this element defines a complete set of properties. The definition of what constitutes a
@@ -65,16 +60,13 @@ public interface IModelElement extends Cloneable
      */
     void checkValid() throws InvalidModelException;
 
-
     /**
      * Find the parent element of this model element or null if no parent exists.
      * @return
      */
     IModelElement getParent();
 
-
-    void setParent( IModelElement parent );
-
+    void setParent(IModelElement parent);
 
     /**
      * Finds the first ancestor up the hierarch of parents which is an instance of the specified
@@ -83,33 +75,24 @@ public interface IModelElement extends Cloneable
      * @param type
      * @return
      */
-    <T extends IModelElement> T getAncestor( Class<T> type );
-
+    <T extends IModelElement> T getAncestor(Class<T> type);
 
     IModelElement clone();
 
-
     Set<String> getPropertyNames();
 
+    void setProperty(String name, Object value) throws NoSuchMethodException;
 
-    void setProperty( String name, Object value ) throws NoSuchMethodException;
+    void addProperty(String name, Object value) throws NoSuchMethodException;
 
+    void removeProperty(String name, Object value) throws NoSuchMethodException;
 
-    void addProperty( String name, Object value ) throws NoSuchMethodException;
+    Object getProperty(String name) throws NoSuchMethodException;
 
-
-    void removeProperty( String name, Object value ) throws NoSuchMethodException;
-
-
-    Object getProperty( String name ) throws NoSuchMethodException;
-
-
-    Object getDefaultPropertyValue( String name );
-
+    Object getDefaultPropertyValue(String name);
 
     Set<String> getRequiredProperties();
 
-
-    Class<?> getPropertyType( String name ) throws NoSuchMethodException;
+    Class<?> getPropertyType(String name) throws NoSuchMethodException;
 
 }

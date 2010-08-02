@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.config;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,53 +32,43 @@ import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 
-
 public interface IBldProject
 {
 
     static final String PROJECT_FILE = "sigil.properties";
     static final String PROJECT_DEFAULTS = "../sigil-defaults.properties";
 
-
     void save() throws IOException;
 
+    void saveAs(File path) throws IOException;
 
-    void saveAs( File path ) throws IOException;
-
-
-    void saveTo( OutputStream out ) throws IOException;
-
+    void saveTo(OutputStream out) throws IOException;
 
     /**
      * gets default package version ranges.
      */
     Properties getDefaultPackageVersions();
 
-
     /**
      * gets default package version range for named package.
      * Also handles wildcards in defaults.
      */
-    String getDefaultPackageVersion( String name );
-
+    String getDefaultPackageVersion(String name);
 
     /**
      * get project options.
      */
     Properties getOptions();
 
-
     /**
      * get project version.
      */
     String getVersion();
 
-
     /**
      * gets dependencies (Package-Import and Require-Bundle) needed to compile.
      */
     IBundleModelElement getDependencies();
-
 
     /**
      * gets project source directories.
@@ -88,62 +77,53 @@ public interface IBldProject
      */
     List<String> getSourceDirs();
 
-
     /**
      * gets the list of packages represented by getSourceDirs().
      * @throws IOException 
      */
     List<String> getSourcePkgs();
 
-
     /**
      * gets bundle ids.
      */
     List<String> getBundleIds();
-
 
     /**
      * gets bundles.
      */
     List<IBldBundle> getBundles();
 
-
     /**
      * convert specified bundle to SigilBundle.
      */
-    ISigilBundle getSigilBundle( String id );
-
+    ISigilBundle getSigilBundle(String id);
 
     /**
      * convert SigilBundle to specified bundle.
      */
-    void setSigilBundle( String id, ISigilBundle sb );
-
+    void setSigilBundle(String id, ISigilBundle sb);
 
     /**
      * converts default bundle to SigilBundle.
      */
     ISigilBundle getDefaultBundle();
 
-
     /**
      * converts SigilBundle to default bundle.
      */
-    void setDefaultBundle( ISigilBundle sb );
-
+    void setDefaultBundle(ISigilBundle sb);
 
     /**
      * resolves a relative path against the project file location.
      */
-    File resolve( String path );
-    
+    File resolve(String path);
+
     /**
      * Creates a new resource for this bundle
      * @param location
      * @return
      */
     Resource newResource(String location);
-
 
     /**
      * gets the last modification date of the project file.
@@ -157,54 +137,45 @@ public interface IBldProject
          */
         String getActivator();
 
-
         /**
          * gets bundle id within project.
          */
         String getId();
-
 
         /**
          * gets bundle version.
          */
         String getVersion();
 
-
         /**
          * gets the Bundle-SymbolicName.
          */
         String getSymbolicName();
-
 
         /**
          * gets bundles export-packages.
          */
         List<IPackageExport> getExports();
 
-
         /**
          * gets project import-packages. 
          */
         List<IPackageImport> getImports();
-
 
         /**
          * gets project require-bundles. 
          */
         List<IRequiredBundle> getRequires();
 
-
         /**
          * get bundle fragment-host. 
          */
         IRequiredBundle getFragmentHost();
 
-
         /**
          * gets bundle libs. 
          */
         Map<String, Map<String, String>> getLibs();
-
 
         /**
          * gets the bundle contents
@@ -212,25 +183,22 @@ public interface IBldProject
          */
         List<String> getContents();
 
-
         /**
          * gets the additional resources.
          * @return map with key as path in bundle, value as path in file system.
          * Paths are resolved relative to location of project file and also from classpath.
          */
         List<Resource> getResources();
-        
+
         /**
          * gets additional bundle headers.
          */
         Properties getHeaders();
 
-
         /**
          * resolves a relative path against the project file location.
          */
-        File resolve( String path );
-
+        File resolve(String path);
 
         /**
          * @return

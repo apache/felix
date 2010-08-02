@@ -77,7 +77,6 @@ public final class OptionBuilder
         required = false;
         numberOfArgs = Option.UNINITIALIZED;
 
-
         // PMM 9/6/02 - these were missing
         optionalArg = false;
         valuesep = (char) 0;
@@ -346,7 +345,8 @@ public final class OptionBuilder
     public static Option create(String opt) throws IllegalArgumentException
     {
         Option option = null;
-        try {
+        try
+        {
             // create the option
             option = new Option(opt, description);
 
@@ -358,7 +358,9 @@ public final class OptionBuilder
             option.setType(type);
             option.setValueSeparator(valuesep);
             option.setArgName(argName);
-        } finally {
+        }
+        finally
+        {
             // reset the OptionBuilder properties
             OptionBuilder.reset();
         }

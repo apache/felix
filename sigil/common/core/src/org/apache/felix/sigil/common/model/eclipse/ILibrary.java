@@ -19,33 +19,25 @@
 
 package org.apache.felix.sigil.common.model.eclipse;
 
-
 import java.util.Collection;
 
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.osgi.framework.Version;
 
-
 public interface ILibrary extends IModelElement
 {
     String getName();
 
-
-    void setName( String name );
-
+    void setName(String name);
 
     Version getVersion();
 
+    void setVersion(Version version);
 
-    void setVersion( Version version );
+    void addImport(IPackageImport pi);
 
-
-    void addImport( IPackageImport pi );
-
-
-    void removeImport( IPackageImport pi );
-
+    void removeImport(IPackageImport pi);
 
     Collection<IPackageImport> getImports();
 }

@@ -19,43 +19,41 @@
 
 package org.apache.felix.sigil.common.core.util;
 
-
 import java.util.ArrayList;
-
 
 public class QuoteUtil
 {
-    public static String[] split( String str )
+    public static String[] split(String str)
     {
         ArrayList<String> split = new ArrayList<String>();
         boolean quote = false;
-        StringBuffer buf = new StringBuffer( str.length() );
+        StringBuffer buf = new StringBuffer(str.length());
 
-        for ( int i = 0; i < str.length(); i++ )
+        for (int i = 0; i < str.length(); i++)
         {
-            char c = str.charAt( i );
-            switch ( c )
+            char c = str.charAt(i);
+            switch (c)
             {
                 case '"':
                     quote = !quote;
                     break;
                 case ',':
-                    if ( !quote )
+                    if (!quote)
                     {
-                        split.add( buf.toString().trim() );
-                        buf.setLength( 0 );
+                        split.add(buf.toString().trim());
+                        buf.setLength(0);
                         break;
                     }
                     // else fall through on purpose
                 default:
-                    buf.append( c );
+                    buf.append(c);
             }
         }
 
-        if ( buf.length() > 0 )
+        if (buf.length() > 0)
         {
-            split.add( buf.toString().trim() );
+            split.add(buf.toString().trim());
         }
-        return split.toArray( new String[split.size()] );
+        return split.toArray(new String[split.size()]);
     }
 }

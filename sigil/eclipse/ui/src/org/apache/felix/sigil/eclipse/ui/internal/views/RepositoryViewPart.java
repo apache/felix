@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views;
 
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,7 +60,6 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
-
 public class RepositoryViewPart extends ViewPart implements IRepositoryChangeListener
 {
 
@@ -73,35 +71,35 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
             return "Find Uses";
         }
 
-
         @Override
         public void run()
         {
             ISelection s = treeViewer.getSelection();
-            if ( !s.isEmpty() )
+            if (!s.isEmpty())
             {
-                IStructuredSelection sel = ( IStructuredSelection ) s;
-                IModelElement e = ( IModelElement ) sel.getFirstElement();
-                List<IModelElement> users = ModelHelper.findUsers( e );
+                IStructuredSelection sel = (IStructuredSelection) s;
+                IModelElement e = (IModelElement) sel.getFirstElement();
+                List<IModelElement> users = ModelHelper.findUsers(e);
                 String msg = null;
-                if ( users.isEmpty() )
+                if (users.isEmpty())
                 {
                     msg = "No users of " + e;
                 }
                 else
                 {
                     StringBuilder b = new StringBuilder();
-                    for ( IModelElement u : users )
+                    for (IModelElement u : users)
                     {
-                        ISigilBundle bndl = u.getAncestor( ISigilBundle.class );
-                        b.append( bndl );
-                        b.append( "->" );
-                        b.append( u );
-                        b.append( "\n" );
+                        ISigilBundle bndl = u.getAncestor(ISigilBundle.class);
+                        b.append(bndl);
+                        b.append("->");
+                        b.append(u);
+                        b.append("\n");
                     }
                     msg = b.toString();
                 }
-                MessageDialog.openInformation( getViewSite().getShell(), "Information", msg );
+                MessageDialog.openInformation(getViewSite().getShell(), "Information",
+                    msg);
             }
         }
     }
@@ -111,45 +109,43 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
         final IBundleRepository rep;
         final IRepositoryModel model;
 
-
-        public RepositoryAction( IBundleRepository rep )
+        public RepositoryAction(IBundleRepository rep)
         {
             this.rep = rep;
-            this.model = SigilCore.getRepositoryConfiguration().findRepository( rep.getId() );
+            this.model = SigilCore.getRepositoryConfiguration().findRepository(
+                rep.getId());
         }
-
 
         @Override
         public void run()
         {
-            treeViewer.setInput( rep );
+            treeViewer.setInput(rep);
             createMenu();
         }
-
 
         @Override
         public String getText()
         {
             String name = model.getName();
-            if ( treeViewer.getInput() == rep )
+            if (treeViewer.getInput() == rep)
             {
                 name = "> " + name;
             }
             return name;
         }
 
-
         @Override
         public ImageDescriptor getImageDescriptor()
         {
             Image img = model.getType().getIcon();
-            if ( img == null )
+            if (img == null)
             {
-                return ImageDescriptor.createFromFile( RepositoryViewPart.class, "/icons/repository.gif" );
+                return ImageDescriptor.createFromFile(RepositoryViewPart.class,
+                    "/icons/repository.gif");
             }
             else
             {
-                return ImageDescriptor.createFromImage( img );
+                return ImageDescriptor.createFromImage(img);
             }
         }
     }
@@ -162,34 +158,32 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
             treeViewer.collapseAll();
         }
 
-
         @Override
         public String getText()
         {
             return "Collapse All";
         }
 
-
         @Override
         public ImageDescriptor getImageDescriptor()
         {
-            return PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_ELCL_COLLAPSEALL);
+            return PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(
+                ISharedImages.IMG_ELCL_COLLAPSEALL);
         }
     }
-    
+
     class RefreshAction extends Action
     {
         @Override
         public void run()
         {
-            IBundleRepository rep = ( IBundleRepository ) treeViewer.getInput();
-            if ( rep != null )
+            IBundleRepository rep = (IBundleRepository) treeViewer.getInput();
+            if (rep != null)
             {
                 rep.refresh();
                 treeViewer.refresh();
             }
         }
-
 
         @Override
         public String getText()
@@ -197,42 +191,38 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
             return "Refresh";
         }
 
-
         @Override
         public ImageDescriptor getImageDescriptor()
         {
-            
-            return ImageDescriptor.createFromFile( RepositoryViewPart.class, "/icons/bundle-refresh.gif" );
+
+            return ImageDescriptor.createFromFile(RepositoryViewPart.class,
+                "/icons/bundle-refresh.gif");
         }
 
     }
 
     private TreeViewer treeViewer;
 
-
     @Override
-    public void createPartControl( Composite parent )
+    public void createPartControl(Composite parent)
     {
-        createBody( parent );
+        createBody(parent);
         createMenu();
-        SigilCore.getGlobalRepositoryManager().addRepositoryChangeListener( this );
+        SigilCore.getGlobalRepositoryManager().addRepositoryChangeListener(this);
     }
-
 
     @Override
     public void dispose()
     {
-        SigilCore.getGlobalRepositoryManager().removeRepositoryChangeListener( this );
+        SigilCore.getGlobalRepositoryManager().removeRepositoryChangeListener(this);
         super.dispose();
     }
-
 
     private void createMenu()
     {
         createTopMenu();
         createLocalMenu();
     }
-
 
     private void createLocalMenu()
     {
@@ -244,183 +234,174 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
         getViewSite().registerContextMenu(menuMgr, treeViewer); */
         IActionBars bars = getViewSite().getActionBars();
         IToolBarManager toolBar = bars.getToolBarManager();
-        toolBar.add( new RefreshAction() );
-        toolBar.add( new CollapseAction() );
+        toolBar.add(new RefreshAction());
+        toolBar.add(new CollapseAction());
     }
-
 
     private void createTopMenu()
     {
         IActionBars bars = getViewSite().getActionBars();
         IMenuManager menu = bars.getMenuManager();
         menu.removeAll();
-        for ( final IBundleRepository rep : SigilCore.getGlobalRepositoryManager().getRepositories() )
+        for (final IBundleRepository rep : SigilCore.getGlobalRepositoryManager().getRepositories())
         {
-            if ( treeViewer.getInput() == null )
+            if (treeViewer.getInput() == null)
             {
-                treeViewer.setInput( rep );
+                treeViewer.setInput(rep);
             }
 
-            RepositoryAction action = new RepositoryAction( rep );
-            menu.add( action );
+            RepositoryAction action = new RepositoryAction(rep);
+            menu.add(action);
         }
     }
 
-
-    private void createBody( Composite parent )
+    private void createBody(Composite parent)
     {
         // components
-        Composite control = new Composite( parent, SWT.NONE );
-        Tree tree = new Tree( control, SWT.NONE );
+        Composite control = new Composite(parent, SWT.NONE);
+        Tree tree = new Tree(control, SWT.NONE);
 
         // layout
-        control.setLayout( new GridLayout( 1, false ) );
-        tree.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
+        control.setLayout(new GridLayout(1, false));
+        tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         // viewer
-        treeViewer = new TreeViewer( tree );
-        treeViewer.setContentProvider( new DefaultTreeContentProvider()
+        treeViewer = new TreeViewer(tree);
+        treeViewer.setContentProvider(new DefaultTreeContentProvider()
         {
-            public Object[] getChildren( Object parentElement )
+            public Object[] getChildren(Object parentElement)
             {
-                if ( parentElement instanceof ICompoundModelElement )
+                if (parentElement instanceof ICompoundModelElement)
                 {
-                    ICompoundModelElement model = ( ICompoundModelElement ) parentElement;
+                    ICompoundModelElement model = (ICompoundModelElement) parentElement;
                     return model.children();
                 }
 
                 return null;
             }
 
-
-            public Object getParent( Object element )
+            public Object getParent(Object element)
             {
-                if ( element instanceof IModelElement )
+                if (element instanceof IModelElement)
                 {
-                    IModelElement model = ( IModelElement ) element;
+                    IModelElement model = (IModelElement) element;
                     return model.getParent();
                 }
 
                 return null;
             }
 
-
-            public boolean hasChildren( Object element )
+            public boolean hasChildren(Object element)
             {
-                if ( element instanceof ICompoundModelElement )
+                if (element instanceof ICompoundModelElement)
                 {
-                    ICompoundModelElement model = ( ICompoundModelElement ) element;
+                    ICompoundModelElement model = (ICompoundModelElement) element;
                     return model.children().length > 0;
                 }
                 return false;
             }
 
-
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                IBundleRepository rep = ( IBundleRepository ) inputElement;
-                return getBundles( rep );
+                IBundleRepository rep = (IBundleRepository) inputElement;
+                return getBundles(rep);
             }
-        } );
+        });
 
-        treeViewer.setComparator( new ModelElementComparator() );
+        treeViewer.setComparator(new ModelElementComparator());
 
-        treeViewer.setLabelProvider( new ModelLabelProvider() );
+        treeViewer.setLabelProvider(new ModelLabelProvider());
 
-        treeViewer.addDragSupport( DND.DROP_LINK, new Transfer[]
-            { LocalSelectionTransfer.getTransfer() }, new DragSourceAdapter()
-        {
-            @Override
-            public void dragFinished( DragSourceEvent event )
+        treeViewer.addDragSupport(DND.DROP_LINK,
+            new Transfer[] { LocalSelectionTransfer.getTransfer() },
+            new DragSourceAdapter()
             {
-                // TODO Auto-generated method stub
-                super.dragFinished( event );
-            }
-
-
-            @Override
-            public void dragSetData( DragSourceEvent event )
-            {
-                // TODO Auto-generated method stub
-                super.dragSetData( event );
-            }
-
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public void dragStart( DragSourceEvent event )
-            {
-                if ( treeViewer.getSelection().isEmpty() )
+                @Override
+                public void dragFinished(DragSourceEvent event)
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) treeViewer.getSelection();
-                    for ( Iterator<IModelElement> i = sel.iterator(); i.hasNext(); )
+                    // TODO Auto-generated method stub
+                    super.dragFinished(event);
+                }
+
+                @Override
+                public void dragSetData(DragSourceEvent event)
+                {
+                    // TODO Auto-generated method stub
+                    super.dragSetData(event);
+                }
+
+                @SuppressWarnings("unchecked")
+                @Override
+                public void dragStart(DragSourceEvent event)
+                {
+                    if (treeViewer.getSelection().isEmpty())
                     {
-                        IModelElement e = i.next();
-                        if ( e instanceof ISigilBundle )
+                        IStructuredSelection sel = (IStructuredSelection) treeViewer.getSelection();
+                        for (Iterator<IModelElement> i = sel.iterator(); i.hasNext();)
                         {
-                            event.data = e;
-                        }
-                        else
-                        {
-                            event.doit = false;
+                            IModelElement e = i.next();
+                            if (e instanceof ISigilBundle)
+                            {
+                                event.data = e;
+                            }
+                            else
+                            {
+                                event.doit = false;
+                            }
                         }
                     }
+                    else
+                    {
+                        event.doit = false;
+                    }
                 }
-                else
-                {
-                    event.doit = false;
-                }
-            }
-        } );
+            });
     }
-
 
     @Override
     public void setFocus()
     {
     }
 
-
-    public void repositoryChanged( RepositoryChangeEvent event )
+    public void repositoryChanged(RepositoryChangeEvent event)
     {
-        switch ( event.getType() )
+        switch (event.getType())
         {
             case ADDED:
                 createTopMenu();
                 break;
             case CHANGED:
-                if ( event.getRepository() == treeViewer.getInput() )
+                if (event.getRepository() == treeViewer.getInput())
                 {
-                    SigilUI.runInUI( new Runnable()
+                    SigilUI.runInUI(new Runnable()
                     {
                         public void run()
                         {
                             treeViewer.refresh();
                         }
-                    } );
+                    });
                 }
                 break;
             case REMOVED:
-                if ( event.getRepository() == treeViewer.getInput() )
+                if (event.getRepository() == treeViewer.getInput())
                 {
-                    treeViewer.setInput( null );
+                    treeViewer.setInput(null);
                 }
                 createTopMenu();
         }
     }
 
-
-    private Object[] getBundles( IBundleRepository repository )
+    private Object[] getBundles(IBundleRepository repository)
     {
         final LinkedList<ISigilBundle> bundles = new LinkedList<ISigilBundle>();
-        repository.accept( new IRepositoryVisitor()
+        repository.accept(new IRepositoryVisitor()
         {
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                bundles.add( bundle );
+                bundles.add(bundle);
                 return true;
             }
-        } );
+        });
         return bundles.toArray();
     }
 }

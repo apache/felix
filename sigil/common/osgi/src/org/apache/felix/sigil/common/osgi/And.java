@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 import java.util.Map;
-
 
 public class And extends AbstractExpr
 {
@@ -31,58 +29,55 @@ public class And extends AbstractExpr
     private static final long serialVersionUID = 1L;
     private LDAPExpr[] children;
 
-
-    public static LDAPExpr apply( LDAPExpr... terms )
+    public static LDAPExpr apply(LDAPExpr... terms)
     {
-        if ( terms == null )
+        if (terms == null)
         {
-            throw new NullPointerException( "terms cannot be null" );
+            throw new NullPointerException("terms cannot be null");
         }
-        else if ( terms.length == 0 )
+        else if (terms.length == 0)
         {
             return Expressions.T;
         }
-        else if ( terms.length == 1 )
+        else if (terms.length == 1)
         {
             return terms[0];
         }
         LDAPExpr[] filtered = new LDAPExpr[terms.length];
         int ctr = 0;
-        for ( int i = 0; i < terms.length; i++ )
+        for (int i = 0; i < terms.length; i++)
         {
-            if ( terms[i].equals( Expressions.F ) )
+            if (terms[i].equals(Expressions.F))
                 return Expressions.F;
-            if ( terms[i].equals( Expressions.T ) )
+            if (terms[i].equals(Expressions.T))
                 continue;
             filtered[ctr] = terms[i];
             ctr++;
         }
-        if ( ctr == 0 )
+        if (ctr == 0)
         {
             return Expressions.T;
         }
-        else if ( ctr == 1 )
+        else if (ctr == 1)
         {
             return filtered[0];
         }
         LDAPExpr[] andTerms = new LDAPExpr[ctr];
-        System.arraycopy( filtered, 0, andTerms, 0, ctr );
+        System.arraycopy(filtered, 0, andTerms, 0, ctr);
 
-        return new And( andTerms );
+        return new And(andTerms);
     }
 
-
-    private And( LDAPExpr... children )
+    private And(LDAPExpr... children)
     {
         this.children = children;
     }
 
-
-    public boolean eval( Map<String, ?> map )
+    public boolean eval(Map<String, ?> map)
     {
-        for ( int i = 0; i < children.length; i++ )
+        for (int i = 0; i < children.length; i++)
         {
-            if ( !children[i].eval( map ) )
+            if (!children[i].eval(map))
             {
                 return false;
             }
@@ -90,32 +85,29 @@ public class And extends AbstractExpr
         return true;
     }
 
-
     public LDAPExpr[] getChildren()
     {
         return children;
     }
 
-
-    public void setChildren( LDAPExpr[] children )
+    public void setChildren(LDAPExpr[] children)
     {
         this.children = children;
     }
 
-
     @Override
-    public boolean equals( Object other )
+    public boolean equals(Object other)
     {
-        if ( other instanceof And )
+        if (other instanceof And)
         {
-            And that = ( And ) other;
-            if ( children.length != that.children.length )
+            And that = (And) other;
+            if (children.length != that.children.length)
             {
                 return false;
             }
-            for ( int i = 0; i < children.length; i++ )
+            for (int i = 0; i < children.length; i++)
             {
-                if ( !children[i].equals( that.children[i] ) )
+                if (!children[i].equals(that.children[i]))
                 {
                     return false;
                 }
@@ -125,17 +117,16 @@ public class And extends AbstractExpr
         return false;
     }
 
-
     @Override
     public String toString()
     {
-        StringBuffer buf = new StringBuffer( 256 );
-        buf.append( "(&" );
-        for ( int i = 0; i < children.length; i++ )
+        StringBuffer buf = new StringBuffer(256);
+        buf.append("(&");
+        for (int i = 0; i < children.length; i++)
         {
-            buf.append( " " ).append( children[i] ).append( " " );
+            buf.append(" ").append(children[i]).append(" ");
         }
-        buf.append( ")" );
+        buf.append(")");
         return buf.toString();
     }
 

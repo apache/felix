@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.junit.server.impl;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -35,156 +34,147 @@ import junit.framework.TestSuite;
 import org.apache.felix.sigil.common.junit.server.JUnitService;
 import org.osgi.framework.BundleContext;
 
-
 public class JUnitServiceImpl implements JUnitService
 {
 
-    private static final Logger log = Logger.getLogger( JUnitServiceImpl.class.getName() );
+    private static final Logger log = Logger.getLogger(JUnitServiceImpl.class.getName());
 
-    private static final Class<?>[] BUNDLE_CONTEXT_PARAMS = new Class[]
-        { BundleContext.class };
+    private static final Class<?>[] BUNDLE_CONTEXT_PARAMS = new Class[] { BundleContext.class };
 
     private final JUnitServiceFactory junitServiceFactory;
     private final BundleContext bundleContext;
 
-
-    public JUnitServiceImpl( JUnitServiceFactory junitServiceFactory, BundleContext bundleContext )
+    public JUnitServiceImpl(JUnitServiceFactory junitServiceFactory, BundleContext bundleContext)
     {
         this.junitServiceFactory = junitServiceFactory;
         this.bundleContext = bundleContext;
     }
-
 
     public Set<String> getTests()
     {
         return junitServiceFactory.getTests();
     }
 
-
-    public TestSuite createTest( String test )
+    public TestSuite createTest(String test)
     {
-        return createTest( test, null );
+        return createTest(test, null);
     }
 
-
-    public TestSuite createTest( String test, BundleContext ctx )
+    public TestSuite createTest(String test, BundleContext ctx)
     {
         try
         {
-            TestSuite ts = junitServiceFactory.getTest( test );
+            TestSuite ts = junitServiceFactory.getTest(test);
 
-            if ( ts == null )
+            if (ts == null)
                 return null;
 
-            TestSuite ret = new TestSuite( ts.getName() );
+            TestSuite ret = new TestSuite(ts.getName());
 
             Enumeration<Test> e = ts.tests();
 
-            while ( e.hasMoreElements() )
+            while (e.hasMoreElements())
             {
                 Test t = e.nextElement();
-                setContext( t, ctx );
-                ret.addTest( t );
+                setContext(t, ctx);
+                ret.addTest(t);
             }
 
             return ret;
         }
-        catch ( final NoClassDefFoundError e )
+        catch (final NoClassDefFoundError e)
         {
-            TestSuite s = new TestSuite( test );
-            s.addTest( new Test()
+            TestSuite s = new TestSuite(test);
+            s.addTest(new Test()
             {
                 public int countTestCases()
                 {
                     return 1;
                 }
 
-
-                public void run( TestResult result )
+                public void run(TestResult result)
                 {
-                    result.addError( this, e );
+                    result.addError(this, e);
                 }
-            } );
+            });
             return s;
         }
-        catch ( final RuntimeException e )
+        catch (final RuntimeException e)
         {
-            TestSuite s = new TestSuite( test );
-            s.addTest( new Test()
+            TestSuite s = new TestSuite(test);
+            s.addTest(new Test()
             {
                 public int countTestCases()
                 {
                     return 1;
                 }
 
-
-                public void run( TestResult result )
+                public void run(TestResult result)
                 {
-                    result.addError( this, e );
+                    result.addError(this, e);
                 }
 
-            } );
+            });
             return s;
         }
     }
 
-
-    private void setContext( Test t, BundleContext ctx )
+    private void setContext(Test t, BundleContext ctx)
     {
         try
         {
-            Method m = findMethod( t.getClass(), "setBundleContext", BUNDLE_CONTEXT_PARAMS );
-            if ( m != null )
-                m.invoke( t, ctx == null ? bundleContext : ctx );
+            Method m = findMethod(t.getClass(), "setBundleContext", BUNDLE_CONTEXT_PARAMS);
+            if (m != null)
+                m.invoke(t, ctx == null ? bundleContext : ctx);
         }
-        catch ( SecurityException e )
+        catch (SecurityException e)
         {
-            log.log( Level.WARNING, "Failed to set bundle context on " + t, e );
+            log.log(Level.WARNING, "Failed to set bundle context on " + t, e);
         }
-        catch ( IllegalArgumentException e )
+        catch (IllegalArgumentException e)
         {
-            log.log( Level.WARNING, "Failed to set bundle context on " + t, e );
+            log.log(Level.WARNING, "Failed to set bundle context on " + t, e);
         }
-        catch ( IllegalAccessException e )
+        catch (IllegalAccessException e)
         {
-            log.log( Level.WARNING, "Failed to set bundle context on " + t, e );
+            log.log(Level.WARNING, "Failed to set bundle context on " + t, e);
         }
-        catch ( InvocationTargetException e )
+        catch (InvocationTargetException e)
         {
-            log.log( Level.WARNING, "Failed to set bundle context on " + t, e );
+            log.log(Level.WARNING, "Failed to set bundle context on " + t, e);
         }
     }
 
-
-    private Method findMethod( Class<?> clazz, String name, Class<?>[] params )
+    private Method findMethod(Class<?> clazz, String name, Class<?>[] params)
     {
         Method found = null;
 
-        for ( Method m : clazz.getDeclaredMethods() )
+        for (Method m : clazz.getDeclaredMethods())
         {
-            if ( m.getName().equals( name ) && Arrays.deepEquals( m.getParameterTypes(), params ) )
+            if (m.getName().equals(name)
+                && Arrays.deepEquals(m.getParameterTypes(), params))
             {
                 found = m;
                 break;
             }
         }
 
-        if ( found == null )
+        if (found == null)
         {
             Class<?> c = clazz.getSuperclass();
 
-            if ( c != null && c != Object.class )
+            if (c != null && c != Object.class)
             {
-                found = findMethod( c, name, params );
+                found = findMethod(c, name, params);
             }
         }
 
-        if ( found == null )
+        if (found == null)
         {
-            for ( Class<?> c : clazz.getInterfaces() )
+            for (Class<?> c : clazz.getInterfaces())
             {
-                found = findMethod( c, name, params );
-                if ( found != null )
+                found = findMethod(c, name, params);
+                if (found != null)
                 {
                     break;
                 }

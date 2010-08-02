@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.Set;
 
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -28,34 +27,29 @@ import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Table;
 
-
 public class ProjectTableViewer extends TableViewer
 {
 
     private ModelLabelProvider labelProvider;
 
-
-    public ProjectTableViewer( Table table )
+    public ProjectTableViewer(Table table)
     {
-        super( table );
+        super(table);
         labelProvider = new ModelLabelProvider();
-        setLabelProvider( labelProvider );
+        setLabelProvider(labelProvider);
     }
-
 
     @Override
-    public void setContentProvider( IContentProvider provider )
+    public void setContentProvider(IContentProvider provider)
     {
-        super.setContentProvider( provider );
-        setInput( getTable() );
+        super.setContentProvider(provider);
+        setInput(getTable());
     }
 
-
-    public void setUnresolvedElements( Set<? extends IModelElement> elements )
+    public void setUnresolvedElements(Set<? extends IModelElement> elements)
     {
-        labelProvider.setUnresolvedElements( elements );
+        labelProvider.setUnresolvedElements(elements);
     }
-
 
     @Override
     public ModelLabelProvider getLabelProvider()

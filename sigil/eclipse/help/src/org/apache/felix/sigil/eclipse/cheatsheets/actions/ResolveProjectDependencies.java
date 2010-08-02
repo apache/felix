@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.cheatsheets.actions;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.actions.ResolveProjectDependenciesAction;
@@ -31,29 +30,27 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.ui.cheatsheets.ICheatSheetAction;
 import org.eclipse.ui.cheatsheets.ICheatSheetManager;
 
-
 public class ResolveProjectDependencies extends Action implements ICheatSheetAction
 {
 
     private String targetProject;
 
-
-    public void run( String[] params, ICheatSheetManager manager )
+    public void run(String[] params, ICheatSheetManager manager)
     {
-        if ( params != null && params.length > 3 )
+        if (params != null && params.length > 3)
         {
             targetProject = params[0];
         }
 
         IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-        IProject project = workspaceRoot.getProject( targetProject );
+        IProject project = workspaceRoot.getProject(targetProject);
 
         try
         {
-            ISigilProjectModel sigil = SigilCore.create( project );
-            new ResolveProjectDependenciesAction( sigil, false ).run();
+            ISigilProjectModel sigil = SigilCore.create(project);
+            new ResolveProjectDependenciesAction(sigil, false).run();
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();

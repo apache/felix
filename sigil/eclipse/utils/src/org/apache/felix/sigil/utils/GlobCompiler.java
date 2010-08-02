@@ -19,44 +19,42 @@
 
 package org.apache.felix.sigil.utils;
 
-
 import java.util.regex.Pattern;
-
 
 public class GlobCompiler
 {
-    public static final Pattern compile( String glob )
+    public static final Pattern compile(String glob)
     {
         char[] chars = glob.toCharArray();
-        if ( chars.length > 0 )
+        if (chars.length > 0)
         {
-            StringBuilder builder = new StringBuilder( chars.length + 5 );
+            StringBuilder builder = new StringBuilder(chars.length + 5);
 
-            builder.append( '^' );
+            builder.append('^');
 
-            for ( char c : chars )
+            for (char c : chars)
             {
-                switch ( c )
+                switch (c)
                 {
                     case '*':
-                        builder.append( ".*" );
+                        builder.append(".*");
                         break;
                     case '.':
-                        builder.append( "\\." );
+                        builder.append("\\.");
                         break;
                     case '$':
-                        builder.append( "\\$" );
+                        builder.append("\\$");
                         break;
                     default:
-                        builder.append( c );
+                        builder.append(c);
                 }
             }
 
-            return Pattern.compile( builder.toString() );
+            return Pattern.compile(builder.toString());
         }
         else
         {
-            return Pattern.compile( glob );
+            return Pattern.compile(glob);
         }
     }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
-
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -27,30 +26,27 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 
-
 public class BundleGraphLabelProvider extends LabelProvider
 {
 
     private BundleResolverView view;
 
-
-    public BundleGraphLabelProvider( BundleResolverView view )
+    public BundleGraphLabelProvider(BundleResolverView view)
     {
         this.view = view;
     }
 
-
     @Override
-    public String getText( Object element )
+    public String getText(Object element)
     {
-        if ( element instanceof Link )
+        if (element instanceof Link)
         {
-            Link l = ( Link ) element;
-            if ( l.isSatisfied() )
+            Link l = (Link) element;
+            if (l.isSatisfied())
             {
-                if ( view.isDisplayed( BundleResolverView.LINK_LABELS ) )
+                if (view.isDisplayed(BundleResolverView.LINK_LABELS))
                 {
-                    return view.getLinkText( ( Link ) element );
+                    return view.getLinkText((Link) element);
                 }
                 else
                 {
@@ -59,15 +55,16 @@ public class BundleGraphLabelProvider extends LabelProvider
             }
             else
             {
-                return view.getLinkText( ( Link ) element );
+                return view.getLinkText((Link) element);
             }
         }
-        else if ( element instanceof ISigilBundle )
+        else if (element instanceof ISigilBundle)
         {
-            ISigilBundle b = ( ISigilBundle ) element;
-            return b.getBundleInfo().getSymbolicName() + ": " + b.getBundleInfo().getVersion();
+            ISigilBundle b = (ISigilBundle) element;
+            return b.getBundleInfo().getSymbolicName() + ": "
+                + b.getBundleInfo().getVersion();
         }
-        else if ( element instanceof Link.Unsatisfied )
+        else if (element instanceof Link.Unsatisfied)
         {
             return "unsatisfied";
         }
@@ -77,18 +74,19 @@ public class BundleGraphLabelProvider extends LabelProvider
         }
     }
 
-
     @Override
-    public Image getImage( Object element )
+    public Image getImage(Object element)
     {
         Image result = null;
-        if ( element instanceof ISigilBundle )
+        if (element instanceof ISigilBundle)
         {
-            result = SigilUI.cacheImage( "icons/bundle.gif", BundleGraphLabelProvider.class.getClassLoader() );
+            result = SigilUI.cacheImage("icons/bundle.gif",
+                BundleGraphLabelProvider.class.getClassLoader());
         }
-        else if ( element instanceof Link.Unsatisfied )
+        else if (element instanceof Link.Unsatisfied)
         {
-            return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJS_ERROR_TSK);
+            return PlatformUI.getWorkbench().getSharedImages().getImage(
+                ISharedImages.IMG_OBJS_ERROR_TSK);
         }
 
         return result;

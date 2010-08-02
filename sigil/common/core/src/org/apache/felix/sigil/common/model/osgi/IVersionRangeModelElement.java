@@ -26,7 +26,6 @@ public interface IVersionRangeModelElement
 
     VersionRange getVersions();
 
-
-    void setVersions( VersionRange version );
+    void setVersions(VersionRange version);
 
 }

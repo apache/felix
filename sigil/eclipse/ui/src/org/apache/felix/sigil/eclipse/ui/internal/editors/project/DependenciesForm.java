@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.Set;
 
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -35,7 +34,6 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 
-
 public class DependenciesForm extends SigilPage
 {
 
@@ -47,14 +45,12 @@ public class DependenciesForm extends SigilPage
     private ImportPackagesSection importPackages;
     private RequiresBundleSection requiresSection;
 
-
-    public DependenciesForm( FormEditor editor, ISigilProjectModel project, Set<IModelElement> unresolved )
+    public DependenciesForm(FormEditor editor, ISigilProjectModel project, Set<IModelElement> unresolved)
     {
-        super( editor, PAGE_ID, "Dependencies" );
+        super(editor, PAGE_ID, "Dependencies");
         this.project = project;
         this.unresolvedElements = unresolved;
     }
-
 
     @Override
     public boolean canLeaveThePage()
@@ -62,14 +58,13 @@ public class DependenciesForm extends SigilPage
         return !isDirty();
     }
 
-
     @Override
-    protected void createFormContent( IManagedForm managedForm )
+    protected void createFormContent(IManagedForm managedForm)
     {
         FormToolkit toolkit = managedForm.getToolkit();
 
         ScrolledForm form = managedForm.getForm();
-        form.setText( "Dependencies" );
+        form.setText("Dependencies");
 
         Composite body = form.getBody();
         TableWrapLayout layout = new TableWrapLayout();
@@ -79,43 +74,46 @@ public class DependenciesForm extends SigilPage
         layout.rightMargin = 10;
         layout.numColumns = 2;
         layout.horizontalSpacing = 10;
-        body.setLayout( layout );
-        body.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        body.setLayout(layout);
+        body.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
-        Composite left = toolkit.createComposite( body );
+        Composite left = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        left.setLayout( layout );
-        TableWrapData layoutData = new TableWrapData( TableWrapData.FILL_GRAB );
+        left.setLayout(layout);
+        TableWrapData layoutData = new TableWrapData(TableWrapData.FILL_GRAB);
         layoutData.rowspan = 2;
-        left.setLayoutData( layoutData );
+        left.setLayoutData(layoutData);
 
-        Composite right = toolkit.createComposite( body );
+        Composite right = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        right.setLayout( layout );
-        right.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        right.setLayout(layout);
+        right.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
-        Composite bottom = toolkit.createComposite( body );
+        Composite bottom = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        bottom.setLayout( layout );
-        bottom.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        bottom.setLayout(layout);
+        bottom.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
         try
         {
-            importPackages = new ImportPackagesSection( this, left, project, unresolvedElements );
-            managedForm.addPart( importPackages );
+            importPackages = new ImportPackagesSection(this, left, project,
+                unresolvedElements);
+            managedForm.addPart(importPackages);
 
-            requiresSection = new RequiresBundleSection( this, right, project, unresolvedElements );
-            managedForm.addPart( requiresSection );
+            requiresSection = new RequiresBundleSection(this, right, project,
+                unresolvedElements);
+            managedForm.addPart(requiresSection);
 
-            DependencyManagementSection depMgmt = new DependencyManagementSection( this, bottom, project );
-            managedForm.addPart( depMgmt );
+            DependencyManagementSection depMgmt = new DependencyManagementSection(this,
+                bottom, project);
+            managedForm.addPart(depMgmt);
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to create dependencies form", e );
+            SigilCore.error("Failed to create dependencies form", e);
         }
     }
 }

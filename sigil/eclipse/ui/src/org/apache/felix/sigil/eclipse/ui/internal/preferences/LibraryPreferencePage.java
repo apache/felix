@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences;
 
-
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -50,7 +49,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-
 public class LibraryPreferencePage extends PreferencePage implements IWorkbenchPreferencePage
 {
 
@@ -62,20 +60,17 @@ public class LibraryPreferencePage extends PreferencePage implements IWorkbenchP
     private Button btnEdit;
     private Button btnRemove;
 
-
-    public void init( IWorkbench workbench )
+    public void init(IWorkbench workbench)
     {
     }
 
-
     @Override
-    protected Control createContents( Composite parent )
+    protected Control createContents(Composite parent)
     {
-        Control control = initContents( parent );
+        Control control = initContents(parent);
         loadPreferences();
         return control;
     }
-
 
     @Override
     protected IPreferenceStore doGetPreferenceStore()
@@ -83,206 +78,198 @@ public class LibraryPreferencePage extends PreferencePage implements IWorkbenchP
         return SigilCore.getDefault().getPreferenceStore();
     }
 
-
     @Override
     protected void performDefaults()
     {
         super.performDefaults();
     }
 
-
     @Override
     public boolean performOk()
     {
         IPreferenceStore prefs = getPreferenceStore();
-        for ( String key : prefs.getString( SigilCore.LIBRARY_KEYS_PREF ).split( "," ) )
+        for (String key : prefs.getString(SigilCore.LIBRARY_KEYS_PREF).split(","))
         {
-            prefs.setToDefault( key );
+            prefs.setToDefault(key);
         }
 
         StringBuffer keys = new StringBuffer();
 
-        for ( ILibrary lib : libraries )
+        for (ILibrary lib : libraries)
         {
-            throw new IllegalStateException( "XXX-FIXME-XXX" );
+            throw new IllegalStateException("XXX-FIXME-XXX");
         }
 
-        prefs.setValue( SigilCore.LIBRARY_KEYS_PREF, keys.toString() );
+        prefs.setValue(SigilCore.LIBRARY_KEYS_PREF, keys.toString());
 
         return true;
     }
 
-
-    private Control initContents( Composite parent )
+    private Control initContents(Composite parent)
     {
-        Composite control = new Composite( parent, SWT.NONE );
-        control.setFont( parent.getFont() );
+        Composite control = new Composite(parent, SWT.NONE);
+        control.setFont(parent.getFont());
 
-        GridLayout grid = new GridLayout( 3, false );
-        control.setLayout( grid );
+        GridLayout grid = new GridLayout(3, false);
+        control.setLayout(grid);
 
-        initRepositories( control );
+        initRepositories(control);
 
         return control;
     }
 
-
-    private void initRepositories( Composite composite )
+    private void initRepositories(Composite composite)
     {
         // Create controls
-        new Label( composite, SWT.NONE ).setText( "Libraries:" );
-        new Label( composite, SWT.NONE ); // Spacer
-        table = new Table( composite, SWT.SINGLE | SWT.BORDER );
+        new Label(composite, SWT.NONE).setText("Libraries:");
+        new Label(composite, SWT.NONE); // Spacer
+        table = new Table(composite, SWT.SINGLE | SWT.BORDER);
         //table.setFont(control.getFont());
-        btnAdd = new Button( composite, SWT.PUSH );
-        btnAdd.setText( "Add..." );
+        btnAdd = new Button(composite, SWT.PUSH);
+        btnAdd.setText("Add...");
         //add.setFont(control.getFont());
-        btnEdit = new Button( composite, SWT.PUSH );
-        btnEdit.setText( "Edit..." );
+        btnEdit = new Button(composite, SWT.PUSH);
+        btnEdit.setText("Edit...");
         //edit.setFont(control.getFont());
-        btnRemove = new Button( composite, SWT.PUSH );
-        btnRemove.setText( "Remove" );
+        btnRemove = new Button(composite, SWT.PUSH);
+        btnRemove.setText("Remove");
         //remove.setFont(control.getFont());
 
         // Table Model
-        libraries = new TreeSet<ILibrary>( new Comparator<ILibrary>()
+        libraries = new TreeSet<ILibrary>(new Comparator<ILibrary>()
         {
-            public int compare( ILibrary l1, ILibrary l2 )
+            public int compare(ILibrary l1, ILibrary l2)
             {
-                int c = l1.getName().compareTo( l2.getName() );
-                if ( c == 0 )
+                int c = l1.getName().compareTo(l2.getName());
+                if (c == 0)
                 {
-                    c = l1.getVersion().compareTo( l2.getVersion() );
+                    c = l1.getVersion().compareTo(l2.getVersion());
                 }
                 return c;
             }
-        } );
-        libraryView = new TableViewer( table );
-        libraryView.setLabelProvider( new LabelProvider()
+        });
+        libraryView = new TableViewer(table);
+        libraryView.setLabelProvider(new LabelProvider()
         {
-            public String getText( Object element )
+            public String getText(Object element)
             {
-                ILibrary rep = ( ILibrary ) element;
+                ILibrary rep = (ILibrary) element;
                 return rep.getName() + " " + rep.getVersion();
             }
-        } );
-        libraryView.setContentProvider( new DefaultTableProvider()
+        });
+        libraryView.setContentProvider(new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                return toArray( inputElement );
+                return toArray(inputElement);
             }
-        } );
-        libraryView.setInput( libraries );
+        });
+        libraryView.setInput(libraries);
 
         // Initialize controls
         updateButtonStates();
 
         // Hookup Listeners
-        libraryView.addSelectionChangedListener( new ISelectionChangedListener()
+        libraryView.addSelectionChangedListener(new ISelectionChangedListener()
         {
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
                 updateButtonStates();
             }
-        } );
-        btnAdd.addSelectionListener( new SelectionAdapter()
+        });
+        btnAdd.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 handleAdd();
             }
-        } );
-        btnEdit.addSelectionListener( new SelectionAdapter()
+        });
+        btnEdit.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 handleEdit();
             }
-        } );
-        btnRemove.addSelectionListener( new SelectionAdapter()
+        });
+        btnRemove.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 handleRemove();
             }
-        } );
+        });
 
         // Layout
-        composite.setLayout( new GridLayout( 2, false ) );
-        table.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true, 1, 4 ) );
-        GridDataFactory buttonGD = GridDataFactory.swtDefaults().align( SWT.FILL, SWT.CENTER );
-        btnAdd.setLayoutData( buttonGD.create() );
-        btnEdit.setLayoutData( buttonGD.create() );
-        btnRemove.setLayoutData( buttonGD.create() );
+        composite.setLayout(new GridLayout(2, false));
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 4));
+        GridDataFactory buttonGD = GridDataFactory.swtDefaults().align(SWT.FILL,
+            SWT.CENTER);
+        btnAdd.setLayoutData(buttonGD.create());
+        btnEdit.setLayoutData(buttonGD.create());
+        btnRemove.setLayoutData(buttonGD.create());
     }
-
 
     private void updateButtonStates()
     {
         ISelection sel = libraryView.getSelection();
-        btnEdit.setEnabled( !sel.isEmpty() );
-        btnRemove.setEnabled( !sel.isEmpty() );
+        btnEdit.setEnabled(!sel.isEmpty());
+        btnRemove.setEnabled(!sel.isEmpty());
     }
-
 
     private void handleAdd()
     {
-        LibraryConfigurationDialog d = new LibraryConfigurationDialog( getShell() );
-        if ( d.open() == Window.OK )
+        LibraryConfigurationDialog d = new LibraryConfigurationDialog(getShell());
+        if (d.open() == Window.OK)
         {
-            libraries.add( d.getLibrary() );
+            libraries.add(d.getLibrary());
             libraryView.refresh();
         }
     }
 
-
     private void handleEdit()
     {
-        IStructuredSelection sel = ( IStructuredSelection ) libraryView.getSelection();
+        IStructuredSelection sel = (IStructuredSelection) libraryView.getSelection();
         boolean change = false;
 
-        for ( @SuppressWarnings("unchecked")
-        Iterator<ILibrary> i = sel.iterator(); i.hasNext(); )
+        for (@SuppressWarnings("unchecked")
+        Iterator<ILibrary> i = sel.iterator(); i.hasNext();)
         {
             ILibrary lib = i.next();
-            LibraryConfigurationDialog d = new LibraryConfigurationDialog( getShell(), lib );
-            if ( d.open() == Window.OK )
+            LibraryConfigurationDialog d = new LibraryConfigurationDialog(getShell(), lib);
+            if (d.open() == Window.OK)
             {
-                libraries.remove( lib );
-                libraries.add( d.getLibrary() );
+                libraries.remove(lib);
+                libraries.add(d.getLibrary());
                 change = true;
             }
         }
 
-        if ( change )
+        if (change)
         {
             libraryView.refresh();
         }
     }
 
-
     private void handleRemove()
     {
-        IStructuredSelection sel = ( IStructuredSelection ) libraryView.getSelection();
-        for ( @SuppressWarnings("unchecked")
-        Iterator<ILibrary> i = sel.iterator(); i.hasNext(); )
+        IStructuredSelection sel = (IStructuredSelection) libraryView.getSelection();
+        for (@SuppressWarnings("unchecked")
+        Iterator<ILibrary> i = sel.iterator(); i.hasNext();)
         {
-            libraries.remove( i );
+            libraries.remove(i);
         }
         libraryView.refresh();
     }
 
-
     private void loadPreferences()
     {
         IPreferenceStore prefs = getPreferenceStore();
-        String keys = prefs.getString( SigilCore.LIBRARY_KEYS_PREF );
-        if ( keys.trim().length() > 0 )
+        String keys = prefs.getString(SigilCore.LIBRARY_KEYS_PREF);
+        if (keys.trim().length() > 0)
         {
-            for ( String key : keys.split( "," ) )
+            for (String key : keys.split(","))
             {
-                String libStr = prefs.getString( key );
+                String libStr = prefs.getString(key);
                 // XXX-FIXME-XXX parse library string
                 // lib = parse(libstr);
                 // libraries.add(lib);

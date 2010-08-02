@@ -19,35 +19,29 @@
 
 package org.apache.felix.sigil.common.core.repository;
 
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.apache.felix.sigil.common.repository.IResolutionMonitor;
-
 
 public class ProgressWrapper implements IProgressMonitor
 {
 
     private IResolutionMonitor monitor;
 
-
-    public ProgressWrapper( IResolutionMonitor monitor )
+    public ProgressWrapper(IResolutionMonitor monitor)
     {
         this.monitor = monitor;
     }
-
 
     public boolean isCanceled()
     {
         return monitor.isCanceled();
     }
 
-
-    public void beginTask( String name, int totalWork )
+    public void beginTask(String name, int totalWork)
     {
         // TODO Auto-generated method stub
 
     }
-
 
     public void done()
     {
@@ -55,36 +49,31 @@ public class ProgressWrapper implements IProgressMonitor
 
     }
 
-
-    public void internalWorked( double work )
+    public void internalWorked(double work)
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    public void setCanceled( boolean value )
+    public void setCanceled(boolean value)
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    public void setTaskName( String name )
+    public void setTaskName(String name)
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    public void subTask( String name )
+    public void subTask(String name)
     {
         // TODO Auto-generated method stub
 
     }
 
-
-    public void worked( int work )
+    public void worked(int work)
     {
         // TODO Auto-generated method stub
 

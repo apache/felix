@@ -39,16 +39,16 @@ public class BldProperties extends Properties
     }
 
     private final Properties mySysEnv;
-    
+
     BldProperties(File baseDir, Properties overrides)
     {
         mySysEnv = new Properties(sysEnv);
-        
+
         if (overrides != null)
         {
             mySysEnv.putAll(overrides);
         }
-        
+
         try
         {
             if (baseDir != null)

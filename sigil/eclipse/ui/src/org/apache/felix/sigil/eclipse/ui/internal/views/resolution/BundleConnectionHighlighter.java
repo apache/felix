@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
-
 import java.util.Set;
 
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
@@ -32,45 +31,42 @@ import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
 
-
 public class BundleConnectionHighlighter implements ISelectionChangedListener
 {
 
     private BundleResolverView view;
 
-
-    public BundleConnectionHighlighter( BundleResolverView view )
+    public BundleConnectionHighlighter(BundleResolverView view)
     {
         this.view = view;
     }
 
-
-    public void selectionChanged( SelectionChangedEvent event )
+    public void selectionChanged(SelectionChangedEvent event)
     {
         ISelection selection = event.getSelection();
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            IStructuredSelection str = ( IStructuredSelection ) selection;
+            IStructuredSelection str = (IStructuredSelection) selection;
 
             Object sel = str.getFirstElement();
 
-            if ( sel instanceof ISigilBundle )
+            if (sel instanceof ISigilBundle)
             {
-                BundleGraph graph = ( BundleGraph ) view.getBundlegraph();
+                BundleGraph graph = (BundleGraph) view.getBundlegraph();
 
-                ISigilBundle selected = ( ISigilBundle ) sel;
-                Set<ISigilBundle> connected = graph.getTargets( selected );
+                ISigilBundle selected = (ISigilBundle) sel;
+                Set<ISigilBundle> connected = graph.getTargets(selected);
 
-                highlightLinks( graph, selected, connected );
-                highlightBundles( graph, selected, connected );
+                highlightLinks(graph, selected, connected);
+                highlightBundles(graph, selected, connected);
             }
-            else if ( sel instanceof Link )
+            else if (sel instanceof Link)
             {
-                GraphConnection c = ( GraphConnection ) findGraphItem( sel );
-                if ( c != null )
+                GraphConnection c = (GraphConnection) findGraphItem(sel);
+                if (c != null)
                 {
                     c.unhighlight();
-                    c.setHighlightColor( ColorConstants.blue );
+                    c.setHighlightColor(ColorConstants.blue);
                     c.highlight();
                 }
             }
@@ -81,26 +77,26 @@ public class BundleConnectionHighlighter implements ISelectionChangedListener
         }
     }
 
-
-    private void highlightBundles( BundleGraph graph, ISigilBundle selected, Set<ISigilBundle> connected )
+    private void highlightBundles(BundleGraph graph, ISigilBundle selected,
+        Set<ISigilBundle> connected)
     {
-        for ( ISigilBundle bundle : graph.getBundles() )
+        for (ISigilBundle bundle : graph.getBundles())
         {
-            GraphNode node = ( GraphNode ) findGraphItem( bundle );
-            if ( node != null )
+            GraphNode node = (GraphNode) findGraphItem(bundle);
+            if (node != null)
             {
                 node.unhighlight();
 
-                if ( bundle == selected )
+                if (bundle == selected)
                 {
-                    node.setHighlightColor( ColorConstants.yellow );
+                    node.setHighlightColor(ColorConstants.yellow);
                     node.highlight();
                 }
-                else if ( view.isDisplayed( BundleResolverView.DEPENDENTS ) )
+                else if (view.isDisplayed(BundleResolverView.DEPENDENTS))
                 {
-                    if ( connected.contains( bundle ) )
+                    if (connected.contains(bundle))
                     {
-                        node.setHighlightColor( ColorConstants.lightBlue );
+                        node.setHighlightColor(ColorConstants.lightBlue);
                         node.highlight();
                     }
                 }
@@ -108,21 +104,21 @@ public class BundleConnectionHighlighter implements ISelectionChangedListener
         }
     }
 
-
-    private void highlightLinks( BundleGraph graph, ISigilBundle selected, Set<ISigilBundle> connected )
+    private void highlightLinks(BundleGraph graph, ISigilBundle selected,
+        Set<ISigilBundle> connected)
     {
-        for ( Link l : graph.getLinks() )
+        for (Link l : graph.getLinks())
         {
-            GraphConnection c = ( GraphConnection ) findGraphItem( l );
-            if ( c != null )
+            GraphConnection c = (GraphConnection) findGraphItem(l);
+            if (c != null)
             {
                 c.unhighlight();
 
-                if ( view.isDisplayed( BundleResolverView.DEPENDENTS ) )
+                if (view.isDisplayed(BundleResolverView.DEPENDENTS))
                 {
-                    if ( l.getSource() == selected && connected.contains( l.getTarget() ) )
+                    if (l.getSource() == selected && connected.contains(l.getTarget()))
                     {
-                        c.setHighlightColor( ColorConstants.lightBlue );
+                        c.setHighlightColor(ColorConstants.lightBlue);
                         c.highlight();
                     }
                 }
@@ -130,14 +126,13 @@ public class BundleConnectionHighlighter implements ISelectionChangedListener
         }
     }
 
-
-    private GraphItem findGraphItem( Object l )
+    private GraphItem findGraphItem(Object l)
     {
         try
         {
-            return view.getGraphViewer().findGraphItem( l );
+            return view.getGraphViewer().findGraphItem(l);
         }
-        catch ( ArrayIndexOutOfBoundsException e )
+        catch (ArrayIndexOutOfBoundsException e)
         {
             // temporary fix for issue 
             // https://bugs.eclipse.org/bugs/show_bug.cgi?id=242523

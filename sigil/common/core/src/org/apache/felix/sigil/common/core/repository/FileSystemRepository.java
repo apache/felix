@@ -19,14 +19,12 @@
 
 package org.apache.felix.sigil.common.core.repository;
 
-
 import java.io.File;
 import java.util.ArrayList;
 
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
-
 
 public class FileSystemRepository extends AbstractBundleRepository
 {
@@ -35,40 +33,37 @@ public class FileSystemRepository extends AbstractBundleRepository
     private File dir;
     private boolean recurse;
 
-
-    public FileSystemRepository( String id, File dir, boolean recurse )
+    public FileSystemRepository(String id, File dir, boolean recurse)
     {
-        super( id );
+        super(id);
         this.dir = dir;
         this.recurse = recurse;
     }
 
-
     @Override
-    public void accept( IRepositoryVisitor visitor, int options )
+    public void accept(IRepositoryVisitor visitor, int options)
     {
-        synchronized ( this )
+        synchronized (this)
         {
-            if ( bundles == null )
+            if (bundles == null)
             {
                 bundles = new ArrayList<ISigilBundle>();
-                DirectoryHelper.scanBundles( this, bundles, dir, null, recurse );
+                DirectoryHelper.scanBundles(this, bundles, dir, null, recurse);
             }
         }
 
-        for ( ISigilBundle b : bundles )
+        for (ISigilBundle b : bundles)
         {
-            if ( !visitor.visit( b ) )
+            if (!visitor.visit(b))
             {
                 break;
             }
         }
     }
 
-
     public void refresh()
     {
-        synchronized ( this )
+        synchronized (this)
         {
             bundles = null;
         }

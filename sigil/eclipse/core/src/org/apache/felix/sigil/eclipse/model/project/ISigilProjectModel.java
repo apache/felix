@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.eclipse.model.project;
 
-
 import java.util.Collection;
-
 
 import org.apache.felix.sigil.common.config.IBldProject;
 import org.apache.felix.sigil.common.core.BldCore;
@@ -39,7 +37,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.framework.Version;
 import org.osgi.service.prefs.Preferences;
 
-
 /**
  * Represents a sigil project. To get a reference to a ISigilProjectModel you can use the 
  * helper method {@link BldCore#create(IProject)}.
@@ -55,13 +52,10 @@ public interface ISigilProjectModel extends ICompoundModelElement
      */
     IProject getProject();
 
-
     // shortcut to getProject().getName()
     String getName();
 
-
     Preferences getPreferences();
-
 
     /**
      * 
@@ -73,64 +67,52 @@ public interface ISigilProjectModel extends ICompoundModelElement
      * @throws CoreException
      */
     void save(IProgressMonitor monitor) throws CoreException;
-    
+
     /**
      * Save the project and optionally rebuildDependencies
      * @param monitor
      * @param rebuildDependencies
      * @throws CoreException
      */
-    void save( IProgressMonitor monitor, boolean rebuildDependencies ) throws CoreException;
-    
-    void rebuildDependencies(IProgressMonitor monitor) throws CoreException;
-    
-    void flushDependencyState();
+    void save(IProgressMonitor monitor, boolean rebuildDependencies) throws CoreException;
 
+    void rebuildDependencies(IProgressMonitor monitor) throws CoreException;
+
+    void flushDependencyState();
 
     /**
      * @return
      */
     Version getVersion();
 
-
     String getSymbolicName();
-
 
     ISigilBundle getBundle();
 
-
-    void setBundle( ISigilBundle bundle );
-
+    void setBundle(ISigilBundle bundle);
 
     /**
      * @return
      */
     IJavaProject getJavaModel();
 
-
-    void resetClasspath( IProgressMonitor monitor ) throws CoreException;
-
+    void resetClasspath(IProgressMonitor monitor) throws CoreException;
 
     IPath findBundleLocation() throws CoreException;
 
+    IModelElement findImport(String packageName, IProgressMonitor monitor);
 
-    IModelElement findImport( String packageName, IProgressMonitor monitor );
+    boolean isInClasspath(String packageName, IProgressMonitor monitor)
+        throws CoreException;
 
+    boolean isInClasspath(ISigilBundle bundle);
 
-    boolean isInClasspath( String packageName, IProgressMonitor monitor ) throws CoreException;
-
-
-    boolean isInClasspath( ISigilBundle bundle );
-
-
-    boolean isInBundleClasspath( IPackageFragment root ) throws JavaModelException;
-
+    boolean isInBundleClasspath(IPackageFragment root) throws JavaModelException;
 
     IPath findOutputLocation() throws CoreException;
 
-
     IBldProject getBldProject() throws CoreException;
 
-
-    Collection<IClasspathEntry> findExternalClasspath( IProgressMonitor monitor ) throws CoreException;
+    Collection<IClasspathEntry> findExternalClasspath(IProgressMonitor monitor)
+        throws CoreException;
 }

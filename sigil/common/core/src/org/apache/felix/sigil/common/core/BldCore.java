@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core;
 
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,61 +42,56 @@ import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-
 public class BldCore implements BundleActivator
 {
     private static LicenseManager licenceManager = new LicenseManager();
 
-    private static final Logger log = Logger.getLogger( BldCore.class.getName() );
+    private static final Logger log = Logger.getLogger(BldCore.class.getName());
 
-
-    public static void error( String string, Throwable e )
+    public static void error(String string, Throwable e)
     {
         // TODO 
-        log.log( Level.WARNING, string, e );
+        log.log(Level.WARNING, string, e);
     }
 
-
-    public static void error( String string )
+    public static void error(String string)
     {
-        log.log( Level.WARNING, string );
+        log.log(Level.WARNING, string);
     }
-
 
     public static ILicenseManager getLicenseManager()
     {
         return licenceManager;
     }
 
-
-    public void start( BundleContext context ) throws Exception
+    public void start(BundleContext context) throws Exception
     {
         init();
     }
 
-
     public static void init() throws Exception
     {
-        ModelElementFactory.getInstance().register( ISigilBundle.class, SigilBundle.class, "bundle", "sigil", null );
-        ModelElementFactory.getInstance().register( ILibrary.class, Library.class, "library", "sigil", null );
-        ModelElementFactory.getInstance().register( ILibraryImport.class, LibraryImport.class, "library-import",
-            "sigil", null );
+        ModelElementFactory.getInstance().register(ISigilBundle.class, SigilBundle.class,
+            "bundle", "sigil", null);
+        ModelElementFactory.getInstance().register(ILibrary.class, Library.class,
+            "library", "sigil", null);
+        ModelElementFactory.getInstance().register(ILibraryImport.class,
+            LibraryImport.class, "library-import", "sigil", null);
 
         // osgi elements
-        ModelElementFactory.getInstance().register( IBundleModelElement.class, BundleModelElement.class, "bundle",
-            null, null );
-        ModelElementFactory.getInstance().register( IPackageExport.class, PackageExport.class, "package.export", null,
-            null );
-        ModelElementFactory.getInstance().register( IPackageImport.class, PackageImport.class, "package.import", null,
-            null );
-        ModelElementFactory.getInstance().register( IRequiredBundle.class, RequiredBundle.class, "required.bundle",
-            null, null );
+        ModelElementFactory.getInstance().register(IBundleModelElement.class,
+            BundleModelElement.class, "bundle", null, null);
+        ModelElementFactory.getInstance().register(IPackageExport.class,
+            PackageExport.class, "package.export", null, null);
+        ModelElementFactory.getInstance().register(IPackageImport.class,
+            PackageImport.class, "package.import", null, null);
+        ModelElementFactory.getInstance().register(IRequiredBundle.class,
+            RequiredBundle.class, "required.bundle", null, null);
     }
 
-
-    public void stop( BundleContext context ) throws Exception
+    public void stop(BundleContext context) throws Exception
     {
         // TODO Auto-generated method stub
 
-    }    
+    }
 }

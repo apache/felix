@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.form;
 
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
@@ -36,18 +35,16 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.IFormColors;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
-
 public class SigilFormEntry
 {
     private static final IFormValueConverter NULL_DESCRIPTOR = new IFormValueConverter()
     {
-        public String getLabel( Object value )
+        public String getLabel(Object value)
         {
-            return ( String ) value;
+            return (String) value;
         }
 
-
-        public Object getValue( String label )
+        public Object getValue(String label)
         {
             return label;
         }
@@ -62,77 +59,69 @@ public class SigilFormEntry
     private Object value;
     private ISigilFormEntryListener listener;
 
-
-    public SigilFormEntry( Composite parent, FormToolkit toolkit, String title )
+    public SigilFormEntry(Composite parent, FormToolkit toolkit, String title)
     {
-        this( parent, toolkit, title, null, null );
+        this(parent, toolkit, title, null, null);
     }
 
-
-    public SigilFormEntry( Composite parent, FormToolkit toolkit, String title, String browse,
-        IFormValueConverter descriptor )
+    public SigilFormEntry(Composite parent, FormToolkit toolkit, String title, String browse, IFormValueConverter descriptor)
     {
         this.descriptor = descriptor == null ? NULL_DESCRIPTOR : descriptor;
-        createComponent( parent, title, browse, toolkit );
+        createComponent(parent, title, browse, toolkit);
     }
 
-
-    public void setFormEntryListener( ISigilFormEntryListener listener )
+    public void setFormEntryListener(ISigilFormEntryListener listener)
     {
         this.listener = listener;
     }
 
-
-    public void setValue( Object value )
+    public void setValue(Object value)
     {
         this.value = value;
-        String text = descriptor.getLabel( value );
-        if ( text == null )
+        String text = descriptor.getLabel(value);
+        if (text == null)
         {
             text = "";
         }
-        txt.setText( text );
+        txt.setText(text);
         handleValueChanged();
     }
-
 
     public Object getValue()
     {
         return value;
     }
 
-
-    public void setFreeText( boolean freeText )
+    public void setFreeText(boolean freeText)
     {
         this.freeText = freeText;
     }
 
-
-    public void setEditable( boolean editable )
+    public void setEditable(boolean editable)
     {
-        lbl.setEnabled( editable );
-        txt.setEditable( editable );
-        if ( btn != null )
+        lbl.setEnabled(editable);
+        txt.setEditable(editable);
+        if (btn != null)
         {
-            btn.setEnabled( editable );
+            btn.setEnabled(editable);
         }
     }
 
-
-    private void createComponent( Composite parent, String title, String browse, FormToolkit toolkit )
+    private void createComponent(Composite parent, String title, String browse,
+        FormToolkit toolkit)
     {
-        lbl = toolkit.createLabel( parent, title );
-        lbl.setForeground( toolkit.getColors().getColor( IFormColors.TITLE ) );
+        lbl = toolkit.createLabel(parent, title);
+        lbl.setForeground(toolkit.getColors().getColor(IFormColors.TITLE));
 
-        txt = toolkit.createText( parent, "", SWT.SINGLE | SWT.BORDER );
-        txt.addKeyListener( new KeyAdapter()
+        txt = toolkit.createText(parent, "", SWT.SINGLE | SWT.BORDER);
+        txt.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyPressed( KeyEvent e )
+            public void keyPressed(KeyEvent e)
             {
-                if ( freeText )
+                if (freeText)
                 {
-                    switch ( e.character )
+                    switch (e.character)
                     {
                         case '\r':
                             handleValueChanged();
@@ -140,10 +129,10 @@ public class SigilFormEntry
                 }
                 else
                 {
-                    switch ( e.character )
+                    switch (e.character)
                     {
                         case '\b':
-                            setValue( null );
+                            setValue(null);
                             handleValueChanged();
                         default:
                             e.doit = false;
@@ -151,72 +140,71 @@ public class SigilFormEntry
                     }
                 }
             }
-        } );
-        txt.addFocusListener( new FocusAdapter()
+        });
+        txt.addFocusListener(new FocusAdapter()
         {
             @Override
-            public void focusLost( FocusEvent e )
+            public void focusLost(FocusEvent e)
             {
                 handleValueChanged();
             }
-        } );
+        });
 
-        if ( browse != null )
+        if (browse != null)
         {
-            btn = toolkit.createButton( parent, browse, SWT.PUSH );
-            btn.addSelectionListener( new SelectionAdapter()
+            btn = toolkit.createButton(parent, browse, SWT.PUSH);
+            btn.addSelectionListener(new SelectionAdapter()
             {
                 @Override
-                public void widgetSelected( SelectionEvent e )
+                public void widgetSelected(SelectionEvent e)
                 {
                     handleBrowseSelected();
                 }
-            } );
+            });
         }
 
-        fillIntoGrid( parent );
+        fillIntoGrid(parent);
     }
-
 
     private void handleBrowseSelected()
     {
-        if ( listener != null )
+        if (listener != null)
         {
-            listener.browseButtonSelected( this );
+            listener.browseButtonSelected(this);
         }
     }
-
 
     private void handleValueChanged()
     {
-        if ( freeText )
+        if (freeText)
         {
-            this.value = descriptor.getValue( txt.getText() );
+            this.value = descriptor.getValue(txt.getText());
         }
-        if ( listener != null )
+        if (listener != null)
         {
-            listener.textValueChanged( this );
+            listener.textValueChanged(this);
         }
     }
 
-
-    private void fillIntoGrid( Composite parent )
+    private void fillIntoGrid(Composite parent)
     {
-        if ( parent.getLayout() instanceof GridLayout )
+        if (parent.getLayout() instanceof GridLayout)
         {
-            GridLayout layout = ( GridLayout ) parent.getLayout();
+            GridLayout layout = (GridLayout) parent.getLayout();
 
             int cols = layout.numColumns;
 
-            lbl.setLayoutData( new GridData( SWT.LEFT, SWT.CENTER, false, false ) );
+            lbl.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
-            if ( btn == null )
+            if (btn == null)
             {
-                txt.setLayoutData( new GridData( SWT.FILL, SWT.CENTER, true, false, Math.max( 1, cols - 1 ), 1 ) );
+                txt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
+                    Math.max(1, cols - 1), 1));
             }
             else
             {
-                txt.setLayoutData( new GridData( SWT.FILL, SWT.CENTER, true, false, Math.max( 1, cols - 2 ), 1 ) );
+                txt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
+                    Math.max(1, cols - 2), 1));
             }
         }
     }

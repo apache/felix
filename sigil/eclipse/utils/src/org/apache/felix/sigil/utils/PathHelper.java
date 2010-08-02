@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.utils;
 
-
 import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -27,23 +26,23 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-
 public class PathHelper
 {
 
-    public static void scanFiles( List<IPath> paths, IPath path, String pattern, boolean recurse )
+    public static void scanFiles(List<IPath> paths, IPath path, String pattern,
+        boolean recurse)
     {
-        Pattern p = GlobCompiler.compile( pattern );
+        Pattern p = GlobCompiler.compile(pattern);
 
-        for ( File f : path.toFile().listFiles() )
+        for (File f : path.toFile().listFiles())
         {
-            if ( f.isDirectory() && recurse )
+            if (f.isDirectory() && recurse)
             {
-                scanFiles( paths, new Path( f.getAbsolutePath() ), pattern, recurse );
+                scanFiles(paths, new Path(f.getAbsolutePath()), pattern, recurse);
             }
-            else if ( f.isFile() && p.matcher( f.getName() ).matches() )
+            else if (f.isFile() && p.matcher(f.getName()).matches())
             {
-                paths.add( new Path( f.getAbsolutePath() ) );
+                paths.add(new Path(f.getAbsolutePath()));
             }
         }
     }

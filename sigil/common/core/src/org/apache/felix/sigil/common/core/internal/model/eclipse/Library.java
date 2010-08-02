@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.internal.model.eclipse;
 
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +28,6 @@ import org.apache.felix.sigil.common.model.eclipse.ILibrary;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 import org.osgi.framework.Version;
-
 
 public class Library extends AbstractCompoundModelElement implements ILibrary
 {
@@ -41,70 +39,59 @@ public class Library extends AbstractCompoundModelElement implements ILibrary
     private Set<IRequiredBundle> bundles;
     private Set<IPackageImport> imports;
 
-
     public Library()
     {
-        super( "Library" );
+        super("Library");
         bundles = new HashSet<IRequiredBundle>();
         imports = new HashSet<IPackageImport>();
     }
 
-
-    public void addBundle( IRequiredBundle bundle )
+    public void addBundle(IRequiredBundle bundle)
     {
-        bundles.add( bundle );
+        bundles.add(bundle);
     }
 
-
-    public void addImport( IPackageImport pi )
+    public void addImport(IPackageImport pi)
     {
-        imports.add( pi );
+        imports.add(pi);
     }
-
 
     public Collection<IRequiredBundle> getBundles()
     {
         return bundles;
     }
 
-
     public Collection<IPackageImport> getImports()
     {
         return imports;
     }
-
 
     public String getName()
     {
         return name;
     }
 
-
     public Version getVersion()
     {
         return version;
     }
 
-
-    public void removeBundle( IRequiredBundle bundle )
+    public void removeBundle(IRequiredBundle bundle)
     {
-        bundles.remove( bundle );
+        bundles.remove(bundle);
     }
 
-
-    public void removeImport( IPackageImport pi )
+    public void removeImport(IPackageImport pi)
     {
-        imports.remove( pi );
+        imports.remove(pi);
     }
 
-
-    public void setName( String name )
+    public void setName(String name)
     {
         this.name = name;
     }
 
-
-    public void setVersion( Version version )
+    public void setVersion(Version version)
     {
         this.version = version;
     }

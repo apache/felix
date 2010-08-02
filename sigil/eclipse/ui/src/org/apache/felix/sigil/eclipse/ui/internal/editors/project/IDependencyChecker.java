@@ -19,15 +19,12 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 
-
 public interface IDependencyChecker
 {
-    boolean isSatisfied( IPackageImport packageImport );
+    boolean isSatisfied(IPackageImport packageImport);
 
-
-    boolean isSatisfied( IRequiredBundle requiredBundle );
+    boolean isSatisfied(IRequiredBundle requiredBundle);
 }

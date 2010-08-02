@@ -70,7 +70,8 @@ public interface CommandLineParser
      * @throws ParseException if there are any problems encountered
      * while parsing the command line tokens.
      */
-    CommandLine parse(Options options, String[] arguments, boolean stopAtNonOption) throws ParseException;
+    CommandLine parse(Options options, String[] arguments, boolean stopAtNonOption)
+        throws ParseException;
 
     /**
      * Parse the arguments according to the specified options and

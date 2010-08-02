@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.model;
 
-
 /**
  * Visitor pattern to traverse nodes in the model.
  * 
@@ -37,5 +36,5 @@ public interface IModelWalker
      * 
      * @return true to continue walking the model, false otherwise
      */
-    boolean visit( IModelElement element );
+    boolean visit(IModelElement element);
 }

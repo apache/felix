@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.wizard.project;
 
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +47,6 @@ import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage;
 import org.osgi.framework.Version;
 
-
 /**
  * @author dave
  *
@@ -61,18 +59,16 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
     private URI currentProjectLocation;
     private boolean created;
 
-
-    public SigilProjectWizardSecondPage( SigilProjectWizardFirstPage firstPage )
+    public SigilProjectWizardSecondPage(SigilProjectWizardFirstPage firstPage)
     {
         this.firstPage = firstPage;
     }
 
-
     @Override
-    public void setVisible( boolean visible )
+    public void setVisible(boolean visible)
     {
-        super.setVisible( visible );
-        if ( visible )
+        super.setVisible(visible);
+        if (visible)
         {
             changeToNewProject();
         }
@@ -82,69 +78,66 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         }
     }
 
-
     @Override
     protected boolean useNewSourcePage()
     {
         return true;
     }
 
-
-    protected void performFinish( IProgressMonitor monitor ) throws CoreException, InterruptedException
+    protected void performFinish(IProgressMonitor monitor) throws CoreException,
+        InterruptedException
     {
         changeToNewProject();
-        updateProject( monitor );
+        updateProject(monitor);
     }
-
 
     private void changeToNewProject()
     {
-        if ( !created )
+        if (!created)
         {
             IWorkspace workspace = ResourcesPlugin.getWorkspace();
 
             IWorkspaceRunnable op = new IWorkspaceRunnable()
             {
-                public void run( IProgressMonitor monitor ) throws CoreException
+                public void run(IProgressMonitor monitor) throws CoreException
                 {
                     try
                     {
-                        updateProject( monitor );
+                        updateProject(monitor);
                     }
-                    catch ( InterruptedException e )
+                    catch (InterruptedException e)
                     {
-                        throw new OperationCanceledException( e.getMessage() );
+                        throw new OperationCanceledException(e.getMessage());
                     }
                 }
             };
 
             try
             {
-                workspace.run( op, Job.getJobManager().createProgressGroup() );
-                setErrorMessage( null );
-                setPageComplete( true );
+                workspace.run(op, Job.getJobManager().createProgressGroup());
+                setErrorMessage(null);
+                setPageComplete(true);
                 created = true;
             }
-            catch ( CoreException e )
+            catch (CoreException e)
             {
-                SigilCore.error( "Failed to run workspace job", e );
+                SigilCore.error("Failed to run workspace job", e);
             }
         }
     }
 
-
     private void removeProject()
     {
-        if ( currentProject == null || !currentProject.exists() )
+        if (currentProject == null || !currentProject.exists())
         {
             return;
         }
 
         IWorkspaceRunnable op = new IWorkspaceRunnable()
         {
-            public void run( IProgressMonitor monitor ) throws CoreException
+            public void run(IProgressMonitor monitor) throws CoreException
             {
-                doRemoveProject( monitor );
+                doRemoveProject(monitor);
             }
         };
 
@@ -152,11 +145,11 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
 
         try
         {
-            workspace.run( op, Job.getJobManager().createProgressGroup() );
+            workspace.run(op, Job.getJobManager().createProgressGroup());
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to run workspace job", e );
+            SigilCore.error("Failed to run workspace job", e);
         }
         finally
         {
@@ -164,8 +157,8 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         }
     }
 
-
-    private void updateProject( IProgressMonitor monitor ) throws CoreException, InterruptedException
+    private void updateProject(IProgressMonitor monitor) throws CoreException,
+        InterruptedException
     {
         currentProject = firstPage.getProjectHandle();
         currentProjectLocation = getProjectLocationURI();
@@ -175,58 +168,58 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         String vendor = firstPage.getVendor();
         String name = firstPage.getName();
 
-        createProject( currentProject, currentProjectLocation, monitor );
+        createProject(currentProject, currentProjectLocation, monitor);
 
         IPath src = createSourcePath();
 
         IPath output = getOutputLocation();
 
-        if ( output.segmentCount() == 0 )
+        if (output.segmentCount() == 0)
         {
-            output = new Path( currentProject.getName() ).append( "build" ).append( "classes" );
+            output = new Path(currentProject.getName()).append("build").append("classes");
         }
 
-        IClasspathEntry[] entries = getProjectClassPath( src );
+        IClasspathEntry[] entries = getProjectClassPath(src);
 
-        SigilCore.makeSigilProject( currentProject, monitor );
+        SigilCore.makeSigilProject(currentProject, monitor);
 
-        init( JavaCore.create( currentProject ), output.makeRelative(), entries, false );
+        init(JavaCore.create(currentProject), output.makeRelative(), entries, false);
 
-        configureJavaProject( new SubProgressMonitor( monitor, 3 ) );
+        configureJavaProject(new SubProgressMonitor(monitor, 3));
 
-        configureSigilProject( currentProject, description, projectVersion, vendor, name, src, monitor );
+        configureSigilProject(currentProject, description, projectVersion, vendor, name,
+            src, monitor);
     }
-
 
     private IPath createSourcePath() throws CoreException
     {
         IPath projectPath = currentProject.getFullPath();
-        IPath src = new Path( "src" );
-        IFolder f = currentProject.getFolder( src );
-        if ( !f.getLocation().toFile().exists() )
+        IPath src = new Path("src");
+        IFolder f = currentProject.getFolder(src);
+        if (!f.getLocation().toFile().exists())
         {
-            f.create( true, true, null );
+            f.create(true, true, null);
         }
 
-        return projectPath.append( src );
+        return projectPath.append(src);
     }
 
-
-    final void doRemoveProject( IProgressMonitor monitor ) throws CoreException
+    final void doRemoveProject(IProgressMonitor monitor) throws CoreException
     {
-        final boolean noProgressMonitor = ( currentProjectLocation == null ); // inside workspace
+        final boolean noProgressMonitor = (currentProjectLocation == null); // inside workspace
 
-        if ( monitor == null || noProgressMonitor )
+        if (monitor == null || noProgressMonitor)
         {
             monitor = new NullProgressMonitor();
         }
-        monitor.beginTask( "Remove project", 3 );
+        monitor.beginTask("Remove project", 3);
         try
         {
             try
             {
-                boolean removeContent = currentProject.isSynchronized( IResource.DEPTH_INFINITE );
-                currentProject.delete( removeContent, false, new SubProgressMonitor( monitor, 2 ) );
+                boolean removeContent = currentProject.isSynchronized(IResource.DEPTH_INFINITE);
+                currentProject.delete(removeContent, false, new SubProgressMonitor(
+                    monitor, 2));
 
             }
             finally
@@ -240,18 +233,17 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         }
     }
 
-
-    private IClasspathEntry[] getProjectClassPath( IPath src ) throws CoreException
+    private IClasspathEntry[] getProjectClassPath(IPath src) throws CoreException
     {
         List<IClasspathEntry> cpEntries = new ArrayList<IClasspathEntry>();
-        cpEntries.add( JavaCore.newSourceEntry( src ) );
-        cpEntries.addAll( Arrays.asList( getDefaultClasspathEntry() ) );
-        cpEntries.add( JavaCore.newContainerEntry( new Path( SigilCore.CLASSPATH_CONTAINER_PATH ) ) );
-        IClasspathEntry[] entries = cpEntries.toArray( new IClasspathEntry[cpEntries.size()] );
+        cpEntries.add(JavaCore.newSourceEntry(src));
+        cpEntries.addAll(Arrays.asList(getDefaultClasspathEntry()));
+        cpEntries.add(JavaCore.newContainerEntry(new Path(
+            SigilCore.CLASSPATH_CONTAINER_PATH)));
+        IClasspathEntry[] entries = cpEntries.toArray(new IClasspathEntry[cpEntries.size()]);
 
         return entries;
     }
-
 
     private IClasspathEntry[] getDefaultClasspathEntry()
     {
@@ -270,46 +262,44 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         return defaultJRELibrary;
     }
 
-
-    private void configureSigilProject( IProject project, String description, Version projectVersion,
-        String vendorName, String bundleName, IPath src, IProgressMonitor monitor ) throws CoreException
+    private void configureSigilProject(IProject project, String description,
+        Version projectVersion, String vendorName, String bundleName, IPath src,
+        IProgressMonitor monitor) throws CoreException
     {
-        ISigilProjectModel sigil = SigilCore.create( project );
-        IClasspathEntry cp = JavaCore.newSourceEntry( src );
-        String encodedClasspath = sigil.getJavaModel().encodeClasspathEntry( cp );
+        ISigilProjectModel sigil = SigilCore.create(project);
+        IClasspathEntry cp = JavaCore.newSourceEntry(src);
+        String encodedClasspath = sigil.getJavaModel().encodeClasspathEntry(cp);
 
         ISigilBundle bundle = sigil.getBundle();
-        bundle.addClasspathEntry( encodedClasspath );
+        bundle.addClasspathEntry(encodedClasspath);
 
-        if ( description != null )
+        if (description != null)
         {
-            bundle.getBundleInfo().setDescription( description );
+            bundle.getBundleInfo().setDescription(description);
         }
-        if ( projectVersion != null )
+        if (projectVersion != null)
         {
-            bundle.setVersion( projectVersion );
+            bundle.setVersion(projectVersion);
         }
-        if ( vendorName != null )
+        if (vendorName != null)
         {
-            bundle.getBundleInfo().setVendor( vendorName );
+            bundle.getBundleInfo().setVendor(vendorName);
         }
-        if ( bundleName != null )
+        if (bundleName != null)
         {
-            bundle.getBundleInfo().setName( bundleName );
+            bundle.getBundleInfo().setName(bundleName);
         }
-        sigil.save( monitor );
+        sigil.save(monitor);
     }
-
 
     private URI getProjectLocationURI() throws CoreException
     {
-        if ( firstPage.isInWorkspace() )
+        if (firstPage.isInWorkspace())
         {
             return null;
         }
         return firstPage.getLocationURI();
     }
-
 
     @Override
     public boolean isPageComplete()
@@ -318,10 +308,9 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         return result;
     }
 
-
     protected void performCancel()
     {
-        if ( currentProject != null )
+        if (currentProject != null)
         {
             removeProject();
         }

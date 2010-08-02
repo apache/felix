@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,22 +40,19 @@ import org.apache.felix.sigil.eclipse.install.IOSGiInstall;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-
 public class OSGiInstallRepository extends AbstractBundleRepository
 {
 
     private Map<String, List<ISigilBundle>> bundles;
 
-
-    public OSGiInstallRepository( String id )
+    public OSGiInstallRepository(String id)
     {
-        super( id );
+        super(id);
     }
-
 
     public void refresh()
     {
-        synchronized ( this )
+        synchronized (this)
         {
             bundles = null;
         }
@@ -64,41 +60,40 @@ public class OSGiInstallRepository extends AbstractBundleRepository
         notifyChange();
     }
 
-
     @Override
-    public void accept( IRepositoryVisitor visitor, int options )
+    public void accept(IRepositoryVisitor visitor, int options)
     {
         IOSGiInstall install = SigilCore.getInstallManager().getDefaultInstall();
 
-        if ( install != null )
+        if (install != null)
         {
             List<ISigilBundle> found = null;
 
-            synchronized ( this )
+            synchronized (this)
             {
-                found = bundles == null ? null : bundles.get( install.getId() );
+                found = bundles == null ? null : bundles.get(install.getId());
             }
 
-            if ( found == null )
+            if (found == null)
             {
                 found = new ArrayList<ISigilBundle>();
                 IPath source = install.getType().getSourceLocation();
 
-                for ( IPath p : install.getType().getDefaultBundleLocations() )
+                for (IPath p : install.getType().getDefaultBundleLocations())
                 {
-                    loadBundle( p, found, source );
+                    loadBundle(p, found, source);
                 }
 
-                synchronized ( this )
+                synchronized (this)
                 {
                     bundles = new HashMap<String, List<ISigilBundle>>();
-                    bundles.put( install.getId(), found );
+                    bundles.put(install.getId(), found);
                 }
             }
 
-            for ( ISigilBundle b : found )
+            for (ISigilBundle b : found)
             {
-                if ( !visitor.visit( b ) )
+                if (!visitor.visit(b))
                 {
                     break;
                 }
@@ -106,64 +101,62 @@ public class OSGiInstallRepository extends AbstractBundleRepository
         }
     }
 
-
-    private void loadBundle( IPath p, List<ISigilBundle> bundles, IPath source )
+    private void loadBundle(IPath p, List<ISigilBundle> bundles, IPath source)
     {
         File f = p.toFile();
         JarFile jar = null;
         try
         {
-            jar = new JarFile( f );
-            ISigilBundle bundle = buildBundle( jar.getManifest(), f );
-            if ( bundle != null )
+            jar = new JarFile(f);
+            ISigilBundle bundle = buildBundle(jar.getManifest(), f);
+            if (bundle != null)
             {
-                bundle.setLocation( f );
-                bundle.setSourcePathLocation( source.toFile() );
+                bundle.setLocation(f);
+                bundle.setSourcePathLocation(source.toFile());
                 // XXX hard coded src location
-                bundle.setSourceRootPath( "src" );
-                bundles.add( bundle );
+                bundle.setSourceRootPath("src");
+                bundles.add(bundle);
             }
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
-            BldCore.error( "Failed to read jar file " + f, e );
+            BldCore.error("Failed to read jar file " + f, e);
         }
-        catch ( ModelElementFactoryException e )
+        catch (ModelElementFactoryException e)
         {
-            BldCore.error( "Failed to build bundle " + f, e );
+            BldCore.error("Failed to build bundle " + f, e);
         }
-        catch ( RuntimeException e )
+        catch (RuntimeException e)
         {
-            BldCore.error( "Failed to build bundle " + f, e );
+            BldCore.error("Failed to build bundle " + f, e);
         }
         finally
         {
-            if ( jar != null )
+            if (jar != null)
             {
                 try
                 {
                     jar.close();
                 }
-                catch ( IOException e )
+                catch (IOException e)
                 {
-                    BldCore.error( "Failed to close jar file", e );
+                    BldCore.error("Failed to close jar file", e);
                 }
             }
         }
     }
 
-
-    private ISigilBundle buildBundle( Manifest manifest, File f )
+    private ISigilBundle buildBundle(Manifest manifest, File f)
     {
-        IBundleModelElement info = buildBundleModelElement( manifest );
+        IBundleModelElement info = buildBundleModelElement(manifest);
 
         ISigilBundle bundle = null;
 
-        if ( info != null )
+        if (info != null)
         {
-            bundle = ModelElementFactory.getInstance().newModelElement( ISigilBundle.class );
-            bundle.addChild( info );
-            bundle.setLocation( f );
+            bundle = ModelElementFactory.getInstance().newModelElement(ISigilBundle.class);
+            bundle.addChild(info);
+            bundle.setLocation(f);
         }
 
         return bundle;

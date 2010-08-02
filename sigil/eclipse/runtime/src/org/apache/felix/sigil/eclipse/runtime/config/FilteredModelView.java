@@ -1,6 +1,5 @@
 package org.apache.felix.sigil.eclipse.runtime.config;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
-
 public class FilteredModelView<T> extends Composite
 {
     private ArrayList<T> selected = new ArrayList<T>();
@@ -39,9 +37,9 @@ public class FilteredModelView<T> extends Composite
     private StructuredViewer viewer;
     private String txt = "";
 
-    public FilteredModelView( Composite parent, int style )
+    public FilteredModelView(Composite parent, int style)
     {
-        super( parent, style );
+        super(parent, style);
         initLayout();
     }
 
@@ -50,42 +48,39 @@ public class FilteredModelView<T> extends Composite
         return selected;
     }
 
-
     public List<T> getElements()
     {
         return elements;
     }
 
-    public void addElement( T element )
+    public void addElement(T element)
     {
-        elements.add( element );
+        elements.add(element);
         refresh();
     }
 
-
-    public void addElements( Collection<T> elements )
+    public void addElements(Collection<T> elements)
     {
-        this.elements.addAll( elements );
+        this.elements.addAll(elements);
         refresh();
     }
 
-
-    public void removeElement( T element )
+    public void removeElement(T element)
     {
-        elements.remove( element );
+        elements.remove(element);
         refresh();
     }
 
-
-    public void removeElements( Collection<T> elements )
+    public void removeElements(Collection<T> elements)
     {
-        this.elements.removeAll( elements );
+        this.elements.removeAll(elements);
         refresh();
     }
 
     public void refresh()
     {
-        SigilUI.runInUI( new Runnable() {
+        SigilUI.runInUI(new Runnable()
+        {
 
             public void run()
             {
@@ -96,107 +91,103 @@ public class FilteredModelView<T> extends Composite
 
     private void initLayout()
     {
-        Text bundleTxt = createSelectionBox( this );
+        Text bundleTxt = createSelectionBox(this);
 
-        Control view = createViewBox( this );
+        Control view = createViewBox(this);
 
         // layout
-        bundleTxt.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        view.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
+        bundleTxt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        view.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-        setLayout( new GridLayout( 1, false ) );
+        setLayout(new GridLayout(1, false));
     }
 
-
-    private Control createViewBox( Composite parent )
+    private Control createViewBox(Composite parent)
     {
-        Table table = new Table( this, SWT.MULTI );
+        Table table = new Table(this, SWT.MULTI);
 
-        viewer = createViewer( table );
+        viewer = createViewer(table);
 
-        viewer.setContentProvider( new ArrayContentProvider() );
+        viewer.setContentProvider(new ArrayContentProvider());
 
-        viewer.addSelectionChangedListener( new ISelectionChangedListener()
+        viewer.addSelectionChangedListener(new ISelectionChangedListener()
         {
             @SuppressWarnings("unchecked")
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
-                if ( event.getSelection().isEmpty() )
+                if (event.getSelection().isEmpty())
                 {
                     selected.clear();
                 }
                 else
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) event.getSelection();
-                    selected.addAll( sel.toList() );
+                    IStructuredSelection sel = (IStructuredSelection) event.getSelection();
+                    selected.addAll(sel.toList());
                 }
             }
-        } );
-        
-        viewer.setInput( elements );
+        });
 
-        viewer.setFilters( new ViewerFilter[]
-            { new ViewerFilter()
+        viewer.setInput(elements);
+
+        viewer.setFilters(new ViewerFilter[] { new ViewerFilter()
+        {
+            @SuppressWarnings("unchecked")
+            @Override
+            public boolean select(Viewer viewer, Object parentElement, Object element)
             {
-                @SuppressWarnings("unchecked")
-                @Override
-                public boolean select( Viewer viewer, Object parentElement, Object element )
+                if (filter.select((T) element))
                 {
-                    if ( filter.select( ( T ) element ) )
-                    {
-                        String name = elementDescriptor.getName( ( T ) element );
-                        return name.startsWith( txt );
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    String name = elementDescriptor.getName((T) element);
+                    return name.startsWith(txt);
                 }
-            } } );
+                else
+                {
+                    return false;
+                }
+            }
+        } });
 
         return table;
     }
 
-
-    protected StructuredViewer createViewer( Table table )
+    protected StructuredViewer createViewer(Table table)
     {
-        TableViewer tableViewer = new TableViewer( table );
-        
-        tableViewer.setLabelProvider( new DefaultLabelProvider() {
+        TableViewer tableViewer = new TableViewer(table);
 
-            public Image getImage( Object arg0 )
+        tableViewer.setLabelProvider(new DefaultLabelProvider()
+        {
+
+            public Image getImage(Object arg0)
             {
                 return null;
             }
 
             @SuppressWarnings("unchecked")
-            public String getText( Object element )
+            public String getText(Object element)
             {
-                return elementDescriptor.getLabel( ( T ) element );
+                return elementDescriptor.getLabel((T) element);
             }
-            
+
         });
 
         return tableViewer;
     }
 
-
-    private Text createSelectionBox( Composite parent )
+    private Text createSelectionBox(Composite parent)
     {
-        final Text txtSelection = new Text( parent, SWT.SEARCH );
+        final Text txtSelection = new Text(parent, SWT.SEARCH);
 
-        txtSelection.addKeyListener( new KeyAdapter()
+        txtSelection.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyReleased( KeyEvent e )
+            public void keyReleased(KeyEvent e)
             {
                 txt = txtSelection.getText();
                 refresh();
             }
-        } );
+        });
         return txtSelection;
     }
-
 
     /*
      *         ControlDecoration selectionDecor = new ControlDecoration( txtSelection, SWT.LEFT | SWT.TOP );
@@ -225,28 +216,27 @@ public class FilteredModelView<T> extends Composite
 
      */
 
-    public void setElementDescriptor( IElementDescriptor<T> elementDescriptor )
+    public void setElementDescriptor(IElementDescriptor<T> elementDescriptor)
     {
-        if ( elementDescriptor == null )
+        if (elementDescriptor == null)
         {
             elementDescriptor = UIHelper.getDefaultElementDescriptor();
         }
         this.elementDescriptor = elementDescriptor;
     }
-    
-    public IElementDescriptor<T> getElementDescriptor() {
+
+    public IElementDescriptor<T> getElementDescriptor()
+    {
         return elementDescriptor;
     }
 
-
-    public void setFilter( IFilter<T> filter )
+    public void setFilter(IFilter<T> filter)
     {
-        if ( filter == null )
+        if (filter == null)
         {
             filter = UIHelper.getDefaultFilter();
         }
         this.filter = filter;
     }
-
 
 }

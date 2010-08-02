@@ -39,18 +39,18 @@ public class PathUtil
         return path == null ? null : new Path(path);
     }
 
-
     /**
      * @param absolutePath
      * @return
      */
     public static IPath newPathIfExists(File file)
     {
-        if (file == null) return null;
-        if (file.exists()) return new Path(file.getAbsolutePath());
+        if (file == null)
+            return null;
+        if (file.exists())
+            return new Path(file.getAbsolutePath());
         // fine
         return null;
     }
-
 
 }

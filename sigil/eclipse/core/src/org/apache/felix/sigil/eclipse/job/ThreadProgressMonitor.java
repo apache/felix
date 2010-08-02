@@ -19,20 +19,16 @@
 
 package org.apache.felix.sigil.eclipse.job;
 
-
 import org.eclipse.core.runtime.IProgressMonitor;
-
 
 public class ThreadProgressMonitor
 {
     private static ThreadLocal<IProgressMonitor> local = new ThreadLocal<IProgressMonitor>();
 
-
-    public static void setProgressMonitor( IProgressMonitor monitor )
+    public static void setProgressMonitor(IProgressMonitor monitor)
     {
-        local.set( monitor );
+        local.set(monitor);
     }
-
 
     public static IProgressMonitor getProgressMonitor()
     {

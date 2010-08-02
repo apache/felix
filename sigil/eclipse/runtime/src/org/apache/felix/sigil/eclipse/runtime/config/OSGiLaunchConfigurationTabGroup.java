@@ -37,16 +37,12 @@ public class OSGiLaunchConfigurationTabGroup extends AbstractLaunchConfiguration
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTabGroup#createTabs(org.eclipse.debug.ui.ILaunchConfigurationDialog, java.lang.String)
      */
-    public void createTabs( ILaunchConfigurationDialog arg0, String arg1 )
+    public void createTabs(ILaunchConfigurationDialog arg0, String arg1)
     {
         ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] {
-            new OSGiLaunchConfigurationTab(),
-            new CommonTab(),
-            new JavaArgumentsTab(),
-            new JavaClasspathTab(),
-            new EnvironmentTab()
-        };
-        setTabs(tabs);    
+                new OSGiLaunchConfigurationTab(), new CommonTab(),
+                new JavaArgumentsTab(), new JavaClasspathTab(), new EnvironmentTab() };
+        setTabs(tabs);
     }
 
 }

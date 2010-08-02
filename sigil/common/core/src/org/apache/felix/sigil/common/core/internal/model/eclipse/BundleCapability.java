@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- package org.apache.felix.sigil.common.core.internal.model.eclipse;
+package org.apache.felix.sigil.common.core.internal.model.eclipse;
 
 import org.apache.felix.sigil.common.model.AbstractModelElement;
 import org.apache.felix.sigil.common.model.eclipse.IBundleCapability;
@@ -50,15 +50,19 @@ public class BundleCapability extends AbstractModelElement implements IBundleCap
     @Override
     public boolean equals(Object obj)
     {
-        if ( obj == this ) return true;
-        if ( obj == null ) return false;
+        if (obj == this)
+            return true;
+        if (obj == null)
+            return false;
 
-        if ( obj instanceof BundleCapability ) {
+        if (obj instanceof BundleCapability)
+        {
             BundleCapability bc = (BundleCapability) obj;
-            return (bsn == null ? bc.bsn == null : bsn.equals(bc.bsn)) && 
-                (version == null ? bc.version == null : version.equals(bc.version));
+            return (bsn == null ? bc.bsn == null : bsn.equals(bc.bsn))
+                && (version == null ? bc.version == null : version.equals(bc.version));
         }
-        else {
+        else
+        {
             return false;
         }
     }
@@ -67,12 +71,14 @@ public class BundleCapability extends AbstractModelElement implements IBundleCap
     public int hashCode()
     {
         int hc = 11;
-        
-        if ( bsn!= null ) {
+
+        if (bsn != null)
+        {
             hc *= bsn.hashCode();
         }
-        
-        if ( version != null ) {
+
+        if (version != null)
+        {
             hc *= version.hashCode();
         }
 

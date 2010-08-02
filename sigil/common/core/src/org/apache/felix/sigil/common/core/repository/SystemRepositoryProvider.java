@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.repository;
 
-
 import java.io.File;
 import java.io.IOException;
 
@@ -33,44 +32,46 @@ import org.apache.felix.sigil.common.repository.RepositoryException;
 public class SystemRepositoryProvider implements IRepositoryProvider
 {
 
-    public IBundleRepository createRepository( String id, Properties properties ) throws RepositoryException
+    public IBundleRepository createRepository(String id, Properties properties)
+        throws RepositoryException
     {
-        String fw = properties.getProperty( "framework" );
-        File frameworkPath = fw == null ? null : new File( fw );
-        String extraPkgs = properties.getProperty( "packages" );
-        String profile = properties.getProperty( "profile" );
-        
+        String fw = properties.getProperty("framework");
+        File frameworkPath = fw == null ? null : new File(fw);
+        String extraPkgs = properties.getProperty("packages");
+        String profile = properties.getProperty("profile");
+
         try
         {
-            Properties p = readProfile( profile );
-            String pkgs = p.getProperty( "org.osgi.framework.system.packages" ) + "," + extraPkgs;
-            return new SystemRepository( id, frameworkPath, pkgs );
+            Properties p = readProfile(profile);
+            String pkgs = p.getProperty("org.osgi.framework.system.packages") + ","
+                + extraPkgs;
+            return new SystemRepository(id, frameworkPath, pkgs);
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
-            throw new RepositoryException( "Failed to load profile", e );
+            throw new RepositoryException("Failed to load profile", e);
         }
     }
 
-
-    public static Properties readProfile( String name ) throws IOException
+    public static Properties readProfile(String name) throws IOException
     {
-        if ( name == null )
+        if (name == null)
         {
-            String version = System.getProperty( "java.specification.version" );
-            String[] split = version.split( "\\." );
-            String prefix = ( "6".compareTo( split[1] ) <= 0 ) ? "JavaSE-" : "J2SE-";
+            String version = System.getProperty("java.specification.version");
+            String[] split = version.split("\\.");
+            String prefix = ("6".compareTo(split[1]) <= 0) ? "JavaSE-" : "J2SE-";
             name = prefix + version;
         }
 
         String profilePath = "profiles/" + name + ".profile";
-        InputStream in = SystemRepositoryProvider.class.getClassLoader().getResourceAsStream( profilePath );
+        InputStream in = SystemRepositoryProvider.class.getClassLoader().getResourceAsStream(
+            profilePath);
 
-        if ( in == null )
-            throw new IOException( "No such profile: " + profilePath );
+        if (in == null)
+            throw new IOException("No such profile: " + profilePath);
 
         Properties p = new Properties();
-        p.load( in );
+        p.load(in);
 
         return p;
     }

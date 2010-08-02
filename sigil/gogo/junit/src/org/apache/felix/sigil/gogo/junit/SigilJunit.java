@@ -39,82 +39,99 @@ import org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter;
 public class SigilJunit
 {
     private static final Options OPTIONS;
-    
-    static {
+
+    static
+    {
         OPTIONS = new Options();
         OPTIONS.addOption("d", "dir", true, "Directory to write ant test results to");
-        OPTIONS.addOption("q", "quiet", false, "Run tests quietly, i.e. don't print steps to console" );
+        OPTIONS.addOption("q", "quiet", false,
+            "Run tests quietly, i.e. don't print steps to console");
     }
-    
+
     private final JUnitService service;
-    
-    public SigilJunit(JUnitService service) {
+
+    public SigilJunit(JUnitService service)
+    {
         this.service = service;
     }
 
-    public boolean junit(String[] args) throws IOException, ParseException {
+    public boolean junit(String[] args) throws IOException, ParseException
+    {
         Parser p = new GnuParser();
         CommandLine cmd = p.parse(OPTIONS, args);
         String[] cargs = cmd.getArgs();
-        if ( cargs.length == 0 ) {
-            for ( String t : service.getTests() ) {
-                System.out.println( "\t" + t );
+        if (cargs.length == 0)
+        {
+            for (String t : service.getTests())
+            {
+                System.out.println("\t" + t);
                 System.out.flush();
             }
             return true;
         }
-        else {
-            boolean quiet = cmd.hasOption( 'q' );
+        else
+        {
+            boolean quiet = cmd.hasOption('q');
             String d = cmd.getOptionValue('d');
             File dir = null;
-            if ( d != null ) {
+            if (d != null)
+            {
                 dir = new File(d);
                 dir.mkdirs();
-                System.out.println( "Writing results to " + dir.getAbsolutePath() );
+                System.out.println("Writing results to " + dir.getAbsolutePath());
                 System.out.flush();
             }
-            return runTests( cargs, quiet, dir );
+            return runTests(cargs, quiet, dir);
         }
     }
-    
-    private boolean runTests(String[] args, boolean quiet, File dir) throws IOException {
+
+    private boolean runTests(String[] args, boolean quiet, File dir) throws IOException
+    {
         int count = 0;
         int failures = 0;
         int errors = 0;
-        for ( String t : args ) {
-            TestSuite[] tests = findTests( t );
-            if ( tests.length == 0 ) {
-                System.err.println( "No tests found for " + t );
+        for (String t : args)
+        {
+            TestSuite[] tests = findTests(t);
+            if (tests.length == 0)
+            {
+                System.err.println("No tests found for " + t);
             }
-            else {
-                for ( TestSuite test : tests ) {
+            else
+            {
+                for (TestSuite test : tests)
+                {
                     TestResult result = new TestResult();
-                    if ( !quiet ) {
-                        result.addListener( new PrintListener());
+                    if (!quiet)
+                    {
+                        result.addListener(new PrintListener());
                     }
-                    
+
                     JUnitTest antTest = null;
                     FileOutputStream fout = null;
                     XMLJUnitResultFormatter formatter = null;
-                    
-                    if ( dir != null ) {
+
+                    if (dir != null)
+                    {
                         antTest = new JUnitTest(t, false, false, true);
-        
+
                         formatter = new XMLJUnitResultFormatter();
                         formatter.startTestSuite(antTest);
-        
+
                         String name = "TEST-" + test.getName() + ".xml";
-                        
-                        File f = new File( dir, name );
-                        fout = new FileOutputStream( f );
+
+                        File f = new File(dir, name);
+                        fout = new FileOutputStream(f);
                         formatter.setOutput(fout);
                         result.addListener(formatter);
                     }
-                    
+
                     test.run(result);
-                    
-                    if ( dir != null ) {
-                        antTest.setCounts(result.runCount(), result.failureCount(), result.errorCount());
+
+                    if (dir != null)
+                    {
+                        antTest.setCounts(result.runCount(), result.failureCount(),
+                            result.errorCount());
                         formatter.endTestSuite(antTest);
                         fout.flush();
                         fout.close();
@@ -125,57 +142,68 @@ public class SigilJunit
                 }
             }
         }
-        
-        System.out.println( "Ran " + count + " tests. " + failures + " failures " + errors + " errors." );
+
+        System.out.println("Ran " + count + " tests. " + failures + " failures " + errors
+            + " errors.");
         System.out.flush();
-        
+
         return failures + errors == 0;
     }
 
-    private TestSuite[] findTests(String t) {
-        if ( t.contains("*" ) ) {
+    private TestSuite[] findTests(String t)
+    {
+        if (t.contains("*"))
+        {
             Pattern p = compile(t);
             LinkedList<TestSuite> tests = new LinkedList<TestSuite>();
-            for ( String n : service.getTests() ) {
-                if ( p.matcher(n).matches() ) {
-                    tests.add( service.createTest(n) );
+            for (String n : service.getTests())
+            {
+                if (p.matcher(n).matches())
+                {
+                    tests.add(service.createTest(n));
                 }
             }
-            return tests.toArray( new TestSuite[tests.size()] );
+            return tests.toArray(new TestSuite[tests.size()]);
         }
-        else {
+        else
+        {
             TestSuite test = service.createTest(t);
             return test == null ? new TestSuite[0] : new TestSuite[] { test };
         }
     }
 
-    public static final Pattern compile(String glob) {
+    public static final Pattern compile(String glob)
+    {
         char[] chars = glob.toCharArray();
-        if ( chars.length > 0 ) {
+        if (chars.length > 0)
+        {
             StringBuilder builder = new StringBuilder(chars.length + 5);
-    
+
             builder.append('^');
-            
-            for (char c : chars) {
-                switch ( c ) {
-                case '*':
-                    builder.append(".*");
-                    break;
-                case '.':
-                    builder.append("\\.");
-                    break;
-                case '$':
-                    builder.append( "\\$" );
-                    break;
-                default:
-                    builder.append( c );
+
+            for (char c : chars)
+            {
+                switch (c)
+                {
+                    case '*':
+                        builder.append(".*");
+                        break;
+                    case '.':
+                        builder.append("\\.");
+                        break;
+                    case '$':
+                        builder.append("\\$");
+                        break;
+                    default:
+                        builder.append(c);
                 }
             }
-    
+
             return Pattern.compile(builder.toString());
         }
-        else {
+        else
+        {
             return Pattern.compile(glob);
         }
-    }    
+    }
 }

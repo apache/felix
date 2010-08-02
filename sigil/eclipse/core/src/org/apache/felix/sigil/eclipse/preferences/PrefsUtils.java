@@ -19,14 +19,12 @@
 
 package org.apache.felix.sigil.eclipse.preferences;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.text.StrTokenizer;
-
 
 public class PrefsUtils
 {
@@ -35,28 +33,26 @@ public class PrefsUtils
     {
     }
 
-
-    public static final String arrayToString( String[] array )
+    public static final String arrayToString(String[] array)
     {
         StringBuilder builder = new StringBuilder();
 
-        for ( int i = 0; i < array.length; i++ )
+        for (int i = 0; i < array.length; i++)
         {
-            if ( i > 0 )
-                builder.append( ',' );
-            builder.append( StringEscapeUtils.escapeCsv( array[i] ) );
+            if (i > 0)
+                builder.append(',');
+            builder.append(StringEscapeUtils.escapeCsv(array[i]));
         }
 
         return builder.toString();
     }
 
-
-    public static final String[] stringToArray( String string )
+    public static final String[] stringToArray(String string)
     {
-        StrTokenizer tokenizer = new StrTokenizer( string, ',', '"' );
+        StrTokenizer tokenizer = new StrTokenizer(string, ',', '"');
         String[] array = new String[tokenizer.size()];
 
-        for ( int i = 0; i < array.length; i++ )
+        for (int i = 0; i < array.length; i++)
         {
             array[i] = tokenizer.nextToken();
         }
@@ -64,15 +60,13 @@ public class PrefsUtils
         return array;
     }
 
-
-    public static String listToString( List<String> names )
+    public static String listToString(List<String> names)
     {
-        return arrayToString( names.toArray( new String[names.size()] ) );
+        return arrayToString(names.toArray(new String[names.size()]));
     }
 
-
-    public static List<String> stringToList( String string )
+    public static List<String> stringToList(String string)
     {
-        return new ArrayList<String>( Arrays.asList( stringToArray( string ) ) );
+        return new ArrayList<String>(Arrays.asList(stringToArray(string)));
     }
 }

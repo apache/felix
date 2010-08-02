@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.internal.model.repository;
 
-
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
 import org.eclipse.jface.preference.PreferenceStore;
-
 
 public class RepositoryModel implements IRepositoryModel
 {
@@ -35,8 +33,7 @@ public class RepositoryModel implements IRepositoryModel
 
     private PreferenceStore preferences;
 
-
-    public RepositoryModel( String id, String name, IRepositoryType type, PreferenceStore preferences )
+    public RepositoryModel(String id, String name, IRepositoryType type, PreferenceStore preferences)
     {
         this.id = id;
         this.name = name;
@@ -44,58 +41,50 @@ public class RepositoryModel implements IRepositoryModel
         this.preferences = preferences;
     }
 
-
     public PreferenceStore getPreferences()
     {
         return preferences;
     }
-
 
     public IRepositoryType getType()
     {
         return type;
     }
 
-
     public String getId()
     {
         return id;
     }
-
 
     public String getName()
     {
         return name;
     }
 
-
-    public void setName( String name )
+    public void setName(String name)
     {
         this.name = name;
     }
 
-
     @Override
-    public boolean equals( Object obj )
+    public boolean equals(Object obj)
     {
         try
         {
-            RepositoryModel e = ( RepositoryModel ) obj;
-            return id.equals( e.id );
+            RepositoryModel e = (RepositoryModel) obj;
+            return id.equals(e.id);
         }
-        catch ( ClassCastException e )
+        catch (ClassCastException e)
         {
             return false;
         }
     }
-
 
     @Override
     public int hashCode()
     {
         return id.hashCode();
     }
-
 
     public String toString()
     {

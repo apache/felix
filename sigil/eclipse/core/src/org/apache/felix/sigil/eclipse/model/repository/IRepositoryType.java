@@ -19,21 +19,16 @@
 
 package org.apache.felix.sigil.eclipse.model.repository;
 
-
 import org.eclipse.swt.graphics.Image;
-
 
 public interface IRepositoryType
 {
 
     String getType();
 
-
     String getId();
 
-
     Image getIcon();
-
 
     boolean isDynamic();
 

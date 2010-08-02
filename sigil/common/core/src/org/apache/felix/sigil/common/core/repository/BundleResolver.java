@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.repository;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +54,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.osgi.framework.Version;
 
-
 public class BundleResolver implements IBundleResolver
 {
 
@@ -63,36 +61,33 @@ public class BundleResolver implements IBundleResolver
     {
         private IModelElement requirement;
 
-
-        public BundleOrderComparator( IModelElement requirement )
+        public BundleOrderComparator(IModelElement requirement)
         {
             this.requirement = requirement;
         }
 
-
-        public int compare( ISigilBundle o1, ISigilBundle o2 )
+        public int compare(ISigilBundle o1, ISigilBundle o2)
         {
-            int c = compareVersions( o1, o2 );
+            int c = compareVersions(o1, o2);
 
-            if ( c == 0 )
+            if (c == 0)
             {
-                c = compareImports( o1, o2 );
+                c = compareImports(o1, o2);
             }
 
             return c;
         }
 
-
-        private int compareImports( ISigilBundle o1, ISigilBundle o2 )
+        private int compareImports(ISigilBundle o1, ISigilBundle o2)
         {
             int c1 = o1.getBundleInfo().getImports().size();
             int c2 = o2.getBundleInfo().getImports().size();
 
-            if ( c1 < c2 )
+            if (c1 < c2)
             {
                 return -1;
             }
-            else if ( c2 > c1 )
+            else if (c2 > c1)
             {
                 return 1;
             }
@@ -102,25 +97,24 @@ public class BundleResolver implements IBundleResolver
             }
         }
 
-
-        private int compareVersions( ISigilBundle o1, ISigilBundle o2 )
+        private int compareVersions(ISigilBundle o1, ISigilBundle o2)
         {
             Version v1 = null;
             Version v2 = null;
-            if ( requirement instanceof IPackageImport )
+            if (requirement instanceof IPackageImport)
             {
-                v1 = findExportVersion( ( IPackageImport ) requirement, o1 );
-                v2 = findExportVersion( ( IPackageImport ) requirement, o2 );
+                v1 = findExportVersion((IPackageImport) requirement, o1);
+                v2 = findExportVersion((IPackageImport) requirement, o2);
             }
-            else if ( requirement instanceof IRequiredBundle )
+            else if (requirement instanceof IRequiredBundle)
             {
                 v1 = o1.getBundleInfo().getVersion();
                 v2 = o1.getBundleInfo().getVersion();
             }
 
-            if ( v1 == null )
+            if (v1 == null)
             {
-                if ( v2 == null )
+                if (v2 == null)
                 {
                     return 0;
                 }
@@ -131,23 +125,22 @@ public class BundleResolver implements IBundleResolver
             }
             else
             {
-                if ( v2 == null )
+                if (v2 == null)
                 {
                     return -1;
                 }
                 else
                 {
-                    return v2.compareTo( v1 );
+                    return v2.compareTo(v1);
                 }
             }
         }
 
-
-        private Version findExportVersion( IPackageImport pi, ISigilBundle o1 )
+        private Version findExportVersion(IPackageImport pi, ISigilBundle o1)
         {
-            for ( IPackageExport pe : o1.getBundleInfo().getExports() )
+            for (IPackageExport pe : o1.getBundleInfo().getExports())
             {
-                if ( pi.getPackageName().equals( pi.getPackageName() ) )
+                if (pi.getPackageName().equals(pi.getPackageName()))
                 {
                     return pe.getVersion();
                 }
@@ -168,72 +161,64 @@ public class BundleResolver implements IBundleResolver
         private final Set<IModelElement> parsed = new HashSet<IModelElement>();
         private final LinkedList<IModelElement> requirements = new LinkedList<IModelElement>();
 
-
-        public ResolutionContext( IModelElement root, ResolutionConfig config, IResolutionMonitor monitor )
+        public ResolutionContext(IModelElement root, ResolutionConfig config, IResolutionMonitor monitor)
         {
             this.root = root;
             this.config = config;
             this.monitor = monitor;
         }
 
-
-        public void enterModelElement( IModelElement element )
+        public void enterModelElement(IModelElement element)
         {
-            parsed.add( element );
+            parsed.add(element);
         }
 
-
-        public void exitModelElement( IModelElement element )
+        public void exitModelElement(IModelElement element)
         {
-            parsed.remove( element );
+            parsed.remove(element);
         }
 
-
-        public boolean isNewModelElement( IModelElement element )
+        public boolean isNewModelElement(IModelElement element)
         {
-            return !parsed.contains( element );
+            return !parsed.contains(element);
         }
-
 
         public boolean isValid()
         {
             return resolution.isSuccess();
         }
 
-
-        public void setValid( boolean valid )
+        public void setValid(boolean valid)
         {
-            resolution.setSuccess( valid );
+            resolution.setSuccess(valid);
         }
-
 
         public ResolutionException newResolutionException()
         {
-            return new ResolutionException( root, requirements.toArray( new IModelElement[requirements.size()] ) );
+            return new ResolutionException(root,
+                requirements.toArray(new IModelElement[requirements.size()]));
         }
 
-
-        public void startRequirement( IRequirementModelElement element )
+        public void startRequirement(IRequirementModelElement element)
         {
-            requirements.add( element );
-            monitor.startResolution( element );
+            requirements.add(element);
+            monitor.startResolution(element);
         }
 
-
-        public void endRequirement( IRequirementModelElement element )
+        public void endRequirement(IRequirementModelElement element)
         {
-            ISigilBundle provider = resolution.getProvider( element );
+            ISigilBundle provider = resolution.getProvider(element);
 
-            setValid( provider != null || element.isOptional() || config.isIgnoreErrors() );
+            setValid(provider != null || element.isOptional() || config.isIgnoreErrors());
 
-            if ( isValid() )
+            if (isValid())
             {
                 // only clear stack if valid
                 // else use it as an aid to trace errors
-                requirements.remove( element );
+                requirements.remove(element);
             }
 
-            monitor.endResolution( element, provider );
+            monitor.endResolution(element, provider);
         }
     }
 
@@ -243,74 +228,66 @@ public class BundleResolver implements IBundleResolver
         private Map<IModelElement, ISigilBundle> providers = new HashMap<IModelElement, ISigilBundle>();
         private boolean success = true; // assume success
 
-
-        boolean addProvider( IModelElement element, ISigilBundle provider )
+        boolean addProvider(IModelElement element, ISigilBundle provider)
         {
-            providers.put( element, provider );
+            providers.put(element, provider);
 
-            List<IModelElement> requirements = providees.get( provider );
+            List<IModelElement> requirements = providees.get(provider);
 
             boolean isNewProvider = requirements == null;
 
-            if ( isNewProvider )
+            if (isNewProvider)
             {
                 requirements = new ArrayList<IModelElement>();
-                providees.put( provider, requirements );
+                providees.put(provider, requirements);
             }
 
-            requirements.add( element );
+            requirements.add(element);
 
             return isNewProvider;
         }
 
-
-        void removeProvider( IModelElement element, ISigilBundle provider )
+        void removeProvider(IModelElement element, ISigilBundle provider)
         {
-            providers.remove( element );
-            List<IModelElement> e = providees.get( provider );
-            e.remove( element );
-            if ( e.isEmpty() )
+            providers.remove(element);
+            List<IModelElement> e = providees.get(provider);
+            e.remove(element);
+            if (e.isEmpty())
             {
-                providees.remove( provider );
+                providees.remove(provider);
             }
         }
 
-
-        void setSuccess( boolean success )
+        void setSuccess(boolean success)
         {
             this.success = success;
         }
-
 
         public boolean isSuccess()
         {
             return success;
         }
 
-
-        public ISigilBundle getProvider( IModelElement requirement )
+        public ISigilBundle getProvider(IModelElement requirement)
         {
-            return providers.get( requirement );
+            return providers.get(requirement);
         }
-
 
         public Set<ISigilBundle> getBundles()
         {
             return providees.keySet();
         }
 
-
-        public List<IModelElement> getMatchedRequirements( ISigilBundle bundle )
+        public List<IModelElement> getMatchedRequirements(ISigilBundle bundle)
         {
-            return providees.get( bundle );
+            return providees.get(bundle);
         }
-
 
         public boolean isSynchronized()
         {
-            for ( ISigilBundle b : getBundles() )
+            for (ISigilBundle b : getBundles())
             {
-                if ( !b.isSynchronized() )
+                if (!b.isSynchronized())
                 {
                     return false;
                 }
@@ -319,26 +296,25 @@ public class BundleResolver implements IBundleResolver
             return true;
         }
 
-
-        public void synchronize( IProgressMonitor monitor )
+        public void synchronize(IProgressMonitor monitor)
         {
             Set<ISigilBundle> bundles = getBundles();
-            SubMonitor progress = SubMonitor.convert( monitor, bundles.size() );
+            SubMonitor progress = SubMonitor.convert(monitor, bundles.size());
 
-            for ( ISigilBundle b : bundles )
+            for (ISigilBundle b : bundles)
             {
-                if ( monitor.isCanceled() )
+                if (monitor.isCanceled())
                 {
                     break;
                 }
 
                 try
                 {
-                    b.synchronize( progress.newChild( 1 ) );
+                    b.synchronize(progress.newChild(1));
                 }
-                catch ( IOException e )
+                catch (IOException e)
                 {
-                    BldCore.error( "Failed to synchronize " + b, e );
+                    BldCore.error("Failed to synchronize " + b, e);
                 }
             }
         }
@@ -346,18 +322,16 @@ public class BundleResolver implements IBundleResolver
 
     private static final IResolutionMonitor NULL_MONITOR = new IResolutionMonitor()
     {
-        public void endResolution( IModelElement requirement, ISigilBundle sigilBundle )
+        public void endResolution(IModelElement requirement, ISigilBundle sigilBundle)
         {
         }
-
 
         public boolean isCanceled()
         {
             return false;
         }
 
-
-        public void startResolution( IModelElement requirement )
+        public void startResolution(IModelElement requirement)
         {
         }
     };
@@ -366,20 +340,26 @@ public class BundleResolver implements IBundleResolver
     {
         public int compare(IRequirementModelElement o1, IRequirementModelElement o2)
         {
-            if ( o1 instanceof IPackageImport ) {
-                if (o2 instanceof IPackageImport ) {
+            if (o1 instanceof IPackageImport)
+            {
+                if (o2 instanceof IPackageImport)
+                {
                     return 0;
                 }
-                else {
+                else
+                {
                     return -1;
                 }
             }
-            else // assumes only alternative is IRequiredBundle
+            else
+            // assumes only alternative is IRequiredBundle
             {
-                if ( o2 instanceof IRequiredBundle) {
+                if (o2 instanceof IRequiredBundle)
+                {
                     return 0;
                 }
-                else {
+                else
+                {
                     return 1;
                 }
             }
@@ -388,25 +368,23 @@ public class BundleResolver implements IBundleResolver
 
     private IRepositoryManager repositoryManager;
 
-
-    public BundleResolver( IRepositoryManager repositoryManager )
+    public BundleResolver(IRepositoryManager repositoryManager)
     {
         this.repositoryManager = repositoryManager;
     }
 
-
-    public IResolution resolve( IModelElement element, ResolutionConfig config, IResolutionMonitor monitor )
-        throws ResolutionException
+    public IResolution resolve(IModelElement element, ResolutionConfig config,
+        IResolutionMonitor monitor) throws ResolutionException
     {
-        if ( monitor == null )
+        if (monitor == null)
         {
             monitor = NULL_MONITOR;
         }
-        ResolutionContext ctx = new ResolutionContext( element, config, monitor );
+        ResolutionContext ctx = new ResolutionContext(element, config, monitor);
 
-        resolveElement( element, ctx );
+        resolveElement(element, ctx);
 
-        if ( !ctx.isValid() )
+        if (!ctx.isValid())
         {
             throw ctx.newResolutionException();
         }
@@ -414,22 +392,25 @@ public class BundleResolver implements IBundleResolver
         return ctx.resolution;
     }
 
-    private void resolveElement( IModelElement element, ResolutionContext ctx ) throws ResolutionException
+    private void resolveElement(IModelElement element, ResolutionContext ctx)
+        throws ResolutionException
     {
-        if ( ctx.isValid() ) {
-            for (IRequirementModelElement req : findRequirements(element, ctx)) {
-                if ( ctx.monitor.isCanceled())
+        if (ctx.isValid())
+        {
+            for (IRequirementModelElement req : findRequirements(element, ctx))
+            {
+                if (ctx.monitor.isCanceled())
                     break;
                 resolveRequirement(req, ctx);
             }
         }
     }
-    
+
     private List<IRequirementModelElement> findRequirements(IModelElement element,
         final ResolutionContext ctx)
     {
         final LinkedList<IRequirementModelElement> reqs = new LinkedList<IRequirementModelElement>();
-        
+
         if (element instanceof IRequirementModelElement)
         {
             reqs.add((IRequirementModelElement) element);
@@ -445,102 +426,106 @@ public class BundleResolver implements IBundleResolver
                     {
                         reqs.add((IRequirementModelElement) element);
                     }
-                    else if ( element instanceof ILibrary ) {
-                        ILibrary lib = repositoryManager.resolveLibrary( ( ILibraryImport ) element );
-                        reqs.addAll( lib.getImports() );
+                    else if (element instanceof ILibrary)
+                    {
+                        ILibrary lib = repositoryManager.resolveLibrary((ILibraryImport) element);
+                        reqs.addAll(lib.getImports());
                     }
-                    
+
                     return !ctx.monitor.isCanceled();
                 }
             });
         }
 
-        if ( !ctx.monitor.isCanceled() ) {
+        if (!ctx.monitor.isCanceled())
+        {
             Collections.sort(reqs, REQUIREMENT_COMPARATOR);
-        }        
+        }
         return reqs;
     }
 
-    private void resolveRequirement( IRequirementModelElement requirement, ResolutionContext ctx ) throws ResolutionException
+    private void resolveRequirement(IRequirementModelElement requirement,
+        ResolutionContext ctx) throws ResolutionException
     {
-        if ( ctx.config.isOptional() || !requirement.isOptional() )
+        if (ctx.config.isOptional() || !requirement.isOptional())
         {
-            ctx.startRequirement( requirement );
+            ctx.startRequirement(requirement);
 
             try
             {
-                if ( !findInContext( requirement, ctx ) ) 
+                if (!findInContext(requirement, ctx))
                 {
-                    findInRepositories( requirement, ctx );
+                    findInRepositories(requirement, ctx);
                 }
             }
             finally
             {
-                ctx.endRequirement( requirement );
+                ctx.endRequirement(requirement);
             }
         }
     }
 
-
     private boolean findInContext(final IRequirementModelElement requirement,
         final ResolutionContext ctx)
     {
-        for ( final ISigilBundle b : ctx.resolution.providees.keySet() ) 
+        for (final ISigilBundle b : ctx.resolution.providees.keySet())
         {
-            b.visit( new IModelWalker() 
+            b.visit(new IModelWalker()
             {
                 public boolean visit(IModelElement element)
                 {
-                    if ( element instanceof ICapabilityModelElement ) {
-                        if ( requirement.accepts((ICapabilityModelElement) element) ) {
-                            ctx.resolution.addProvider( requirement, b );
+                    if (element instanceof ICapabilityModelElement)
+                    {
+                        if (requirement.accepts((ICapabilityModelElement) element))
+                        {
+                            ctx.resolution.addProvider(requirement, b);
                             return false;
                         }
                     }
                     return !ctx.monitor.isCanceled();
                 }
-                
+
             });
         }
-        
+
         return ctx.resolution.getProvider(requirement) != null;
     }
-
 
     private void findInRepositories(IRequirementModelElement requirement,
         ResolutionContext ctx) throws ResolutionException
     {
         int[] priorities = repositoryManager.getPriorityLevels();
 
-        outer: for ( int i = 0; i < priorities.length; i++ )
+        outer: for (int i = 0; i < priorities.length; i++)
         {
-            List<ISigilBundle> providers = findProvidersAtPriority( priorities[i], requirement, ctx );
+            List<ISigilBundle> providers = findProvidersAtPriority(priorities[i],
+                requirement, ctx);
 
-            if ( !providers.isEmpty() && !ctx.monitor.isCanceled() )
+            if (!providers.isEmpty() && !ctx.monitor.isCanceled())
             {
-                if ( providers.size() > 1 )
+                if (providers.size() > 1)
                 {
-                    Collections.sort( providers, new BundleOrderComparator( requirement ) );
+                    Collections.sort(providers, new BundleOrderComparator(requirement));
                 }
 
-                for ( ISigilBundle provider : providers )
+                for (ISigilBundle provider : providers)
                 {
                     // reset validity - if there's another provider it can still be solved
-                    ctx.setValid( true );
-                    if ( ctx.resolution.addProvider( requirement, provider ) )
+                    ctx.setValid(true);
+                    if (ctx.resolution.addProvider(requirement, provider))
                     {
-                        if ( ctx.config.isDependents() )
+                        if (ctx.config.isDependents())
                         {
-                            resolveElement( provider, ctx );
+                            resolveElement(provider, ctx);
                         }
 
-                        if ( ctx.isValid() )
+                        if (ctx.isValid())
                         {
                             break outer;
                         }
                         else
                         {
-                            ctx.resolution.removeProvider( requirement, provider );
+                            ctx.resolution.removeProvider(requirement, provider);
                         }
                     }
                     else
@@ -552,45 +537,44 @@ public class BundleResolver implements IBundleResolver
         }
     }
 
-
-    private List<ISigilBundle> findProvidersAtPriority( int i, IRequirementModelElement requirement, ResolutionContext ctx )
+    private List<ISigilBundle> findProvidersAtPriority(int i,
+        IRequirementModelElement requirement, ResolutionContext ctx)
         throws ResolutionException
     {
         ArrayList<ISigilBundle> providers = new ArrayList<ISigilBundle>();
 
-        for ( IBundleRepository rep : repositoryManager.getRepositories( i ) )
+        for (IBundleRepository rep : repositoryManager.getRepositories(i))
         {
-            if ( ctx.monitor.isCanceled() )
+            if (ctx.monitor.isCanceled())
             {
                 break;
             }
-            providers.addAll( findProviders( requirement, ctx.config, rep ) );
+            providers.addAll(findProviders(requirement, ctx.config, rep));
         }
 
         return providers;
     }
 
-
-    private Collection<ISigilBundle> findProviders( IRequirementModelElement requirement, ResolutionConfig config,
-        IBundleRepository rep ) throws ResolutionException
+    private Collection<ISigilBundle> findProviders(IRequirementModelElement requirement,
+        ResolutionConfig config, IBundleRepository rep) throws ResolutionException
     {
         ArrayList<ISigilBundle> found = new ArrayList<ISigilBundle>();
 
-        if ( requirement instanceof IPackageImport )
+        if (requirement instanceof IPackageImport)
         {
-            IPackageImport pi = ( IPackageImport ) requirement;
-            found.addAll( rep.findAllProviders( pi, config.getOptions() ) );
+            IPackageImport pi = (IPackageImport) requirement;
+            found.addAll(rep.findAllProviders(pi, config.getOptions()));
         }
-        else if ( requirement instanceof IRequiredBundle )
+        else if (requirement instanceof IRequiredBundle)
         {
-            IRequiredBundle rb = ( IRequiredBundle ) requirement;
-            found.addAll( rep.findAllProviders( rb, config.getOptions() ) );
+            IRequiredBundle rb = (IRequiredBundle) requirement;
+            found.addAll(rep.findAllProviders(rb, config.getOptions()));
         }
         else
         {
             // shouldn't get here - developer error if do
             // use isRequirement before getting anywhere near this logic...
-            throw new IllegalStateException( "Invalid requirement type " + requirement );
+            throw new IllegalStateException("Invalid requirement type " + requirement);
         }
 
         return found;

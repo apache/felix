@@ -19,28 +19,23 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 
-
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
-
 
 public class ImportedClassReference
 {
     private IPackageImport pi;
     private String type;
 
-
-    public ImportedClassReference( IPackageImport packageImport, String typeName )
+    public ImportedClassReference(IPackageImport packageImport, String typeName)
     {
         this.pi = packageImport;
         this.type = typeName;
     }
 
-
     public IPackageImport getPackageImport()
     {
         return pi;
     }
-
 
     public String getFullType()
     {

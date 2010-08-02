@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.preferences.PromptablePreference;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -27,21 +26,22 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Shell;
 
-
 public class OptionalPrompt
 {
-    public static boolean optionallyPrompt( String prefName, String title, String text, Shell parentShell) 
+    public static boolean optionallyPrompt(String prefName, String title, String text,
+        Shell parentShell)
     {
-        return optionallyPrompt(SigilCore.getDefault().getPreferenceStore(), prefName, title, text, parentShell);
+        return optionallyPrompt(SigilCore.getDefault().getPreferenceStore(), prefName,
+            title, text, parentShell);
     }
-    
-    public static boolean optionallyPrompt( IPreferenceStore prefStore, String prefName, String title, String text,
-        Shell parentShell )
+
+    public static boolean optionallyPrompt(IPreferenceStore prefStore, String prefName,
+        String title, String text, Shell parentShell)
     {
         boolean result = false;
 
         PromptablePreference value = preference(prefStore, prefName);
-        switch ( value )
+        switch (value)
         {
             case Always:
                 result = true;
@@ -50,33 +50,35 @@ public class OptionalPrompt
                 result = false;
                 break;
             case Prompt:
-                MessageDialogWithToggle dialog = MessageDialogWithToggle.openYesNoQuestion( parentShell, title, text,
-                    "Do not ask this again", false, null, null );
-                result = ( dialog.getReturnCode() == IDialogConstants.YES_ID );
-                if ( dialog.getToggleState() )
+                MessageDialogWithToggle dialog = MessageDialogWithToggle.openYesNoQuestion(
+                    parentShell, title, text, "Do not ask this again", false, null, null);
+                result = (dialog.getReturnCode() == IDialogConstants.YES_ID);
+                if (dialog.getToggleState())
                 {
                     // User said don't ask again... take the current answer as the new preference
-                    prefStore.setValue( prefName, result ? PromptablePreference.Always.name()
-                        : PromptablePreference.Never.name() );
+                    prefStore.setValue(prefName,
+                        result ? PromptablePreference.Always.name()
+                            : PromptablePreference.Never.name());
                 }
         }
 
         return result;
     }
 
-    public static int optionallyPromptWithCancel( String prefName, String title,
-        String text, Shell parentShell )
+    public static int optionallyPromptWithCancel(String prefName, String title,
+        String text, Shell parentShell)
     {
-        return optionallyPromptWithCancel(SigilCore.getDefault().getPreferenceStore(), prefName, title, text, parentShell);
+        return optionallyPromptWithCancel(SigilCore.getDefault().getPreferenceStore(),
+            prefName, title, text, parentShell);
     }
-    
-    public static int optionallyPromptWithCancel( IPreferenceStore prefStore, String prefName, String title,
-        String text, Shell parentShell )
+
+    public static int optionallyPromptWithCancel(IPreferenceStore prefStore,
+        String prefName, String title, String text, Shell parentShell)
     {
         int result = IDialogConstants.NO_ID;
 
         PromptablePreference value = preference(prefStore, prefName);
-        switch ( value )
+        switch (value)
         {
             case Always:
                 result = IDialogConstants.YES_ID;
@@ -85,32 +87,35 @@ public class OptionalPrompt
                 result = IDialogConstants.NO_ID;
                 break;
             case Prompt:
-                MessageDialogWithToggle dialog = MessageDialogWithToggle.openYesNoCancelQuestion( parentShell, title,
-                    text, "Do not ask this again", false, null, null );
+                MessageDialogWithToggle dialog = MessageDialogWithToggle.openYesNoCancelQuestion(
+                    parentShell, title, text, "Do not ask this again", false, null, null);
                 result = dialog.getReturnCode();
-                if ( result != IDialogConstants.CANCEL_ID )
+                if (result != IDialogConstants.CANCEL_ID)
                 {
-                    if ( dialog.getToggleState() )
+                    if (dialog.getToggleState())
                     {
                         // User said don't ask again... take the current answer as the new preference
-                        prefStore.setValue( prefName,
-                            ( result == IDialogConstants.YES_ID ) ? PromptablePreference.Always.name()
-                                : PromptablePreference.Never.name() );
+                        prefStore.setValue(
+                            prefName,
+                            (result == IDialogConstants.YES_ID) ? PromptablePreference.Always.name()
+                                : PromptablePreference.Never.name());
                     }
                 }
         }
 
         return result;
     }
-    
+
     /**
      * @param prefStore 
      * @param prefName
      * @return
      */
-    private static PromptablePreference preference(IPreferenceStore prefStore, String prefName)
+    private static PromptablePreference preference(IPreferenceStore prefStore,
+        String prefName)
     {
-        String val = prefStore.getString( prefName );
-        return (val == null || val.trim().length() == 0) ? PromptablePreference.Prompt : PromptablePreference.valueOf( val );
-    }    
+        String val = prefStore.getString(prefName);
+        return (val == null || val.trim().length() == 0) ? PromptablePreference.Prompt
+            : PromptablePreference.valueOf(val);
+    }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,7 +39,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.osgi.framework.Version;
 
-
 public class VersionRangeComponent extends Composite
 {
     private VersionRange versions = VersionRange.ANY_VERSION;
@@ -57,257 +55,244 @@ public class VersionRangeComponent extends Composite
     private Set<VersionsChangeListener> listeners = new HashSet<VersionsChangeListener>();
     private Set<IValidationListener> validationListeners = new HashSet<IValidationListener>();
 
-
-    public VersionRangeComponent( Composite parent, int style )
+    public VersionRangeComponent(Composite parent, int style)
     {
-        super( parent, style );
-        createComponents( this );
+        super(parent, style);
+        createComponents(this);
     }
 
-
-    public void addVersionChangeListener( VersionsChangeListener listener )
+    public void addVersionChangeListener(VersionsChangeListener listener)
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            listeners.add( listener );
+            listeners.add(listener);
         }
     }
 
-
-    public void removeVersionChangeListener( VersionsChangeListener listener )
+    public void removeVersionChangeListener(VersionsChangeListener listener)
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            listeners.remove( listener );
+            listeners.remove(listener);
         }
     }
 
-
-    public void addValidationListener( IValidationListener listener )
+    public void addValidationListener(IValidationListener listener)
     {
-        validationListeners.add( listener );
+        validationListeners.add(listener);
     }
 
-
-    public void removeValidationListener( IValidationListener listener )
+    public void removeValidationListener(IValidationListener listener)
     {
-        validationListeners.remove( listener );
+        validationListeners.remove(listener);
     }
-
 
     @Override
-    public void setEnabled( boolean enabled )
+    public void setEnabled(boolean enabled)
     {
-        super.setEnabled( enabled );
-        specificButton.setEnabled( enabled );
-        rangeButton.setEnabled( enabled );
-        if ( enabled )
+        super.setEnabled(enabled);
+        specificButton.setEnabled(enabled);
+        rangeButton.setEnabled(enabled);
+        if (enabled)
         {
-            specificButton.setSelection( versions.isPointVersion() );
+            specificButton.setSelection(versions.isPointVersion());
             setSpecific();
         }
         else
         {
-            minimumText.setEnabled( enabled );
-            maximumText.setEnabled( enabled );
-            minInclusiveButton.setEnabled( enabled );
-            maxInclusiveButton.setEnabled( enabled );
+            minimumText.setEnabled(enabled);
+            maximumText.setEnabled(enabled);
+            minInclusiveButton.setEnabled(enabled);
+            maxInclusiveButton.setEnabled(enabled);
         }
     }
-
 
     public VersionRange getVersions()
     {
         return versions;
     }
 
-
-    public void setVersions( VersionRange versions )
+    public void setVersions(VersionRange versions)
     {
         this.versions = versions == null ? VersionRange.ANY_VERSION : versions;
         updateFields();
     }
 
-
     private void updateFields()
     {
-        if ( versions.isPointVersion() )
+        if (versions.isPointVersion())
         {
-            specificButton.setSelection( true );
-            specificText.setText( versions.getCeiling() == VersionRange.INFINITE_VERSION ? "*" : versions.getFloor()
-                .toString() );
+            specificButton.setSelection(true);
+            specificText.setText(versions.getCeiling() == VersionRange.INFINITE_VERSION ? "*"
+                : versions.getFloor().toString());
         }
         else
         {
-            rangeButton.setSelection( true );
-            minimumText.setText( versions.getFloor().toString() );
-            minInclusiveButton.setSelection( !versions.isOpenFloor() );
-            maximumText.setText( versions.getCeiling() == VersionRange.INFINITE_VERSION ? "*" : versions.getCeiling()
-                .toString() );
-            maxInclusiveButton.setSelection( !versions.isOpenCeiling() );
+            rangeButton.setSelection(true);
+            minimumText.setText(versions.getFloor().toString());
+            minInclusiveButton.setSelection(!versions.isOpenFloor());
+            maximumText.setText(versions.getCeiling() == VersionRange.INFINITE_VERSION ? "*"
+                : versions.getCeiling().toString());
+            maxInclusiveButton.setSelection(!versions.isOpenCeiling());
         }
 
         setSpecific();
     }
 
-
-    private void createComponents( Composite body )
+    private void createComponents(Composite body)
     {
-        setLayout( new GridLayout( 3, false ) );
+        setLayout(new GridLayout(3, false));
 
-        specificButton = new Button( body, SWT.RADIO );
-        specificButton.setText( "Specific:" );
-        specificButton.addSelectionListener( new SelectionAdapter()
+        specificButton = new Button(body, SWT.RADIO);
+        specificButton.setText("Specific:");
+        specificButton.addSelectionListener(new SelectionAdapter()
         {
             @Override
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 setSpecific();
             }
-        } );
+        });
 
-        new Label( body, SWT.NONE ).setText( "Version:" );
+        new Label(body, SWT.NONE).setText("Version:");
 
-        specificText = new Text( body, SWT.BORDER );
-        specificText.addKeyListener( new KeyAdapter()
+        specificText = new Text(body, SWT.BORDER);
+        specificText.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyReleased( KeyEvent e )
+            public void keyReleased(KeyEvent e)
             {
                 setVersions();
             }
-        } );
+        });
 
-        rangeButton = new Button( body, SWT.RADIO );
-        rangeButton.setText( "Range:" );
+        rangeButton = new Button(body, SWT.RADIO);
+        rangeButton.setText("Range:");
 
-        new Label( body, SWT.NONE ).setText( "Minimum:" );
+        new Label(body, SWT.NONE).setText("Minimum:");
 
-        minimumText = new Text( body, SWT.BORDER );
-        minimumText.addKeyListener( new KeyAdapter()
+        minimumText = new Text(body, SWT.BORDER);
+        minimumText.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyReleased( KeyEvent e )
+            public void keyReleased(KeyEvent e)
             {
                 setVersions();
             }
-        } );
+        });
 
-        minInclusiveButton = new Button( body, SWT.CHECK );
-        minInclusiveButton.setText( "inclusive" );
-        minInclusiveButton.setSelection( true );
-        minInclusiveButton.addSelectionListener( new SelectionAdapter()
+        minInclusiveButton = new Button(body, SWT.CHECK);
+        minInclusiveButton.setText("inclusive");
+        minInclusiveButton.setSelection(true);
+        minInclusiveButton.addSelectionListener(new SelectionAdapter()
         {
             @Override
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 setVersions();
             }
-        } );
+        });
 
-        new Label( body, SWT.NONE ).setText( "Maximum:" );
-        maximumText = new Text( body, SWT.BORDER );
-        maximumText.addKeyListener( new KeyAdapter()
+        new Label(body, SWT.NONE).setText("Maximum:");
+        maximumText = new Text(body, SWT.BORDER);
+        maximumText.addKeyListener(new KeyAdapter()
         {
             @Override
-            public void keyReleased( KeyEvent e )
+            public void keyReleased(KeyEvent e)
             {
                 setVersions();
             }
-        } );
+        });
 
-        maxInclusiveButton = new Button( body, SWT.CHECK );
-        maxInclusiveButton.setText( "inclusive" );
-        maxInclusiveButton.setSelection( false );
-        maxInclusiveButton.addSelectionListener( new SelectionAdapter()
+        maxInclusiveButton = new Button(body, SWT.CHECK);
+        maxInclusiveButton.setText("inclusive");
+        maxInclusiveButton.setSelection(false);
+        maxInclusiveButton.addSelectionListener(new SelectionAdapter()
         {
             @Override
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 setVersions();
             }
-        } );
+        });
 
         // Layout
-        specificButton.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false, 3, 1 ) );
-        specificText.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false, 2, 1 ) );
-        rangeButton.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false, 3, 1 ) );
-        minimumText.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        maximumText.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
+        specificButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+        specificText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+        rangeButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+        minimumText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        maximumText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
         updateFields();
     }
-
 
     private void setVersions()
     {
         try
         {
-            if ( specificButton.getSelection() )
+            if (specificButton.getSelection())
             {
-                if ( "*".equals( specificText.getText() ) )
+                if ("*".equals(specificText.getText()))
                 {
                     versions = VersionRange.ANY_VERSION;
                 }
-                else if ( specificText.getText().trim().length() == 0 )
+                else if (specificText.getText().trim().length() == 0)
                 {
                     versions = null;
                 }
                 else
                 {
-                    Version v = VersionTable.getVersion( specificText.getText().trim() );
-                    versions = new VersionRange( false, v, v, false );
+                    Version v = VersionTable.getVersion(specificText.getText().trim());
+                    versions = new VersionRange(false, v, v, false);
                 }
             }
             else
             {
-                Version min = VersionTable.getVersion( minimumText.getText() );
-                Version max = "*".equals( maximumText.getText() ) ? VersionRange.INFINITE_VERSION : VersionTable.getVersion( maximumText.getText() );
-                versions = new VersionRange( !minInclusiveButton.getSelection(), min, max, !maxInclusiveButton
-                    .getSelection() );
+                Version min = VersionTable.getVersion(minimumText.getText());
+                Version max = "*".equals(maximumText.getText()) ? VersionRange.INFINITE_VERSION
+                    : VersionTable.getVersion(maximumText.getText());
+                versions = new VersionRange(!minInclusiveButton.getSelection(), min, max,
+                    !maxInclusiveButton.getSelection());
             }
-            fireValidationMessage( null, IMessageProvider.NONE );
+            fireValidationMessage(null, IMessageProvider.NONE);
         }
-        catch ( IllegalArgumentException e )
+        catch (IllegalArgumentException e)
         {
             versions = null;
-            fireValidationMessage( "Invalid version", IMessageProvider.ERROR );
+            fireValidationMessage("Invalid version", IMessageProvider.ERROR);
         }
 
         fireVersionChange();
     }
 
-
     private void fireVersionChange()
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            for ( VersionsChangeListener l : listeners )
+            for (VersionsChangeListener l : listeners)
             {
-                l.versionsChanged( versions );
+                l.versionsChanged(versions);
             }
         }
     }
 
-
-    private void fireValidationMessage( String message, int level )
+    private void fireValidationMessage(String message, int level)
     {
-        for ( IValidationListener validationListener : validationListeners )
+        for (IValidationListener validationListener : validationListeners)
         {
-            validationListener.validationMessage( message, level );
+            validationListener.validationMessage(message, level);
         }
     }
-
 
     private void setSpecific()
     {
         boolean specific = specificButton.getSelection();
-        specificButton.setSelection( specific );
-        specificText.setEnabled( specific );
-        minimumText.setEnabled( !specific );
-        maximumText.setEnabled( !specific );
-        minInclusiveButton.setEnabled( !specific );
-        maxInclusiveButton.setEnabled( !specific );
+        specificButton.setSelection(specific);
+        specificText.setEnabled(specific);
+        minimumText.setEnabled(!specific);
+        maximumText.setEnabled(!specific);
+        minInclusiveButton.setEnabled(!specific);
+        maxInclusiveButton.setEnabled(!specific);
         setVersions();
     }
 }

@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 
 import org.apache.felix.sigil.common.config.Resource;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
@@ -54,17 +52,14 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.model.BaseWorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-
 /**
  * @author dave
  *
  */
-public class ResourceBuildSection extends AbstractResourceSection implements ICheckStateListener,
-    IResourceChangeListener, IPropertyChangeListener
+public class ResourceBuildSection extends AbstractResourceSection implements ICheckStateListener, IResourceChangeListener, IPropertyChangeListener
 {
 
     private ExcludedResourcesFilter resourcesFilter;
-
 
     /**
      * @param page
@@ -72,60 +67,58 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
      * @param project
      * @throws CoreException 
      */
-    public ResourceBuildSection( SigilPage page, Composite parent, ISigilProjectModel project ) throws CoreException
+    public ResourceBuildSection(SigilPage page, Composite parent, ISigilProjectModel project) throws CoreException
     {
-        super( page, parent, project );
+        super(page, parent, project);
     }
 
-
     @Override
-    protected void createSection( Section section, FormToolkit toolkit )
+    protected void createSection(Section section, FormToolkit toolkit)
     {
-        setTitle( "Resources" );
+        setTitle("Resources");
 
-        Composite body = createTableWrapBody( 1, toolkit );
+        Composite body = createTableWrapBody(1, toolkit);
 
-        toolkit.createLabel( body, "Specify which resources are included in the bundle." );
+        toolkit.createLabel(body, "Specify which resources are included in the bundle.");
 
-        tree = toolkit.createTree( body, SWT.CHECK | SWT.BORDER );
-        Link link = new Link( body, SWT.WRAP );
-        link
-            .setText( "Some resources may be filtered according to preferences. <a href=\"excludedResourcePrefs\">Click here</a> to edit the list of exclusions." );
+        tree = toolkit.createTree(body, SWT.CHECK | SWT.BORDER);
+        Link link = new Link(body, SWT.WRAP);
+        link.setText("Some resources may be filtered according to preferences. <a href=\"excludedResourcePrefs\">Click here</a> to edit the list of exclusions.");
 
-        TableWrapData data = new TableWrapData( TableWrapData.FILL_GRAB );
+        TableWrapData data = new TableWrapData(TableWrapData.FILL_GRAB);
         data.heightHint = 200;
-        tree.setLayoutData( data );
+        tree.setLayoutData(data);
 
-        viewer = new CheckboxTreeViewer( tree );
+        viewer = new CheckboxTreeViewer(tree);
         IProject base = getProjectModel().getProject();
         viewer.setContentProvider(new BaseWorkbenchContentProvider());
         viewer.setLabelProvider(new WorkbenchLabelProvider());
-        viewer.addCheckStateListener( this );
+        viewer.addCheckStateListener(this);
         resourcesFilter = new ExcludedResourcesFilter();
-        viewer.addFilter( resourcesFilter );
-        viewer.setInput( base );
+        viewer.addFilter(resourcesFilter);
+        viewer.setInput(base);
 
-        link.addListener( SWT.Selection, new Listener()
+        link.addListener(SWT.Selection, new Listener()
         {
-            public void handleEvent( Event event )
+            public void handleEvent(Event event)
             {
-                if ( "excludedResourcePrefs".equals( event.text ) )
+                if ("excludedResourcePrefs".equals(event.text))
                 {
-                    PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn( getPage().getEditorSite()
-                        .getShell(), SigilCore.EXCLUDED_RESOURCES_PREFERENCES_ID, null, null );
+                    PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(
+                        getPage().getEditorSite().getShell(),
+                        SigilCore.EXCLUDED_RESOURCES_PREFERENCES_ID, null, null);
                     dialog.open();
                 }
             }
-        } );
+        });
 
-        SigilCore.getDefault().getPreferenceStore().addPropertyChangeListener( this );
+        SigilCore.getDefault().getPreferenceStore().addPropertyChangeListener(this);
 
-        startWorkspaceListener( base.getWorkspace() );
+        startWorkspaceListener(base.getWorkspace());
     }
 
-
     @Override
-    public void commit( boolean onSave )
+    public void commit(boolean onSave)
     {
         ISigilBundle bundle = getProjectModel().getBundle();
 
@@ -133,25 +126,25 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
 
         try
         {
-            SigilUI.runInUISync( new Callable<Void>()
+            SigilUI.runInUISync(new Callable<Void>()
             {
                 public Void call() throws Exception
                 {
-                    for ( Object o : viewer.getCheckedElements() )
+                    for (Object o : viewer.getCheckedElements())
                     {
-                        if ( !viewer.getGrayed( o ) )
+                        if (!viewer.getGrayed(o))
                         {
-                            IResource r = ( IResource ) o;
-                            
-                            getProjectModel().getBundle().addSourcePath( toBldResource(r) );
+                            IResource r = (IResource) o;
+
+                            getProjectModel().getBundle().addSourcePath(toBldResource(r));
                         }
                     }
-                    
+
                     return null;
                 }
-            } );
+            });
 
-            super.commit( onSave );
+            super.commit(onSave);
         }
         catch (Exception e)
         {
@@ -159,43 +152,41 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
         }
     }
 
-
     @Override
     protected void refreshSelections()
     {
         // zero the state
-        for ( Resource path : getProjectModel().getBundle().getSourcePaths() )
+        for (Resource path : getProjectModel().getBundle().getSourcePaths())
         {
-            IResource r = findResource( new Path(path.getLocalFile()) );
-            if ( r != null )
+            IResource r = findResource(new Path(path.getLocalFile()));
+            if (r != null)
             {
-                viewer.expandToLevel( r, 0 );
-                viewer.setChecked( r, true );
-                viewer.setGrayed( r, false );
-                handleStateChanged( r, true, false, false );
+                viewer.expandToLevel(r, 0);
+                viewer.setChecked(r, true);
+                viewer.setGrayed(r, false);
+                handleStateChanged(r, true, false, false);
             }
             else
             {
-                SigilCore.error( "Unknown path " + path );
+                SigilCore.error("Unknown path " + path);
             }
         }
     }
 
-
     @Override
-    protected void syncResourceModel( IResource element, boolean checked )
+    protected void syncResourceModel(IResource element, boolean checked)
     {
         try
         {
             Resource resource = toBldResource(element);
-            
-            if ( checked )
+
+            if (checked)
             {
-                getProjectModel().getBundle().addSourcePath( resource );
+                getProjectModel().getBundle().addSourcePath(resource);
             }
             else
             {
-                getProjectModel().getBundle().removeSourcePath( resource );
+                getProjectModel().getBundle().removeSourcePath(resource);
             }
 
             markDirty();
@@ -213,28 +204,31 @@ public class ResourceBuildSection extends AbstractResourceSection implements ICh
      */
     private Resource toBldResource(IResource element) throws CoreException
     {
-        return getProjectModel().getBldProject().newResource(element.getProjectRelativePath().toString());
+        return getProjectModel().getBldProject().newResource(
+            element.getProjectRelativePath().toString());
     }
 
     private AtomicBoolean disposed = new AtomicBoolean();
-    
+
     @Override
     public void dispose()
     {
-        disposed.set( true );
-        SigilCore.getDefault().getPreferenceStore().removePropertyChangeListener( this );
+        disposed.set(true);
+        SigilCore.getDefault().getPreferenceStore().removePropertyChangeListener(this);
         super.dispose();
     }
 
-
-    public void propertyChange( PropertyChangeEvent event )
+    public void propertyChange(PropertyChangeEvent event)
     {
-        if ( !disposed.get() ) {
+        if (!disposed.get())
+        {
             resourcesFilter.loadExclusions();
-            try {
+            try
+            {
                 viewer.refresh();
             }
-            catch (SWTException e) {
+            catch (SWTException e)
+            {
                 // can happen on dispose
             }
         }

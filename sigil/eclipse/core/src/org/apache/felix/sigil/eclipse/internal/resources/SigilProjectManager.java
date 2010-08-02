@@ -28,28 +28,34 @@ import org.eclipse.core.runtime.CoreException;
 public class SigilProjectManager
 {
     private static HashMap<IProject, SigilProject> projects = new HashMap<IProject, SigilProject>();
-    
-    public SigilProject getSigilProject(IProject project) throws CoreException {
-        if ( project.hasNature( SigilCore.NATURE_ID ) )
+
+    public SigilProject getSigilProject(IProject project) throws CoreException
+    {
+        if (project.hasNature(SigilCore.NATURE_ID))
         {
             SigilProject p = null;
-            synchronized( projects ) {
+            synchronized (projects)
+            {
                 p = projects.get(project);
-                if ( p == null ) {
-                   p = new SigilProject( project );
-                   projects.put(project, p);
+                if (p == null)
+                {
+                    p = new SigilProject(project);
+                    projects.put(project, p);
                 }
             }
-            return p; 
+            return p;
         }
         else
         {
-            throw SigilCore.newCoreException( "Project " + project.getName() + " is not a sigil project", null );
+            throw SigilCore.newCoreException("Project " + project.getName()
+                + " is not a sigil project", null);
         }
     }
-    
-    public void flushSigilProject(IProject project) {
-        synchronized(project) {
+
+    public void flushSigilProject(IProject project)
+    {
+        synchronized (project)
+        {
             projects.remove(project);
         }
     }

@@ -21,7 +21,6 @@ package org.apache.felix.sigil.eclipse.runtime.config;
 
 import java.net.URL;
 
-
 import org.apache.felix.sigil.common.runtime.BundleForm;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.runtime.LaunchHelper;
@@ -64,7 +63,7 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
      */
-    public void createControl( Composite parent )
+    public void createControl(Composite parent)
     {
         Composite configurationView = new Composite(parent, SWT.NONE);
         new Label(configurationView, SWT.NONE).setText("Form");
@@ -73,8 +72,8 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         formText = new Text(configurationView, SWT.BORDER);
 
         // layout
-        formText.setLayoutData( new GridData( SWT.FILL, SWT.CENTER, true, false ) );
-        
+        formText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
         formText.addKeyListener(new KeyAdapter()
         {
             @Override
@@ -83,25 +82,26 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
                 updateLocation();
             }
         });
-        
+
         Button browse = new Button(configurationView, SWT.PUSH);
         browse.setText("Browse");
-        
-        browse.addSelectionListener( new SelectionAdapter() {
+
+        browse.addSelectionListener(new SelectionAdapter()
+        {
             @Override
-            public void widgetSelected(SelectionEvent e) {
-                FormSelectionDialog dialog =
-                    new FormSelectionDialog(getShell());
-                if ( dialog.open() == Window.OK ) {
+            public void widgetSelected(SelectionEvent e)
+            {
+                FormSelectionDialog dialog = new FormSelectionDialog(getShell());
+                if (dialog.open() == Window.OK)
+                {
                     formLocation = dialog.getFormFile().getFullPath().toOSString();
                     formText.setText(formLocation);
                     updateLocation();
                 }
             }
         });
-        
-        
-        configurationView.setLayout( new GridLayout( 3, false ) );
+
+        configurationView.setLayout(new GridLayout(3, false));
 
         setControl(configurationView);
     }
@@ -109,7 +109,8 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
     private void updateLocation()
     {
         String loc = formText.getText();
-        if ( loc.trim().length() > 0 ) {
+        if (loc.trim().length() > 0)
+        {
             try
             {
                 URL url = LaunchHelper.toURL(loc);
@@ -121,10 +122,11 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
             catch (Exception e)
             {
                 SigilCore.warn("Failed to resolve bundle form", e);
-                setErrorMessage("Invalid form file " + e.getMessage() );
+                setErrorMessage("Invalid form file " + e.getMessage());
             }
         }
-        else {
+        else
+        {
             setErrorMessage("Missing form file");
         }
         updateLaunchConfigurationDialog();
@@ -133,11 +135,12 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
-    public void initializeFrom( ILaunchConfiguration config )
+    public void initializeFrom(ILaunchConfiguration config)
     {
         try
         {
-            formLocation = config.getAttribute(OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION, "");
+            formLocation = config.getAttribute(
+                OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION, "");
             formText.setText(formLocation);
         }
         catch (CoreException e)
@@ -149,18 +152,22 @@ public class OSGiLaunchConfigurationTab extends AbstractLaunchConfigurationTab
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
-    public void performApply( ILaunchConfigurationWorkingCopy config )
+    public void performApply(ILaunchConfigurationWorkingCopy config)
     {
-        config.setAttribute(OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION, formLocation);
-        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER, OSGiLaunchConfigurationConstants.CLASSPATH_PROVIDER );
-        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH_PROVIDER, OSGiLaunchConfigurationConstants.CLASSPATH_PROVIDER);    
+        config.setAttribute(OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION,
+            formLocation);
+        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH_PROVIDER,
+            OSGiLaunchConfigurationConstants.CLASSPATH_PROVIDER);
+        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH_PROVIDER,
+            OSGiLaunchConfigurationConstants.CLASSPATH_PROVIDER);
     }
 
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
-    public void setDefaults( ILaunchConfigurationWorkingCopy config )
+    public void setDefaults(ILaunchConfigurationWorkingCopy config)
     {
-        config.setAttribute(OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION, (String) null);
+        config.setAttribute(OSGiLaunchConfigurationConstants.FORM_FILE_LOCATION,
+            (String) null);
     }
 }

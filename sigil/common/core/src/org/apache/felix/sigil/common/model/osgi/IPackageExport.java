@@ -19,26 +19,20 @@
 
 package org.apache.felix.sigil.common.model.osgi;
 
-
 import java.util.Collection;
 
 import org.apache.felix.sigil.common.model.ICapabilityModelElement;
 import org.osgi.framework.Version;
 
-
 public interface IPackageExport extends IPackageModelElement, IVersionedModelElement, Comparable<IPackageExport>, ICapabilityModelElement
 {
-    void addUse( String uses );
+    void addUse(String uses);
 
-
-    void removeUse( String uses );
-
+    void removeUse(String uses);
 
     Collection<String> getUses();
 
-
-    void setUses( Collection<String> asList );
-
+    void setUses(Collection<String> asList);
 
     Version getRawVersion();
 }

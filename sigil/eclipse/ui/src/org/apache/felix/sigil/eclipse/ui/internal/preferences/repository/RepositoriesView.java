@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -50,7 +49,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
-
 public class RepositoriesView
 {
     private final RepositoriesPreferencePage page;
@@ -59,259 +57,246 @@ public class RepositoriesView
 
     private TableViewer repositoryView;
 
-
-    public RepositoriesView( RepositoriesPreferencePage page )
+    public RepositoriesView(RepositoriesPreferencePage page)
     {
         this.page = page;
     }
 
-
-    public Control createContents( Composite parent )
+    public Control createContents(Composite parent)
     {
         // Create Controls
-        Composite composite = new Composite( parent, SWT.NONE );
+        Composite composite = new Composite(parent, SWT.NONE);
 
-        Table table = new Table( composite, SWT.MULTI | SWT.BORDER );
+        Table table = new Table(composite, SWT.MULTI | SWT.BORDER);
 
         // Table Viewer Setup
-        repositoryView = new TableViewer( table );
-        repositoryView.setLabelProvider( new LabelProvider()
+        repositoryView = new TableViewer(table);
+        repositoryView.setLabelProvider(new LabelProvider()
         {
             @Override
-            public String getText( Object element )
+            public String getText(Object element)
             {
-                IRepositoryModel rep = ( IRepositoryModel ) element;
+                IRepositoryModel rep = (IRepositoryModel) element;
                 return rep.getName();
             }
 
-
             @Override
-            public Image getImage( Object element )
+            public Image getImage(Object element)
             {
-                IRepositoryModel rep = ( IRepositoryModel ) element;
+                IRepositoryModel rep = (IRepositoryModel) element;
                 return rep.getType().getIcon();
             }
-        } );
+        });
 
-        repositoryView.setContentProvider( new DefaultTableProvider()
+        repositoryView.setContentProvider(new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                return toArray( inputElement );
+                return toArray(inputElement);
             }
-        } );
+        });
 
         // Layout
-        composite.setLayout( new GridLayout( 2, false ) );
-        table.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true, 1, 6 ) );
+        composite.setLayout(new GridLayout(2, false));
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 6));
 
-        createButtons( composite, repositoryView );
+        createButtons(composite, repositoryView);
 
         repositories = SigilCore.getRepositoryConfiguration().loadRepositories();
-        repositoryView.setInput( repositories );
+        repositoryView.setInput(repositories);
 
         return composite;
     }
 
-
-    private void createButtons( final Composite composite, final TableViewer repositoryView )
+    private void createButtons(final Composite composite, final TableViewer repositoryView)
     {
-        final Button add = new Button( composite, SWT.PUSH );
-        add.setText( "Add..." );
-        add.setEnabled( true );
+        final Button add = new Button(composite, SWT.PUSH);
+        add.setText("Add...");
+        add.setEnabled(true);
 
-        final Button edit = new Button( composite, SWT.PUSH );
-        edit.setText( "Edit..." );
-        edit.setEnabled( false );
+        final Button edit = new Button(composite, SWT.PUSH);
+        edit.setText("Edit...");
+        edit.setEnabled(false);
 
-        final Button remove = new Button( composite, SWT.PUSH );
-        remove.setText( "Remove" );
-        remove.setEnabled( false );
+        final Button remove = new Button(composite, SWT.PUSH);
+        remove.setText("Remove");
+        remove.setEnabled(false);
 
-        final Button refresh = new Button( composite, SWT.PUSH );
-        refresh.setText( "Refresh" );
-        refresh.setEnabled( false );
+        final Button refresh = new Button(composite, SWT.PUSH);
+        refresh.setText("Refresh");
+        refresh.setEnabled(false);
 
         // Listeners
-        add.addSelectionListener( new SelectionAdapter()
+        add.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
-                add( composite );
+                add(composite);
             }
-        } );
+        });
 
-        edit.addSelectionListener( new SelectionAdapter()
+        edit.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
-                IStructuredSelection sel = ( IStructuredSelection ) repositoryView.getSelection();
-                edit( composite, sel );
+                IStructuredSelection sel = (IStructuredSelection) repositoryView.getSelection();
+                edit(composite, sel);
             }
-        } );
+        });
 
-        remove.addSelectionListener( new SelectionAdapter()
+        remove.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
-                IStructuredSelection sel = ( IStructuredSelection ) repositoryView.getSelection();
-                remove( sel );
+                IStructuredSelection sel = (IStructuredSelection) repositoryView.getSelection();
+                remove(sel);
             }
-        } );
+        });
 
-        refresh.addSelectionListener( new SelectionAdapter()
+        refresh.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
-                IStructuredSelection sel = ( IStructuredSelection ) repositoryView.getSelection();
-                refresh( composite, sel );
+                IStructuredSelection sel = (IStructuredSelection) repositoryView.getSelection();
+                refresh(composite, sel);
             }
-        } );
+        });
 
-        repositoryView.addSelectionChangedListener( new ISelectionChangedListener()
+        repositoryView.addSelectionChangedListener(new ISelectionChangedListener()
         {
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
                 boolean selected = !event.getSelection().isEmpty();
-                if ( selected )
+                if (selected)
                 {
-                    refresh.setEnabled( true );
+                    refresh.setEnabled(true);
 
-                    IStructuredSelection sel = ( IStructuredSelection ) event.getSelection();
+                    IStructuredSelection sel = (IStructuredSelection) event.getSelection();
 
-                    checkEditEnabled( edit, sel );
-                    checkRemoveEnabled( remove, sel );
+                    checkEditEnabled(edit, sel);
+                    checkRemoveEnabled(remove, sel);
                 }
                 else
                 {
-                    refresh.setEnabled( false );
-                    edit.setEnabled( false );
-                    remove.setEnabled( false );
+                    refresh.setEnabled(false);
+                    edit.setEnabled(false);
+                    remove.setEnabled(false);
                 }
             }
-        } );
+        });
 
-        add.setLayoutData( new GridData( SWT.FILL, SWT.FILL, false, false ) );
-        edit.setLayoutData( new GridData( SWT.FILL, SWT.FILL, false, false ) );
-        remove.setLayoutData( new GridData( SWT.FILL, SWT.FILL, false, false ) );
+        add.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        edit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        remove.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
     }
 
-
     @SuppressWarnings("unchecked")
-    private void checkRemoveEnabled( Button button, IStructuredSelection sel )
+    private void checkRemoveEnabled(Button button, IStructuredSelection sel)
     {
         boolean alldynamic = true;
-        for ( Iterator i = sel.iterator(); i.hasNext(); )
+        for (Iterator i = sel.iterator(); i.hasNext();)
         {
-            IRepositoryModel model = ( IRepositoryModel ) i.next();
-            if ( !model.getType().isDynamic() )
+            IRepositoryModel model = (IRepositoryModel) i.next();
+            if (!model.getType().isDynamic())
             {
                 alldynamic = false;
                 break;
             }
         }
-        button.setEnabled( alldynamic );
+        button.setEnabled(alldynamic);
     }
 
-
-    private void checkEditEnabled( Button edit, IStructuredSelection sel )
+    private void checkEditEnabled(Button edit, IStructuredSelection sel)
     {
-        if ( sel.size() == 1 )
+        if (sel.size() == 1)
         {
-            IRepositoryModel element = ( IRepositoryModel ) sel.getFirstElement();
-            if ( WizardHelper.hasWizard( element.getType() ) )
+            IRepositoryModel element = (IRepositoryModel) sel.getFirstElement();
+            if (WizardHelper.hasWizard(element.getType()))
             {
-                edit.setEnabled( true );
+                edit.setEnabled(true);
             }
             else
             {
-                edit.setEnabled( false );
+                edit.setEnabled(false);
             }
         }
         else
         {
-            edit.setEnabled( false );
+            edit.setEnabled(false);
         }
     }
-
 
     @SuppressWarnings("unchecked")
-    protected void refresh( Control parent, IStructuredSelection sel )
+    protected void refresh(Control parent, IStructuredSelection sel)
     {
-        ArrayList<IRepositoryModel> models = new ArrayList<IRepositoryModel>( sel.size() );
+        ArrayList<IRepositoryModel> models = new ArrayList<IRepositoryModel>(sel.size());
 
-        for ( Iterator i = sel.iterator(); i.hasNext(); )
+        for (Iterator i = sel.iterator(); i.hasNext();)
         {
-            IRepositoryModel model = ( IRepositoryModel ) i.next();
-            models.add( model );
+            IRepositoryModel model = (IRepositoryModel) i.next();
+            models.add(model);
         }
 
-        new RefreshRepositoryAction( models.toArray( new IRepositoryModel[models.size()] ) ).run();
+        new RefreshRepositoryAction(models.toArray(new IRepositoryModel[models.size()])).run();
     }
 
-
-    private void add( Control parent )
+    private void add(Control parent)
     {
         NewRepositoryWizard wizard = new NewRepositoryWizard();
-        WizardDialog dialog = new WizardDialog( getShell( parent ), wizard );
-        if ( dialog.open() == Window.OK )
+        WizardDialog dialog = new WizardDialog(getShell(parent), wizard);
+        if (dialog.open() == Window.OK)
         {
-            repositories.add( wizard.getRepository() );
+            repositories.add(wizard.getRepository());
             updated();
         }
     }
 
-
-    private void edit( Control parent, IStructuredSelection sel )
+    private void edit(Control parent, IStructuredSelection sel)
     {
-        IRepositoryModel model = ( IRepositoryModel ) sel.getFirstElement();
+        IRepositoryModel model = (IRepositoryModel) sel.getFirstElement();
         try
         {
-            RepositoryWizard wizard = WizardHelper.loadWizard( model.getType() );
-            wizard.init( model );
-            WizardDialog dialog = new WizardDialog( getShell( parent ), wizard );
-            if ( dialog.open() == Window.OK )
+            RepositoryWizard wizard = WizardHelper.loadWizard(model.getType());
+            wizard.init(model);
+            WizardDialog dialog = new WizardDialog(getShell(parent), wizard);
+            if (dialog.open() == Window.OK)
             {
                 updated();
             }
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to load wizard", e );
-            MessageDialog
-                .openError( getShell( parent ), "Error", "Failed to load wizard:" + e.getStatus().getMessage() );
+            SigilCore.error("Failed to load wizard", e);
+            MessageDialog.openError(getShell(parent), "Error", "Failed to load wizard:"
+                + e.getStatus().getMessage());
         }
     }
 
-
-    private Shell getShell( Control parent )
+    private Shell getShell(Control parent)
     {
         return parent.getShell();
     }
 
-
     @SuppressWarnings("unchecked")
-    private void remove( IStructuredSelection sel )
+    private void remove(IStructuredSelection sel)
     {
         boolean change = false;
-        for ( Iterator i = sel.iterator(); i.hasNext(); )
+        for (Iterator i = sel.iterator(); i.hasNext();)
         {
-            change = repositories.remove( i.next() );
+            change = repositories.remove(i.next());
         }
 
-        if ( change )
+        if (change)
         {
             updated();
         }
     }
-
 
     private void updated()
     {
         repositoryView.refresh();
         page.changed();
     }
-
 
     public List<IRepositoryModel> getRepositories()
     {

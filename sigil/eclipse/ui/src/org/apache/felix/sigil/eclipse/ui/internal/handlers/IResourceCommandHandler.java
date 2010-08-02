@@ -19,15 +19,13 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.handlers;
 
-
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IResource;
 
-
 public interface IResourceCommandHandler
 {
 
-    Object execute( IResource[] resources, ExecutionEvent event ) throws ExecutionException;
+    Object execute(IResource[] resources, ExecutionEvent event) throws ExecutionException;
 
 }

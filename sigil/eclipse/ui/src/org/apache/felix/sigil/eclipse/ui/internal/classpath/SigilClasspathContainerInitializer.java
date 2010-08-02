@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.classpath;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.*;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
@@ -32,7 +31,6 @@ import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-
 public class SigilClasspathContainerInitializer extends ClasspathContainerInitializer
 {
 
@@ -41,55 +39,52 @@ public class SigilClasspathContainerInitializer extends ClasspathContainerInitia
         // TODO Auto-generated constructor stub
     }
 
-
     @Override
-    public boolean canUpdateClasspathContainer( IPath containerPath, IJavaProject project )
+    public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project)
     {
         return true;
     }
 
-
     @Override
-    public void requestClasspathContainerUpdate( IPath containerPath, IJavaProject project,
-        IClasspathContainer containerSuggestion ) throws CoreException
+    public void requestClasspathContainerUpdate(IPath containerPath,
+        IJavaProject project, IClasspathContainer containerSuggestion)
+        throws CoreException
     {
-        ISigilProjectModel sigil = SigilCore.create( project.getProject() );
+        ISigilProjectModel sigil = SigilCore.create(project.getProject());
 
-        IClasspathContainer sigilContainer = new SigilClassPathContainer( sigil );
+        IClasspathContainer sigilContainer = new SigilClassPathContainer(sigil);
 
-        IJavaProject[] affectedProjects = new IJavaProject[]
-            { project };
+        IJavaProject[] affectedProjects = new IJavaProject[] { project };
 
-        IClasspathContainer[] respectiveContainers = new IClasspathContainer[]
-            { sigilContainer };
+        IClasspathContainer[] respectiveContainers = new IClasspathContainer[] { sigilContainer };
 
         IProgressMonitor monitor = ThreadProgressMonitor.getProgressMonitor();
 
-        if ( monitor == null )
+        if (monitor == null)
         {
             monitor = Job.getJobManager().createProgressGroup();
         }
 
-        JavaCore.setClasspathContainer( containerPath, affectedProjects, respectiveContainers, monitor );
+        JavaCore.setClasspathContainer(containerPath, affectedProjects,
+            respectiveContainers, monitor);
     }
 
-
     @Override
-    public void initialize( IPath containerPath, IJavaProject project ) throws CoreException
+    public void initialize(IPath containerPath, IJavaProject project)
+        throws CoreException
     {
-        ISigilProjectModel sigil = SigilCore.create( project.getProject() );
+        ISigilProjectModel sigil = SigilCore.create(project.getProject());
 
-        IClasspathContainer sigilContainer = new SigilClassPathContainer( sigil );
+        IClasspathContainer sigilContainer = new SigilClassPathContainer(sigil);
 
-        IJavaProject[] affectedProjects = new IJavaProject[]
-            { project };
+        IJavaProject[] affectedProjects = new IJavaProject[] { project };
 
-        IClasspathContainer[] respectiveContainers = new IClasspathContainer[]
-            { sigilContainer };
+        IClasspathContainer[] respectiveContainers = new IClasspathContainer[] { sigilContainer };
 
         IProgressMonitor monitor = Job.getJobManager().createProgressGroup();
 
-        JavaCore.setClasspathContainer( containerPath, affectedProjects, respectiveContainers, monitor );
+        JavaCore.setClasspathContainer(containerPath, affectedProjects,
+            respectiveContainers, monitor);
     }
 
 }

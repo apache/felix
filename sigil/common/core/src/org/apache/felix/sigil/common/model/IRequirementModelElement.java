@@ -19,16 +19,14 @@
 
 package org.apache.felix.sigil.common.model;
 
-
 public interface IRequirementModelElement extends IModelElement
 {
-    boolean accepts( ICapabilityModelElement provider );
-    
+    boolean accepts(ICapabilityModelElement provider);
+
     /**
      * indicates whether the OSGi attribute "resolution=optional" is specified.
      */
     boolean isOptional();
 
-
-    void setOptional( boolean optional );
+    void setOptional(boolean optional);
 }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +49,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-
 public class RepositorySetDialog extends TitleAreaDialog
 {
 
@@ -65,101 +63,94 @@ public class RepositorySetDialog extends TitleAreaDialog
 
     private String newName;
 
-
-    public RepositorySetDialog( Shell shell, Set<String> set )
+    public RepositorySetDialog(Shell shell, Set<String> set)
     {
-        this( shell, null, true, set );
+        this(shell, null, true, set);
     }
 
-
-    public RepositorySetDialog( Shell parent, RepositoryViewData data, boolean nameEditable, Set<String> set )
+    public RepositorySetDialog(Shell parent, RepositoryViewData data, boolean nameEditable, Set<String> set)
     {
-        super( parent );
+        super(parent);
         this.set = set;
         this.setName = data == null ? "" : data.getName();
-        this.repositories = data == null ? new ArrayList<IRepositoryModel>() : new ArrayList<IRepositoryModel>( Arrays
-            .asList( data.getRepositories() ) );
+        this.repositories = data == null ? new ArrayList<IRepositoryModel>()
+            : new ArrayList<IRepositoryModel>(Arrays.asList(data.getRepositories()));
         this.nameEditable = nameEditable;
     }
 
-
     @Override
-    protected Control createDialogArea( Composite parent )
+    protected Control createDialogArea(Composite parent)
     {
-        Composite area = ( Composite ) super.createDialogArea( parent );
-        createControl( area );
+        Composite area = (Composite) super.createDialogArea(parent);
+        createControl(area);
         return area;
     }
 
-
-    public void createControl( Composite parent )
+    public void createControl(Composite parent)
     {
         // controls
-        Composite body = new Composite( parent, SWT.NONE );
-        body.setLayoutData( new GridData( GridData.FILL_BOTH ) );
+        Composite body = new Composite(parent, SWT.NONE);
+        body.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        if ( nameEditable )
+        if (nameEditable)
         {
-            new Label( body, SWT.NONE ).setText( "Name" );
+            new Label(body, SWT.NONE).setText("Name");
 
-            nameTxt = new Text( body, SWT.BORDER );
+            nameTxt = new Text(body, SWT.BORDER);
 
-            nameTxt.setText( setName );
+            nameTxt.setText(setName);
 
-            nameTxt.addKeyListener( new KeyAdapter()
+            nameTxt.addKeyListener(new KeyAdapter()
             {
                 @Override
-                public void keyReleased( KeyEvent e )
+                public void keyReleased(KeyEvent e)
                 {
                     checkComplete();
                 }
-            } );
+            });
         }
 
-        Composite table = new Composite( body, SWT.NONE );
-        table.setLayout( new GridLayout( 2, false ) );
-        createTable( table );
+        Composite table = new Composite(body, SWT.NONE);
+        table.setLayout(new GridLayout(2, false));
+        createTable(table);
 
         // layout
-        body.setLayout( new GridLayout( 2, false ) );
-        if ( nameEditable )
+        body.setLayout(new GridLayout(2, false));
+        if (nameEditable)
         {
-            nameTxt.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
+            nameTxt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         }
-        table.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true, 2, 1 ) );
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
-
 
     public RepositoryViewData getData()
     {
         String name = nameEditable ? newName : setName;
-        IRepositoryModel[] reps = repositories.toArray( new IRepositoryModel[repositories.size()] );
-        return new RepositoryViewData( name, reps );
+        IRepositoryModel[] reps = repositories.toArray(new IRepositoryModel[repositories.size()]);
+        return new RepositoryViewData(name, reps);
     }
-
 
     private void checkComplete()
     {
-        if ( nameEditable )
+        if (nameEditable)
         {
             String name = nameTxt.getText();
-            if ( !name.equals( setName ) && set.contains( name ) )
+            if (!name.equals(setName) && set.contains(name))
             {
-                setErrorMessage( "Set " + name + " already exists" );
-                Button b = getButton( IDialogConstants.OK_ID );
-                b.setEnabled( false );
+                setErrorMessage("Set " + name + " already exists");
+                Button b = getButton(IDialogConstants.OK_ID);
+                b.setEnabled(false);
             }
         }
-        setErrorMessage( null );
-        Button b = getButton( IDialogConstants.OK_ID );
-        b.setEnabled( true );
+        setErrorMessage(null);
+        Button b = getButton(IDialogConstants.OK_ID);
+        b.setEnabled(true);
     }
-
 
     @Override
     protected void okPressed()
     {
-        if ( nameEditable )
+        if (nameEditable)
         {
             newName = nameTxt.getText();
         }
@@ -167,150 +158,140 @@ public class RepositorySetDialog extends TitleAreaDialog
         super.okPressed();
     }
 
-
-    private void createTable( Composite body )
+    private void createTable(Composite body)
     {
-        createViewer( body );
+        createViewer(body);
 
-        Composite btns = new Composite( body, SWT.NONE );
-        btns.setLayout( new GridLayout( 1, true ) );
+        Composite btns = new Composite(body, SWT.NONE);
+        btns.setLayout(new GridLayout(1, true));
 
-        createButtons( btns );
+        createButtons(btns);
 
         // layout
-        viewer.getTable().setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
-        btns.setLayoutData( new GridData( SWT.RIGHT, SWT.TOP, false, false ) );
+        viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        btns.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false));
     }
 
-
-    private void createButtons( Composite parent )
+    private void createButtons(Composite parent)
     {
-        upBtn = new Button( parent, SWT.PUSH );
-        upBtn.setText( "Up" );
-        upBtn.addSelectionListener( new SelectionAdapter()
+        upBtn = new Button(parent, SWT.PUSH);
+        upBtn.setText("Up");
+        upBtn.addSelectionListener(new SelectionAdapter()
         {
             @Override
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 up();
             }
-        } );
+        });
 
-        downBtn = new Button( parent, SWT.PUSH );
-        downBtn.setText( "Down" );
-        downBtn.addSelectionListener( new SelectionAdapter()
+        downBtn = new Button(parent, SWT.PUSH);
+        downBtn.setText("Down");
+        downBtn.addSelectionListener(new SelectionAdapter()
         {
             @Override
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 down();
             }
-        } );
+        });
 
-        setUpDownEnabled( false );
+        setUpDownEnabled(false);
     }
-
 
     private void up()
     {
-        IRepositoryModel model = ( IRepositoryModel ) ( ( StructuredSelection ) viewer.getSelection() )
-            .getFirstElement();
-        int i = repositories.indexOf( model );
-        if ( i > 0 )
+        IRepositoryModel model = (IRepositoryModel) ((StructuredSelection) viewer.getSelection()).getFirstElement();
+        int i = repositories.indexOf(model);
+        if (i > 0)
         {
-            repositories.remove( i );
-            repositories.add( i - 1, model );
+            repositories.remove(i);
+            repositories.add(i - 1, model);
             viewer.refresh();
         }
     }
-
 
     private void down()
     {
-        IRepositoryModel model = ( IRepositoryModel ) ( ( StructuredSelection ) viewer.getSelection() )
-            .getFirstElement();
-        int i = repositories.indexOf( model );
-        if ( i < repositories.size() - 1 )
+        IRepositoryModel model = (IRepositoryModel) ((StructuredSelection) viewer.getSelection()).getFirstElement();
+        int i = repositories.indexOf(model);
+        if (i < repositories.size() - 1)
         {
-            repositories.remove( i );
-            repositories.add( i + 1, model );
+            repositories.remove(i);
+            repositories.add(i + 1, model);
             viewer.refresh();
         }
     }
 
-
-    private void createViewer( Composite parent )
+    private void createViewer(Composite parent)
     {
-        viewer = CheckboxTableViewer.newCheckList( parent, SWT.BORDER );
+        viewer = CheckboxTableViewer.newCheckList(parent, SWT.BORDER);
 
-        viewer.addSelectionChangedListener( new ISelectionChangedListener()
+        viewer.addSelectionChangedListener(new ISelectionChangedListener()
         {
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
-                setUpDownEnabled( !viewer.getSelection().isEmpty() );
+                setUpDownEnabled(!viewer.getSelection().isEmpty());
             }
-        } );
+        });
 
-        viewer.setContentProvider( new DefaultTableProvider()
+        viewer.setContentProvider(new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                return toArray( inputElement );
+                return toArray(inputElement);
             }
-        } );
+        });
 
-        viewer.setLabelProvider( new DefaultLabelProvider()
+        viewer.setLabelProvider(new DefaultLabelProvider()
         {
-            public Image getImage( Object element )
+            public Image getImage(Object element)
             {
                 return null;
             }
 
-
-            public String getText( Object element )
+            public String getText(Object element)
             {
-                IRepositoryModel m = ( IRepositoryModel ) element;
+                IRepositoryModel m = (IRepositoryModel) element;
                 return m.getName();
             }
-        } );
+        });
 
-        viewer.setInput( repositories );
+        viewer.setInput(repositories);
 
-        for ( IRepositoryModel m : repositories )
+        for (IRepositoryModel m : repositories)
         {
-            viewer.setChecked( m, true );
+            viewer.setChecked(m, true);
         }
 
         List<IRepositoryModel> allRepositories = SigilCore.getRepositoryConfiguration().loadRepositories();
 
-        for ( IRepositoryModel m : allRepositories )
+        for (IRepositoryModel m : allRepositories)
         {
-            if ( !repositories.contains( m ) )
+            if (!repositories.contains(m))
             {
-                repositories.add( m );
+                repositories.add(m);
             }
         }
 
         viewer.refresh();
     }
 
-
-    private void setUpDownEnabled( boolean enabled )
+    private void setUpDownEnabled(boolean enabled)
     {
-        upBtn.setEnabled( enabled );
-        downBtn.setEnabled( enabled );
+        upBtn.setEnabled(enabled);
+        downBtn.setEnabled(enabled);
     }
-
 
     private List<IRepositoryModel> getRepositories()
     {
         ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
 
-        for ( IRepositoryModel m : repositories )
+        for (IRepositoryModel m : repositories)
         {
-            if ( viewer.getChecked( m ) )
+            if (viewer.getChecked(m))
             {
-                reps.add( m );
+                reps.add(m);
             }
         }
 

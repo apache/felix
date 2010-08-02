@@ -19,21 +19,16 @@
 
 package org.apache.felix.sigil.common.model.eclipse;
 
-
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.osgi.VersionRange;
-
 
 public interface ILibraryImport extends IModelElement
 {
     String getLibraryName();
 
-
-    void setLibraryName( String name );
-
+    void setLibraryName(String name);
 
     VersionRange getVersions();
 
-
-    void setVersions( VersionRange range );
+    void setVersions(VersionRange range);
 }

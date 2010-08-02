@@ -89,11 +89,14 @@ public class CommandLine implements Serializable
      */
     public Object getOptionObject(String opt)
     {
-        try {
+        try
+        {
             return getParsedOptionValue(opt);
-        } catch(ParseException pe) {
-            System.err.println("Exception found converting " + opt + " to desired type: " + 
-                pe.getMessage() );
+        }
+        catch (ParseException pe)
+        {
+            System.err.println("Exception found converting " + opt + " to desired type: "
+                + pe.getMessage());
             return null;
         }
     }
@@ -106,8 +109,7 @@ public class CommandLine implements Serializable
      * @throws ParseException if there are problems turning the option value into the desired type
      * @see PatternOptionBuilder
      */
-    public Object getParsedOptionValue(String opt)
-    throws ParseException
+    public Object getParsedOptionValue(String opt) throws ParseException
     {
         String res = getOptionValue(opt);
 
@@ -119,7 +121,7 @@ public class CommandLine implements Serializable
 
         Object type = option.getType();
 
-        return (res == null)        ? null : TypeHandler.createValue(res, type);
+        return (res == null) ? null : TypeHandler.createValue(res, type);
     }
 
     /**
@@ -179,7 +181,8 @@ public class CommandLine implements Serializable
             }
         }
 
-        return values.isEmpty() ? null : (String[]) values.toArray(new String[values.size()]);
+        return values.isEmpty() ? null
+            : (String[]) values.toArray(new String[values.size()]);
     }
 
     /**

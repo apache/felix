@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 public class ResolutionConfig
 {
     private int options;
@@ -33,42 +32,35 @@ public class ResolutionConfig
     public static final int LOCAL_ONLY = 16;
     public static final int COMPILE_TIME = 32;
 
-
     public ResolutionConfig()
     {
-        this( INCLUDE_DEPENDENTS );
+        this(INCLUDE_DEPENDENTS);
     }
 
-
-    public ResolutionConfig( int options )
+    public ResolutionConfig(int options)
     {
         this.options = options;
     }
-
 
     public int getOptions()
     {
         return options;
     }
 
-
     public boolean isDependents()
     {
-        return ( options & INCLUDE_DEPENDENTS ) != 0;
+        return (options & INCLUDE_DEPENDENTS) != 0;
     }
-
 
     public boolean isIgnoreErrors()
     {
-        return ( options & IGNORE_ERRORS ) != 0;
+        return (options & IGNORE_ERRORS) != 0;
     }
-
 
     public boolean isOptional()
     {
-        return ( options & INCLUDE_OPTIONAL ) != 0;
+        return (options & INCLUDE_OPTIONAL) != 0;
     }
-
 
     public boolean isCalculateLocalDependencies()
     {
@@ -76,9 +68,8 @@ public class ResolutionConfig
         return false;
     }
 
-
     public boolean isCompileTime()
     {
-        return ( options & COMPILE_TIME ) != 0;
+        return (options & COMPILE_TIME) != 0;
     }
 }

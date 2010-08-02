@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -49,17 +48,15 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 
-
 @SuppressWarnings("restriction")
 public class ImportQuickFixProcessor implements IQuickFixProcessor
 {
 
     private static final Object SYNC_FLAG = new Object();
 
-
-    public boolean hasCorrections( ICompilationUnit unit, int problemId )
+    public boolean hasCorrections(ICompilationUnit unit, int problemId)
     {
-        switch ( problemId )
+        switch (problemId)
         {
             case IProblem.ImportNotFound:
             case IProblem.ForbiddenReference:
@@ -71,156 +68,158 @@ public class ImportQuickFixProcessor implements IQuickFixProcessor
         }
     }
 
-
-    public IJavaCompletionProposal[] getCorrections( IInvocationContext context, IProblemLocation[] locations )
-        throws CoreException
+    public IJavaCompletionProposal[] getCorrections(IInvocationContext context,
+        IProblemLocation[] locations) throws CoreException
     {
         try
         {
             HashMap<Object, IJavaCompletionProposal> results = new HashMap<Object, IJavaCompletionProposal>();
 
-            ISigilProjectModel project = findProject( context );
+            ISigilProjectModel project = findProject(context);
 
-            if ( project != null )
+            if (project != null)
             {
-                for ( int i = 0; i < locations.length; i++ )
+                for (int i = 0; i < locations.length; i++)
                 {
-                    switch ( locations[i].getProblemId() )
+                    switch (locations[i].getProblemId())
                     {
                         case IProblem.ForbiddenReference:
-                            handleImportNotFound( project, context, locations[i], results );
+                            handleImportNotFound(project, context, locations[i], results);
                             break;
                         case IProblem.ImportNotFound:
-                            handleImportNotFound( project, context, locations[i], results );
+                            handleImportNotFound(project, context, locations[i], results);
                             break;
                         case IProblem.IsClassPathCorrect:
-                            handleIsClassPathCorrect( project, context, locations[i], results );
+                            handleIsClassPathCorrect(project, context, locations[i],
+                                results);
                             break;
                         case IProblem.UndefinedType:
-                            handleUndefinedType( project, context, locations[i], results );
+                            handleUndefinedType(project, context, locations[i], results);
                             break;
                         case IProblem.UndefinedName:
-                            handleUndefinedName( project, context, locations[i], results );
+                            handleUndefinedName(project, context, locations[i], results);
                             break;
                     }
                 }
             }
 
-            return ( IJavaCompletionProposal[] ) results.values().toArray( new IJavaCompletionProposal[results.size()] );
+            return (IJavaCompletionProposal[]) results.values().toArray(
+                new IJavaCompletionProposal[results.size()]);
         }
-        catch ( RuntimeException e )
+        catch (RuntimeException e)
         {
             e.printStackTrace();
             throw e;
         }
     }
 
-
-    private void handleUndefinedName( ISigilProjectModel project, IInvocationContext context, IProblemLocation problem,
-        HashMap<Object, IJavaCompletionProposal> results )
+    private void handleUndefinedName(ISigilProjectModel project,
+        IInvocationContext context, IProblemLocation problem,
+        HashMap<Object, IJavaCompletionProposal> results)
     {
-        Name node = findNode( context, problem );
+        Name node = findNode(context, problem);
 
-        if ( node == null )
+        if (node == null)
         {
             return;
         }
-        addSearchResults( node, project, results );
+        addSearchResults(node, project, results);
     }
 
-
-    private void handleIsClassPathCorrect( ISigilProjectModel project, final IInvocationContext context,
-        IProblemLocation problemLocation, final HashMap<Object, IJavaCompletionProposal> results )
+    private void handleIsClassPathCorrect(ISigilProjectModel project,
+        final IInvocationContext context, IProblemLocation problemLocation,
+        final HashMap<Object, IJavaCompletionProposal> results)
     {
-        for ( final String type : problemLocation.getProblemArguments() )
+        for (final String type : problemLocation.getProblemArguments())
         {
-            final String iPackage = type.substring( 0, type.lastIndexOf( "." ) );
+            final String iPackage = type.substring(0, type.lastIndexOf("."));
 
-            for ( IPackageExport pe : JavaHelper.findExportsForPackage( project, iPackage ) )
+            for (IPackageExport pe : JavaHelper.findExportsForPackage(project, iPackage))
             {
-                results.put( type, new ImportPackageProposal( pe, project ) );
+                results.put(type, new ImportPackageProposal(pe, project));
             }
         }
 
-        if ( !results.containsKey( SYNC_FLAG ) )
+        if (!results.containsKey(SYNC_FLAG))
         {
             //results.put( SYNC_FLAG, null);
         }
     }
 
-
-    private void handleUndefinedType( ISigilProjectModel project, IInvocationContext context, IProblemLocation problem,
-        HashMap<Object, IJavaCompletionProposal> results ) throws CoreException
+    private void handleUndefinedType(ISigilProjectModel project,
+        IInvocationContext context, IProblemLocation problem,
+        HashMap<Object, IJavaCompletionProposal> results) throws CoreException
     {
-        Name node = findNode( context, problem );
+        Name node = findNode(context, problem);
 
-        if ( node == null )
+        if (node == null)
         {
             return;
         }
-        addSearchResults( node, project, results );
+        addSearchResults(node, project, results);
     }
 
-
-    private void handleImportNotFound( ISigilProjectModel project, final IInvocationContext context,
-        IProblemLocation location, final HashMap<Object, IJavaCompletionProposal> results ) throws CoreException
+    private void handleImportNotFound(ISigilProjectModel project,
+        final IInvocationContext context, IProblemLocation location,
+        final HashMap<Object, IJavaCompletionProposal> results) throws CoreException
     {
-        ASTNode selectedNode = location.getCoveringNode( context.getASTRoot() );
-        if ( selectedNode == null )
+        ASTNode selectedNode = location.getCoveringNode(context.getASTRoot());
+        if (selectedNode == null)
             return;
 
-        if ( selectedNode instanceof ClassInstanceCreation )
+        if (selectedNode instanceof ClassInstanceCreation)
         {
-            ClassInstanceCreation c = ( ClassInstanceCreation ) selectedNode;
+            ClassInstanceCreation c = (ClassInstanceCreation) selectedNode;
             Type t = c.getType();
-            Name node = findName( t );
-            if ( node != null )
+            Name node = findName(t);
+            if (node != null)
             {
-                addSearchResults( node, project, results );
+                addSearchResults(node, project, results);
             }
         }
         else
         {
-            for ( final String iPackage : readPackage( selectedNode, location ) )
+            for (final String iPackage : readPackage(selectedNode, location))
             {
-                if ( !results.containsKey( iPackage ) )
+                if (!results.containsKey(iPackage))
                 {
-                    for ( IPackageExport pe : JavaHelper.findExportsForPackage( project, iPackage ) )
+                    for (IPackageExport pe : JavaHelper.findExportsForPackage(project,
+                        iPackage))
                     {
-                        results.put( iPackage, new ImportPackageProposal( pe, project ) );
+                        results.put(iPackage, new ImportPackageProposal(pe, project));
                     }
                 }
             }
         }
     }
 
-
-    private void addSearchResults( Name node, ISigilProjectModel project,
-        HashMap<Object, IJavaCompletionProposal> results )
+    private void addSearchResults(Name node, ISigilProjectModel project,
+        HashMap<Object, IJavaCompletionProposal> results)
     {
-        for ( ISearchResult result : SigilSearch.findProviders( node.getFullyQualifiedName(), project, null ) )
+        for (ISearchResult result : SigilSearch.findProviders(
+            node.getFullyQualifiedName(), project, null))
         {
-            if ( project.getBundle().findImport( result.getPackageName() ) == null )
+            if (project.getBundle().findImport(result.getPackageName()) == null)
             {
-                String type = result.getPackageName() + "." + node.getFullyQualifiedName();
-                results.put( type, new ImportSearchResultProposal( SigilUI.getActiveWorkbenchShell(), result, node,
-                    project ) );
+                String type = result.getPackageName() + "."
+                    + node.getFullyQualifiedName();
+                results.put(type, new ImportSearchResultProposal(
+                    SigilUI.getActiveWorkbenchShell(), result, node, project));
             }
         }
     }
 
-
-    private Name findName( Type t )
+    private Name findName(Type t)
     {
-        if ( t.isSimpleType() )
+        if (t.isSimpleType())
         {
-            SimpleType st = ( SimpleType ) t;
+            SimpleType st = (SimpleType) t;
             return st.getName();
         }
-        else if ( t.isArrayType() )
+        else if (t.isArrayType())
         {
-            ArrayType at = ( ArrayType ) t;
-            return findName( at.getElementType() );
+            ArrayType at = (ArrayType) t;
+            return findName(at.getElementType());
         }
         else
         {
@@ -228,41 +227,40 @@ public class ImportQuickFixProcessor implements IQuickFixProcessor
         }
     }
 
-
-    private Name findNode( IInvocationContext context, IProblemLocation problem )
+    private Name findNode(IInvocationContext context, IProblemLocation problem)
     {
-        ASTNode selectedNode = problem.getCoveringNode( context.getASTRoot() );
-        if ( selectedNode == null )
+        ASTNode selectedNode = problem.getCoveringNode(context.getASTRoot());
+        if (selectedNode == null)
         {
             return null;
         }
 
-        while ( selectedNode.getLocationInParent() == QualifiedName.NAME_PROPERTY )
+        while (selectedNode.getLocationInParent() == QualifiedName.NAME_PROPERTY)
         {
             selectedNode = selectedNode.getParent();
         }
 
         Name node = null;
 
-        if ( selectedNode instanceof Type )
+        if (selectedNode instanceof Type)
         {
-            node = findName( ( Type ) selectedNode );
+            node = findName((Type) selectedNode);
         }
-        else if ( selectedNode instanceof Name )
+        else if (selectedNode instanceof Name)
         {
-            node = ( Name ) selectedNode;
+            node = (Name) selectedNode;
         }
 
         return node;
     }
 
-
-    private ISigilProjectModel findProject( IInvocationContext context ) throws CoreException
+    private ISigilProjectModel findProject(IInvocationContext context)
+        throws CoreException
     {
         IProject project = context.getCompilationUnit().getJavaProject().getProject();
-        if ( project.hasNature( SigilCore.NATURE_ID ) )
+        if (project.hasNature(SigilCore.NATURE_ID))
         {
-            return SigilCore.create( project );
+            return SigilCore.create(project);
         }
         else
         {
@@ -270,45 +268,46 @@ public class ImportQuickFixProcessor implements IQuickFixProcessor
         }
     }
 
-
-    private String[] readPackage( ASTNode selectedNode, IProblemLocation location )
+    private String[] readPackage(ASTNode selectedNode, IProblemLocation location)
     {
         ArrayList<String> packages = new ArrayList<String>();
 
-        ImportDeclaration id = ( ImportDeclaration ) ASTNodes.getParent( selectedNode, ASTNode.IMPORT_DECLARATION );
+        ImportDeclaration id = (ImportDeclaration) ASTNodes.getParent(selectedNode,
+            ASTNode.IMPORT_DECLARATION);
 
-        if ( id == null )
+        if (id == null)
         {
-            MethodInvocation m = ( MethodInvocation ) ASTNodes.getParent( selectedNode, ASTNode.METHOD_INVOCATION );
+            MethodInvocation m = (MethodInvocation) ASTNodes.getParent(selectedNode,
+                ASTNode.METHOD_INVOCATION);
 
-            if ( m != null )
+            if (m != null)
             {
-                packages.add( readPackage( m ) );
-                while ( m.getExpression() != null && m.getExpression() instanceof MethodInvocation )
+                packages.add(readPackage(m));
+                while (m.getExpression() != null
+                    && m.getExpression() instanceof MethodInvocation)
                 {
-                    m = ( MethodInvocation ) m.getExpression();
-                    packages.add( readPackage( m ) );
+                    m = (MethodInvocation) m.getExpression();
+                    packages.add(readPackage(m));
                 }
             }
         }
         else
         {
-            if ( id.isOnDemand() )
+            if (id.isOnDemand())
             {
-                packages.add( id.getName().toString() );
+                packages.add(id.getName().toString());
             }
             else
             {
                 String iStr = id.getName().toString();
-                packages.add( iStr.substring( 0, iStr.lastIndexOf( "." ) ) );
+                packages.add(iStr.substring(0, iStr.lastIndexOf(".")));
             }
         }
 
-        return packages.toArray( new String[packages.size()] );
+        return packages.toArray(new String[packages.size()]);
     }
 
-
-    private String readPackage( MethodInvocation m )
+    private String readPackage(MethodInvocation m)
     {
         return m.resolveMethodBinding().getDeclaringClass().getPackage().getName();
     }

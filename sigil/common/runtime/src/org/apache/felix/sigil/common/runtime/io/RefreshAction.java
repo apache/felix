@@ -40,30 +40,35 @@ public class RefreshAction extends Action<Void, Void>
     @Override
     public Void client(Void input) throws IOException, BundleException
     {
-        writeInt( REFRESH );
+        writeInt(REFRESH);
         flush();
-        if ( checkOk() )
+        if (checkOk())
         {
             return null;
         }
         else
         {
             String msg = readString();
-            throw new BundleException( msg );
+            throw new BundleException(msg);
         }
     }
 
     @Override
     public void server(Framework fw) throws IOException
     {
-        ServiceReference ref = fw.getBundleContext().getServiceReference(PackageAdmin.class.getName());
-        if ( ref != null ) {
+        ServiceReference ref = fw.getBundleContext().getServiceReference(
+            PackageAdmin.class.getName());
+        if (ref != null)
+        {
             PackageAdmin pa = (PackageAdmin) fw.getBundleContext().getService(ref);
-            if ( pa != null ) {
-                try {
+            if (pa != null)
+            {
+                try
+                {
                     pa.refreshPackages(null);
                 }
-                finally {
+                finally
+                {
                     fw.getBundleContext().ungetService(ref);
                 }
             }

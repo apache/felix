@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.internal.model.repository;
 
-
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
 import org.eclipse.swt.graphics.Image;
-
 
 public class RepositoryType implements IRepositoryType
 {
@@ -31,8 +29,7 @@ public class RepositoryType implements IRepositoryType
     private Image icon;
     private boolean dynamic;
 
-
-    public RepositoryType( String id, String type, boolean dynamic, Image icon )
+    public RepositoryType(String id, String type, boolean dynamic, Image icon)
     {
         this.id = id;
         this.type = type;
@@ -40,52 +37,45 @@ public class RepositoryType implements IRepositoryType
         this.icon = icon;
     }
 
-
     public String getType()
     {
         return type;
     }
-
 
     public String getId()
     {
         return id;
     }
 
-
     public Image getIcon()
     {
         return icon;
     }
-
 
     public boolean isDynamic()
     {
         return dynamic;
     }
 
-
     @Override
-    public boolean equals( Object obj )
+    public boolean equals(Object obj)
     {
         try
         {
-            RepositoryType t = ( RepositoryType ) obj;
-            return t.id.equals( id );
+            RepositoryType t = (RepositoryType) obj;
+            return t.id.equals(id);
         }
-        catch ( ClassCastException e )
+        catch (ClassCastException e)
         {
             return false;
         }
     }
-
 
     @Override
     public int hashCode()
     {
         return id.hashCode();
     }
-
 
     @Override
     public String toString()

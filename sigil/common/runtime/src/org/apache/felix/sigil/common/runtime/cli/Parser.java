@@ -68,7 +68,8 @@ public abstract class Parser implements CommandLineParser
      * flattening when a non option has been encountered
      * @return a String array of the flattened arguments
      */
-    protected abstract String[] flatten(Options opts, String[] arguments, boolean stopAtNonOption);
+    protected abstract String[] flatten(Options opts, String[] arguments,
+        boolean stopAtNonOption);
 
     /**
      * Parses the specified <code>arguments</code> based
@@ -97,7 +98,8 @@ public abstract class Parser implements CommandLineParser
      *
      * @since 1.1
      */
-    public CommandLine parse(Options options, String[] arguments, Properties properties) throws ParseException
+    public CommandLine parse(Options options, String[] arguments, Properties properties)
+        throws ParseException
     {
         return parse(options, arguments, properties, false);
     }
@@ -114,7 +116,8 @@ public abstract class Parser implements CommandLineParser
      * @return the <code>CommandLine</code>
      * @throws ParseException if an error occurs when parsing the arguments.
      */
-    public CommandLine parse(Options options, String[] arguments, boolean stopAtNonOption) throws ParseException
+    public CommandLine parse(Options options, String[] arguments, boolean stopAtNonOption)
+        throws ParseException
     {
         return parse(options, arguments, null, stopAtNonOption);
     }
@@ -136,8 +139,8 @@ public abstract class Parser implements CommandLineParser
      *
      * @since 1.1
      */
-    public CommandLine parse(Options options, String[] arguments, Properties properties, boolean stopAtNonOption)
-            throws ParseException
+    public CommandLine parse(Options options, String[] arguments, Properties properties,
+        boolean stopAtNonOption) throws ParseException
     {
         // clear out the data in options in case it's been used before (CLI-71)
         for (Iterator it = options.helpOptions().iterator(); it.hasNext();)
@@ -271,8 +274,7 @@ public abstract class Parser implements CommandLineParser
                     }
                 }
                 else if (!("yes".equalsIgnoreCase(value)
-                        || "true".equalsIgnoreCase(value)
-                        || "1".equalsIgnoreCase(value)))
+                    || "true".equalsIgnoreCase(value) || "1".equalsIgnoreCase(value)))
                 {
                     // if the value is not yes, true or 1 then don't add the
                     // option to the CommandLine

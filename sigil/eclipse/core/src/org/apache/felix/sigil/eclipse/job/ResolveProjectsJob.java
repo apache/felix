@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.job;
 
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -38,32 +37,31 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 
-
 public class ResolveProjectsJob extends WorkspaceJob
 {
     private final Collection<ISigilProjectModel> sigilProjects;
     private final LinkedList<ICapabilityModelElement> capabilities;
-    
-    public ResolveProjectsJob( IWorkspace workspace )
+
+    public ResolveProjectsJob(IWorkspace workspace)
     {
-        super( "Resolving Sigil projects" );
-        setRule( workspace.getRoot() );
+        super("Resolving Sigil projects");
+        setRule(workspace.getRoot());
         sigilProjects = SigilCore.getRoot().getProjects();
         capabilities = null;
     }
 
     public ResolveProjectsJob(IWorkspace workspace, LinkedList<ICapabilityModelElement> capabilities)
     {
-        super( "Resolving Sigil projects" );
+        super("Resolving Sigil projects");
         this.capabilities = capabilities;
-        setRule( workspace.getRoot() );
+        setRule(workspace.getRoot());
         sigilProjects = SigilCore.getRoot().getProjects();
     }
 
     public ResolveProjectsJob(ISigilProjectModel project)
     {
-        super( "Resolving Sigil project" );
-        setRule( project.getProject().getWorkspace().getRoot() );
+        super("Resolving Sigil project");
+        setRule(project.getProject().getWorkspace().getRoot());
         sigilProjects = Collections.singleton(project);
         capabilities = null;
     }
@@ -71,22 +69,25 @@ public class ResolveProjectsJob extends WorkspaceJob
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException
     {
-        MultiStatus status = new MultiStatus( SigilCore.PLUGIN_ID, 0, "Error resolving Sigil projects", null );
+        MultiStatus status = new MultiStatus(SigilCore.PLUGIN_ID, 0,
+            "Error resolving Sigil projects", null);
 
         boolean flush = sigilProjects.size() > 0;
-        
-        for ( ISigilProjectModel sigilProject : sigilProjects )
+
+        for (ISigilProjectModel sigilProject : sigilProjects)
         {
             try
             {
-                if ( isDependent(sigilProject) ) { 
-                    if ( flush) sigilProject.flushDependencyState();
+                if (isDependent(sigilProject))
+                {
+                    if (flush)
+                        sigilProject.flushDependencyState();
                     sigilProject.rebuildDependencies(monitor);
                 }
             }
-            catch ( CoreException e )
+            catch (CoreException e)
             {
-                status.add( e.getStatus() );
+                status.add(e.getStatus());
             }
         }
 
@@ -95,27 +96,34 @@ public class ResolveProjectsJob extends WorkspaceJob
 
     private boolean isDependent(ISigilProjectModel sigilProject)
     {
-        if ( capabilities == null ) {
+        if (capabilities == null)
+        {
             return true;
         }
-        else {
+        else
+        {
             ISigilBundle b = sigilProject.getBundle();
-            if ( b == null ) {
+            if (b == null)
+            {
                 // sigil project deleted can't be a dependent
                 return false;
             }
-            else {
+            else
+            {
                 final boolean[] dep = new boolean[1];
-                
+
                 b.visit(new IModelWalker()
                 {
                     public boolean visit(IModelElement element)
                     {
-                        if (element instanceof IRequirementModelElement) {
+                        if (element instanceof IRequirementModelElement)
+                        {
                             IRequirementModelElement r = (IRequirementModelElement) element;
-        
-                            for (ICapabilityModelElement c : capabilities) {
-                                if( r.accepts(c)) {
+
+                            for (ICapabilityModelElement c : capabilities)
+                            {
+                                if (r.accepts(c))
+                                {
                                     dep[0] = true;
                                     break;
                                 }
@@ -125,7 +133,7 @@ public class ResolveProjectsJob extends WorkspaceJob
                         return !dep[0];
                     }
                 });
-                
+
                 return dep[0];
             }
         }

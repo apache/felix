@@ -49,13 +49,15 @@ public class OBRRepositoryProvider implements IRepositoryProvider
         try
         {
             File urlFile = new File(urlStr);
-            URL repositoryURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(urlStr);
+            URL repositoryURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(
+                urlStr);
             URL testURL = urlFile.exists() ? urlFile.toURI().toURL() : new URL(urlStr);
             File indexCache = new File(preferences.getProperty(INDEX_CACHE_FILE));
             File localCache = new File(preferences.getProperty(CACHE_DIRECTORY));
             String auth = preferences.getProperty(AUTH_FILE);
             File authFile = auth == null ? null : new File(auth);
-            Long up = preferences.containsKey(UPDATE_PERIOD) ? Long.parseLong( preferences.getProperty(UPDATE_PERIOD) ) : 60 * 60 * 24 * 7; 
+            Long up = preferences.containsKey(UPDATE_PERIOD) ? Long.parseLong(preferences.getProperty(UPDATE_PERIOD))
+                : 60 * 60 * 24 * 7;
 
             if (testURL.openConnection().getLastModified() == 0)
             {
@@ -65,7 +67,7 @@ public class OBRRepositoryProvider implements IRepositoryProvider
                 System.err.println("WARNING: " + msg + "using cache: " + urlStr);
             }
 
-            long updatePeriod = TimeUnit.MILLISECONDS.convert(up,TimeUnit.SECONDS);
+            long updatePeriod = TimeUnit.MILLISECONDS.convert(up, TimeUnit.SECONDS);
             if (preferences.getProperty(IN_MEMORY) == null)
             {
                 return new NonCachingOBRBundleRepository(id, repositoryURL, indexCache,

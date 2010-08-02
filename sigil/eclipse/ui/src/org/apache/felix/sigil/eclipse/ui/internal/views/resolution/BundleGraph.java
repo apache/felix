@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,7 +30,6 @@ import java.util.Set;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 
-
 public class BundleGraph
 {
 
@@ -39,89 +37,82 @@ public class BundleGraph
     private LinkedList<Link> links = new LinkedList<Link>();
     private HashSet<ISigilBundle> bundles = new HashSet<ISigilBundle>();
 
-
-    public void startResolution( IModelElement requirement )
+    public void startResolution(IModelElement requirement)
     {
     }
 
-
-    public void endResolution( IModelElement requirement, ISigilBundle target )
+    public void endResolution(IModelElement requirement, ISigilBundle target)
     {
-        ISigilBundle source = requirement.getAncestor( ISigilBundle.class );
+        ISigilBundle source = requirement.getAncestor(ISigilBundle.class);
 
-        bundles.add( source );
-        bundles.add( target );
+        bundles.add(source);
+        bundles.add(target);
 
-        LinkedList<Link> links = lookup.get( source );
+        LinkedList<Link> links = lookup.get(source);
 
-        if ( links == null )
+        if (links == null)
         {
             links = new LinkedList<Link>();
-            lookup.put( source, links );
+            lookup.put(source, links);
         }
 
         Link l = null;
-        for ( Link c : links )
+        for (Link c : links)
         {
-            if ( c.getTarget() == target )
+            if (c.getTarget() == target)
             {
                 l = c;
                 break;
             }
         }
 
-        if ( l == null )
+        if (l == null)
         {
-            l = new Link( source, target );
-            links.add( l );
-            this.links.add( l );
+            l = new Link(source, target);
+            links.add(l);
+            this.links.add(l);
         }
 
-        l.addRequirement( requirement );
+        l.addRequirement(requirement);
     }
-
 
     public List<Link> getLinks()
     {
         return links;
     }
 
-
     public Set<ISigilBundle> getBundles()
     {
         return bundles;
     }
 
-
-    public Set<ISigilBundle> getTargets( ISigilBundle bundle )
+    public Set<ISigilBundle> getTargets(ISigilBundle bundle)
     {
         HashSet<ISigilBundle> targets = new HashSet<ISigilBundle>();
 
-        for ( Link l : getLinks( bundle ) )
+        for (Link l : getLinks(bundle))
         {
-            targets.add( l.getTarget() );
+            targets.add(l.getTarget());
         }
 
         return targets;
     }
 
-
-    public List<Link> getLinks( ISigilBundle selected )
+    public List<Link> getLinks(ISigilBundle selected)
     {
-        List<Link> l = lookup.get( selected );
+        List<Link> l = lookup.get(selected);
         return l == null ? Collections.<Link> emptyList() : l;
     }
 
-
-    public List<Link> getDependentLinks( ISigilBundle bundle )
+    public List<Link> getDependentLinks(ISigilBundle bundle)
     {
-        ArrayList<Link> found = new ArrayList<Link>( links.size() );
+        ArrayList<Link> found = new ArrayList<Link>(links.size());
 
-        for ( Link l : links )
+        for (Link l : links)
         {
-            if ( l.getTarget() == bundle )
+            if (l.getTarget() == bundle)
             {
-                found.add( l );
+                found.add(l);
             }
         }
 

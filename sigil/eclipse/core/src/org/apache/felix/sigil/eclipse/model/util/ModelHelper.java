@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.model.util;
 
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,75 +38,77 @@ import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.framework.Version;
 
-
 public class ModelHelper
 {
-    public static List<IModelElement> findUsers( IModelElement e )
+    public static List<IModelElement> findUsers(IModelElement e)
     {
         LinkedList<IModelElement> users = new LinkedList<IModelElement>();
 
-        findUsers( e, users );
+        findUsers(e, users);
 
         return users;
     }
 
-
-    private static void findUsers( IModelElement e, final LinkedList<IModelElement> users )
+    private static void findUsers(IModelElement e, final LinkedList<IModelElement> users)
     {
-        if ( e instanceof ICapabilityModelElement )
+        if (e instanceof ICapabilityModelElement)
         {
-            final ICapabilityModelElement cap = ( ICapabilityModelElement ) e;
-            SigilCore.getGlobalRepositoryManager().visit( new IModelWalker()
+            final ICapabilityModelElement cap = (ICapabilityModelElement) e;
+            SigilCore.getGlobalRepositoryManager().visit(new IModelWalker()
             {
-                public boolean visit( IModelElement element )
+                public boolean visit(IModelElement element)
                 {
-                    if ( element instanceof IRequirementModelElement )
+                    if (element instanceof IRequirementModelElement)
                     {
-                        IRequirementModelElement req = ( IRequirementModelElement ) element;
-                        if ( req.accepts( cap ) )
+                        IRequirementModelElement req = (IRequirementModelElement) element;
+                        if (req.accepts(cap))
                         {
-                            users.add( req );
+                            users.add(req);
                         }
                         return false;
                     }
 
                     return true;
                 }
-            } );
+            });
         }
-        
-        if ( e instanceof ICompoundModelElement )
+
+        if (e instanceof ICompoundModelElement)
         {
-            ICompoundModelElement c = ( ICompoundModelElement ) e;
+            ICompoundModelElement c = (ICompoundModelElement) e;
             IModelElement[] ch = c.children();
-            for ( IModelElement ee : ch )
+            for (IModelElement ee : ch)
             {
-                findUsers( ee, users );
+                findUsers(ee, users);
             }
         }
     }
-    
-    public static VersionRange getDefaultRange(Version version) {
-        IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-        
-        VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf( store
-            .getString( SigilCore.DEFAULT_VERSION_LOWER_BOUND ) );
-        VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf( store
-            .getString( SigilCore.DEFAULT_VERSION_UPPER_BOUND ) );
 
-        VersionRange selectedVersions = VersionRange.newInstance( version, lowerBoundRule, upperBoundRule );
+    public static VersionRange getDefaultRange(Version version)
+    {
+        IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
+
+        VersionRangeBoundingRule lowerBoundRule = VersionRangeBoundingRule.valueOf(store.getString(SigilCore.DEFAULT_VERSION_LOWER_BOUND));
+        VersionRangeBoundingRule upperBoundRule = VersionRangeBoundingRule.valueOf(store.getString(SigilCore.DEFAULT_VERSION_UPPER_BOUND));
+
+        VersionRange selectedVersions = VersionRange.newInstance(version, lowerBoundRule,
+            upperBoundRule);
         return selectedVersions;
     }
-    
-    public static IPackageExport findExport(ISigilProjectModel sigil, final String packageName) {
+
+    public static IPackageExport findExport(ISigilProjectModel sigil,
+        final String packageName)
+    {
         final ArrayList<IPackageExport> found = new ArrayList<IPackageExport>(1);
         sigil.visit(new IModelWalker()
-        {            
+        {
             public boolean visit(IModelElement element)
             {
-                if (element instanceof IPackageExport) {
+                if (element instanceof IPackageExport)
+                {
                     IPackageExport pe = (IPackageExport) element;
-                    if (pe.getPackageName().equals(packageName)) {
+                    if (pe.getPackageName().equals(packageName))
+                    {
                         found.add(pe);
                     }
                 }

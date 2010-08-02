@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.handlers.project;
 
-
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
@@ -34,35 +33,36 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
-
 public class RefreshSigilClasspathCommandHandler implements IResourceCommandHandler
 {
 
-    public Object execute( IResource[] resources, ExecutionEvent event ) throws ExecutionException
+    public Object execute(IResource[] resources, ExecutionEvent event)
+        throws ExecutionException
     {
         try
         {
-            for ( IResource res : resources )
+            for (IResource res : resources)
             {
-                IProject p = ( IProject ) res;
-                final ISigilProjectModel model = SigilCore.create( p );
+                IProject p = (IProject) res;
+                final ISigilProjectModel model = SigilCore.create(p);
 
                 WorkspaceModifyOperation op = new WorkspaceModifyOperation()
                 {
                     @Override
-                    protected void execute( IProgressMonitor monitor ) throws CoreException, InvocationTargetException,
+                    protected void execute(IProgressMonitor monitor)
+                        throws CoreException, InvocationTargetException,
                         InterruptedException
                     {
-                        model.resetClasspath( monitor );
+                        model.resetClasspath(monitor);
                     }
                 };
 
-                SigilUI.runWorkspaceOperation( op, null );
+                SigilUI.runWorkspaceOperation(op, null);
             }
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to create sigil project for refresh action", e );
+            SigilCore.error("Failed to create sigil project for refresh action", e);
         }
         return null;
     }

@@ -43,8 +43,7 @@ public class TypeHandler
      * @return The instance of <code>obj</code> initialised with
      * the value of <code>str</code>.
      */
-    public static Object createValue(String str, Object obj)
-    throws ParseException
+    public static Object createValue(String str, Object obj) throws ParseException
     {
         return createValue(str, (Class) obj);
     }
@@ -58,8 +57,7 @@ public class TypeHandler
      * @return The instance of <code>clazz</code> initialised with
      * the value of <code>str</code>.
      */
-    public static Object createValue(String str, Class clazz)
-    throws ParseException
+    public static Object createValue(String str, Class clazz) throws ParseException
     {
         if (PatternOptionBuilder.STRING_VALUE == clazz)
         {
@@ -110,8 +108,7 @@ public class TypeHandler
       * @return the initialised object, or null if it couldn't create
       * the Object.
       */
-    public static Object createObject(String classname)
-    throws ParseException
+    public static Object createObject(String classname) throws ParseException
     {
         Class cl = null;
 
@@ -132,7 +129,8 @@ public class TypeHandler
         }
         catch (Exception e)
         {
-            throw new ParseException(e.getClass().getName() + "; Unable to create an instance of: " + classname);
+            throw new ParseException(e.getClass().getName()
+                + "; Unable to create an instance of: " + classname);
         }
 
         return instance;
@@ -146,8 +144,7 @@ public class TypeHandler
      * @return the number represented by <code>str</code>, if <code>str</code>
      * is not a number, null is returned.
      */
-    public static Number createNumber(String str)
-    throws ParseException
+    public static Number createNumber(String str) throws ParseException
     {
         try
         {
@@ -172,8 +169,7 @@ public class TypeHandler
      * @param classname the class name
      * @return The class if it is found, otherwise return null
      */
-    public static Class createClass(String classname)
-    throws ParseException
+    public static Class createClass(String classname) throws ParseException
     {
         try
         {
@@ -192,8 +188,7 @@ public class TypeHandler
      * @return The date if <code>str</code> is a valid date string,
      * otherwise return null.
      */
-    public static Date createDate(String str)
-    throws ParseException
+    public static Date createDate(String str) throws ParseException
     {
         throw new UnsupportedOperationException("Not yet implemented");
     }
@@ -205,8 +200,7 @@ public class TypeHandler
      * @return The URL is <code>str</code> is well-formed, otherwise
      * return null.
      */
-    public static URL createURL(String str)
-    throws ParseException
+    public static URL createURL(String str) throws ParseException
     {
         try
         {
@@ -224,8 +218,7 @@ public class TypeHandler
      * @param str the File location
      * @return The file represented by <code>str</code>.
      */
-    public static File createFile(String str)
-    throws ParseException
+    public static File createFile(String str) throws ParseException
     {
         return new File(str);
     }
@@ -236,8 +229,7 @@ public class TypeHandler
      * @param str the paths to the files
      * @return The File[] represented by <code>str</code>.
      */
-    public static File[] createFiles(String str)
-    throws ParseException
+    public static File[] createFiles(String str) throws ParseException
     {
         // to implement/port:
         //        return FileW.findFiles(str);

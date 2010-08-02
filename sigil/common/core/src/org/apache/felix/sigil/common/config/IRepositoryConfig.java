@@ -19,16 +19,13 @@
 
 package org.apache.felix.sigil.common.config;
 
-
 import java.util.Map;
 import java.util.Properties;
-
 
 public interface IRepositoryConfig
 {
     static final String REPOSITORY_PROVIDER = "provider";
     static final String REPOSITORY_LEVEL = "level";
-
 
     /**
      * get properties with which to instantiate repositories.

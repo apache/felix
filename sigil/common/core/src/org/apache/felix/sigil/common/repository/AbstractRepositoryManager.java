@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +37,6 @@ import org.apache.felix.sigil.common.model.eclipse.ILibraryImport;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.repository.RepositoryChangeEvent.Type;
 
-
 public abstract class AbstractRepositoryManager implements IRepositoryManager, IBundleRepositoryListener
 {
 
@@ -51,16 +49,15 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
     private TreeMap<Integer, HashSet<IBundleRepository>> levelMap = new TreeMap<Integer, HashSet<IBundleRepository>>();
     private int[] levels;
 
-    private BundleResolver resolver = new BundleResolver( this );
+    private BundleResolver resolver = new BundleResolver(this);
 
     private ArrayList<ILibrary> libraries = new ArrayList<ILibrary>();
 
-
     public void initialise()
     {
-        synchronized ( repositories )
+        synchronized (repositories)
         {
-            if ( !initialised )
+            if (!initialised)
             {
                 initialised = true;
                 loadRepositories();
@@ -68,136 +65,126 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
         }
     }
 
-
     protected abstract void loadRepositories();
 
-
-    public void addRepositoryChangeListener( IRepositoryChangeListener listener )
+    public void addRepositoryChangeListener(IRepositoryChangeListener listener)
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            listeners.add( listener );
+            listeners.add(listener);
         }
     }
 
-
-    public void removeRepositoryChangeListener( IRepositoryChangeListener listener )
+    public void removeRepositoryChangeListener(IRepositoryChangeListener listener)
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            listeners.remove( listener );
+            listeners.remove(listener);
         }
     }
 
-
-    public void notifyChange( IBundleRepository repository )
+    public void notifyChange(IBundleRepository repository)
     {
-        notifyListeners( new RepositoryChangeEvent( repository, Type.CHANGED ) );
+        notifyListeners(new RepositoryChangeEvent(repository, Type.CHANGED));
     }
 
-
-    private void notifyListeners( RepositoryChangeEvent event )
+    private void notifyListeners(RepositoryChangeEvent event)
     {
         ArrayList<IRepositoryChangeListener> safe = null;
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            safe = new ArrayList<IRepositoryChangeListener>( listeners );
+            safe = new ArrayList<IRepositoryChangeListener>(listeners);
         }
-        for ( IRepositoryChangeListener l : safe )
+        for (IRepositoryChangeListener l : safe)
         {
-            l.repositoryChanged( event );
+            l.repositoryChanged(event);
         }
     }
 
-
-    protected void setRepositories( IBundleRepository[] repos )
+    protected void setRepositories(IBundleRepository[] repos)
     {
-        synchronized ( repositories )
+        synchronized (repositories)
         {
             repositories.clear();
             order.clear();
             levelMap.clear();
             resetLevels();
-            if ( repos != null )
+            if (repos != null)
             {
-                for ( int i = 0; i < repos.length; i++ )
+                for (int i = 0; i < repos.length; i++)
                 {
-                    addRepository( repos[i], i );
+                    addRepository(repos[i], i);
                 }
             }
         }
     }
 
-
-    protected void addRepository( IBundleRepository rep, int level )
+    protected void addRepository(IBundleRepository rep, int level)
     {
         Type type = null;
 
-        synchronized ( repositories )
+        synchronized (repositories)
         {
-            IBundleRepository old = repositories.put( rep.getId(), rep );
-            if ( old == null )
+            IBundleRepository old = repositories.put(rep.getId(), rep);
+            if (old == null)
             {
                 type = Type.ADDED;
-                rep.addBundleRepositoryListener( this );
+                rep.addBundleRepositoryListener(this);
             }
             else
             {
-                old.removeBundleRepositoryListener( this );
+                old.removeBundleRepositoryListener(this);
                 type = Type.CHANGED;
-                order.remove( old );
-                clearLevel( rep );
+                order.remove(old);
+                clearLevel(rep);
             }
 
-            order.add( rep );
+            order.add(rep);
 
-            HashSet<IBundleRepository> set = levelMap.get( level );
+            HashSet<IBundleRepository> set = levelMap.get(level);
 
-            if ( set == null )
+            if (set == null)
             {
                 set = new HashSet<IBundleRepository>();
-                levelMap.put( level, set );
+                levelMap.put(level, set);
             }
 
-            set.add( rep );
+            set.add(rep);
             resetLevels();
         }
 
-        notifyListeners( new RepositoryChangeEvent( rep, type ) );
+        notifyListeners(new RepositoryChangeEvent(rep, type));
     }
 
-
-    protected void removeRepository( IBundleRepository rep )
+    protected void removeRepository(IBundleRepository rep)
     {
         Type type = null;
 
-        synchronized ( repositories )
+        synchronized (repositories)
         {
-            if ( repositories.remove( rep.getId() ) != null )
+            if (repositories.remove(rep.getId()) != null)
             {
-                order.remove( rep );
+                order.remove(rep);
                 type = Type.REMOVED;
-                clearLevel( rep );
+                clearLevel(rep);
                 resetLevels();
             }
         }
 
-        if ( type != null )
+        if (type != null)
         {
-            notifyListeners( new RepositoryChangeEvent( rep, type ) );
+            notifyListeners(new RepositoryChangeEvent(rep, type));
         }
     }
 
-
-    private void clearLevel( IBundleRepository rep )
+    private void clearLevel(IBundleRepository rep)
     {
-        for ( Iterator<Map.Entry<Integer, HashSet<IBundleRepository>>> iter = levelMap.entrySet().iterator(); iter
-            .hasNext(); )
+        for (Iterator<Map.Entry<Integer, HashSet<IBundleRepository>>> iter = levelMap.entrySet().iterator(); iter.hasNext();)
         {
             Map.Entry<Integer, HashSet<IBundleRepository>> e = iter.next();
-            if ( e.getValue().remove( rep ) )
+            if (e.getValue().remove(rep))
             {
-                if ( e.getValue().isEmpty() )
+                if (e.getValue().isEmpty())
                 {
                     iter.remove();
                 }
@@ -206,35 +193,33 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
         }
     }
 
-
     public Collection<IBundleRepository> getRepositories()
     {
         initialise();
         ArrayList<IBundleRepository> safe = null;
 
-        synchronized ( repositories )
+        synchronized (repositories)
         {
-            safe = new ArrayList<IBundleRepository>( order );
+            safe = new ArrayList<IBundleRepository>(order);
         }
 
         return safe;
     }
 
-
     private void resetLevels()
     {
-        Collections.sort( order, new Comparator<IBundleRepository>()
+        Collections.sort(order, new Comparator<IBundleRepository>()
         {
-            public int compare( IBundleRepository o1, IBundleRepository o2 )
+            public int compare(IBundleRepository o1, IBundleRepository o2)
             {
-                int l1 = findLevel( o1 );
-                int l2 = findLevel( o2 );
+                int l1 = findLevel(o1);
+                int l2 = findLevel(o2);
 
-                if ( l1 < l2 )
+                if (l1 < l2)
                 {
                     return -1;
                 }
-                else if ( l1 > l2 )
+                else if (l1 > l2)
                 {
                     return 1;
                 }
@@ -244,90 +229,83 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
                 }
             }
 
-
-            private int findLevel( IBundleRepository rep )
+            private int findLevel(IBundleRepository rep)
             {
-                for ( Map.Entry<Integer, HashSet<IBundleRepository>> e : levelMap.entrySet() )
+                for (Map.Entry<Integer, HashSet<IBundleRepository>> e : levelMap.entrySet())
                 {
-                    if ( e.getValue().contains( rep ) )
+                    if (e.getValue().contains(rep))
                     {
                         return e.getKey();
                     }
                 }
                 throw new IllegalStateException();
             }
-        } );
+        });
         levels = new int[levelMap.size()];
         int i = 0;
-        for ( Integer v : levelMap.keySet() )
+        for (Integer v : levelMap.keySet())
         {
             levels[i++] = v;
         }
     }
 
-
     public int[] getPriorityLevels()
     {
         initialise();
-        synchronized ( repositories )
+        synchronized (repositories)
         {
             return levels;
         }
     }
 
-
-    public Collection<IBundleRepository> getRepositories( int priorityLevel )
+    public Collection<IBundleRepository> getRepositories(int priorityLevel)
     {
         initialise();
         List<IBundleRepository> found = null;
 
-        synchronized ( repositories )
+        synchronized (repositories)
         {
-            HashSet<IBundleRepository> b = levelMap.get( priorityLevel );
-            if ( b == null )
+            HashSet<IBundleRepository> b = levelMap.get(priorityLevel);
+            if (b == null)
             {
                 found = Collections.emptyList();
             }
             else
             {
-                found = new ArrayList<IBundleRepository>( b );
+                found = new ArrayList<IBundleRepository>(b);
             }
         }
 
         return found;
     }
 
-
-    public void addLibrary( ILibrary library )
+    public void addLibrary(ILibrary library)
     {
-        synchronized ( libraries )
+        synchronized (libraries)
         {
-            libraries.add( library );
+            libraries.add(library);
         }
     }
 
-
-    public void removeLibrary( ILibrary library )
+    public void removeLibrary(ILibrary library)
     {
-        synchronized ( libraries )
+        synchronized (libraries)
         {
-            libraries.remove( library );
+            libraries.remove(library);
         }
     }
-
 
     public Collection<ILibrary> getLibraries()
     {
-        synchronized ( libraries )
+        synchronized (libraries)
         {
             return libraries;
         }
     }
 
-
-    public ILibrary resolveLibrary( final ILibraryImport l )
+    public ILibrary resolveLibrary(final ILibraryImport l)
     {
-        final ArrayList<ILibrary> found = new ArrayList<ILibrary>( 1 );
+        final ArrayList<ILibrary> found = new ArrayList<ILibrary>(1);
         //ISigilProjectModel p = l.getAncestor(ISigilProjectModel.class);
         //
         //IModelWalker w = new IModelWalker() {
@@ -344,63 +322,62 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
         //p.visit( w );
 
         //if ( found.isEmpty() ) { // no project specific libraries - check workspace definitions
-        synchronized ( libraries )
+        synchronized (libraries)
         {
-            for ( ILibrary lib : libraries )
+            for (ILibrary lib : libraries)
             {
-                if ( l.getLibraryName().equals( lib.getName() ) && l.getVersions().contains( lib.getVersion() ) )
+                if (l.getLibraryName().equals(lib.getName())
+                    && l.getVersions().contains(lib.getVersion()))
                 {
-                    updateLibrary( l, lib, found );
+                    updateLibrary(l, lib, found);
                 }
             }
         }
         //}
 
-        return found.isEmpty() ? null : found.get( 0 );
+        return found.isEmpty() ? null : found.get(0);
     }
 
-
-    protected void updateLibrary( ILibraryImport li, ILibrary l, ArrayList<ILibrary> found )
+    protected void updateLibrary(ILibraryImport li, ILibrary l, ArrayList<ILibrary> found)
     {
-        if ( li.getLibraryName().equals( l.getName() ) && li.getVersions().contains( l.getVersion() ) )
+        if (li.getLibraryName().equals(l.getName())
+            && li.getVersions().contains(l.getVersion()))
         {
-            if ( found.isEmpty() )
+            if (found.isEmpty())
             {
-                found.add( l );
+                found.add(l);
             }
             else
             {
-                ILibrary c = found.get( 0 );
-                if ( l.getVersion().compareTo( c.getVersion() ) > 0 )
+                ILibrary c = found.get(0);
+                if (l.getVersion().compareTo(c.getVersion()) > 0)
                 {
-                    found.remove( 0 );
-                    found.add( l );
+                    found.remove(0);
+                    found.add(l);
                 }
             }
         }
     }
-
 
     public IBundleResolver getBundleResolver()
     {
         return resolver;
     }
 
-
-    public void visit( final IModelWalker walker )
+    public void visit(final IModelWalker walker)
     {
-        for ( IBundleRepository rep : getRepositories() )
+        for (IBundleRepository rep : getRepositories())
         {
             IRepositoryVisitor wrapper = new IRepositoryVisitor()
             {
-                public boolean visit( ISigilBundle bundle )
+                public boolean visit(ISigilBundle bundle)
                 {
-                    bundle.visit( walker );
+                    bundle.visit(walker);
                     // return true as still want to visit other bundles
                     return true;
                 }
             };
-            rep.accept( wrapper );
+            rep.accept(wrapper);
         }
     }
 }

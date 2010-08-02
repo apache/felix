@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,15 +47,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.osgi.framework.Version;
 
-
 public class ExportPackagesSection extends BundleDependencySection
 {
 
-    public ExportPackagesSection( SigilPage page, Composite parent, ISigilProjectModel project ) throws CoreException
+    public ExportPackagesSection(SigilPage page, Composite parent, ISigilProjectModel project) throws CoreException
     {
-        super( page, parent, project );
+        super(page, parent, project);
     }
-
 
     @Override
     protected String getTitle()
@@ -64,34 +61,33 @@ public class ExportPackagesSection extends BundleDependencySection
         return "Export Packages";
     }
 
-
     @Override
-    protected Label createLabel( Composite parent, FormToolkit toolkit )
+    protected Label createLabel(Composite parent, FormToolkit toolkit)
     {
-        return toolkit.createLabel( parent, "Specify which packages this bundle shares with other bundles." );
+        return toolkit.createLabel(parent,
+            "Specify which packages this bundle shares with other bundles.");
     }
-
 
     @Override
     protected IContentProvider getContentProvider()
     {
         return new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
                 return getBundle().getBundleInfo().getExports().toArray();
             }
         };
     }
 
-
     @Override
     protected void handleAdd()
     {
-        NewPackageExportDialog dialog = ResourcesDialogHelper.createNewExportDialog( getSection().getShell(),
-            "Add Exported Package", null, getProjectModel(), true );
+        NewPackageExportDialog dialog = ResourcesDialogHelper.createNewExportDialog(
+            getSection().getShell(), "Add Exported Package", null, getProjectModel(),
+            true);
 
-        if ( dialog.open() == Window.OK )
+        if (dialog.open() == Window.OK)
         {
             try
             {
@@ -99,12 +95,13 @@ public class ExportPackagesSection extends BundleDependencySection
                 boolean exportsAdded = false;
 
                 List<IPackageFragment> newPkgFragments = dialog.getSelectedElements();
-                for ( IPackageFragment pkgFragment : newPkgFragments )
+                for (IPackageFragment pkgFragment : newPkgFragments)
                 {
-                    IPackageExport pkgExport = ModelElementFactory.getInstance().newModelElement( IPackageExport.class );
-                    pkgExport.setPackageName( pkgFragment.getElementName() );
-                    pkgExport.setVersion( dialog.getVersion() );
-                    getBundle().getBundleInfo().addExport( pkgExport );
+                    IPackageExport pkgExport = ModelElementFactory.getInstance().newModelElement(
+                        IPackageExport.class);
+                    pkgExport.setPackageName(pkgFragment.getElementName());
+                    pkgExport.setVersion(dialog.getVersion());
+                    getBundle().getBundleInfo().addExport(pkgExport);
 
                     exportsAdded = true;
                 }
@@ -114,106 +111,107 @@ public class ExportPackagesSection extends BundleDependencySection
 
                 boolean shouldAddImports = OptionalPrompt.optionallyPrompt(
                     SigilCore.PREFERENCES_ADD_IMPORT_FOR_EXPORT, "Add Exports",
-                    "Should corresponding imports be added?", getSection().getShell() );
-                if ( shouldAddImports )
+                    "Should corresponding imports be added?", getSection().getShell());
+                if (shouldAddImports)
                 {
-                    for ( IPackageFragment pkgFragment : newPkgFragments )
+                    for (IPackageFragment pkgFragment : newPkgFragments)
                     {
                         IPackageImport pkgImport = ModelElementFactory.getInstance().newModelElement(
-                            IPackageImport.class );
-                        pkgImport.setPackageName( pkgFragment.getElementName() );
+                            IPackageImport.class);
+                        pkgImport.setPackageName(pkgFragment.getElementName());
                         Version version = dialog.getVersion();
-                        if ( version == null )
+                        if (version == null)
                         {
                             version = getBundle().getVersion();
                         }
                         VersionRange versionRange = ModelHelper.getDefaultRange(version);
-                        pkgImport.setVersions( versionRange );
+                        pkgImport.setVersions(versionRange);
 
-                        getBundle().getBundleInfo().addImport( pkgImport );
+                        getBundle().getBundleInfo().addImport(pkgImport);
 
                         importsAdded = true;
                     }
                 }
 
-                if ( importsAdded )
+                if (importsAdded)
                 {
                     refreshAllPages();
                     markDirty();
                 }
-                else if ( exportsAdded )
+                else if (exportsAdded)
                 {
                     refresh();
                     markDirty();
                 }
             }
-            catch ( ModelElementFactoryException e )
+            catch (ModelElementFactoryException e)
             {
-                SigilCore.error( "Failed to buiild model element for package export", e );
+                SigilCore.error("Failed to buiild model element for package export", e);
             }
         }
     }
-
 
     @SuppressWarnings("unchecked")
     @Override
     protected void handleEdit()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) getSelection();
+        IStructuredSelection selection = (IStructuredSelection) getSelection();
 
         boolean changed = false;
 
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            for ( Iterator<IPackageExport> i = selection.iterator(); i.hasNext(); )
+            for (Iterator<IPackageExport> i = selection.iterator(); i.hasNext();)
             {
                 IPackageExport packageExport = i.next();
-                NewPackageExportDialog dialog = ResourcesDialogHelper.createNewExportDialog( getSection().getShell(),
-                    "Edit Imported Package", packageExport, getProjectModel(), false );
-                if ( dialog.open() == Window.OK )
+                NewPackageExportDialog dialog = ResourcesDialogHelper.createNewExportDialog(
+                    getSection().getShell(), "Edit Imported Package", packageExport,
+                    getProjectModel(), false);
+                if (dialog.open() == Window.OK)
                 {
                     changed = true;
                     IPackageFragment pkgFragment = dialog.getSelectedElement();
-                    packageExport.setPackageName( pkgFragment.getElementName() );
-                    packageExport.setVersion( dialog.getVersion() );
+                    packageExport.setPackageName(pkgFragment.getElementName());
+                    packageExport.setVersion(dialog.getVersion());
                 }
             }
         }
 
-        if ( changed )
+        if (changed)
         {
             refresh();
             markDirty();
         }
     }
 
-
     @SuppressWarnings("unchecked")
     @Override
     protected void handleRemoved()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) getSelection();
-        
-        if ( !selection.isEmpty() )
+        IStructuredSelection selection = (IStructuredSelection) getSelection();
+
+        if (!selection.isEmpty())
         {
             boolean importsRemoved = false;
 
-            boolean shouldRemoveImports = OptionalPrompt.optionallyPrompt( 
+            boolean shouldRemoveImports = OptionalPrompt.optionallyPrompt(
                 SigilCore.PREFERENCES_REMOVE_IMPORT_FOR_EXPORT, "Remove Exports",
-                "Should corresponding imports be removed?", getSection().getShell() );
-            
+                "Should corresponding imports be removed?", getSection().getShell());
+
             IBundleModelElement info = getBundle().getBundleInfo();
-            
-            for ( Iterator<IPackageExport> i = selection.iterator(); i.hasNext(); )
+
+            for (Iterator<IPackageExport> i = selection.iterator(); i.hasNext();)
             {
                 IPackageExport pe = i.next();
-                info.removeExport( pe );
-                
+                info.removeExport(pe);
+
                 // Remove corresponding imports (maybe)
-                if (shouldRemoveImports) 
-                {                    
-                    for(IPackageImport pi : info.getImports() ) {
-                        if (pi.getPackageName().equals(pe.getPackageName())) {
+                if (shouldRemoveImports)
+                {
+                    for (IPackageImport pi : info.getImports())
+                    {
+                        if (pi.getPackageName().equals(pe.getPackageName()))
+                        {
                             importsRemoved = true;
                             info.removeImport(pi);
                         }
@@ -221,27 +219,26 @@ public class ExportPackagesSection extends BundleDependencySection
                 }
             }
 
-            if ( importsRemoved )
+            if (importsRemoved)
             {
                 refreshAllPages();
             }
-            else {
+            else
+            {
                 refresh();
             }
-            
+
             markDirty();
         }
     }
-
 
     /**
      * 
      */
     private void refreshAllPages()
     {
-        ( ( SigilProjectEditorPart ) getPage().getEditor() ).refreshAllPages();
+        ((SigilProjectEditorPart) getPage().getEditor()).refreshAllPages();
     }
-
 
     private ISigilBundle getBundle()
     {

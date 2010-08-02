@@ -248,7 +248,8 @@ public class ProjectRepository extends AbstractBundleRepository
 
         for (IBldBundle bb : project.getBundles())
         {
-            IBundleModelElement info = ModelElementFactory.getInstance().newModelElement(IBundleModelElement.class);
+            IBundleModelElement info = ModelElementFactory.getInstance().newModelElement(
+                IBundleModelElement.class);
 
             for (IPackageExport pexport : bb.getExports())
             {
@@ -274,15 +275,18 @@ public class ProjectRepository extends AbstractBundleRepository
             Version version = VersionTable.getVersion(bb.getVersion());
             info.setVersion(version);
 
-            ISigilBundle pb = ModelElementFactory.getInstance().newModelElement(ISigilBundle.class);
+            ISigilBundle pb = ModelElementFactory.getInstance().newModelElement(
+                ISigilBundle.class);
             pb.setBundleInfo(info);
-            
+
             Map<Object, Object> meta = new HashMap<Object, Object>();
             ModuleDescriptor md = SigilParser.instance().parseDescriptor(uri.toURL());
-            if ( !bb.getId().equals( md.getModuleRevisionId().getName() ) )
+            if (!bb.getId().equals(md.getModuleRevisionId().getName()))
             { // non-default artifact
-                for ( Artifact a : md.getAllArtifacts() ) {
-                    if ( a.getName().equals( bb.getId() ) ) {
+                for (Artifact a : md.getAllArtifacts())
+                {
+                    if (a.getName().equals(bb.getId()))
+                    {
                         meta.put(Artifact.class, a);
                         break;
                     }
@@ -291,7 +295,7 @@ public class ProjectRepository extends AbstractBundleRepository
 
             meta.put(ModuleDescriptor.class, md);
             pb.setMeta(meta);
-            
+
             list.add(pb);
             Log.debug("ProjectRepository: added " + pb);
             Log.debug("ProjectRepository: exports " + bb.getExports());

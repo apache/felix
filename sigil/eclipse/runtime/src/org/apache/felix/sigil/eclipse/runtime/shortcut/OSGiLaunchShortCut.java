@@ -33,19 +33,19 @@ public class OSGiLaunchShortCut implements ILaunchShortcut
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchShortcut#launch(org.eclipse.jface.viewers.ISelection, java.lang.String)
      */
-    public void launch( ISelection arg0, String arg1 )
+    public void launch(ISelection arg0, String arg1)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchShortcut#launch(org.eclipse.ui.IEditorPart, java.lang.String)
      */
-    public void launch( IEditorPart arg0, String arg1 )
+    public void launch(IEditorPart arg0, String arg1)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
 }

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.internal.license;
 
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
@@ -28,38 +27,32 @@ import java.util.regex.Pattern;
 import org.apache.felix.sigil.common.core.licence.ILicenseManager;
 import org.apache.felix.sigil.common.core.licence.ILicensePolicy;
 
-
 public class LicenseManager implements ILicenseManager
 {
 
     private HashMap<String, Pattern> licenses = new HashMap<String, Pattern>();
     private HashMap<String, LicensePolicy> policies = new HashMap<String, LicensePolicy>();
-    private LicensePolicy defaultPolicy = new LicensePolicy( this );
+    private LicensePolicy defaultPolicy = new LicensePolicy(this);
 
-
-    public void addLicense( String name, Pattern pattern )
+    public void addLicense(String name, Pattern pattern)
     {
-        licenses.put( name, pattern );
+        licenses.put(name, pattern);
     }
 
-
-    public void removeLicense( String name )
+    public void removeLicense(String name)
     {
-        licenses.remove( name );
+        licenses.remove(name);
     }
-
 
     public Set<String> getLicenseNames()
     {
-        return Collections.unmodifiableSet( licenses.keySet() );
+        return Collections.unmodifiableSet(licenses.keySet());
     }
 
-
-    public Pattern getLicensePattern( String name )
+    public Pattern getLicensePattern(String name)
     {
-        return licenses.get( name );
+        return licenses.get(name);
     }
-
 
     public ILicensePolicy getDefaultPolicy()
     {

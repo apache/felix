@@ -19,12 +19,10 @@
 
 package org.apache.felix.sigil.common.junit;
 
-
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-
 
 public abstract class ReflectiveSigilTestCase extends AbstractSigilTestCase
 {
@@ -33,7 +31,6 @@ public abstract class ReflectiveSigilTestCase extends AbstractSigilTestCase
     private Map<Class<?>, Method> bindMethods;
     private Map<Class<?>, Method> unbindMethods;
 
-
     @Override
     protected Class<?>[] getReferences()
     {
@@ -41,75 +38,70 @@ public abstract class ReflectiveSigilTestCase extends AbstractSigilTestCase
         return references;
     }
 
-
     @Override
-    protected Method getBindMethod( Class<?> clazz )
+    protected Method getBindMethod(Class<?> clazz)
     {
-        return bindMethods.get( clazz );
+        return bindMethods.get(clazz);
     }
 
-
     @Override
-    protected Method getUnbindMethod( Class<?> clazz )
+    protected Method getUnbindMethod(Class<?> clazz)
     {
-        return unbindMethods.get( clazz );
+        return unbindMethods.get(clazz);
     }
-
 
     private void introspect()
     {
-        if ( references == null )
+        if (references == null)
         {
-            bindMethods = findBindMethods( getClass(), "set", "add" );
-            unbindMethods = findBindMethods( getClass(), "set", "remove" );
+            bindMethods = findBindMethods(getClass(), "set", "add");
+            unbindMethods = findBindMethods(getClass(), "set", "remove");
 
             HashSet<Class<?>> refs = new HashSet<Class<?>>();
-            refs.addAll( bindMethods.keySet() );
-            refs.addAll( unbindMethods.keySet() );
-            references = refs.toArray( new Class<?>[refs.size()] );
+            refs.addAll(bindMethods.keySet());
+            refs.addAll(unbindMethods.keySet());
+            references = refs.toArray(new Class<?>[refs.size()]);
         }
     }
 
-
-    private static Map<Class<?>, Method> findBindMethods( Class<?> clazz, String... prefix )
+    private static Map<Class<?>, Method> findBindMethods(Class<?> clazz, String... prefix)
     {
         HashMap<Class<?>, Method> found = new HashMap<Class<?>, Method>();
 
-        checkDeclaredMethods( clazz, found, prefix );
+        checkDeclaredMethods(clazz, found, prefix);
 
         return found;
     }
 
-
-    private static void checkDeclaredMethods( Class<?> clazz, Map<Class<?>, Method> found, String... prefix )
+    private static void checkDeclaredMethods(Class<?> clazz, Map<Class<?>, Method> found,
+        String... prefix)
     {
-        for ( Method m : clazz.getDeclaredMethods() )
+        for (Method m : clazz.getDeclaredMethods())
         {
-            if ( isMethodPrefixed( m, prefix ) && isBindSignature( m ) )
+            if (isMethodPrefixed(m, prefix) && isBindSignature(m))
             {
-                found.put( m.getParameterTypes()[0], m );
+                found.put(m.getParameterTypes()[0], m);
             }
         }
 
         Class<?> sup = clazz.getSuperclass();
-        if ( sup != null && sup != Object.class )
+        if (sup != null && sup != Object.class)
         {
-            checkDeclaredMethods( sup, found, prefix );
+            checkDeclaredMethods(sup, found, prefix);
         }
 
-        for ( Class<?> i : clazz.getInterfaces() )
+        for (Class<?> i : clazz.getInterfaces())
         {
-            checkDeclaredMethods( i, found, prefix );
+            checkDeclaredMethods(i, found, prefix);
         }
     }
 
-
-    private static boolean isMethodPrefixed( Method m, String... prefix )
+    private static boolean isMethodPrefixed(Method m, String... prefix)
     {
         String n = m.getName();
-        for ( String p : prefix )
+        for (String p : prefix)
         {
-            if ( n.startsWith( p ) && n.length() > p.length() )
+            if (n.startsWith(p) && n.length() > p.length())
             {
                 return true;
             }
@@ -117,8 +109,7 @@ public abstract class ReflectiveSigilTestCase extends AbstractSigilTestCase
         return false;
     }
 
-
-    private static boolean isBindSignature( Method m )
+    private static boolean isBindSignature(Method m)
     {
         return m.getReturnType() == Void.TYPE && m.getParameterTypes().length == 1;
     }

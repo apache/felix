@@ -70,7 +70,8 @@ class OptionValidator
             {
                 if (!isValidChar(chars[i]))
                 {
-                    throw new IllegalArgumentException("opt contains illegal character value '" + chars[i] + "'");
+                    throw new IllegalArgumentException(
+                        "opt contains illegal character value '" + chars[i] + "'");
                 }
             }
         }

@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.utils;
 
-
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
-
 
 public final class SigilUtils
 {
@@ -31,13 +29,13 @@ public final class SigilUtils
     {
     }
 
-
-    public static boolean isResourceType( IResource resource, String type )
+    public static boolean isResourceType(IResource resource, String type)
     {
-        IContentType[] types = Platform.getContentTypeManager().findContentTypesFor( resource.getName() );
-        for ( IContentType contentType : types )
+        IContentType[] types = Platform.getContentTypeManager().findContentTypesFor(
+            resource.getName());
+        for (IContentType contentType : types)
         {
-            if ( contentType.getId().equals( type ) )
+            if (contentType.getId().equals(type))
             {
                 return true;
             }

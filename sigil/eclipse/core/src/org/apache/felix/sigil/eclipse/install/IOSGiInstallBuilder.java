@@ -19,12 +19,10 @@
 
 package org.apache.felix.sigil.eclipse.install;
 
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
-
 public interface IOSGiInstallBuilder
 {
-    IOSGiInstall build( String id, IPath path ) throws CoreException;
+    IOSGiInstall build(String id, IPath path) throws CoreException;
 }

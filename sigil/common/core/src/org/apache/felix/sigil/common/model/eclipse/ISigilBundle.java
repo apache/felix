@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.model.eclipse;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -32,75 +31,54 @@ import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IVersionedModelElement;
 
-
 /**
  * @author dave
  *
  */
 public interface ISigilBundle extends ICompoundModelElement, IVersionedModelElement
 {
-    void synchronize( IProgressMonitor monitor ) throws IOException;
-
+    void synchronize(IProgressMonitor monitor) throws IOException;
 
     boolean isSynchronized();
 
-
     IBundleModelElement getBundleInfo();
-
 
     String getSymbolicName();
 
-
-    void setBundleInfo( IBundleModelElement bundle );
-
+    void setBundleInfo(IBundleModelElement bundle);
 
     // TODO rename this method...
-    void addSourcePath( Resource path );
+    void addSourcePath(Resource path);
 
-
-    void removeSourcePath( Resource path );
-
+    void removeSourcePath(Resource path);
 
     Collection<Resource> getSourcePaths();
 
-
     void clearSourcePaths();
-
 
     Collection<String> getClasspathEntrys();
 
+    void addClasspathEntry(String encodedClasspath);
 
-    void addClasspathEntry( String encodedClasspath );
-
-
-    void removeClasspathEntry( String encodedClasspath );
-
+    void removeClasspathEntry(String encodedClasspath);
 
     // XXX must be file due to SiglCore.isBundlePath
     File getLocation();
 
-
     // XXX must be file due to SiglCore.isBundlePath
-    void setLocation( File location );
-
+    void setLocation(File location);
 
     File getSourcePathLocation();
 
-
-    void setSourcePathLocation( File location );
-
+    void setSourcePathLocation(File location);
 
     String getSourceRootPath();
 
+    void setSourceRootPath(String location);
 
-    void setSourceRootPath( String location );
-
-
-    void setLicencePathLocation( File cacheSourceLocation );
-
+    void setLicencePathLocation(File cacheSourceLocation);
 
     File getLicencePathLocation();
-
 
     /**
      * get package names included in bundle.
@@ -108,18 +86,15 @@ public interface ISigilBundle extends ICompoundModelElement, IVersionedModelElem
      */
     Collection<String> getPackages();
 
-
     /**
      * remove package name from those included in bundle.
      */
-    boolean removePackage( String pkg );
-
+    boolean removePackage(String pkg);
 
     /**
      * add package name to be included in bundle.
      */
-    void addPackage( String pkg );
-
+    void addPackage(String pkg);
 
     /**
      * Attempt to find a package export that matches the given name or return null if none specified
@@ -127,16 +102,14 @@ public interface ISigilBundle extends ICompoundModelElement, IVersionedModelElem
      * @param elementName
      * @return
      */
-    IPackageExport findExport( String elementName );
-
+    IPackageExport findExport(String elementName);
 
     /**
      * Attempt to find a package import that matches the given name or return null if none specified
      * @param packageName
      * @return
      */
-    IPackageImport findImport( String packageName );
-
+    IPackageImport findImport(String packageName);
 
     IBundleCapability getBundleCapability();
 }

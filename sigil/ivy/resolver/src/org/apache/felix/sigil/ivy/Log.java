@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.ivy;
 
-
 import org.apache.ivy.util.Message;
-
 
 // ensure common prefix to all sigil messages
 public class Log
@@ -30,45 +28,40 @@ public class Log
 
     private static final boolean highlight = false;
 
-
-    public static void error( String msg )
+    public static void error(String msg)
     {
-        if ( highlight )
-            Message.deprecated( PREFIX + "[error] " + msg );
-        Message.error( PREFIX + msg );
+        if (highlight)
+            Message.deprecated(PREFIX + "[error] " + msg);
+        Message.error(PREFIX + msg);
     }
 
-
-    public static void warn( String msg )
+    public static void warn(String msg)
     {
-        if ( highlight )
-            Message.deprecated( PREFIX + "[warn] " + msg );
+        if (highlight)
+            Message.deprecated(PREFIX + "[warn] " + msg);
         else
-            Message.warn( PREFIX + msg );
+            Message.warn(PREFIX + msg);
     }
 
-
-    public static void info( String msg )
+    public static void info(String msg)
     {
-        if ( highlight )
-            Message.deprecated( PREFIX + "[info] " + msg );
+        if (highlight)
+            Message.deprecated(PREFIX + "[info] " + msg);
         else
-            Message.info( PREFIX + msg );
+            Message.info(PREFIX + msg);
     }
 
-
-    public static void verbose( String msg )
+    public static void verbose(String msg)
     {
-        Message.verbose( PREFIX + "[verbose] " + msg );
+        Message.verbose(PREFIX + "[verbose] " + msg);
     }
 
-
-    public static void debug( String msg )
+    public static void debug(String msg)
     {
-        if ( highlight )
-            Message.deprecated( PREFIX + "[debug] " + msg );
+        if (highlight)
+            Message.deprecated(PREFIX + "[debug] " + msg);
         else
-            Message.debug( PREFIX + msg );
+            Message.debug(PREFIX + msg);
     }
 
 }

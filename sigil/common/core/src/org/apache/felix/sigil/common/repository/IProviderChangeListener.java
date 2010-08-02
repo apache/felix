@@ -19,8 +19,7 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 public interface IProviderChangeListener
 {
-    void notifyChange( IRepositoryProvider provider );
+    void notifyChange(IRepositoryProvider provider);
 }

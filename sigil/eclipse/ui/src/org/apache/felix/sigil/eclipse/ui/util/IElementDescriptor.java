@@ -19,14 +19,12 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 public interface IElementDescriptor<E>
 {
     /**
      * Return the short identifying name of the element.
      */
-    String getName( E element );
-
+    String getName(E element);
 
     /**
      * Return a label for the element, including the name but possibly supplying
@@ -35,5 +33,5 @@ public interface IElementDescriptor<E>
      * @param element
      * @return
      */
-    String getLabel( E element );
+    String getLabel(E element);
 }

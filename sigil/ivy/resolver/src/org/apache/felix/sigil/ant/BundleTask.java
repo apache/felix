@@ -130,7 +130,7 @@ public class BundleTask extends Task
                 log(id + ": " + count(nErr, "error") + ", " + count(nWarn, "warning")
                     + msg);
             }
-        
+
             if (revision != null)
             {
                 // FIXME: hopefully if we have multiple bundles they all have the same version

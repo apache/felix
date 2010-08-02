@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.preferences;
 
-
 public enum PromptablePreference
 {
     Always, Prompt, Never

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime;
 
-
 import static org.apache.felix.sigil.common.runtime.Runtime.ADDRESS_PROPERTY;
 import static org.apache.felix.sigil.common.runtime.Runtime.PORT_PROPERTY;
 
@@ -42,88 +41,87 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
-
 public class Main
 {
     private static final String COMMAND_LINE_SYNTAX = "java -jar org.apache.felix.sigil.common.runtime";
 
     private static Framework framework;
     private static final Options options;
-    
+
     private static boolean verbose = false;
 
     static
     {
         options = new Options();
-        options.addOption( "?", "help", false, "Print help for the Sigil launcher" );
-        options.addOption( "p", "port", true, "Port to launch server on (0 implies auto allocate) [default 0]" );
-        options.addOption( "a", "address", true, "Address to bind server to [default all]" );
-        options.addOption( "c", "clean", false, "Clean bundle cache directory on init" );
-        options.addOption( "s", "startLevel", true, "Start level for framework" );
-        options.addOption( "v", "verbose", false, "Verbose output" );
+        options.addOption("?", "help", false, "Print help for the Sigil launcher");
+        options.addOption("p", "port", true,
+            "Port to launch server on (0 implies auto allocate) [default 0]");
+        options.addOption("a", "address", true, "Address to bind server to [default all]");
+        options.addOption("c", "clean", false, "Clean bundle cache directory on init");
+        options.addOption("s", "startLevel", true, "Start level for framework");
+        options.addOption("v", "verbose", false, "Verbose output");
     }
 
-
-    public static void main( String[] args ) throws Exception
+    public static void main(String[] args) throws Exception
     {
         FrameworkFactory factory = getFrameworkFactory();
 
         try
         {
             Parser parser = new PosixParser();
-            CommandLine cl = parser.parse( options, args );
+            CommandLine cl = parser.parse(options, args);
 
-            if ( cl.hasOption( '?' ) )
+            if (cl.hasOption('?'))
             {
                 printHelp();
             }
             else
             {
                 verbose = cl.hasOption('v');
-                
-                Map<String, String> config = buildConfig( cl );
 
-                framework = factory.newFramework( config );
+                Map<String, String> config = buildConfig(cl);
+
+                framework = factory.newFramework(config);
                 framework.init();
                 framework.start();
 
-                Server server = launch( cl );
+                Server server = launch(cl);
 
-                framework.waitForStop( 0 );
+                framework.waitForStop(0);
 
-                if ( server != null )
+                if (server != null)
                 {
                     server.stop();
                 }
             }
         }
-        catch ( NoSuchElementException e )
+        catch (NoSuchElementException e)
         {
-            System.err.println( "No " + FrameworkFactory.class.getName() + " found on classpath" );
-            System.exit( 1 );
+            System.err.println("No " + FrameworkFactory.class.getName()
+                + " found on classpath");
+            System.exit(1);
         }
-        catch ( InterruptedException e )
+        catch (InterruptedException e)
         {
-            System.err.println( "Interrupted prior to framework stop" );
-            System.exit( 1 );
+            System.err.println("Interrupted prior to framework stop");
+            System.exit(1);
         }
-        catch ( ParseException e )
+        catch (ParseException e)
         {
             printHelp();
-            System.exit( 1 );
+            System.exit(1);
         }
-        catch ( BundleException e )
+        catch (BundleException e)
         {
             e.printStackTrace();
-            System.exit( 1 );
+            System.exit(1);
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
             e.printStackTrace();
-            System.exit( 1 );
+            System.exit(1);
         }
     }
-
 
     /**
      * Simple method to parse META-INF/services file for framework factory.
@@ -135,65 +133,64 @@ public class Main
     private static FrameworkFactory getFrameworkFactory() throws Exception
     {
         URL url = Main.class.getClassLoader().getResource(
-            "META-INF/services/org.osgi.framework.launch.FrameworkFactory" );
-        if ( url != null )
+            "META-INF/services/org.osgi.framework.launch.FrameworkFactory");
+        if (url != null)
         {
-            BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) );
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(url.openStream()));
             try
             {
-                for ( String s = br.readLine(); s != null; s = br.readLine() )
+                for (String s = br.readLine(); s != null; s = br.readLine())
                 {
                     s = s.trim();
                     // Try to load first non-empty, non-commented line.
-                    if ( ( s.length() > 0 ) && ( s.charAt( 0 ) != '#' ) )
+                    if ((s.length() > 0) && (s.charAt(0) != '#'))
                     {
-                        return ( FrameworkFactory ) Class.forName( s ).newInstance();
+                        return (FrameworkFactory) Class.forName(s).newInstance();
                     }
                 }
             }
             finally
             {
-                if ( br != null )
+                if (br != null)
                     br.close();
             }
         }
 
-        throw new Exception( "Could not find framework factory." );
+        throw new Exception("Could not find framework factory.");
     }
 
-
-    private static Map<String, String> buildConfig( CommandLine cl )
+    private static Map<String, String> buildConfig(CommandLine cl)
     {
         HashMap<String, String> config = new HashMap<String, String>();
-        if ( cl.hasOption( 'c' ))
-            config.put(  "org.osgi.framework.storage.clean", "onFirstInit" );
-        
-        if ( cl.hasOption( 's' ) )
-            config.put( "org.osgi.framework.startlevel.beginning", cl.getOptionValue( 's' ) );
-        
+        if (cl.hasOption('c'))
+            config.put("org.osgi.framework.storage.clean", "onFirstInit");
+
+        if (cl.hasOption('s'))
+            config.put("org.osgi.framework.startlevel.beginning", cl.getOptionValue('s'));
+
         return config;
     }
 
-
-    private static Server launch( CommandLine line ) throws IOException
+    private static Server launch(CommandLine line) throws IOException
     {
-        Server server = new Server( framework );
+        Server server = new Server(framework);
         Properties props = new Properties();
-        props.put( ADDRESS_PROPERTY, line.getOptionValue( 'a' ) );
-        props.put( PORT_PROPERTY, line.getOptionValue( 'p' ) );
-        server.start( props );
+        props.put(ADDRESS_PROPERTY, line.getOptionValue('a'));
+        props.put(PORT_PROPERTY, line.getOptionValue('p'));
+        server.start(props);
         return server;
     }
-
 
     private static void printHelp()
     {
         HelpFormatter f = new HelpFormatter();
-        f.printHelp( COMMAND_LINE_SYNTAX, options );
+        f.printHelp(COMMAND_LINE_SYNTAX, options);
     }
-    
-    public static void log(String msg) {
-        if ( verbose )
-            System.out.println( msg );
+
+    public static void log(String msg)
+    {
+        if (verbose)
+            System.out.println(msg);
     }
 }

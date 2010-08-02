@@ -34,6 +34,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+
 //import org.eclipse.core.runtime.IProgressMonitor;
 //import org.eclipse.core.runtime.IStatus;
 //import org.eclipse.core.runtime.Status;
@@ -41,7 +42,8 @@ import org.eclipse.core.runtime.CoreException;
 
 public class ProjectResourceListener implements IResourceChangeListener
 {
-    public static final int EVENT_MASKS = IResourceChangeEvent.PRE_DELETE | IResourceChangeEvent.POST_CHANGE;
+    public static final int EVENT_MASKS = IResourceChangeEvent.PRE_DELETE
+        | IResourceChangeEvent.POST_CHANGE;
     private final SigilProjectManager projectManager;
 
     public ProjectResourceListener(SigilProjectManager projectManager)
@@ -49,11 +51,12 @@ public class ProjectResourceListener implements IResourceChangeListener
         this.projectManager = projectManager;
     }
 
-    public void resourceChanged( IResourceChangeEvent event )
+    public void resourceChanged(IResourceChangeEvent event)
     {
         try
         {
-            switch ( event.getType() ) {
+            switch (event.getType())
+            {
                 case IResourceChangeEvent.PRE_REFRESH:
                     handleRefresh(event);
                     break;
@@ -64,40 +67,43 @@ public class ProjectResourceListener implements IResourceChangeListener
                     handlePostChange(event);
                     break;
             }
-            
+
             handleUpdate();
         }
         catch (CoreException e)
         {
-            SigilCore.error( "Failed to process resource change", e );
+            SigilCore.error("Failed to process resource change", e);
         }
     }
 
     private void handleUpdate()
     {
-        if( capabilities.size() > 0 ) {
-            final LinkedList<ICapabilityModelElement> changes = new LinkedList<ICapabilityModelElement>(capabilities);
+        if (capabilities.size() > 0)
+        {
+            final LinkedList<ICapabilityModelElement> changes = new LinkedList<ICapabilityModelElement>(
+                capabilities);
             capabilities.clear();
-            
-            ResolveProjectsJob job = new ResolveProjectsJob(ResourcesPlugin.getWorkspace(), changes);
-            job.schedule();        
+
+            ResolveProjectsJob job = new ResolveProjectsJob(
+                ResourcesPlugin.getWorkspace(), changes);
+            job.schedule();
         }
     }
-    
+
     private void handleRefresh(IResourceChangeEvent event) throws CoreException
     {
         IResourceDelta delta = event.getDelta();
-        if ( delta != null )
+        if (delta != null)
         {
-            delta.accept( new IResourceDeltaVisitor()
+            delta.accept(new IResourceDeltaVisitor()
             {
-                public boolean visit( IResourceDelta delta ) throws CoreException
+                public boolean visit(IResourceDelta delta) throws CoreException
                 {
                     IResource resource = delta.getResource();
-                    if ( resource instanceof IProject )
+                    if (resource instanceof IProject)
                     {
-                        IProject project = ( IProject ) resource;
-                        if ( SigilCore.isSigilProject( project ) )
+                        IProject project = (IProject) resource;
+                        if (SigilCore.isSigilProject(project))
                         {
                             readCapabilities(project);
                         }
@@ -106,28 +112,28 @@ public class ProjectResourceListener implements IResourceChangeListener
                     }
                     return true;
                 }
-            } );            
+            });
         }
-    }    
+    }
 
     private LinkedList<ICapabilityModelElement> capabilities = new LinkedList<ICapabilityModelElement>();
-    
+
     private void handlePostChange(IResourceChangeEvent event) throws CoreException
     {
         IResourceDelta delta = event.getDelta();
-        if ( delta != null )
+        if (delta != null)
         {
-            delta.accept( new IResourceDeltaVisitor()
+            delta.accept(new IResourceDeltaVisitor()
             {
-                public boolean visit( IResourceDelta delta ) throws CoreException
+                public boolean visit(IResourceDelta delta) throws CoreException
                 {
                     IResource resource = delta.getResource();
-                    if ( resource instanceof IProject )
+                    if (resource instanceof IProject)
                     {
-                        IProject project = ( IProject ) resource;
-                        if ( SigilCore.isSigilProject( project ) )
+                        IProject project = (IProject) resource;
+                        if (SigilCore.isSigilProject(project))
                         {
-                            switch ( delta.getKind() )
+                            switch (delta.getKind())
                             {
                                 case IResourceDelta.REMOVED:
                                 case IResourceDelta.ADDED:
@@ -140,17 +146,17 @@ public class ProjectResourceListener implements IResourceChangeListener
                     }
                     return true;
                 }
-            } );            
+            });
         }
     }
 
     protected void handlePreDelete(IResourceChangeEvent event) throws CoreException
     {
         IResource resource = event.getResource();
-        if ( resource instanceof IProject )
+        if (resource instanceof IProject)
         {
-            IProject project = ( IProject ) resource;
-            if ( SigilCore.isSigilProject( project ) )
+            IProject project = (IProject) resource;
+            if (SigilCore.isSigilProject(project))
             {
                 readCapabilities(project);
                 projectManager.flushSigilProject(project);
@@ -162,10 +168,11 @@ public class ProjectResourceListener implements IResourceChangeListener
     {
         ISigilProjectModel sigil = SigilCore.create(project);
         sigil.visit(new IModelWalker()
-        { 
+        {
             public boolean visit(IModelElement element)
             {
-                if ( element instanceof ICapabilityModelElement ) {
+                if (element instanceof ICapabilityModelElement)
+                {
                     capabilities.add((ICapabilityModelElement) element);
                 }
                 return true;

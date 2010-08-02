@@ -46,7 +46,8 @@ public class GnuParser extends Parser
      *                        a non option has been encountered
      * @return a String array of the flattened arguments
      */
-    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    protected String[] flatten(Options options, String[] arguments,
+        boolean stopAtNonOption)
     {
         List tokens = new ArrayList();
 
@@ -75,7 +76,8 @@ public class GnuParser extends Parser
                 }
                 else
                 {
-                    if (opt.indexOf('=') != -1 && options.hasOption(opt.substring(0, opt.indexOf('='))))
+                    if (opt.indexOf('=') != -1
+                        && options.hasOption(opt.substring(0, opt.indexOf('='))))
                     {
                         // the format is --foo=value or -foo=value
                         tokens.add(arg.substring(0, arg.indexOf('='))); // --foo

@@ -23,40 +23,48 @@ import junit.framework.TestCase;
 
 public class LDAPParserTest extends TestCase
 {
-    private static final SimpleTerm A_B = new SimpleTerm( "a", Ops.EQ, "b" );
-    private static final SimpleTerm C_D = new SimpleTerm( "c", Ops.EQ, "d" );
-    
-    public void testSimple() {
-        LDAPExpr expr = LDAPParser.parseExpression( "(a=b)" );
-        assertEquals( expr, A_B );
+    private static final SimpleTerm A_B = new SimpleTerm("a", Ops.EQ, "b");
+    private static final SimpleTerm C_D = new SimpleTerm("c", Ops.EQ, "d");
+
+    public void testSimple()
+    {
+        LDAPExpr expr = LDAPParser.parseExpression("(a=b)");
+        assertEquals(expr, A_B);
     }
 
-    public void testSimpleWhiteSpace() {
-        LDAPExpr expr = LDAPParser.parseExpression( "  ( a = b )  " );
-        assertEquals( expr, A_B );
+    public void testSimpleWhiteSpace()
+    {
+        LDAPExpr expr = LDAPParser.parseExpression("  ( a = b )  ");
+        assertEquals(expr, A_B);
     }
-    
-    public void testNot() {
-        LDAPExpr expr = LDAPParser.parseExpression( "(!(a=b))" );
-        assertEquals( expr, Not.apply(A_B));
+
+    public void testNot()
+    {
+        LDAPExpr expr = LDAPParser.parseExpression("(!(a=b))");
+        assertEquals(expr, Not.apply(A_B));
     }
-    
-    public void testAnd() {
-        LDAPExpr expr = LDAPParser.parseExpression( "(&(a=b)(c=d))" );
-        assertEquals( expr, And.apply(A_B, C_D) );
+
+    public void testAnd()
+    {
+        LDAPExpr expr = LDAPParser.parseExpression("(&(a=b)(c=d))");
+        assertEquals(expr, And.apply(A_B, C_D));
     }
-    
-    public void testOr() {
-        LDAPExpr expr = LDAPParser.parseExpression( "(|(a=b)(c=d))" );
-        assertEquals( expr, Or.apply(A_B, C_D) );
+
+    public void testOr()
+    {
+        LDAPExpr expr = LDAPParser.parseExpression("(|(a=b)(c=d))");
+        assertEquals(expr, Or.apply(A_B, C_D));
     }
-    
-    public void testParseException() {
-        try {
-            LDAPExpr expr = LDAPParser.parseExpression( ".(a=b)" );
-            fail( "Unexpectedly parsed invalid ldap expr " + expr);
+
+    public void testParseException()
+    {
+        try
+        {
+            LDAPExpr expr = LDAPParser.parseExpression(".(a=b)");
+            fail("Unexpectedly parsed invalid ldap expr " + expr);
         }
-        catch (LDAPParseException e) {
+        catch (LDAPParseException e)
+        {
             // expected
         }
     }

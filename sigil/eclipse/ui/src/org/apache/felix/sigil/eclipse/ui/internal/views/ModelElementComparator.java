@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views;
 
-
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
@@ -29,7 +28,6 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 
-
 public class ModelElementComparator extends ViewerComparator
 {
     private static final int EXPORT_GROUP = 0;
@@ -37,18 +35,17 @@ public class ModelElementComparator extends ViewerComparator
     private static final int REQUIRE_GROUP = 2;
     private static final int OTHER_GROUP = 4;
 
-
-    public int category( Object element )
+    public int category(Object element)
     {
-        if ( element instanceof IPackageImport )
+        if (element instanceof IPackageImport)
         {
             return IMPORT_GROUP;
         }
-        else if ( element instanceof IPackageExport )
+        else if (element instanceof IPackageExport)
         {
             return EXPORT_GROUP;
         }
-        else if ( element instanceof IRequiredBundle )
+        else if (element instanceof IRequiredBundle)
         {
             return REQUIRE_GROUP;
         }
@@ -58,37 +55,36 @@ public class ModelElementComparator extends ViewerComparator
         }
     }
 
-
     @SuppressWarnings("unchecked")
     @Override
-    public int compare( Viewer viewer, Object e1, Object e2 )
+    public int compare(Viewer viewer, Object e1, Object e2)
     {
-        int cat1 = category( e1 );
-        int cat2 = category( e2 );
+        int cat1 = category(e1);
+        int cat2 = category(e2);
 
-        if ( cat1 != cat2 )
+        if (cat1 != cat2)
         {
             return cat1 - cat2;
         }
 
-        if ( cat1 == OTHER_GROUP )
+        if (cat1 == OTHER_GROUP)
         {
             String name1;
             String name2;
 
-            if ( viewer == null || !( viewer instanceof ContentViewer ) )
+            if (viewer == null || !(viewer instanceof ContentViewer))
             {
                 name1 = e1.toString();
                 name2 = e2.toString();
             }
             else
             {
-                IBaseLabelProvider prov = ( ( ContentViewer ) viewer ).getLabelProvider();
-                if ( prov instanceof ILabelProvider )
+                IBaseLabelProvider prov = ((ContentViewer) viewer).getLabelProvider();
+                if (prov instanceof ILabelProvider)
                 {
-                    ILabelProvider lprov = ( ILabelProvider ) prov;
-                    name1 = lprov.getText( e1 );
-                    name2 = lprov.getText( e2 );
+                    ILabelProvider lprov = (ILabelProvider) prov;
+                    name1 = lprov.getText(e1);
+                    name2 = lprov.getText(e2);
                 }
                 else
                 {
@@ -96,23 +92,23 @@ public class ModelElementComparator extends ViewerComparator
                     name2 = e2.toString();
                 }
             }
-            if ( name1 == null )
+            if (name1 == null)
             {
                 name1 = "";//$NON-NLS-1$
             }
-            if ( name2 == null )
+            if (name2 == null)
             {
                 name2 = "";//$NON-NLS-1$
             }
 
             // use the comparator to compare the strings
-            return getComparator().compare( name1, name2 );
+            return getComparator().compare(name1, name2);
         }
         else
         {
-            Comparable c1 = ( Comparable ) e1;
-            Comparable c2 = ( Comparable ) e2;
-            return c1.compareTo( c2 );
+            Comparable c1 = (Comparable) e1;
+            Comparable c2 = (Comparable) e2;
+            return c1.compareTo(c2);
         }
     }
 }

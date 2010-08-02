@@ -19,13 +19,11 @@
 
 package org.apache.felix.sigil.eclipse.internal.adapter;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdapterFactory;
-
 
 /**
  * @author savage
@@ -34,46 +32,42 @@ import org.eclipse.core.runtime.IAdapterFactory;
 public class ProjectAdaptorFactory implements IAdapterFactory
 {
 
-    private Class<?>[] types = new Class<?>[]
-        { ISigilProjectModel.class };
-
+    private Class<?>[] types = new Class<?>[] { ISigilProjectModel.class };
 
     /* (non-Javadoc)
      * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
      */
     @SuppressWarnings("unchecked")
-    public Object getAdapter( Object adaptableObject, Class adapterType )
+    public Object getAdapter(Object adaptableObject, Class adapterType)
     {
         Object adapted = null;
 
-        IProject project = ( IProject ) adaptableObject;
+        IProject project = (IProject) adaptableObject;
 
-        if ( ISigilProjectModel.class.equals( adapterType ) )
+        if (ISigilProjectModel.class.equals(adapterType))
         {
-            adapted = adaptProject( project );
+            adapted = adaptProject(project);
         }
 
         return adapted;
     }
 
-
-    private Object adaptProject( IProject project )
+    private Object adaptProject(IProject project)
     {
         try
         {
-            if ( SigilCore.isSigilProject( project ) )
+            if (SigilCore.isSigilProject(project))
             {
-                return SigilCore.create( project );
+                return SigilCore.create(project);
             }
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return null;
     }
-
 
     /* (non-Javadoc)
      * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()

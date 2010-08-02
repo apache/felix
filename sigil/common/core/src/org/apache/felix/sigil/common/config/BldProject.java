@@ -180,11 +180,12 @@ public class BldProject implements IBldProject, IRepositoryConfig
             try
             {
                 File file = new File(defaults);
-                if (!file.isAbsolute()) {
+                if (!file.isAbsolute())
+                {
                     file = new File(base, defaults);
                 }
                 file = file.getCanonicalFile();
-                
+
                 URL url = file.toURI().toURL();
                 BldProperties bp = new BldProperties(file.getParentFile(), bldOverrides);
 
@@ -289,23 +290,27 @@ public class BldProject implements IBldProject, IRepositoryConfig
         }
         return file;
     }
-    
-    public Resource newResource(String location) {
+
+    public Resource newResource(String location)
+    {
         String[] paths = location.split("=", 2);
         String bPath = paths[0];
         String fsPath = (paths.length > 1 ? paths[1] : null);
-        if (bPath.startsWith("@")) {
+        if (bPath.startsWith("@"))
+        {
             bPath = bPath.substring(1);
             return new InlineResource(BldProject.this, bPath);
         }
-        else if (bPath.startsWith("{")) {
-            bPath = bPath.substring(1, bPath.length() -1);
+        else if (bPath.startsWith("{"))
+        {
+            bPath = bPath.substring(1, bPath.length() - 1);
             return new PreprocessedResource(BldProject.this, bPath, fsPath);
         }
-        else {
+        else
+        {
             return new StandardResource(BldProject.this, bPath, fsPath);
         }
-    }    
+    }
 
     public String getVersion()
     {
@@ -359,9 +364,9 @@ public class BldProject implements IBldProject, IRepositoryConfig
      * set internal OSGiImport and isDependency flags, based on external
      * resolve= attribute.
      */
-     // OSGiImport:    AUTO    ALWAYS     NEVER
-     // dependency:    default -          compile
-     // !dependency:   auto    runtime    ignore
+    // OSGiImport:    AUTO    ALWAYS     NEVER
+    // dependency:    default -          compile
+    // !dependency:   auto    runtime    ignore
 
     private void setResolve(IPackageImport pi, String resolve) throws IOException
     {
@@ -982,10 +987,11 @@ public class BldProject implements IBldProject, IRepositoryConfig
         public List<Resource> getResources()
         {
             List<String> resources = getList(BldConfig.L_RESOURCES);
-            if (resources == null) {
+            if (resources == null)
+            {
                 return Collections.emptyList();
             }
-            
+
             List<Resource> ret = new ArrayList<Resource>(resources.size());
             for (String resource : resources)
             {
@@ -993,7 +999,7 @@ public class BldProject implements IBldProject, IRepositoryConfig
             }
             return ret;
         }
-        
+
         public Properties getHeaders()
         {
             Properties headers = config.getProps(id, BldConfig.P_HEADER);

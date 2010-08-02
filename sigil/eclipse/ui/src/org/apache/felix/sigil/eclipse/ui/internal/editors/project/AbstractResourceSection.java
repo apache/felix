@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.io.File;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
@@ -43,34 +42,28 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.forms.IManagedForm;
 
-
-public abstract class AbstractResourceSection extends SigilSection implements IResourceChangeListener,
-    ICheckStateListener
+public abstract class AbstractResourceSection extends SigilSection implements IResourceChangeListener, ICheckStateListener
 {
 
-    protected static final Object[] EMPTY = new Object[]
-        {};
+    protected static final Object[] EMPTY = new Object[] {};
     protected Tree tree;
     protected CheckboxTreeViewer viewer;
     private IWorkspace workspace;
 
-
-    public AbstractResourceSection( SigilPage page, Composite parent, ISigilProjectModel project ) throws CoreException
+    public AbstractResourceSection(SigilPage page, Composite parent, ISigilProjectModel project) throws CoreException
     {
-        super( page, parent, project );
+        super(page, parent, project);
     }
 
-
     @Override
-    public void initialize( IManagedForm form )
+    public void initialize(IManagedForm form)
     {
-        super.initialize( form );
-        viewer.setAllChecked( false );
-        viewer.setGrayedElements( EMPTY );
+        super.initialize(form);
+        viewer.setAllChecked(false);
+        viewer.setGrayedElements(EMPTY);
         refreshSelections();
         viewer.refresh();
     }
-
 
     @Override
     public void refresh()
@@ -79,145 +72,137 @@ public abstract class AbstractResourceSection extends SigilSection implements IR
         super.refresh();
     }
 
-
-    public void checkStateChanged( CheckStateChangedEvent event )
+    public void checkStateChanged(CheckStateChangedEvent event)
     {
-        handleStateChanged( ( IResource ) event.getElement(), event.getChecked(), true, true );
+        handleStateChanged((IResource) event.getElement(), event.getChecked(), true, true);
     }
 
-
-    public void resourceChanged( IResourceChangeEvent event )
+    public void resourceChanged(IResourceChangeEvent event)
     {
-        if ( !getSection().getDisplay().isDisposed() )
+        if (!getSection().getDisplay().isDisposed())
         {
-            getSection().getDisplay().asyncExec( new Runnable()
+            getSection().getDisplay().asyncExec(new Runnable()
             {
                 public void run()
                 {
-                    if ( getSection().isVisible() )
+                    if (getSection().isVisible())
                     {
                         viewer.refresh();
                     }
                 }
-            } );
+            });
         }
     }
 
-
-    protected void startWorkspaceListener( IWorkspace workspace )
+    protected void startWorkspaceListener(IWorkspace workspace)
     {
         this.workspace = workspace;
-        workspace.addResourceChangeListener( this );
+        workspace.addResourceChangeListener(this);
     }
-
 
     @Override
     public void dispose()
     {
-        workspace.removeResourceChangeListener( this );
+        workspace.removeResourceChangeListener(this);
     }
-
 
     protected abstract void refreshSelections();
 
+    protected abstract void syncResourceModel(IResource element, boolean checked);
 
-    protected abstract void syncResourceModel( IResource element, boolean checked );
-
-
-    protected IResource findResource( IPath path )
+    protected IResource findResource(IPath path)
     {
         IProject project2 = getProjectModel().getProject();
-        File f = project2.getLocation().append( path ).toFile();
+        File f = project2.getLocation().append(path).toFile();
 
-        if ( f.exists() )
+        if (f.exists())
         {
             try
             {
-                if ( f.isFile() )
+                if (f.isFile())
                 {
-                    return project2.getFile( path );
+                    return project2.getFile(path);
                 }
                 else
                 {
-                    return project2.getFolder( path );
+                    return project2.getFolder(path);
                 }
             }
-            catch ( IllegalArgumentException e )
+            catch (IllegalArgumentException e)
             {
-                SigilCore.error( "Unknown path " + path );
+                SigilCore.error("Unknown path " + path);
                 return null;
             }
         }
         else
         {
-            SigilCore.error( "Unknown file " + f );
+            SigilCore.error("Unknown file " + f);
             return null;
         }
     }
 
-
-    protected void handleStateChanged( IResource element, boolean checked, boolean recurse, boolean sync )
+    protected void handleStateChanged(IResource element, boolean checked,
+        boolean recurse, boolean sync)
     {
-        if ( element instanceof IContainer )
+        if (element instanceof IContainer)
         {
-            setParentsGrayChecked( element, checked );
-            if ( recurse )
+            setParentsGrayChecked(element, checked);
+            if (recurse)
             {
-                recursiveCheck( ( IContainer ) element, checked, sync );
+                recursiveCheck((IContainer) element, checked, sync);
             }
         }
         else
         {
-            setParentsGrayChecked( element, checked );
+            setParentsGrayChecked(element, checked);
         }
 
-        if ( sync )
+        if (sync)
         {
-            syncResourceModel( element, checked );
+            syncResourceModel(element, checked);
         }
     }
 
-
-    private void recursiveCheck( IContainer element, final boolean checked, final boolean sync )
+    private void recursiveCheck(IContainer element, final boolean checked,
+        final boolean sync)
     {
         try
         {
-            element.accept( new IResourceVisitor()
+            element.accept(new IResourceVisitor()
             {
-                public boolean visit( IResource resource ) throws CoreException
+                public boolean visit(IResource resource) throws CoreException
                 {
-                    viewer.setChecked( resource, checked );
-                    if ( sync )
+                    viewer.setChecked(resource, checked);
+                    if (sync)
                     {
-                        syncResourceModel( resource, checked );
+                        syncResourceModel(resource, checked);
                     }
                     return true;
                 }
-            } );
+            });
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            DebugPlugin.log( e.getStatus() );
+            DebugPlugin.log(e.getStatus());
         }
     }
 
-
-    private void setParentsGrayChecked( IResource r, boolean checked )
+    private void setParentsGrayChecked(IResource r, boolean checked)
     {
-        while ( r.getParent() != null )
+        while (r.getParent() != null)
         {
             r = r.getParent();
-            if ( ( viewer.getGrayed( r ) && viewer.getChecked( r ) ) == checked )
+            if ((viewer.getGrayed(r) && viewer.getChecked(r)) == checked)
             {
                 break;
             }
-            if ( viewer.getChecked( r ) == checked )
+            if (viewer.getChecked(r) == checked)
             {
-                viewer.setGrayed( r, !checked );
+                viewer.setGrayed(r, !checked);
             }
             else
             {
-                viewer.setGrayChecked( r, checked );
+                viewer.setGrayChecked(r, checked);
             }
         }
     }

@@ -19,32 +19,27 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 
-
 public abstract class DefaultLabelProvider implements IBaseLabelProvider, ILabelProvider
 {
 
-    public boolean isLabelProperty( Object element, String property )
+    public boolean isLabelProperty(Object element, String property)
     {
         return false;
     }
-
 
     public void dispose()
     {
     }
 
-
-    public void addListener( ILabelProviderListener listener )
+    public void addListener(ILabelProviderListener listener)
     {
     }
 
-
-    public void removeListener( ILabelProviderListener listener )
+    public void removeListener(ILabelProviderListener listener)
     {
     }
 

@@ -19,47 +19,44 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class Utils
 {
-    public static MapBuilder map( String name, Object value )
+    public static MapBuilder map(String name, Object value)
     {
-        return new MapBuilder().put( name, value );
+        return new MapBuilder().put(name, value);
     }
 
-
-    public static String toString( Map<String, Object> attrs )
+    public static String toString(Map<String, Object> attrs)
     {
-        if ( attrs == null )
+        if (attrs == null)
         {
             return "NULL";
         }
 
-        StringBuffer buf = new StringBuffer( 128 );
-        List<String> keys = new ArrayList<String>( attrs.keySet() );
-        Collections.sort( keys );
-        buf.append( "{" );
+        StringBuffer buf = new StringBuffer(128);
+        List<String> keys = new ArrayList<String>(attrs.keySet());
+        Collections.sort(keys);
+        buf.append("{");
 
-        for ( int i = 0; i < keys.size(); i++ )
+        for (int i = 0; i < keys.size(); i++)
         {
-            Object name = keys.get( i );
-            Object value = attrs.get( name );
-            buf.append( name ).append( "=" ).append( value ).append( "," );
+            Object name = keys.get(i);
+            Object value = attrs.get(name);
+            buf.append(name).append("=").append(value).append(",");
         }
 
-        if ( buf.length() > 1 )
+        if (buf.length() > 1)
         {
-            buf.delete( buf.length() - 1, buf.length() );
+            buf.delete(buf.length() - 1, buf.length());
         }
 
-        buf.append( "}" );
+        buf.append("}");
 
         return buf.toString();
     }
@@ -68,14 +65,12 @@ public class Utils
     {
         private Map<String, Object> map = new HashMap<String, Object>();
 
-
-        public MapBuilder put( String name, Object value )
+        public MapBuilder put(String name, Object value)
         {
-            map.put( name, value );
+            map.put(name, value);
 
             return this;
         }
-
 
         public Map<String, Object> toMap()
         {

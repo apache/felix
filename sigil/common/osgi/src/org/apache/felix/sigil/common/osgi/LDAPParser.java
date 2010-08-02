@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 import static org.apache.felix.sigil.common.osgi.Expressions.and;
 import static org.apache.felix.sigil.common.osgi.Expressions.not;
 import static org.apache.felix.sigil.common.osgi.Expressions.or;
@@ -33,226 +32,219 @@ import static org.apache.felix.sigil.common.osgi.Ops.LT;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class LDAPParser
 {
 
     private static final LDAPParser parser = new LDAPParser();
 
-
-    public static LDAPExpr parseExpression( String strExpr ) throws LDAPParseException
+    public static LDAPExpr parseExpression(String strExpr) throws LDAPParseException
     {
-        return parser.parse( strExpr );
+        return parser.parse(strExpr);
     }
 
-    public LDAPExpr parse( String strExpr ) throws LDAPParseException
+    public LDAPExpr parse(String strExpr) throws LDAPParseException
     {
 
-        if ( strExpr == null || strExpr.trim().length() == 0 )
+        if (strExpr == null || strExpr.trim().length() == 0)
         {
             return LDAPExpr.ACCEPT_ALL;
         }
 
-        ParseState ps = new ParseState( strExpr );
-        LDAPExpr expr = parseExpr( ps );
+        ParseState ps = new ParseState(strExpr);
+        LDAPExpr expr = parseExpr(ps);
         ps.skipWhitespace();
-        if ( !ps.isEndOfString() )
+        if (!ps.isEndOfString())
         {
-            error( "expected end of expression ", ps );
+            error("expected end of expression ", ps);
         }
         return expr;
     }
 
-
-    public LDAPExpr parseExpr( ParseState ps ) throws LDAPParseException
+    public LDAPExpr parseExpr(ParseState ps) throws LDAPParseException
     {
         ps.skipWhitespace();
-        if ( !( ps.peek() == '(' ) )
+        if (!(ps.peek() == '('))
         {
-            error( "expected (", ps );
+            error("expected (", ps);
         }
         ps.read();
         LDAPExpr expr = null;
         ps.skipWhitespace();
         char ch = ps.peek();
-        switch ( ch )
+        switch (ch)
         {
             case '&':
                 ps.readAndSkipWhiteSpace();
                 List<LDAPExpr> andList = new ArrayList<LDAPExpr>();
-                while ( ps.peek() == '(' )
+                while (ps.peek() == '(')
                 {
-                    andList.add( parseExpr( ps ) );
+                    andList.add(parseExpr(ps));
                     ps.skipWhitespace();
                 }
-                LDAPExpr[] andArr = andList.toArray( new LDAPExpr[andList.size()] );
-                expr = and( andArr );
+                LDAPExpr[] andArr = andList.toArray(new LDAPExpr[andList.size()]);
+                expr = and(andArr);
                 break;
             case '|':
                 ps.readAndSkipWhiteSpace();
                 List<LDAPExpr> orList = new ArrayList<LDAPExpr>();
-                while ( ps.peek() == '(' )
+                while (ps.peek() == '(')
                 {
-                    orList.add( parseExpr( ps ) );
+                    orList.add(parseExpr(ps));
                     ps.skipWhitespace();
                 }
-                LDAPExpr[] orArray = orList.toArray( new LDAPExpr[orList.size()] );
-                expr = or( orArray );
+                LDAPExpr[] orArray = orList.toArray(new LDAPExpr[orList.size()]);
+                expr = or(orArray);
                 break;
             case '!':
                 ps.readAndSkipWhiteSpace();
-                expr = not( parseExpr( ps ) );
+                expr = not(parseExpr(ps));
                 break;
             default:
-                if ( isNameChar( ch ) )
+                if (isNameChar(ch))
                 {
-                    expr = parseSimple( ps );
+                    expr = parseSimple(ps);
                 }
                 else
                 {
-                    error( "unexpected character: '" + ch + "'", ps );
+                    error("unexpected character: '" + ch + "'", ps);
                 }
         }
         ps.skipWhitespace();
-        if ( ps.peek() != ')' )
+        if (ps.peek() != ')')
         {
-            error( "expected )", ps );
+            error("expected )", ps);
         }
         ps.read();
         return expr;
 
     }
 
-
-    void error( String message, ParseState ps ) throws LDAPParseException
+    void error(String message, ParseState ps) throws LDAPParseException
     {
-        throw new LDAPParseException( message, ps );
+        throw new LDAPParseException(message, ps);
     }
 
-
-    private SimpleTerm parseSimple( ParseState ps ) throws LDAPParseException
+    private SimpleTerm parseSimple(ParseState ps) throws LDAPParseException
     {
         // read name
-        StringBuffer name = new StringBuffer( 16 );
-        for ( char c = ps.peek(); !ps.isEndOfString() && isNameChar( c ); c = ps.peek() )
+        StringBuffer name = new StringBuffer(16);
+        for (char c = ps.peek(); !ps.isEndOfString() && isNameChar(c); c = ps.peek())
         {
             ps.read();
-            name.append( c );
+            name.append(c);
         }
         ps.skipWhitespace();
         Ops op = null;
         // read op
-        if ( ps.lookingAt( "=" ) )
+        if (ps.lookingAt("="))
         {
             op = EQ;
-            ps.skip( 1 );
+            ps.skip(1);
         }
-        else if ( ps.lookingAt( ">=" ) )
+        else if (ps.lookingAt(">="))
         {
             op = GE;
-            ps.skip( 2 );
+            ps.skip(2);
         }
-        else if ( ps.lookingAt( "<=" ) )
+        else if (ps.lookingAt("<="))
         {
             op = LE;
-            ps.skip( 2 );
+            ps.skip(2);
         }
-        else if ( ps.lookingAt( ">" ) )
+        else if (ps.lookingAt(">"))
         {
             op = GT;
-            ps.skip( 1 );
+            ps.skip(1);
         }
-        else if ( ps.lookingAt( "<" ) )
+        else if (ps.lookingAt("<"))
         {
             op = LT;
-            ps.skip( 1 );
+            ps.skip(1);
         }
-        else if ( ps.lookingAt( "-=" ) )
+        else if (ps.lookingAt("-="))
         {
             op = APPROX;
-            ps.skip( 2 );
+            ps.skip(2);
         }
-        else if ( ps.isEndOfString() )
+        else if (ps.isEndOfString())
         {
-            error( "unexpected end of expression", ps );
+            error("unexpected end of expression", ps);
         }
         else
         {
-            error( "unexpected character: '" + ps.peek() + "'", ps );
+            error("unexpected character: '" + ps.peek() + "'", ps);
         }
         ps.skipWhitespace();
 
         boolean escaped = false;
-        StringBuffer value = new StringBuffer( 16 );
+        StringBuffer value = new StringBuffer(16);
 
-        while ( !ps.isEndOfString() && !Character.isWhitespace( ps.peek() ) && !( ps.peek() == ')' && !escaped ) )
+        while (!ps.isEndOfString() && !Character.isWhitespace(ps.peek())
+            && !(ps.peek() == ')' && !escaped))
         {
 
             char ch = ps.peek();
 
-            if ( ch == '\\' )
+            if (ch == '\\')
             {
                 escaped = true;
                 ps.read();
             }
-            else if ( ch == '*' )
+            else if (ch == '*')
             {
-                if ( escaped )
+                if (escaped)
                 {
-                    value.append( ch );
+                    value.append(ch);
                     escaped = false;
                 }
                 else
                 {
-                    value.append( SimpleTerm.WILDCARD );
+                    value.append(SimpleTerm.WILDCARD);
                 }
                 ps.read();
             }
-            else if ( isLiteralValue( ch ) )
+            else if (isLiteralValue(ch))
             {
-                if ( escaped )
+                if (escaped)
                 {
-                    error( "incorrectly applied escape of '" + ch + "'", ps );
+                    error("incorrectly applied escape of '" + ch + "'", ps);
                 }
-                value.append( ps.read() );
+                value.append(ps.read());
             }
-            else if ( isEscapedValue( ch ) )
+            else if (isEscapedValue(ch))
             {
-                if ( !escaped )
+                if (!escaped)
                 {
-                    error( "missing escape for '" + ch + "'", ps );
+                    error("missing escape for '" + ch + "'", ps);
                 }
-                value.append( ps.read() );
+                value.append(ps.read());
                 escaped = false;
             }
             else
             {
-                error( "unexpected character: '" + ps.peek() + "'", ps );
+                error("unexpected character: '" + ps.peek() + "'", ps);
             }
         }
         ps.skipWhitespace();
 
-        SimpleTerm expr = new SimpleTerm( name.toString(), op, value.toString() );
+        SimpleTerm expr = new SimpleTerm(name.toString(), op, value.toString());
 
         return expr;
     }
 
-
-    private boolean isNameChar( int ch )
+    private boolean isNameChar(int ch)
     {
-        return !( Character.isWhitespace( ch ) || ( ch == '(' ) || ( ch == ')' ) || ( ch == '<' ) || ( ch == '>' )
-            || ( ch == '=' ) || ( ch == '~' ) || ( ch == '*' ) || ( ch == '\\' ) );
+        return !(Character.isWhitespace(ch) || (ch == '(') || (ch == ')') || (ch == '<')
+            || (ch == '>') || (ch == '=') || (ch == '~') || (ch == '*') || (ch == '\\'));
     }
 
-
-    private boolean isLiteralValue( int ch )
+    private boolean isLiteralValue(int ch)
     {
-        return !( Character.isWhitespace( ch ) || ( ch == '(' ) || ( ch == ')' ) || ( ch == '*' ) );
+        return !(Character.isWhitespace(ch) || (ch == '(') || (ch == ')') || (ch == '*'));
     }
 
-
-    private boolean isEscapedValue( int ch )
+    private boolean isEscapedValue(int ch)
     {
-        return ( ch == '(' ) || ( ch == ')' ) || ( ch == '*' );
+        return (ch == '(') || (ch == ')') || (ch == '*');
     }
 }

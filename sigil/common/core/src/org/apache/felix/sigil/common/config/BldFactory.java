@@ -35,7 +35,8 @@ public class BldFactory
         return load(uri, false, null);
     }
 
-    public static IBldProject getProject(URI uri, Properties overrides) throws IOException
+    public static IBldProject getProject(URI uri, Properties overrides)
+        throws IOException
     {
         return load(uri, false, overrides);
     }
@@ -67,7 +68,8 @@ public class BldFactory
         return project;
     }
 
-    private synchronized static BldProject load(URI uri, boolean ignoreCache, Properties overrides) throws IOException
+    private synchronized static BldProject load(URI uri, boolean ignoreCache,
+        Properties overrides) throws IOException
     {
         BldProject p = null;
         if (!ignoreCache)

@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.form;
 
-
 public interface IFormValueConverter
 {
-    String getLabel( Object value );
+    String getLabel(Object value);
 
-
-    Object getValue( String label );
+    Object getValue(String label);
 }

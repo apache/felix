@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.apache.felix.sigil.common.model.osgi.IVersionedModelElement;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
@@ -39,7 +38,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.osgi.framework.Version;
 
-
 public class NewResourceSelectionDialog<E extends IVersionedModelElement> extends BackgroundLoadingSelectionDialog<E>
 {
 
@@ -50,106 +48,101 @@ public class NewResourceSelectionDialog<E extends IVersionedModelElement> extend
     private VersionRange selectedVersions = null;
     private boolean optional = false;
 
-
-    public NewResourceSelectionDialog( Shell parentShell, String selectionLabel, boolean multi )
+    public NewResourceSelectionDialog(Shell parentShell, String selectionLabel, boolean multi)
     {
-        super( parentShell, selectionLabel, multi );
+        super(parentShell, selectionLabel, multi);
     }
 
-
-    public void setOptionalEnabled( boolean enabled )
+    public void setOptionalEnabled(boolean enabled)
     {
         optionalEnabled = enabled;
     }
 
-
     @Override
-    protected Control createDialogArea( Composite parent )
+    protected Control createDialogArea(Composite parent)
     {
         // Create controls
-        Composite container = ( Composite ) super.createDialogArea( parent );
-        Composite composite = new Composite( container, SWT.NONE );
+        Composite container = (Composite) super.createDialogArea(parent);
+        Composite composite = new Composite(container, SWT.NONE);
 
-        if ( optionalEnabled )
+        if (optionalEnabled)
         {
-            new Label( composite, SWT.NONE ); //Spacer
-            btnOptional = new Button( composite, SWT.CHECK );
-            btnOptional.setText( "Optional" );
+            new Label(composite, SWT.NONE); //Spacer
+            btnOptional = new Button(composite, SWT.CHECK);
+            btnOptional.setText("Optional");
         }
 
-        Label lblVersionRange = new Label( composite, SWT.NONE );
-        lblVersionRange.setText( "Version Range:" );
-        Group group = new Group( composite, SWT.BORDER );
+        Label lblVersionRange = new Label(composite, SWT.NONE);
+        lblVersionRange.setText("Version Range:");
+        Group group = new Group(composite, SWT.BORDER);
 
-        pnlVersionRange = new VersionRangeComponent( group, SWT.NONE );
+        pnlVersionRange = new VersionRangeComponent(group, SWT.NONE);
 
         // Initialize
-        if ( selectedVersions != null )
+        if (selectedVersions != null)
         {
-            pnlVersionRange.setVersions( selectedVersions );
+            pnlVersionRange.setVersions(selectedVersions);
         }
 
-        if ( optionalEnabled )
+        if (optionalEnabled)
         {
-            btnOptional.setSelection( optional );
+            btnOptional.setSelection(optional);
             updateButtons();
         }
 
         // Hookup Listeners
-        pnlVersionRange.addVersionChangeListener( new VersionsChangeListener()
+        pnlVersionRange.addVersionChangeListener(new VersionsChangeListener()
         {
-            public void versionsChanged( VersionRange range )
+            public void versionsChanged(VersionRange range)
             {
                 selectedVersions = range;
                 updateButtons();
             }
-        } );
-        pnlVersionRange.addValidationListener( new IValidationListener()
+        });
+        pnlVersionRange.addValidationListener(new IValidationListener()
         {
-            public void validationMessage( String message, int level )
+            public void validationMessage(String message, int level)
             {
-                setMessage( message, level );
+                setMessage(message, level);
                 updateButtons();
             }
-        } );
+        });
 
-        if ( optionalEnabled )
+        if (optionalEnabled)
         {
-            btnOptional.addSelectionListener( new SelectionAdapter()
+            btnOptional.addSelectionListener(new SelectionAdapter()
             {
-                public void widgetSelected( SelectionEvent e )
+                public void widgetSelected(SelectionEvent e)
                 {
                     optional = btnOptional.getSelection();
                 }
-            } );
+            });
         }
 
         // Layout
-        composite.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        GridLayout layout = new GridLayout( 2, false );
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        GridLayout layout = new GridLayout(2, false);
         layout.verticalSpacing = 10;
         layout.horizontalSpacing = 10;
-        composite.setLayout( layout );
+        composite.setLayout(layout);
 
-        lblVersionRange.setLayoutData( new GridData( SWT.LEFT, SWT.TOP, false, false ) );
-        group.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        group.setLayout( new FillLayout() );
+        lblVersionRange.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+        group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        group.setLayout(new FillLayout());
 
         return container;
     }
 
-
     @Override
-    protected void elementSelected( E selection )
+    protected void elementSelected(E selection)
     {
-        if ( selection != null )
+        if (selection != null)
         {
             Version version = selection.getVersion();
             selectedVersions = ModelHelper.getDefaultRange(version);
-            pnlVersionRange.setVersions( selectedVersions );
+            pnlVersionRange.setVersions(selectedVersions);
         }
     }
-
 
     @Override
     protected synchronized boolean canComplete()
@@ -157,31 +150,27 @@ public class NewResourceSelectionDialog<E extends IVersionedModelElement> extend
         return super.canComplete() && selectedVersions != null;
     }
 
-
     public VersionRange getSelectedVersions()
     {
         return selectedVersions;
     }
 
-
-    public void setVersions( VersionRange versions )
+    public void setVersions(VersionRange versions)
     {
         selectedVersions = versions;
-        if ( pnlVersionRange != null && !pnlVersionRange.isDisposed() )
+        if (pnlVersionRange != null && !pnlVersionRange.isDisposed())
         {
-            pnlVersionRange.setVersions( versions );
+            pnlVersionRange.setVersions(versions);
             updateButtons();
         }
     }
-
 
     public boolean isOptional()
     {
         return optional;
     }
 
-
-    public void setOptional( boolean optional )
+    public void setOptional(boolean optional)
     {
         this.optional = optional;
     }

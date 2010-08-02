@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.eclipse.internal.builders;
 
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
-
 
 public class BuildConsole extends MessageConsole
 {
@@ -31,16 +29,14 @@ public class BuildConsole extends MessageConsole
     private static final ImageDescriptor imageDescriptor = null;
     private MessageConsoleStream stream;
 
-
     public BuildConsole()
     {
-        super( "Sigil Build", imageDescriptor, true );
+        super("Sigil Build", imageDescriptor, true);
     }
-
 
     public synchronized MessageConsoleStream getMessageStream()
     {
-        if ( stream == null )
+        if (stream == null)
         {
             stream = newMessageStream();
         }

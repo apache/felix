@@ -19,22 +19,19 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.Collection;
 import java.util.LinkedList;
 
-
 public abstract class AccumulatorAdapter<E> implements IAccumulator<E>
 {
-    public void addElement( E element )
+    public void addElement(E element)
     {
         LinkedList<E> list = new LinkedList<E>();
-        list.add( element );
-        addElements( list );
+        list.add(element);
+        addElements(list);
     };
 
-
-    public void addElements( Collection<? extends E> elements )
+    public void addElements(Collection<? extends E> elements)
     {
     }
 }

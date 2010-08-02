@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.Iterator;
 import java.util.Set;
 
@@ -42,16 +41,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
-
 public class RequiresBundleSection extends BundleDependencySection
 {
 
-    public RequiresBundleSection( SigilPage page, Composite parent, ISigilProjectModel project,
-        Set<IModelElement> unresolvedElements ) throws CoreException
+    public RequiresBundleSection(SigilPage page, Composite parent, ISigilProjectModel project, Set<IModelElement> unresolvedElements) throws CoreException
     {
-        super( page, parent, project, unresolvedElements );
+        super(page, parent, project, unresolvedElements);
     }
-
 
     @Override
     protected String getTitle()
@@ -59,32 +55,29 @@ public class RequiresBundleSection extends BundleDependencySection
         return "Requires Bundles";
     }
 
-
     @Override
-    protected Label createLabel( Composite parent, FormToolkit toolkit )
+    protected Label createLabel(Composite parent, FormToolkit toolkit)
     {
-        return toolkit.createLabel( parent, "Specify which bundles this bundle depends on." );
+        return toolkit.createLabel(parent,
+            "Specify which bundles this bundle depends on.");
     }
-
 
     @Override
     protected IContentProvider getContentProvider()
     {
         return new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
                 return getBundle().getBundleInfo().getRequiredBundles().toArray();
             }
         };
     }
 
-
     protected ISigilBundle getBundle()
     {
         return getProjectModel().getBundle();
     }
-
 
     @Override
     protected void handleAdd()
@@ -92,73 +85,72 @@ public class RequiresBundleSection extends BundleDependencySection
         try
         {
             NewResourceSelectionDialog<IBundleModelElement> dialog = ResourcesDialogHelper.createRequiredBundleDialog(
-                getSection().getShell(), "Add Required Bundle", getProjectModel(), null, getBundle().getBundleInfo()
-                    .getRequiredBundles() );
+                getSection().getShell(), "Add Required Bundle", getProjectModel(), null,
+                getBundle().getBundleInfo().getRequiredBundles());
 
-            if ( dialog.open() == Window.OK )
+            if (dialog.open() == Window.OK)
             {
-                IRequiredBundle required = ModelElementFactory.getInstance().newModelElement( IRequiredBundle.class );
-                required.setSymbolicName( dialog.getSelectedName() );
-                required.setVersions( dialog.getSelectedVersions() );
-                required.setOptional( dialog.isOptional() );
+                IRequiredBundle required = ModelElementFactory.getInstance().newModelElement(
+                    IRequiredBundle.class);
+                required.setSymbolicName(dialog.getSelectedName());
+                required.setVersions(dialog.getSelectedVersions());
+                required.setOptional(dialog.isOptional());
 
-                getBundle().getBundleInfo().addRequiredBundle( required );
+                getBundle().getBundleInfo().addRequiredBundle(required);
                 refresh();
                 markDirty();
             }
         }
-        catch ( ModelElementFactoryException e )
+        catch (ModelElementFactoryException e)
         {
-            SigilCore.error( "Failed to build required bundle", e );
+            SigilCore.error("Failed to build required bundle", e);
         }
     }
-
 
     @SuppressWarnings("unchecked")
     @Override
     protected void handleEdit()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) getSelection();
+        IStructuredSelection selection = (IStructuredSelection) getSelection();
 
         boolean changed = false;
 
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            for ( Iterator<IRequiredBundle> i = selection.iterator(); i.hasNext(); )
+            for (Iterator<IRequiredBundle> i = selection.iterator(); i.hasNext();)
             {
                 IRequiredBundle requiredBundle = i.next();
-                NewResourceSelectionDialog<IBundleModelElement> dialog = ResourcesDialogHelper
-                    .createRequiredBundleDialog( getSection().getShell(), "Edit Imported Package", getProjectModel(),
-                        requiredBundle, getBundle().getBundleInfo().getRequiredBundles() );
-                if ( dialog.open() == Window.OK )
+                NewResourceSelectionDialog<IBundleModelElement> dialog = ResourcesDialogHelper.createRequiredBundleDialog(
+                    getSection().getShell(), "Edit Imported Package", getProjectModel(),
+                    requiredBundle, getBundle().getBundleInfo().getRequiredBundles());
+                if (dialog.open() == Window.OK)
                 {
                     changed = true;
-                    requiredBundle.setSymbolicName( dialog.getSelectedName() );
-                    requiredBundle.setVersions( dialog.getSelectedVersions() );
-                    requiredBundle.setOptional( dialog.isOptional() );
+                    requiredBundle.setSymbolicName(dialog.getSelectedName());
+                    requiredBundle.setVersions(dialog.getSelectedVersions());
+                    requiredBundle.setOptional(dialog.isOptional());
                 }
             }
         }
 
-        if ( changed )
+        if (changed)
         {
             refresh();
             markDirty();
         }
     }
 
-
     @SuppressWarnings("unchecked")
     @Override
     protected void handleRemoved()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) getSelection();
+        IStructuredSelection selection = (IStructuredSelection) getSelection();
 
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            for ( Iterator<IRequiredBundle> i = selection.iterator(); i.hasNext(); )
+            for (Iterator<IRequiredBundle> i = selection.iterator(); i.hasNext();)
             {
-                getBundle().getBundleInfo().removeRequiredBundle( i.next() );
+                getBundle().getBundleInfo().removeRequiredBundle(i.next());
             }
 
             refresh();

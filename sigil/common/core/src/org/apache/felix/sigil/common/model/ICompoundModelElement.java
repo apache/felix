@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.common.model;
 
-
 import java.util.Set;
-
 
 /**
  * Represents a model element that is made up of sub model elements.
@@ -38,16 +36,14 @@ public interface ICompoundModelElement extends IModelElement
      * @return
      * @throws InvalidModelException
      */
-    boolean addChild( IModelElement children ) throws InvalidModelException;
-
+    boolean addChild(IModelElement children) throws InvalidModelException;
 
     /**
      * Calls the applicable set/remove method of this model to remove the element from this part of the model
      * @param children
      * @return
      */
-    boolean removeChild( IModelElement children );
-
+    boolean removeChild(IModelElement children);
 
     /**
      * List all direct child elements of this model element.
@@ -55,14 +51,12 @@ public interface ICompoundModelElement extends IModelElement
      */
     IModelElement[] children();
 
-
     /**
      * Visits child elements of this model element, recursing down to sub compound elements when found.
      * 
      * @param walker
      */
-    void visit( IModelWalker walker );
-
+    void visit(IModelWalker walker);
 
     /**
      * Searches the model to find all child model elements which match the specified type
@@ -71,11 +65,9 @@ public interface ICompoundModelElement extends IModelElement
      * @param type
      * @return
      */
-    <T extends IModelElement> T[] childrenOfType( Class<T> type );
-
+    <T extends IModelElement> T[] childrenOfType(Class<T> type);
 
     Set<Class<? extends IModelElement>> getRequiredChildren();
-
 
     Set<Class<? extends IModelElement>> getOptionalChildren();
 }

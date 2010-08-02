@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.Set;
 
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -41,40 +40,39 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.osgi.framework.Version;
 
-
 public class ModelLabelProvider extends LabelProvider
 {
     private volatile Set<? extends IModelElement> unresolvedElements = null;
 
-
-    public Image getImage( Object element )
+    public Image getImage(Object element)
     {
-        boolean unresolved = ( unresolvedElements == null ) ? false : unresolvedElements.contains( element );
+        boolean unresolved = (unresolvedElements == null) ? false
+            : unresolvedElements.contains(element);
 
-        if ( element instanceof ISigilBundle || element instanceof IBundleModelElement )
+        if (element instanceof ISigilBundle || element instanceof IBundleModelElement)
         {
             return findBundle();
         }
-        else if ( element instanceof IRequiredBundle )
+        else if (element instanceof IRequiredBundle)
         {
-            boolean optional = ( ( IRequiredBundle ) element ).isOptional();
-            return findRequiredBundle( optional, unresolved );
+            boolean optional = ((IRequiredBundle) element).isOptional();
+            return findRequiredBundle(optional, unresolved);
         }
-        else if ( element instanceof IPackageImport )
+        else if (element instanceof IPackageImport)
         {
-            boolean optional = ( ( IPackageImport ) element ).isOptional();
-            return findPackageImport( optional, unresolved );
+            boolean optional = ((IPackageImport) element).isOptional();
+            return findPackageImport(optional, unresolved);
         }
-        else if ( element instanceof IPackageExport )
+        else if (element instanceof IPackageExport)
         {
             return findPackageExport();
         }
-        else if ( element instanceof IPackageFragmentRoot )
+        else if (element instanceof IPackageFragmentRoot)
         {
-            IPackageFragmentRoot root = ( IPackageFragmentRoot ) element;
+            IPackageFragmentRoot root = (IPackageFragmentRoot) element;
             try
             {
-                if ( root.getKind() == IPackageFragmentRoot.K_SOURCE )
+                if (root.getKind() == IPackageFragmentRoot.K_SOURCE)
                 {
                     return findPackage();
                 }
@@ -83,154 +81,154 @@ public class ModelLabelProvider extends LabelProvider
                     return findBundle();
                 }
             }
-            catch ( JavaModelException e )
+            catch (JavaModelException e)
             {
-                SigilCore.error( "Failed to inspect package fragment root", e );
+                SigilCore.error("Failed to inspect package fragment root", e);
             }
         }
-        else if ( element instanceof IClasspathEntry )
+        else if (element instanceof IClasspathEntry)
         {
             return findPackage();
         }
-        if ( element instanceof IBundleRepository )
+        if (element instanceof IBundleRepository)
         {
-            IBundleRepository rep = ( IBundleRepository ) element;
-            IRepositoryModel config = SigilCore.getRepositoryConfiguration().findRepository( rep.getId() );
+            IBundleRepository rep = (IBundleRepository) element;
+            IRepositoryModel config = SigilCore.getRepositoryConfiguration().findRepository(
+                rep.getId());
             return config.getType().getIcon();
         }
 
         return null;
     }
 
-
-    public String getText( Object element )
+    public String getText(Object element)
     {
-        if ( element instanceof ISigilBundle )
+        if (element instanceof ISigilBundle)
         {
-            ISigilBundle bundle = ( ISigilBundle ) element;
-            return bundle.getBundleInfo().getSymbolicName() + " " + bundle.getBundleInfo().getVersion();
+            ISigilBundle bundle = (ISigilBundle) element;
+            return bundle.getBundleInfo().getSymbolicName() + " "
+                + bundle.getBundleInfo().getVersion();
         }
-        if ( element instanceof IBundleModelElement )
+        if (element instanceof IBundleModelElement)
         {
-            IBundleModelElement bundle = ( IBundleModelElement ) element;
+            IBundleModelElement bundle = (IBundleModelElement) element;
             return bundle.getSymbolicName();
         }
-        if ( element instanceof IRequiredBundle )
+        if (element instanceof IRequiredBundle)
         {
-            IRequiredBundle req = ( IRequiredBundle ) element;
+            IRequiredBundle req = (IRequiredBundle) element;
             return req.getSymbolicName() + " " + req.getVersions();
         }
 
-        if ( element instanceof IPackageImport )
+        if (element instanceof IPackageImport)
         {
-            IPackageImport req = ( IPackageImport ) element;
+            IPackageImport req = (IPackageImport) element;
             return req.getPackageName() + " " + req.getVersions();
         }
 
-        if ( element instanceof IPackageExport )
+        if (element instanceof IPackageExport)
         {
-            IPackageExport pe = ( IPackageExport ) element;
+            IPackageExport pe = (IPackageExport) element;
             Version rawVersion = pe.getRawVersion();
-            return rawVersion != null ? pe.getPackageName() + " " + rawVersion : pe.getPackageName();
+            return rawVersion != null ? pe.getPackageName() + " " + rawVersion
+                : pe.getPackageName();
         }
 
-        if ( element instanceof IResource )
+        if (element instanceof IResource)
         {
-            IResource resource = ( IResource ) element;
+            IResource resource = (IResource) element;
             return resource.getName();
         }
 
-        if ( element instanceof IPackageFragment )
+        if (element instanceof IPackageFragment)
         {
-            IPackageFragment f = ( IPackageFragment ) element;
+            IPackageFragment f = (IPackageFragment) element;
             return f.getElementName();
         }
 
-        if ( element instanceof IPackageFragmentRoot )
+        if (element instanceof IPackageFragmentRoot)
         {
-            IPackageFragmentRoot f = ( IPackageFragmentRoot ) element;
+            IPackageFragmentRoot f = (IPackageFragmentRoot) element;
             try
             {
                 return f.getUnderlyingResource().getName();
             }
-            catch ( JavaModelException e )
+            catch (JavaModelException e)
             {
                 return "unknown";
             }
         }
 
-        if ( element instanceof IClasspathEntry )
+        if (element instanceof IClasspathEntry)
         {
-            IClasspathEntry cp = ( IClasspathEntry ) element;
+            IClasspathEntry cp = (IClasspathEntry) element;
             return cp.getPath().toString();
         }
 
-        if ( element instanceof IBundleRepository )
+        if (element instanceof IBundleRepository)
         {
-            IBundleRepository rep = ( IBundleRepository ) element;
-            IRepositoryModel config = SigilCore.getRepositoryConfiguration().findRepository( rep.getId() );
+            IBundleRepository rep = (IBundleRepository) element;
+            IRepositoryModel config = SigilCore.getRepositoryConfiguration().findRepository(
+                rep.getId());
             return config.getName();
         }
 
         return element.toString();
     }
 
-
     private Image findPackage()
     {
-        return cacheImage( "icons/package.gif" );
+        return cacheImage("icons/package.gif");
     }
 
-
-    private Image findPackageImport( boolean optional, boolean unresolved )
+    private Image findPackageImport(boolean optional, boolean unresolved)
     {
         String path;
-        if ( optional )
+        if (optional)
         {
-            path = unresolved ? "icons/import-package-optional-error.gif" : "icons/import-package-optional.gif";
+            path = unresolved ? "icons/import-package-optional-error.gif"
+                : "icons/import-package-optional.gif";
         }
         else
         {
-            path = unresolved ? "icons/import-package-error.gif" : "icons/import-package.gif";
+            path = unresolved ? "icons/import-package-error.gif"
+                : "icons/import-package.gif";
         }
-        return cacheImage( path );
+        return cacheImage(path);
     }
-
 
     private Image findPackageExport()
     {
-        return cacheImage( "icons/export-package.gif" );
+        return cacheImage("icons/export-package.gif");
     }
-
 
     private Image findBundle()
     {
-        return cacheImage( "icons/bundle.gif" );
+        return cacheImage("icons/bundle.gif");
     }
 
-
-    private Image findRequiredBundle( boolean optional, boolean unresolved )
+    private Image findRequiredBundle(boolean optional, boolean unresolved)
     {
         String path;
-        if ( optional )
+        if (optional)
         {
-            path = unresolved ? "icons/require-bundle-optional-error.gif" : "icons/require-bundle-optional.gif";
+            path = unresolved ? "icons/require-bundle-optional-error.gif"
+                : "icons/require-bundle-optional.gif";
         }
         else
         {
-            path = unresolved ? "icons/require-bundle-error.gif" : "icons/require-bundle.gif";
+            path = unresolved ? "icons/require-bundle-error.gif"
+                : "icons/require-bundle.gif";
         }
-        return cacheImage( path );
+        return cacheImage(path);
     }
 
-
-    private static Image cacheImage( String path )
+    private static Image cacheImage(String path)
     {
-        return SigilUI.cacheImage( path, ModelLabelProvider.class.getClassLoader() );
+        return SigilUI.cacheImage(path, ModelLabelProvider.class.getClassLoader());
     }
 
-
-    public void setUnresolvedElements( Set<? extends IModelElement> elements )
+    public void setUnresolvedElements(Set<? extends IModelElement> elements)
     {
         this.unresolvedElements = elements;
     }

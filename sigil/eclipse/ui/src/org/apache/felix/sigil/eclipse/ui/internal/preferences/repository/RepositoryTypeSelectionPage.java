@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -42,7 +41,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 
-
 public class RepositoryTypeSelectionPage extends WizardSelectionPage implements IWizardPage
 {
 
@@ -51,96 +49,91 @@ public class RepositoryTypeSelectionPage extends WizardSelectionPage implements 
     private TableViewer repositoryView;
     private IRepositoryModel repositoryElement;
 
-
     public RepositoryTypeSelectionPage()
     {
-        super( TITLE );
-        setTitle( TITLE );
+        super(TITLE);
+        setTitle(TITLE);
     }
 
-
-    public void createControl( Composite parent )
+    public void createControl(Composite parent)
     {
-        Composite control = new Composite( parent, SWT.NONE );
+        Composite control = new Composite(parent, SWT.NONE);
 
         // components
-        new Label( control, SWT.NONE ).setText( "Repositories" );
-        Table table = new Table( control, SWT.SINGLE | SWT.BORDER );
+        new Label(control, SWT.NONE).setText("Repositories");
+        Table table = new Table(control, SWT.SINGLE | SWT.BORDER);
 
         // layout
-        control.setLayout( new GridLayout( 1, true ) );
-        table.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
+        control.setLayout(new GridLayout(1, true));
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
         // view
-        repositoryView = new TableViewer( table );
-        repositoryView.setLabelProvider( new LabelProvider()
+        repositoryView = new TableViewer(table);
+        repositoryView.setLabelProvider(new LabelProvider()
         {
             @Override
-            public String getText( Object element )
+            public String getText(Object element)
             {
-                IRepositoryType rep = ( IRepositoryType ) element;
+                IRepositoryType rep = (IRepositoryType) element;
                 return rep.getType();
             }
 
-
             @Override
-            public Image getImage( Object element )
+            public Image getImage(Object element)
             {
-                IRepositoryType rep = ( IRepositoryType ) element;
+                IRepositoryType rep = (IRepositoryType) element;
                 return rep.getIcon();
             }
-        } );
+        });
 
-        repositoryView.setContentProvider( new DefaultTableProvider()
+        repositoryView.setContentProvider(new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                return toArray( inputElement );
+                return toArray(inputElement);
             }
-        } );
+        });
 
-        repositoryView.addSelectionChangedListener( new ISelectionChangedListener()
+        repositoryView.addSelectionChangedListener(new ISelectionChangedListener()
         {
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
-                if ( !event.getSelection().isEmpty() )
+                if (!event.getSelection().isEmpty())
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) event.getSelection();
-                    IRepositoryType type = ( IRepositoryType ) sel.getFirstElement();
-                    repositoryElement = SigilCore.getRepositoryConfiguration().newRepositoryElement( type );
-                    selectWizardNode( new RepositoryWizardNode( repositoryElement ) );
+                    IStructuredSelection sel = (IStructuredSelection) event.getSelection();
+                    IRepositoryType type = (IRepositoryType) sel.getFirstElement();
+                    repositoryElement = SigilCore.getRepositoryConfiguration().newRepositoryElement(
+                        type);
+                    selectWizardNode(new RepositoryWizardNode(repositoryElement));
                 }
             }
-        } );
+        });
 
-        ArrayList<IRepositoryType> descriptors = new ArrayList<IRepositoryType>( SigilCore.getRepositoryConfiguration()
-            .loadRepositoryTypes() );
+        ArrayList<IRepositoryType> descriptors = new ArrayList<IRepositoryType>(
+            SigilCore.getRepositoryConfiguration().loadRepositoryTypes());
 
-        for ( Iterator<IRepositoryType> i = descriptors.iterator(); i.hasNext(); )
+        for (Iterator<IRepositoryType> i = descriptors.iterator(); i.hasNext();)
         {
-            if ( !i.next().isDynamic() )
+            if (!i.next().isDynamic())
             {
                 i.remove();
             }
         }
 
-        repositoryView.setInput( descriptors );
+        repositoryView.setInput(descriptors);
 
-        setControl( control );
+        setControl(control);
     }
 
-
-    public void selectWizardNode( RepositoryWizardNode node )
+    public void selectWizardNode(RepositoryWizardNode node)
     {
-        setSelectedNode( node );
+        setSelectedNode(node);
     }
-
 
     public RepositoryWizardNode getSelectedWizardNode()
     {
-        return ( RepositoryWizardNode ) getSelectedNode();
+        return (RepositoryWizardNode) getSelectedNode();
     }
-
 
     public IRepositoryModel getRepository()
     {

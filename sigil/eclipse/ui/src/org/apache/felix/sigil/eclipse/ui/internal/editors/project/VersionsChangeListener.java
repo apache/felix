@@ -23,5 +23,5 @@ import org.apache.felix.sigil.common.osgi.VersionRange;
 
 public interface VersionsChangeListener
 {
-    void versionsChanged( VersionRange range );
+    void versionsChanged(VersionRange range);
 }

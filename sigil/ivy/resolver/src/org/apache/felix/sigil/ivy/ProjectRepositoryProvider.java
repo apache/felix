@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.ivy;
 
-
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -27,25 +26,24 @@ import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 import org.apache.felix.sigil.common.repository.RepositoryException;
 
-
 public class ProjectRepositoryProvider implements IRepositoryProvider
 {
     private static HashMap<String, ProjectRepository> cache = new HashMap<String, ProjectRepository>();
 
-
-    public IBundleRepository createRepository( String id, Properties properties ) throws RepositoryException
+    public IBundleRepository createRepository(String id, Properties properties)
+        throws RepositoryException
     {
-        ProjectRepository repository = cache.get( id );
+        ProjectRepository repository = cache.get(id);
 
-        if ( repository == null )
+        if (repository == null)
         {
-            String pattern = properties.getProperty( "pattern" );
-            if ( pattern == null )
+            String pattern = properties.getProperty("pattern");
+            if (pattern == null)
             {
-                throw new RepositoryException( "property 'pattern' not specified." );
+                throw new RepositoryException("property 'pattern' not specified.");
             }
-            repository = new ProjectRepository( id, pattern );
-            cache.put( id, repository );
+            repository = new ProjectRepository(id, pattern);
+            cache.put(id, repository);
         }
 
         return repository;

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.ArrayList;
 
 import java.util.Collection;
@@ -51,39 +50,39 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.progress.IJobRunnable;
 
-
 public class ResourcesDialogHelper
 {
 
     static final int UPDATE_BATCH_SIZE = 100;
 
-
-    public static BackgroundLoadingSelectionDialog<String> createClassSelectDialog( Shell shell, String title,
-        final ISigilProjectModel project, String selected, final String ifaceOrParentClass )
+    public static BackgroundLoadingSelectionDialog<String> createClassSelectDialog(
+        Shell shell, String title, final ISigilProjectModel project, String selected,
+        final String ifaceOrParentClass)
     {
-        final BackgroundLoadingSelectionDialog<String> dialog = new BackgroundLoadingSelectionDialog<String>( shell,
-            "Class Name", true );
+        final BackgroundLoadingSelectionDialog<String> dialog = new BackgroundLoadingSelectionDialog<String>(
+            shell, "Class Name", true);
 
         IJobRunnable job = new IJobRunnable()
         {
-            public IStatus run( IProgressMonitor monitor )
+            public IStatus run(IProgressMonitor monitor)
             {
                 try
                 {
-                    for ( IJavaElement e : JavaHelper.findTypes( project.getJavaModel(),
-                        IJavaElement.PACKAGE_FRAGMENT ) )
+                    for (IJavaElement e : JavaHelper.findTypes(project.getJavaModel(),
+                        IJavaElement.PACKAGE_FRAGMENT))
                     {
-                        IPackageFragment root = ( IPackageFragment ) e;
-                        if ( project.isInBundleClasspath( root ) )
+                        IPackageFragment root = (IPackageFragment) e;
+                        if (project.isInBundleClasspath(root))
                         {
-                            for ( IJavaElement e1 : JavaHelper.findTypes( root, IJavaElement.COMPILATION_UNIT,
-                                IJavaElement.CLASS_FILE ) )
+                            for (IJavaElement e1 : JavaHelper.findTypes(root,
+                                IJavaElement.COMPILATION_UNIT, IJavaElement.CLASS_FILE))
                             {
-                                ITypeRoot typeRoot = ( ITypeRoot ) e1;
-                                IType type = ( IType ) JavaHelper.findType( typeRoot, IJavaElement.TYPE );
-                                if ( JavaHelper.isAssignableTo( ifaceOrParentClass, type ) )
+                                ITypeRoot typeRoot = (ITypeRoot) e1;
+                                IType type = (IType) JavaHelper.findType(typeRoot,
+                                    IJavaElement.TYPE);
+                                if (JavaHelper.isAssignableTo(ifaceOrParentClass, type))
                                 {
-                                    dialog.addElement( type.getFullyQualifiedName() );
+                                    dialog.addElement(type.getFullyQualifiedName());
                                 }
                             }
                         }
@@ -91,7 +90,7 @@ public class ResourcesDialogHelper
 
                     return Status.OK_STATUS;
                 }
-                catch ( JavaModelException e )
+                catch (JavaModelException e)
                 {
                     return e.getStatus();
                 }
@@ -99,88 +98,89 @@ public class ResourcesDialogHelper
 
         };
 
-        dialog.addBackgroundJob( "Scanning for activators in project", job );
+        dialog.addBackgroundJob("Scanning for activators in project", job);
 
         return dialog;
     }
 
-
-    public static NewResourceSelectionDialog<IPackageExport> createImportDialog( Shell shell, String title,
-        ISigilProjectModel sigil, final IPackageImport selected, final Collection<IPackageImport> existing )
+    public static NewResourceSelectionDialog<IPackageExport> createImportDialog(
+        Shell shell, String title, ISigilProjectModel sigil,
+        final IPackageImport selected, final Collection<IPackageImport> existing)
     {
         final Set<String> existingNames = new HashSet<String>();
 
-        for ( IPackageImport existingImport : existing )
+        for (IPackageImport existingImport : existing)
         {
-            existingNames.add( existingImport.getPackageName() );
+            existingNames.add(existingImport.getPackageName());
         }
 
         final NewResourceSelectionDialog<IPackageExport> dialog = new NewResourceSelectionDialog<IPackageExport>(
-            shell, "Package Name:", false );
+            shell, "Package Name:", false);
 
-        dialog.setFilter( new IFilter<IPackageModelElement>()
+        dialog.setFilter(new IFilter<IPackageModelElement>()
         {
-            public boolean select( IPackageModelElement element )
+            public boolean select(IPackageModelElement element)
             {
-                return !existingNames.contains( element.getPackageName() );
+                return !existingNames.contains(element.getPackageName());
             }
-        } );
+        });
 
-        dialog.setComparator( new Comparator<IPackageExport>()
+        dialog.setComparator(new Comparator<IPackageExport>()
         {
-            public int compare( IPackageExport o1, IPackageExport o2 )
+            public int compare(IPackageExport o1, IPackageExport o2)
             {
-                return o1.compareTo( o2 );
+                return o1.compareTo(o2);
             }
-        } );
+        });
 
-        dialog.setDescriptor( new IElementDescriptor<IPackageExport>()
+        dialog.setDescriptor(new IElementDescriptor<IPackageExport>()
         {
-            public String getLabel( IPackageExport element )
+            public String getLabel(IPackageExport element)
             {
-                return getName( element ) + " (" + element.getVersion().toString() + ")";
+                return getName(element) + " (" + element.getVersion().toString() + ")";
             }
 
-
-            public String getName( IPackageExport element )
+            public String getName(IPackageExport element)
             {
                 return element.getPackageName();
             }
-        } );
+        });
 
-        dialog.setLabelProvider( new WrappedContentProposalLabelProvider<IPackageExport>( dialog.getDescriptor() ) );
+        dialog.setLabelProvider(new WrappedContentProposalLabelProvider<IPackageExport>(
+            dialog.getDescriptor()));
 
-        if ( selected != null )
+        if (selected != null)
         {
-            dialog.setSelectedName( selected.getPackageName() );
-            dialog.setVersions( selected.getVersions() );
-            dialog.setOptional( selected.isOptional() );
+            dialog.setSelectedName(selected.getPackageName());
+            dialog.setVersions(selected.getVersions());
+            dialog.setOptional(selected.isOptional());
         }
 
-        IJobRunnable job = new ExportedPackageFinder( sigil, dialog );
-        dialog.addBackgroundJob( "Scanning for exports in workspace", job );
+        IJobRunnable job = new ExportedPackageFinder(sigil, dialog);
+        dialog.addBackgroundJob("Scanning for exports in workspace", job);
 
         return dialog;
     }
 
-
-    public static NewPackageExportDialog createNewExportDialog( Shell shell, String title,
-        final IPackageExport selected, final ISigilProjectModel project, boolean multiSelect )
+    public static NewPackageExportDialog createNewExportDialog(Shell shell, String title,
+        final IPackageExport selected, final ISigilProjectModel project,
+        boolean multiSelect)
     {
         IFilter<IJavaElement> selectFilter = new IFilter<IJavaElement>()
         {
-            public boolean select( IJavaElement e )
+            public boolean select(IJavaElement e)
             {
-                if ( selected != null && e.getElementName().equals( selected.getPackageName() ) )
+                if (selected != null
+                    && e.getElementName().equals(selected.getPackageName()))
                 {
                     return true;
                 }
 
-                if ( e.getElementName().trim().length() > 0 && isLocal( e ) )
+                if (e.getElementName().trim().length() > 0 && isLocal(e))
                 {
-                    for ( IPackageExport p : project.getBundle().getBundleInfo().getExports() )
+                    for (IPackageExport p : project.getBundle().getBundleInfo().getExports())
                     {
-                        if ( p.getPackageName().equals( e.getElementName() ) )
+                        if (p.getPackageName().equals(e.getElementName()))
                         {
                             return false;
                         }
@@ -194,150 +194,151 @@ public class ResourcesDialogHelper
                 }
             }
 
-
-            private boolean isLocal( IJavaElement java )
+            private boolean isLocal(IJavaElement java)
             {
                 try
                 {
-                    switch ( java.getElementType() )
+                    switch (java.getElementType())
                     {
                         case IJavaElement.PACKAGE_FRAGMENT:
-                            IPackageFragment fragment = ( IPackageFragment ) java;
+                            IPackageFragment fragment = (IPackageFragment) java;
                             return fragment.containsJavaResources();
                         default:
-                            throw new IllegalStateException( "Unexpected resource type " + java );
+                            throw new IllegalStateException("Unexpected resource type "
+                                + java);
                     }
                 }
-                catch ( JavaModelException e )
+                catch (JavaModelException e)
                 {
-                    SigilCore.error( "Failed to inspect java element ", e );
+                    SigilCore.error("Failed to inspect java element ", e);
                     return false;
                 }
             }
 
         };
 
-        final NewPackageExportDialog dialog = new NewPackageExportDialog( shell, multiSelect );
-        dialog.setFilter( selectFilter );
+        final NewPackageExportDialog dialog = new NewPackageExportDialog(shell,
+            multiSelect);
+        dialog.setFilter(selectFilter);
 
-        dialog.setProjectVersion( project.getVersion() );
-        if ( selected != null )
+        dialog.setProjectVersion(project.getVersion());
+        if (selected != null)
         {
-            dialog.setSelectedName( selected.getPackageName() );
-            dialog.setVersion( selected.getRawVersion() );
+            dialog.setSelectedName(selected.getPackageName());
+            dialog.setVersion(selected.getRawVersion());
         }
 
         IJobRunnable job = new IJobRunnable()
         {
-            public IStatus run( IProgressMonitor monitor )
+            public IStatus run(IProgressMonitor monitor)
             {
                 try
                 {
-                    ArrayList<IPackageFragment> list = new ArrayList<IPackageFragment>( UPDATE_BATCH_SIZE );
-                    for ( IJavaElement e : JavaHelper.findTypes( project.getJavaModel(),
-                        IJavaElement.PACKAGE_FRAGMENT ) )
+                    ArrayList<IPackageFragment> list = new ArrayList<IPackageFragment>(
+                        UPDATE_BATCH_SIZE);
+                    for (IJavaElement e : JavaHelper.findTypes(project.getJavaModel(),
+                        IJavaElement.PACKAGE_FRAGMENT))
                     {
-                        IPackageFragment root = ( IPackageFragment ) e;
-                        if ( project.isInBundleClasspath( root ) )
+                        IPackageFragment root = (IPackageFragment) e;
+                        if (project.isInBundleClasspath(root))
                         {
-                            list.add( root );
-                            if ( list.size() >= UPDATE_BATCH_SIZE )
+                            list.add(root);
+                            if (list.size() >= UPDATE_BATCH_SIZE)
                             {
-                                dialog.addElements( list );
+                                dialog.addElements(list);
                                 list.clear();
                             }
                         }
                     }
-                    if ( !list.isEmpty() )
+                    if (!list.isEmpty())
                     {
-                        dialog.addElements( list );
+                        dialog.addElements(list);
                     }
                     return Status.OK_STATUS;
                 }
-                catch ( JavaModelException e )
+                catch (JavaModelException e)
                 {
                     return e.getStatus();
                 }
             }
         };
 
-        dialog.addBackgroundJob( "Scanning for packages in project", job );
+        dialog.addBackgroundJob("Scanning for packages in project", job);
 
         return dialog;
     }
 
-
-    public static NewResourceSelectionDialog<IBundleModelElement> createRequiredBundleDialog( Shell shell,
-        String title, final ISigilProjectModel sigil, final IRequiredBundle selected,
-        final Collection<IRequiredBundle> existing )
+    public static NewResourceSelectionDialog<IBundleModelElement> createRequiredBundleDialog(
+        Shell shell, String title, final ISigilProjectModel sigil,
+        final IRequiredBundle selected, final Collection<IRequiredBundle> existing)
     {
         final Set<String> existingNames = new HashSet<String>();
-        for ( IRequiredBundle existingBundle : existing )
+        for (IRequiredBundle existingBundle : existing)
         {
-            existingNames.add( existingBundle.getSymbolicName() );
+            existingNames.add(existingBundle.getSymbolicName());
         }
 
         final NewResourceSelectionDialog<IBundleModelElement> dialog = new NewResourceSelectionDialog<IBundleModelElement>(
-            shell, "Bundle:", false );
+            shell, "Bundle:", false);
 
-        dialog.setDescriptor( new IElementDescriptor<IBundleModelElement>()
+        dialog.setDescriptor(new IElementDescriptor<IBundleModelElement>()
         {
-            public String getLabel( IBundleModelElement element )
+            public String getLabel(IBundleModelElement element)
             {
-                return getName( element ) + " (" + element.getVersion() + ")";
+                return getName(element) + " (" + element.getVersion() + ")";
             }
 
-
-            public String getName( IBundleModelElement element )
+            public String getName(IBundleModelElement element)
             {
                 return element.getSymbolicName();
             }
-        } );
+        });
 
-        dialog
-            .setLabelProvider( new WrappedContentProposalLabelProvider<IBundleModelElement>( dialog.getDescriptor() ) );
+        dialog.setLabelProvider(new WrappedContentProposalLabelProvider<IBundleModelElement>(
+            dialog.getDescriptor()));
 
-        dialog.setFilter( new IFilter<IBundleModelElement>()
+        dialog.setFilter(new IFilter<IBundleModelElement>()
         {
-            public boolean select( IBundleModelElement element )
+            public boolean select(IBundleModelElement element)
             {
-                return !existingNames.contains( element.getSymbolicName() );
+                return !existingNames.contains(element.getSymbolicName());
             }
-        } );
+        });
 
-        dialog.setComparator( new Comparator<IBundleModelElement>()
+        dialog.setComparator(new Comparator<IBundleModelElement>()
         {
-            public int compare( IBundleModelElement o1, IBundleModelElement o2 )
+            public int compare(IBundleModelElement o1, IBundleModelElement o2)
             {
-                return o1.getSymbolicName().compareTo( o2.getSymbolicName() );
+                return o1.getSymbolicName().compareTo(o2.getSymbolicName());
             }
-        } );
+        });
 
-        if ( selected != null )
+        if (selected != null)
         {
-            dialog.setSelectedName( selected.getSymbolicName() );
-            dialog.setVersions( selected.getVersions() );
-            dialog.setOptional( selected.isOptional() );
+            dialog.setSelectedName(selected.getSymbolicName());
+            dialog.setVersions(selected.getVersions());
+            dialog.setOptional(selected.isOptional());
         }
 
         IJobRunnable job = new IJobRunnable()
         {
-            public IStatus run( final IProgressMonitor monitor )
+            public IStatus run(final IProgressMonitor monitor)
             {
-                final List<IBundleModelElement> bundles = new ArrayList<IBundleModelElement>( UPDATE_BATCH_SIZE );
+                final List<IBundleModelElement> bundles = new ArrayList<IBundleModelElement>(
+                    UPDATE_BATCH_SIZE);
                 final IModelWalker walker = new IModelWalker()
                 {
                     //int count = 0;
-                    public boolean visit( IModelElement element )
+                    public boolean visit(IModelElement element)
                     {
-                        if ( element instanceof IBundleModelElement )
+                        if (element instanceof IBundleModelElement)
                         {
-                            IBundleModelElement b = ( IBundleModelElement ) element;
-                            bundles.add( b );
+                            IBundleModelElement b = (IBundleModelElement) element;
+                            bundles.add(b);
 
-                            if ( bundles.size() >= UPDATE_BATCH_SIZE )
+                            if (bundles.size() >= UPDATE_BATCH_SIZE)
                             {
-                                dialog.addElements( bundles );
+                                dialog.addElements(bundles);
                                 bundles.clear();
                             }
                             // no need to recurse further.
@@ -346,16 +347,16 @@ public class ResourcesDialogHelper
                         return !monitor.isCanceled();
                     }
                 };
-                SigilCore.getRepositoryManager( sigil ).visit( walker );
-                if ( !bundles.isEmpty() )
+                SigilCore.getRepositoryManager(sigil).visit(walker);
+                if (!bundles.isEmpty())
                 {
-                    dialog.addElements( bundles );
+                    dialog.addElements(bundles);
                 }
                 return Status.OK_STATUS;
             }
         };
 
-        dialog.addBackgroundJob( "Scanning for bundles in workspace", job );
+        dialog.addBackgroundJob("Scanning for bundles in workspace", job);
 
         return dialog;
     }

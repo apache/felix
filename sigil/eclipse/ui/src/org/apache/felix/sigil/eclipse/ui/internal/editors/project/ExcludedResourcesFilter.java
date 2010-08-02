@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -32,39 +31,35 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 
-
 public class ExcludedResourcesFilter extends ViewerFilter
 {
 
     private final Set<Pattern> exclusionSet = new HashSet<Pattern>();
-
 
     public ExcludedResourcesFilter()
     {
         loadExclusions();
     }
 
-
     public final synchronized void loadExclusions()
     {
         exclusionSet.clear();
         IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
-        String[] exclusions = PrefsUtils.stringToArray( store.getString( SigilCore.DEFAULT_EXCLUDED_RESOURCES ) );
-        for ( String exclusion : exclusions )
+        String[] exclusions = PrefsUtils.stringToArray(store.getString(SigilCore.DEFAULT_EXCLUDED_RESOURCES));
+        for (String exclusion : exclusions)
         {
-            exclusionSet.add( GlobCompiler.compile( exclusion ) );
+            exclusionSet.add(GlobCompiler.compile(exclusion));
         }
     }
 
-
     @Override
-    public synchronized boolean select( Viewer viewer, Object parentElement, Object element )
+    public synchronized boolean select(Viewer viewer, Object parentElement, Object element)
     {
-        IResource file = ( IResource ) element;
+        IResource file = (IResource) element;
         String path = file.getName();
-        for ( Pattern p : exclusionSet )
+        for (Pattern p : exclusionSet)
         {
-            if ( p.matcher( path ).matches() )
+            if (p.matcher(path).matches())
             {
                 return false;
             }

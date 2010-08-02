@@ -75,7 +75,7 @@ public class BundleActivatorChange extends Change
     public void initializeValidationData(IProgressMonitor monitor)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)

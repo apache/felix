@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.eclipse.jface.wizard.Wizard;
-
 
 public class NewRepositoryWizard extends Wizard
 {
@@ -31,12 +29,10 @@ public class NewRepositoryWizard extends Wizard
 
     private RepositoryTypeSelectionPage page = new RepositoryTypeSelectionPage();
 
-
     public void addPages()
     {
-        addPage( page );
+        addPage(page);
     }
-
 
     @Override
     public boolean performFinish()
@@ -45,13 +41,11 @@ public class NewRepositoryWizard extends Wizard
         return true;
     }
 
-
     @Override
     public boolean needsPreviousAndNextButtons()
     {
         return true;
     }
-
 
     public IRepositoryModel getRepository()
     {

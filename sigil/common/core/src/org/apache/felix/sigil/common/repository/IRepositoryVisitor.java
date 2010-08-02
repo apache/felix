@@ -19,9 +19,7 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
-
 
 public interface IRepositoryVisitor
 {
@@ -31,5 +29,5 @@ public interface IRepositoryVisitor
      * @param bundle
      * @return
      */
-    boolean visit( ISigilBundle bundle );
+    boolean visit(ISigilBundle bundle);
 }

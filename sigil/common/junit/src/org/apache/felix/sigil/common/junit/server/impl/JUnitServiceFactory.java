@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.junit.server.impl;
 
-
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
@@ -32,69 +31,60 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
-
 public class JUnitServiceFactory implements ServiceFactory
 {
 
     private HashMap<String, Class<? extends TestCase>> tests = new HashMap<String, Class<? extends TestCase>>();
     private TestClassListener listener;
 
-
-    public void start( BundleContext ctx )
+    public void start(BundleContext ctx)
     {
-        listener = new TestClassListener( this );
-        ctx.addBundleListener( listener );
+        listener = new TestClassListener(this);
+        ctx.addBundleListener(listener);
         //listener.index(ctx.getBundle());
-        for ( Bundle b : ctx.getBundles() )
+        for (Bundle b : ctx.getBundles())
         {
-            if ( b.getState() == Bundle.RESOLVED )
+            if (b.getState() == Bundle.RESOLVED)
             {
-                listener.index( b );
+                listener.index(b);
             }
         }
     }
 
-
-    public void stop( BundleContext ctx )
+    public void stop(BundleContext ctx)
     {
-        ctx.removeBundleListener( listener );
+        ctx.removeBundleListener(listener);
         listener = null;
     }
 
-
-    public Object getService( Bundle bundle, ServiceRegistration reg )
+    public Object getService(Bundle bundle, ServiceRegistration reg)
     {
-        return new JUnitServiceImpl( this, bundle.getBundleContext() );
+        return new JUnitServiceImpl(this, bundle.getBundleContext());
     }
 
-
-    public void ungetService( Bundle bundle, ServiceRegistration reg, Object service )
+    public void ungetService(Bundle bundle, ServiceRegistration reg, Object service)
     {
     }
 
-
-    public void registerTest( Class<? extends TestCase> clazz )
+    public void registerTest(Class<? extends TestCase> clazz)
     {
-        tests.put( clazz.getName(), clazz );
+        tests.put(clazz.getName(), clazz);
     }
 
-
-    public void unregister( Class<? extends TestCase> clazz )
+    public void unregister(Class<? extends TestCase> clazz)
     {
-        tests.remove( clazz.getName() );
+        tests.remove(clazz.getName());
     }
-
 
     public Set<String> getTests()
     {
-        return new TreeSet<String>( tests.keySet() );
+        return new TreeSet<String>(tests.keySet());
     }
 
-
-    public TestSuite getTest( String test )
+    public TestSuite getTest(String test)
     {
-        Class<? extends TestCase> tc = tests.get( test );
-        return tc == null ? null : new TestSuite( tc );
+        Class<? extends TestCase> tc = tests.get(test);
+        return tc == null ? null : new TestSuite(tc);
     }
 
 }

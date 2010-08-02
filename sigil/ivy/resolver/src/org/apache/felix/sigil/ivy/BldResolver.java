@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.ivy;
 
-
 import java.util.Map;
 import java.util.Properties;
 
@@ -30,7 +29,6 @@ import org.apache.felix.sigil.common.repository.IResolution;
 import org.apache.felix.sigil.common.repository.IResolutionMonitor;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
-
 
 public class BldResolver implements IBldResolver
 {
@@ -43,75 +41,72 @@ public class BldResolver implements IBldResolver
         {
             BldCore.init();
         }
-        catch ( Exception e )
+        catch (Exception e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     };
 
-
-    public BldResolver( Map<String, Properties> repos )
+    public BldResolver(Map<String, Properties> repos)
     {
         this.repos = repos;
     }
 
-
-    public IResolution resolve( IModelElement element, boolean transitive )
+    public IResolution resolve(IModelElement element, boolean transitive)
     {
         int options = ResolutionConfig.IGNORE_ERRORS | ResolutionConfig.INCLUDE_OPTIONAL;
-        if ( transitive )
+        if (transitive)
             options |= ResolutionConfig.INCLUDE_DEPENDENTS;
 
-        ResolutionConfig config = new ResolutionConfig( options );
+        ResolutionConfig config = new ResolutionConfig(options);
         try
         {
-            return resolve( element, config );
+            return resolve(element, config);
         }
-        catch ( ResolutionException e )
+        catch (ResolutionException e)
         {
-            throw new IllegalStateException( "eek! this shouldn't happen when ignoreErrors=true", e );
+            throw new IllegalStateException(
+                "eek! this shouldn't happen when ignoreErrors=true", e);
         }
     }
 
-
-    public IResolution resolveOrFail( IModelElement element, boolean transitive ) throws ResolutionException
+    public IResolution resolveOrFail(IModelElement element, boolean transitive)
+        throws ResolutionException
     {
         int options = 0;
-        if ( transitive )
+        if (transitive)
             options |= ResolutionConfig.INCLUDE_DEPENDENTS;
-        ResolutionConfig config = new ResolutionConfig( options );
-        return resolve( element, config );
+        ResolutionConfig config = new ResolutionConfig(options);
+        return resolve(element, config);
     }
 
-
-    private IResolution resolve( IModelElement element, ResolutionConfig config ) throws ResolutionException
+    private IResolution resolve(IModelElement element, ResolutionConfig config)
+        throws ResolutionException
     {
-        if ( manager == null )
+        if (manager == null)
         {
-            manager = new BldRepositoryManager( repos );
+            manager = new BldRepositoryManager(repos);
         }
 
         IResolutionMonitor ivyMonitor = new IResolutionMonitor()
         {
-            public void endResolution( IModelElement requirement, ISigilBundle sigilBundle )
+            public void endResolution(IModelElement requirement, ISigilBundle sigilBundle)
             {
-                Log.debug( "Resolved " + requirement + " -> " + sigilBundle );
+                Log.debug("Resolved " + requirement + " -> " + sigilBundle);
             }
-
 
             public boolean isCanceled()
             {
                 return false;
             }
 
-
-            public void startResolution( IModelElement requirement )
+            public void startResolution(IModelElement requirement)
             {
-                Log.verbose( "Resolving " + requirement );
+                Log.verbose("Resolving " + requirement);
             }
         };
 
-        return manager.getBundleResolver().resolve( element, config, ivyMonitor );
+        return manager.getBundleResolver().resolve(element, config, ivyMonitor);
     }
 }

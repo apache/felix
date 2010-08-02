@@ -19,19 +19,17 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 public interface FilterValidator
 {
 
     public static FilterValidator ACCEPT_ALL = new AcceptEverythingValidator();
 
-
-    boolean validate( LDAPExpr filter );
+    boolean validate(LDAPExpr filter);
 
     static class AcceptEverythingValidator implements FilterValidator
     {
 
-        public boolean validate( LDAPExpr filter )
+        public boolean validate(LDAPExpr filter)
         {
             return true;
         }

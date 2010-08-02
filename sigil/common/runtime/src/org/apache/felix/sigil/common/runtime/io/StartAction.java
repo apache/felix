@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime.io;
 
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,7 +29,6 @@ import org.osgi.framework.launch.Framework;
 
 import static org.apache.felix.sigil.common.runtime.io.Constants.START;
 
-
 /**
  * @author dave
  *
@@ -38,36 +36,34 @@ import static org.apache.felix.sigil.common.runtime.io.Constants.START;
 public class StartAction extends Action<Long, Void>
 {
 
-    public StartAction( DataInputStream in, DataOutputStream out ) throws IOException
+    public StartAction(DataInputStream in, DataOutputStream out) throws IOException
     {
-        super( in, out );
+        super(in, out);
     }
 
-
     @Override
-    public Void client( Long bundle ) throws IOException, BundleException
+    public Void client(Long bundle) throws IOException, BundleException
     {
-        writeInt( START );
-        writeLong( bundle );
+        writeInt(START);
+        writeLong(bundle);
         flush();
-        if ( !checkOk() )
+        if (!checkOk())
         {
             String msg = readString();
-            throw new BundleException( msg );
+            throw new BundleException(msg);
         }
         return null;
     }
 
-
     @Override
-    public void server( Framework fw ) throws IOException
+    public void server(Framework fw) throws IOException
     {
         long id = readLong();
-        Bundle b = fw.getBundleContext().getBundle( id );
-        if ( b == null )
+        Bundle b = fw.getBundleContext().getBundle(id);
+        if (b == null)
         {
             writeError();
-            writeString( "Unknown bundle " + id );
+            writeString("Unknown bundle " + id);
         }
         else
         {
@@ -75,9 +71,9 @@ public class StartAction extends Action<Long, Void>
             {
                 b.start();
                 writeOk();
-                log( "Started " + b.getSymbolicName() );
+                log("Started " + b.getSymbolicName());
             }
-            catch ( BundleException e )
+            catch (BundleException e)
             {
                 writeError();
                 writeThrowable(e);

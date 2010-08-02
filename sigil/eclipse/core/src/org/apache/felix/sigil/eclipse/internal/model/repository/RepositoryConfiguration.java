@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.internal.model.repository;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -49,7 +48,6 @@ import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.graphics.Image;
 import org.osgi.framework.Bundle;
 
-
 public class RepositoryConfiguration implements IRepositoryConfiguration
 {
 
@@ -64,33 +62,32 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
 
     public static final String REPOSITORY_DEFAULT_SET = REPOSITORY + "default.set";
 
-
     public List<IRepositoryModel> loadRepositories()
     {
         IPreferenceStore prefs = SigilCore.getDefault().getPreferenceStore();
 
         ArrayList<IRepositoryModel> repositories = new ArrayList<IRepositoryModel>();
 
-        for ( RepositoryType type : loadRepositoryTypes() )
+        for (RepositoryType type : loadRepositoryTypes())
         {
             String typeID = type.getId();
 
-            if ( type.isDynamic() )
+            if (type.isDynamic())
             {
-                String instances = prefs.getString( REPOSITORY + typeID + INSTANCES );
-                if ( instances.trim().length() > 0 )
+                String instances = prefs.getString(REPOSITORY + typeID + INSTANCES);
+                if (instances.trim().length() > 0)
                 {
-                    for ( String instance : instances.split( "," ) )
+                    for (String instance : instances.split(","))
                     {
                         String key = REPOSITORY + typeID + "." + instance;
-                        repositories.add( loadRepository( instance, key, type, prefs ) );
+                        repositories.add(loadRepository(instance, key, type, prefs));
                     }
                 }
             }
             else
             {
                 String key = REPOSITORY + typeID;
-                repositories.add( loadRepository( typeID, key, type, prefs ) );
+                repositories.add(loadRepository(typeID, key, type, prefs));
             }
 
         }
@@ -98,12 +95,11 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
         return repositories;
     }
 
-
-    public IRepositoryModel findRepository( String id )
+    public IRepositoryModel findRepository(String id)
     {
-        for ( IRepositoryModel model : loadRepositories() )
+        for (IRepositoryModel model : loadRepositories())
         {
-            if ( model.getId().equals( id ) )
+            if (model.getId().equals(id))
             {
                 return model;
             }
@@ -111,22 +107,21 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
         return null;
     }
 
-
-    public void saveRepositories( List<IRepositoryModel> repositories ) throws CoreException
+    public void saveRepositories(List<IRepositoryModel> repositories)
+        throws CoreException
     {
         IPreferenceStore prefs = getPreferences();
 
         HashMap<IRepositoryType, List<IRepositoryModel>> mapped = new HashMap<IRepositoryType, List<IRepositoryModel>>(
-            repositories.size() );
+            repositories.size());
 
-        saveRepositoryPreferences( repositories, mapped );
-        createNewEntries( mapped, prefs );
-        deleteOldEntries( repositories, prefs );
+        saveRepositoryPreferences(repositories, mapped);
+        createNewEntries(mapped, prefs);
+        deleteOldEntries(repositories, prefs);
         // time stamp is used as a signal to the manager
         // to update its view of the stored repositories
-        timeStamp( prefs );
+        timeStamp(prefs);
     }
-
 
     public List<RepositoryType> loadRepositoryTypes()
     {
@@ -134,69 +129,71 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
 
         IExtensionRegistry registry = Platform.getExtensionRegistry();
 
-        IExtensionPoint p = registry.getExtensionPoint( SigilCore.REPOSITORY_PROVIDER_EXTENSION_POINT_ID );
+        IExtensionPoint p = registry.getExtensionPoint(SigilCore.REPOSITORY_PROVIDER_EXTENSION_POINT_ID);
 
-        for ( IExtension e : p.getExtensions() )
+        for (IExtension e : p.getExtensions())
         {
-            for ( IConfigurationElement c : e.getConfigurationElements() )
+            for (IConfigurationElement c : e.getConfigurationElements())
             {
-                String id = c.getAttribute( "id" );
-                String type = c.getAttribute( "type" );
-                boolean dynamic = Boolean.valueOf( c.getAttribute( "dynamic" ) );
-                String icon = c.getAttribute( "icon" );
-                Image image = ( icon == null || icon.trim().length() == 0 ) ? null : loadImage( e, icon );
-                repositories.add( new RepositoryType( id, type, dynamic, image ) );
+                String id = c.getAttribute("id");
+                String type = c.getAttribute("type");
+                boolean dynamic = Boolean.valueOf(c.getAttribute("dynamic"));
+                String icon = c.getAttribute("icon");
+                Image image = (icon == null || icon.trim().length() == 0) ? null
+                    : loadImage(e, icon);
+                repositories.add(new RepositoryType(id, type, dynamic, image));
             }
         }
 
         return repositories;
     }
 
-
-    public IRepositoryModel newRepositoryElement( IRepositoryType type )
+    public IRepositoryModel newRepositoryElement(IRepositoryType type)
     {
         String id = UUID.randomUUID().toString();
         PreferenceStore prefs = new PreferenceStore();
-        RepositoryModel element = new RepositoryModel( id, "", type, prefs );
-        prefs.setFilename( makeFileName( element ) );
-        prefs.setValue( "id", id );
+        RepositoryModel element = new RepositoryModel(id, "", type, prefs);
+        prefs.setFilename(makeFileName(element));
+        prefs.setValue("id", id);
         return element;
     }
-
 
     public IRepositorySet getDefaultRepositorySet()
     {
         //int level = findLevel( key + LEVEL, type, prefs );
         ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
-        for ( String s : PrefsUtils.stringToArray( getPreferences().getString( REPOSITORY_DEFAULT_SET ) ) )
-        {   
-            IRepositoryModel rep = findRepository( s );
-            if ( rep == null ) {
-                SigilCore.error( "Missing repository for " + s );
+        for (String s : PrefsUtils.stringToArray(getPreferences().getString(
+            REPOSITORY_DEFAULT_SET)))
+        {
+            IRepositoryModel rep = findRepository(s);
+            if (rep == null)
+            {
+                SigilCore.error("Missing repository for " + s);
             }
-            else {
-                reps.add( rep );
+            else
+            {
+                reps.add(rep);
             }
         }
-        return new RepositorySet( reps );
+        return new RepositorySet(reps);
     }
 
-
-    public IRepositorySet getRepositorySet( String name )
+    public IRepositorySet getRepositorySet(String name)
     {
         String key = REPOSITORY_SET + name;
-        if ( getPreferences().contains( key ) )
+        if (getPreferences().contains(key))
         {
             ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
-            for ( String s : PrefsUtils.stringToArray( getPreferences().getString( key ) ) )
+            for (String s : PrefsUtils.stringToArray(getPreferences().getString(key)))
             {
-                IRepositoryModel rep = findRepository( s );
-                if ( rep == null ) {
-                    throw new IllegalStateException( "Missing repository for " + s );
+                IRepositoryModel rep = findRepository(s);
+                if (rep == null)
+                {
+                    throw new IllegalStateException("Missing repository for " + s);
                 }
-                reps.add( rep );
+                reps.add(rep);
             }
-            return new RepositorySet( reps );
+            return new RepositorySet(reps);
         }
         else
         {
@@ -204,282 +201,270 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
         }
     }
 
-
     public Map<String, IRepositorySet> loadRepositorySets()
     {
         IPreferenceStore store = getPreferences();
 
         HashMap<String, IRepositorySet> sets = new HashMap<String, IRepositorySet>();
 
-        for ( String name : PrefsUtils.stringToArray( store.getString( REPOSITORY_SETS ) ) )
+        for (String name : PrefsUtils.stringToArray(store.getString(REPOSITORY_SETS)))
         {
             String key = REPOSITORY_SET + name;
             ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
-            for ( String s : PrefsUtils.stringToArray( getPreferences().getString( key ) ) )
+            for (String s : PrefsUtils.stringToArray(getPreferences().getString(key)))
             {
-                reps.add( findRepository( s ) );
+                reps.add(findRepository(s));
             }
-            sets.put( name, new RepositorySet( reps ) );
+            sets.put(name, new RepositorySet(reps));
         }
 
         return sets;
     }
 
-
-    public void saveRepositorySets( Map<String, IRepositorySet> sets )
+    public void saveRepositorySets(Map<String, IRepositorySet> sets)
     {
         IPreferenceStore store = getPreferences();
 
         ArrayList<String> names = new ArrayList<String>();
 
-        for ( Map.Entry<String, IRepositorySet> set : sets.entrySet() )
+        for (Map.Entry<String, IRepositorySet> set : sets.entrySet())
         {
             String name = set.getKey();
             String key = REPOSITORY_SET + name;
             ArrayList<String> ids = new ArrayList<String>();
-            for ( IRepositoryModel m : set.getValue().getRepositories() )
+            for (IRepositoryModel m : set.getValue().getRepositories())
             {
-                ids.add( m.getId() );
+                ids.add(m.getId());
             }
-            store.setValue( key, PrefsUtils.listToString( ids ) );
-            names.add( name );
+            store.setValue(key, PrefsUtils.listToString(ids));
+            names.add(name);
         }
 
-        for ( String name : PrefsUtils.stringToArray( store.getString( REPOSITORY_SETS ) ) )
+        for (String name : PrefsUtils.stringToArray(store.getString(REPOSITORY_SETS)))
         {
-            if ( !names.contains( name ) )
+            if (!names.contains(name))
             {
                 String key = REPOSITORY_SET + name;
-                store.setToDefault( key );
+                store.setToDefault(key);
             }
         }
 
-        store.setValue( REPOSITORY_SETS, PrefsUtils.listToString( names ) );
-        timeStamp( store );
+        store.setValue(REPOSITORY_SETS, PrefsUtils.listToString(names));
+        timeStamp(store);
     }
 
-
-    public void setDefaultRepositorySet( IRepositorySet defaultSet )
+    public void setDefaultRepositorySet(IRepositorySet defaultSet)
     {
         ArrayList<String> ids = new ArrayList<String>();
-        for ( IRepositoryModel m : defaultSet.getRepositories() )
+        for (IRepositoryModel m : defaultSet.getRepositories())
         {
-            ids.add( m.getId() );
+            ids.add(m.getId());
         }
         IPreferenceStore prefs = getPreferences();
-        prefs.setValue( REPOSITORY_DEFAULT_SET, PrefsUtils.listToString( ids ) );
-        timeStamp( prefs );
+        prefs.setValue(REPOSITORY_DEFAULT_SET, PrefsUtils.listToString(ids));
+        timeStamp(prefs);
     }
 
-
-    private void timeStamp( IPreferenceStore prefs )
+    private void timeStamp(IPreferenceStore prefs)
     {
-        prefs.setValue( REPOSITORY_TIMESTAMP, System.currentTimeMillis() );
+        prefs.setValue(REPOSITORY_TIMESTAMP, System.currentTimeMillis());
     }
-
 
     private IPreferenceStore getPreferences()
     {
         return SigilCore.getDefault().getPreferenceStore();
     }
 
-
-    private void deleteOldEntries( List<IRepositoryModel> repositories, IPreferenceStore prefs )
+    private void deleteOldEntries(List<IRepositoryModel> repositories,
+        IPreferenceStore prefs)
     {
-        for ( IRepositoryModel e : loadRepositories() )
+        for (IRepositoryModel e : loadRepositories())
         {
-            if ( !repositories.contains( e ) )
+            if (!repositories.contains(e))
             {
-                new File( makeFileName( e ) ).delete();
-                String key = makeKey( e );
-                prefs.setToDefault( key + LOC );
-                prefs.setToDefault( key + NAME );
+                new File(makeFileName(e)).delete();
+                String key = makeKey(e);
+                prefs.setToDefault(key + LOC);
+                prefs.setToDefault(key + NAME);
             }
         }
 
-        for ( IRepositoryType type : loadRepositoryTypes() )
+        for (IRepositoryType type : loadRepositoryTypes())
         {
             boolean found = false;
-            for ( IRepositoryModel e : repositories )
+            for (IRepositoryModel e : repositories)
             {
-                if ( e.getType().equals( type ) )
+                if (e.getType().equals(type))
                 {
                     found = true;
                     break;
                 }
             }
 
-            if ( !found )
+            if (!found)
             {
-                prefs.setToDefault( REPOSITORY + type.getId() + INSTANCES );
+                prefs.setToDefault(REPOSITORY + type.getId() + INSTANCES);
             }
         }
     }
 
-
-    private static void createNewEntries( HashMap<IRepositoryType, List<IRepositoryModel>> mapped,
-        IPreferenceStore prefs )
+    private static void createNewEntries(
+        HashMap<IRepositoryType, List<IRepositoryModel>> mapped, IPreferenceStore prefs)
     {
-        for ( Map.Entry<IRepositoryType, List<IRepositoryModel>> entry : mapped.entrySet() )
+        for (Map.Entry<IRepositoryType, List<IRepositoryModel>> entry : mapped.entrySet())
         {
             IRepositoryType type = entry.getKey();
-            if ( type.isDynamic() )
+            if (type.isDynamic())
             {
                 StringBuffer buf = new StringBuffer();
 
-                for ( IRepositoryModel element : entry.getValue() )
+                for (IRepositoryModel element : entry.getValue())
                 {
-                    if ( buf.length() > 0 )
+                    if (buf.length() > 0)
                     {
-                        buf.append( "," );
+                        buf.append(",");
                     }
-                    buf.append( element.getId() );
-                    saveRepository( element, prefs );
+                    buf.append(element.getId());
+                    saveRepository(element, prefs);
                 }
 
-                prefs.setValue( REPOSITORY + type.getId() + INSTANCES, buf.toString() );
+                prefs.setValue(REPOSITORY + type.getId() + INSTANCES, buf.toString());
             }
             else
             {
-                IRepositoryModel element = entry.getValue().get( 0 );
-                saveRepository( element, prefs );
+                IRepositoryModel element = entry.getValue().get(0);
+                saveRepository(element, prefs);
             }
         }
     }
 
-
-    private static void saveRepositoryPreferences( List<IRepositoryModel> repositories,
-        HashMap<IRepositoryType, List<IRepositoryModel>> mapped ) throws CoreException
+    private static void saveRepositoryPreferences(List<IRepositoryModel> repositories,
+        HashMap<IRepositoryType, List<IRepositoryModel>> mapped) throws CoreException
     {
-        for ( IRepositoryModel rep : repositories )
+        for (IRepositoryModel rep : repositories)
         {
             try
             {
-                createDir( makeFileName( rep ) );
+                createDir(makeFileName(rep));
                 rep.getPreferences().save();
-                List<IRepositoryModel> list = mapped.get( rep.getType() );
-                if ( list == null )
+                List<IRepositoryModel> list = mapped.get(rep.getType());
+                if (list == null)
                 {
-                    list = new ArrayList<IRepositoryModel>( 1 );
-                    mapped.put( rep.getType(), list );
+                    list = new ArrayList<IRepositoryModel>(1);
+                    mapped.put(rep.getType(), list);
                 }
-                list.add( rep );
+                list.add(rep);
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                throw SigilCore.newCoreException( "Failed to save repository preferences", e );
+                throw SigilCore.newCoreException("Failed to save repository preferences",
+                    e);
             }
         }
     }
 
-
-    private static void createDir( String fileName )
+    private static void createDir(String fileName)
     {
-        File file = new File( fileName );
+        File file = new File(fileName);
         file.getParentFile().mkdirs();
     }
 
-
-    private static void saveRepository( IRepositoryModel element, IPreferenceStore prefs )
+    private static void saveRepository(IRepositoryModel element, IPreferenceStore prefs)
     {
-        String key = makeKey( element );
-        prefs.setValue( key + LOC, makeFileName( element ) );
-        if ( element.getType().isDynamic() )
+        String key = makeKey(element);
+        prefs.setValue(key + LOC, makeFileName(element));
+        if (element.getType().isDynamic())
         {
-            prefs.setValue( key + NAME, element.getName() );
+            prefs.setValue(key + NAME, element.getName());
         }
-        prefs.setValue( key + TIMESTAMP, now() );
+        prefs.setValue(key + TIMESTAMP, now());
     }
-
 
     private static long now()
     {
         return System.currentTimeMillis();
     }
 
-
-    private static String makeKey( IRepositoryModel element )
+    private static String makeKey(IRepositoryModel element)
     {
         IRepositoryType type = element.getType();
 
         String key = REPOSITORY + type.getId();
-        if ( type.isDynamic() )
+        if (type.isDynamic())
             key = key + "." + element.getId();
 
         return key;
     }
 
-
-    private static String makeFileName( IRepositoryModel element )
+    private static String makeFileName(IRepositoryModel element)
     {
         IPath path = SigilCore.getDefault().getStateLocation();
-        path = path.append( "repository" );
-        path = path.append( element.getType().getId() );
-        path = path.append( element.getId() );
+        path = path.append("repository");
+        path = path.append(element.getType().getId());
+        path = path.append(element.getId());
         return path.toOSString();
     }
 
-
-    private static RepositoryModel loadRepository( String id, String key, RepositoryType type, IPreferenceStore prefs )
+    private static RepositoryModel loadRepository(String id, String key,
+        RepositoryType type, IPreferenceStore prefs)
     {
-        String name = type.isDynamic() ? prefs.getString( key + NAME ) : type.getType();
+        String name = type.isDynamic() ? prefs.getString(key + NAME) : type.getType();
 
         PreferenceStore repPrefs = new PreferenceStore();
-        RepositoryModel element = new RepositoryModel( id, name, type, repPrefs );
+        RepositoryModel element = new RepositoryModel(id, name, type, repPrefs);
 
-        String loc = prefs.getString( key + LOC );
+        String loc = prefs.getString(key + LOC);
 
-        if ( loc == null || loc.trim().length() == 0 )
+        if (loc == null || loc.trim().length() == 0)
         {
-            loc = makeFileName( element );
+            loc = makeFileName(element);
         }
 
-        repPrefs.setFilename( loc );
+        repPrefs.setFilename(loc);
 
-        if ( new File( loc ).exists() )
+        if (new File(loc).exists())
         {
             try
             {
                 repPrefs.load();
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                SigilCore.error( "Failed to load properties for repository " + key, e );
+                SigilCore.error("Failed to load properties for repository " + key, e);
             }
         }
 
-        repPrefs.setValue( "id", id );
+        repPrefs.setValue("id", id);
 
         return element;
     }
 
-
     @SuppressWarnings("unchecked")
-    private static Image loadImage( IExtension ext, String icon )
+    private static Image loadImage(IExtension ext, String icon)
     {
-        int i = icon.lastIndexOf( "/" );
-        String path = i == -1 ? "/" : icon.substring( 0, i );
-        String name = i == -1 ? icon : icon.substring( i + 1 );
+        int i = icon.lastIndexOf("/");
+        String path = i == -1 ? "/" : icon.substring(0, i);
+        String name = i == -1 ? icon : icon.substring(i + 1);
 
-        Bundle b = Platform.getBundle( ext.getContributor().getName() );
+        Bundle b = Platform.getBundle(ext.getContributor().getName());
 
-        Enumeration<URL> en = b.findEntries( path, name, false );
+        Enumeration<URL> en = b.findEntries(path, name, false);
         Image image = null;
 
-        if ( en.hasMoreElements() )
+        if (en.hasMoreElements())
         {
             try
             {
-                image = SigilCore.loadImage( en.nextElement() );
+                image = SigilCore.loadImage(en.nextElement());
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                SigilCore.error( "Failed to load image", e );
+                SigilCore.error("Failed to load image", e);
             }
         }
         else
         {
-            SigilCore.error( "No such image " + icon + " in bundle " + b.getSymbolicName() );
+            SigilCore.error("No such image " + icon + " in bundle " + b.getSymbolicName());
         }
 
         return image;

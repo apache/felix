@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.text.ITextListener;
 import org.eclipse.jface.text.TextEvent;
@@ -31,7 +30,6 @@ import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.ide.IDE;
 
-
 public class SigilSourcePage extends TextEditor implements IFormPage
 {
     private final String id;
@@ -40,91 +38,79 @@ public class SigilSourcePage extends TextEditor implements IFormPage
     private boolean active;
     private Control control;
 
-
-    public SigilSourcePage( String id )
+    public SigilSourcePage(String id)
     {
         this.id = id;
     }
 
-
     @Override
-    public void createPartControl( Composite parent )
+    public void createPartControl(Composite parent)
     {
-        super.createPartControl( parent );
+        super.createPartControl(parent);
         Control[] children = parent.getChildren();
         control = children[children.length - 1];
-        getSourceViewer().addTextListener( new ITextListener()
+        getSourceViewer().addTextListener(new ITextListener()
         {
-            public void textChanged( TextEvent event )
+            public void textChanged(TextEvent event)
             {
-                if ( editor != null )
+                if (editor != null)
                 {
                     editor.refreshAllPages();
                 }
             }
-        } );
+        });
         //PlatformUI.getWorkbench().getHelpSystem().setHelp(fControl, IHelpContextIds.MANIFEST_SOURCE_PAGE);
     }
 
-
-    public void initialize( FormEditor editor )
+    public void initialize(FormEditor editor)
     {
-        this.editor = ( SigilProjectEditorPart ) editor;
+        this.editor = (SigilProjectEditorPart) editor;
     }
-
 
     public FormEditor getEditor()
     {
         return editor;
     }
 
-
     public String getId()
     {
         return id;
     }
-
 
     public int getIndex()
     {
         return index;
     }
 
-
-    public void setIndex( int index )
+    public void setIndex(int index)
     {
         this.index = index;
     }
-
 
     public boolean isActive()
     {
         return active;
     }
 
-
-    public void setActive( boolean active )
+    public void setActive(boolean active)
     {
         this.active = active;
     }
-
 
     public Control getPartControl()
     {
         return control;
     }
 
-
-    public boolean selectReveal( Object object )
+    public boolean selectReveal(Object object)
     {
-        if ( object instanceof IMarker )
+        if (object instanceof IMarker)
         {
-            IDE.gotoMarker( this, ( IMarker ) object );
+            IDE.gotoMarker(this, (IMarker) object);
             return true;
         }
         return false;
     }
-
 
     // static impls
     public boolean isEditor()
@@ -132,12 +118,10 @@ public class SigilSourcePage extends TextEditor implements IFormPage
         return true;
     }
 
-
     public boolean canLeaveThePage()
     {
         return true;
     }
-
 
     public IManagedForm getManagedForm()
     {

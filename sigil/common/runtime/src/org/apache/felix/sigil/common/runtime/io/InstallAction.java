@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime.io;
 
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,7 +29,6 @@ import org.osgi.framework.launch.Framework;
 
 import static org.apache.felix.sigil.common.runtime.io.Constants.INSTALL;
 
-
 /**
  * @author dave
  *
@@ -38,46 +36,44 @@ import static org.apache.felix.sigil.common.runtime.io.Constants.INSTALL;
 public class InstallAction extends Action<String, Long>
 {
 
-    public InstallAction( DataInputStream in, DataOutputStream out ) throws IOException
+    public InstallAction(DataInputStream in, DataOutputStream out) throws IOException
     {
-        super( in, out );
+        super(in, out);
     }
 
-
     @Override
-    public Long client( String url ) throws IOException, BundleException
+    public Long client(String url) throws IOException, BundleException
     {
-        writeInt( INSTALL );
-        writeString( url );
+        writeInt(INSTALL);
+        writeString(url);
         flush();
-        if ( checkOk() )
+        if (checkOk())
         {
             return readLong();
         }
         else
         {
             String msg = readString();
-            throw new BundleException( msg );
+            throw new BundleException(msg);
         }
     }
 
-
     @Override
-    public void server( Framework fw ) throws IOException
+    public void server(Framework fw) throws IOException
     {
         String url = readString();
         try
         {
-            Bundle val = fw.getBundleContext().installBundle( url );
-            log( "Installed " + url );
+            Bundle val = fw.getBundleContext().installBundle(url);
+            log("Installed " + url);
             writeOk();
-            writeLong( val.getBundleId() );
+            writeLong(val.getBundleId());
         }
-        catch ( BundleException e )
+        catch (BundleException e)
         {
             e.printStackTrace();
             writeError();
-            writeThrowable( e );
+            writeThrowable(e);
         }
         flush();
     }

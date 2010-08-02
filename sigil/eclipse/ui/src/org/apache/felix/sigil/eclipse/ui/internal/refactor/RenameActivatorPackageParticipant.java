@@ -45,19 +45,23 @@ public class RenameActivatorPackageParticipant extends RenameParticipant
         CheckConditionsContext ctx) throws OperationCanceledException
     {
         RefactoringStatus status = null;
-        if(getArguments().getUpdateReferences()) {
+        if (getArguments().getUpdateReferences())
+        {
             try
             {
                 ISigilProjectModel sigil = SigilCore.create(packageFragment.getJavaProject().getProject());
                 RefactorUtil.touch(ctx, sigil);
-                
+
                 String oldName = sigil.getBundle().getBundleInfo().getActivator();
-                if ( oldName != null ) {
+                if (oldName != null)
+                {
                     String[] parts = splitPackageClass(oldName);
-                    if (parts[0].equals(packageFragment.getElementName())) {
+                    if (parts[0].equals(packageFragment.getElementName()))
+                    {
                         String newName = getArguments().getNewName() + "." + parts[1];
                         changes.add(new BundleActivatorChange(sigil, oldName, newName));
-                        status = RefactoringStatus.createInfoStatus("Updating bundle activator from " + oldName + " to " + newName );
+                        status = RefactoringStatus.createInfoStatus("Updating bundle activator from "
+                            + oldName + " to " + newName);
                     }
                 }
             }
@@ -66,7 +70,7 @@ public class RenameActivatorPackageParticipant extends RenameParticipant
                 SigilCore.warn("Failed to update activator", e);
             }
         }
-        
+
         return status;
     }
 
@@ -74,11 +78,13 @@ public class RenameActivatorPackageParticipant extends RenameParticipant
     {
         String[] parts = new String[2];
         int i = className.lastIndexOf('.');
-        if ( i == -1 ) {
+        if (i == -1)
+        {
             parts[0] = "";
             parts[1] = className;
         }
-        else {
+        else
+        {
             parts[0] = className.substring(0, i);
             parts[1] = className.substring(i + 1);
         }
@@ -89,22 +95,23 @@ public class RenameActivatorPackageParticipant extends RenameParticipant
     public Change createChange(IProgressMonitor monitor) throws CoreException,
         OperationCanceledException
     {
-        if (changes.isEmpty()) {
+        if (changes.isEmpty())
+        {
             return new NullChange();
         }
-        else 
+        else
         {
             CompositeChange ret = new CompositeChange("Export-Package update");
-            
+
             ret.addAll(changes.toArray(new Change[changes.size()]));
-            
+
             return ret;
         }
     }
 
     @Override
     public String getName()
-    {        
+    {
         return "Sigil Rename Activator Package Participant";
     }
 

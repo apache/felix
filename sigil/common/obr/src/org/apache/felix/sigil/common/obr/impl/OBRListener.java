@@ -19,11 +19,9 @@
 
 package org.apache.felix.sigil.common.obr.impl;
 
-
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
-
 
 public interface OBRListener
 {
-    void handleBundle( ISigilBundle bundle );
+    void handleBundle(ISigilBundle bundle);
 }

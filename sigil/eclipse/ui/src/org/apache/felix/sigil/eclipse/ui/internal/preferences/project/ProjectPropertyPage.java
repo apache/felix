@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.project;
 
-
 import java.util.concurrent.Callable;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
@@ -49,7 +48,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.osgi.service.prefs.BackingStoreException;
 
-
 public class ProjectPropertyPage extends PropertyPage implements IWorkbenchPropertyPage
 {
 
@@ -58,170 +56,163 @@ public class ProjectPropertyPage extends PropertyPage implements IWorkbenchPrope
     private Composite settings;
     private Button projectSpecificBtn;
 
-
     @Override
-    protected Control createContents( Composite parent )
+    protected Control createContents(Composite parent)
     {
-        final Composite control = new Composite( parent, SWT.NONE );
+        final Composite control = new Composite(parent, SWT.NONE);
 
-        projectSpecificBtn = new Button( control, SWT.CHECK );
-        projectSpecificBtn.setText( "Enable project specific settings" );
-        projectSpecificBtn.addSelectionListener( new SelectionAdapter()
+        projectSpecificBtn = new Button(control, SWT.CHECK);
+        projectSpecificBtn.setText("Enable project specific settings");
+        projectSpecificBtn.addSelectionListener(new SelectionAdapter()
         {
             @Override
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
-                setProjectSpecific( !projectSpecific );
+                setProjectSpecific(!projectSpecific);
             }
-        } );
+        });
 
-        Label link = new Label( control, SWT.UNDERLINE_SINGLE );
-        link.addMouseListener( new MouseAdapter()
+        Label link = new Label(control, SWT.UNDERLINE_SINGLE);
+        link.addMouseListener(new MouseAdapter()
         {
             @Override
-            public void mouseDown( MouseEvent e )
+            public void mouseDown(MouseEvent e)
             {
-                PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn( null,
-                    SigilCore.REPOSITORIES_PREFERENCES_ID, null, null );
+                PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(null,
+                    SigilCore.REPOSITORIES_PREFERENCES_ID, null, null);
                 dialog.open();
             }
-        } );
+        });
 
-        link.setText( "Configure workspace settings" );
+        link.setText("Configure workspace settings");
 
-        settings = new Composite( control, SWT.BORDER );
-        settings.setLayout( new GridLayout( 1, false ) );
-        createSettings( settings );
+        settings = new Composite(control, SWT.BORDER);
+        settings.setLayout(new GridLayout(1, false));
+        createSettings(settings);
 
-        setFonts( control );
+        setFonts(control);
 
         // layout
-        control.setLayout( new GridLayout( 2, false ) );
-        projectSpecificBtn.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        settings.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true, 2, 1 ) );
+        control.setLayout(new GridLayout(2, false));
+        projectSpecificBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        settings.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
         // load settings
         String currentSet = getCurrentSet();
 
-        if ( currentSet == null )
+        if (currentSet == null)
         {
-            setProjectSpecific( false );
+            setProjectSpecific(false);
         }
         else
         {
-            setView.setSelection( new StructuredSelection( currentSet ) );
-            setProjectSpecific( true );
+            setView.setSelection(new StructuredSelection(currentSet));
+            setProjectSpecific(true);
         }
 
         return control;
     }
 
-
-    private void setFonts( Composite control )
+    private void setFonts(Composite control)
     {
         Composite p = control.getParent();
-        for ( Control c : control.getChildren() )
+        for (Control c : control.getChildren())
         {
-            c.setFont( p.getFont() );
-            if ( c instanceof Composite )
+            c.setFont(p.getFont());
+            if (c instanceof Composite)
             {
-                setFonts( ( Composite ) c );
+                setFonts((Composite) c);
             }
         }
     }
 
-
-    private void setProjectSpecific( boolean projectSpecific )
+    private void setProjectSpecific(boolean projectSpecific)
     {
-        if ( this.projectSpecific != projectSpecific )
+        if (this.projectSpecific != projectSpecific)
         {
             this.projectSpecific = projectSpecific;
-            settings.setEnabled( projectSpecific );
-            for ( Control c : settings.getChildren() )
+            settings.setEnabled(projectSpecific);
+            for (Control c : settings.getChildren())
             {
-                c.setEnabled( projectSpecific );
+                c.setEnabled(projectSpecific);
             }
-            projectSpecificBtn.setSelection( projectSpecific );
+            projectSpecificBtn.setSelection(projectSpecific);
         }
     }
 
-
-    private void createSettings( Composite parent )
+    private void createSettings(Composite parent)
     {
-        Composite control = new Composite( parent, SWT.NONE );
+        Composite control = new Composite(parent, SWT.NONE);
 
-        new Label( control, SWT.NONE ).setText( "Repository Set:" );
-        Combo combo = new Combo( control, SWT.SINGLE );
+        new Label(control, SWT.NONE).setText("Repository Set:");
+        Combo combo = new Combo(control, SWT.SINGLE);
 
-        setView = new ComboViewer( combo );
-        setView.setContentProvider( new DefaultTableProvider()
+        setView = new ComboViewer(combo);
+        setView.setContentProvider(new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                return toArray( inputElement );
+                return toArray(inputElement);
             }
-        } );
+        });
 
-        setView.setInput( SigilCore.getRepositoryConfiguration().loadRepositorySets().keySet() );
+        setView.setInput(SigilCore.getRepositoryConfiguration().loadRepositorySets().keySet());
 
         // layout
-        control.setLayout( new GridLayout( 2, false ) );
+        control.setLayout(new GridLayout(2, false));
     }
-
 
     private String getCurrentSet()
     {
         try
         {
-            IProject p = ( IProject ) getElement().getAdapter( IProject.class );
-            ISigilProjectModel model = SigilCore.create( p );
-            return model.getPreferences().get( SigilCore.REPOSITORY_SET, null );
+            IProject p = (IProject) getElement().getAdapter(IProject.class);
+            ISigilProjectModel model = SigilCore.create(p);
+            return model.getPreferences().get(SigilCore.REPOSITORY_SET, null);
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to read repository set", e );
+            SigilCore.error("Failed to read repository set", e);
             return null;
         }
     }
 
-
     @Override
     public boolean okToLeave()
     {
-        if ( projectSpecific )
+        if (projectSpecific)
         {
-            if ( setView.getSelection().isEmpty() )
+            if (setView.getSelection().isEmpty())
             {
-                setErrorMessage( "Must select a repository set" );
+                setErrorMessage("Must select a repository set");
                 return false;
             }
         }
-        setErrorMessage( null );
+        setErrorMessage(null);
         return true;
     }
-
 
     @Override
     public boolean performOk()
     {
-        return ProjectUtils.runTaskWithRebuildCheck( new Callable<Boolean>()
+        return ProjectUtils.runTaskWithRebuildCheck(new Callable<Boolean>()
         {
             public Boolean call() throws CoreException, BackingStoreException
             {
                 String set = null;
-                if ( projectSpecific )
+                if (projectSpecific)
                 {
-                    set = ( String ) ( ( IStructuredSelection ) setView.getSelection() ).getFirstElement();
+                    set = (String) ((IStructuredSelection) setView.getSelection()).getFirstElement();
                 }
 
-                IProject p = ( IProject ) getElement().getAdapter( IProject.class );
-                ISigilProjectModel model = SigilCore.create( p );
-                model.getPreferences().put( SigilCore.REPOSITORY_SET, set );
+                IProject p = (IProject) getElement().getAdapter(IProject.class);
+                ISigilProjectModel model = SigilCore.create(p);
+                model.getPreferences().put(SigilCore.REPOSITORY_SET, set);
                 model.getPreferences().flush();
                 return true;
             }
 
-        }, getShell() );
+        }, getShell());
     }
 
 }

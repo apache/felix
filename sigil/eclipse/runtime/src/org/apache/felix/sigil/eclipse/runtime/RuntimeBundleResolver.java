@@ -31,11 +31,13 @@ public class RuntimeBundleResolver implements ResolutionContext
         public URI[] resolve(URI base) throws URISyntaxException
         {
             ArrayList<URI> uris = new ArrayList<URI>(1);
-            
+
             IBundleResolver resolver = manager.getBundleResolver();
-            IRequiredBundle element = ModelElementFactory.getInstance().newModelElement(IRequiredBundle.class);
+            IRequiredBundle element = ModelElementFactory.getInstance().newModelElement(
+                IRequiredBundle.class);
             String[] parts = base.getSchemeSpecificPart().split(":");
-            switch( parts.length ) {
+            switch (parts.length)
+            {
                 case 2:
                     Version v = Version.parseVersion(parts[1]);
                     element.setVersions(new VersionRange(false, v, v, false));
@@ -44,25 +46,32 @@ public class RuntimeBundleResolver implements ResolutionContext
                     element.setSymbolicName(parts[0]);
                     break;
                 default:
-                    throw new URISyntaxException(base.toString(), "Unexpected number of parts: " + parts.length);
+                    throw new URISyntaxException(base.toString(),
+                        "Unexpected number of parts: " + parts.length);
             }
             try
             {
-                ResolutionConfig config = new ResolutionConfig(ResolutionConfig.IGNORE_ERRORS);
+                ResolutionConfig config = new ResolutionConfig(
+                    ResolutionConfig.IGNORE_ERRORS);
                 IResolution resolution = resolver.resolve(element, config, null);
-                if ( resolution.getBundles().isEmpty() ) {
-                    SigilCore.error( "Failed to resolve bundle for " + base );
+                if (resolution.getBundles().isEmpty())
+                {
+                    SigilCore.error("Failed to resolve bundle for " + base);
                 }
-                for ( ISigilBundle b : resolution.getBundles() ) {
+                for (ISigilBundle b : resolution.getBundles())
+                {
                     ISigilProjectModel p = b.getAncestor(ISigilProjectModel.class);
-                    if ( p != null ) {
+                    if (p != null)
+                    {
                         uris.add(p.findBundleLocation().toFile().toURI());
-                        SigilCore.log("Adding project source to source path " + p.getName());
+                        SigilCore.log("Adding project source to source path "
+                            + p.getName());
                         SigilSourcePathProvider.addProjectSource(launchConfig, p);
                     }
-                    else {
+                    else
+                    {
                         b.synchronize(null);
-                        uris.add( b.getLocation().toURI() );
+                        uris.add(b.getLocation().toURI());
                     }
                 }
             }
@@ -78,27 +87,29 @@ public class RuntimeBundleResolver implements ResolutionContext
             {
                 SigilCore.error("Failed to access " + base, e);
             }
-            SigilCore.log( "Resolved " + uris );
+            SigilCore.log("Resolved " + uris);
             return uris.toArray(new URI[uris.size()]);
         }
     }
-    
+
     private final IRepositoryManager manager;
     private final ILaunchConfiguration launchConfig;
-    
-    public RuntimeBundleResolver(IRepositoryManager manager, ILaunchConfiguration launchConfig) {
+
+    public RuntimeBundleResolver(IRepositoryManager manager, ILaunchConfiguration launchConfig)
+    {
         this.manager = manager;
         this.launchConfig = launchConfig;
     }
 
     public Resolver findResolver(URI uri)
     {
-        SigilCore.log( "Finding resolver for " + uri.getScheme() );
-        if ( "sigil".equals( uri.getScheme() ) ) {
-            SigilCore.log( "Found resolver for " + uri.getScheme() );
+        SigilCore.log("Finding resolver for " + uri.getScheme());
+        if ("sigil".equals(uri.getScheme()))
+        {
+            SigilCore.log("Found resolver for " + uri.getScheme());
             return new SigilBundleResolver();
         }
         return null;
     }
-    
+
 }

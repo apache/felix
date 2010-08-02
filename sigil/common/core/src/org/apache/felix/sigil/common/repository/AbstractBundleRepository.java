@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.repository;
 
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -39,89 +38,79 @@ import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 
-
 public abstract class AbstractBundleRepository implements IBundleRepository
 {
 
     private final String id;
     private final HashSet<IBundleRepositoryListener> listeners = new HashSet<IBundleRepositoryListener>();
 
-
-    public AbstractBundleRepository( String id )
+    public AbstractBundleRepository(String id)
     {
         this.id = id;
     }
 
+    public abstract void accept(IRepositoryVisitor visitor, int options);
 
-    public abstract void accept( IRepositoryVisitor visitor, int options );
-
-
-    public void addBundleRepositoryListener( IBundleRepositoryListener listener )
+    public void addBundleRepositoryListener(IBundleRepositoryListener listener)
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            listeners.add( listener );
+            listeners.add(listener);
         }
     }
 
-
-    public void removeBundleRepositoryListener( IBundleRepositoryListener listener )
+    public void removeBundleRepositoryListener(IBundleRepositoryListener listener)
     {
-        synchronized ( listeners )
+        synchronized (listeners)
         {
-            listeners.remove( listener );
+            listeners.remove(listener);
         }
     }
-
 
     protected void notifyChange()
     {
-        for ( IBundleRepositoryListener l : listeners )
+        for (IBundleRepositoryListener l : listeners)
         {
-            l.notifyChange( this );
+            l.notifyChange(this);
         }
     }
-
 
     public String getId()
     {
         return id;
     }
 
-
-    public void accept( IRepositoryVisitor visitor )
+    public void accept(IRepositoryVisitor visitor)
     {
-        accept( visitor, 0 );
+        accept(visitor, 0);
     }
 
-
-    public void writeOBR( OutputStream out ) throws IOException
+    public void writeOBR(OutputStream out) throws IOException
     {
         throw new UnsupportedOperationException();
     }
 
-
-    public Collection<ISigilBundle> findProviders( final ILibrary library, int options )
+    public Collection<ISigilBundle> findProviders(final ILibrary library, int options)
     {
         final ArrayList<ISigilBundle> found = new ArrayList<ISigilBundle>();
 
-        final ILicensePolicy policy = findPolicy( library );
+        final ILicensePolicy policy = findPolicy(library);
 
         IRepositoryVisitor visitor = new IRepositoryVisitor()
         {
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                if ( policy.accept( bundle ) )
+                if (policy.accept(bundle))
                 {
                     IBundleModelElement info = bundle.getBundleInfo();
-                    for ( IPackageImport pi : library.getImports() )
+                    for (IPackageImport pi : library.getImports())
                     {
-                        for ( IPackageExport e : info.getExports() )
+                        for (IPackageExport e : info.getExports())
                         {
-                            if ( pi.getPackageName().equals( e.getPackageName() )
-                                && pi.getVersions().contains( e.getVersion() ) )
+                            if (pi.getPackageName().equals(e.getPackageName())
+                                && pi.getVersions().contains(e.getVersion()))
                             {
-                                found.add( bundle );
+                                found.add(bundle);
                                 break;
                             }
                         }
@@ -131,64 +120,63 @@ public abstract class AbstractBundleRepository implements IBundleRepository
             }
         };
 
-        accept( visitor, options );
+        accept(visitor, options);
 
         return found;
     }
 
-
-    public Collection<ISigilBundle> findAllProviders( final IRequiredBundle req, int options )
+    public Collection<ISigilBundle> findAllProviders(final IRequiredBundle req,
+        int options)
     {
         final ArrayList<ISigilBundle> found = new ArrayList<ISigilBundle>();
 
-        final ILicensePolicy policy = findPolicy( req );
+        final ILicensePolicy policy = findPolicy(req);
 
         IRepositoryVisitor visitor = new IRepositoryVisitor()
         {
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                if ( policy.accept( bundle ) )
+                if (policy.accept(bundle))
                 {
                     IBundleModelElement info = bundle.getBundleInfo();
-                    if ( req.getSymbolicName().equals( info.getSymbolicName() )
-                        && req.getVersions().contains( info.getVersion() ) )
+                    if (req.getSymbolicName().equals(info.getSymbolicName())
+                        && req.getVersions().contains(info.getVersion()))
                     {
-                        found.add( bundle );
+                        found.add(bundle);
                     }
                 }
                 return true;
             }
         };
 
-        accept( visitor, options );
+        accept(visitor, options);
 
         return found;
     }
 
-
-    public Collection<ISigilBundle> findAllProviders( final IPackageImport pi, int options )
+    public Collection<ISigilBundle> findAllProviders(final IPackageImport pi, int options)
     {
         final ArrayList<ISigilBundle> found = new ArrayList<ISigilBundle>();
 
-        final ILicensePolicy policy = findPolicy( pi );
+        final ILicensePolicy policy = findPolicy(pi);
 
         IRepositoryVisitor visitor = new IRepositoryVisitor()
         {
 
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                if ( policy.accept( bundle ) )
+                if (policy.accept(bundle))
                 {
                     IBundleModelElement info = bundle.getBundleInfo();
-                    if ( info != null )
+                    if (info != null)
                     {
-                        for ( IPackageExport e : info.getExports() )
+                        for (IPackageExport e : info.getExports())
                         {
-                            if ( pi.getPackageName().equals( e.getPackageName() ) )
+                            if (pi.getPackageName().equals(e.getPackageName()))
                             {
-                                if ( pi.getVersions().contains( e.getVersion() ) )
+                                if (pi.getVersions().contains(e.getVersion()))
                                 {
-                                    found.add( bundle );
+                                    found.add(bundle);
                                     break;
                                 }
                             }
@@ -200,31 +188,30 @@ public abstract class AbstractBundleRepository implements IBundleRepository
 
         };
 
-        accept( visitor, options );
+        accept(visitor, options);
 
         return found;
     }
 
-
-    public ISigilBundle findProvider( final IPackageImport pi, int options )
+    public ISigilBundle findProvider(final IPackageImport pi, int options)
     {
         final ArrayList<ISigilBundle> found = new ArrayList<ISigilBundle>();
 
-        final ILicensePolicy policy = findPolicy( pi );
+        final ILicensePolicy policy = findPolicy(pi);
 
         IRepositoryVisitor visitor = new IRepositoryVisitor()
         {
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                if ( policy.accept( bundle ) )
+                if (policy.accept(bundle))
                 {
                     IBundleModelElement info = bundle.getBundleInfo();
-                    for ( IPackageExport e : info.getExports() )
+                    for (IPackageExport e : info.getExports())
                     {
-                        if ( pi.getPackageName().equals( e.getPackageName() )
-                            && pi.getVersions().contains( e.getVersion() ) )
+                        if (pi.getPackageName().equals(e.getPackageName())
+                            && pi.getVersions().contains(e.getVersion()))
                         {
-                            found.add( bundle );
+                            found.add(bundle);
                             return false;
                         }
                     }
@@ -234,30 +221,29 @@ public abstract class AbstractBundleRepository implements IBundleRepository
 
         };
 
-        accept( visitor, options );
+        accept(visitor, options);
 
         return found.isEmpty() ? null : found.iterator().next();
     }
 
-
-    public ISigilBundle findProvider( final IRequiredBundle req, int options )
+    public ISigilBundle findProvider(final IRequiredBundle req, int options)
     {
         final ArrayList<ISigilBundle> found = new ArrayList<ISigilBundle>();
 
-        final ILicensePolicy policy = findPolicy( req );
+        final ILicensePolicy policy = findPolicy(req);
 
         IRepositoryVisitor visitor = new IRepositoryVisitor()
         {
 
-            public boolean visit( ISigilBundle bundle )
+            public boolean visit(ISigilBundle bundle)
             {
-                if ( policy.accept( bundle ) )
+                if (policy.accept(bundle))
                 {
                     IBundleModelElement info = bundle.getBundleInfo();
-                    if ( req.getSymbolicName().equals( info.getSymbolicName() )
-                        && req.getVersions().contains( info.getVersion() ) )
+                    if (req.getSymbolicName().equals(info.getSymbolicName())
+                        && req.getVersions().contains(info.getVersion()))
                     {
-                        found.add( bundle );
+                        found.add(bundle);
                         return false;
                     }
                 }
@@ -266,19 +252,17 @@ public abstract class AbstractBundleRepository implements IBundleRepository
 
         };
 
-        accept( visitor, options );
+        accept(visitor, options);
 
         return found.isEmpty() ? null : found.iterator().next();
     }
 
-
-    public IBundleModelElement buildBundleModelElement( Manifest mf )
+    public IBundleModelElement buildBundleModelElement(Manifest mf)
     {
         return ManifestUtil.buildBundleModelElement(mf);
     }
 
-
-    protected ILicensePolicy findPolicy( IModelElement elem )
+    protected ILicensePolicy findPolicy(IModelElement elem)
     {
         ILicenseManager man = BldCore.getLicenseManager();
 

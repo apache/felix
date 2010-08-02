@@ -52,50 +52,69 @@ public class MovePackageParticipant extends MoveParticipant
     public RefactoringStatus checkConditions(IProgressMonitor monitor,
         CheckConditionsContext context) throws OperationCanceledException
     {
-        if (getArguments().getUpdateReferences()) {
+        if (getArguments().getUpdateReferences())
+        {
             try
             {
                 ISigilProjectModel sourceProject = SigilCore.create(packageFragment.getJavaProject().getProject());
                 IPackageFragmentRoot dest = (IPackageFragmentRoot) getArguments().getDestination();
                 ISigilProjectModel destProject = SigilCore.create(dest.getJavaProject().getProject());
-                
+
                 RefactoringStatus status = new RefactoringStatus();
-                if ( !sourceProject.equals(destProject) ) {                    
+                if (!sourceProject.equals(destProject))
+                {
                     RefactorUtil.touch(context, sourceProject);
                     RefactorUtil.touch(context, destProject);
-                    
+
                     final String packageName = packageFragment.getElementName();
-                    IPackageExport oldExport = ModelHelper.findExport(sourceProject, packageName);
-                    
-                    if (oldExport != null) {
-                        IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(IPackageExport.class);
-                        
+                    IPackageExport oldExport = ModelHelper.findExport(sourceProject,
+                        packageName);
+
+                    if (oldExport != null)
+                    {
+                        IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(
+                            IPackageExport.class);
+
                         newExport.setPackageName(oldExport.getPackageName());
                         newExport.setVersion(oldExport.getRawVersion());
-                        
-                        changes.add(new ExportPackageChange(destProject,null, newExport));
-                        changes.add(new ExportPackageChange(sourceProject, oldExport, null));
-                        
-                        status.addWarning("Package " + packageName + " is exported from " + sourceProject.getSymbolicName() + ", this may effect client bundles that use require bundle");
-                    }
-                    else {
-                        SubMonitor sub = SubMonitor.convert(monitor);
-                        
-                        Set<String> users = JavaHelper.findLocalPackageUsers(sourceProject, packageName, sub.newChild(100));
-                        Set<String> dependencies = JavaHelper.findLocalPackageDependencies(sourceProject, packageName, sub.newChild(100));
 
-                        if (users.size() > 0 && dependencies.size() > 0) {
-                            status.addWarning("Package " + packageName + " is coupled to " + users + " and " + dependencies + " this may cause a cyclical dependency");
+                        changes.add(new ExportPackageChange(destProject, null, newExport));
+                        changes.add(new ExportPackageChange(sourceProject, oldExport,
+                            null));
+
+                        status.addWarning("Package " + packageName + " is exported from "
+                            + sourceProject.getSymbolicName()
+                            + ", this may effect client bundles that use require bundle");
+                    }
+                    else
+                    {
+                        SubMonitor sub = SubMonitor.convert(monitor);
+
+                        Set<String> users = JavaHelper.findLocalPackageUsers(
+                            sourceProject, packageName, sub.newChild(100));
+                        Set<String> dependencies = JavaHelper.findLocalPackageDependencies(
+                            sourceProject, packageName, sub.newChild(100));
+
+                        if (users.size() > 0 && dependencies.size() > 0)
+                        {
+                            status.addWarning("Package " + packageName
+                                + " is coupled to " + users + " and " + dependencies
+                                + " this may cause a cyclical dependency");
                         }
-                        
-                        if (users.size() > 0) { // attempt to move an API package
-                            IPackageExport newExport = createNewExport(status, destProject, packageName);
+
+                        if (users.size() > 0)
+                        { // attempt to move an API package
+                            IPackageExport newExport = createNewExport(status,
+                                destProject, packageName);
                             createNewImport(status, sourceProject, newExport);
                         }
-                        
-                        if (dependencies.size() > 0){ // moved an impl package
-                            for (String dep : dependencies) {
-                                IPackageExport newExport = createNewExport(status, sourceProject, dep);
+
+                        if (dependencies.size() > 0)
+                        { // moved an impl package
+                            for (String dep : dependencies)
+                            {
+                                IPackageExport newExport = createNewExport(status,
+                                    sourceProject, dep);
                                 createNewImport(status, destProject, newExport);
                             }
                         }
@@ -109,32 +128,36 @@ public class MovePackageParticipant extends MoveParticipant
                 throw new OperationCanceledException(e.getMessage());
             }
         }
-        else {
+        else
+        {
             return new RefactoringStatus();
         }
     }
 
-    private void createNewImport(RefactoringStatus status,
-        ISigilProjectModel project, IPackageExport export)
+    private void createNewImport(RefactoringStatus status, ISigilProjectModel project,
+        IPackageExport export)
     {
-        IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(IPackageImport.class);
+        IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(
+            IPackageImport.class);
         newImport.setPackageName(export.getPackageName());
         newImport.setVersions(ModelHelper.getDefaultRange(export.getVersion()));
-        
+
         status.addInfo("Creating new import in " + project.getSymbolicName());
-        changes.add( new ImportPackageChange(project, null, newImport));                            
+        changes.add(new ImportPackageChange(project, null, newImport));
     }
 
     private IPackageExport createNewExport(RefactoringStatus status,
         ISigilProjectModel project, String packageName)
     {
-        IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(IPackageExport.class);                            
-        newExport.setPackageName(packageName);                            
+        IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(
+            IPackageExport.class);
+        newExport.setPackageName(packageName);
         // new export inherits project version by default
         newExport.setVersion(project.getVersion());
-        
-        status.addInfo("Creating new export " + packageName + " in " + project.getSymbolicName());
-        changes.add( new ExportPackageChange(project, null, newExport));
+
+        status.addInfo("Creating new export " + packageName + " in "
+            + project.getSymbolicName());
+        changes.add(new ExportPackageChange(project, null, newExport));
         return newExport;
     }
 
@@ -142,15 +165,16 @@ public class MovePackageParticipant extends MoveParticipant
     public Change createChange(IProgressMonitor monitor) throws CoreException,
         OperationCanceledException
     {
-        if (changes.isEmpty()) {
+        if (changes.isEmpty())
+        {
             return new NullChange();
         }
-        else 
+        else
         {
             CompositeChange ret = new CompositeChange("Export-Package update");
-            
+
             ret.addAll(changes.toArray(new Change[changes.size()]));
-            
+
             return ret;
         }
     }

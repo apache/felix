@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.ant;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
@@ -28,7 +27,6 @@ import java.util.jar.Manifest;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
-
 public class BundleInfoTask extends Task
 {
     private File bundle;
@@ -36,51 +34,52 @@ public class BundleInfoTask extends Task
     private String property;
     private String defaultValue;
 
-
     @Override
     public void execute() throws BuildException
     {
-        if ( bundle == null )
-            throw new BuildException( "missing attribute: bundle" );
-        if ( header == null )
-            throw new BuildException( "missing attribute: header" );
+        if (bundle == null)
+            throw new BuildException("missing attribute: bundle");
+        if (header == null)
+            throw new BuildException("missing attribute: header");
 
         JarFile jar = null;
-        
+
         try
         {
-            jar = new JarFile( bundle, false );
+            jar = new JarFile(bundle, false);
             Manifest mf = jar.getManifest();
-            String value = mf.getMainAttributes().getValue( header );
-            if ( property == null )
+            String value = mf.getMainAttributes().getValue(header);
+            if (property == null)
             {
-                log( header + "=" + value );
+                log(header + "=" + value);
             }
             else
             {
-                if ( "Bundle-SymbolicName".equals( header ) && value != null )
+                if ("Bundle-SymbolicName".equals(header) && value != null)
                 {
                     // remove singleton flag
-                    int semi = value.indexOf( ';' );
-                    if ( semi > 0 )
-                        value = value.substring( 0, semi );
+                    int semi = value.indexOf(';');
+                    if (semi > 0)
+                        value = value.substring(0, semi);
                 }
-                if ( value == null )
+                if (value == null)
                 {
                     value = defaultValue;
                 }
-                if ( value != null )
+                if (value != null)
                 {
-                    getProject().setNewProperty( property, value );
+                    getProject().setNewProperty(property, value);
                 }
             }
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
-            throw new BuildException( "Failed to access bundle", e );
+            throw new BuildException("Failed to access bundle", e);
         }
-        finally {
-            if ( jar != null ) {
+        finally
+        {
+            if (jar != null)
+            {
                 try
                 {
                     jar.close();
@@ -94,26 +93,22 @@ public class BundleInfoTask extends Task
         }
     }
 
-
-    public void setBundle( String bundle )
+    public void setBundle(String bundle)
     {
-        this.bundle = new File( bundle );
+        this.bundle = new File(bundle);
     }
 
-
-    public void setHeader( String header )
+    public void setHeader(String header)
     {
         this.header = header;
     }
 
-
-    public void setProperty( String property )
+    public void setProperty(String property)
     {
         this.property = property;
     }
 
-
-    public void setDefaultValue( String defaultValue )
+    public void setDefaultValue(String defaultValue)
     {
         this.defaultValue = defaultValue;
     }

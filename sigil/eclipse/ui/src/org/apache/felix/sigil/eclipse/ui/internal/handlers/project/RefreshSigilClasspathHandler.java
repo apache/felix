@@ -19,10 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.handlers.project;
 
-
 import org.apache.felix.sigil.eclipse.ui.internal.handlers.IResourceCommandHandler;
 import org.apache.felix.sigil.eclipse.ui.internal.handlers.SelectionResourceCommandHandler;
-
 
 public class RefreshSigilClasspathHandler extends SelectionResourceCommandHandler
 {

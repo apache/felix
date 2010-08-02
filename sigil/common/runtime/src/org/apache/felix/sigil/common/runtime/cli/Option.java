@@ -116,8 +116,7 @@ public class Option implements Cloneable, Serializable
      * @throws IllegalArgumentException if there are any non valid
      * Option characters in <code>opt</code>.
      */
-    public Option(String opt, String longOpt, boolean hasArg, String description)
-           throws IllegalArgumentException
+    public Option(String opt, String longOpt, boolean hasArg, String description) throws IllegalArgumentException
     {
         // ensure that the option is valid
         OptionValidator.validateOption(opt);
@@ -529,7 +528,8 @@ public class Option implements Cloneable, Serializable
      */
     public String[] getValues()
     {
-        return hasNoValues() ? null : (String[]) values.toArray(new String[values.size()]);
+        return hasNoValues() ? null
+            : (String[]) values.toArray(new String[values.size()]);
     }
 
     /**
@@ -603,7 +603,6 @@ public class Option implements Cloneable, Serializable
 
         Option option = (Option) o;
 
-
         if (opt != null ? !opt.equals(option.opt) : option.opt != null)
         {
             return false;
@@ -644,7 +643,8 @@ public class Option implements Cloneable, Serializable
         }
         catch (CloneNotSupportedException cnse)
         {
-            throw new RuntimeException("A CloneNotSupportedException was thrown: " + cnse.getMessage());
+            throw new RuntimeException("A CloneNotSupportedException was thrown: "
+                + cnse.getMessage());
         }
     }
 
@@ -667,7 +667,8 @@ public class Option implements Cloneable, Serializable
      */
     public boolean addValue(String value)
     {
-        throw new UnsupportedOperationException("The addValue method is not intended for client use. "
+        throw new UnsupportedOperationException(
+            "The addValue method is not intended for client use. "
                 + "Subclasses should use the addValueForProcessing method instead. ");
     }
 

@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.internal.model.eclipse;
 
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,7 +47,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.osgi.framework.Version;
 
-
 /**
  * @author dave
  *
@@ -70,106 +68,109 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
 
     public SigilBundle()
     {
-        super( "Sigil Bundle" );
+        super("Sigil Bundle");
         sourcePaths = new Resource[0];
         classpath = new String[0];
         packages = new String[0];
     }
 
-
-    public void synchronize( IProgressMonitor monitor ) throws IOException
+    public void synchronize(IProgressMonitor monitor) throws IOException
     {
-        SubMonitor progress = SubMonitor.convert( monitor, 100 );
-        progress.subTask( "Synchronizing " + bundle.getSymbolicName() + " binary" );
-        sync( location, bundle.getUpdateLocation(), progress.newChild( 45 ) );
-        
-        if ( bundle.getSourceLocation() != null ) {
+        SubMonitor progress = SubMonitor.convert(monitor, 100);
+        progress.subTask("Synchronizing " + bundle.getSymbolicName() + " binary");
+        sync(location, bundle.getUpdateLocation(), progress.newChild(45));
+
+        if (bundle.getSourceLocation() != null)
+        {
             try
             {
-                progress.subTask( "Synchronizing " + bundle.getSymbolicName() + " source" );
-                sync( sourcePathLocation, bundle.getSourceLocation(), progress.newChild( 45 ) );
+                progress.subTask("Synchronizing " + bundle.getSymbolicName() + " source");
+                sync(sourcePathLocation, bundle.getSourceLocation(),
+                    progress.newChild(45));
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                BldCore.error( "Failed to download source for " + bundle.getSymbolicName() + " " + bundle.getVersion(), e
-                    .getCause() );
+                BldCore.error("Failed to download source for " + bundle.getSymbolicName()
+                    + " " + bundle.getVersion(), e.getCause());
             }
         }
-        
-        if ( bundle.getLicenseURI() != null ) {
+
+        if (bundle.getLicenseURI() != null)
+        {
             try
             {
-                progress.subTask( "Synchronizing " + bundle.getSymbolicName() + " licence" );
-                sync( licencePathLocation, bundle.getLicenseURI(), progress.newChild( 10 ) );
+                progress.subTask("Synchronizing " + bundle.getSymbolicName() + " licence");
+                sync(licencePathLocation, bundle.getLicenseURI(), progress.newChild(10));
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
-                BldCore.error( "Failed to download licence for " + bundle.getSymbolicName() + " " + bundle.getVersion(), e
-                    .getCause() );
+                BldCore.error("Failed to download licence for "
+                    + bundle.getSymbolicName() + " " + bundle.getVersion(), e.getCause());
             }
         }
-        
+
         updateManifest(location);
     }
 
-
     private void updateManifest(File location) throws IOException
     {
-        if ( location != null ) {
+        if (location != null)
+        {
             JarFile f = new JarFile(location);
-            try {
+            try
+            {
                 setBundleInfo(ManifestUtil.buildBundleModelElement(f.getManifest()));
             }
-            finally {
+            finally
+            {
                 f.close();
             }
         }
     }
-
 
     public boolean isSynchronized()
     {
         return location == null || location.exists();
     }
 
-
-    private static void sync( File local, URI remote, IProgressMonitor monitor ) throws IOException
+    private static void sync(File local, URI remote, IProgressMonitor monitor)
+        throws IOException
     {
         try
         {
-            if ( remote != null )
+            if (remote != null)
             {
-                if ( local != null && !local.exists() )
+                if (local != null && !local.exists())
                 {
                     URL url = remote.toURL();
                     URLConnection connection = url.openConnection();
                     int contentLength = connection.getContentLength();
 
-                    monitor.beginTask( "Downloading from " + url.getHost(), contentLength );
+                    monitor.beginTask("Downloading from " + url.getHost(), contentLength);
 
                     InputStream in = null;
                     OutputStream out = null;
                     try
                     {
                         URLConnection conn = url.openConnection();
-                        if ( conn instanceof HttpURLConnection )
+                        if (conn instanceof HttpURLConnection)
                         {
-                            HttpURLConnection http = ( HttpURLConnection ) conn;
-                            http.setConnectTimeout( 10000 );
-                            http.setReadTimeout( 5000 );
+                            HttpURLConnection http = (HttpURLConnection) conn;
+                            http.setConnectTimeout(10000);
+                            http.setReadTimeout(5000);
                         }
                         in = conn.getInputStream();
                         local.getParentFile().mkdirs();
-                        out = new FileOutputStream( local );
-                        stream( in, out, monitor );
+                        out = new FileOutputStream(local);
+                        stream(in, out, monitor);
                     }
                     finally
                     {
-                        if ( in != null )
+                        if (in != null)
                         {
                             in.close();
                         }
-                        if ( out != null )
+                        if (out != null)
                         {
                             out.close();
                         }
@@ -178,152 +179,137 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
                 }
             }
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
             local.delete();
             throw e;
         }
     }
 
-
-    private static void stream( InputStream in, OutputStream out, IProgressMonitor monitor ) throws IOException
+    private static void stream(InputStream in, OutputStream out, IProgressMonitor monitor)
+        throws IOException
     {
         byte[] b = new byte[1024];
-        for ( ;; )
+        for (;;)
         {
-            if ( monitor.isCanceled() )
+            if (monitor.isCanceled())
             {
-                throw new InterruptedIOException( "User canceled download" );
+                throw new InterruptedIOException("User canceled download");
             }
-            int r = in.read( b );
-            if ( r == -1 )
+            int r = in.read(b);
+            if (r == -1)
                 break;
-            out.write( b, 0, r );
-            monitor.worked( r );
+            out.write(b, 0, r);
+            monitor.worked(r);
         }
 
         out.flush();
     }
-
 
     public IBundleModelElement getBundleInfo()
     {
         return bundle;
     }
 
-
-    public void setBundleInfo( IBundleModelElement bundle )
+    public void setBundleInfo(IBundleModelElement bundle)
     {
-        if ( bundle == null )
+        if (bundle == null)
         {
-            if ( this.bundle != null )
+            if (this.bundle != null)
             {
-                this.bundle.setParent( null );
+                this.bundle.setParent(null);
             }
         }
         else
         {
-            bundle.setParent( this );
+            bundle.setParent(this);
         }
         this.bundle = bundle;
     }
 
-
-    public void addSourcePath( Resource path )
+    public void addSourcePath(Resource path)
     {
         ArrayList<Resource> tmp = new ArrayList<Resource>(getSourcePaths());
         tmp.add(path);
-        sourcePaths = tmp.toArray( new Resource[tmp.size()] );
+        sourcePaths = tmp.toArray(new Resource[tmp.size()]);
     }
 
-
-    public void removeSourcePath( Resource path )
+    public void removeSourcePath(Resource path)
     {
         ArrayList<Resource> tmp = new ArrayList<Resource>(getSourcePaths());
-        if ( tmp.remove(path) ) {
-            sourcePaths = tmp.toArray( new Resource[tmp.size()] );
+        if (tmp.remove(path))
+        {
+            sourcePaths = tmp.toArray(new Resource[tmp.size()]);
         }
     }
-
 
     public Collection<Resource> getSourcePaths()
     {
         return Arrays.asList(sourcePaths);
     }
 
-
     public void clearSourcePaths()
     {
         sourcePaths = new Resource[0];
     }
 
-
-    public void addClasspathEntry( String encodedClasspath )
+    public void addClasspathEntry(String encodedClasspath)
     {
         ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
         tmp.add(encodedClasspath.trim());
-        classpath = tmp.toArray( new String[tmp.size()] );
+        classpath = tmp.toArray(new String[tmp.size()]);
     }
-
 
     public Collection<String> getClasspathEntrys()
     {
         return Arrays.asList(classpath);
     }
 
-
-    public void removeClasspathEntry( String encodedClasspath )
+    public void removeClasspathEntry(String encodedClasspath)
     {
         ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
-        if ( tmp.remove( encodedClasspath.trim() ) ) {
-            classpath = tmp.toArray( new String[tmp.size()] );
+        if (tmp.remove(encodedClasspath.trim()))
+        {
+            classpath = tmp.toArray(new String[tmp.size()]);
         }
     }
-
 
     public File getLocation()
     {
         return location;
     }
 
-
-    public void setLocation( File location )
+    public void setLocation(File location)
     {
         this.location = location;
     }
-
 
     public File getSourcePathLocation()
     {
         return sourcePathLocation;
     }
 
-
-    public void setSourcePathLocation( File location )
+    public void setSourcePathLocation(File location)
     {
         this.sourcePathLocation = location;
     }
-
 
     public String getSourceRootPath()
     {
         return sourceRootPath;
     }
 
-
-    public void setSourceRootPath( String location )
+    public void setSourceRootPath(String location)
     {
         this.sourceRootPath = location;
     }
-
 
     public File getLicencePathLocation()
     {
         return licencePathLocation;
     }
 
-
-    public void setLicencePathLocation( File licencePathLocation )
+    public void setLicencePathLocation(File licencePathLocation)
     {
         this.licencePathLocation = licencePathLocation;
     }
@@ -333,57 +319,52 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         return bundle.getSymbolicName();
     }
 
-
     public Version getVersion()
     {
         return bundle.getVersion();
     }
 
-
-    public void setVersion( Version version )
+    public void setVersion(Version version)
     {
-        this.bundle.setVersion( version );
+        this.bundle.setVersion(version);
     }
-
 
     public String getSymbolicName()
     {
         return bundle.getSymbolicName();
     }
 
-
     public Collection<String> getPackages()
     {
         return Arrays.asList(packages);
     }
 
-
-    public void addPackage( String pkg )
+    public void addPackage(String pkg)
     {
         ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
         tmp.add(pkg);
-        packages = tmp.toArray( new String[tmp.size()] );
+        packages = tmp.toArray(new String[tmp.size()]);
     }
 
-
-    public boolean removePackage( String pkg )
+    public boolean removePackage(String pkg)
     {
         ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
-        if ( tmp.remove(pkg) ) {
-            packages = tmp.toArray( new String[tmp.size()] );
+        if (tmp.remove(pkg))
+        {
+            packages = tmp.toArray(new String[tmp.size()]);
             return true;
         }
-        else {
+        else
+        {
             return false;
         }
     }
 
-
-    public IPackageExport findExport( String packageName )
+    public IPackageExport findExport(String packageName)
     {
-        for ( IPackageExport e : bundle.getExports() )
+        for (IPackageExport e : bundle.getExports())
         {
-            if ( packageName.equals( e.getPackageName() ) )
+            if (packageName.equals(e.getPackageName()))
             {
                 return e;
             }
@@ -391,44 +372,42 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         return null;
     }
 
-
-    public IPackageImport findImport( String packageName )
+    public IPackageImport findImport(String packageName)
     {
-        for ( IPackageImport i : bundle.getImports() )
+        for (IPackageImport i : bundle.getImports())
         {
-            if ( packageName.equals( i.getPackageName() ) )
+            if (packageName.equals(i.getPackageName()))
             {
                 return i;
             }
         }
         return null;
     }
-    
+
     @Override
     public String toString()
     {
         return "SigilBundle["
-            + ( getBundleInfo() == null ? null : ( getBundleInfo().getSymbolicName() + ":" + getBundleInfo()
-                .getVersion() ) ) + "]";
+            + (getBundleInfo() == null ? null
+                : (getBundleInfo().getSymbolicName() + ":" + getBundleInfo().getVersion()))
+            + "]";
     }
 
-
     @Override
-    public boolean equals( Object obj )
+    public boolean equals(Object obj)
     {
-        if ( obj == null )
+        if (obj == null)
             return false;
-        if ( obj == this )
+        if (obj == this)
             return true;
 
-        if ( obj instanceof SigilBundle )
+        if (obj instanceof SigilBundle)
         {
-            return obj.toString().equals( toString() );
+            return obj.toString().equals(toString());
         }
 
         return false;
     }
-
 
     @Override
     public int hashCode()
@@ -441,15 +420,15 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
     {
         SigilBundle b = (SigilBundle) super.clone();
         b.bundle = (IBundleModelElement) b.bundle.clone();
-        
+
         Resource[] newPaths = new Resource[b.sourcePaths.length];
         System.arraycopy(b.sourcePaths, 0, newPaths, 0, b.sourcePaths.length);
         b.sourcePaths = newPaths;
-        
+
         String[] tmp = new String[classpath.length];
         System.arraycopy(b.classpath, 0, tmp, 0, b.classpath.length);
         b.classpath = tmp;
-        
+
         tmp = new String[packages.length];
         System.arraycopy(b.packages, 0, tmp, 0, b.packages.length);
         b.packages = tmp;
@@ -457,9 +436,8 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         return b;
     }
 
-
     public IBundleCapability getBundleCapability()
     {
         return new BundleCapability(bundle);
-    }    
+    }
 }

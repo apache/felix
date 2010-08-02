@@ -32,7 +32,7 @@ import java.util.Map;
 public class OptionGroup implements Serializable
 {
     private static final long serialVersionUID = 1L;
-    
+
     /** hold the options */
     private Map optionMap = new HashMap();
 

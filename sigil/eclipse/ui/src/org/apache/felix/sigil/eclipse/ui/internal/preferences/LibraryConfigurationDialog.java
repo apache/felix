@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences;
 
-
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -54,21 +53,21 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.osgi.framework.Version;
 
-
 public class LibraryConfigurationDialog extends TitleAreaDialog
 {
 
     private static final Comparator<IPackageImport> COMPARATOR = new Comparator<IPackageImport>()
     {
-        public int compare( IPackageImport o1, IPackageImport o2 )
+        public int compare(IPackageImport o1, IPackageImport o2)
         {
-            return o1.getPackageName().compareTo( o2.getPackageName() );
+            return o1.getPackageName().compareTo(o2.getPackageName());
         }
     };
 
     private String name;
     private Version version;
-    private TreeSet<IPackageImport> packageImports = new TreeSet<IPackageImport>( COMPARATOR );
+    private TreeSet<IPackageImport> packageImports = new TreeSet<IPackageImport>(
+        COMPARATOR);
 
     private boolean editOnly;
 
@@ -76,145 +75,141 @@ public class LibraryConfigurationDialog extends TitleAreaDialog
     private Text txtName;
     private Text txtVersion;
 
-
-    public LibraryConfigurationDialog( Shell parentShell )
+    public LibraryConfigurationDialog(Shell parentShell)
     {
-        super( parentShell );
+        super(parentShell);
         name = "";
         version = Version.emptyVersion;
     }
 
-
-    public LibraryConfigurationDialog( Shell parentShell, ILibrary lib )
+    public LibraryConfigurationDialog(Shell parentShell, ILibrary lib)
     {
-        super( parentShell );
+        super(parentShell);
         editOnly = true;
         name = lib.getName();
         version = lib.getVersion();
-        packageImports.addAll( lib.getImports() );
+        packageImports.addAll(lib.getImports());
     }
 
-
     @Override
-    protected Control createDialogArea( Composite par )
+    protected Control createDialogArea(Composite par)
     {
-        setTitle( "Add Library" );
-        Composite container = ( Composite ) super.createDialogArea( par );
+        setTitle("Add Library");
+        Composite container = (Composite) super.createDialogArea(par);
 
-        Composite topPanel = new Composite( container, SWT.NONE );
+        Composite topPanel = new Composite(container, SWT.NONE);
 
-        new Label( topPanel, SWT.NONE ).setText( "Name" );
+        new Label(topPanel, SWT.NONE).setText("Name");
 
-        txtName = new Text( topPanel, SWT.BORDER );
-        txtName.setEditable( !editOnly );
-        if ( name != null )
-            txtName.setText( name );
+        txtName = new Text(topPanel, SWT.BORDER);
+        txtName.setEditable(!editOnly);
+        if (name != null)
+            txtName.setText(name);
 
-        new Label( topPanel, SWT.NONE ).setText( "Version" );
+        new Label(topPanel, SWT.NONE).setText("Version");
 
-        txtVersion = new Text( topPanel, SWT.BORDER );
-        txtVersion.setText( version.toString() );
-        txtVersion.setEditable( !editOnly );
+        txtVersion = new Text(topPanel, SWT.BORDER);
+        txtVersion.setText(version.toString());
+        txtVersion.setEditable(!editOnly);
 
-        Composite bottomPanel = new Composite( container, SWT.NONE );
+        Composite bottomPanel = new Composite(container, SWT.NONE);
 
-        Table table = new Table( bottomPanel, SWT.BORDER );
-        table.setSize( new Point( 300, 200 ) );
+        Table table = new Table(bottomPanel, SWT.BORDER);
+        table.setSize(new Point(300, 200));
 
-        Button add = new Button( bottomPanel, SWT.PUSH );
-        add.setText( "Add..." );
+        Button add = new Button(bottomPanel, SWT.PUSH);
+        add.setText("Add...");
 
-        final Button edit = new Button( bottomPanel, SWT.PUSH );
-        edit.setText( "Edit..." );
-        edit.setEnabled( false );
+        final Button edit = new Button(bottomPanel, SWT.PUSH);
+        edit.setText("Edit...");
+        edit.setEnabled(false);
 
-        final Button remove = new Button( bottomPanel, SWT.PUSH );
-        remove.setText( "Remove" );
-        remove.setEnabled( false );
+        final Button remove = new Button(bottomPanel, SWT.PUSH);
+        remove.setText("Remove");
+        remove.setEnabled(false);
 
         updateState();
 
         // Hookup Listeners
-        txtName.addModifyListener( new ModifyListener()
+        txtName.addModifyListener(new ModifyListener()
         {
-            public void modifyText( ModifyEvent e )
+            public void modifyText(ModifyEvent e)
             {
                 updateState();
             }
-        } );
-        txtVersion.addModifyListener( new ModifyListener()
+        });
+        txtVersion.addModifyListener(new ModifyListener()
         {
-            public void modifyText( ModifyEvent e )
+            public void modifyText(ModifyEvent e)
             {
                 updateState();
             }
-        } );
-        add.addSelectionListener( new SelectionAdapter()
+        });
+        add.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 handleAdd();
             }
-        } );
-        edit.addSelectionListener( new SelectionAdapter()
+        });
+        edit.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 handleEdit();
             }
-        } );
-        remove.addSelectionListener( new SelectionAdapter()
+        });
+        remove.addSelectionListener(new SelectionAdapter()
         {
-            public void widgetSelected( SelectionEvent e )
+            public void widgetSelected(SelectionEvent e)
             {
                 handleRemove();
             }
-        } );
+        });
 
         // Layout
-        topPanel.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        topPanel.setLayout( new GridLayout( 2, false ) );
-        txtName.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        txtVersion.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
+        topPanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        topPanel.setLayout(new GridLayout(2, false));
+        txtName.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        txtVersion.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
-        bottomPanel.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
-        bottomPanel.setLayout( new GridLayout( 2, false ) );
-        table.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true, 1, 4 ) );
-        add.setLayoutData( new GridData( SWT.FILL, SWT.FILL, false, false ) );
-        edit.setLayoutData( new GridData( SWT.FILL, SWT.FILL, false, false ) );
-        remove.setLayoutData( new GridData( SWT.FILL, SWT.FILL, false, false ) );
+        bottomPanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        bottomPanel.setLayout(new GridLayout(2, false));
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 4));
+        add.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        edit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        remove.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 
         // Table Viewer
-        viewer = new TableViewer( table );
-        viewer.setLabelProvider( new LabelProvider()
+        viewer = new TableViewer(table);
+        viewer.setLabelProvider(new LabelProvider()
         {
             @Override
-            public String getText( Object element )
+            public String getText(Object element)
             {
-                IPackageImport pi = ( IPackageImport ) element;
+                IPackageImport pi = (IPackageImport) element;
                 return pi.getPackageName() + " " + pi.getVersions();
             }
-        } );
-        viewer.addSelectionChangedListener( new ISelectionChangedListener()
+        });
+        viewer.addSelectionChangedListener(new ISelectionChangedListener()
         {
-            public void selectionChanged( SelectionChangedEvent event )
+            public void selectionChanged(SelectionChangedEvent event)
             {
-                edit.setEnabled( !event.getSelection().isEmpty() );
-                remove.setEnabled( !event.getSelection().isEmpty() );
+                edit.setEnabled(!event.getSelection().isEmpty());
+                remove.setEnabled(!event.getSelection().isEmpty());
             }
-        } );
-        viewer.setContentProvider( new DefaultTableProvider()
+        });
+        viewer.setContentProvider(new DefaultTableProvider()
         {
-            public Object[] getElements( Object inputElement )
+            public Object[] getElements(Object inputElement)
             {
-                return toArray( inputElement );
+                return toArray(inputElement);
             }
-        } );
+        });
 
-        viewer.setInput( packageImports );
+        viewer.setInput(packageImports);
         return container;
     }
-
 
     private void updateState()
     {
@@ -225,44 +220,42 @@ public class LibraryConfigurationDialog extends TitleAreaDialog
 
         try
         {
-            version = VersionTable.getVersion( txtVersion.getText() );
-            if ( version.getQualifier().indexOf( '_' ) > -1 )
+            version = VersionTable.getVersion(txtVersion.getText());
+            if (version.getQualifier().indexOf('_') > -1)
             {
                 warning = "The use of underscores in a version qualifier is discouraged.";
             }
         }
-        catch ( IllegalArgumentException e )
+        catch (IllegalArgumentException e)
         {
             version = null;
             error = "Invalid version format";
         }
 
-        Button okButton = getButton( IDialogConstants.OK_ID );
-        if ( okButton != null && !okButton.isDisposed() )
-            okButton.setEnabled( allowOkay() );
+        Button okButton = getButton(IDialogConstants.OK_ID);
+        if (okButton != null && !okButton.isDisposed())
+            okButton.setEnabled(allowOkay());
 
-        setErrorMessage( error );
-        setMessage( warning, IMessageProvider.WARNING );
+        setErrorMessage(error);
+        setMessage(warning, IMessageProvider.WARNING);
     }
-
 
     private boolean allowOkay()
     {
         return name != null && name.length() > 0 && version != null;
     }
 
-
     @Override
-    protected Button createButton( Composite parent, int id, String label, boolean defaultButton )
+    protected Button createButton(Composite parent, int id, String label,
+        boolean defaultButton)
     {
-        Button button = super.createButton( parent, id, label, defaultButton );
-        if ( id == IDialogConstants.OK_ID )
+        Button button = super.createButton(parent, id, label, defaultButton);
+        if (id == IDialogConstants.OK_ID)
         {
-            button.setEnabled( allowOkay() );
+            button.setEnabled(allowOkay());
         }
         return button;
     }
-
 
     private void handleAdd()
     {
@@ -277,7 +270,6 @@ public class LibraryConfigurationDialog extends TitleAreaDialog
         	viewer.refresh();
         }*/
     }
-
 
     private void handleEdit()
     {
@@ -312,33 +304,32 @@ public class LibraryConfigurationDialog extends TitleAreaDialog
         } */
     }
 
-
     private void handleRemove()
     {
-        IStructuredSelection selection = ( IStructuredSelection ) viewer.getSelection();
+        IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 
-        if ( !selection.isEmpty() )
+        if (!selection.isEmpty())
         {
-            for ( Iterator<IPackageImport> i = selection.iterator(); i.hasNext(); )
+            for (Iterator<IPackageImport> i = selection.iterator(); i.hasNext();)
             {
-                packageImports.remove( i.next() );
+                packageImports.remove(i.next());
             }
 
             viewer.refresh();
         }
     }
 
-
     public ILibrary getLibrary()
     {
-        ILibrary library = ModelElementFactory.getInstance().newModelElement( ILibrary.class );
+        ILibrary library = ModelElementFactory.getInstance().newModelElement(
+            ILibrary.class);
 
-        library.setName( name );
-        library.setVersion( version );
+        library.setName(name);
+        library.setVersion(version);
 
-        for ( IPackageImport pi : packageImports )
+        for (IPackageImport pi : packageImports)
         {
-            library.addImport( pi );
+            library.addImport(pi);
         }
 
         return library;

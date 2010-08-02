@@ -19,14 +19,11 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.Collection;
-
 
 public interface IAccumulator<E>
 {
-    public void addElement( E element );
+    public void addElement(E element);
 
-
-    public void addElements( Collection<? extends E> elements );
+    public void addElements(Collection<? extends E> elements);
 }

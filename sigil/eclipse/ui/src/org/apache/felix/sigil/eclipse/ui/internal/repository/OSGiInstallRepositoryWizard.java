@@ -19,15 +19,13 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.repository;
 
-
 import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizard;
-
 
 public class OSGiInstallRepositoryWizard extends RepositoryWizard
 {
     @Override
     public void addPages()
     {
-        addPage( new OSGiInstallRepositoryWizardPage( this ) );
+        addPage(new OSGiInstallRepositoryWizardPage(this));
     }
 }

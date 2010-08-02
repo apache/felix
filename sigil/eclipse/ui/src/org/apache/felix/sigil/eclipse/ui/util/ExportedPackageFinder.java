@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,46 +32,44 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.progress.IJobRunnable;
 
-
 public class ExportedPackageFinder implements IJobRunnable
 {
 
     private final IAccumulator<? super IPackageExport> accumulator;
     private final ISigilProjectModel sigil;
 
-
-    public ExportedPackageFinder( ISigilProjectModel sigil, IAccumulator<? super IPackageExport> accumulator )
+    public ExportedPackageFinder(ISigilProjectModel sigil, IAccumulator<? super IPackageExport> accumulator)
     {
         this.sigil = sigil;
         this.accumulator = accumulator;
     }
 
-
-    public IStatus run( final IProgressMonitor monitor )
+    public IStatus run(final IProgressMonitor monitor)
     {
-        final List<IPackageExport> exports = new ArrayList<IPackageExport>( ResourcesDialogHelper.UPDATE_BATCH_SIZE );
+        final List<IPackageExport> exports = new ArrayList<IPackageExport>(
+            ResourcesDialogHelper.UPDATE_BATCH_SIZE);
         final IModelWalker walker = new IModelWalker()
         {
-            public boolean visit( IModelElement element )
+            public boolean visit(IModelElement element)
             {
-                if ( element instanceof IPackageExport )
+                if (element instanceof IPackageExport)
                 {
-                    IPackageExport pkgExport = ( IPackageExport ) element;
-                    exports.add( pkgExport );
+                    IPackageExport pkgExport = (IPackageExport) element;
+                    exports.add(pkgExport);
 
-                    if ( exports.size() >= ResourcesDialogHelper.UPDATE_BATCH_SIZE )
+                    if (exports.size() >= ResourcesDialogHelper.UPDATE_BATCH_SIZE)
                     {
-                        accumulator.addElements( exports );
+                        accumulator.addElements(exports);
                         exports.clear();
                     }
                 }
                 return !monitor.isCanceled();
             }
         };
-        SigilCore.getRepositoryManager( sigil ).visit( walker );
-        if ( exports.size() > 0 )
+        SigilCore.getRepositoryManager(sigil).visit(walker);
+        if (exports.size() > 0)
         {
-            accumulator.addElements( exports );
+            accumulator.addElements(exports);
         }
 
         return Status.OK_STATUS;

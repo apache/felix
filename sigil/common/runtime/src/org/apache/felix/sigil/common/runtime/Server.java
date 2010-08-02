@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.runtime;
 
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -47,7 +46,6 @@ import static org.apache.felix.sigil.common.runtime.Runtime.ADDRESS_PROPERTY;
 import static org.apache.felix.sigil.common.runtime.Runtime.PORT_PROPERTY;
 import static org.apache.felix.sigil.common.runtime.io.Constants.*;
 
-
 /**
  * @author dave
  *
@@ -60,54 +58,52 @@ public class Server
 
     private AtomicBoolean stopped = new AtomicBoolean();
 
-
-    public Server( Framework fw )
+    public Server(Framework fw)
     {
         this.fw = fw;
     }
 
-
-    public void start( Properties props ) throws IOException
+    public void start(Properties props) throws IOException
     {
         final ServerSocket socket = new ServerSocket();
-        
-        String v = props.getProperty( ADDRESS_PROPERTY );
-        InetAddress address = v == null ? null : InetAddress.getByName( v );
-        int port = Integer.parseInt( props.getProperty( PORT_PROPERTY, "0" ) );
-        
-        InetSocketAddress socketAddress = new InetSocketAddress(address, port);        
-        socket.bind( socketAddress );
 
-        Main.log( "Started server listening on " + socket.getLocalSocketAddress() + ":" + socket.getLocalPort() );
-        
-        accept = new Thread( new Runnable()
+        String v = props.getProperty(ADDRESS_PROPERTY);
+        InetAddress address = v == null ? null : InetAddress.getByName(v);
+        int port = Integer.parseInt(props.getProperty(PORT_PROPERTY, "0"));
+
+        InetSocketAddress socketAddress = new InetSocketAddress(address, port);
+        socket.bind(socketAddress);
+
+        Main.log("Started server listening on " + socket.getLocalSocketAddress() + ":"
+            + socket.getLocalPort());
+
+        accept = new Thread(new Runnable()
         {
             public void run()
             {
-                while ( !stopped.get() )
+                while (!stopped.get())
                 {
                     try
                     {
-                        read.execute( new Reader( socket.accept() ) );
+                        read.execute(new Reader(socket.accept()));
                     }
-                    catch ( IOException e )
+                    catch (IOException e)
                     {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
             }
-        } );
-        
-        accept.start();
-        
-        Main.log( "Started thread!" );
-    }
+        });
 
+        accept.start();
+
+        Main.log("Started thread!");
+    }
 
     public void stop()
     {
-        stopped.set( true );
+        stopped.set(true);
         accept.interrupt();
         accept = null;
     }
@@ -117,81 +113,83 @@ public class Server
 
         private final Socket socket;
 
-
         /**
          * @param accept
          */
-        public Reader( Socket socket )
+        public Reader(Socket socket)
         {
             this.socket = socket;
         }
-
 
         /* (non-Javadoc)
          * @see java.lang.Runnable#run()
          */
         public void run()
         {
-            Main.log( "Accepted " + socket.getInetAddress() + ":" + socket.getLocalPort() );
-            
+            Main.log("Accepted " + socket.getInetAddress() + ":" + socket.getLocalPort());
+
             try
             {
-                DataInputStream in = new DataInputStream( socket.getInputStream() );
-                DataOutputStream out = new DataOutputStream( socket.getOutputStream() );
-                
-                while ( !stopped.get() )
+                DataInputStream in = new DataInputStream(socket.getInputStream());
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+                while (!stopped.get())
                 {
                     int action = in.readInt();
-                    
+
                     Action<?, ?> task = null;
-                    
-                    switch ( action )
+
+                    switch (action)
                     {
                         case INSTALL:
-                            task = new InstallAction( in, out );
+                            task = new InstallAction(in, out);
                             break;
                         case START:
-                            task = new StartAction( in, out );
+                            task = new StartAction(in, out);
                             break;
                         case STOP:
-                            task = new StopAction( in, out );
+                            task = new StopAction(in, out);
                             break;
                         case UNINSTALL:
-                            task = new UninstallAction( in, out );
+                            task = new UninstallAction(in, out);
                             break;
                         case UPDATE:
-                            task = new UpdateAction( in, out );
+                            task = new UpdateAction(in, out);
                             break;
                         case STATUS:
-                            task = new StatusAction( in, out );
+                            task = new StatusAction(in, out);
                             break;
                         case REFRESH:
                             task = new RefreshAction(in, out);
                             break;
                     }
-                    
-                    if ( task == null ) {
-                        Main.log( "Invalid action " + action );
+
+                    if (task == null)
+                    {
+                        Main.log("Invalid action " + action);
                     }
-                    else {
-                        task.server( fw );
+                    else
+                    {
+                        task.server(fw);
                     }
                 }
             }
-            catch ( EOFException e ) {
+            catch (EOFException e)
+            {
                 // fine
             }
-            catch ( IOException e )
+            catch (IOException e)
             {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            finally {
+            finally
+            {
                 try
                 {
                     socket.close();
                 }
-                catch ( IOException e )
+                catch (IOException e)
                 {
                     // TODO Auto-generated catch block
                     e.printStackTrace();

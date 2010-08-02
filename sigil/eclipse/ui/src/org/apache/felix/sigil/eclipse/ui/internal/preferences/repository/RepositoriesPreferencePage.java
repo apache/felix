@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryConfiguration;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositorySet;
@@ -37,7 +36,6 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-
 public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage implements IWorkbenchPreferencePage
 {
 
@@ -45,20 +43,17 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
     private RepositoriesView viewPage;
     private RepositorySetsView setPage;
 
-
     public RepositoriesPreferencePage()
     {
-        super( "Repository Preferences" );
+        super("Repository Preferences");
     }
-
 
     @Override
-    protected Control createContents( Composite parent )
+    protected Control createContents(Composite parent)
     {
-        Control control = initContents( parent );
+        Control control = initContents(parent);
         return control;
     }
-
 
     @Override
     protected IPreferenceStore doGetPreferenceStore()
@@ -66,44 +61,40 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
         return SigilCore.getDefault().getPreferenceStore();
     }
 
-
     protected void changed()
     {
         changed = true;
         updateApplyButton();
     }
 
-
-    private Control initContents( Composite parent )
+    private Control initContents(Composite parent)
     {
-        viewPage = new RepositoriesView( this );
-        setPage = new RepositorySetsView( this );
+        viewPage = new RepositoriesView(this);
+        setPage = new RepositorySetsView(this);
 
-        Composite control = new Composite( parent, SWT.NONE );
+        Composite control = new Composite(parent, SWT.NONE);
 
-        TabFolder folder = new TabFolder( control, SWT.TOP );
+        TabFolder folder = new TabFolder(control, SWT.TOP);
 
-        TabItem view = new TabItem( folder, SWT.NONE );
-        view.setText( "Repositories" );
-        view.setControl( viewPage.createContents( folder ) );
+        TabItem view = new TabItem(folder, SWT.NONE);
+        view.setText("Repositories");
+        view.setControl(viewPage.createContents(folder));
 
-        TabItem sets = new TabItem( folder, SWT.NONE );
-        sets.setText( "Sets" );
-        sets.setControl( setPage.createContents( folder ) );
+        TabItem sets = new TabItem(folder, SWT.NONE);
+        sets.setText("Sets");
+        sets.setControl(setPage.createContents(folder));
 
-        control.setLayout( new GridLayout( 1, true ) );
-        folder.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
+        control.setLayout(new GridLayout(1, true));
+        folder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
         return control;
     }
 
-
-    public void init( IWorkbench workbench )
+    public void init(IWorkbench workbench)
     {
         // TODO Auto-generated method stub
 
     }
-
 
     @Override
     protected void doSave()
@@ -111,22 +102,22 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
         try
         {
             IRepositoryConfiguration config = SigilCore.getRepositoryConfiguration();
-            config.saveRepositories( viewPage.getRepositories() );
-            config.saveRepositorySets( setPage.getSets() );
-            IRepositorySet defaultSet = new RepositorySet( setPage.getDefaultRepositories() );
-            config.setDefaultRepositorySet( defaultSet );
+            config.saveRepositories(viewPage.getRepositories());
+            config.saveRepositorySets(setPage.getSets());
+            IRepositorySet defaultSet = new RepositorySet(
+                setPage.getDefaultRepositories());
+            config.setDefaultRepositorySet(defaultSet);
 
-            setErrorMessage( null );
-            getApplyButton().setEnabled( false );
+            setErrorMessage(null);
+            getApplyButton().setEnabled(false);
             changed = false;
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            setErrorMessage( "Failed to save repositories:" + e.getStatus().getMessage() );
-            SigilCore.error( "Failed to save repositories", e );
+            setErrorMessage("Failed to save repositories:" + e.getStatus().getMessage());
+            SigilCore.error("Failed to save repositories", e);
         }
     }
-
 
     @Override
     protected boolean isDirty()

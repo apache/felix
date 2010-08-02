@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 public enum VersionRangeBoundingRule
 {
     Exact, Micro, Minor, Major, Any

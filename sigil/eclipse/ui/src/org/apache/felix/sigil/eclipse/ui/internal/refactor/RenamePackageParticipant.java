@@ -49,47 +49,57 @@ public class RenamePackageParticipant extends RenameParticipant
     @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm,
         CheckConditionsContext context) throws OperationCanceledException
-    {   
+    {
         RefactoringStatus status = new RefactoringStatus();
-        
-        if (getArguments().getUpdateReferences()) {
+
+        if (getArguments().getUpdateReferences())
+        {
             try
             {
                 ISigilProjectModel sigil = SigilCore.create(packageFragment.getJavaProject().getProject());
                 final String packageName = packageFragment.getElementName();
-                
+
                 SigilCore.log("Rename checkConditions " + packageName);
-                
+
                 IPackageExport oldExport = ModelHelper.findExport(sigil, packageName);
-                
-                if (oldExport != null) {
+
+                if (oldExport != null)
+                {
                     // record change to check if out of sync...
                     RefactorUtil.touch(context, sigil);
-                                
-                    status = RefactoringStatus.createWarningStatus("Package " + packageName + " is exported. Renaming this package may effect bundles outside of this workspace");
-                    SigilCore.log("Export Package " + packageName + " renamed to " + getArguments().getNewName());
-    
-                    IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(IPackageExport.class);
+
+                    status = RefactoringStatus.createWarningStatus("Package "
+                        + packageName
+                        + " is exported. Renaming this package may effect bundles outside of this workspace");
+                    SigilCore.log("Export Package " + packageName + " renamed to "
+                        + getArguments().getNewName());
+
+                    IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(
+                        IPackageExport.class);
                     newExport.setPackageName(getArguments().getNewName());
                     newExport.setVersion(oldExport.getVersion());
-    
-                    changes.add(new ExportPackageChange(sigil, oldExport, newExport));                    
-    
-                    for ( ISigilProjectModel other : SigilCore.getRoot().getProjects() ) {
-                        if ( !sigil.equals(other) ) {
+
+                    changes.add(new ExportPackageChange(sigil, oldExport, newExport));
+
+                    for (ISigilProjectModel other : SigilCore.getRoot().getProjects())
+                    {
+                        if (!sigil.equals(other))
+                        {
                             // record change to check if out of sync...
                             RefactorUtil.touch(context, other);
                         }
-                        changes.add(createImportChange(status, other, oldExport, newExport));
+                        changes.add(createImportChange(status, other, oldExport,
+                            newExport));
                     }
                 }
             }
             catch (CoreException e)
             {
                 SigilCore.warn("Failed to create export package refactor", e);
-                throw new OperationCanceledException("Failed to create export package refactor");
+                throw new OperationCanceledException(
+                    "Failed to create export package refactor");
             }
-        }        
+        }
         return status;
     }
 
@@ -97,15 +107,16 @@ public class RenamePackageParticipant extends RenameParticipant
     public Change createChange(IProgressMonitor pm) throws CoreException,
         OperationCanceledException
     {
-        if (changes.isEmpty()) {
+        if (changes.isEmpty())
+        {
             return new NullChange();
         }
-        else 
+        else
         {
             CompositeChange ret = new CompositeChange("Export-Package update");
-            
+
             ret.addAll(changes.toArray(new Change[changes.size()]));
-            
+
             return ret;
         }
     }
@@ -123,24 +134,28 @@ public class RenamePackageParticipant extends RenameParticipant
         return true;
     }
 
-    private Change createImportChange(RefactoringStatus status, ISigilProjectModel sigil, IPackageExport oldExport, IPackageExport newExport)
+    private Change createImportChange(RefactoringStatus status, ISigilProjectModel sigil,
+        IPackageExport oldExport, IPackageExport newExport)
     {
         IBundleModelElement info = sigil.getBundle().getBundleInfo();
         Collection<IPackageImport> imports = info.getImports();
-        
-        for (IPackageImport oldImport : imports) {
-            if (oldImport.accepts(oldExport)) {
-                IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(IPackageImport.class);
-                
+
+        for (IPackageImport oldImport : imports)
+        {
+            if (oldImport.accepts(oldExport))
+            {
+                IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(
+                    IPackageImport.class);
+
                 newImport.setPackageName(newExport.getPackageName());
                 newImport.setVersions(oldImport.getVersions());
-                
+
                 status.addInfo(buildImportChangeMsg(sigil, oldImport, newImport));
-                
+
                 return new ImportPackageChange(sigil, oldImport, newImport);
             }
         }
-        
+
         // ok no change
         return new NullChange();
     }
@@ -148,9 +163,10 @@ public class RenamePackageParticipant extends RenameParticipant
     private static final String buildImportChangeMsg(ISigilProjectModel sigil,
         IPackageImport oldImport, IPackageImport newImport)
     {
-        return "Updating import " + oldImport.getPackageName() + " version " + oldImport.getVersions() +
-            " to " + newImport.getPackageName() + " version " + newImport.getVersions() +
-            " in project " + sigil.getSymbolicName() + " version " + sigil.getVersion();
+        return "Updating import " + oldImport.getPackageName() + " version "
+            + oldImport.getVersions() + " to " + newImport.getPackageName() + " version "
+            + newImport.getVersions() + " in project " + sigil.getSymbolicName()
+            + " version " + sigil.getVersion();
     }
 
 }

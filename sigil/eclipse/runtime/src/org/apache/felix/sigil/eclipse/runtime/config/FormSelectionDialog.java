@@ -22,7 +22,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 public class FormSelectionDialog extends Dialog
 {
     private IFile formFile;
-    
+
     public FormSelectionDialog(Shell parent)
     {
         super(parent);
@@ -39,45 +39,52 @@ public class FormSelectionDialog extends Dialog
         viewer.setContentProvider(new BaseWorkbenchContentProvider());
         viewer.setInput(ResourcesPlugin.getWorkspace().getRoot());
         viewer.addSelectionChangedListener(new ISelectionChangedListener()
-        {        
+        {
             public void selectionChanged(SelectionChangedEvent evt)
             {
-                if (evt.getSelection().isEmpty()) {
+                if (evt.getSelection().isEmpty())
+                {
                     updateFile(null);
                 }
-                else {
+                else
+                {
                     StructuredSelection sel = (StructuredSelection) evt.getSelection();
                     IResource r = (IResource) sel.getFirstElement();
-                    if ( r instanceof IFile ) {
+                    if (r instanceof IFile)
+                    {
                         IFile f = (IFile) r;
                         updateFile(f);
                     }
-                    else {
+                    else
+                    {
                         updateFile(null);
                     }
                 }
             }
         });
         viewer.setLabelProvider(new WorkbenchLabelProvider());
-        
+
         tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-        
+
         return composite;
     }
-    
-    public IFile getFormFile() {
+
+    public IFile getFormFile()
+    {
         return formFile;
     }
 
     protected void updateFile(IFile file)
     {
         formFile = file;
-        
-        if ( file == null ) {
-            getButton(Window.OK).setEnabled(false);            
+
+        if (file == null)
+        {
+            getButton(Window.OK).setEnabled(false);
         }
-        else {
-            getButton(Window.OK).setEnabled(true);            
+        else
+        {
+            getButton(Window.OK).setEnabled(true);
         }
     }
 

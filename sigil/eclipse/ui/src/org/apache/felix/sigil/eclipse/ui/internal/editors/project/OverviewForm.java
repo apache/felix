@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilPage;
@@ -31,7 +30,6 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 
-
 /**
  * @author dave
  *
@@ -41,21 +39,19 @@ public class OverviewForm extends SigilPage
     public static final String PAGE_ID = "overview";
     private ISigilProjectModel sigil;
 
-
-    public OverviewForm( SigilProjectEditorPart editor, ISigilProjectModel sigil )
+    public OverviewForm(SigilProjectEditorPart editor, ISigilProjectModel sigil)
     {
-        super( editor, PAGE_ID, "Overview" );
+        super(editor, PAGE_ID, "Overview");
         this.sigil = sigil;
     }
 
-
     @Override
-    protected void createFormContent( IManagedForm managedForm )
+    protected void createFormContent(IManagedForm managedForm)
     {
         FormToolkit toolkit = managedForm.getToolkit();
 
         ScrolledForm form = managedForm.getForm();
-        form.setText( "Overview" );
+        form.setText("Overview");
 
         Composite body = form.getBody();
         TableWrapLayout layout = new TableWrapLayout();
@@ -65,28 +61,28 @@ public class OverviewForm extends SigilPage
         layout.rightMargin = 10;
         layout.numColumns = 2;
         layout.horizontalSpacing = 10;
-        body.setLayout( layout );
-        body.setLayoutData( new TableWrapData( TableWrapData.FILL ) );
+        body.setLayout(layout);
+        body.setLayoutData(new TableWrapData(TableWrapData.FILL));
 
-        Composite left = toolkit.createComposite( body );
+        Composite left = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        left.setLayout( layout );
-        left.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        left.setLayout(layout);
+        left.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
-        Composite right = toolkit.createComposite( body );
+        Composite right = toolkit.createComposite(body);
         layout = new TableWrapLayout();
         layout.verticalSpacing = 20;
-        right.setLayout( layout );
-        right.setLayoutData( new TableWrapData( TableWrapData.FILL_GRAB ) );
+        right.setLayout(layout);
+        right.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 
         try
         {
-            GeneralInfoSection general = new GeneralInfoSection( this, left, sigil );
-            managedForm.addPart( general );
+            GeneralInfoSection general = new GeneralInfoSection(this, left, sigil);
+            managedForm.addPart(general);
 
-            ContentSummarySection content = new ContentSummarySection( this, right, sigil );
-            managedForm.addPart( content );
+            ContentSummarySection content = new ContentSummarySection(this, right, sigil);
+            managedForm.addPart(content);
 
             // XXX-FELIX
             // commented out due to removal of runtime newton integration
@@ -94,12 +90,12 @@ public class OverviewForm extends SigilPage
             //TestingSection testing = new TestingSection(this, right, newton);
             //managedForm.addPart(testing);
 
-            ToolsSection tools = new ToolsSection( this, right, sigil );
-            managedForm.addPart( tools );
+            ToolsSection tools = new ToolsSection(this, right, sigil);
+            managedForm.addPart(tools);
         }
-        catch ( CoreException e )
+        catch (CoreException e)
         {
-            SigilCore.error( "Failed to create overview form", e );
+            SigilCore.error("Failed to create overview form", e);
         }
     }
 }

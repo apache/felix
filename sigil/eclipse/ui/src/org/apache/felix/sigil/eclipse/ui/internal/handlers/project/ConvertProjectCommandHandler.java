@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.handlers.project;
 
-
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
@@ -35,39 +34,40 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
-
 public class ConvertProjectCommandHandler implements IResourceCommandHandler
 {
 
-    public Object execute( IResource[] resources, ExecutionEvent event ) throws ExecutionException
+    public Object execute(IResource[] resources, ExecutionEvent event)
+        throws ExecutionException
     {
-        for ( IResource r : resources )
+        for (IResource r : resources)
         {
-            final IProject project = ( IProject ) r;
-            if ( project != null )
+            final IProject project = (IProject) r;
+            if (project != null)
             {
                 WorkspaceModifyOperation op = new WorkspaceModifyOperation()
                 {
                     @Override
-                    protected void execute( IProgressMonitor monitor ) throws CoreException
+                    protected void execute(IProgressMonitor monitor) throws CoreException
                     {
-                        SigilCore.makeSigilProject( project, monitor );
-                        IJavaProject java = JavaCore.create( project );
-                        ISigilProjectModel sigil = SigilCore.create( project );
+                        SigilCore.makeSigilProject(project, monitor);
+                        IJavaProject java = JavaCore.create(project);
+                        ISigilProjectModel sigil = SigilCore.create(project);
                         IClasspathEntry[] entries = java.getRawClasspath();
-                        for ( int i = 0; i < entries.length; i++ )
+                        for (int i = 0; i < entries.length; i++)
                         {
                             IClasspathEntry entry = entries[i];
-                            if ( entry.getEntryKind() == IClasspathEntry.CPE_SOURCE )
+                            if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE)
                             {
-                                String encodedClasspath = sigil.getJavaModel().encodeClasspathEntry( entry );
-                                sigil.getBundle().addClasspathEntry( encodedClasspath );
+                                String encodedClasspath = sigil.getJavaModel().encodeClasspathEntry(
+                                    entry);
+                                sigil.getBundle().addClasspathEntry(encodedClasspath);
                             }
                         }
-                        sigil.save( monitor );
+                        sigil.save(monitor);
                     }
                 };
-                SigilUI.runWorkspaceOperation( op, null );
+                SigilUI.runWorkspaceOperation(op, null);
             }
         }
 

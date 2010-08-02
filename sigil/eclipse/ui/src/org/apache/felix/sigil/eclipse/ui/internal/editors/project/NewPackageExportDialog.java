@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
-
 import java.util.Comparator;
 
 import org.apache.felix.sigil.common.osgi.VersionTable;
@@ -40,19 +39,17 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.osgi.framework.Version;
 
-
 public class NewPackageExportDialog extends BackgroundLoadingSelectionDialog<IPackageFragment>
 {
 
     private static final IElementDescriptor<IPackageFragment> PKG_FRAGMENT_STRINGIFIER = new IElementDescriptor<IPackageFragment>()
     {
-        public String getLabel( IPackageFragment element )
+        public String getLabel(IPackageFragment element)
         {
-            return getName( element );
+            return getName(element);
         }
 
-
-        public String getName( IPackageFragment element )
+        public String getName(IPackageFragment element)
         {
             return element.getElementName();
         }
@@ -60,102 +57,99 @@ public class NewPackageExportDialog extends BackgroundLoadingSelectionDialog<IPa
 
     private static final Comparator<IPackageFragment> PKG_FRAGMENT_COMPARATOR = new Comparator<IPackageFragment>()
     {
-        public int compare( IPackageFragment o1, IPackageFragment o2 )
+        public int compare(IPackageFragment o1, IPackageFragment o2)
         {
-            return o1.getElementName().compareTo( o2.getElementName() );
+            return o1.getElementName().compareTo(o2.getElementName());
         }
     };
 
     private Version version = null;
     private String error = null;
-    private Version projectVersion = VersionTable.getVersion( 0, 0, 0 );
+    private Version projectVersion = VersionTable.getVersion(0, 0, 0);
 
     private Button btnInheritBundleVersion;
     private Button btnExplicitVersion;
     private Text txtVersion;
 
-
-    public NewPackageExportDialog( Shell parentShell, boolean multiSelect )
+    public NewPackageExportDialog(Shell parentShell, boolean multiSelect)
     {
-        super( parentShell, "Package:", multiSelect );
-        setDescriptor( PKG_FRAGMENT_STRINGIFIER );
-        setComparator( PKG_FRAGMENT_COMPARATOR );
+        super(parentShell, "Package:", multiSelect);
+        setDescriptor(PKG_FRAGMENT_STRINGIFIER);
+        setComparator(PKG_FRAGMENT_COMPARATOR);
     }
 
-
     @Override
-    protected Control createDialogArea( Composite parent )
+    protected Control createDialogArea(Composite parent)
     {
         // Create controls
-        Composite container = ( Composite ) super.createDialogArea( parent );
-        Composite composite = new Composite( container, SWT.NONE );
+        Composite container = (Composite) super.createDialogArea(parent);
+        Composite composite = new Composite(container, SWT.NONE);
 
-        Group grpVersion = new Group( composite, SWT.NONE );
-        grpVersion.setText( "Version" );
+        Group grpVersion = new Group(composite, SWT.NONE);
+        grpVersion.setText("Version");
 
-        btnInheritBundleVersion = new Button( grpVersion, SWT.RADIO );
-        btnInheritBundleVersion.setText( "Inherit bundle version" );
-        new Label( grpVersion, SWT.NONE ); // Spacer
-        btnExplicitVersion = new Button( grpVersion, SWT.RADIO );
-        btnExplicitVersion.setText( "Fixed version:" );
-        txtVersion = new Text( grpVersion, SWT.BORDER );
+        btnInheritBundleVersion = new Button(grpVersion, SWT.RADIO);
+        btnInheritBundleVersion.setText("Inherit bundle version");
+        new Label(grpVersion, SWT.NONE); // Spacer
+        btnExplicitVersion = new Button(grpVersion, SWT.RADIO);
+        btnExplicitVersion.setText("Fixed version:");
+        txtVersion = new Text(grpVersion, SWT.BORDER);
 
         // Initialize
-        if ( version == null )
+        if (version == null)
         {
-            btnInheritBundleVersion.setSelection( true );
-            txtVersion.setEnabled( false );
-            txtVersion.setText( projectVersion.toString() );
+            btnInheritBundleVersion.setSelection(true);
+            txtVersion.setEnabled(false);
+            txtVersion.setText(projectVersion.toString());
         }
         else
         {
-            btnExplicitVersion.setSelection( true );
-            txtVersion.setEnabled( true );
-            txtVersion.setText( version.toString() );
+            btnExplicitVersion.setSelection(true);
+            txtVersion.setEnabled(true);
+            txtVersion.setText(version.toString());
         }
         updateButtons();
 
         // Listeners
         Listener radioAndTextListener = new Listener()
         {
-            public void handleEvent( Event event )
+            public void handleEvent(Event event)
             {
                 error = null;
-                if ( btnInheritBundleVersion.getSelection() )
+                if (btnInheritBundleVersion.getSelection())
                 {
                     version = null;
-                    txtVersion.setEnabled( false );
+                    txtVersion.setEnabled(false);
                 }
                 else
                 {
-                    txtVersion.setEnabled( true );
+                    txtVersion.setEnabled(true);
                     try
                     {
-                        version = VersionTable.getVersion( txtVersion.getText() );
+                        version = VersionTable.getVersion(txtVersion.getText());
                     }
-                    catch ( IllegalArgumentException e )
+                    catch (IllegalArgumentException e)
                     {
                         error = "Invalid version";
                     }
                 }
-                setErrorMessage( error );
+                setErrorMessage(error);
                 updateButtons();
             }
         };
-        txtVersion.addListener( SWT.Modify, radioAndTextListener );
-        btnInheritBundleVersion.addListener( SWT.Selection, radioAndTextListener );
-        btnExplicitVersion.addListener( SWT.Selection, radioAndTextListener );
+        txtVersion.addListener(SWT.Modify, radioAndTextListener);
+        btnInheritBundleVersion.addListener(SWT.Selection, radioAndTextListener);
+        btnExplicitVersion.addListener(SWT.Selection, radioAndTextListener);
 
         // Layout
-        composite.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        composite.setLayout( new GridLayout( 1, false ) );
-        grpVersion.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
-        grpVersion.setLayout( new GridLayout( 2, false ) );
-        txtVersion.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, false ) );
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        composite.setLayout(new GridLayout(1, false));
+        grpVersion.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        grpVersion.setLayout(new GridLayout(2, false));
+        txtVersion.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
         return container;
     }
-
 
     @Override
     protected boolean canComplete()
@@ -163,18 +157,15 @@ public class NewPackageExportDialog extends BackgroundLoadingSelectionDialog<IPa
         return super.canComplete() && error == null;
     }
 
-
-    public void setProjectVersion( Version projectVersion )
+    public void setProjectVersion(Version projectVersion)
     {
         this.projectVersion = projectVersion;
     }
 
-
-    public void setVersion( Version version )
+    public void setVersion(Version version)
     {
         this.version = version;
     }
-
 
     public Version getVersion()
     {

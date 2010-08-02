@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +59,6 @@ import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
-
 public class BundleResolverView extends ViewPart
 {
 
@@ -98,149 +96,140 @@ public class BundleResolverView extends ViewPart
         private String showMsg;
         private String hideMsg;
 
-
-        ToggleDisplayAction( String key, String showMsg, String hideMsg )
+        ToggleDisplayAction(String key, String showMsg, String hideMsg)
         {
             this.key = key;
             this.showMsg = showMsg;
             this.hideMsg = hideMsg;
-            setText( BundleResolverView.this.isDisplayed( key ) ? hideMsg : showMsg );
+            setText(BundleResolverView.this.isDisplayed(key) ? hideMsg : showMsg);
         }
-
 
         @Override
         public void run()
         {
-            BundleResolverView.this.setDisplayed( key, !BundleResolverView.this.isDisplayed( key ) );
-            setText( BundleResolverView.this.isDisplayed( key ) ? hideMsg : showMsg );
+            BundleResolverView.this.setDisplayed(key,
+                !BundleResolverView.this.isDisplayed(key));
+            setText(BundleResolverView.this.isDisplayed(key) ? hideMsg : showMsg);
         }
     }
 
-
-    public void setInput( final IModelElement element )
+    public void setInput(final IModelElement element)
     {
-        if ( current == null || !current.equals( element ) )
+        if (current == null || !current.equals(element))
         {
-            SigilCore.log( "Set input " + element );
+            SigilCore.log("Set input " + element);
             current = element;
             redraw();
         }
     }
 
-
-    public void setDisplayed( String key, boolean b )
+    public void setDisplayed(String key, boolean b)
     {
-        displayed.put( key, b );
+        displayed.put(key, b);
 
-        if ( key == DEPENDENTS )
+        if (key == DEPENDENTS)
         {
             int style = LayoutStyles.NO_LAYOUT_NODE_RESIZING;
-            viewer.setLayoutAlgorithm( b ? new TreeLayoutAlgorithm( style ) : new RadialLayoutAlgorithm( style ) );
+            viewer.setLayoutAlgorithm(b ? new TreeLayoutAlgorithm(style)
+                : new RadialLayoutAlgorithm(style));
             redraw();
         }
-        else if ( key == OPTIONAL )
+        else if (key == OPTIONAL)
         {
             redraw();
         }
-        else if ( key == SATISFIED || key == UNSATISFIED )
+        else if (key == SATISFIED || key == UNSATISFIED)
         {
             viewer.refresh();
         }
     }
 
-
-    public boolean isDisplayed( String key )
+    public boolean isDisplayed(String key)
     {
-        return displayed.get( key );
+        return displayed.get(key);
     }
-
 
     @Override
     public void setFocus()
     {
     }
 
-
     @Override
-    public void createPartControl( Composite parent )
+    public void createPartControl(Composite parent)
     {
         init();
-        createViewer( parent );
+        createViewer(parent);
         createListeners();
         createMenu();
     }
 
-
     private void init()
     {
-        displayed.put( LINK_LABELS, false );
-        displayed.put( LOCAL_LINKS, false );
-        displayed.put( DEPENDENTS, false );
-        displayed.put( OPTIONAL, false );
-        displayed.put( SATISFIED, true );
-        displayed.put( UNSATISFIED, true );
+        displayed.put(LINK_LABELS, false);
+        displayed.put(LOCAL_LINKS, false);
+        displayed.put(DEPENDENTS, false);
+        displayed.put(OPTIONAL, false);
+        displayed.put(SATISFIED, true);
+        displayed.put(UNSATISFIED, true);
     }
-
 
     public BundleGraph getBundlegraph()
     {
-        return ( BundleGraph ) viewer.getInput();
+        return (BundleGraph) viewer.getInput();
     }
-
 
     GraphViewer getGraphViewer()
     {
         return viewer;
     }
 
-
-    String getLinkText( Link link )
+    String getLinkText(Link link)
     {
         StringBuffer buf = new StringBuffer();
 
-        for ( IModelElement e : link.getRequirements() )
+        for (IModelElement e : link.getRequirements())
         {
-            if ( buf.length() > 0 )
+            if (buf.length() > 0)
             {
-                buf.append( "\n" );
+                buf.append("\n");
             }
-            if ( e instanceof IPackageImport )
+            if (e instanceof IPackageImport)
             {
-                IPackageImport pi = ( IPackageImport ) e;
-                buf.append( "import " + pi.getPackageName() + " : " + pi.getVersions() + ": "
-                    + ( pi.isOptional() ? "optional" : "mandatory" ) );
+                IPackageImport pi = (IPackageImport) e;
+                buf.append("import " + pi.getPackageName() + " : " + pi.getVersions()
+                    + ": " + (pi.isOptional() ? "optional" : "mandatory"));
             }
-            else if ( e instanceof IRequiredBundle )
+            else if (e instanceof IRequiredBundle)
             {
-                IRequiredBundle rb = ( IRequiredBundle ) e;
-                buf.append( "required bundle " + rb.getSymbolicName() + " : " + rb.getVersions() + ": "
-                    + ( rb.isOptional() ? "optional" : "mandatory" ) );
+                IRequiredBundle rb = (IRequiredBundle) e;
+                buf.append("required bundle " + rb.getSymbolicName() + " : "
+                    + rb.getVersions() + ": "
+                    + (rb.isOptional() ? "optional" : "mandatory"));
             }
         }
 
         return buf.toString();
     }
 
-
     private synchronized void redraw()
     {
         final IModelElement element = current;
-        if ( job != null )
+        if (job != null)
         {
             job.cancel();
         }
 
-        job = new Job( "Resolving " + current )
+        job = new Job("Resolving " + current)
         {
             @Override
-            protected IStatus run( IProgressMonitor progress )
+            protected IStatus run(IProgressMonitor progress)
             {
                 try
                 {
-                    resolve( element, progress );
+                    resolve(element, progress);
                     return Status.OK_STATUS;
                 }
-                catch ( CoreException e )
+                catch (CoreException e)
                 {
                     return e.getStatus();
                 }
@@ -249,151 +238,150 @@ public class BundleResolverView extends ViewPart
         job.schedule();
     }
 
-
-    private void resolve( IModelElement element, IProgressMonitor progress ) throws CoreException
+    private void resolve(IModelElement element, IProgressMonitor progress)
+        throws CoreException
     {
         final BundleGraph graph = new BundleGraph();
 
-        IResolutionMonitor monitor = new ResolutionMonitorAdapter( progress )
+        IResolutionMonitor monitor = new ResolutionMonitorAdapter(progress)
         {
             @Override
-            public void startResolution( IModelElement requirement )
+            public void startResolution(IModelElement requirement)
             {
-                graph.startResolution( requirement );
+                graph.startResolution(requirement);
             }
 
-
             @Override
-            public void endResolution( IModelElement requirement, ISigilBundle provider )
+            public void endResolution(IModelElement requirement, ISigilBundle provider)
             {
-                graph.endResolution( requirement, provider );
+                graph.endResolution(requirement, provider);
             }
         };
 
-        ISigilProjectModel project = findProject( element );
-        IRepositoryManager repository = SigilCore.getRepositoryManager( project );
+        ISigilProjectModel project = findProject(element);
+        IRepositoryManager repository = SigilCore.getRepositoryManager(project);
 
         int options = ResolutionConfig.IGNORE_ERRORS;
 
-        if ( isDisplayed( DEPENDENTS ) )
+        if (isDisplayed(DEPENDENTS))
         {
             options |= ResolutionConfig.INCLUDE_DEPENDENTS;
         }
-        if ( isDisplayed( OPTIONAL ) )
+        if (isDisplayed(OPTIONAL))
         {
             options |= ResolutionConfig.INCLUDE_OPTIONAL;
         }
 
-        ResolutionConfig config = new ResolutionConfig( options );
+        ResolutionConfig config = new ResolutionConfig(options);
 
         try
         {
-            repository.getBundleResolver().resolve( element, config, monitor );
+            repository.getBundleResolver().resolve(element, config, monitor);
         }
-        catch ( ResolutionException e )
+        catch (ResolutionException e)
         {
-            throw SigilCore.newCoreException( "Failed to resolve " + element, e );
+            throw SigilCore.newCoreException("Failed to resolve " + element, e);
         }
 
-        SigilUI.runInUI( new Runnable()
+        SigilUI.runInUI(new Runnable()
         {
             public void run()
             {
-                viewer.setInput( graph );
+                viewer.setInput(graph);
                 addCustomUIElements();
             }
-        } );
+        });
     }
 
-
-    private static ISigilProjectModel findProject( IModelElement element )
+    private static ISigilProjectModel findProject(IModelElement element)
     {
-        if ( element == null )
+        if (element == null)
         {
             return null;
         }
-        if ( element instanceof ISigilProjectModel )
+        if (element instanceof ISigilProjectModel)
         {
-            return ( ISigilProjectModel ) element;
+            return (ISigilProjectModel) element;
         }
 
-        return element.getAncestor( ISigilProjectModel.class );
+        return element.getAncestor(ISigilProjectModel.class);
     }
-
 
     @SuppressWarnings("unchecked")
     private void addCustomUIElements()
     {
-        if ( !isDisplayed( LINK_LABELS ) )
+        if (!isDisplayed(LINK_LABELS))
         {
-            for ( GraphConnection c : ( List<GraphConnection> ) viewer.getGraphControl().getConnections() )
+            for (GraphConnection c : (List<GraphConnection>) viewer.getGraphControl().getConnections())
             {
-                if ( c.getData() instanceof Link )
+                if (c.getData() instanceof Link)
                 {
-                    c.setTooltip( buildToolTip( ( Link ) c.getData() ) );
+                    c.setTooltip(buildToolTip((Link) c.getData()));
                 }
             }
         }
     }
 
-
-    private IFigure buildToolTip( Link link )
+    private IFigure buildToolTip(Link link)
     {
         Label l = new Label();
-        l.setText( getLinkText( link ) );
+        l.setText(getLinkText(link));
         return l;
     }
 
-
-    private void createViewer( Composite parent )
+    private void createViewer(Composite parent)
     {
-        parent.setLayout( new FillLayout() );
-        viewer = new GraphViewer( parent, SWT.H_SCROLL | SWT.V_SCROLL );
+        parent.setLayout(new FillLayout());
+        viewer = new GraphViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL);
         IContentProvider contentProvider = new BundleGraphContentProvider();
-        viewer.setContentProvider( contentProvider );
-        viewer.setLabelProvider( new BundleGraphLabelProvider( this ) );
-        viewer.addFilter( new BundleGraphViewFilter( this ) );
+        viewer.setContentProvider(contentProvider);
+        viewer.setLabelProvider(new BundleGraphLabelProvider(this));
+        viewer.addFilter(new BundleGraphViewFilter(this));
 
         int style = LayoutStyles.NO_LAYOUT_NODE_RESIZING;
-        viewer.setLayoutAlgorithm( isDisplayed( DEPENDENTS ) ? new TreeLayoutAlgorithm( style )
-            : new RadialLayoutAlgorithm( style ) );
-        viewer.addSelectionChangedListener( new BundleConnectionHighlighter( this ) );
-        viewer.setInput( new BundleGraph() );
+        viewer.setLayoutAlgorithm(isDisplayed(DEPENDENTS) ? new TreeLayoutAlgorithm(style)
+            : new RadialLayoutAlgorithm(style));
+        viewer.addSelectionChangedListener(new BundleConnectionHighlighter(this));
+        viewer.setInput(new BundleGraph());
     }
-
 
     private void createMenu()
     {
         IActionBars action = getViewSite().getActionBars();
-        action.getMenuManager().add( new ToggleDisplayAction( LINK_LABELS, SHOW_LINK_LABELS, HIDE_LINK_LABELS ) );
-        action.getMenuManager().add( new ToggleDisplayAction( LOCAL_LINKS, SHOW_LOCAL_LINKS, HIDE_LOCAL_LINKS ) );
-        action.getMenuManager().add( new ToggleDisplayAction( DEPENDENTS, SHOW_DEPENDENTS, HIDE_DEPENDENTS ) );
-        action.getMenuManager().add( new ToggleDisplayAction( OPTIONAL, SHOW_OPTIONAL, HIDE_OPTIONAL ) );
-        action.getMenuManager().add( new ToggleDisplayAction( SATISFIED, SHOW_SATISFIED, HIDE_SATISFIED ) );
-        action.getMenuManager().add( new ToggleDisplayAction( UNSATISFIED, SHOW_UNSATISFIED, HIDE_UNSATISFIED ) );
+        action.getMenuManager().add(
+            new ToggleDisplayAction(LINK_LABELS, SHOW_LINK_LABELS, HIDE_LINK_LABELS));
+        action.getMenuManager().add(
+            new ToggleDisplayAction(LOCAL_LINKS, SHOW_LOCAL_LINKS, HIDE_LOCAL_LINKS));
+        action.getMenuManager().add(
+            new ToggleDisplayAction(DEPENDENTS, SHOW_DEPENDENTS, HIDE_DEPENDENTS));
+        action.getMenuManager().add(
+            new ToggleDisplayAction(OPTIONAL, SHOW_OPTIONAL, HIDE_OPTIONAL));
+        action.getMenuManager().add(
+            new ToggleDisplayAction(SATISFIED, SHOW_SATISFIED, HIDE_SATISFIED));
+        action.getMenuManager().add(
+            new ToggleDisplayAction(UNSATISFIED, SHOW_UNSATISFIED, HIDE_UNSATISFIED));
         action.updateActionBars();
     }
 
-
     private void createListeners()
     {
-        IPartService ps = ( IPartService ) getViewSite().getService( IPartService.class );
-        ps.addPartListener( new EditorViewPartListener( this ) );
-        viewer.getGraphControl().addControlListener( new ControlAdapter()
+        IPartService ps = (IPartService) getViewSite().getService(IPartService.class);
+        ps.addPartListener(new EditorViewPartListener(this));
+        viewer.getGraphControl().addControlListener(new ControlAdapter()
         {
             @Override
-            public void controlResized( ControlEvent e )
+            public void controlResized(ControlEvent e)
             {
-                Graph g = ( Graph ) e.getSource();
+                Graph g = (Graph) e.getSource();
                 int x = g.getSize().x;
                 int y = g.getSize().y;
-                if ( lastX != x || lastY != y )
+                if (lastX != x || lastY != y)
                 {
                     lastX = x;
                     lastY = y;
                     redraw();
                 }
             }
-        } );
+        });
     }
 }

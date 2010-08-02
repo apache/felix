@@ -19,22 +19,17 @@
 
 package org.apache.felix.sigil.common.model.osgi;
 
-
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.IRequirementModelElement;
 import org.apache.felix.sigil.common.osgi.VersionRange;
-
 
 public interface IRequiredBundle extends IModelElement, IRequirementModelElement, Comparable<IRequiredBundle>
 {
     String getSymbolicName();
 
-
-    void setSymbolicName( String symbolicName );
-
+    void setSymbolicName(String symbolicName);
 
     VersionRange getVersions();
 
-
-    void setVersions( VersionRange versions );
+    void setVersions(VersionRange versions);
 }

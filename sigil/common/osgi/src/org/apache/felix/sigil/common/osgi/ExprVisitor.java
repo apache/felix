@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.osgi;
 
-
 public interface ExprVisitor
 {
     void visitExpr(LDAPExpr expr);

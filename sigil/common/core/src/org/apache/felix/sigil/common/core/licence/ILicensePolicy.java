@@ -19,21 +19,16 @@
 
 package org.apache.felix.sigil.common.core.licence;
 
-
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-
 public interface ILicensePolicy
 {
-    void addAllowed( String licenseName );
+    void addAllowed(String licenseName);
 
+    void removeAllowed(String licenseName);
 
-    void removeAllowed( String licenseName );
+    boolean accept(ISigilBundle bundle);
 
-
-    boolean accept( ISigilBundle bundle );
-
-
-    void save( IProgressMonitor monitor );
+    void save(IProgressMonitor monitor);
 }

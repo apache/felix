@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.handlers;
 
-
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IResource;
@@ -27,19 +26,18 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-
 public abstract class SelectionResourceCommandHandler extends AbstractResourceCommandHandler
 {
 
-    public final Object execute( ExecutionEvent event ) throws ExecutionException
+    public final Object execute(ExecutionEvent event) throws ExecutionException
     {
-        ISelection selection = HandlerUtil.getCurrentSelection( event );
+        ISelection selection = HandlerUtil.getCurrentSelection(event);
 
-        Object[] objectArray = ( ( IStructuredSelection ) selection ).toArray();
+        Object[] objectArray = ((IStructuredSelection) selection).toArray();
         IResource[] resourceArray = new IResource[objectArray.length];
-        System.arraycopy( objectArray, 0, resourceArray, 0, objectArray.length );
+        System.arraycopy(objectArray, 0, resourceArray, 0, objectArray.length);
 
-        return getResourceCommandHandler().execute( resourceArray, event );
+        return getResourceCommandHandler().execute(resourceArray, event);
     }
 
 }

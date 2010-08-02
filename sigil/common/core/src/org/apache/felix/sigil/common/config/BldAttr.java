@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.config;
 
-
 public class BldAttr
 {
     // Sigil attributes

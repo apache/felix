@@ -60,7 +60,7 @@ public class BldRepositoryManager extends AbstractRepositoryManager
             {
                 continue;
             }
-            
+
             String optStr = repo.getProperty("optional", "false");
             boolean optional = Boolean.parseBoolean(optStr.trim());
 
@@ -98,7 +98,8 @@ public class BldRepositoryManager extends AbstractRepositoryManager
             }
 
             int level = Integer.parseInt(repo.getProperty(
-                IRepositoryConfig.REPOSITORY_LEVEL, Integer.toString(IBundleRepository.NORMAL_PRIORITY)));
+                IRepositoryConfig.REPOSITORY_LEVEL,
+                Integer.toString(IBundleRepository.NORMAL_PRIORITY)));
 
             try
             {

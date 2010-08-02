@@ -19,41 +19,36 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
-
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 
-
 public class PackageFilter implements IFilter<IPackageImport>
 {
 
     private Set<String> names = new HashSet<String>();
 
-
-    public PackageFilter( String[] packageNames )
+    public PackageFilter(String[] packageNames)
     {
-        for ( String name : packageNames )
+        for (String name : packageNames)
         {
-            names.add( name );
+            names.add(name);
         }
     }
 
-
-    public PackageFilter( IPackageExport[] packages )
+    public PackageFilter(IPackageExport[] packages)
     {
-        for ( IPackageExport packageExport : packages )
+        for (IPackageExport packageExport : packages)
         {
-            names.add( packageExport.getPackageName() );
+            names.add(packageExport.getPackageName());
         }
     }
 
-
-    public boolean select( IPackageImport element )
+    public boolean select(IPackageImport element)
     {
-        return !names.contains( element.getPackageName() );
+        return !names.contains(element.getPackageName());
     }
 
 }

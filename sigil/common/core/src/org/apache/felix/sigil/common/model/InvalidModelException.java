@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.model;
 
-
 /**
  * @author dave
  * 
@@ -31,20 +30,17 @@ public class InvalidModelException extends RuntimeException
 
     private IModelElement target;
 
-
-    public InvalidModelException( IModelElement target, String msg )
+    public InvalidModelException(IModelElement target, String msg)
     {
-        super( msg );
+        super(msg);
         this.target = target;
     }
 
-
-    public InvalidModelException( IModelElement target, String msg, Throwable t )
+    public InvalidModelException(IModelElement target, String msg, Throwable t)
     {
-        super( msg, t );
+        super(msg, t);
         this.target = target;
     }
-
 
     public IModelElement getTarget()
     {

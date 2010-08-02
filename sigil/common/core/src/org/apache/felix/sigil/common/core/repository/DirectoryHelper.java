@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.common.core.repository;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -33,61 +32,61 @@ import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
 
-
 public class DirectoryHelper
 {
-    public static void scanBundles( AbstractBundleRepository repository, List<ISigilBundle> bundles, File dir,
-        File source, boolean recursive )
+    public static void scanBundles(AbstractBundleRepository repository,
+        List<ISigilBundle> bundles, File dir, File source, boolean recursive)
     {
-        if ( dir.exists() )
+        if (dir.exists())
         {
-            for ( File f : dir.listFiles() )
+            for (File f : dir.listFiles())
             {
-                if ( f.isDirectory() )
+                if (f.isDirectory())
                 {
-                    if ( recursive )
+                    if (recursive)
                     {
-                        scanBundles( repository, bundles, f, source, recursive );
+                        scanBundles(repository, bundles, f, source, recursive);
                     }
                 }
-                else if ( f.isFile() && f.getName().endsWith( ".jar" ) )
+                else if (f.isFile() && f.getName().endsWith(".jar"))
                 {
                     JarFile jar = null;
                     try
                     {
-                        jar = new JarFile( f, false );
-                        ISigilBundle bundle = buildBundle( repository, jar.getManifest(), f );
-                        if ( bundle != null )
+                        jar = new JarFile(f, false);
+                        ISigilBundle bundle = buildBundle(repository, jar.getManifest(),
+                            f);
+                        if (bundle != null)
                         {
-                            bundle.setSourcePathLocation( source );
+                            bundle.setSourcePathLocation(source);
                             // TODO shouldn't be hard coded
-                            bundle.setSourceRootPath( "src" );
-                            bundles.add( bundle );
+                            bundle.setSourceRootPath("src");
+                            bundles.add(bundle);
                         }
                     }
-                    catch ( IOException e )
+                    catch (IOException e)
                     {
-                        BldCore.error( "Failed to read jar file " + f, e );
+                        BldCore.error("Failed to read jar file " + f, e);
                     }
-                    catch ( ModelElementFactoryException e )
+                    catch (ModelElementFactoryException e)
                     {
-                        BldCore.error( "Failed to build bundle " + f, e );
+                        BldCore.error("Failed to build bundle " + f, e);
                     }
-                    catch ( RuntimeException e )
+                    catch (RuntimeException e)
                     {
-                        BldCore.error( "Failed to build bundle " + f, e );
+                        BldCore.error("Failed to build bundle " + f, e);
                     }
                     finally
                     {
-                        if ( jar != null )
+                        if (jar != null)
                         {
                             try
                             {
                                 jar.close();
                             }
-                            catch ( IOException e )
+                            catch (IOException e)
                             {
-                                BldCore.error( "Failed to close jar file", e );
+                                BldCore.error("Failed to close jar file", e);
                             }
                         }
                     }
@@ -96,18 +95,18 @@ public class DirectoryHelper
         }
     }
 
-
-    private static ISigilBundle buildBundle( AbstractBundleRepository repository, Manifest manifest, File f )
+    private static ISigilBundle buildBundle(AbstractBundleRepository repository,
+        Manifest manifest, File f)
     {
-        IBundleModelElement info = repository.buildBundleModelElement( manifest );
+        IBundleModelElement info = repository.buildBundleModelElement(manifest);
 
         ISigilBundle bundle = null;
 
-        if ( info != null )
+        if (info != null)
         {
-            bundle = ModelElementFactory.getInstance().newModelElement( ISigilBundle.class );
-            bundle.addChild( info );
-            bundle.setLocation( f );
+            bundle = ModelElementFactory.getInstance().newModelElement(ISigilBundle.class);
+            bundle.addChild(info);
+            bundle.setLocation(f);
         }
 
         return bundle;

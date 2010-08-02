@@ -19,7 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.ui.wizard.repository;
 
-
 import java.util.ArrayList;
 
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
@@ -32,7 +31,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
-
 public abstract class RepositoryWizardPage extends WizardPage
 {
 
@@ -40,93 +38,86 @@ public abstract class RepositoryWizardPage extends WizardPage
     private ArrayList<FieldEditor> editors = new ArrayList<FieldEditor>();
     private RepositoryWizard wizard;
 
-
-    protected RepositoryWizardPage( String pageName, RepositoryWizard parent )
+    protected RepositoryWizardPage(String pageName, RepositoryWizard parent)
     {
-        super( pageName );
-        setTitle( pageName );
+        super(pageName);
+        setTitle(pageName);
         this.wizard = parent;
     }
 
-
     public abstract void createFieldEditors();
 
-
-    public void addField( FieldEditor editor )
+    public void addField(FieldEditor editor)
     {
-        editors.add( editor );
+        editors.add(editor);
     }
 
-
-    public void createControl( Composite parent )
+    public void createControl(Composite parent)
     {
-        Composite control = new Composite( parent, SWT.NONE );
-        setControl( control );
+        Composite control = new Composite(parent, SWT.NONE);
+        setControl(control);
 
-        if ( getModel().getType().isDynamic() )
+        if (getModel().getType().isDynamic())
         {
-            nameEditor = new StringFieldEditor( "name", "Name:", control );
-            nameEditor.setStringValue( getModel().getName() );
-            nameEditor.getTextControl( getFieldEditorParent() ).addModifyListener( new ModifyListener()
-            {
-                public void modifyText( ModifyEvent e )
+            nameEditor = new StringFieldEditor("name", "Name:", control);
+            nameEditor.setStringValue(getModel().getName());
+            nameEditor.getTextControl(getFieldEditorParent()).addModifyListener(
+                new ModifyListener()
                 {
-                    checkPageComplete();
-                }
-            } );
+                    public void modifyText(ModifyEvent e)
+                    {
+                        checkPageComplete();
+                    }
+                });
         }
 
         createFieldEditors();
 
         int cols = nameEditor == null ? 0 : nameEditor.getNumberOfControls();
-        for ( FieldEditor e : editors )
+        for (FieldEditor e : editors)
         {
-            cols = Math.max( cols, e.getNumberOfControls() );
+            cols = Math.max(cols, e.getNumberOfControls());
         }
 
-        control.setLayout( new GridLayout( cols, false ) );
+        control.setLayout(new GridLayout(cols, false));
 
-        if ( nameEditor != null )
+        if (nameEditor != null)
         {
-            nameEditor.fillIntoGrid( getFieldEditorParent(), cols );
+            nameEditor.fillIntoGrid(getFieldEditorParent(), cols);
         }
 
-        for ( FieldEditor e : editors )
+        for (FieldEditor e : editors)
         {
-            e.fillIntoGrid( getFieldEditorParent(), cols );
-            e.setPreferenceStore( getModel().getPreferences() );
+            e.fillIntoGrid(getFieldEditorParent(), cols);
+            e.setPreferenceStore(getModel().getPreferences());
             e.load();
         }
 
         checkPageComplete();
     }
 
-
     protected void checkPageComplete()
     {
-        if ( nameEditor != null )
+        if (nameEditor != null)
         {
-            setPageComplete( nameEditor.getStringValue().length() > 0 );
+            setPageComplete(nameEditor.getStringValue().length() > 0);
         }
     }
-
 
     public IRepositoryModel getModel()
     {
         return wizard.getModel();
     }
 
-
     protected Composite getFieldEditorParent()
     {
-        return ( Composite ) getControl();
+        return (Composite) getControl();
     }
-
 
     public void storeFields()
     {
-        getModel().setName( nameEditor.getStringValue() );
-        for ( FieldEditor e : editors )
+        getModel().setName(nameEditor.getStringValue());
+        for (FieldEditor e : editors)
         {
             e.store();
         }
