@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.felix.sigil.ui.eclipse.SigilUI;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultLabelProvider;
-import org.apache.felix.sigil.ui.eclipse.ui.util.IElementDescriptor;
-import org.apache.felix.sigil.ui.eclipse.ui.util.IFilter;
-import org.apache.felix.sigil.ui.eclipse.ui.util.UIHelper;
+import org.apache.felix.sigil.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultLabelProvider;
+import org.apache.felix.sigil.eclipse.ui.util.IElementDescriptor;
+import org.apache.felix.sigil.eclipse.ui.util.IFilter;
+import org.apache.felix.sigil.eclipse.ui.util.UIHelper;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;

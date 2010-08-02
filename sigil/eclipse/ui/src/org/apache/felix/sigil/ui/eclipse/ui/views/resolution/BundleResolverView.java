@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.apache.felix.sigil.model.IModelElement;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
@@ -35,7 +36,6 @@ import org.apache.felix.sigil.repository.IResolutionMonitor;
 import org.apache.felix.sigil.repository.ResolutionConfig;
 import org.apache.felix.sigil.repository.ResolutionException;
 import org.apache.felix.sigil.repository.ResolutionMonitorAdapter;
-import org.apache.felix.sigil.ui.eclipse.SigilUI;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;

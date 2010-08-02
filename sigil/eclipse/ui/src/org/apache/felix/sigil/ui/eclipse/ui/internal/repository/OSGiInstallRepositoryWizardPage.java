@@ -24,8 +24,8 @@ import java.util.ArrayList;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstall;
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizard;
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizardPage;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizard;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizardPage;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
 
 

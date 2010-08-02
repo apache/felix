@@ -26,7 +26,7 @@ import java.util.Iterator;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultTableProvider;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;

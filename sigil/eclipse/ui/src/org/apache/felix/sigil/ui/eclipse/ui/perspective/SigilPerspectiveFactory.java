@@ -20,7 +20,7 @@
 package org.apache.felix.sigil.ui.eclipse.ui.perspective;
 
 
-import org.apache.felix.sigil.ui.eclipse.SigilUI;
+import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.ui.IFolderLayout;

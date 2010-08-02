@@ -22,8 +22,8 @@ package org.apache.felix.sigil.ui.eclipse.ui.internal.repository;
 
 import java.io.File;
 
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizard;
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizardPage;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizard;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizardPage;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.wizard.IWizardPage;

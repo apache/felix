@@ -22,9 +22,9 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
+import org.apache.felix.sigil.eclipse.ui.util.BackgroundLoadingSelectionDialog;
+import org.apache.felix.sigil.eclipse.ui.util.IValidationListener;
 import org.apache.felix.sigil.model.osgi.IVersionedModelElement;
-import org.apache.felix.sigil.ui.eclipse.ui.util.BackgroundLoadingSelectionDialog;
-import org.apache.felix.sigil.ui.eclipse.ui.util.IValidationListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;

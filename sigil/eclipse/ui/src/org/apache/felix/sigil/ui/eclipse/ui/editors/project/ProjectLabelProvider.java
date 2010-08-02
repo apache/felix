@@ -23,12 +23,12 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 import java.io.InputStream;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultLabelProvider;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.model.osgi.IRequiredBundle;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultLabelProvider;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IPackageFragment;

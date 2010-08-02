@@ -22,6 +22,8 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 
 import org.apache.felix.sigil.common.osgi.VersionTable;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.ui.util.BackgroundLoadingSelectionDialog;
+import org.apache.felix.sigil.eclipse.ui.util.ResourcesDialogHelper;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.model.osgi.IBundleModelElement;
@@ -31,8 +33,6 @@ import org.apache.felix.sigil.ui.eclipse.ui.form.SigilFormEntry;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilFormEntryAdapter;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilPage;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilSection;
-import org.apache.felix.sigil.ui.eclipse.ui.util.BackgroundLoadingSelectionDialog;
-import org.apache.felix.sigil.ui.eclipse.ui.util.ResourcesDialogHelper;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;

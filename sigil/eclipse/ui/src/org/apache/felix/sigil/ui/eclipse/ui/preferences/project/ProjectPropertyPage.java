@@ -24,8 +24,8 @@ import java.util.concurrent.Callable;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultTableProvider;
-import org.apache.felix.sigil.ui.eclipse.ui.util.ProjectUtils;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
+import org.apache.felix.sigil.eclipse.ui.util.ProjectUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.PreferenceDialog;

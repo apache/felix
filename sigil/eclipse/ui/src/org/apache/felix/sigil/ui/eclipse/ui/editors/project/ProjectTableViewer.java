@@ -22,8 +22,8 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 
 import java.util.Set;
 
+import org.apache.felix.sigil.eclipse.ui.util.ModelLabelProvider;
 import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.ui.eclipse.ui.util.ModelLabelProvider;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Table;

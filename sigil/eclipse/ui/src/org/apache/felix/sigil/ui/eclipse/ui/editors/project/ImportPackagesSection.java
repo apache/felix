@@ -27,14 +27,14 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
+import org.apache.felix.sigil.eclipse.ui.util.ResourcesDialogHelper;
 import org.apache.felix.sigil.model.IModelElement;
 import org.apache.felix.sigil.model.ModelElementFactory;
 import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.model.osgi.IPackageModelElement;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilPage;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultTableProvider;
-import org.apache.felix.sigil.ui.eclipse.ui.util.ResourcesDialogHelper;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;

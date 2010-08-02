@@ -20,7 +20,7 @@
 package org.apache.felix.sigil.eclipse.cheatsheets.actions;
 
 
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.project.SigilProjectWizard;
+import org.apache.felix.sigil.eclipse.ui.wizard.project.SigilProjectWizard;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.cheatsheets.ICheatSheetAction;

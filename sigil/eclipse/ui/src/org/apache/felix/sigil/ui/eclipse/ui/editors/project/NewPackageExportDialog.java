@@ -23,8 +23,8 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 import java.util.Comparator;
 
 import org.apache.felix.sigil.common.osgi.VersionTable;
-import org.apache.felix.sigil.ui.eclipse.ui.util.BackgroundLoadingSelectionDialog;
-import org.apache.felix.sigil.ui.eclipse.ui.util.IElementDescriptor;
+import org.apache.felix.sigil.eclipse.ui.util.BackgroundLoadingSelectionDialog;
+import org.apache.felix.sigil.eclipse.ui.util.IElementDescriptor;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;

@@ -24,8 +24,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizard;
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizardPage;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizard;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizardPage;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;

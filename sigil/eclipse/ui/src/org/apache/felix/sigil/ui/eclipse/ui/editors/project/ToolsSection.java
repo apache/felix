@@ -21,8 +21,8 @@ package org.apache.felix.sigil.ui.eclipse.ui.editors.project;
 
 
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.ui.eclipse.actions.PruneProjectDependenciesAction;
-import org.apache.felix.sigil.ui.eclipse.actions.ResolveProjectDependenciesAction;
+import org.apache.felix.sigil.eclipse.ui.actions.PruneProjectDependenciesAction;
+import org.apache.felix.sigil.eclipse.ui.actions.ResolveProjectDependenciesAction;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilPage;
 import org.apache.felix.sigil.ui.eclipse.ui.form.SigilSection;
 import org.eclipse.core.runtime.CoreException;

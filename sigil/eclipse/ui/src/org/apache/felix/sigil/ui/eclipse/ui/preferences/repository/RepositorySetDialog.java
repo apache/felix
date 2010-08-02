@@ -27,8 +27,8 @@ import java.util.Set;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultLabelProvider;
-import org.apache.felix.sigil.ui.eclipse.ui.util.DefaultTableProvider;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultLabelProvider;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.CheckboxTableViewer;

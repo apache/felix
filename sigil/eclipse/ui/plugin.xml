@@ -31,7 +31,7 @@
             name="Sigil"/>
       <wizard
             category="org.apache.felix.sigil.newWizardCategory"
-            class="org.apache.felix.sigil.ui.eclipse.ui.wizard.project.SigilProjectWizard"
+            class="org.apache.felix.sigil.eclipse.ui.wizard.project.SigilProjectWizard"
             finalPerspective="org.apache.felix.sigil.ui.perspective"
             icon="icons/logo16x16.gif"
             id="org.apache.felix.sigil.editors.newProjectWizard"

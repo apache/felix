@@ -20,7 +20,7 @@
 package org.apache.felix.sigil.ui.eclipse.ui.preferences;
 
 
-import org.apache.felix.sigil.ui.eclipse.ui.util.ProjectUtils;
+import org.apache.felix.sigil.eclipse.ui.util.ProjectUtils;
 import org.eclipse.jface.preference.PreferencePage;
 
 

@@ -22,7 +22,7 @@ package org.apache.felix.sigil.eclipse.cheatsheets.actions;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.ui.eclipse.actions.ResolveProjectDependenciesAction;
+import org.apache.felix.sigil.eclipse.ui.actions.ResolveProjectDependenciesAction;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;

@@ -24,7 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.ui.eclipse.SigilUI;
+import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.apache.felix.sigil.ui.eclipse.handlers.IResourceCommandHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;

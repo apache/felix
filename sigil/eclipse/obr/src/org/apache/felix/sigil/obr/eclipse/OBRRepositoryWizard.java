@@ -20,7 +20,7 @@
 package org.apache.felix.sigil.obr.eclipse;
 
 
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.repository.RepositoryWizard;
+import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizard;
 
 
 public class OBRRepositoryWizard extends RepositoryWizard

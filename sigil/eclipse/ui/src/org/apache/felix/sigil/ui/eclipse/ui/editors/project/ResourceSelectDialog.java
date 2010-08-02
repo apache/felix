@@ -25,8 +25,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.sigil.ui.eclipse.ui.util.ModelLabelProvider;
-import org.apache.felix.sigil.ui.eclipse.ui.util.SingletonSelection;
+import org.apache.felix.sigil.eclipse.ui.util.ModelLabelProvider;
+import org.apache.felix.sigil.eclipse.ui.util.SingletonSelection;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;

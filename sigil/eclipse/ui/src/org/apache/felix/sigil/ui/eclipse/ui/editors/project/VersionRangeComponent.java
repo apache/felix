@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionTable;
-import org.apache.felix.sigil.ui.eclipse.ui.util.IValidationListener;
+import org.apache.felix.sigil.eclipse.ui.util.IValidationListener;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
