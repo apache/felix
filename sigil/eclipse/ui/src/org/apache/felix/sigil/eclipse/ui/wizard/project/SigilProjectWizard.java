@@ -21,7 +21,7 @@ package org.apache.felix.sigil.eclipse.ui.wizard.project;
 
 
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.ui.eclipse.ui.wizard.SigilNewResourceWizard;
+import org.apache.felix.sigil.eclipse.ui.internal.wizard.SigilNewResourceWizard;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;

@@ -21,7 +21,7 @@ package org.apache.felix.sigil.eclipse.ui.wizard.project;
 
 
 import org.apache.felix.sigil.common.osgi.VersionTable;
-import org.apache.felix.sigil.ui.eclipse.ui.views.RepositoryViewPart;
+import org.apache.felix.sigil.eclipse.ui.internal.views.RepositoryViewPart;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;

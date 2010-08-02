@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.ui.eclipse.ui.preferences.OptionalPrompt;
+import org.apache.felix.sigil.eclipse.ui.internal.preferences.OptionalPrompt;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.widgets.Shell;
