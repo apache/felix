@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.sigil.model.ICapabilityModelElement;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.ICapabilityModelElement;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 

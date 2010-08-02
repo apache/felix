@@ -22,11 +22,11 @@ package org.apache.felix.sigil.eclipse.ui.internal.startup;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.felix.sigil.common.repository.IRepositoryChangeListener;
+import org.apache.felix.sigil.common.repository.RepositoryChangeEvent;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.ResolveProjectsJob;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.repository.IRepositoryChangeListener;
-import org.apache.felix.sigil.repository.RepositoryChangeEvent;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;

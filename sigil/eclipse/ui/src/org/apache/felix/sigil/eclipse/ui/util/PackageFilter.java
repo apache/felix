@@ -23,8 +23,8 @@ package org.apache.felix.sigil.eclipse.ui.util;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 
 
 public class PackageFilter implements IFilter<IPackageImport>

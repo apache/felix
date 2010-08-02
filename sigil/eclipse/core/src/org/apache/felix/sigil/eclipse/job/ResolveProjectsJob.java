@@ -24,13 +24,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import org.apache.felix.sigil.common.model.ICapabilityModelElement;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.IModelWalker;
+import org.apache.felix.sigil.common.model.IRequirementModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.model.ICapabilityModelElement;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.IModelWalker;
-import org.apache.felix.sigil.model.IRequirementModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;

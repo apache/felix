@@ -24,11 +24,11 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
 
+import org.apache.felix.sigil.common.model.ModelElementFactory;
+import org.apache.felix.sigil.common.model.eclipse.ILibrary;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.osgi.VersionTable;
 import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
-import org.apache.felix.sigil.model.ModelElementFactory;
-import org.apache.felix.sigil.model.eclipse.ILibrary;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;

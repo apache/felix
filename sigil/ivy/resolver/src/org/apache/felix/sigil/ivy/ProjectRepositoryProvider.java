@@ -23,9 +23,9 @@ package org.apache.felix.sigil.ivy;
 import java.util.HashMap;
 import java.util.Properties;
 
-import org.apache.felix.sigil.repository.IBundleRepository;
-import org.apache.felix.sigil.repository.IRepositoryProvider;
-import org.apache.felix.sigil.repository.RepositoryException;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IRepositoryProvider;
+import org.apache.felix.sigil.common.repository.RepositoryException;
 
 
 public class ProjectRepositoryProvider implements IRepositoryProvider

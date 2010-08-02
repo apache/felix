@@ -20,15 +20,15 @@
 package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 
 
+import org.apache.felix.sigil.common.model.ModelElementFactory;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.model.ModelElementFactory;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.apache.felix.sigil.search.ISearchResult;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;

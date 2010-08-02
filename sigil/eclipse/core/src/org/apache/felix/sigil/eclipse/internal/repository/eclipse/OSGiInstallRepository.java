@@ -29,15 +29,15 @@ import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import org.apache.felix.sigil.core.BldCore;
+import org.apache.felix.sigil.common.core.BldCore;
+import org.apache.felix.sigil.common.model.ModelElementFactory;
+import org.apache.felix.sigil.common.model.ModelElementFactoryException;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
+import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
+import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstall;
-import org.apache.felix.sigil.model.ModelElementFactory;
-import org.apache.felix.sigil.model.ModelElementFactoryException;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.model.osgi.IBundleModelElement;
-import org.apache.felix.sigil.repository.AbstractBundleRepository;
-import org.apache.felix.sigil.repository.IRepositoryVisitor;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 

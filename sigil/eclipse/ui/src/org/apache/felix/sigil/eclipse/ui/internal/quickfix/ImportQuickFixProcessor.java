@@ -23,11 +23,11 @@ package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.apache.felix.sigil.search.ISearchResult;
 import org.apache.felix.sigil.search.SigilSearch;
 import org.eclipse.core.resources.IProject;

@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 
-import org.apache.felix.sigil.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
 
 public class RepositoryMap
 {

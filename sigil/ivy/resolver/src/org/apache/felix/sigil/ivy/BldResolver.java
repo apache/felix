@@ -23,13 +23,13 @@ package org.apache.felix.sigil.ivy;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.felix.sigil.core.BldCore;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.repository.IResolution;
-import org.apache.felix.sigil.repository.IResolutionMonitor;
-import org.apache.felix.sigil.repository.ResolutionConfig;
-import org.apache.felix.sigil.repository.ResolutionException;
+import org.apache.felix.sigil.common.core.BldCore;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.repository.IResolution;
+import org.apache.felix.sigil.common.repository.IResolutionMonitor;
+import org.apache.felix.sigil.common.repository.ResolutionConfig;
+import org.apache.felix.sigil.common.repository.ResolutionException;
 
 
 public class BldResolver implements IBldResolver

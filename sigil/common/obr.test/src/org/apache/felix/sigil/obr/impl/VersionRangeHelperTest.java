@@ -19,6 +19,7 @@
 
 package org.apache.felix.sigil.obr.impl;
 
+import org.apache.felix.sigil.common.obr.impl.VersionRangeHelper;
 import org.apache.felix.sigil.common.osgi.LDAPExpr;
 import org.apache.felix.sigil.common.osgi.LDAPParser;
 import org.apache.felix.sigil.common.osgi.VersionRange;

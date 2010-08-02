@@ -20,8 +20,8 @@
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
 
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;

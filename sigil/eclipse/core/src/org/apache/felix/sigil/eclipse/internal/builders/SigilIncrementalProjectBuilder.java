@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.felix.sigil.bnd.BundleBuilder;
-import org.apache.felix.sigil.config.IBldProject;
+import org.apache.felix.sigil.common.bnd.BundleBuilder;
+import org.apache.felix.sigil.common.config.IBldProject;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;

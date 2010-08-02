@@ -24,10 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.felix.sigil.config.IRepositoryConfig;
-import org.apache.felix.sigil.repository.AbstractRepositoryManager;
-import org.apache.felix.sigil.repository.IBundleRepository;
-import org.apache.felix.sigil.repository.IRepositoryProvider;
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
+import org.apache.felix.sigil.common.repository.AbstractRepositoryManager;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 
 public class BldRepositoryManager extends AbstractRepositoryManager
 {
@@ -36,11 +36,11 @@ public class BldRepositoryManager extends AbstractRepositoryManager
     static
     {
         aliases.put("filesystem",
-            "org.apache.felix.sigil.core.repository.FileSystemRepositoryProvider");
-        aliases.put("obr", "org.apache.felix.sigil.obr.OBRRepositoryProvider");
+            "org.apache.felix.sigil.common.core.repository.FileSystemRepositoryProvider");
+        aliases.put("obr", "org.apache.felix.sigil.common.obr.OBRRepositoryProvider");
         aliases.put("project", "org.apache.felix.sigil.ivy.ProjectRepositoryProvider");
         aliases.put("system",
-            "org.apache.felix.sigil.core.repository.SystemRepositoryProvider");
+            "org.apache.felix.sigil.common.core.repository.SystemRepositoryProvider");
     };
 
     private Map<String, Properties> repos;

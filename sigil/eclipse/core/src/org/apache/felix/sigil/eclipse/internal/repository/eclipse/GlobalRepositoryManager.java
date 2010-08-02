@@ -22,10 +22,10 @@ package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
 
 import java.util.List;
 
+import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.internal.repository.eclipse.SigilRepositoryManager;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
-import org.apache.felix.sigil.repository.IRepositoryManager;
 
 
 public class GlobalRepositoryManager extends SigilRepositoryManager implements IRepositoryManager

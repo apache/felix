@@ -20,9 +20,9 @@
 package org.apache.felix.sigil.eclipse.ui.internal.views;
 
 
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
-import org.apache.felix.sigil.model.osgi.IRequiredBundle;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
+import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 import org.eclipse.jface.viewers.ContentViewer;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.ILabelProvider;

@@ -25,10 +25,10 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
-import org.apache.felix.sigil.model.osgi.IRequiredBundle;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
+import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 
 
 public class Link

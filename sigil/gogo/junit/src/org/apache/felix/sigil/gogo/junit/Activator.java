@@ -21,7 +21,7 @@ package org.apache.felix.sigil.gogo.junit;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.felix.sigil.junit.server.JUnitService;
+import org.apache.felix.sigil.common.junit.server.JUnitService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;

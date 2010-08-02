@@ -20,9 +20,9 @@
 package org.apache.felix.sigil.ivy;
 
 
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.repository.IResolution;
-import org.apache.felix.sigil.repository.ResolutionException;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.repository.IResolution;
+import org.apache.felix.sigil.common.repository.ResolutionException;
 
 
 public interface IBldResolver

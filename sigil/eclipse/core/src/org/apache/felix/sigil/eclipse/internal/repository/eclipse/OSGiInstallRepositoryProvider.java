@@ -22,8 +22,8 @@ package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
 
 import java.util.Properties;
 
-import org.apache.felix.sigil.repository.IBundleRepository;
-import org.apache.felix.sigil.repository.IRepositoryProvider;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 
 
 public class OSGiInstallRepositoryProvider implements IRepositoryProvider

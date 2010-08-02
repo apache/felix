@@ -23,11 +23,11 @@ package org.apache.felix.sigil.eclipse.ui.actions;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
+import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.repository.IBundleRepository;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;

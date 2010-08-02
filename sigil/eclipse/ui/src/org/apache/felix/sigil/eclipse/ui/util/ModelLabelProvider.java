@@ -22,16 +22,16 @@ package org.apache.felix.sigil.eclipse.ui.util;
 
 import java.util.Set;
 
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
+import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.model.osgi.IBundleModelElement;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
-import org.apache.felix.sigil.model.osgi.IRequiredBundle;
-import org.apache.felix.sigil.repository.IBundleRepository;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IPackageFragment;

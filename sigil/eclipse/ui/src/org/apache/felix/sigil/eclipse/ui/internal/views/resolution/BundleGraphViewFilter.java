@@ -20,7 +20,7 @@
 package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
 
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 

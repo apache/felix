@@ -23,11 +23,11 @@ package org.apache.felix.sigil.eclipse.ui.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.IModelWalker;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.IModelWalker;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;

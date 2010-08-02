@@ -22,12 +22,12 @@ package org.apache.felix.sigil.eclipse.ui.actions;
 
 import java.util.Collection;
 
+import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.apache.felix.sigil.eclipse.ui.util.ResourceReviewDialog;
-import org.apache.felix.sigil.model.IModelElement;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;

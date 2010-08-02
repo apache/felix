@@ -22,7 +22,7 @@ package org.apache.felix.sigil.eclipse.ui.internal.views.resolution;
 
 import java.util.Set;
 
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;

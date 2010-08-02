@@ -20,12 +20,12 @@ package org.apache.felix.sigil.eclipse.internal.resources;
 
 import java.util.LinkedList;
 
+import org.apache.felix.sigil.common.model.ICapabilityModelElement;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.IModelWalker;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.ResolveProjectsJob;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.model.ICapabilityModelElement;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.IModelWalker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;

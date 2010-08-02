@@ -27,12 +27,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.common.runtime.BundleForm;
 import org.apache.felix.sigil.common.runtime.Client;
 import org.apache.felix.sigil.common.runtime.Main;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstall;
-import org.apache.felix.sigil.repository.IRepositoryManager;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;

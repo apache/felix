@@ -24,9 +24,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
 
+import org.apache.felix.sigil.common.model.eclipse.ILibrary;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
-import org.apache.felix.sigil.model.eclipse.ILibrary;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;

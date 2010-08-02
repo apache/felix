@@ -78,13 +78,13 @@
             type="Workspace Repository">
       </provider>
       <provider
-            class="org.apache.felix.sigil.core.repository.FileSystemRepositoryProvider"
+            class="org.apache.felix.sigil.common.core.repository.FileSystemRepositoryProvider"
             dynamic="true"
             id="org.apache.felix.sigil.core.file"
             type="File System Repository">
       </provider>
       <provider
-            class="org.apache.felix.sigil.core.repository.SystemRepositoryProvider"
+            class="org.apache.felix.sigil.common.core.repository.SystemRepositoryProvider"
             dynamic="false"
             id="org.apache.felix.sigil.core.system"
             type="System Repository">

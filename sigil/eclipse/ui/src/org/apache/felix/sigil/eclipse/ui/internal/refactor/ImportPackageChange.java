@@ -19,8 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.refactor;
 
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;

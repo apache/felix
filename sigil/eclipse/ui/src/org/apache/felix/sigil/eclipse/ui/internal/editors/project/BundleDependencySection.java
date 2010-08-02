@@ -22,10 +22,10 @@ package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
 import java.util.Set;
 
+import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilPage;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilSection;
-import org.apache.felix.sigil.model.IModelElement;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelection;

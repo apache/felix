@@ -24,12 +24,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-import org.apache.felix.sigil.config.Resource;
+import org.apache.felix.sigil.common.config.Resource;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilPage;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeListener;

@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.eclipse.ui.internal.form.SigilPage;
@@ -36,7 +37,6 @@ import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
 import org.apache.felix.sigil.eclipse.ui.util.IElementDescriptor;
 import org.apache.felix.sigil.eclipse.ui.util.IFilter;
 import org.apache.felix.sigil.eclipse.ui.util.ModelLabelProvider;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;

@@ -20,8 +20,8 @@
 package org.apache.felix.sigil.eclipse.ui.internal.editors.project;
 
 
-import org.apache.felix.sigil.model.osgi.IPackageImport;
-import org.apache.felix.sigil.model.osgi.IRequiredBundle;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
+import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 
 
 public interface IDependencyChecker

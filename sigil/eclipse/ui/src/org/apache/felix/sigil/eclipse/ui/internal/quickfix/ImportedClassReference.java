@@ -20,7 +20,7 @@
 package org.apache.felix.sigil.eclipse.ui.internal.quickfix;
 
 
-import org.apache.felix.sigil.model.osgi.IPackageImport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 
 
 public class ImportedClassReference

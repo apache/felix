@@ -28,8 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 
 
 public class BundleGraph

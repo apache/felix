@@ -24,13 +24,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
+import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
+import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.repository.AbstractBundleRepository;
-import org.apache.felix.sigil.repository.IRepositoryVisitor;
-import org.apache.felix.sigil.repository.ResolutionConfig;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

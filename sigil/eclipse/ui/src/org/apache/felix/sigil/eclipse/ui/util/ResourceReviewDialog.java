@@ -22,7 +22,7 @@ package org.apache.felix.sigil.eclipse.ui.util;
 
 import java.util.Collection;
 
-import org.apache.felix.sigil.model.IModelElement;
+import org.apache.felix.sigil.common.model.IModelElement;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;

@@ -26,10 +26,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.felix.sigil.bnd.BundleBuilder;
-import org.apache.felix.sigil.config.BldFactory;
-import org.apache.felix.sigil.config.IBldProject;
-import org.apache.felix.sigil.config.IBldProject.IBldBundle;
+import org.apache.felix.sigil.common.bnd.BundleBuilder;
+import org.apache.felix.sigil.common.config.BldFactory;
+import org.apache.felix.sigil.common.config.IBldProject;
+import org.apache.felix.sigil.common.config.IBldProject.IBldBundle;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;

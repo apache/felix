@@ -23,11 +23,11 @@ package org.apache.felix.sigil.eclipse.model.project;
 import java.util.Collection;
 
 
-import org.apache.felix.sigil.config.IBldProject;
-import org.apache.felix.sigil.core.BldCore;
-import org.apache.felix.sigil.model.ICompoundModelElement;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.config.IBldProject;
+import org.apache.felix.sigil.common.core.BldCore;
+import org.apache.felix.sigil.common.model.ICompoundModelElement;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;

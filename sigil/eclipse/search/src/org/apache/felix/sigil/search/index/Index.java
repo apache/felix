@@ -32,12 +32,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.felix.sigil.common.model.ModelElementFactory;
+import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 import org.apache.felix.sigil.common.osgi.VersionRange;
-import org.apache.felix.sigil.model.ModelElementFactory;
-import org.apache.felix.sigil.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.model.osgi.IRequiredBundle;
-import org.apache.felix.sigil.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.search.ISearchResult;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;

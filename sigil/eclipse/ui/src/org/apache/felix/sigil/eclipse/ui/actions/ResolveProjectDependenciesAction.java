@@ -24,11 +24,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.apache.felix.sigil.eclipse.ui.util.ResourceReviewDialog;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;

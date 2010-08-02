@@ -24,18 +24,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.felix.sigil.common.model.ICapabilityModelElement;
+import org.apache.felix.sigil.common.model.ICompoundModelElement;
+import org.apache.felix.sigil.common.model.IModelElement;
+import org.apache.felix.sigil.common.model.IModelWalker;
+import org.apache.felix.sigil.common.model.IRequirementModelElement;
+import org.apache.felix.sigil.common.model.ModelElementFactory;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.model.ICapabilityModelElement;
-import org.apache.felix.sigil.model.ICompoundModelElement;
-import org.apache.felix.sigil.model.IModelElement;
-import org.apache.felix.sigil.model.IModelWalker;
-import org.apache.felix.sigil.model.IRequirementModelElement;
-import org.apache.felix.sigil.model.ModelElementFactory;
-import org.apache.felix.sigil.model.osgi.IPackageExport;
-import org.apache.felix.sigil.model.osgi.IPackageImport;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.framework.Version;
 
