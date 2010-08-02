@@ -20,7 +20,6 @@ package org.apache.felix.webconsole.internal.compendium;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.TreeMap;
@@ -251,7 +250,7 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
         jw.value( ComponentConfigurationPrinter.toStateString( state ) );
         jw.key( "stateRaw" );
         jw.value( state );
-        
+
         final Dictionary props = component.getProperties();
 
         final String pid = (String) (props != null ?  props.get( Constants.SERVICE_PID ) : null);
@@ -259,7 +258,7 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
         {
             jw.key("pid");
             jw.value(pid);
-            if ( isConfigurable( component.getBundle(), pid ) ) 
+            if ( isConfigurable( component.getBundle(), pid ) )
             {
                 jw.key("configurable");
                 jw.value(pid);
@@ -283,8 +282,19 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
 
         keyVal( jw, "Bundle", component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId()
             + ")" );
+        keyVal( jw, "Implementation Class", component.getClassName() );
+        if (component.getFactory() != null) {
+            keyVal( jw, "Component Factory Name", component.getFactory() );
+        }
         keyVal( jw, "Default State", component.isDefaultEnabled() ? "enabled" : "disabled" );
         keyVal( jw, "Activation", component.isImmediate() ? "immediate" : "delayed" );
+
+        try {
+            keyVal( jw, "Configuration Policy", component.getConfigurationPolicy() );
+        } catch (Throwable t) {
+            // missing implementation of said method in the actually bound API
+            // ignore this and just don't display the information
+        }
 
         listServices( jw, component );
         listReferences( jw, component );
