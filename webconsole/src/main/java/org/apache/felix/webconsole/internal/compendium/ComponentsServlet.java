@@ -20,9 +20,10 @@ package org.apache.felix.webconsole.internal.compendium;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Iterator;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.servlet.ServletException;
@@ -190,22 +191,18 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
                 else
                 {
                     // order components by name
-                    TreeMap componentMap = new TreeMap();
-                    for ( int i = 0; i < components.length; i++ )
-                    {
-                        Component c = components[i];
-                        componentMap.put( c.getName(), c );
-                    }
+                    sortComponents( components );
 
                     final StringBuffer buffer = new StringBuffer();
-                    buffer.append(componentMap.size());
-                    buffer.append(" component");
-                    if ( componentMap.size() != 1 ) {
-                        buffer.append('s');
+                    buffer.append( components.length );
+                    buffer.append( " component" );
+                    if ( components.length != 1 )
+                    {
+                        buffer.append( 's' );
                     }
-                    buffer.append(" installed.");
-                    jw.key("status");
-                    jw.value(componentMap.size());
+                    buffer.append( " installed." );
+                    jw.key( "status" );
+                    jw.value( components.length );
 
                     // render components
                     jw.key( "data" );
@@ -216,9 +213,9 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
                     }
                     else
                     {
-                        for ( Iterator ci = componentMap.values().iterator(); ci.hasNext(); )
+                        for ( int i = 0; i < components.length; i++ )
                         {
-                            component( jw, ( Component ) ci.next(), false );
+                            component( jw, components[i], false );
                         }
                     }
                     jw.endArray();
@@ -232,6 +229,26 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
             throw new IOException( je.toString() );
         }
     }
+
+
+    private void sortComponents( Component[] components )
+    {
+        Arrays.sort( components, new Comparator()
+        {
+            public int compare( Object o0, Object o1 )
+            {
+                final Component c0 = ( Component ) o0;
+                final Component c1 = ( Component ) o1;
+                final int nameCmp = c0.getName().compareTo( c1.getName() );
+                if ( nameCmp != 0 )
+                {
+                    return nameCmp;
+                }
+                return ( c0.getId() < c1.getId() ) ? -1 : ( ( c0.getId() > c1.getId() ) ? 1 : 0 );
+            }
+        } );
+    }
+
 
     private void component( JSONWriter jw, Component component, boolean details ) throws JSONException
     {
