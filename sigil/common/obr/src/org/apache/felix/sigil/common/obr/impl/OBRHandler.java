@@ -40,8 +40,6 @@ import org.apache.felix.sigil.common.osgi.LDAPParser;
 import org.apache.felix.sigil.common.osgi.SimpleTerm;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionTable;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
