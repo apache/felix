@@ -202,7 +202,7 @@ public class SigilResolver extends BasicResolver implements IBldResolver
 
         try
         {
-            URL url = (uri != null) ? uri.toURL() : bundle.getLocation().toURL();
+            URL url = (uri != null) ? uri.toURL() : bundle.getLocation().toURI().toURL();
             if (name.contains("!"))
             {
                 String[] split = name.split("!");
