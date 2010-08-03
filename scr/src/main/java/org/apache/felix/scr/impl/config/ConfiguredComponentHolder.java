@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -236,6 +237,14 @@ public class ConfiguredComponentHolder extends AbstractComponentHolder
                 putComponentManager( pid, newIcm );
             }
         }
+    }
+
+
+    public Component[] getComponents()
+    {
+        Component[] components = getComponentManagers( false );
+        return ( components != null ) ? components : new Component[]
+            { m_singleComponent };
     }
 
 

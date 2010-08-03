@@ -158,7 +158,7 @@
                             org.apache.felix.scr.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.scr;version=1.4,
+                            org.apache.felix.scr;version=1.5,
                             org.osgi.service.component
                         </Export-Package>
                         <Private-Package>

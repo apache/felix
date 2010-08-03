@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.config;
 
 import java.util.Dictionary;
 
+import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -69,6 +70,10 @@ public interface ComponentHolder
      */
     void configurationUpdated( String pid, Dictionary props );
 
+    /**
+     * Returns all <code>Component</code> instances held by this holder.
+     */
+    Component[] getComponents();
 
     /**
      * Enables all components of this holder.

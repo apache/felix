@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.Component;
@@ -119,47 +118,58 @@ public class ComponentRegistry implements ScrService
 
     public Component[] getComponents()
     {
-        synchronized ( m_componentsById )
+        Object[] holders = getComponentHolders();
+        ArrayList list = new ArrayList();
+        for ( int i = 0; i < holders.length; i++ )
         {
-            if ( m_componentsById.isEmpty() )
+            if ( holders[i] instanceof ComponentHolder )
             {
-                return null;
+                Component[] components = ( ( ComponentHolder ) holders[i] ).getComponents();
+                for ( int j = 0; j < components.length; j++ )
+                {
+                    list.add( components[j] );
+                }
             }
-
-            return ( org.apache.felix.scr.Component[] ) m_componentsById.values().toArray(
-                new Component[m_componentsById.size()] );
         }
+
+        // nothing to return
+        if ( list.isEmpty() )
+        {
+            return null;
+        }
+
+        return ( Component[] ) list.toArray( new Component[list.size()] );
     }
 
 
     public Component[] getComponents( Bundle bundle )
     {
-        Component[] all = getComponents();
-        if ( all == null || all.length == 0 )
+        Object[] holders = getComponentHolders();
+        ArrayList list = new ArrayList();
+        for ( int i = 0; i < holders.length; i++ )
         {
-            return null;
-        }
-
-        // compare the bundle by its id
-        long bundleId = bundle.getBundleId();
-
-        // scan the components for the the desired components
-        List perBundle = new ArrayList();
-        for ( int i = 0; i < all.length; i++ )
-        {
-            if ( all[i].getBundle().getBundleId() == bundleId )
+            if ( holders[i] instanceof ComponentHolder )
             {
-                perBundle.add( all[i] );
+                ComponentHolder holder = ( ComponentHolder ) holders[i];
+                BundleComponentActivator activator = holder.getActivator();
+                if ( activator != null && activator.getBundleContext().getBundle() == bundle )
+                {
+                    Component[] components = holder.getComponents();
+                    for ( int j = 0; j < components.length; j++ )
+                    {
+                        list.add( components[j] );
+                    }
+                }
             }
         }
 
         // nothing to return
-        if ( perBundle.isEmpty() )
+        if ( list.isEmpty() )
         {
             return null;
         }
 
-        return ( org.apache.felix.scr.Component[] ) perBundle.toArray( new Component[perBundle.size()] );
+        return ( Component[] ) list.toArray( new Component[list.size()] );
     }
 
 
@@ -169,6 +179,18 @@ public class ComponentRegistry implements ScrService
         {
             return ( Component ) m_componentsById.get( new Long( componentId ) );
         }
+    }
+
+
+    public Component[] getComponents( String componentName )
+    {
+        final ComponentHolder holder = getComponentHolder( componentName );
+        if ( holder != null )
+        {
+            return holder.getComponents();
+        }
+
+        return null;
     }
 
 

@@ -300,6 +300,20 @@ public class ImmediateComponentManager extends AbstractComponentManager
     }
 
 
+    void registerComponentId()
+    {
+        super.registerComponentId();
+        this.m_properties = null;
+    }
+
+
+    void unregisterComponentId()
+    {
+        super.unregisterComponentId();
+        this.m_properties = null;
+    }
+
+
     /**
      * Returns the (private copy) of the Component properties to be used
      * for the ComponentContext as well as eventual service registration.

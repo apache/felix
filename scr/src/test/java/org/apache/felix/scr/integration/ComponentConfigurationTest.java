@@ -261,14 +261,36 @@ public class ComponentConfigurationTest extends ComponentTestBase
         final Component[] twoConfigs = findComponentsByName( factoryPid );
         TestCase.assertNotNull( twoConfigs );
         TestCase.assertEquals( 2, twoConfigs.length );
-        TestCase.assertEquals( Component.STATE_ACTIVE, twoConfigs[0].getState() );
-        TestCase.assertEquals( Component.STATE_DISABLED, twoConfigs[1].getState() );
+
+        // find the active and inactive configs, fail if none
+        int activeConfig;
+        int inactiveConfig;
+        if ( twoConfigs[0].getState() == Component.STATE_ACTIVE )
+        {
+            // [0] is active, [1] expected disabled
+            activeConfig = 0;
+            inactiveConfig = 1;
+        }
+        else if ( twoConfigs[1].getState() == Component.STATE_ACTIVE )
+        {
+            // [1] is active, [0] expected disabled
+            activeConfig = 1;
+            inactiveConfig = 0;
+        }
+        else
+        {
+            TestCase.fail( "One of two components expected active" );
+            return; // eases the compiler...
+        }
+
+        TestCase.assertEquals( Component.STATE_ACTIVE, twoConfigs[activeConfig].getState() );
+        TestCase.assertEquals( Component.STATE_DISABLED, twoConfigs[inactiveConfig].getState() );
         TestCase.assertEquals( 1, SimpleComponent.INSTANCES.size() );
-        TestCase.assertTrue( SimpleComponent.INSTANCES.containsKey( twoConfigs[0].getId() ) );
-        TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( twoConfigs[1].getId() ) );
+        TestCase.assertTrue( SimpleComponent.INSTANCES.containsKey( twoConfigs[activeConfig].getId() ) );
+        TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( twoConfigs[inactiveConfig].getId() ) );
 
         // enable second component
-        twoConfigs[1].enable();
+        twoConfigs[inactiveConfig].enable();
         delay();
 
         // ensure both components active
@@ -288,8 +310,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         TestCase.assertEquals( 1, oneConfig.length );
         TestCase.assertEquals( Component.STATE_ACTIVE, oneConfig[0].getState() );
         TestCase.assertEquals( 1, SimpleComponent.INSTANCES.size() );
-        TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( twoConfigs[0].getId() ) );
-        TestCase.assertTrue( SimpleComponent.INSTANCES.containsKey( twoConfigs[1].getId() ) );
+        TestCase.assertTrue( SimpleComponent.INSTANCES.containsKey( oneConfig[0].getId() ) );
 
         // delete second configuration
         deleteConfig( pid1 );
@@ -301,8 +322,6 @@ public class ComponentConfigurationTest extends ComponentTestBase
         TestCase.assertEquals( 1, configsDeleted.length );
         TestCase.assertEquals( Component.STATE_UNSATISFIED, configsDeleted[0].getState() );
         TestCase.assertEquals( 0, SimpleComponent.INSTANCES.size() );
-        TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( twoConfigs[0].getId() ) );
-        TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( twoConfigs[1].getId() ) );
     }
 
     @Test

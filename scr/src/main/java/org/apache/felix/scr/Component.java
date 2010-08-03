@@ -84,9 +84,11 @@ public interface Component
     static final int STATE_REGISTERED = 32;
 
     /**
-     * The Component is a Component Factory ready to manage Component instances
-     * from configuration data received from the Configuration Admin Service
-     * (value is 64).
+     * The Component is a Component Factory ready to create Component instances
+     * with the <code>ComponentFactory.newInstance(Dictionary)</code> method
+     * or (if enabled with the <code>ds.factory.enabled</code> configuration) to
+     * manage Component instances from configuration data received from the
+     * Configuration Admin Service (value is 64).
      */
     static final int STATE_FACTORY = 64;
 
@@ -133,7 +135,9 @@ public interface Component
 
     /**
      * Returns the component ID of this component. This ID is managed by the
-     * SCR.
+     * SCR. If the component is not currently enabled the ID might not be
+     * assigned to the component (yet) and this method will return -1 in this
+     * case.
      */
     long getId();
 

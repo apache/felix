@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -317,6 +318,26 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
             // 112.7 Factory Configuration not allowed for factory component
             log( LogService.LOG_ERROR, "Component Factory cannot be configured by factory configuration", null );
         }
+    }
+
+
+    public Component[] getComponents()
+    {
+        ImmediateComponentManager[] instances = getComponentManagers( m_componentInstances );
+        ImmediateComponentManager[] services = getComponentManagers( m_configuredServices );
+        int size = instances.length + services.length;
+
+        if ( size > 0 )
+        {
+            Component[] result = new Component[size + 1];
+            result[0] = this;
+            System.arraycopy( instances, 0, result, 1, instances.length );
+            System.arraycopy( services, 0, result, instances.length + 1, services.length );
+            return result;
+        }
+
+        return new Component[]
+            { this };
     }
 
 

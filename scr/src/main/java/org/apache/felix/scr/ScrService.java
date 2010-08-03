@@ -55,6 +55,24 @@ public interface ScrService
 
 
     /**
+     * Returns the components whose <code>component.name</code> matches the
+     * given <code>componentName</code> or <code>null</code> if no component
+     * with the given name is currently managed.
+     * <p>
+     * If the component name refers to a component factory component or a
+     * component configured with multiple factory configurations this method
+     * returns multiple component instances.
+     *
+     * @param componentName The name of the component to return
+     *
+     * @return The indicated components or <code>null</code> if no such
+     *      component exists.
+     * @since 1.5 (Apache Felix Declarative Services 1.4.2)
+     */
+    Component[] getComponents( String componentName );
+
+
+    /**
      * Reuturns an array of all components managed by this SCR instance on
      * behalf of the given bundle. The components are returned in ascending
      * order of their component.id. If there are no components managed by the
