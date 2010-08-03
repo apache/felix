@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -158,7 +157,6 @@ public class BundleResolver implements IBundleResolver
         private final IResolutionMonitor monitor;
 
         private final Resolution resolution = new Resolution();
-        private final Set<IModelElement> parsed = new HashSet<IModelElement>();
         private final LinkedList<IModelElement> requirements = new LinkedList<IModelElement>();
 
         public ResolutionContext(IModelElement root, ResolutionConfig config, IResolutionMonitor monitor)
@@ -166,21 +164,6 @@ public class BundleResolver implements IBundleResolver
             this.root = root;
             this.config = config;
             this.monitor = monitor;
-        }
-
-        public void enterModelElement(IModelElement element)
-        {
-            parsed.add(element);
-        }
-
-        public void exitModelElement(IModelElement element)
-        {
-            parsed.remove(element);
-        }
-
-        public boolean isNewModelElement(IModelElement element)
-        {
-            return !parsed.contains(element);
         }
 
         public boolean isValid()

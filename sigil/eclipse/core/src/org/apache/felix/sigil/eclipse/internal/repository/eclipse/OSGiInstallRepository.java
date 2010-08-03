@@ -38,7 +38,6 @@ import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstall;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 
 public class OSGiInstallRepository extends AbstractBundleRepository
 {
