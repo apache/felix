@@ -80,9 +80,7 @@ public abstract class AbstractComponentManager implements Component
     {
         m_activator = activator;
         m_componentMetadata = metadata;
-
-        // for some testing, the activator may be null
-        m_componentId = ( activator != null ) ? activator.registerComponentId( this ) : -1;
+        m_componentId = -1;
 
         m_state = Disabled.getInstance();
         m_dependencyManagers = loadDependencyManagers( metadata );
@@ -112,6 +110,32 @@ public abstract class AbstractComponentManager implements Component
                 log( LogService.LOG_DEBUG, "Component {0} Properties: {1}", new Object[]
                     { metadata.getName(), metadata.getProperties() }, null );
             }
+        }
+    }
+
+
+    //---------- Component ID management
+
+    void registerComponentId()
+    {
+        final BundleComponentActivator activator = getActivator();
+        if ( activator != null )
+        {
+            this.m_componentId = activator.registerComponentId( this );
+        }
+    }
+
+
+    void unregisterComponentId()
+    {
+        if ( this.m_componentId >= 0 )
+        {
+            final BundleComponentActivator activator = getActivator();
+            if ( activator != null )
+            {
+                activator.unregisterComponentId( this );
+            }
+            this.m_componentId = -1;
         }
     }
 
@@ -869,7 +893,7 @@ public abstract class AbstractComponentManager implements Component
         void enable( AbstractComponentManager acm )
         {
             acm.changeState( Enabling.getInstance() );
-
+            acm.registerComponentId();
             try
             {
                 acm.enableDependencyManagers();
@@ -881,6 +905,7 @@ public abstract class AbstractComponentManager implements Component
                 // one of the reference target filters is invalid, fail
                 acm.log( LogService.LOG_ERROR, "Failed enabling Component", ise );
                 acm.disableDependencyManagers();
+                acm.unregisterComponentId();
                 acm.changeState( Disabled.getInstance() );
             }
         }
@@ -993,6 +1018,9 @@ public abstract class AbstractComponentManager implements Component
 
             // dispose and recreate dependency managers
             acm.disableDependencyManagers();
+
+            // reset the component id now (a disabled component has none)
+            acm.unregisterComponentId();
 
             // we are now disabled, ready for re-enablement or complete destroyal
             acm.changeState( Disabled.getInstance() );

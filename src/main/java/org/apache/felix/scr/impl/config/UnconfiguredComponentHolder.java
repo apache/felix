@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.config;
 
 import java.util.Dictionary;
 
+import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -52,6 +53,13 @@ public class UnconfiguredComponentHolder extends AbstractComponentHolder
 
     public void configurationUpdated( String pid, Dictionary props )
     {
+    }
+
+
+    public Component[] getComponents()
+    {
+        return new Component[]
+            { m_component };
     }
 
 

@@ -29,10 +29,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
@@ -162,16 +160,10 @@ public abstract class ComponentTestBase
 
     protected Component findComponentByName( String name )
     {
-        Component[] components = getComponents();
-        if ( components != null )
+        Component[] components = findComponentsByName( name );
+        if ( components != null && components.length > 0 )
         {
-            for ( Component component : components )
-            {
-                if ( name.equals( component.getName() ) )
-                {
-                    return component;
-                }
-            }
+            return components[0];
         }
 
         return null;
@@ -180,22 +172,10 @@ public abstract class ComponentTestBase
 
     protected Component[] findComponentsByName( String name )
     {
-        List<Component> cList = new ArrayList<Component>();
-        Component[] components = getComponents();
-        if ( components != null )
+        ScrService scr = ( ScrService ) scrTracker.getService();
+        if ( scr != null )
         {
-            for ( Component component : components )
-            {
-                if ( name.equals( component.getName() ) )
-                {
-                    cList.add( component );
-                }
-            }
-        }
-
-        if ( !cList.isEmpty() )
-        {
-            return cList.toArray( new Component[cList.size()] );
+            return scr.getComponents( name );
         }
 
         return null;
