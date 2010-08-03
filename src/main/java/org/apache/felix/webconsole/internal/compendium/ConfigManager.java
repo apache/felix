@@ -97,7 +97,7 @@ public class ConfigManager extends ConfigManagerBase
         if ( pid == null )
         {
             String info = request.getPathInfo();
-            pid = info.substring( info.lastIndexOf( '/' ) + 1 );
+            pid = WebConsoleUtil.urlDecode( info.substring( info.lastIndexOf( '/' ) + 1 ) );
         }
 
         // the filter to select part of the configurations
@@ -403,7 +403,7 @@ public class ConfigManager extends ConfigManagerBase
                 }
                 catch (IllegalArgumentException t)
                 {
-                    // MetaTypeProvider.getObjectClassDefinition might throw illegal 
+                    // MetaTypeProvider.getObjectClassDefinition might throw illegal
                     // argument exception. So we must catch it here, otherwise the
                     // other configurations will not be shown
                     // See https://issues.apache.org/jira/browse/FELIX-2390
