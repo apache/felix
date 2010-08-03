@@ -100,13 +100,14 @@
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.webconsole;version=${project.version}
+                            org.apache.felix.webconsole;version=3.1
                         </Export-Package>
                         <Private-Package>
                             !org.apache.felix.webconsole,
                             org.apache.felix.webconsole.*,
                         </Private-Package>
                         <Import-Package>
+                            org.apache.felix.scr;version=1.0;resolution:=optional,
                             org.osgi.service.http,
                             org.apache.felix.scr;
                             org.apache.felix.shell;
@@ -246,6 +247,13 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr</artifactId>
+            <version>1.4.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.shell</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
