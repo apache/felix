@@ -38,24 +38,35 @@ function renderData( eventData )  {
 	}
 }
 
-function entry( /* Object */ dataEntry ) {
-	var id = dataEntry.id;
-	var name = dataEntry.name;
+function getEntryId(/* Object */ dataEntry) {
+    var id = dataEntry.id;
+    if (id < 0) {
+        id = dataEntry.name;
+        if (dataEntry.pid) {
+            id += "/" + dataEntry.pid;
+        }
+    }
+    return id;
+}
 
-	var _ = tableEntryTemplate.clone().appendTo(tableBody).attr('id', 'entry' + dataEntry.id);
+function entry( /* Object */ dataEntry ) {
+	var idPath = getEntryId(dataEntry);
+	var id = idPath.replace(/[./-]/g, "_");
+	var name = dataEntry.name;
+	var _ = tableEntryTemplate.clone().appendTo(tableBody).attr('id', 'entry' + id);
 
 	_.find('.bIcon').attr('id', 'img' + id).click(function() {
-		showDetails(id);
-	}).after(drawDetails ? name : ('<a href="' + window.location.pathname + '/' + id + '">' + name + '</a>'));
+		showDetails(idPath);
+	}).after(drawDetails ? name : ('<a href="' + pluginRoot + '/' + idPath + '">' + name + '</a>'));
 
-	_.find('td:eq(0)').text( id );
+	_.find('td:eq(0)').text( dataEntry.id );
 	_.find('td:eq(2)').text( dataEntry.state );
 
 	// setup buttons
 	if ( dataEntry.stateRaw == 1 || dataEntry.stateRaw == 1024 ) { // disabled or disabling
-		_.find('li:eq(0)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(id, 'enable') });
+		_.find('li:eq(0)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'enable') });
 	} else {
-		_.find('li:eq(1)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(id, 'disable') });
+		_.find('li:eq(1)').removeClass('ui-helper-hidden').click(function() { changeDataEntryState(idPath, 'disable') });
 	}
 	if ( dataEntry.configurable ) _.find('li:eq(2)').removeClass('ui-helper-hidden').click(function() { // configure
 		changeDataEntryState(dataEntry.pid, 'configure');
@@ -85,6 +96,7 @@ function loadData() {
 }
 
 function hideDetails( id ) {
+	var __test__ = $("#img" + id);
 	$("#img" + id).each(function() {
 		$("#pluginInlineDetails").remove();
 		$(this).
@@ -98,9 +110,11 @@ function hideDetails( id ) {
 
 function renderDetails( data ) {
 	data = data.data[0];
+	var id = getEntryId(data).replace(/[./-]/g, "_");
 	$("#pluginInlineDetails").remove();
-	$("#entry" + data.id + " > td").eq(1).append("<div id='pluginInlineDetails'/>");
-	$("#img" + data.id).each(function() {
+	var __test__ = $("#entry" + id);
+	$("#entry" + id + " > td").eq(1).append("<div id='pluginInlineDetails'/>");
+	$("#img" + id).each(function() {
 		if ( drawDetails ) {
 			var ref = window.location.pathname;
 			ref = ref.substring(0, ref.lastIndexOf('/'));
@@ -116,7 +130,7 @@ function renderDetails( data ) {
 				removeClass('ui-icon-triangle-1-e').//right
 				addClass('ui-icon-triangle-1-s').//down
 				attr("title", "Hide Details").
-				unbind('click').click(function() {hideDetails(data.id)});
+				unbind('click').click(function() {hideDetails(id)});
 		}
 	});
 	$("#pluginInlineDetails").append("<table border='0'><tbody></tbody></table>");

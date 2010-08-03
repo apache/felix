@@ -508,60 +508,121 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
         public final Component component;
         public final boolean componentRequested;
 
-        protected long getComponentId( final String componentIdPar )
-        {
-            try
-            {
-                return Long.parseLong( componentIdPar );
-            }
-            catch ( NumberFormatException nfe )
-            {
-                // TODO: log
-            }
-
-            // no bundleId or wrong format
-            return -1;
-        }
 
         protected RequestInfo( final HttpServletRequest request )
         {
             String info = request.getPathInfo();
             // remove label and starting slash
-            info = info.substring(getLabel().length() + 1);
+            info = info.substring( getLabel().length() + 1 );
 
             // get extension
-            if ( info.endsWith(".json") )
+            if ( info.endsWith( ".json" ) )
             {
                 extension = "json";
-                info = info.substring(0, info.length() - 5);
+                info = info.substring( 0, info.length() - 5 );
             }
             else
             {
                 extension = "html";
             }
 
-            long componentId = getComponentId(info.substring(info.lastIndexOf('/') + 1));
-            if ( componentId == -1 )
+            if ( info.length() > 0 && info.startsWith( "/" ) )
             {
-                componentRequested = false;
-                component = null;
+                this.componentRequested = true;
+                info = info.substring( 1 );
+                Component component = getComponentId( info );
+                if ( component == null )
+                {
+                    component = getComponentByName( info );
+                }
+                this.component = component;
             }
             else
             {
-                componentRequested = true;
+                this.componentRequested = false;
+                this.component = null;
+            }
+
+            request.setAttribute( ComponentsServlet.this.getClass().getName(), this );
+        }
+
+
+        protected Component getComponentId( final String componentIdPar )
+        {
+            final ScrService scrService = getScrService();
+            if ( scrService != null )
+            {
+                try
+                {
+                    final long componentId = Long.parseLong( componentIdPar );
+                    return scrService.getComponent( componentId );
+                }
+                catch ( NumberFormatException nfe )
+                {
+                    // don't care
+                }
+            }
+
+            return null;
+        }
+
+
+        protected Component getComponentByName( final String names )
+        {
+            if ( names.length() > 0 )
+            {
                 final ScrService scrService = getScrService();
                 if ( scrService != null )
                 {
-                    component = scrService.getComponent( componentId );
-                }
-                else
-                {
-                    component = null;
+
+                    final int slash = names.lastIndexOf( '/' );
+                    final String componentName;
+                    final String pid;
+                    if ( slash > 0 )
+                    {
+                        componentName = names.substring( 0, slash );
+                        pid = names.substring( slash + 1 );
+                    }
+                    else
+                    {
+                        componentName = names;
+                        pid = null;
+                    }
+
+                    Component[] components;
+                    try
+                    {
+                        components = scrService.getComponents( componentName );
+                    }
+                    catch ( Throwable t )
+                    {
+                        // not implemented in the used API versio
+                        components = null;
+                    }
+
+                    if ( components != null )
+                    {
+                        if ( pid != null )
+                        {
+                            for ( int i = 0; i < components.length; i++ )
+                            {
+                                Component component = components[i];
+                                if ( pid.equals( component.getProperties().get( Constants.SERVICE_PID ) ) )
+                                {
+                                    return component;
+                                }
+                            }
+                        }
+                        else if ( components.length > 0 )
+                        {
+                            return components[0];
+                        }
+                    }
                 }
             }
-            request.setAttribute(ComponentsServlet.class.getName(), this);
-        }
 
+            return null;
+        }
     }
 
     static RequestInfo getRequestInfo(final HttpServletRequest request)
