@@ -1064,66 +1064,8 @@ ex.printStackTrace();
             {
                 // Get a snapshot of all installed bundles.
                 bundles = getBundles();
-
-                // Sort bundle array by start level either ascending or
-                // descending depending on whether the start level is being
-                // lowered or raised to that the bundles can be efficiently
-                // processed in order. Within a start level sort by bundle ID.
-                Comparator comparator = null;
-                if (lowering)
-                {
-                    // Sort descending to stop highest start level first.
-                    comparator = new Comparator() {
-                        public int compare(Object o1, Object o2)
-                        {
-                            BundleImpl b1 = (BundleImpl) o1;
-                            BundleImpl b2 = (BundleImpl) o2;
-                            if (b1.getStartLevel(getInitialBundleStartLevel())
-                                < b2.getStartLevel(getInitialBundleStartLevel()))
-                            {
-                                return 1;
-                            }
-                            else if (b1.getStartLevel(getInitialBundleStartLevel())
-                                > b2.getStartLevel(getInitialBundleStartLevel()))
-                            {
-                                return -1;
-                            }
-                            else if (b1.getBundleId() < b2.getBundleId())
-                            {
-                                return 1;
-                            }
-                            return -1;
-                        }
-                    };
-                }
-                else
-                {
-                    // Sort ascending to start lowest start level first.
-                    comparator = new Comparator() {
-                        public int compare(Object o1, Object o2)
-                        {
-                            BundleImpl b1 = (BundleImpl) o1;
-                            BundleImpl b2 = (BundleImpl) o2;
-                            if (b1.getStartLevel(getInitialBundleStartLevel())
-                                > b2.getStartLevel(getInitialBundleStartLevel()))
-                            {
-                                return 1;
-                            }
-                            else if (b1.getStartLevel(getInitialBundleStartLevel())
-                                < b2.getStartLevel(getInitialBundleStartLevel()))
-                            {
-                                return -1;
-                            }
-                            else if (b1.getBundleId() > b2.getBundleId())
-                            {
-                                return 1;
-                            }
-                            return -1;
-                        }
-                    };
-                }
-
-                Arrays.sort(bundles, comparator);
+                // Sort the bundles according to sort level for processing.
+                Arrays.sort(bundles, new BundleComparator(lowering));
             }
 
             // Stop or start the bundles according to the start level.
@@ -4506,6 +4448,48 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
         public void invokeHook(Object hook)
         {
             ((ListenerHook) hook).removed(m_removed);
+        }
+    }
+
+    // Compares bundles by start level either ascending or
+    // descending depending on whether the start level is being
+    // lowered or raised. Within a start level sort by bundle ID.
+    private class BundleComparator implements Comparator
+    {
+        private final boolean m_lowering;
+
+        BundleComparator(boolean lowering)
+        {
+            m_lowering = lowering;
+        }
+
+        public int compare(Object o1, Object o2)
+        {
+            int result = -1;
+
+            BundleImpl b1 = (BundleImpl) o1;
+            BundleImpl b2 = (BundleImpl) o2;
+            if (b1.getStartLevel(getInitialBundleStartLevel())
+                < b2.getStartLevel(getInitialBundleStartLevel()))
+            {
+                result = 1;
+            }
+            else if (b1.getStartLevel(getInitialBundleStartLevel())
+                > b2.getStartLevel(getInitialBundleStartLevel()))
+            {
+                result = -1;
+            }
+            else if (b1.getBundleId() < b2.getBundleId())
+            {
+                result = 1;
+            }
+
+            if (!m_lowering)
+            {
+                result = result * -1;
+            }
+
+            return result;
         }
     }
 
