@@ -1,3 +1,11 @@
+Version 3.0.2
+-------------
+** Bug
+    * [FELIX-2366] - Avoiding property substitution by escaping does not remove escape character
+
+** Improvement
+    * [FELIX-1657] - Add option in fileinstall to start bundles transiently (START_TRANSIENT)
+
 Version 3.0.0
 -------------
 ** Bug
