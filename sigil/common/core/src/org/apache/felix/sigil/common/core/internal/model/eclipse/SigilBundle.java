@@ -72,7 +72,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         classpath = new String[0];
         packages = new String[0];
     }
-
+    
     public void synchronize(IProgress progress) throws IOException
     {
         progress = progress.newTask(100);
@@ -113,7 +113,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
 
     private void updateManifest(File location) throws IOException
     {
-        if (location != null)
+        if (location != null && location.exists())
         {
             JarFile f = new JarFile(location);
             try
