@@ -281,7 +281,7 @@ public class BundleResolver implements IBundleResolver
         public void synchronize(IProgress progress)
         {
             Set<ISigilBundle> bundles = getBundles();
-            progress = progress.newTask(bundles.size());
+            progress = progress.newTask(bundles.size()*100);
 
             for (ISigilBundle b : bundles)
             {
@@ -292,7 +292,7 @@ public class BundleResolver implements IBundleResolver
 
                 try
                 {
-                    b.synchronize(progress.newChild(1));
+                    b.synchronize(progress.newChild(100));
                 }
                 catch (IOException e)
                 {
