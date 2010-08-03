@@ -31,6 +31,8 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
@@ -40,15 +42,23 @@ import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.log.LogService;
 
 
-public class ConfigurationComponentRegistry extends ComponentRegistry implements ConfigurationListener
+public class ConfigurationComponentRegistry extends ComponentRegistry implements ServiceListener, ConfigurationListener
 {
+
+    // the name of the ConfigurationAdmin service
+    private static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
 
     // the service m_registration of the ConfigurationListener service
     private ServiceRegistration m_registration;
 
+    // the bundle context
+    private BundleContext m_bundleContext;
+
+
     public ConfigurationComponentRegistry( final BundleContext context )
     {
         super( context );
+        m_bundleContext = context;
 
         // register as listener for configurations
         Dictionary props = new Hashtable();
@@ -56,11 +66,23 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         m_registration = context.registerService( new String[]
             { ConfigurationListener.class.getName() }, this, props );
+
+        // keep me informed on ConfigurationAdmin state changes
+        try
+        {
+            context.addServiceListener( this, "(objectclass=" + CONFIGURATION_ADMIN + ")" );
+        }
+        catch ( InvalidSyntaxException ise )
+        {
+            // not expected (filter is tested valid)
+        }
     }
 
 
     public void dispose()
     {
+        m_bundleContext.removeServiceListener( this );
+
         if ( m_registration != null )
         {
             m_registration.unregister();
@@ -97,7 +119,7 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
         final String bundleLocation = bundleContext.getBundle().getLocation();
         final String name = metadata.getName();
 
-        final ServiceReference caRef = bundleContext.getServiceReference( ConfigurationAdmin.class.getName() );
+        final ServiceReference caRef = bundleContext.getServiceReference( CONFIGURATION_ADMIN );
         if ( caRef != null )
         {
             final ConfigurationAdmin ca = ( ConfigurationAdmin ) bundleContext.getService( caRef );
@@ -137,8 +159,67 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
     }
 
 
+    //---------- ServiceListener
+
+    /**
+     * Called if the Configuration Admin service changes state. This
+     * implementation is mainly interested in the Configuration Admin service
+     * being registered <i>after</i> the Declarative Services setup to be able
+     * to forward existing configuration.
+     *
+     * @param event The service change event
+     */
+    public void serviceChanged( ServiceEvent event )
+    {
+        if ( event.getType() == ServiceEvent.REGISTERED )
+        {
+            Configuration[] configs = null;
+            final ServiceReference caRef = event.getServiceReference();
+            final Object service = m_bundleContext.getService( caRef );
+            try
+            {
+                if ( service instanceof ConfigurationAdmin )
+                {
+                    configs = findConfigurations( ( ConfigurationAdmin ) service, null );
+                }
+            }
+            finally
+            {
+                if ( service != null )
+                {
+                    m_bundleContext.ungetService( caRef );
+                }
+            }
+
+            if ( configs != null )
+            {
+                for ( int i = 0; i < configs.length; i++ )
+                {
+                    ConfigurationEvent cfgEvent = new ConfigurationEvent( caRef, ConfigurationEvent.CM_UPDATED,
+                        configs[i].getFactoryPid(), configs[i].getPid() );
+                    configurationEvent( cfgEvent );
+                }
+            }
+        }
+    }
+
+
     //---------- ConfigurationListener
 
+    /**
+     * Called by the Configuration Admin service if a configuration is updated
+     * or removed.
+     * <p>
+     * This method is really only called upon configuration changes; it is not
+     * called for existing configurations upon startup of the Configuration
+     * Admin service. To bridge this gap, the
+     * {@link #serviceChanged(ServiceEvent)} method called when the
+     * Configuration Admin service is registered calls this method for all
+     * existing configurations to be able to foward existing configurations
+     * to components.
+     *
+     * @param event The configuration change event
+     */
     public void configurationEvent( ConfigurationEvent event )
     {
         final String pid = event.getPid();
@@ -175,8 +256,7 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
                         break;
                     }
 
-                    final ServiceReference caRef = bundleContext.getServiceReference( ConfigurationAdmin.class
-                        .getName() );
+                    final ServiceReference caRef = bundleContext.getServiceReference( CONFIGURATION_ADMIN );
                     if ( caRef != null )
                     {
                         try
@@ -274,8 +354,7 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
         }
         catch ( IOException ioe )
         {
-            Activator
-                .log( LogService.LOG_WARNING, null, "Problem listing configurations for filter=" + filter, ioe );
+            Activator.log( LogService.LOG_WARNING, null, "Problem listing configurations for filter=" + filter, ioe );
         }
         catch ( InvalidSyntaxException ise )
         {
