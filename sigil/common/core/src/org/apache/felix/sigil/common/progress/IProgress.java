@@ -17,18 +17,46 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.common.core.licence;
+package org.apache.felix.sigil.common.progress;
 
-import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
-import org.apache.felix.sigil.common.progress.IProgress;
-
-public interface ILicensePolicy
+/**
+ * @author dave
+ *
+ */
+public interface IProgress
 {
-    void addAllowed(String licenseName);
 
-    void removeAllowed(String licenseName);
+    /**
+     * @return
+     */
+    boolean isCanceled();
 
-    boolean accept(ISigilBundle bundle);
+    /**
+     * @param totalWork
+     * @return
+     */
+    IProgress newChild(int totalWork);
+    
+    /**
+     * @param name
+     * @param totalWork
+     * @return
+     */
+    IProgress newTask(int totalWork);
+    
+    /**
+     * @param msg
+     */
+    void report(String msg);
 
-    void save(IProgress progress);
+    /**
+     * @param work
+     */
+    void worked(int work);
+
+    /**
+     * 
+     */
+    void done();
+
 }

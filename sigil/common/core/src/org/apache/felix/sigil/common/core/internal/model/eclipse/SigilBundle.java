@@ -43,8 +43,7 @@ import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubMonitor;
+import org.apache.felix.sigil.common.progress.IProgress;
 import org.osgi.framework.Version;
 
 /**
@@ -74,17 +73,17 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         packages = new String[0];
     }
 
-    public void synchronize(IProgressMonitor monitor) throws IOException
+    public void synchronize(IProgress progress) throws IOException
     {
-        SubMonitor progress = SubMonitor.convert(monitor, 100);
-        progress.subTask("Synchronizing " + bundle.getSymbolicName() + " binary");
+        progress = progress.newTask(100);
+        progress.report("Synchronizing " + bundle.getSymbolicName() + " binary");
         sync(location, bundle.getUpdateLocation(), progress.newChild(45));
 
         if (bundle.getSourceLocation() != null)
         {
             try
             {
-                progress.subTask("Synchronizing " + bundle.getSymbolicName() + " source");
+                progress.report("Synchronizing " + bundle.getSymbolicName() + " source");
                 sync(sourcePathLocation, bundle.getSourceLocation(),
                     progress.newChild(45));
             }
@@ -99,7 +98,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         {
             try
             {
-                progress.subTask("Synchronizing " + bundle.getSymbolicName() + " licence");
+                progress.report("Synchronizing " + bundle.getSymbolicName() + " licence");
                 sync(licencePathLocation, bundle.getLicenseURI(), progress.newChild(10));
             }
             catch (IOException e)
@@ -133,7 +132,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         return location == null || location.exists();
     }
 
-    private static void sync(File local, URI remote, IProgressMonitor monitor)
+    private static void sync(File local, URI remote, IProgress progress)
         throws IOException
     {
         try
@@ -146,7 +145,8 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
                     URLConnection connection = url.openConnection();
                     int contentLength = connection.getContentLength();
 
-                    monitor.beginTask("Downloading from " + url.getHost(), contentLength);
+                    progress = progress.newTask(contentLength);
+                    progress.report("Downloading from " + url.getHost());
 
                     InputStream in = null;
                     OutputStream out = null;
@@ -162,7 +162,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
                         in = conn.getInputStream();
                         local.getParentFile().mkdirs();
                         out = new FileOutputStream(local);
-                        stream(in, out, monitor);
+                        stream(in, out, progress);
                     }
                     finally
                     {
@@ -174,7 +174,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
                         {
                             out.close();
                         }
-                        monitor.done();
+                        progress.done();
                     }
                 }
             }
@@ -186,13 +186,13 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
         }
     }
 
-    private static void stream(InputStream in, OutputStream out, IProgressMonitor monitor)
+    private static void stream(InputStream in, OutputStream out, IProgress progress)
         throws IOException
     {
         byte[] b = new byte[1024];
         for (;;)
         {
-            if (monitor.isCanceled())
+            if (progress.isCanceled())
             {
                 throw new InterruptedIOException("User canceled download");
             }
@@ -200,7 +200,7 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
             if (r == -1)
                 break;
             out.write(b, 0, r);
-            monitor.worked(r);
+            progress.worked(r);
         }
 
         out.flush();

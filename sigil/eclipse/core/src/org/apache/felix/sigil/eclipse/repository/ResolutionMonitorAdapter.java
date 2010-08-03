@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.common.repository;
+package org.apache.felix.sigil.eclipse.repository;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.repository.IResolutionMonitor;
 
 public class ResolutionMonitorAdapter implements IResolutionMonitor
 {

@@ -22,9 +22,9 @@ package org.apache.felix.sigil.common.repository;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.progress.IProgress;
 
 public interface IResolution
 {
@@ -34,7 +34,7 @@ public interface IResolution
 
     List<IModelElement> getMatchedRequirements(ISigilBundle bundle);
 
-    void synchronize(IProgressMonitor monitor);
+    void synchronize(IProgress progress);
 
     boolean isSynchronized();
 }

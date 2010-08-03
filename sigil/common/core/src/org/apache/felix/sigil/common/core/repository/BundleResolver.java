@@ -42,6 +42,7 @@ import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
+import org.apache.felix.sigil.common.progress.IProgress;
 import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IBundleResolver;
 import org.apache.felix.sigil.common.repository.IRepositoryManager;
@@ -49,8 +50,6 @@ import org.apache.felix.sigil.common.repository.IResolution;
 import org.apache.felix.sigil.common.repository.IResolutionMonitor;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubMonitor;
 import org.osgi.framework.Version;
 
 public class BundleResolver implements IBundleResolver
@@ -279,14 +278,14 @@ public class BundleResolver implements IBundleResolver
             return true;
         }
 
-        public void synchronize(IProgressMonitor monitor)
+        public void synchronize(IProgress progress)
         {
             Set<ISigilBundle> bundles = getBundles();
-            SubMonitor progress = SubMonitor.convert(monitor, bundles.size());
+            progress = progress.newTask(bundles.size());
 
             for (ISigilBundle b : bundles)
             {
-                if (monitor.isCanceled())
+                if (progress.isCanceled())
                 {
                     break;
                 }

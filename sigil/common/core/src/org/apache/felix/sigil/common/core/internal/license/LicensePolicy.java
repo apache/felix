@@ -21,7 +21,7 @@ package org.apache.felix.sigil.common.core.internal.license;
 
 import org.apache.felix.sigil.common.core.licence.ILicensePolicy;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
-import org.eclipse.core.runtime.IProgressMonitor;
+import org.apache.felix.sigil.common.progress.IProgress;
 
 public class LicensePolicy implements ILicensePolicy
 {
@@ -50,7 +50,7 @@ public class LicensePolicy implements ILicensePolicy
 
     }
 
-    public void save(IProgressMonitor monitor)
+    public void save(IProgress progress)
     {
         // TODO Auto-generated method stub
 

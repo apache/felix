@@ -54,10 +54,11 @@ import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.common.repository.IResolution;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
-import org.apache.felix.sigil.common.repository.ResolutionMonitorAdapter;
 import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.progress.ProgressAdapter;
+import org.apache.felix.sigil.eclipse.repository.ResolutionMonitorAdapter;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -416,7 +417,7 @@ public class JavaHelper
         {
             if (other == null)
             {
-                provider.synchronize(monitor);
+                provider.synchronize(new ProgressAdapter(monitor));
                 return newBundleEntry(provider, rules, attrs, false);
             }
             else

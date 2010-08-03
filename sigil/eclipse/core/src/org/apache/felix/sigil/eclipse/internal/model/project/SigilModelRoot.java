@@ -37,10 +37,11 @@ import org.apache.felix.sigil.common.repository.IBundleResolver;
 import org.apache.felix.sigil.common.repository.IResolution;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
-import org.apache.felix.sigil.common.repository.ResolutionMonitorAdapter;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilModelRoot;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.progress.ProgressAdapter;
+import org.apache.felix.sigil.eclipse.repository.ResolutionMonitorAdapter;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -186,7 +187,7 @@ public class SigilModelRoot implements ISigilModelRoot
             IBundleResolver resolver = SigilCore.getRepositoryManager(sigil).getBundleResolver();
             IResolution resolution = resolver.resolve(element, config,
                 new ResolutionMonitorAdapter(monitor));
-            resolution.synchronize(monitor);
+            resolution.synchronize(new ProgressAdapter(monitor));
             return resolution.getBundles();
         }
         catch (ResolutionException e)

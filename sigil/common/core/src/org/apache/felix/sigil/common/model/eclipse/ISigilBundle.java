@@ -23,13 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.apache.felix.sigil.common.config.Resource;
 import org.apache.felix.sigil.common.model.ICompoundModelElement;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IVersionedModelElement;
+import org.apache.felix.sigil.common.progress.IProgress;
 
 /**
  * @author dave
@@ -37,7 +37,7 @@ import org.apache.felix.sigil.common.model.osgi.IVersionedModelElement;
  */
 public interface ISigilBundle extends ICompoundModelElement, IVersionedModelElement
 {
-    void synchronize(IProgressMonitor monitor) throws IOException;
+    void synchronize(IProgress progress) throws IOException;
 
     boolean isSynchronized();
 

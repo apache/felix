@@ -48,12 +48,13 @@ import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.common.repository.IResolution;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
-import org.apache.felix.sigil.common.repository.ResolutionMonitorAdapter;
 import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.job.ThreadProgressMonitor;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
+import org.apache.felix.sigil.eclipse.progress.ProgressAdapter;
+import org.apache.felix.sigil.eclipse.repository.ResolutionMonitorAdapter;
 import org.apache.felix.sigil.utils.GlobCompiler;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -195,7 +196,7 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
             // pull remote bundles from repositories to be added to classpath
             if (!resolution.isSynchronized())
             {
-                resolution.synchronize(progress.newChild(80));
+                resolution.synchronize(new ProgressAdapter(progress.newChild(80)));
             }
         }
         catch (ResolutionException e)
