@@ -31,7 +31,6 @@ import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.job.ResolveProjectsJob;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.eclipse.core.resources.IFile;
