@@ -31,17 +31,10 @@ import org.apache.felix.sigil.common.model.IModelWalker;
 import org.apache.felix.sigil.common.model.IRequirementModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ILibrary;
 import org.apache.felix.sigil.common.model.eclipse.ILibraryImport;
-import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
-import org.apache.felix.sigil.common.repository.IBundleResolver;
-import org.apache.felix.sigil.common.repository.IResolution;
-import org.apache.felix.sigil.common.repository.ResolutionConfig;
-import org.apache.felix.sigil.common.repository.ResolutionException;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilModelRoot;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.eclipse.progress.ProgressAdapter;
-import org.apache.felix.sigil.eclipse.repository.ResolutionMonitorAdapter;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -169,30 +162,5 @@ public class SigilModelRoot implements ISigilModelRoot
         }
 
         return dependents;
-    }
-
-    public Collection<ISigilBundle> resolveBundles(ISigilProjectModel sigil,
-        IModelElement element, boolean includeOptional, IProgressMonitor monitor)
-        throws CoreException
-    {
-        int options = ResolutionConfig.INCLUDE_DEPENDENTS;
-        if (includeOptional)
-        {
-            options |= ResolutionConfig.INCLUDE_OPTIONAL;
-        }
-
-        ResolutionConfig config = new ResolutionConfig(options);
-        try
-        {
-            IBundleResolver resolver = SigilCore.getRepositoryManager(sigil).getBundleResolver();
-            IResolution resolution = resolver.resolve(element, config,
-                new ResolutionMonitorAdapter(monitor));
-            resolution.synchronize(new ProgressAdapter(monitor));
-            return resolution.getBundles();
-        }
-        catch (ResolutionException e)
-        {
-            throw SigilCore.newCoreException(e.getMessage(), e);
-        }
     }
 }
