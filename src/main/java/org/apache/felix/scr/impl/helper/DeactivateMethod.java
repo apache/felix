@@ -25,6 +25,10 @@ import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 public class DeactivateMethod extends ActivateMethod
 {
 
+    private static final Class[] DEACTIVATE_TYPES_DS11 =
+        { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS, Integer.TYPE, INTEGER_CLASS };
+
+
     public DeactivateMethod( final AbstractComponentManager componentManager, final String methodName,
         final boolean methodRequired, final Class componentClass )
     {
@@ -34,14 +38,7 @@ public class DeactivateMethod extends ActivateMethod
 
     protected Class[] getAcceptedParameterTypes()
     {
-        if ( isDS11() )
-        {
-            return new Class[]
-                { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS, Integer.TYPE, INTEGER_CLASS };
-        }
-
-        return new Class[]
-            { COMPONENT_CONTEXT_CLASS };
+        return isDS11() ? DEACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
     }
 
 
