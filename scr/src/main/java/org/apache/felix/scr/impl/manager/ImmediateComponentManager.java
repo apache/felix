@@ -224,7 +224,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
 
         // 4. Call the activate method, if present
         if ( !m_activateMethod.invoke( implementationObject,
-            new ActivateMethod.ActivatorParameter( componentContext, 1 ) ) )
+            new ActivateMethod.ActivatorParameter( componentContext, 1 ), false ) )
         {
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
@@ -258,7 +258,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // method throws an exception, SCR must log an error message containing the
         // exception with the Log Service and continue) has already been logged
         m_deactivateMethod.invoke( implementationObject, new ActivateMethod.ActivatorParameter( componentContext,
-            reason ) );
+            reason ), true );
 
         // 2. Unbind any bound services
         Iterator it = getDependencyManagers();
@@ -415,6 +415,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         }
         else if ( !modify() )
         {
+            // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
             log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
             int reason = ( configuration == null ) ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
                 : ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_MODIFIED;
@@ -467,10 +468,11 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // invariant: modify method existing and no static bound service changes
 
         // 4. call method (nothing to do when failed, since it has already been logged)
-        if ( !m_modifyMethod.invoke( getInstance(), new ActivateMethod.ActivatorParameter( m_componentContext, -1 ) ) )
+        if ( !m_modifyMethod.invoke( getInstance(), new ActivateMethod.ActivatorParameter( m_componentContext, -1 ),
+            true ) )
         {
             // log an error if the declared method cannot be found
-            log( LogService.LOG_ERROR, "Declared modify method '{0}' cannot be found, configuring by reactivation",
+            log( LogService.LOG_ERROR, "Declared modify method ''{0}'' cannot be found, configuring by reactivation",
                 new Object[]
                     { getComponentMetadata().getModified() }, null );
             return false;

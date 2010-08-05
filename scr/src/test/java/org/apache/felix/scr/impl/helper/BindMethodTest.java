@@ -441,7 +441,7 @@ public class BindMethodTest extends TestCase
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
         BindMethod bm = new BindMethod( icm, methodName, component.getClass(), "reference",
             FakeService.class.getName() );
-        bm.invoke( component, m_service );
+        bm.invoke( component, m_service, true );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
 }

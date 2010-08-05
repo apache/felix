@@ -24,10 +24,18 @@ import java.lang.reflect.Method;
 
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.log.LogService;
 
 
 public class ActivateMethod extends BaseMethod
 {
+
+    Class[] ACTIVATE_TYPES_DS11 =
+        { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS };
+    Class[] ACTIVATE_TYPES_DS10 =
+        { COMPONENT_CONTEXT_CLASS };
+
+
     public ActivateMethod( final AbstractComponentManager componentManager, final String methodName,
         final boolean methodRequired, final Class componentClass )
     {
@@ -133,9 +141,9 @@ public class ActivateMethod extends BaseMethod
     }
 
 
-    public boolean invoke( Object componentInstance, Object rawParameter )
+    public boolean invoke( Object componentInstance, Object rawParameter, final boolean methodCallFailureResult )
     {
-        return methodExists() && super.invoke( componentInstance, rawParameter );
+        return methodExists() && super.invoke( componentInstance, rawParameter, methodCallFailureResult );
     }
 
 
@@ -173,9 +181,9 @@ public class ActivateMethod extends BaseMethod
             }
             catch ( SuitableMethodNotAccessibleException thrown )
             {
+                getComponentManager().log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
                 ex = thrown;
             }
-
         }
 
         // rethrow if we looked for all method signatures and only found
@@ -223,14 +231,7 @@ public class ActivateMethod extends BaseMethod
 
     protected Class[] getAcceptedParameterTypes()
     {
-        if ( isDS11() )
-        {
-            return new Class[]
-                { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS };
-        }
-
-        return new Class[]
-            { COMPONENT_CONTEXT_CLASS };
+        return isDS11() ? ACTIVATE_TYPES_DS11 : ACTIVATE_TYPES_DS10;
     }
 
 
