@@ -657,13 +657,11 @@ public class ComponentMetadata
         }
         else if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
         {
-            logger.log( LogService.LOG_WARNING, "Ignoring configuration policy, DS 1.1 or later namespace required",
-                this, null );
-            m_configurationPolicy = CONFIGURATION_POLICY_OPTIONAL;
+            throw validationFailure( "configuration-policy declaration requires DS 1.1 or later namespace " );
         }
         else if ( !CONFIGURATION_POLICY_VALID.contains( m_configurationPolicy ) )
         {
-            throw validationFailure( "Configuration policy must be one of " + CONFIGURATION_POLICY_VALID );
+            throw validationFailure( "configuration-policy must be one of " + CONFIGURATION_POLICY_VALID );
         }
 
         // 112.5.8 activate can be specified (since DS 1.1)
@@ -674,11 +672,7 @@ public class ComponentMetadata
         }
         else if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
         {
-            // DS 1.0 cannot declare the activate method, assume default and undeclared
-            logger.log( LogService.LOG_WARNING,
-                "Ignoring activate method declaration, DS 1.1 or later namespace required", this, null );
-            m_activate = "activate";
-            m_activateDeclared = false;
+            throw validationFailure( "activate method declaration requires DS 1.1 or later namespace " );
         }
 
         // 112.5.12 deactivate can be specified (since DS 1.1)
@@ -689,20 +683,13 @@ public class ComponentMetadata
         }
         else if ( m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
         {
-            // DS 1.0 cannot declare the deactivate method, assume default and undeclared
-            logger.log( LogService.LOG_WARNING,
-                "Ignoring deactivate method declaration, DS 1.1 or later namespace required", this, null );
-            m_deactivate = "deactivate";
-            m_deactivateDeclared = false;
+            throw validationFailure( "deactivate method declaration requires DS 1.1 or later namespace " );
         }
 
         // 112.??.?? modified can be specified (since DS 1.1)
         if ( m_modified != null && m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
         {
-            // require new namespace if modified is specified
-            logger.log( LogService.LOG_WARNING,
-                "Ignoring modified method declaration, DS 1.1 or later namespace required", this, null );
-            m_modified = null;
+            throw validationFailure( "modified method declaration requires DS 1.1 or later namespace " );
         }
 
         // Next check if the properties are valid (and extract property values)

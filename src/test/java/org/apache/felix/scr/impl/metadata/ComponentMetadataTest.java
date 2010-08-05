@@ -279,9 +279,7 @@ public class ComponentMetadataTest extends TestCase
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setActivate( "someMethod" );
-        cm2.validate( logger );
-        assertEquals( "Activate method name", "activate", cm2.getActivate() );
-        assertFalse( "Activate method expected to not be declared", cm2.isActivateDeclared() );
+        failDS10Validation( cm2, "activate", logger );
     }
 
 
@@ -309,9 +307,7 @@ public class ComponentMetadataTest extends TestCase
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setDeactivate( "someMethod" );
-        cm2.validate( logger );
-        assertEquals( "Deactivate method name", "deactivate", cm2.getDeactivate() );
-        assertFalse( "Deactivate method expected to not be declared", cm2.isDeactivateDeclared() );
+        failDS10Validation( cm2, "deactivate", logger );
     }
 
 
@@ -338,8 +334,7 @@ public class ComponentMetadataTest extends TestCase
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setModified( "someName" );
-        cm2.validate( logger );
-        assertNull( "Modified method name", cm2.getModified() );
+        failDS10Validation( cm2, "modified", logger );
     }
 
 
@@ -365,27 +360,19 @@ public class ComponentMetadataTest extends TestCase
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_IGNORE );
-        cm2.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm2
-            .getConfigurationPolicy() );
+        failDS10Validation( cm2, "configuration-policy", logger );
 
         final ComponentMetadata cm3 = createComponentMetadata( Boolean.TRUE, null );
         cm3.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL );
-        cm3.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm3
-            .getConfigurationPolicy() );
+        failDS10Validation( cm3, "configuration-policy", logger );
 
         final ComponentMetadata cm4 = createComponentMetadata( Boolean.TRUE, null );
         cm4.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_REQUIRE );
-        cm4.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm4
-            .getConfigurationPolicy() );
+        failDS10Validation( cm4, "configuration-policy", logger );
 
         final ComponentMetadata cm5 = createComponentMetadata( Boolean.TRUE, null );
         cm5.setConfigurationPolicy( "undefined" );
-        cm5.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm5
-            .getConfigurationPolicy() );
+        failDS10Validation( cm5, "configuration-policy", logger );
     }
 
 
@@ -680,6 +667,23 @@ public class ComponentMetadataTest extends TestCase
 
 
     //---------- Helper methods
+
+    // method also used by XmlHandlerTest
+    static void failDS10Validation( final ComponentMetadata metadata, final String expectedValidationReason,
+        final MockLogger logger )
+    {
+        try
+        {
+            metadata.validate( logger );
+            fail( "Expected validation failure for Component " + metadata.getName() + " containing '"
+                + expectedValidationReason + "'" );
+        }
+        catch ( ComponentException ce )
+        {
+            assertTrue( "Expected validation reason to contain '" + expectedValidationReason + "': actual: "
+                + ce.getMessage(), ce.getMessage().indexOf( expectedValidationReason ) >= 0 );
+        }
+    }
 
     // Creates Component Metadata for the given namespace
     private ComponentMetadata createComponentMetadata( int nameSpaceCode, Boolean immediate, String factory )
