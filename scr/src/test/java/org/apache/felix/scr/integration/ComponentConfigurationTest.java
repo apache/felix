@@ -215,7 +215,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
         delay();
 
         TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-        TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+        TestCase.assertNotSame( instance, SimpleComponent.INSTANCE );
         TestCase.assertNull( SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
 
