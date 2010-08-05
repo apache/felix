@@ -413,7 +413,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         {
             deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
         }
-        else if ( !modify() )
+        else if ( configuration == null | !modify() )
         {
             // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
             log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
