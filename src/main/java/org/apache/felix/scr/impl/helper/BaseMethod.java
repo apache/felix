@@ -22,6 +22,7 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
@@ -49,7 +50,7 @@ abstract class BaseMethod
     private final String m_methodName;
     private final Class m_componentClass;
 
-    private Method m_method = null;
+    private Method m_method;
 
     private final boolean m_methodRequired;
 
@@ -112,10 +113,15 @@ abstract class BaseMethod
         if ( method != null )
         {
             m_state = Resolved.INSTANCE;
+            getComponentManager().log( LogService.LOG_DEBUG, "Found {0} method: {1}", new Object[]
+                { getMethodNamePrefix(), method }, null );
         }
         else if ( m_methodRequired )
         {
             m_state = NotFound.INSTANCE;
+            getComponentManager().log( LogService.LOG_DEBUG, "{0} method [{1}] not found, will not invoke",
+                new Object[]
+                    { getMethodNamePrefix(), getMethodName() }, null );
         }
         else
         {
@@ -161,6 +167,12 @@ abstract class BaseMethod
         for ( Class theClass = targetClass; theClass != null; )
         {
 
+            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                getComponentManager().log( LogService.LOG_DEBUG,
+                    "Locating method " + getMethodName() + " in class " + theClass.getName(), null );
+            }
+
             try
             {
                 Method method = doFindMethod( theClass, acceptPrivate, acceptPackage );
@@ -205,6 +217,7 @@ abstract class BaseMethod
 
 
     private boolean invokeMethod( final Object componentInstance, final Object rawParameter )
+        throws InvocationTargetException
     {
         try
         {
@@ -235,20 +248,11 @@ abstract class BaseMethod
         }
         catch ( InvocationTargetException ex )
         {
-            // 112.5.7 If a bind method throws an exception, SCR must log an
-            // error message containing the exception [...]
-            getComponentManager().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", new Object[]
-                { getMethodName() }, ex.getCause() );
-            return false;
+            throw ex;
         }
         catch ( Throwable t )
         {
-            // anything else went wrong, log the message and fail the invocation
-            getComponentManager().log( LogService.LOG_ERROR, "The {0} method could not be called", new Object[]
-                { getMethodName() }, t );
-
-            // method invocation threw, so it was a failure
-            return false;
+            throw new InvocationTargetException( t );
         }
 
         // assume success (also if the mehotd is not available or accessible)
@@ -319,6 +323,12 @@ abstract class BaseMethod
         {
             // thrown if no method is declared with the given name and
             // parameters
+            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                String argList = ( parameterTypes != null ) ? Arrays.asList( parameterTypes ).toString() : "";
+                getComponentManager().log( LogService.LOG_DEBUG, "Declared Method {0}.{1}({2}) not found", new Object[]
+                    { clazz.getName(), name, argList }, null );
+            }
         }
         catch ( NoClassDefFoundError cdfe )
         {
@@ -437,9 +447,37 @@ abstract class BaseMethod
 
     //---------- State management  ------------------------------------
 
-    public boolean invoke( final Object componentInstance, final Object rawParameter )
+    /**
+     * Calls the declared method on the given component with the provided
+     * method call arguments.
+     *
+     * @param componentInstance The component instance on which to call the
+     *      method
+     * @param rawParameter The parameter container providing the actual
+     *      parameters to provide to the called method
+     * @param methodCallFailureResult The result to return from this method if
+     *      calling the method resulted in an exception.
+     *
+     * @return <code>true</code> if the method was called successfully or the
+     *      method was not found and was not required. <code>false</code> if
+     *      the method was not found but required.
+     *      <code>methodCallFailureResult</code> is returned if the method was
+     *      found and called, but the method threw an exception.
+     */
+    public boolean invoke( final Object componentInstance, final Object rawParameter,
+        final boolean methodCallFailureResult )
     {
-        return m_state.invoke( this, componentInstance, rawParameter );
+        try
+        {
+            return m_state.invoke( this, componentInstance, rawParameter );
+        }
+        catch ( InvocationTargetException ite )
+        {
+            getComponentManager().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", new Object[]
+                { getMethodName() }, ite.getCause() );
+        }
+
+        return methodCallFailureResult;
     }
 
 
@@ -451,7 +489,8 @@ abstract class BaseMethod
     private static interface State
     {
 
-        boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter );
+        boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+            throws InvocationTargetException;
 
 
         boolean methodExists( final BaseMethod baseMethod );
@@ -485,24 +524,25 @@ abstract class BaseMethod
             baseMethod.getComponentManager().log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
                 { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
 
-            // resolve the method
-            Method method;
-            try
-            {
-                method = baseMethod.findMethod();
-            }
-            catch ( InvocationTargetException ex )
-            {
-                method = null;
-                baseMethod.getComponentManager().log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
-                    { baseMethod.getMethodName() }, ex.getTargetException() );
-            }
+                // resolve the method
+                Method method;
+                try
+                {
+                    method = baseMethod.findMethod();
+                }
+                catch ( InvocationTargetException ex )
+                {
+                    method = null;
+                    baseMethod.getComponentManager().log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
+                        { baseMethod.getMethodName() }, ex.getTargetException() );
+                }
 
-            baseMethod.setMethod( method );
-        }
+                baseMethod.setMethod( method );
+            }
 
 
         public boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+            throws InvocationTargetException
         {
             resolve( baseMethod );
             return baseMethod.getState().invoke( baseMethod, componentInstance, rawParameter );
@@ -544,6 +584,7 @@ abstract class BaseMethod
 
 
         public boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+            throws InvocationTargetException
         {
             baseMethod.getComponentManager().log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]
                 { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );

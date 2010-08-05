@@ -230,7 +230,7 @@ public class ActivateMethodTest extends TestCase
         };
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
         ActivateMethod am = new ActivateMethod( icm, methodName, methodName != null, obj.getClass() );
-        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ) );
+        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), false );
         Method m = get(am, "m_method");
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
@@ -258,7 +258,7 @@ public class ActivateMethodTest extends TestCase
         };
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
         ActivateMethod am = new ActivateMethod( icm, methodName, methodName != null, obj.getClass() );
-        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ) );
+        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), false );
         assertNull( get( am, "m_method" ) );
         assertNull( obj.getCalledMethod() );
     }

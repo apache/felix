@@ -1025,22 +1025,20 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if( m_componentInstance != null )
         {
-            return m_bind.invoke(
-                m_componentInstance,
-                new BindMethod.Service()
+            return m_bind.invoke( m_componentInstance, new BindMethod.Service()
+            {
+                public ServiceReference getReference()
                 {
-                    public ServiceReference getReference()
-                    {
-                        bindService( ref );
-                        return ref;
-                    }
-
-                    public Object getInstance()
-                    {
-                        return getService( ref );
-                    }
+                    bindService( ref );
+                    return ref;
                 }
-            );
+
+
+                public Object getInstance()
+                {
+                    return getService( ref );
+                }
+            }, true );
         }
         else if ( !m_componentManager.getComponentMetadata().isImmediate() )
         {
@@ -1099,7 +1097,7 @@ public class DependencyManager implements ServiceListener, Reference
                 {
                     return getService( ref );
                 }
-            } );
+            }, true );
         }
         else
         {
@@ -1128,21 +1126,19 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if ( m_componentInstance != null )
         {
-            m_unbind.invoke(
-                m_componentInstance,
-                new BindMethod.Service()
+            m_unbind.invoke( m_componentInstance, new BindMethod.Service()
+            {
+                public ServiceReference getReference()
                 {
-                    public ServiceReference getReference()
-                    {
-                        return ref;
-                    }
-
-                    public Object getInstance()
-                    {
-                        return getService( ref );
-                    }
+                    return ref;
                 }
-            );
+
+
+                public Object getInstance()
+                {
+                    return getService( ref );
+                }
+            }, true );
         }
         else
         {
