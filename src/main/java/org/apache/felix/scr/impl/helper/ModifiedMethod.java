@@ -34,7 +34,7 @@ public class ModifiedMethod extends ActivateMethod
 
     protected boolean acceptEmpty()
     {
-        return false;
+        return true;
     }
 
 
