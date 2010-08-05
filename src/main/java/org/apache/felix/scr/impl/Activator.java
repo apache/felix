@@ -46,6 +46,9 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     //  name of the LogService class (this is a string to not create a reference to the class)
     static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
 
+    // name of the PackageAdmin class (this is a string to not create a reference to the class)
+    static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
+
     // Our configuration from bundle context properties and Config Admin
     private ScrConfiguration m_configuration;
 
@@ -53,10 +56,13 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     private static int m_logLevel = LogService.LOG_ERROR;
 
     // this bundle's context
-    private BundleContext m_context;
+    private static BundleContext m_context;
 
     // the log service to log messages to
     private static ServiceTracker m_logService;
+
+    // the package admin service (see BindMethod.getParameterClass)
+    private static ServiceTracker m_packageAdmin;
 
     // map of BundleComponentActivator instances per Bundle indexed by Bundle id
     private Map m_componentBundles;
@@ -148,6 +154,23 @@ public class Activator implements BundleActivator, SynchronousBundleListener
             m_componentActor.terminate();
             m_componentActor = null;
         }
+
+        // close the LogService tracker now
+        if ( m_logService != null )
+        {
+            m_logService.close();
+            m_logService = null;
+        }
+
+        // close the PackageAdmin tracker now
+        if ( m_packageAdmin != null )
+        {
+            m_packageAdmin.close();
+            m_packageAdmin = null;
+        }
+
+        // remove the reference to the component context
+        m_context = null;
     }
 
 
@@ -432,5 +455,23 @@ public class Activator implements BundleActivator, SynchronousBundleListener
                 ( ( LogService ) logger ).log( level, message, ex );
             }
         }
+    }
+
+
+    public static Object getPackageAdmin()
+    {
+        if ( m_packageAdmin == null )
+        {
+            synchronized ( Activator.class )
+            {
+                if ( m_packageAdmin == null )
+                {
+                    m_packageAdmin = new ServiceTracker( m_context, PACKAGEADMIN_CLASS, null );
+                    m_packageAdmin.open();
+                }
+            }
+        }
+
+        return m_packageAdmin.getService();
     }
 }

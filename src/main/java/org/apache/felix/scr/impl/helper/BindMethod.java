@@ -22,9 +22,12 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
+import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 
 /**
@@ -32,6 +35,8 @@ import org.osgi.service.log.LogService;
  */
 public class BindMethod extends BaseMethod
 {
+
+    private static final Class OBJECT_CLASS = Object.class;
 
     private final String m_referenceName;
     private final String m_referenceClassName;
@@ -75,6 +80,12 @@ public class BindMethod extends BaseMethod
         // flag indicating a suitable but inaccessible method has been found
         boolean suitableMethodNotAccessible = false;
 
+        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            getComponentManager().log( LogService.LOG_DEBUG,
+                "doFindMethod: Looking for method " + targetClass.getName() + "." + getMethodName(), null );
+        }
+
         // Case 1 - Service reference parameter
         Method method;
         try
@@ -82,6 +93,10 @@ public class BindMethod extends BaseMethod
             method = getServiceReferenceMethod( targetClass, acceptPrivate, acceptPackage );
             if ( method != null )
             {
+                if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    getComponentManager().log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                }
                 return method;
             }
         }
@@ -94,6 +109,14 @@ public class BindMethod extends BaseMethod
         final Class parameterClass = getParameterClass( targetClass );
         if ( parameterClass != null )
         {
+
+            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                getComponentManager().log(
+                    LogService.LOG_DEBUG,
+                    "doFindMethod: No method taking ServiceReference found, checking method taking "
+                        + parameterClass.getName(), null );
+            }
 
             // Case 2 - Service object parameter
             try
@@ -159,6 +182,13 @@ public class BindMethod extends BaseMethod
             }
 
         }
+        else if ( getComponentManager().isLogEnabled( LogService.LOG_WARNING ) )
+        {
+            getComponentManager().log(
+                LogService.LOG_WARNING,
+                "doFindMethod: Cannot check for methods taking parameter class " + m_referenceClassName + ": "
+                    + targetClass.getName() + " does not see it", null );
+        }
 
         // if at least one suitable method could be found but none of
         // the suitable methods are accessible, we have to terminate
@@ -190,6 +220,14 @@ public class BindMethod extends BaseMethod
      */
     private Class getParameterClass( final Class targetClass )
     {
+        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            getComponentManager().log(
+                LogService.LOG_DEBUG,
+                "getParameterClass: Looking for interface class " + m_referenceClassName + "through loader of "
+                    + targetClass.getName(), null );
+        }
+
         try
         {
             // need the class loader of the target class, which may be the
@@ -200,8 +238,13 @@ public class BindMethod extends BaseMethod
                 loader = ClassLoader.getSystemClassLoader();
             }
 
-            return loader.loadClass( m_referenceClassName );
-
+            final Class referenceClass = loader.loadClass( m_referenceClassName );
+            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                getComponentManager().log( LogService.LOG_DEBUG,
+                    "getParameterClass: Found class " + referenceClass.getName(), null );
+            }
+            return referenceClass;
         }
         catch ( ClassNotFoundException cnfe )
         {
@@ -209,7 +252,67 @@ public class BindMethod extends BaseMethod
             // super class so we try this class next
         }
 
-        return null;
+        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            getComponentManager().log( LogService.LOG_DEBUG,
+                "getParameterClass: Not found through component class, using PackageAdmin service", null );
+        }
+
+        // try to load the class with the help of the PackageAdmin service
+        PackageAdmin pa = ( PackageAdmin ) Activator.getPackageAdmin();
+        if ( pa != null )
+        {
+            final String referenceClassPackage = m_referenceClassName.substring( 0, m_referenceClassName
+                .lastIndexOf( '.' ) );
+            ExportedPackage[] pkg = pa.getExportedPackages( referenceClassPackage );
+            if ( pkg != null )
+            {
+                for ( int i = 0; i < pkg.length; i++ )
+                {
+                    try
+                    {
+                        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+                        {
+                            getComponentManager().log(
+                                LogService.LOG_DEBUG,
+                                "getParameterClass: Checking Bundle " + pkg[i].getExportingBundle().getSymbolicName()
+                                    + "/" + pkg[i].getExportingBundle().getBundleId(), null );
+                        }
+
+                        Class referenceClass = pkg[i].getExportingBundle().loadClass( m_referenceClassName );
+                        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+                        {
+                            getComponentManager().log( LogService.LOG_DEBUG,
+                                "getParameterClass: Found class " + referenceClass.getName(), null );
+                        }
+                        return referenceClass;
+                    }
+                    catch ( ClassNotFoundException cnfe )
+                    {
+                        // exported package does not provide the interface !!!!
+                    }
+                }
+            }
+            else if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                getComponentManager().log( LogService.LOG_DEBUG,
+                    "getParameterClass: No bundles exporting package " + referenceClassPackage + " found ", null );
+            }
+        }
+        else if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            getComponentManager().log( LogService.LOG_DEBUG,
+                "getParameterClass: PackageAdmin service not available, cannot find class", null );
+        }
+
+        // class cannot be found, neither through the component nor from an
+        // export, so we fall back to assuming Object
+        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            getComponentManager().log( LogService.LOG_DEBUG,
+                "getParameterClass: No class found, falling back to class Object", null );
+        }
+        return OBJECT_CLASS;
     }
 
 
@@ -286,10 +389,22 @@ public class BindMethod extends BaseMethod
         Method candidateBindMethods[] = targetClass.getDeclaredMethods();
         boolean suitableNotAccessible = false;
 
+        if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            getComponentManager().log(
+                LogService.LOG_DEBUG,
+                "getServiceObjectAssignableMethod: Checking " + candidateBindMethods.length
+                    + " declared method in class " + targetClass.getName(), null );
+        }
+
         // Iterate over them
         for ( int i = 0; i < candidateBindMethods.length; i++ )
         {
             Method method = candidateBindMethods[i];
+            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                getComponentManager().log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Checking " + method, null );
+            }
 
             // Get the parameters for the current method
             Class[] parameters = method.getParameterTypes();
@@ -299,6 +414,11 @@ public class BindMethod extends BaseMethod
             // and a matching name
             if ( parameters.length == 1 && method.getName().equals( getMethodName() ) )
             {
+
+                if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    getComponentManager().log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Considering " + method, null );
+                }
 
                 // Get the parameter type
                 final Class theParameter = parameters[0];
@@ -316,6 +436,14 @@ public class BindMethod extends BaseMethod
                     // suitable method is not accessible, flag for exception
                     suitableNotAccessible = true;
                 }
+                else if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    getComponentManager().log(
+                        LogService.LOG_DEBUG,
+                        "getServiceObjectAssignableMethod: Parameter failure: Required " + theParameter + "; actual "
+                            + parameterClass.getName(), null );
+                }
+
             }
         }
 
