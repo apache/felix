@@ -62,6 +62,8 @@ class ComponentActorThread implements Runnable
     // terminates.
     public void run()
     {
+        Activator.log( LogService.LOG_DEBUG, null, "Starting ComponentActorThread", null );
+
         for ( ;; )
         {
             final Runnable task;
