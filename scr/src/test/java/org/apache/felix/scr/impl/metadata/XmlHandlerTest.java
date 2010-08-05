@@ -60,19 +60,12 @@ public class XmlHandlerTest extends TestCase
     public void test_component_attributes_11() throws Exception
     {
         final List metadataList10 = readMetadata( "/components_activate_10.xml" );
-        assertEquals( "Component Descriptors", 1, metadataList10.size() );
-
-        final ComponentMetadata cm10 = ( ComponentMetadata ) metadataList10.get( 0 );
-        cm10.validate( logger );
-        assertEquals( "DS Version 1.0", XmlHandler.DS_VERSION_1_0, cm10.getNamespaceCode() );
-        assertFalse( "DS Version 1.0", cm10.isDS11() );
-        assertEquals( "Expected Activate Method not set", "activate", cm10.getActivate() );
-        assertFalse( "Activate method expected to not be declared", cm10.isActivateDeclared() );
-        assertEquals( "Expected Deactivate Method not set", "deactivate", cm10.getDeactivate() );
-        assertFalse( "Deactivate method expected to not be declared", cm10.isDeactivateDeclared() );
-        assertNull( "Expected Modified Method not set", cm10.getModified() );
-        assertEquals( "Expected Configuration Policy not set", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm10
-            .getConfigurationPolicy() );
+        assertEquals( "Component Descriptors", 4, metadataList10.size() );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 0 ), "activate", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 1 ), "deactivate", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 2 ), "modified", logger );
+        ComponentMetadataTest.failDS10Validation( ( ComponentMetadata ) metadataList10.get( 3 ),
+            "configuration-policy", logger );
 
         final List metadataList11 = readMetadata( "/components_activate_11.xml" );
         assertEquals( "Component Descriptors", 1, metadataList11.size() );
