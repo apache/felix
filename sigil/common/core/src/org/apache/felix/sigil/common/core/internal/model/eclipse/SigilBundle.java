@@ -341,14 +341,14 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
 
     public void addPackage(String pkg)
     {
-        ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
+        ArrayList<String> tmp = new ArrayList<String>(getPackages());
         tmp.add(pkg);
         packages = tmp.toArray(new String[tmp.size()]);
     }
 
     public boolean removePackage(String pkg)
     {
-        ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
+        ArrayList<String> tmp = new ArrayList<String>(getPackages());
         if (tmp.remove(pkg))
         {
             packages = tmp.toArray(new String[tmp.size()]);
