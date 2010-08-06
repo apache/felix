@@ -303,7 +303,7 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
         try
         {
             final Configuration cfg = ca.getConfiguration( pid );
-            if ( Activator.hasCtWorkaround() || bundleLocation.equals( cfg.getBundleLocation() ) )
+            if ( bundleLocation.equals( cfg.getBundleLocation() ) || Activator.hasCtWorkaround() )
             {
                 return cfg.getProperties();
             }
