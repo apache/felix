@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import org.apache.felix.framework.FelixResolverState;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.Attribute;
 import org.apache.felix.framework.capabilityset.Capability;
@@ -58,8 +57,6 @@ public class ResolverImpl implements Resolver
     public ResolverImpl(Logger logger)
     {
         m_logger = logger;
-
-        String v = System.getProperty("invoke.count");
     }
 
     public Map<Module, List<Wire>> resolve(ResolverState state, Module module)
@@ -872,7 +869,7 @@ public class ResolverImpl implements Resolver
         Packages pkgs = modulePkgMap.get(module);
 
         ResolveException rethrow = null;
-        Map<Requirement, Set<Capability>> copyConflict = null;
+        Map<Requirement, Set<Capability>> permutation = null;
         Set<Requirement> mutated = null;
 
         Set<Module> checkModules = new HashSet();
@@ -892,31 +889,10 @@ public class ResolverImpl implements Resolver
                     else if (!sourceBlame.m_cap.equals(blame.m_cap))
                     {
                         // Try to permutate the conflicting requirement.
-                        Requirement req = blame.m_reqs.get(0);
-                        Set<Capability> candidates = candidateMap.get(req);
-                        if (candidates.size() > 1)
-                        {
-                            Map<Requirement, Set<Capability>> importPerm =
-                                copyCandidateMap(candidateMap);
-                            candidates = importPerm.get(req);
-                            Iterator it = candidates.iterator();
-                            it.next();
-                            it.remove();
-                            m_importPermutations.add(importPerm);
-                        }
+                        permutate(candidateMap, blame.m_reqs.get(0), m_importPermutations);
                         // Try to permutate the source requirement.
-                        req = sourceBlame.m_reqs.get(0);
-                        candidates = candidateMap.get(req);
-                        if (candidates.size() > 1)
-                        {
-                            Map<Requirement, Set<Capability>> importPerm =
-                                copyCandidateMap(candidateMap);
-                            candidates = importPerm.get(req);
-                            Iterator it = candidates.iterator();
-                            it.next();
-                            it.remove();
-                            m_importPermutations.add(importPerm);
-                        }
+                        permutate(candidateMap, sourceBlame.m_reqs.get(0), m_importPermutations);
+                        // Report conflict.
                         ResolveException ex = new ResolveException(
                             "Constraint violation for package '"
                             + entry.getKey() + "' when resolving module "
@@ -942,10 +918,10 @@ public class ResolverImpl implements Resolver
             {
                 if (!isCompatible(exportBlame.m_cap, usedBlame.m_cap, modulePkgMap))
                 {
-                    // Create a candidate permutation that eliminates any candidates
+                    // Create a candidate permutation that eliminates all candidates
                     // that conflict with existing selected candidates.
-                    copyConflict = (copyConflict != null)
-                        ? copyConflict
+                    permutation = (permutation != null)
+                        ? permutation
                         : copyCandidateMap(candidateMap);
                     rethrow = (rethrow != null)
                         ? rethrow
@@ -975,7 +951,7 @@ public class ResolverImpl implements Resolver
                         // See if we can permutate the candidates for blamed
                         // requirement; there may be no candidates if the module
                         // associated with the requirement is already resolved.
-                        Set<Capability> candidates = copyConflict.get(req);
+                        Set<Capability> candidates = permutation.get(req);
                         if ((candidates != null) && (candidates.size() > 1))
                         {
                             mutated.add(req);
@@ -993,7 +969,7 @@ public class ResolverImpl implements Resolver
             {
                 if (mutated.size() > 0)
                 {
-                    m_usesPermutations.add(copyConflict);
+                    m_usesPermutations.add(permutation);
                 }
                 m_logger.log(Logger.LOG_DEBUG, "Conflict between an export and import", rethrow);
                 throw rethrow;
@@ -1021,8 +997,8 @@ public class ResolverImpl implements Resolver
                     {
                         // Create a candidate permutation that eliminates any candidates
                         // that conflict with existing selected candidates.
-                        copyConflict = (copyConflict != null)
-                            ? copyConflict
+                        permutation = (permutation != null)
+                            ? permutation
                             : copyCandidateMap(candidateMap);
                         rethrow = (rethrow != null)
                             ? rethrow
@@ -1052,7 +1028,7 @@ public class ResolverImpl implements Resolver
                             // See if we can permutate the candidates for blamed
                             // requirement; there may be no candidates if the module
                             // associated with the requirement is already resolved.
-                            Set<Capability> candidates = copyConflict.get(req);
+                            Set<Capability> candidates = permutation.get(req);
                             if ((candidates != null) && (candidates.size() > 1))
                             {
                                 mutated.add(req);
@@ -1066,31 +1042,52 @@ public class ResolverImpl implements Resolver
                     }
                 }
 
+                // If there was a uses confliect, then we should add a uses
+                // permutation if we were able to permutate any candidates.
+                // Additionally, we should try to push an import permutation
+                // for the original import to force a backtracking on the
+                // original candidate decision if no viable candidate is found
+                // for the conflicting uses constraint.
                 if (rethrow != null)
                 {
-                    // If we couldn't permutate the uses constraints,
-                    // then try to permutate the import.
-// TODO: FELIX3 - Maybe we will push too many permutations this way, since
-//       we will push one on each level as we move down.
+                    // Add uses permutation if we mutated any candidates.
+                    if (mutated.size() > 0)
+                    {
+                        m_usesPermutations.add(permutation);
+                    }
+
+                    // Try to permutate the candidate for the original
+                    // import requirement; only permutate it if we haven't
+                    // done so already.
                     Requirement req = importBlame.m_reqs.get(0);
                     if (!mutated.contains(req))
                     {
                         Set<Capability> candidates = candidateMap.get(req);
                         if (candidates.size() > 1)
                         {
-                            Map<Requirement, Set<Capability>> importPerm =
-                                copyCandidateMap(candidateMap);
-                            candidates = importPerm.get(req);
-                            Iterator it = candidates.iterator();
-                            it.next();
-                            it.remove();
-                            m_importPermutations.add(importPerm);
+                            // Check existing import permutations to make sure
+                            // we haven't already permutated this requirement.
+                            // This check for duplicate permutations is simplistic.
+                            // It assumes if there is any permutation that contains
+                            // a different candidate for the requirement in question,
+                            // then it has already been permutated.
+                            boolean permutated = false;
+                            for (Map<Requirement, Set<Capability>> existingPerm
+                                : m_importPermutations)
+                            {
+                                Set<Capability> existingPermCands = existingPerm.get(req);
+                                if (!existingPermCands.iterator().next().equals(candidates.iterator().next()))
+                                {
+                                    permutated = true;
+                                }
+                            }
+                            // If we haven't already permutated the existing
+                            // import, do so now.
+                            if (!permutated)
+                            {
+                                permutate(candidateMap, req, m_importPermutations);
+                            }
                         }
-                    }
-
-                    if (mutated.size() > 0)
-                    {
-                        m_usesPermutations.add(copyConflict);
                     }
 
                     m_logger.log(Logger.LOG_DEBUG, "Conflict between imports", rethrow);
@@ -1106,6 +1103,22 @@ public class ResolverImpl implements Resolver
         for (Module m : checkModules)
         {
             checkPackageSpaceConsistency(m, candidateMap, modulePkgMap, capDepSet, resultCache);
+        }
+    }
+
+    private static void permutate(
+        Map<Requirement, Set<Capability>> candidateMap, Requirement req,
+        List<Map<Requirement, Set<Capability>>> permutations)
+    {
+        Set<Capability> candidates = candidateMap.get(req);
+        if (candidates.size() > 1)
+        {
+            Map<Requirement, Set<Capability>> perm = copyCandidateMap(candidateMap);
+            candidates = perm.get(req);
+            Iterator it = candidates.iterator();
+            it.next();
+            it.remove();
+            permutations.add(perm);
         }
     }
 
