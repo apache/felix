@@ -872,8 +872,6 @@ public class ResolverImpl implements Resolver
         Map<Requirement, Set<Capability>> permutation = null;
         Set<Requirement> mutated = null;
 
-        Set<Module> checkModules = new HashSet();
-
         // Check for conflicting imports from fragments.
         for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.entrySet())
         {
@@ -981,11 +979,6 @@ public class ResolverImpl implements Resolver
         {
             for (Blame importBlame : entry.getValue())
             {
-                if (!module.equals(importBlame.m_cap.getModule()))
-                {
-                    checkModules.add(importBlame.m_cap.getModule());
-                }
-
                 String pkgName = entry.getKey();
                 if (!pkgs.m_usedPkgs.containsKey(pkgName))
                 {
@@ -1042,7 +1035,7 @@ public class ResolverImpl implements Resolver
                     }
                 }
 
-                // If there was a uses confliect, then we should add a uses
+                // If there was a uses conflict, then we should add a uses
                 // permutation if we were able to permutate any candidates.
                 // Additionally, we should try to push an import permutation
                 // for the original import to force a backtracking on the
@@ -1062,32 +1055,11 @@ public class ResolverImpl implements Resolver
                     Requirement req = importBlame.m_reqs.get(0);
                     if (!mutated.contains(req))
                     {
-                        Set<Capability> candidates = candidateMap.get(req);
-                        if (candidates.size() > 1)
-                        {
-                            // Check existing import permutations to make sure
-                            // we haven't already permutated this requirement.
-                            // This check for duplicate permutations is simplistic.
-                            // It assumes if there is any permutation that contains
-                            // a different candidate for the requirement in question,
-                            // then it has already been permutated.
-                            boolean permutated = false;
-                            for (Map<Requirement, Set<Capability>> existingPerm
-                                : m_importPermutations)
-                            {
-                                Set<Capability> existingPermCands = existingPerm.get(req);
-                                if (!existingPermCands.iterator().next().equals(candidates.iterator().next()))
-                                {
-                                    permutated = true;
-                                }
-                            }
-                            // If we haven't already permutated the existing
-                            // import, do so now.
-                            if (!permutated)
-                            {
-                                permutate(candidateMap, req, m_importPermutations);
-                            }
-                        }
+                        // Since there may be lots of uses constraint violations
+                        // with existing import decisions, we may end up trying
+                        // to permutate the same import a lot of times, so we should
+                        // try to check if that the case and only permutate it once.
+                        permutateIfNeeded(candidateMap, req, m_importPermutations);
                     }
 
                     m_logger.log(Logger.LOG_DEBUG, "Conflict between imports", rethrow);
@@ -1099,10 +1071,37 @@ public class ResolverImpl implements Resolver
         resultCache.put(module, Boolean.TRUE);
 
         // Now check the consistency of all modules on which the
-        // current module depends.
-        for (Module m : checkModules)
+        // current module depends. Keep track of the current number
+        // of permutations so we know if the lower level check was
+        // able to create a permutation or not in the case of failure.
+        int permCount = m_usesPermutations.size() + m_importPermutations.size();
+        for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.entrySet())
         {
-            checkPackageSpaceConsistency(m, candidateMap, modulePkgMap, capDepSet, resultCache);
+            for (Blame importBlame : entry.getValue())
+            {
+                if (!module.equals(importBlame.m_cap.getModule()))
+                {
+                    try
+                    {
+                        checkPackageSpaceConsistency(
+                            importBlame.m_cap.getModule(), candidateMap, modulePkgMap,
+                            capDepSet, resultCache);
+                    }
+                    catch (ResolveException ex)
+                    {
+                        // If the lower level check didn't create any permutations,
+                        // then we should create an import permutation for the
+                        // requirement with the dependency on the failing module
+                        // to backtrack on our current candidate selection.
+                        if (permCount == (m_usesPermutations.size() + m_importPermutations.size()))
+                        {
+                            Requirement req = importBlame.m_reqs.get(0);
+                            permutate(candidateMap, req, m_importPermutations);
+                        }
+                        throw ex;
+                    }
+                }
+            }
         }
     }
 
@@ -1119,6 +1118,37 @@ public class ResolverImpl implements Resolver
             it.next();
             it.remove();
             permutations.add(perm);
+        }
+    }
+
+    private static void permutateIfNeeded(
+        Map<Requirement, Set<Capability>> candidateMap, Requirement req,
+        List<Map<Requirement, Set<Capability>>> permutations)
+    {
+        Set<Capability> candidates = candidateMap.get(req);
+        if (candidates.size() > 1)
+        {
+            // Check existing permutations to make sure we haven't
+            // already permutated this requirement. This check for
+            // duplicate permutations is simplistic. It assumes if
+            // there is any permutation that contains a different
+            // initial candidate for the requirement in question,
+            // then it has already been permutated.
+            boolean permutated = false;
+            for (Map<Requirement, Set<Capability>> existingPerm : permutations)
+            {
+                Set<Capability> existingPermCands = existingPerm.get(req);
+                if (!existingPermCands.iterator().next().equals(candidates.iterator().next()))
+                {
+                    permutated = true;
+                }
+            }
+            // If we haven't already permutated the existing
+            // import, do so now.
+            if (!permutated)
+            {
+                permutate(candidateMap, req, permutations);
+            }
         }
     }
 
