@@ -18,27 +18,12 @@
  */
 package org.apache.felix.fileinstall.internal;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.apache.felix.fileinstall.ArtifactInstaller;
-import org.apache.felix.fileinstall.ArtifactListener;
-import org.apache.felix.fileinstall.ArtifactTransformer;
-import org.apache.felix.fileinstall.ArtifactUrlTransformer;
+import org.apache.felix.fileinstall.*;
 import org.apache.felix.fileinstall.internal.Util.Logger;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.framework.*;
+import org.osgi.service.cm.*;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
@@ -47,7 +32,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * This clever little bundle watches a directory and will install any jar file
  * if finds in that directory (as long as it is a valid bundle and not a
  * fragment).
- * 
+ *
  */
 public class FileInstall implements BundleActivator
 {
@@ -111,7 +96,29 @@ public class FileInstall implements BundleActivator
         set(ht, DirectoryWatcher.START_NEW_BUNDLES);
         set(ht, DirectoryWatcher.USE_START_TRANSIENT);
         set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
-        updated("initial", ht);
+
+        // check if dir is an array of dirs
+        String dirs = (String)ht.get(DirectoryWatcher.DIR);
+        if ( dirs != null && dirs.indexOf(',') != -1 )
+        {
+            StringTokenizer st = new StringTokenizer(dirs, ",");
+            int index = 0;
+            while ( st.hasMoreTokens() )
+            {
+                final String dir = st.nextToken().trim();
+                ht.put(DirectoryWatcher.DIR, dir);
+
+                String name = "initial";
+                if ( index > 0 ) name = name + index;
+                updated(name, new Hashtable(ht));
+
+                index++;
+            }
+        }
+        else
+        {
+            updated("initial", ht);
+        }
     }
 
     // Adapted for FELIX-524
