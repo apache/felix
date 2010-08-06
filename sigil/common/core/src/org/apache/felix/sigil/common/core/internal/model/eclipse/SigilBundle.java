@@ -36,7 +36,6 @@ import java.util.jar.JarFile;
 
 import org.apache.felix.sigil.common.config.Resource;
 import org.apache.felix.sigil.common.core.BldCore;
-import org.apache.felix.sigil.common.core.util.ManifestUtil;
 import org.apache.felix.sigil.common.model.AbstractCompoundModelElement;
 import org.apache.felix.sigil.common.model.eclipse.IBundleCapability;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
@@ -44,6 +43,7 @@ import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.progress.IProgress;
+import org.apache.felix.sigil.common.util.ManifestUtil;
 import org.osgi.framework.Version;
 
 /**
@@ -115,10 +115,10 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
     {
         if (location != null && location.exists())
         {
-            JarFile f = new JarFile(location);
+            JarFile f = new JarFile(location, false);
             try
             {
-                setBundleInfo(ManifestUtil.buildBundleModelElement(f.getManifest()));
+                setBundleInfo(ManifestUtil.buildBundleModelElement(f));
             }
             finally
             {

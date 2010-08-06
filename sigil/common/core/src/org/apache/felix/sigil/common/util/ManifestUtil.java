@@ -1,9 +1,13 @@
-package org.apache.felix.sigil.common.core.util;
+package org.apache.felix.sigil.common.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.ModelElementFactory;
@@ -18,10 +22,34 @@ import org.osgi.framework.Version;
 
 public class ManifestUtil
 {
-    public static IBundleModelElement buildBundleModelElement(Manifest mf)
-    {
+    /**
+     * Use this utility to read Manifest from a JarFile or ZipFile
+     * due to http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6735255
+     * 
+     * @param zip
+     * @return
+     * @throws IOException
+     */
+    public static Manifest getManifest(ZipFile zip) throws IOException {
+        ZipEntry entry = zip.getEntry("META-INF/MANIFEST.MF");
+        if ( entry == null ) return null;
+        
+        InputStream in = zip.getInputStream(entry);
+        try {
+            return new Manifest(in);
+        }
+        finally {
+            // explicitly close due to 
+            // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6735255
+            in.close();
+        }
+    }
+    
+    public static IBundleModelElement buildBundleModelElement(ZipFile zip) throws IOException {
         IBundleModelElement info = null;
 
+        Manifest mf = getManifest(zip);
+        
         if (mf != null)
         {
             Attributes attrs = mf.getMainAttributes();

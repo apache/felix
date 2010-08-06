@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.apache.felix.sigil.common.core.util.QuoteUtil;
+import org.apache.felix.sigil.common.util.QuoteUtil;
 
 public class BldConfig
 {

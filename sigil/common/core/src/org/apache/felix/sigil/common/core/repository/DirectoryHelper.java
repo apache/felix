@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.ModelElementFactory;
@@ -31,6 +30,7 @@ import org.apache.felix.sigil.common.model.ModelElementFactoryException;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
+import org.apache.felix.sigil.common.util.ManifestUtil;
 
 public class DirectoryHelper
 {
@@ -54,7 +54,7 @@ public class DirectoryHelper
                     try
                     {
                         jar = new JarFile(f, false);
-                        ISigilBundle bundle = buildBundle(repository, jar.getManifest(),
+                        ISigilBundle bundle = buildBundle(repository, jar,
                             f);
                         if (bundle != null)
                         {
@@ -96,9 +96,9 @@ public class DirectoryHelper
     }
 
     private static ISigilBundle buildBundle(AbstractBundleRepository repository,
-        Manifest manifest, File f)
+        JarFile jar, File f) throws IOException
     {
-        IBundleModelElement info = repository.buildBundleModelElement(manifest);
+        IBundleModelElement info = ManifestUtil.buildBundleModelElement(jar);
 
         ISigilBundle bundle = null;
 

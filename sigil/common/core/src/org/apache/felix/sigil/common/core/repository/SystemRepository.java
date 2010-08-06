@@ -31,6 +31,7 @@ import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
+import org.apache.felix.sigil.common.util.ManifestUtil;
 
 public class SystemRepository extends AbstractBundleRepository
 {
@@ -73,8 +74,8 @@ public class SystemRepository extends AbstractBundleRepository
                 if (frameworkPath != null)
                 {
                     systemBundle.setLocation(frameworkPath);
-                    jar = new JarFile(frameworkPath);
-                    info = buildBundleModelElement(jar.getManifest());
+                    jar = new JarFile(frameworkPath,false);
+                    info = ManifestUtil.buildBundleModelElement(jar);
                 }
                 else
                 {

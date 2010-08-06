@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.ModelElementFactory;
@@ -35,6 +34,7 @@ import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
+import org.apache.felix.sigil.common.util.ManifestUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstall;
 import org.eclipse.core.runtime.IPath;
@@ -106,8 +106,8 @@ public class OSGiInstallRepository extends AbstractBundleRepository
         JarFile jar = null;
         try
         {
-            jar = new JarFile(f);
-            ISigilBundle bundle = buildBundle(jar.getManifest(), f);
+            jar = new JarFile(f, false);
+            ISigilBundle bundle = buildBundle(jar, f);
             if (bundle != null)
             {
                 bundle.setLocation(f);
@@ -145,9 +145,9 @@ public class OSGiInstallRepository extends AbstractBundleRepository
         }
     }
 
-    private ISigilBundle buildBundle(Manifest manifest, File f)
+    private ISigilBundle buildBundle(JarFile jar, File f) throws IOException
     {
-        IBundleModelElement info = buildBundleModelElement(manifest);
+        IBundleModelElement info = ManifestUtil.buildBundleModelElement(jar);
 
         ISigilBundle bundle = null;
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.common.core.util;
+package org.apache.felix.sigil.common.util;
 
 import java.util.ArrayList;
 

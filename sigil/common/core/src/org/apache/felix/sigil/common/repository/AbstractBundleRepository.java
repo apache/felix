@@ -24,12 +24,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.jar.Manifest;
 
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.core.licence.ILicenseManager;
 import org.apache.felix.sigil.common.core.licence.ILicensePolicy;
-import org.apache.felix.sigil.common.core.util.ManifestUtil;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ILibrary;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
@@ -255,11 +253,6 @@ public abstract class AbstractBundleRepository implements IBundleRepository
         accept(visitor, options);
 
         return found.isEmpty() ? null : found.iterator().next();
-    }
-
-    public IBundleModelElement buildBundleModelElement(Manifest mf)
-    {
-        return ManifestUtil.buildBundleModelElement(mf);
     }
 
     protected ILicensePolicy findPolicy(IModelElement elem)
