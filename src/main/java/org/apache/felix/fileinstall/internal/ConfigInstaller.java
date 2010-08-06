@@ -18,13 +18,10 @@
  */
 package org.apache.felix.fileinstall.internal;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Hashtable;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.osgi.framework.BundleContext;
@@ -48,7 +45,8 @@ public class ConfigInstaller implements ArtifactInstaller
 
     public boolean canHandle(File artifact)
     {
-        return artifact.getName().endsWith(".cfg");
+        return artifact.getName().endsWith(".cfg")
+            || artifact.getName().endsWith(".config");
     }
 
     public void install(File artifact) throws Exception
@@ -79,29 +77,43 @@ public class ConfigInstaller implements ArtifactInstaller
      * @return
      * @throws Exception
      */
-    boolean setConfig(File f) throws Exception
+    boolean setConfig(final File f) throws Exception
     {
-        Properties p = new Properties();
-        InputStream in = new BufferedInputStream(new FileInputStream(f));
+        final Hashtable ht = new Hashtable();
+        final InputStream in = new BufferedInputStream(new FileInputStream(f));
         try
         {
-            in.mark(1);
-            boolean isXml = in.read() == '<';
-            in.reset();
-            if (isXml) {
-                p.loadFromXML(in);
-            } else {
-                p.load(in);
+            if ( f.getName().endsWith(".cfg") )
+            {
+                final Properties p = new Properties();
+                in.mark(1);
+                boolean isXml = in.read() == '<';
+                in.reset();
+                if (isXml) {
+                    p.loadFromXML(in);
+                } else {
+                    p.load(in);
+                }
+                Util.performSubstitution(p);
+                ht.putAll(p);
+            }
+            else
+            {
+                final Dictionary config = ConfigurationHandler.read(in);
+                final Enumeration i = config.keys();
+                while ( i.hasMoreElements() )
+                {
+                    final Object key = i.nextElement();
+                    ht.put(key, config.get(key));
+                }
             }
         }
         finally
         {
             in.close();
         }
-        Util.performSubstitution(p);
+
         String pid[] = parsePid(f.getName());
-        Hashtable ht = new Hashtable();
-        ht.putAll(p);
         ht.put(DirectoryWatcher.FILENAME, f.getName());
         Configuration config = getConfiguration(pid[0], pid[1]);
         if (config.getBundleLocation() != null)

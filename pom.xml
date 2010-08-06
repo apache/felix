@@ -42,6 +42,12 @@
       <artifactId>org.osgi.compendium</artifactId>
       <version>4.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.configadmin</artifactId>
+      <version>1.2.4</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -68,6 +74,9 @@
             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+            <Embed-Dependency>
+                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*"
+            </Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
