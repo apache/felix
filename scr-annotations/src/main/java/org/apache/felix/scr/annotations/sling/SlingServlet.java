@@ -46,62 +46,54 @@ public @interface SlingServlet {
     boolean generateService() default true;
 
     /**
-     * The name of the service registration property of a Servlet registered as
-     * a service providing the absolute paths under which the servlet is
-     * accessible as a Resource (value is "sling.servlet.paths")
+     * One or more paths under which the servlet will be registered in the
+     * Sling Resource tree.
      * <p>
-     * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types.
+     * This attribute is converted to values for the
+     * <code>sling.servlet.paths</code> property.
+     * <p>
+     * Note that to be used as a servlet for Sling either this attribute or
+     * the {@link #resourceTypes()} attribute or both must be set.
      */
     String[] paths() default {};
 
     /**
-     * The name of the service registration property of a Servlet registered as
-     * a service containing the resource type(s) supported by the servlet (value
-     * is "sling.servlet.resourceTypes").
+     * One or more resource types which are handled by this servlet.
      * <p>
-     * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types. This property is ignored if the
-     * {@link #paths} property is set. Otherwise this property must be set or
-     * the servlet is ignored.
+     * This attribute is converted to values for the
+     * <code>sling.servlet.resourceTypes</code> property.
+     * <p>
+     * Note that to be used as a servlet for Sling either this attribute or
+     * the {@link #paths()} attribute or both must be set.
      */
     String[] resourceTypes() default {};
 
     /**
-     * The name of the service registration property of a Servlet registered as
-     * a service containing the request URL selectors supported by the servlet
-     * (value is "sling.servlet.selectors"). The selectors must be configured as
-     * they would be specified in the URL that is as a list of dot-separated
-     * strings such as <em>print.a4</em>.
+     * One ore more request URL selectors supported by the servlet. The
+     * selectors must be configured as they would be specified in the URL that
+     * is as a list of dot-separated strings such as <em>print.a4</em>.
      * <p>
-     * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types. This property is ignored if the
-     * {@link #paths} property is set. Otherwise this property is optional and
-     * ignored if not set.
+     * This attribute is converted to values for the
+     * <code>sling.servlet.selectors</code> property and is ignored if the
+     * {@link #resourceTypes()} attribute is not set.
      */
     String[] selectors() default {};
 
     /**
-     * The name of the service registration property of a Servlet registered as
-     * a service containing the request URL extensions supported by the servlet
-     * for GET requests (value is "sling.servlet.extensions").
+     * One or more request URL extensions supported by the servlet.
      * <p>
-     * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types. This property is ignored if the
-     * {@link #paths} property is set. Otherwise this property or the
-     * {@link #methods} is optional and ignored if not set.
+     * This attribute is converted to values for the
+     * <code>sling.servlet.extensions</code> property and is ignored if the
+     * {@link #resourceTypes()} attribute is not set.
      */
     String[] extensions() default {};
 
     /**
-     * The name of the service registration property of a Servlet registered as
-     * a service containing the request methods supported by the servlet (value
-     * is "sling.servlet.methods").
+     * One or more request methods supported by the servlet.
      * <p>
-     * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types. This property is ignored if the
-     * {@link #paths} property is set. Otherwise this property or the
-     * {@link #extensions} is optional and ignored if not set.
+     * This attribute is converted to values for the
+     * <code>sling.servlet.methods</code> property and is ignored if the
+     * {@link #resourceTypes()} attribute is not set.
      */
     String[] methods() default {};
 
