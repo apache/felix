@@ -235,6 +235,10 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
             cm = getComponentHolder( factoryPid );
         }
 
+        Activator.log( LogService.LOG_DEBUG, null, "configurationEvent: Handling "
+            + ( ( event.getType() == ConfigurationEvent.CM_DELETED ) ? "DELETE" : "UPDATE" ) + " of Configuration PID="
+            + pid, null );
+
         if ( cm != null && !cm.getComponentMetadata().isConfigurationIgnored() )
         {
             switch ( event.getType() )
@@ -299,7 +303,7 @@ public class ConfigurationComponentRegistry extends ComponentRegistry implements
         try
         {
             final Configuration cfg = ca.getConfiguration( pid );
-            if ( bundleLocation.equals( cfg.getBundleLocation() ) )
+            if ( Activator.hasCtWorkaround() || bundleLocation.equals( cfg.getBundleLocation() ) )
             {
                 return cfg.getProperties();
             }
