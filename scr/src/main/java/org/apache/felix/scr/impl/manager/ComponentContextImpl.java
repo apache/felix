@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.Dictionary;
 
+import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -52,8 +53,13 @@ public class ComponentContextImpl implements ComponentContext, ComponentInstance
 
     public final Dictionary getProperties()
     {
-        // 112.11.3.5 The Dictionary is read-only and cannot be modified
-        return new ReadOnlyDictionary( m_componentManager.getProperties() );
+        // 112.12.3.5 The Dictionary is read-only and cannot be modified
+        Dictionary ctxProperties = m_componentManager.getProperties();
+        if ( !Activator.hasCtWorkaround() )
+        {
+            ctxProperties = new ReadOnlyDictionary( ctxProperties );
+        }
+        return ctxProperties;
     }
 
 
