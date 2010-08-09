@@ -329,7 +329,7 @@ public class SigilProjectEditorPart extends FormEditor implements IResourceChang
         refreshAllPages();
     }
 
-    protected void refreshAllPages()
+    void refreshAllPages()
     {
         Runnable op = new Runnable()
         {
