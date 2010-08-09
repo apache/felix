@@ -57,10 +57,11 @@ public class ImportQuickFixProcessor implements IQuickFixProcessor
     {
         switch (problemId)
         {
-            case IProblem.ImportNotFound:
             case IProblem.ForbiddenReference:
-            case IProblem.NotVisibleType:
+            case IProblem.ImportNotFound:
+            case IProblem.IsClassPathCorrect:
             case IProblem.UndefinedType:
+            case IProblem.UndefinedName:
                 return true;
             default:
                 return false;
@@ -166,6 +167,8 @@ public class ImportQuickFixProcessor implements IQuickFixProcessor
         if (selectedNode == null)
             return;
 
+        // check QualifiedName for search results as well - 
+        // happens if import package is already added but exported package has been removed 
         if (selectedNode instanceof ClassInstanceCreation)
         {
             ClassInstanceCreation c = (ClassInstanceCreation) selectedNode;
