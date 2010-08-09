@@ -87,4 +87,23 @@ public class ExportPackageChange extends Change
         return new ExportPackageChange(sigil, newExport, oldExport);
     }
 
+    /**
+     * @return
+     */
+    public IPackageExport getOldExport()
+    {
+        return oldExport;
+    }
+
+    /**
+     * @return
+     */
+    public IPackageExport getNewExport()
+    {
+        return newExport;
+    }
+    
+    public ISigilProjectModel getProject() {
+        return sigil;
+    }
 }

@@ -19,10 +19,14 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.refactor;
 
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.eclipse.ltk.ui.refactoring.ChangePreviewViewerInput;
 import org.eclipse.ltk.ui.refactoring.IChangePreviewViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ViewForm;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
 /**
  * @author dave
@@ -31,13 +35,16 @@ import org.eclipse.swt.widgets.Control;
 public class ExportChangePreviewViewer implements IChangePreviewViewer
 {
 
+    private ViewForm control;
+    private Label text;
+
     /* (non-Javadoc)
      * @see org.eclipse.ltk.ui.refactoring.IChangePreviewViewer#createControl(org.eclipse.swt.widgets.Composite)
      */
-    public void createControl(Composite arg0)
+    public void createControl(Composite parent)
     {
-        // TODO Auto-generated method stub
-        
+        control = new ViewForm(parent, SWT.NONE);
+        text = new Label(control, SWT.NONE);
     }
 
     /* (non-Javadoc)
@@ -45,8 +52,7 @@ public class ExportChangePreviewViewer implements IChangePreviewViewer
      */
     public Control getControl()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return control;
     }
 
     /* (non-Javadoc)
@@ -54,8 +60,34 @@ public class ExportChangePreviewViewer implements IChangePreviewViewer
      */
     public void setInput(ChangePreviewViewerInput input)
     {
-        // TODO Auto-generated method stub
+        ExportPackageChange change = (ExportPackageChange) input.getChange();
+        StringBuilder buf = new StringBuilder();
+        buf.append("Export-Package: \n");
+        if ( change.getOldExport() != null ) {
+            buf.append("- ");
+            appendPackage(change.getOldExport(), buf);
+            buf.append("\n");
+        }
         
+        if ( change.getNewExport() != null ) {
+            buf.append("+ ");
+            appendPackage(change.getNewExport(), buf);
+            buf.append("\n");
+        }
+        text.setText(buf.toString());
+    }
+
+    /**
+     * @param pe
+     * @param buf
+     */
+    private void appendPackage(IPackageExport pe, StringBuilder buf)
+    {
+        buf.append(pe.getPackageName());
+        if (pe.getVersion() != null) {
+            buf.append(";version=");
+            buf.append(pe.getVersion());
+        }
     }
 
 }
