@@ -30,7 +30,9 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Service;
 import org.apache.felix.dm.ServiceStateListener;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 
 public abstract class AbstractDecorator  {
@@ -233,4 +235,21 @@ public abstract class AbstractDecorator  {
         }
         m_services.clear();
     }    
+    
+    public void configureAutoConfigState(Service target, Service source) {
+        configureAutoConfigState(target, source, BundleContext.class);
+        configureAutoConfigState(target, source, ServiceRegistration.class);
+        configureAutoConfigState(target, source, DependencyManager.class);
+        configureAutoConfigState(target, source, Service.class);
+    }
+
+    private void configureAutoConfigState(Service target, Service source, Class clazz) {
+        String name = source.getAutoConfigInstance(clazz);
+        if (name != null) {
+            target.setAutoConfig(clazz, name);
+        }
+        else {
+            target.setAutoConfig(clazz, source.getAutoConfig(clazz));
+        }
+    }
 }

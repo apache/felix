@@ -21,7 +21,7 @@ package org.apache.felix.dm;
 import java.net.URL;
 
 
-public interface ResourceDependency extends Dependency, ResourceHandler {
+public interface ResourceDependency extends Dependency, ServiceComponentDependency, ResourceHandler {
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
      * dependency is added or removed. When you specify callbacks, the auto configuration 

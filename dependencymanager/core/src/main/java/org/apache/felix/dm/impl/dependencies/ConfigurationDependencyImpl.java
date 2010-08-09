@@ -28,6 +28,8 @@ import java.util.Set;
 
 import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyActivation;
+import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.PropertyMetaData;
 import org.apache.felix.dm.ServiceComponentDependency;
 import org.apache.felix.dm.impl.InvocationUtil;

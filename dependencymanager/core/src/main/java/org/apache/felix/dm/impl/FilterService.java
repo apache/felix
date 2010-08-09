@@ -260,4 +260,22 @@ public class FilterService implements Service
     public DependencyManager getDependencyManager() {
         return m_service.getDependencyManager();
     }
+
+    public Service setAutoConfig(Class clazz, boolean autoConfig) {
+        m_service.setAutoConfig(clazz, autoConfig);
+        return this;
+    }
+
+    public Service setAutoConfig(Class clazz, String instanceName) {
+        m_service.setAutoConfig(clazz, instanceName);
+        return this;
+    }
+    
+    public boolean getAutoConfig(Class clazz) {
+        return m_service.getAutoConfig(clazz);
+    }
+    
+    public String getAutoConfigInstance(Class clazz) {
+        return m_service.getAutoConfigInstance(clazz);
+    };
 }

@@ -33,13 +33,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.Service;
 import org.apache.felix.dm.ServiceComponent;
 import org.apache.felix.dm.ServiceComponentDependency;
 import org.apache.felix.dm.ServiceStateListener;
-import org.apache.felix.dm.impl.dependencies.DependencyActivation;
-import org.apache.felix.dm.impl.dependencies.DependencyService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -768,13 +768,24 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     	}
     }
 
-    public void setAutoConfig(Class clazz, boolean autoConfig) {
+    public synchronized Service setAutoConfig(Class clazz, boolean autoConfig) {
         m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
+        return this;
     }
     
-    public void setAutoConfig(Class clazz, String instanceName) {
+    public synchronized Service setAutoConfig(Class clazz, String instanceName) {
         m_autoConfig.put(clazz, Boolean.valueOf(instanceName != null));
         m_autoConfigInstance.put(clazz, instanceName);
+        return this;
+    }
+    
+    public boolean getAutoConfig(Class clazz) {
+        Boolean result = (Boolean) m_autoConfig.get(clazz);
+        return (result != null && result.booleanValue());
+    }
+    
+    public String getAutoConfigInstance(Class clazz) {
+        return (String) m_autoConfigInstance.get(clazz);
     }
     
     private void configureService(State state) {

@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.ServiceComponentDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.InvocationUtil;

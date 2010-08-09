@@ -20,7 +20,6 @@ package org.apache.felix.dm;
 
 import java.util.Dictionary;
 
-import org.apache.felix.dm.impl.dependencies.DependencyService;
 
 /**
  * Generic dependency for a service. A dependency can be required or not.
