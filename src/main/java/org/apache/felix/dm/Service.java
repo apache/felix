@@ -238,4 +238,39 @@ public interface Service {
 	 * Returns the dependency manager associated with this service.
 	 */
 	public DependencyManager getDependencyManager();
+
+	/**
+	 * Configures auto configuration of injected classes in the service instance.
+	 * The following injections are currently performed, unless you explicitly
+	 * turn them off:
+	 * <dl>
+	 * <dt>BundleContext</dt><dd>the bundle context of the bundle</dd>
+     * <dt>ServiceRegistration</dt><dd>the service registration used to register your service</dd>
+     * <dt>DependencyManager</dt><dd>the dependency manager instance</dd>
+     * <dt>Service</dt><dd>the service instance of the dependency manager</dd>
+	 * </dl>
+	 * 
+	 * @param clazz the class (from the list above)
+	 * @param autoConfig <code>false</code> to turn off auto configuration
+	 */
+    public Service setAutoConfig(Class clazz, boolean autoConfig);
+    
+    /**
+     * Configures auto configuration of injected classes in the service instance.
+     * 
+     * @param clazz the class (from the list above)
+     * @param instanceName the name of the instance to inject the class into
+     * @see setAutoConfig(Class, boolean)
+     */
+    public Service setAutoConfig(Class clazz, String instanceName);
+
+    /**
+     * Returns the status of auto configuration of the specified class.
+     */
+    public boolean getAutoConfig(Class clazz);
+    
+    /**
+     * Returns the instance variable name of auto configuration of the specified class.
+     */
+    public String getAutoConfigInstance(Class clazz);
 }

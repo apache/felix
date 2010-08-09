@@ -26,6 +26,8 @@ import java.net.URL;
 public interface ResourceHandler {
     /** Name of the property that's used to describe the filter condition for a resource. */
     public static final String FILTER = "filter";
+    /** Exact URL that this handler is looking for. Can be used instead of a filter to be very explicit about the resource you're looking for. */
+    public static final String URL = "url";
     
     /** The host part of the URL. */
     public static final String HOST = "host";

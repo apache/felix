@@ -1,6 +1,7 @@
 package org.apache.felix.dm.impl.dependencies;
 
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.impl.Logger;
 
 public abstract class DependencyBase implements Dependency, DependencyActivation {
