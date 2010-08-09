@@ -337,4 +337,14 @@
        </enablement>
      </moveParticipant>
    </extension>  
+   
+   <!--extension point="org.eclipse.ltk.ui.refactoring.changePreviewViewers">
+      <changePreviewViewer
+            class="org.apache.felix.sigil.eclipse.ui.internal.refactor.ExportChangePreviewViewer"
+            id="org.apache.felix.sigil.eclipse.ui.refactor.exportChangePreviewViewer">
+         <enablement>
+            <instanceof value="org.apache.felix.sigil.eclipse.ui.internal.refactor.ExportPackageChange"/>
+         </enablement>
+      </changePreviewViewer>
+   </extension-->
 </plugin>
