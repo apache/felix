@@ -198,6 +198,9 @@ public class ExportPackagesSection extends BundleDependencySection
                 SigilCore.PREFERENCES_REMOVE_IMPORT_FOR_EXPORT, "Remove Exports",
                 "Should corresponding imports be removed?", getSection().getShell());
 
+            // TODO should also prompt to remove corresponding imports from other
+            // projects in workspace??
+            
             IBundleModelElement info = getBundle().getBundleInfo();
 
             for (Iterator<IPackageExport> i = selection.iterator(); i.hasNext();)
