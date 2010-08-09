@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.impl.dependencies;
+package org.apache.felix.dm;
 
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.Service;
 
 public interface DependencyService {
     /**

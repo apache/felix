@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyActivation;
+import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.Service;
@@ -95,10 +97,14 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	        }
 	    }
 	    if (needsStarting) {
-	        Properties props = null;
-	        if (m_resourceFilter != null) {
+	        Dictionary props = null;
+	        if (m_trackedResource != null) {
+                props = new Properties();
+                props.put(ResourceHandler.URL, m_trackedResource);
+	        }
+	        else if (m_resourceFilter != null) {
 	            props = new Properties();
-	            props.setProperty(ResourceHandler.FILTER, m_resourceFilter);
+	            props.put(ResourceHandler.FILTER, m_resourceFilter);
 	        }
 	        m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
 	    }
