@@ -19,10 +19,18 @@
 
 package org.apache.felix.sigil.eclipse.ui.internal.refactor;
 
+import java.util.List;
+
+import org.apache.felix.sigil.common.model.ModelElementFactory;
+import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.mapping.IResourceChangeDescriptionFactory;
+import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.ResourceChangeChecker;
 
@@ -38,5 +46,32 @@ class RefactorUtil
         IResourceChangeDescriptionFactory deltaFactory = checker.getDeltaFactory();
         IFile file = sigil.getProject().getFile(SigilCore.SIGIL_PROJECT_FILE);
         deltaFactory.change(file);
+    }    
+    
+    static void createNewImport(RefactoringStatus status, List<Change> changes, ISigilProjectModel project,
+        IPackageExport export)
+    {
+        IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(
+            IPackageImport.class);
+        newImport.setPackageName(export.getPackageName());
+        newImport.setVersions(ModelHelper.getDefaultRange(export.getVersion()));
+
+        status.addInfo("Creating new import in " + project.getSymbolicName());
+        changes.add(new ImportPackageChange(project, null, newImport));
     }
+
+    static IPackageExport createNewExport(RefactoringStatus status,
+        List<Change> changes, ISigilProjectModel project, String packageName)
+    {
+        IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(
+            IPackageExport.class);
+        newExport.setPackageName(packageName);
+        // new export inherits project version by default
+        newExport.setVersion(project.getVersion());
+
+        status.addInfo("Creating new export " + packageName + " in "
+            + project.getSymbolicName());
+        changes.add(new ExportPackageChange(project, null, newExport));
+        return newExport;
+    }    
 }

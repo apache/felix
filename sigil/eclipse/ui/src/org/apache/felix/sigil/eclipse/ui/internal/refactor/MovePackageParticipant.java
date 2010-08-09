@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.felix.sigil.common.model.ModelElementFactory;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
-import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
@@ -89,7 +88,9 @@ public class MovePackageParticipant extends MoveParticipant
                     else
                     {
                         SubMonitor sub = SubMonitor.convert(monitor);
-
+                        
+                        sub.beginTask("Resolving package users", 200);
+                        
                         Set<String> users = JavaHelper.findLocalPackageUsers(
                             sourceProject, packageName, sub.newChild(100));
                         Set<String> dependencies = JavaHelper.findLocalPackageDependencies(
@@ -104,18 +105,18 @@ public class MovePackageParticipant extends MoveParticipant
 
                         if (users.size() > 0)
                         { // attempt to move an API package
-                            IPackageExport newExport = createNewExport(status,
+                            IPackageExport newExport = RefactorUtil.createNewExport(status, changes,
                                 destProject, packageName);
-                            createNewImport(status, sourceProject, newExport);
+                            RefactorUtil.createNewImport(status, changes, sourceProject, newExport);
                         }
 
                         if (dependencies.size() > 0)
                         { // moved an impl package
                             for (String dep : dependencies)
                             {
-                                IPackageExport newExport = createNewExport(status,
+                                IPackageExport newExport = RefactorUtil.createNewExport(status, changes,
                                     sourceProject, dep);
-                                createNewImport(status, destProject, newExport);
+                                RefactorUtil.createNewImport(status, changes, destProject, newExport);
                             }
                         }
                     }
@@ -132,33 +133,6 @@ public class MovePackageParticipant extends MoveParticipant
         {
             return new RefactoringStatus();
         }
-    }
-
-    private void createNewImport(RefactoringStatus status, ISigilProjectModel project,
-        IPackageExport export)
-    {
-        IPackageImport newImport = ModelElementFactory.getInstance().newModelElement(
-            IPackageImport.class);
-        newImport.setPackageName(export.getPackageName());
-        newImport.setVersions(ModelHelper.getDefaultRange(export.getVersion()));
-
-        status.addInfo("Creating new import in " + project.getSymbolicName());
-        changes.add(new ImportPackageChange(project, null, newImport));
-    }
-
-    private IPackageExport createNewExport(RefactoringStatus status,
-        ISigilProjectModel project, String packageName)
-    {
-        IPackageExport newExport = ModelElementFactory.getInstance().newModelElement(
-            IPackageExport.class);
-        newExport.setPackageName(packageName);
-        // new export inherits project version by default
-        newExport.setVersion(project.getVersion());
-
-        status.addInfo("Creating new export " + packageName + " in "
-            + project.getSymbolicName());
-        changes.add(new ExportPackageChange(project, null, newExport));
-        return newExport;
     }
 
     @Override

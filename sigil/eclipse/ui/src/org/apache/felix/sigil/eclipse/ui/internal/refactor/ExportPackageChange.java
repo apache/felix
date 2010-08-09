@@ -74,7 +74,7 @@ public class ExportPackageChange extends Change
     {
         if (oldExport != null)
         {
-            sigil.getBundle().getBundleInfo().removeChild(oldExport);
+            sigil.getBundle().getBundleInfo().removeExport(oldExport);
         }
 
         if (newExport != null)
