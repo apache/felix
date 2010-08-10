@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.felix.sigil.common.config.BldUtil;
 import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 import org.apache.felix.sigil.common.repository.RepositoryException;
@@ -42,9 +43,12 @@ public class SystemRepositoryProvider implements IRepositoryProvider
 
         try
         {
-            Properties p = readProfile(profile);
-            String pkgs = p.getProperty("org.osgi.framework.system.packages") + ","
-                + extraPkgs;
+            String pkgs = readSystemPackages(profile);
+            
+            if ( extraPkgs != null ) {
+                pkgs += "," + extraPkgs;
+            }
+            
             return new SystemRepository(id, frameworkPath, pkgs);
         }
         catch (IOException e)
@@ -52,9 +56,33 @@ public class SystemRepositoryProvider implements IRepositoryProvider
             throw new RepositoryException("Failed to load profile", e);
         }
     }
+    
+    public static String readSystemPackages(String name) throws IOException {
+        Properties p = readProperties();
+        
+        String key = systemPackagesKey(name);
+        
+        return BldUtil.expand(p.getProperty(key), p);
+    }
 
-    public static Properties readProfile(String name) throws IOException
+    public static Properties readProperties() throws IOException
     {
+
+        String profilePath = "profiles/jvm-packages.properties";
+        InputStream in = SystemRepositoryProvider.class.getClassLoader().getResourceAsStream(
+            profilePath);
+
+        if (in == null)
+            throw new IllegalStateException("Missing jvm packages: " + profilePath);
+
+        Properties p = new Properties();
+        
+        p.load(in);
+
+        return p;
+    }
+    
+    private static String systemPackagesKey(String name) {
         if (name == null)
         {
             String version = System.getProperty("java.specification.version");
@@ -62,18 +90,8 @@ public class SystemRepositoryProvider implements IRepositoryProvider
             String prefix = ("6".compareTo(split[1]) <= 0) ? "JavaSE-" : "J2SE-";
             name = prefix + version;
         }
-
-        String profilePath = "profiles/" + name + ".profile";
-        InputStream in = SystemRepositoryProvider.class.getClassLoader().getResourceAsStream(
-            profilePath);
-
-        if (in == null)
-            throw new IOException("No such profile: " + profilePath);
-
-        Properties p = new Properties();
-        p.load(in);
-
-        return p;
+        
+        return name + ".system";
     }
 
 }

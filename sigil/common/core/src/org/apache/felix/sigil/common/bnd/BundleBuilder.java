@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.Attributes;
 
 import org.apache.felix.sigil.common.config.BldAttr;
@@ -112,9 +113,8 @@ public class BundleBuilder
 
         try
         {
-            systemPkgs = new HashSet<String>();
-            Properties profile = SystemRepositoryProvider.readProfile(null);
-            String pkgs = profile.getProperty("org.osgi.framework.system.packages");
+            systemPkgs = new TreeSet<String>();
+            String pkgs = SystemRepositoryProvider.readSystemPackages(null);
             for (String pkg : pkgs.split(",\\s*"))
             {
                 systemPkgs.add(pkg);
@@ -190,6 +190,10 @@ public class BundleBuilder
 
         if (log != null)
         {
+            log.verbose("System packages:");
+            for (String pkg : systemPkgs) {
+                log.verbose(pkg);
+            }
             log.verbose("Generated " + bundle.getSymbolicName());
             log.verbose("-----------------------------");
             for (Map.Entry<Object, Object> e : spec.entrySet())
