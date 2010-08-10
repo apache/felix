@@ -16,46 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.runtime;
+package org.apache.felix.dm.test.bundle.annotation.publisher;
 
-/**
- * List of descriptor parameters.
- */
-public enum Params
+public interface Provider
 {
-    type,
-    init,
-    start,
-    stop,
-    destroy,
-    impl,
-    provide,
-    properties,
-    composition,
-    service,
-    filter,
-    defaultImpl,
-    required,
-    added,
-    changed,
-    removed,
-    autoConfig,
-    pid,
-    propagate,
-    updated,
-    timeout,
-    adapterService,
-    adapterProperties,
-    adapteeService,
-    adapteeFilter,
-    stateMask,
-    ranking,
-    factoryPid,    
-    factorySet,
-    factoryConfigure,
-    factoryMethod,
-    name,
-    field,
-    publisher,
-    unpublisher
 }

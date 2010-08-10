@@ -20,7 +20,10 @@ package org.apache.felix.dm.runtime;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -182,11 +185,47 @@ public class ServiceLifecycleHandler
     /**
      * Handles the Service's start lifecycle callback. We just invoke the service "start" service callback on 
      * the service instance, as well as on all eventual service composites.
+     * We take care to check if a start callback returns a Map, which is meant to contain
+     * some additional properties which must be appended to existing service properties.
+     * Such extra properties takes precedence over existing service properties.
      */
+    @SuppressWarnings("unchecked")
     public void start(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        callbackComposites(service, m_start);
+        DependencyManager dm = service.getDependencyManager();
+        Map<String, String> extraProperties = new HashMap<String, String>();
+        Object[] composites = service.getCompositionInstances();
+        for (Object composite: composites)
+        {
+            Object o = invokeMethod(composite, m_start, dm, service);
+            if (o != null && Map.class.isAssignableFrom(o.getClass()))
+            {
+                extraProperties.putAll((Map) o);
+            }
+        }
+
+        if (extraProperties.size() > 0)
+        {
+            // Store extra properties returned by start callbacks into existing service properties
+            Dictionary existingProperties = service.getServiceProperties();
+            if (existingProperties != null)
+            {
+                Hashtable props = new Hashtable();
+                Enumeration e = existingProperties.keys();
+                while (e.hasMoreElements())
+                {
+                    Object key = e.nextElement();
+                    props.put(key, existingProperties.get(key));
+                }
+                props.putAll(extraProperties);
+                service.setServiceProperties(props);
+            }
+            else
+            {
+                service.setServiceProperties(new Hashtable(extraProperties));
+            }
+        }
     }
 
     /**
