@@ -174,4 +174,80 @@ public @interface Service
      * Sets the static method used to create the Service implementation instance.
      */
     String factoryMethod() default "";
+    
+    /**
+     * Injects a <code>Runnable</code> object to invoke for manually registering the Service into the OSGi registry.
+     * By default, a Service is implicitly registered into the OSGi registry when the service's bundle is
+     * started and when all required dependencies are satisfied. However, it is sometimes required to programatically 
+     * take control of when the service is registered. In this case, this attribute can be used and provides a
+     * </code>Runnable</code> object that can be invoked in order to register a Service at any time. 
+     * <p>
+     * <h3>Usage Examples</h3>
+     * <blockquote>
+     * 
+     * <pre>
+     * &#47;**
+     *   * This Service will be registered programatically into the OSGi registry, using the publisher attribute.
+     *   *&#47;
+     * &#64;Service(publisher="m_publisher")
+     * class X implements Z {
+     *     Runnable m_publisher;
+     *   
+     *     &#64;Start
+     *     void start() {
+     *         // Our Z Service is started but won't be registered into the OSGi registry once this method returns,
+     *         // because we are using the publisher attribute. The service will be registered only when we
+     *         // decide to invoke the Runnable injected by the publisher attribute.
+     *     }
+     *   
+     *     public void registerServiceWheneverIWant() {
+     *         m_publisher.run(); // register our service into the osgi registry.
+     *     }
+     * }
+     * </pre>
+     * </blockquote>
+     */
+    String publisher() default "";
+    
+    /**
+     * Injects a <code>Runnable</code> object for manually unregistering the Service from the OSGi registry.
+     * By default, a Service is implicitly unregistered from the OSGi registry when the service's bundle is
+     * stopped, or when the Service has lost one of its required dependencies. However, it is sometimes required to programatically 
+     * take control of when the service is unregistered. In this case, this attribute can be used and provides a
+     * </code>Runnable</code> object that can be invoked in order to unregister a Service at any time.
+     * 
+     * <p> Notice that this attribute is generally used with the {@link #publisher()} attribute.
+     * <p>
+     * <h3>Usage Examples</h3>
+     * <blockquote>
+     * 
+     * <pre>
+     * &#47;**
+     *   * This Service will be registered programatically into the OSGi registry, using the publisher attribute.
+     *   * It will also be unregistered unsing the Runnable injected by the unpublisher attribute.
+     *   *&#47;
+     * &#64;Service(publisher="m_publisher", unpublisher="m_unpublisher")
+     * class X implements Z {
+     *     Runnable m_publisher;
+     *     Runnable m_unpublisher;
+     *   
+     *     &#64;Start
+     *     void start() {
+     *         // Our Z Service is started but won't be registered into the OSGi registry once this method returns,
+     *         // because we are using the publisher attribute. The service will be registered only when we
+     *         // decide to invoke the Runnable injected by the publisher attribute.
+     *     }
+     *   
+     *     public void registerServiceWheneverIWant() {
+     *         m_publisher.run(); // register our service into the OSGi registry.
+     *     }
+     *     
+     *     public void unregisterServiceWheneverIWant() {
+     *         m_unpublisher.run(); // unregister our Z service from the OSGi registry.
+     *     }
+     * }
+     * </pre>
+     * </blockquote>
+     */
+   String unpublisher() default "";
 }

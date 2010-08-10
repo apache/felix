@@ -25,7 +25,31 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates a method which will be invoked when the Service is started.
- * If you don't supply this annotation, then no "start" method will be invoked.
+ * The annotated method will be called when all required dependencies have been injected, and
+ * just before registering the service into the OSGi registry (if the service provides an interface).
+ * Notice that the start method may optionally return a Map which will be propagated to the provided
+ * service properties.
+ *      
+ * <p>
+ * <h3>Usage Examples</h3>
+ * <blockquote>
+ * 
+ * <pre>
+ * &#64;Service(properties={&#64;Property(name="foo", value="bar")})
+ * class X implements Z {
+ *     &#64;ServiceDependency
+ *     OtherService m_dependency;
+ *   
+ *     &#64;Start
+ *     Map start() {
+ *         // Our Z Service is ready (all required dependencies have been satisfied), and is about to be 
+ *         // registered into the OSGi registry. We return here an optional Map containing some extra-properties
+ *         // which will be appended to the properties supplied in the Service annotation.
+ *         return new HashMap() {{ put("foo2", "bar2"); }};
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
