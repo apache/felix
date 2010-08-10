@@ -110,8 +110,8 @@ public @interface ServiceDependency
      * The name used when dynamically configuring this dependency from the init method.
      * Specifying this attribute allows to dynamically configure the dependency 
      * <code>filter</code> and <code>required</code> flag from the Service's init method.
-     * All unamed dependencies will be injected before the init() method; so from the init() method, you can
-     * then pick up whatever information needed from already injected (unamed) dependencies, and configure dynamically
+     * All unnamed dependencies will be injected before the init() method; so from the init() method, you can
+     * then pick up whatever information needed from already injected (unnamed) dependencies, and configure dynamically
      * your named dependencies, which will then be calculated once the init() method returns.
      * 
      * <p> Usage example of a Service whose dependency filter is configured from ConfigAdmin:

@@ -11,11 +11,14 @@ public class Patterns
     // Pattern used to check if a method returns an array of Objects
     public final static Pattern COMPOSITION = Pattern.compile("\\(\\)\\[Ljava/lang/Object;");
 
-   // Pattern used to parse the class parameter from the bind methods ("bind(Type)" or "bind(Map, Type)" or "bind(BundleContext, Type)"
+    // Pattern used to parse the class parameter from the bind methods ("bind(Type)" or "bind(Map, Type)" or "bind(BundleContext, Type)"
     public final static Pattern BIND_CLASS = Pattern.compile("\\((L[^;]+;)?L([^;]+);\\)V");
 
     // Pattern used to parse classes from class descriptors;
     public final static Pattern CLASS = Pattern.compile("L([^;]+);");
+    
+    // Pattern used to parse the field on which a Publisher annotation may be applied on
+    public final static Pattern PUBLISHER = Pattern.compile("Ljava/lang/Runnable;");
 
     /**
      * Parses a class.
@@ -39,6 +42,7 @@ public class Patterns
     
     /**
      * Checks if a method descriptor matches a given pattern. 
+     * @param the method whose signature descriptor is checked
      * @param pattern the pattern used to check the method signature descriptor
      * @throws IllegalArgumentException if the method signature descriptor does not match the given pattern.
      */
@@ -48,6 +52,22 @@ public class Patterns
         if (!matcher.matches())
         {
             throw new IllegalArgumentException("Invalid method " + method + ", wrong signature: "
+                + descriptor);
+        }
+    }
+    
+    /**
+     * Checks if a field descriptor matches a given pattern.
+     * @param field the field whose type descriptor is checked
+     * @param descriptor the field descriptor to be checked
+     * @param pattern the pattern to use
+     * @throws IllegalArgumentException if the method signature descriptor does not match the given pattern.
+     */
+    public static void parseField(String field, String descriptor, Pattern pattern) {
+        Matcher matcher = pattern.matcher(descriptor);
+        if (!matcher.matches())
+        {
+            throw new IllegalArgumentException("Invalid field " + field + ", wrong signature: "
                 + descriptor);
         }
     }

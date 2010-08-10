@@ -208,26 +208,18 @@ public class AnnotationCollector extends ClassDataCollector
         }
         else if (annotation.getName().equals(A_INIT))
         {
-            //Patterns.parseMethod(m_method, m_descriptor, Patterns.VOID);
-            // TODO check if method takes optional params like Service, DependencyManager, etc ...
             m_initMethod = m_method;
         } 
         else if (annotation.getName().equals(A_START))
         {
-            //Patterns.parseMethod(m_method, m_descriptor, Patterns.VOID);
-            // TODO check if method takes optional params like Service, DependencyManager, etc ...
             m_startMethod = m_method;
         } 
         else if (annotation.getName().equals(A_STOP))
         {
-            //Patterns.parseMethod(m_method, m_descriptor, Patterns.VOID);
-            // TODO check if method takes optional params like Service, DependencyManager, etc ...
             m_stopMethod = m_method;
         }
         else if (annotation.getName().equals(A_DESTROY))
         {
-            //Patterns.parseMethod(m_method, m_descriptor, Patterns.VOID);
-            // TODO check if method takes optional params like Service, DependencyManager, etc ...
             m_destroyMethod = m_method;
         }
         else if (annotation.getName().equals(A_COMPOSITION))
@@ -282,6 +274,10 @@ public class AnnotationCollector extends ClassDataCollector
         
         // factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
+
+        // Parse publisher/unpublisher attributes.
+        writer.putString(annotation, EntryParam.publisher, null);
+        writer.putString(annotation, EntryParam.unpublisher, null);
     }
 
     private void addCommonServiceParams(EntryWriter writer)
@@ -306,11 +302,10 @@ public class AnnotationCollector extends ClassDataCollector
             writer.put(EntryParam.destroy, m_destroyMethod);
         }
 
-        // Register Composition method
         if (m_compositionMethod != null)
         {
             writer.put(EntryParam.composition, m_compositionMethod);
-        }
+        }        
     }
 
     /**
