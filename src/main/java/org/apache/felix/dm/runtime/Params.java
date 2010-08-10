@@ -55,5 +55,7 @@ public enum Params
     factoryConfigure,
     factoryMethod,
     name,
-    field
+    field,
+    publisher,
+    unpublisher
 }

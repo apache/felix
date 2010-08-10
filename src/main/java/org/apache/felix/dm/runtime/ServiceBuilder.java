@@ -55,8 +55,6 @@ public class ServiceBuilder extends ServiceComponentBuilder
 
             String impl = srvMeta.getString(Params.impl);
             String composition = srvMeta.getString(Params.composition, null);
-            Dictionary<String, Object> serviceProperties = srvMeta.getDictionary(Params.properties, null);
-            String[] provide = srvMeta.getStrings(Params.provide, null);
             String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
             if (factoryMethod == null)
             {
@@ -66,12 +64,33 @@ public class ServiceBuilder extends ServiceComponentBuilder
                 service.setFactory(b.loadClass(impl), factoryMethod);
             }
             service.setComposition(composition);
-            service.setInterface(provide, serviceProperties);
+            
             // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
             addUnamedDependencies(b, dm, service, srvMeta, depsMeta);
             // Creates a ServiceHandler, which will filter all service lifecycle callbacks.
             ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
             service.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
+            
+            // Set the provided services
+            Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
+            String[] services = srvMeta.getStrings(Params.provide, null);
+            String publisherField = srvMeta.getString(Params.publisher, null);
+            String unpublisherField = srvMeta.getString(Params.unpublisher, null);
+            if (publisherField == null) 
+            {
+                service.setInterface(services, properties);
+            }
+            else if (services != null)
+            {
+                // Services will be manually provided by the service itself.
+                ServicePublisher publisher = new ServicePublisher(publisherField,
+                                                                  unpublisherField,
+                                                                  service,
+                                                                  b.getBundleContext(),
+                                                                  services,
+                                                                  properties);
+                publisher.register(dm);
+            }
         }
         else
         {

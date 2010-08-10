@@ -18,12 +18,15 @@
  */
 package org.apache.felix.dm.runtime;
 
+import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Service;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -64,7 +67,7 @@ public abstract class ServiceComponentBuilder
     }
     
     /**
-     * Registers all unamed dependencies into a given service. Named dependencies are
+     * Registers all unnamed dependencies into a given service. Named dependencies are
      * handled differently, and are managed by the ServiceLifecycleHandler class.
      * @throws Exception 
      */
@@ -84,6 +87,5 @@ public abstract class ServiceComponentBuilder
                 s.add(d);
             }
         }
-
     }
 }
