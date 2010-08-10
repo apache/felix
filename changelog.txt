@@ -1,3 +1,37 @@
+Changes from 1.4.0 to 1.6.0
+---------------------------
+
+** Bug
+    * [FELIX-1952] - Factory configured ComponentFactory instances not reconfigured when configuration updated
+    * [FELIX-1997] - Actual configuration might not be reflected in the web console
+    * [FELIX-2006] - If an Error is thrown instantiated a component, the component remains in the Activating state and cannot be managed any longer
+    * [FELIX-2090] - Multiple concurrency issues under heavy "stop/start" load
+    * [FELIX-2091] - AbstractComponentManager.getBundle() may throw NullPointerException
+    * [FELIX-2213] - NPE when modifying properties of lazy (uninstantiated) service
+    * [FELIX-2230] - NPE deactivating service during fw shutdown
+    * [FELIX-2231] - Errors with services in Lazy bundles
+    * [FELIX-2233] - ConfiguredComponentHolder tracks component enablement but not disablement
+    * [FELIX-2288] - Felix SCR API problem/misunderstanding
+    * [FELIX-2289] - Unsynchronized access to map of component instances may block the system
+    * [FELIX-2325] - SCR says that my component is registered twice
+    * [FELIX-2370] - Access to internal data structures for delayed and service factory components not thread safe
+    * [FELIX-2399] - Make ScrService lenient against unexpected configuration data types
+    * [FELIX-2510] - Configuration not provided to components if Configuration Admin is not active while setting up components
+    * [FELIX-2518] - Modified method without arguments not supported
+    * [FELIX-2519] - Declarative Services 1.0 descriptors must fail to validate if 1.1 attributes are declared
+    * [FELIX-2520] - Bind method selection must not expect the component's bundle to import the service interface type
+    * [FELIX-2521] - Method call failures not always handled correctly
+    * [FELIX-2523] - Component must be reactivated even if modified method is declared
+
+** Improvement
+    * [FELIX-2368] - Activate components synchronously
+    * [FELIX-2372] - Improve logging on IllegalStateException getting a service
+    * [FELIX-2526] - Add a property to enable workarounds for CT assumptions
+
+** Sub-task
+    * [FELIX-2534] - Adapt SCR LICENSE and NOTICE files
+
+
 Changes from 1.2.0 to 1.4.0
 ---------------------------
 
@@ -21,6 +55,7 @@ Changes from 1.2.0 to 1.4.0
 
 ** Task
     * [FELIX-1945] - Increase org.apache.felix.scr package export to 1.4
+
 
 Changes from 1.0.8 to 1.2.0
 ---------------------------
@@ -82,6 +117,7 @@ Changes from 1.0.8 to 1.2.0
 ** Task
     * [FELIX-1711] - Remove OSGi library source from SVN and depend on official R4.2 libraries
 
+
 Changes from 1.0.6 to 1.0.8
 ---------------------------
 
@@ -113,12 +149,14 @@ Changes from 1.0.4 to 1.0.6
 ** Improvement
     * [FELIX-668] - SCR OBR description
 
+
 Changes from 1.0.2 to 1.0.4
 ---------------------------
 
 ** Bug
     * [FELIX-624] - Wrong classloader is used to detect bind/unbind methods
     * [FELIX-646] - Reconfiguration of factory components is not possible
+
 
 Changes from 1.0.0 to 1.0.2
 ---------------------------
