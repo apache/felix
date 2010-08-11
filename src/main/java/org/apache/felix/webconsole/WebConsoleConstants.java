@@ -18,6 +18,8 @@
  */
 package org.apache.felix.webconsole;
 
+import java.util.Locale;
+
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
@@ -129,4 +131,24 @@ public interface WebConsoleConstants
      * @since 3.0
      */
     static final String ATTR_CONSOLE_VARIABLE_RESOLVER = "felix.webconsole.variable.resolver";
+
+    /**
+     * The name of the request attribute holding the language {@link Map}
+     * for the request (value is "felix.webconsole.langMap").
+     *
+     * This map contains the web console supported languages, which are automatically detected.
+     * The keys of the map are the language codes, like "en", "en_US" .. and so-on.
+     * The value for each key is the locale user-friendly name - exactly the same as
+     * returned by {@link Locale#getDisplayLanguage()}.
+     *
+     * The automatic detection of languages is very simple. It relies on having a
+     * 'res/flags/[lang].gif' file in the bundle. So translators should not only provide
+     * localized l10n/bundle.properties but also a flag image.
+     *
+     * The image should be obtained from http://famfamfam.com/lab/icons/flags/ and eventually
+     * renamed to the correct locale.
+     *
+     * @since 3.1.2
+     */
+    public static final String ATTR_LANG_MAP = "felix.webconsole.langMap"; //$NON-NLS-1$
 }

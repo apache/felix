@@ -252,3 +252,15 @@ function Xdialog(text) {
 	}
 	return element;
 }
+
+// language selection element
+var langSelect = false;
+$(document).ready(function() {
+	langSelect = $('#langSelect').hover( 
+		function() { $(this).find('.flags').show('blind') },
+		function() { $(this).find('.flags').hide('blind') });
+	langSelect.find('.flags img').click(function() {
+		$.cookies.set('felix.webconsole.locale', $(this).attr('alt'));
+		location.reload();
+	});
+});
