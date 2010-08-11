@@ -354,7 +354,7 @@ public final class WebConsoleUtil
         // shortcut for empty or missing values
         if ( value == null || value.length() == 0 )
         {
-            return null;
+            return value;
         }
 
         try
@@ -375,7 +375,7 @@ public final class WebConsoleUtil
      * is array and will property display it.
      *
      * If the value is byte[] the elements are shown as Hex
-     * 
+     *
      * @param value the value to convert
      * @return the string representation of the value
      */

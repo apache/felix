@@ -56,9 +56,9 @@ public class FelixBundleRepositoryRenderHelper extends AbstractBundleRepositoryR
         RepositoryAdmin admin = ( RepositoryAdmin ) getRepositoryAdmin();
         if ( admin != null )
         {
+            JSONObject json = new JSONObject();
             try
             {
-                JSONObject json = new JSONObject();
                 json.put( "status", admin != null );
                 json.put( "details", details );
 
@@ -76,16 +76,29 @@ public class FelixBundleRepositoryRenderHelper extends AbstractBundleRepositoryR
                     json.append( "resources", toJSON( resources[i], bundles, details ) );
                 }
 
-                return json.toString();
-            }
-            catch ( InvalidSyntaxException e )
-            {
-                logger.log( "Failed to parse filter.", e );
             }
             catch ( JSONException e )
             {
                 logger.log( "Failed to serialize repository to JSON object.", e );
             }
+            catch ( Exception e )
+            {
+                logger.log( "Failed to parse filter '" + filter + "'", e );
+                try
+                {
+                    String reason = "filter=" + filter;
+                    if ( e.getMessage() != null )
+                    {
+                        reason = e.getMessage() + "(" + reason + ")";
+                    }
+                    json.put( "error", reason );
+                }
+                catch ( JSONException je )
+                {
+                    // ignore
+                }
+            }
+            return json.toString();
         }
 
         // fall back to no data

@@ -137,7 +137,14 @@ function renderResource(res) {
         blockElement.appendChild(titleElement);
         titleElement.appendChild(inputElement);
         titleElement.appendChild(text(" "));
-        titleElement.appendChild(text(res.presentationname ? res.presentationname : res.symbolicname));
+        if (res.presentationname) {
+	    titleElement.appendChild(text(res.presentationname));
+	    titleElement.appendChild(text(" ("));
+	    titleElement.appendChild(text(res.symbolicname));
+	    titleElement.appendChild(text(")"));
+	} else {
+	    titleElement.appendChild(text(res.symbolicname));
+	}
         $(titleElement).click(function() {showVersions(res.symbolicname)});
 
         _tr = tr( null, { 'id' : 'row' + _id } , [
@@ -426,11 +433,17 @@ function renderData() {
             $('#detailsTable').removeClass('ui-helper-hidden');
             for (var i in obrData.resources ) {
                 renderDetailedResource( obrData.resources[i] );
-                    }
-        } else {
+            }
+        } else if (obrData.resources) {
             for (var i in obrData.resources ) {
                 renderResource( obrData.resources[i] );
-                    }
+            }
+        } else if (obrData.error) {
+            _tr = tr( "ui-state-error", null , [
+                      td( "ui-state-error-text", { 'colspan': '2' }, 
+                	  [ text(i18n.error + ": " + obrData.error) ] )
+                  ]);
+            resTable.append( _tr );
         }
     } else {
         $('.statline').html(i18n.status_no);

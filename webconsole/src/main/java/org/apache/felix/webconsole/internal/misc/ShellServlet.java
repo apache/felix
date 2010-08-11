@@ -82,7 +82,7 @@ public class ShellServlet extends SimpleWebConsolePlugin implements OsgiManagerP
             pw.print( command == null ? "" : WebConsoleUtil.escapeHtml( command ) );
             pw.println( "</span><br />" );
 
-            if ( command != null && !"".equals( command ) )
+            if ( command != null && command.length() > 0 )
             {
                 ShellService shellService = getShellService();
                 if ( shellService != null )
