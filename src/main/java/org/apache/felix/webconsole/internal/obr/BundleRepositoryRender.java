@@ -221,7 +221,7 @@ public class BundleRepositoryRender extends SimpleWebConsolePlugin implements Os
                     }
                 }
                 sb.append( ")" );
-                filter = sb.toString();
+                filter = (sb.length() > 3) ? sb.toString() : null;
             }
         }
 

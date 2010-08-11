@@ -3,7 +3,8 @@
 var i18n = {
 	status_ok : '${obr.status.ok}',
 	status_no : '${obr.status.no}',
-	selectVersion : '${obr.version.select}'
+	selectVersion : '${obr.version.select}',
+	error : '${obr.error}'
 }
 var obrData = ${__data__};
 </script>
@@ -75,7 +76,7 @@ var obrData = ${__data__};
         <a href="${pluginRoot}?list=z">Z</a>
         <a href="${pluginRoot}?list=-">?</a>
     </span>
-    <input type="text" id="searchField"/>
+    <input type="text" id="searchField" title="${obr.action.search.description}"/>
     <button id="searchBtn">${obr.action.search}</button>
 </div>
 

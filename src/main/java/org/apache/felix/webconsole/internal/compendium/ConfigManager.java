@@ -106,7 +106,7 @@ public class ConfigManager extends ConfigManagerBase
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
 
         // ignore this request if the pid and/or configuration admin is missing
-        if ( pid == null || ca == null )
+        if ( pid == null || pid.length() == 0 || ca == null )
         {
             // should log this here !!
             return;
