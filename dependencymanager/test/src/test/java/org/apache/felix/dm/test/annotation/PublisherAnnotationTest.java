@@ -72,12 +72,7 @@ public class PublisherAnnotationTest extends AnnotationBase
         // Provide the Sequencer service to the "Component" service.
         m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
                                                                      new Hashtable() {{ put("test", "testService"); }}));
-        // Check if the Provider has seen the Provider.
-        m_ensure.waitForStep(2, 10000);
-        // Stop the bundle
-        stopBundle("PublisherAnnotationsTest", context);
-        // And check if the Consumer has been destroyed.
-        m_ensure.waitForStep(3, 10000);
+        m_ensure.waitForStep(4, 10000);
     }
     
     /**
@@ -90,11 +85,21 @@ public class PublisherAnnotationTest extends AnnotationBase
         // Provide the Sequencer service to the "Component" service.
         m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
                                                                      new Hashtable() {{ put("test", "testFactoryService"); }}));
-        // Check if the Provider has seen the Provider.
-        m_ensure.waitForStep(2, 10000);
-        // Stop the bundle
-        stopBundle("PublisherAnnotationsTest", context);
-        // And check if the Consumer has been destroyed.
-        m_ensure.waitForStep(3, 10000);
+        m_ensure.waitForStep(5, 10000);
+    }
+    
+    /**
+     * A Provider that registers its service, using the Publisher annotation, but very early: before
+     * the start callback is invoked ! In this case, we must verify that the runtime will delay the
+     * service registration until the service is fully started.
+     */
+    @Test
+    public void testServiceWithEarlyPublisher(BundleContext context)
+    {
+        DependencyManager m = new DependencyManager(context);
+        // Provide the Sequencer service to the "Component" service.
+        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
+                                                                     new Hashtable() {{ put("test", "testEarlyService"); }}));
+        m_ensure.waitForStep(5, 10000);
     }
 }

@@ -68,6 +68,13 @@ public class ServicePublisher
     {
         Log.instance().log(LogService.LOG_DEBUG, "registering Publisher for services %s", 
                            Arrays.toString(m_services));
+        
+        // First, store the service properties in the service itself. We do this because when
+        // our lifecycle handler will invoke the service's start callback, it will eventually
+        // append the eventual properties returned by the start() method into our current service
+        // properties. 
+        m_srv.setServiceProperties(m_properties);
+        
         Publisher publisher = new Publisher();
         m_srv.add(dm.createServiceDependency()
                   .setService(Runnable.class, "(dm.publisher=" + System.identityHashCode(this) + ")")
@@ -89,29 +96,24 @@ public class ServicePublisher
 
     private class Publisher implements Runnable, ServiceStateListener
     {
+        private boolean m_started; // true if the service has started
+        
         public void run()
         {
             if (m_published.compareAndSet(false, true))
             {
-                try
-                {
-                    Log.instance().log(LogService.LOG_DEBUG, "publishing services %s",
-                                       Arrays.toString(m_services));
+                // Only register the service if it has been started. Otherwise delay the registration
+                // until the service start callback has been invoked.
+                synchronized (this) {
+                    if (! m_started)
+                    {
+                        Log.instance().log(LogService.LOG_DEBUG, "Delaying service publication for services %s (service not yet started)",
+                                           Arrays.toString(m_services));
 
-                    m_registration = m_bc.registerService(m_services, m_srv.getService(), m_properties);
-                }
-                catch (Throwable t)
-                {
-                    m_published.set(false);
-                    if (t instanceof RuntimeException)
-                    {
-                        throw (RuntimeException) t;
-                    }
-                    else
-                    {
-                        throw new RuntimeException("Could not register services", t);
+                        return;
                     }
                 }
+                publish();
             }
         }
 
@@ -121,12 +123,25 @@ public class ServicePublisher
 
         public void started(Service service)
         {
-            // TODO Auto-generated method stub
-
+            synchronized (this)
+            {
+                m_started = true;
+            }
+            if (m_published.get())
+            {
+                // Our runnable has been invoked before the service start callback has been called: 
+                // Now that we are started, we fire the service registration.
+                publish();
+            }
         }
 
         public void stopping(Service service)
         {
+            synchronized (this)
+            {
+                m_started = false;
+            }
+
             if (m_published.compareAndSet(true, false))
             {
                 if (m_registration != null)
@@ -143,6 +158,28 @@ public class ServicePublisher
         public void stopped(Service service)
         {
         }
+        
+        private void publish()
+        {
+            try
+            {
+                Log.instance().log(LogService.LOG_DEBUG, "publishing services %s",
+                                   Arrays.toString(m_services));
+                m_registration = m_bc.registerService(m_services, m_srv.getService(), m_srv.getServiceProperties());
+            }
+            catch (Throwable t)
+            {
+                m_published.set(false);
+                if (t instanceof RuntimeException)
+                {
+                    throw (RuntimeException) t;
+                }
+                else
+                {
+                    throw new RuntimeException("Could not register services", t);
+                }
+            }
+        }
     }
 
     private class Unpublisher implements Runnable
@@ -155,7 +192,6 @@ public class ServicePublisher
                 {
                     Log.instance().log(LogService.LOG_DEBUG, "unpublishing services %s",
                                        Arrays.toString(m_services));
-
                     m_registration.unregister();
                     m_registration = null;
                 }
