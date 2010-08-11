@@ -53,18 +53,18 @@ function guid() {
 
 /* displays a date in the user's local timezone */
 function localTm(time) {
-	return (time ? new Date(time) : new Date()).toLocaleString();
+    return (time ? new Date(time) : new Date()).toLocaleString();
 }
 
 function doRepoAction(action, url) {
-	if ( !url ) {
-		Xalert('Invalid URI: ' + url, 'Error');
-	} else {
-		$.post(pluginRoot, {
-			'action' : action,
-			'url'    : url
-		}, renderData, 'json');
-	}
+    if ( !url ) {
+        Xalert('Invalid URI: ' + url, 'Error');
+    } else {
+        $.post(pluginRoot, {
+            'action' : action,
+            'url'    : url
+        }, renderData, 'json');
+    }
 }
 
 function showDetails( symbolicname, version ) {
@@ -72,7 +72,7 @@ function showDetails( symbolicname, version ) {
 }
 
 function showVersions( symbolicname ) {
-	var _id = symbolicname.replace(/\./g, '_');
+    var _id = symbolicname.replace(/\./g, '_');
     $("#block" + _id).append("<div id='pluginInlineVersions" + _id + "' style='margin-left: 4em'><ul/></div>");
     $("#img" + _id).each(function() {
         $(this).
@@ -99,7 +99,7 @@ function showVersions( symbolicname ) {
 }
 
 function hideVersions( symbolicname ) {
-	var _id = symbolicname.replace(/\./g, '_');
+    var _id = symbolicname.replace(/\./g, '_');
     $("#img" + _id).each(function() {
         $(this).
             removeClass('ui-icon-triangle-1-s').//down
@@ -118,14 +118,14 @@ function hideVersions( symbolicname ) {
 }
 
 function renderResource(res) {
-	// proceed with resource
-	var _id = res.symbolicname.replace(/\./g, '_');
-	var _tr = resTable.find('#row' + _id);
+    // proceed with resource
+    var _id = res.symbolicname.replace(/\./g, '_');
+    var _tr = resTable.find('#row' + _id);
 
-	if (_tr.length == 0) { // not created yet, create it
-	    var blockElement = createElement('span', '', {
+    if (_tr.length == 0) { // not created yet, create it
+        var blockElement = createElement('span', '', {
             id: 'block' + _id
-	    });
+        });
         var titleElement = createElement('span', '', {
             id: 'entry' + _id,
             title: "Show Versions"
@@ -140,12 +140,12 @@ function renderResource(res) {
         titleElement.appendChild(text(res.presentationname ? res.presentationname : res.symbolicname));
         $(titleElement).click(function() {showVersions(res.symbolicname)});
 
-		_tr = tr( null, { 'id' : 'row' + _id } , [
-			td( null, null, [ blockElement ] ),
-			td( null, null, [ text(res.installed ? res.version : '') ] )
-		]);
-		resTable.append( _tr );
-	}
+        _tr = tr( null, { 'id' : 'row' + _id } , [
+            td( null, null, [ blockElement ] ),
+            td( null, null, [ text(res.installed ? res.version : '') ] )
+        ]);
+        resTable.append( _tr );
+    }
 }
 
 function getCapabilitiesByName(res, name) {
@@ -212,7 +212,7 @@ function createDetailedTable(enclosing, name, headers, rows, callback) {
 }
 
 function trim(stringToTrim) {
-	return stringToTrim.replace(/^\s+|\s+$/g,"");
+    return stringToTrim.replace(/^\s+|\s+$/g,"");
 }
 
 function parseSimpleFilter(filter) {
@@ -399,43 +399,43 @@ function renderDetailedResource(res) {
 }
 
 function renderRepository(repo) {
-	var _tr = repoTableTemplate.clone();
-	_tr.find('td:eq(0)').text( repo.name );
-	_tr.find('td:eq(1)').text( repo.url );
-	_tr.find('td:eq(2)').text( localTm(repo.lastModified) );
-	_tr.find('li:eq(0)').click(function() {
-		doRepoAction('refresh', repo.url);
-	});
-	_tr.find('li:eq(1)').click(function() {
-		doRepoAction('delete', repo.url);
-	});
-	repoTable.append(_tr);
+    var _tr = repoTableTemplate.clone();
+    _tr.find('td:eq(0)').text( repo.name );
+    _tr.find('td:eq(1)').text( repo.url );
+    _tr.find('td:eq(2)').text( localTm(repo.lastModified) );
+    _tr.find('li:eq(0)').click(function() {
+        doRepoAction('refresh', repo.url);
+    });
+    _tr.find('li:eq(1)').click(function() {
+        doRepoAction('delete', repo.url);
+    });
+    repoTable.append(_tr);
 }
 
 function renderData() {
-	repoTable.empty();
-	resTable.empty();
-	if ( obrData.status ) {
-		$('.statline').html(i18n.status_ok);
-		ifStatusOK.removeClass('ui-helper-hidden');
-		for (var i in obrData.repositories ) {
-			renderRepository( obrData.repositories[i] );
-		}
-		if (obrData.details) {
-		    $('#resTable').addClass('ui-helper-hidden');
-		    $('#detailsTable').removeClass('ui-helper-hidden');
-		    for (var i in obrData.resources ) {
-			    renderDetailedResource( obrData.resources[i] );
-            }
-		} else {
-		    for (var i in obrData.resources ) {
-			    renderResource( obrData.resources[i] );
-            }
-		}
-	} else {
-		$('.statline').html(i18n.status_no);
-		ifStatusOK.addClass('ui-helper-hidden');
-	}
+    repoTable.empty();
+    resTable.empty();
+    if ( obrData.status ) {
+        $('.statline').html(i18n.status_ok);
+        ifStatusOK.removeClass('ui-helper-hidden');
+        for (var i in obrData.repositories ) {
+            renderRepository( obrData.repositories[i] );
+        }
+        if (obrData.details) {
+            $('#resTable').addClass('ui-helper-hidden');
+            $('#detailsTable').removeClass('ui-helper-hidden');
+            for (var i in obrData.resources ) {
+                renderDetailedResource( obrData.resources[i] );
+                    }
+        } else {
+            for (var i in obrData.resources ) {
+                renderResource( obrData.resources[i] );
+                    }
+        }
+    } else {
+        $('.statline').html(i18n.status_no);
+        ifStatusOK.addClass('ui-helper-hidden');
+    }
 }
 
 
@@ -464,34 +464,34 @@ $.extend({
 });
 
 $(document).ready( function() {
-	repoTable = $('#repoTable tbody');
-	repoTableTemplate = repoTable.find('tr').clone();
-	addRepoUri = $('#addRepoUri');
-	resTable = $('#resTable tbody').empty();
-	searchField = $('#searchField');
-	ifStatusOK = $('#ifStatusOK');
-	
-	var query = $.getUrlVar('query');
-	if (query) {
+    repoTable = $('#repoTable tbody');
+    repoTableTemplate = repoTable.find('tr').clone();
+    addRepoUri = $('#addRepoUri');
+    resTable = $('#resTable tbody').empty();
+    searchField = $('#searchField');
+    ifStatusOK = $('#ifStatusOK');
+    
+    var query = $.getUrlVar('query');
+    if (query) {
         searchField.val(decodeURIComponent(query));
     }
 
-	$('#addRepoBtn').click(function(event) {
+    $('#addRepoBtn').click(function(event) {
         event.preventDefault();
-		doRepoAction('add', addRepoUri.val());
-	});
-	$('#searchBtn').click(function(event) {
+        doRepoAction('add', addRepoUri.val());
+    });
+    $('#searchBtn').click(function(event) {
         event.preventDefault();
         window.location.href = pluginRoot + '?query=' + encodeURIComponent(searchField.val());
-	});
-	searchField.keypress(function(event) {
+    });
+    searchField.keypress(function(event) {
         if (event.keyCode == 13) {
             event.preventDefault();
             $('#searchBtn').click();
         }
-	});
+    });
 
-	renderData();
+    renderData();
     initStaticWidgets();
 });
 
