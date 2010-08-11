@@ -22,10 +22,8 @@ package org.apache.felix.sigil.gogo.junit;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
-import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import org.osgi.service.command.CommandSession;
@@ -38,13 +36,7 @@ public class SigilTestAdapter
     {
         return new TestCase( name )
         {
-            public int countTestCases()
-            {
-                return 1;
-            }
-
-
-            public void run( TestResult result )
+            public void runTest() throws Throwable
             {
                 try
                 {
@@ -52,23 +44,7 @@ public class SigilTestAdapter
                 }
                 catch ( InvocationTargetException e )
                 {
-                    Throwable c = e.getCause();
-                    if ( c instanceof AssertionFailedError )
-                    {
-                        result.addFailure( this, ( AssertionFailedError ) c );
-                    }
-                    else
-                    {
-                        result.addError( this, c );
-                    }
-                }
-                catch ( AssertionFailedError e )
-                {
-                    result.addFailure( this, e );
-                }
-                catch ( Throwable t )
-                {
-                    result.addError( this, t );
+                    throw e.getCause();
                 }
             }
         };
