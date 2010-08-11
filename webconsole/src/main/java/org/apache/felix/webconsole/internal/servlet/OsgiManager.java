@@ -18,11 +18,13 @@ package org.apache.felix.webconsole.internal.servlet;
 
 
 import java.io.IOException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -40,6 +42,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.BrandingPlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -50,6 +53,7 @@ import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -407,6 +411,7 @@ public class OsgiManager extends GenericServlet
             final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale );
 
             // the official request attributes
+            request.setAttribute( WebConsoleConstants.ATTR_LANG_MAP, getLangMap() );
             request.setAttribute( WebConsoleConstants.ATTR_LABEL_MAP, labelMap );
             request.setAttribute( WebConsoleConstants.ATTR_APP_ROOT, request.getContextPath() + request.getServletPath() );
             request.setAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT, request.getContextPath() + request.getServletPath()
@@ -944,6 +949,32 @@ public class OsgiManager extends GenericServlet
             stringConfig.put( key.toString(), String.valueOf( config.get( key ) ) );
         }
         return stringConfig;
+    }
+    
+    private Map langMap;
+
+    private final Map getLangMap()
+    {
+        if (null != langMap) return langMap;
+        final Map map = new HashMap();
+        final Bundle bundle = bundleContext.getBundle();
+        final Enumeration e = bundle.findEntries("res/flags", null, false);
+        while (e != null && e.hasMoreElements())
+        {
+            final URL img = (URL) e.nextElement();
+            final String name = FilenameUtils.getBaseName(img.getFile());
+            try
+            {
+                final String locale = new Locale(name).getDisplayLanguage();
+                map.put(name, null != locale ? locale : name);
+            }
+            catch (Throwable t)
+            {
+                t.printStackTrace();
+                /* ignore invalid locale? */
+            }
+        }
+        return langMap = map;
     }
 
     static class SecurityProvider implements WebConsoleSecurityProvider {

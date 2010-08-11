@@ -614,9 +614,37 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             pw.println("<div id='technav' class='ui-widget ui-widget-header'>");
             for ( Iterator li = map.values().iterator(); li.hasNext(); )
             {
+                pw.print(' ');
                 pw.println( li.next() );
             }
             pw.println( "</div>" );
+
+        }
+
+        // render lang-box
+        Map langMap = (Map) request.getAttribute(WebConsoleConstants.ATTR_LANG_MAP);
+        if (null != langMap && !langMap.isEmpty())
+        {
+            pw.println("<div id='langSelect'>"); //$NON-NLS-1$
+            pw.println(" <span class='ui-icon ui-icon-comment'>&nbsp;</span>"); //$NON-NLS-1$
+            pw.println(" <span class='flags ui-helper-hidden'>"); //$NON-NLS-1$
+            for (Iterator li = langMap.keySet().iterator(); li.hasNext();)
+            {
+                // <img src="us.gif" alt="en" title="English"/>
+                final Object l = li.next();
+                pw.print("  <img src='"); //$NON-NLS-1$
+                pw.print(appRoot);
+                pw.print("/res/flags/"); //$NON-NLS-1$
+                pw.print(l);
+                pw.print(".gif' alt='"); //$NON-NLS-1$
+                pw.print(l);
+                pw.print("' title='"); //$NON-NLS-1$
+                pw.print(langMap.get(l));
+                pw.println("'/>"); //$NON-NLS-1$
+            }
+
+            pw.println(" </span>"); //$NON-NLS-1$
+            pw.println("</div>"); //$NON-NLS-1$
         }
     }
 
@@ -709,7 +737,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * Note: This method is intended to be used internally by the Web Console
      * to update the log level according to the Web Console configuration.
      *
-     * @param logLevel the maximum allowed log level. If message is logged with 
+     * @param logLevel the maximum allowed log level. If message is logged with
      *        lower level it will not be forwarded to the logger.
      */
     public static final void setLogLevel( int logLevel )

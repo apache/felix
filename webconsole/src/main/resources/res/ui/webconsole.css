@@ -170,3 +170,6 @@ ul.icons li {
 	float: left;
 	list-style: none
 }
+/* language selection element */
+#langSelect { position: absolute;	top: 5px; right: 5px }
+#langSelect img   { display: block; padding: 2px 0 }
