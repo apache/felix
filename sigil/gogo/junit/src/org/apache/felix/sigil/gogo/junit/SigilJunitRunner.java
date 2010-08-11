@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -60,11 +62,16 @@ public class SigilJunitRunner
         Option opts = Options.compile( usage ).parse( args );
         
         boolean quiet = opts.isSet( "quiet" );
-        String d = opts.isSet( "directory" ) ? opts.get( "directory" ) : null;
+        Object d = opts.isSet( "directory" ) ? opts.getObject( "directory" ) : null;
         File dir = null;
         if (d != null)
         {
-            dir = new File(d);
+            if ( d instanceof File ) {
+                dir = ( File ) d;
+            }
+            else {
+                dir = new File(d.toString());                
+            }
             dir.mkdirs();
             if (!quiet) {
                 System.out.println("Writing results to " + dir.getAbsolutePath());
@@ -217,17 +224,43 @@ public class SigilJunitRunner
      */
     private TestSuite[] coerceTest( Object o )
     {
+        ArrayList<TestSuite> tests = new ArrayList<TestSuite>();
+        if (o instanceof String ) {
+            return findTests(( String ) o);
+        }
+        else if ( o instanceof Iterable ) {
+            Iterable i = ( Iterable ) o;
+            for ( Object t : i ) {
+                tests.add(doCoerce(t));
+            }
+        }
+        // not sure if this next test is necessary - does Iterable capture it?
+        else if ( o.getClass().isArray() ) {
+            for (int i = 0; i < Array.getLength( o ); i++ ) {
+                Object t = Array.get( o, i );
+                tests.add(doCoerce(t));
+            }
+        }
+        else {
+            tests.add( doCoerce(o) );
+        }
+        return tests.toArray( new TestSuite[tests.size()] );
+    }
+
+    /**
+     * @param o
+     * @return
+     */
+    private TestSuite doCoerce( Object o )
+    {
         if ( o instanceof TestCase ) {
             TestCase t = ( TestCase ) o;
             TestSuite suite = new TestSuite(t.getName());
             suite.addTest(t);
-            return new TestSuite[] { suite };
+            return suite;
         }
         else if (o instanceof TestSuite ) {
-            return new TestSuite[] { ( TestSuite ) o };
-        }
-        else if (o instanceof String) {
-            return findTests(( String ) o);
+            return ( TestSuite ) o;
         }
         else {
             throw new IllegalArgumentException("Unexpected test type " + o.getClass().getName() );
