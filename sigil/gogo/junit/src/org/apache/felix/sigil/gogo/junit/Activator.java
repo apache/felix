@@ -18,55 +18,66 @@
  */
 package org.apache.felix.sigil.gogo.junit;
 
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Map;
+
+import junit.framework.Assert;
 
 import org.apache.felix.sigil.common.junit.server.JUnitService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
 import org.osgi.service.command.CommandProcessor;
 import org.osgi.util.tracker.ServiceTracker;
 
+
 public class Activator implements BundleActivator
 {
 
-    public void start(final BundleContext ctx) throws Exception
+    public void start( final BundleContext ctx ) throws Exception
     {
-        final Hashtable props = new Hashtable();
-        props.put(CommandProcessor.COMMAND_SCOPE, "sigil");
-        props.put(CommandProcessor.COMMAND_FUNCTION, new String[] { "junit" });
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
+        props.put( CommandProcessor.COMMAND_SCOPE, "sigil" );
+        props.put( CommandProcessor.COMMAND_FUNCTION, new String[]
+            { "runTests", "listTests" } );
 
-        ServiceTracker tracker = new ServiceTracker(ctx, JUnitService.class.getName(),
-            null)
-        {
-            private Map<ServiceReference, ServiceRegistration> regs;
-
-            @Override
-            public Object addingService(ServiceReference reference)
-            {
-                JUnitService svc = (JUnitService) super.addingService(reference);
-                ServiceRegistration reg = ctx.registerService(SigilJunit.class.getName(),
-                    new SigilJunit(svc), props);
-                regs.put(reference, reg);
-                return svc;
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service)
-            {
-                ServiceRegistration reg = regs.remove(reference);
-                reg.unregister();
-                super.removedService(reference, service);
-            }
-
-        };
+        ServiceTracker tracker = new ServiceTracker( ctx, JUnitService.class.getName(), null );
         tracker.open();
+
+        ctx.registerService( SigilJunitRunner.class.getName(), new SigilJunitRunner( tracker ), props );
+
+        props.put( CommandProcessor.COMMAND_FUNCTION, new String[]
+            { "newTest", "newTestSuite" } );
+        ctx.registerService( SigilTestAdapter.class.getName(), new SigilTestAdapter(), props );
+
+        props.put( CommandProcessor.COMMAND_SCOPE, "junit" );
+        props.put( CommandProcessor.COMMAND_FUNCTION, getAssertMethods() );
+        ctx.registerService( Assert.class.getName(), new Assert()
+        {
+        }, props );
     }
 
-    public void stop(BundleContext ctx) throws Exception
+
+    /**
+     * @return
+     */
+    private String[] getAssertMethods()
+    {
+        ArrayList<String> list = new ArrayList<String>();
+        for ( Method m : Assert.class.getDeclaredMethods() )
+        {
+            if ( Modifier.isPublic( m.getModifiers() ) ) {
+                list.add( m.getName() );
+            }
+        }
+        return list.toArray( new String[list.size()] );
+    }
+
+
+    public void stop( BundleContext ctx ) throws Exception
     {
     }
 
