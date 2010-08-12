@@ -54,7 +54,8 @@ import org.osgi.framework.Bundle;
 public final class LicenseServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     // common names (without extension) of the license files.
-    static final String LICENSE_FILES[] =  { "README", "DISCLAIMER", "LICENSE", "NOTICE" };
+    static final String LICENSE_FILES[] =
+        { "README", "DISCLAIMER", "LICENSE", "NOTICE", "DEPENDENCIES" };
 
     static final String LABEL = "licenses";
     static final String TITLE = "%license.pluginTitle";
