@@ -139,6 +139,20 @@
     </dependencies>
     <build>
         <directory>${bundle.build.name}</directory>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+            </resource>
+            <resource>
+                <targetPath>META-INF</targetPath>
+                <directory>${basedir}</directory>
+                <includes>
+                    <include>LICENSE</include>
+                    <include>NOTICE</include>
+                    <include>DEPENDENCIES</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
