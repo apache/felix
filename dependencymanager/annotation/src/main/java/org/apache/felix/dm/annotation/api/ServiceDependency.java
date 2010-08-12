@@ -118,34 +118,48 @@ public @interface ServiceDependency
      * 
      * <blockquote><pre>
      *  &#47;**
-     *    * A Service whose service dependency filter/require attribute may be configured from ConfigAdmin
+     *    * A Service whose service dependency "otherService" filter is configured from ConfigAdmin
      *    *&#47;
      *  &#64;Service
      *  class X {
      *      private Dictionary m_config;
      *      
+     *      &#47;**
+     *       * Initialize our service from config ... and store the config for later usage (from our init method)
+     *       *&#47; 
      *      &#64;ConfigurationDependency(pid="MyPid")
      *      void configure(Dictionary conf) {
-     *           // Initialize our service from config ...
-     *           
-     *           // And store the config for later usage (from our init method)
      *           m_config = config;
      *      }
      * 
-     *      // This named dependency will be configured by our init method (see below).
-     *      &#64;ServiceDependency(name="dependency1") 
-     *      void bindOtherService(OtherService other) {
-     *         // the filter and required flag will be configured from our init method.
-     *      }
-
-     *      // The returned Map will be used to configure our "dependency1" Dependency.
+     *      &#47;**
+     *       * All unnamed dependencies are injected: we can now configure other named
+     *       * dependencies, using the already injected configuration.
+     *       * The returned Map will be used to configure our "otherService" Dependency.
+     *       *&#47;
      *      &#64;Init
      *      Map init() {
      *          return new HashMap() {{
-     *              put("dependency1.filter", m_config.get("filter"));
-     *              put("dependency1.required", m_config.get("required"));
+     *              put("otherService.filter", m_config.get("filter"));
+     *              put("otherService.required", m_config.get("required"));
      *          }};
      *      } 
+     *
+     *      &#47;**
+     *       * This named dependency filter/required flag will be configured by our init method (see above).
+     *       *&#47;
+     *      &#64;ServiceDependency(name="otherService") 
+     *      void bindOtherService(OtherService other) {
+     *      }
+     *      
+     *      &#47;**
+     *       * All dependencies are injected and our service is now ready to be published.
+     *       * Notice that you can also use the publisher service attribute if you need 
+     *       * to take control on service exposition.
+     *       *&#47;
+     *      &#64;Start
+     *      void start() {
+     *      }
      *  }
      *  </pre></blockquote>
      */
