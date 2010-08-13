@@ -29,7 +29,7 @@ public enum Params
     stop,
     destroy,
     impl,
-    provide,
+    provides,
     properties,
     composition,
     service,

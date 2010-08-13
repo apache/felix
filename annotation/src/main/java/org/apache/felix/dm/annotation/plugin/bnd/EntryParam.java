@@ -10,7 +10,7 @@ public enum EntryParam
     stop, 
     destroy, 
     impl, 
-    provide, 
+    provides, 
     properties, 
     composition, 
     service, 
