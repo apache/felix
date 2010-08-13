@@ -9,7 +9,5 @@
 
 - annotation:
 
-  * implement missing services
-  * implement missing dependencies
-  * implement property meta data
+  * resource dependency: allow to specify an URL instead of the filter. Fix javadoc
 
