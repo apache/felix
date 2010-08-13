@@ -73,7 +73,7 @@ public class ServiceBuilder extends ServiceComponentBuilder
             
             // Set the provided services
             Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
-            String[] services = srvMeta.getStrings(Params.provide, null);
+            String[] services = srvMeta.getStrings(Params.provides, null);
             String publisherField = srvMeta.getString(Params.publisher, null);
             String unpublisherField = srvMeta.getString(Params.unpublisher, null);
             if (publisherField == null) 

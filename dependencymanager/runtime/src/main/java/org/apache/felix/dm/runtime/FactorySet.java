@@ -149,13 +149,13 @@ public class FactorySet extends AbstractSet<Dictionary>
      * @param b the bundle containing the Service annotated with the factory attribute
      * @param impl The Service implementation class
      * @param serviceProperties The Service properties
-     * @param provide The Services provided by this Service
+     * @param provides The Services provided by this Service
      * @param factoryConfigure The configure callback invoked in order to pass configurations added in this Set.
      */
     public FactorySet(Bundle b, MetaData srvMeta, List<MetaData> depsMeta)
     {
         m_serviceProperties = srvMeta.getDictionary(Params.properties, null);
-        m_provide = srvMeta.getStrings(Params.provide, null);
+        m_provide = srvMeta.getStrings(Params.provides, null);
         m_configure = srvMeta.getString(Params.factoryConfigure, null);
         m_bundle = b;
         m_srvMeta = srvMeta;

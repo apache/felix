@@ -263,8 +263,8 @@ public class AnnotationCollector extends ClassDataCollector
         // properties attribute
         parseProperties(annotation, EntryParam.properties, writer);
 
-        // provide attribute
-        writer.putClassArray(annotation, EntryParam.provide, m_interfaces);
+        // provides attribute
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
 
         // factorySet attribute
         writer.putString(annotation, EntryParam.factorySet, null);

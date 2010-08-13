@@ -27,7 +27,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 /**
  * Service using an annotated Temporal Service dependendency.
  */
-@Service(provide = {})
+@Service(provides = {})
 public class TemporalTest implements Runnable
 {
     Thread m_thread;
