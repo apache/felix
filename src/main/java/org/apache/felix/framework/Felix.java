@@ -116,20 +116,17 @@ public class Felix extends BundleImpl implements Framework
     // be acquired before locks with lower priority.
     private final Object[] m_installRequestLock_Priority1 = new Object[0];
 
-    // Maps a bundle location to a bundle.
-    private HashMap m_installedBundleMap;
-    private SortedMap m_installedBundleIndex;
-    // This lock must be acquired to modify m_installedBundleMap;
-    // to help avoid deadlock this lock as priority 2 and should
-    // be acquired before locks with lower priority.
-    private final Object[] m_installedBundleLock_Priority2 = new Object[0];
-
+    // Contains two maps, one mapping a String bundle location to a bundle
+    // and the other mapping a Long bundle identifier to a bundle.
+    // CONCURRENCY: Access guarded by the global lock for writes,
+    // but no lock for reads since it is copy on write.
+    private volatile Map[] m_installedBundles;
+    private static final int LOCATION_MAP_IDX = 0;
+    private static final int IDENTIFIER_MAP_IDX = 1;
     // An array of uninstalled bundles before a refresh occurs.
-    private BundleImpl[] m_uninstalledBundles = null;
-    // This lock must be acquired to modify m_uninstalledBundles;
-    // to help avoid deadlock this lock as priority 3 and should
-    // be acquired before locks with lower priority.
-    private final Object[] m_uninstalledBundlesLock_Priority3 = new Object[0];
+    // CONCURRENCY: Access guarded by the global lock for writes,
+    // but no lock for reads since it is copy on write.
+    private volatile List<BundleImpl> m_uninstalledBundles;
 
     // Framework's active start level.
     private volatile int m_activeStartLevel = FelixConstants.FRAMEWORK_INACTIVE_STARTLEVEL;
@@ -617,12 +614,16 @@ public class Felix extends BundleImpl implements Framework
                 }
 
                 // Initialize installed bundle data structures.
-                m_installedBundleMap = new HashMap();
-                m_installedBundleIndex = new TreeMap();
+                Map[] maps = new Map[] {
+                    new HashMap<String, BundleImpl>(1),
+                    new TreeMap<Long, BundleImpl>()
+                };
+                m_uninstalledBundles = new ArrayList<BundleImpl>(0);
 
                 // Add the system bundle to the set of installed bundles.
-                m_installedBundleMap.put(_getLocation(), this);
-                m_installedBundleIndex.put(new Long(0), this);
+                maps[LOCATION_MAP_IDX].put(_getLocation(), this);
+                maps[IDENTIFIER_MAP_IDX].put(new Long(0), this);
+                m_installedBundles = maps;
 
                 // Manually resolve the system bundle, which will cause its
                 // state to be set to RESOLVED.
@@ -684,7 +685,6 @@ public class Felix extends BundleImpl implements Framework
                     }
                     catch (Exception ex)
                     {
-ex.printStackTrace();
                         fireFrameworkEvent(FrameworkEvent.ERROR, this, ex);
                         try
                         {
@@ -1060,12 +1060,25 @@ ex.printStackTrace();
             // active start level.
             boolean lowering = (m_targetStartLevel < m_activeStartLevel);
 
-            synchronized (m_installedBundleLock_Priority2)
+            // Acquire global lock.
+            boolean locked = acquireGlobalLock();
+            if (!locked)
+            {
+                // If the calling thread holds bundle locks, then we might not
+                // be able to get the global lock.
+                throw new IllegalStateException(
+                    "Unable to acquire global lock to create bundle snapshot.");
+            }
+            try
             {
                 // Get a snapshot of all installed bundles.
                 bundles = getBundles();
                 // Sort the bundles according to sort level for processing.
                 Arrays.sort(bundles, new BundleComparator(lowering));
+            }
+            finally
+            {
+                releaseGlobalLock();
             }
 
             // Stop or start the bundles according to the start level.
@@ -1931,7 +1944,7 @@ ex.printStackTrace();
                 boolean wasExtension = bundle.isExtension();
                 try
                 {
-// REFACTOR - This adds the module to the resolver state, but should we do the
+// TODO: REFACTOR - This adds the module to the resolver state, but should we do the
 //            security check first?
                     bundle.revise(updateLocation, is);
                 }
@@ -2283,23 +2296,44 @@ ex.printStackTrace();
 
             // Remove the bundle from the installed map.
             BundleImpl target = null;
-            synchronized (m_installedBundleLock_Priority2)
+            // Acquire global lock.
+            boolean locked = acquireGlobalLock();
+            if (!locked)
             {
-                target = (BundleImpl) m_installedBundleMap.remove(bundle._getLocation());
-                m_installedBundleIndex.remove(new Long(target.getBundleId()));
+                // If the calling thread holds bundle locks, then we might not
+                // be able to get the global lock.
+                throw new IllegalStateException(
+                    "Unable to acquire global lock to remove bundle.");
+            }
+            try
+            {
+                // Use a copy-on-write approach to remove the bundle
+                // from the installed maps.
+                Map[] maps = new Map[] {
+                    new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
+                    new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
+                };
+                target = (BundleImpl) maps[LOCATION_MAP_IDX].remove(bundle._getLocation());
+                maps[IDENTIFIER_MAP_IDX].remove(new Long(target.getBundleId()));
+                m_installedBundles = maps;
+
+                // Put the uninstalled bundle into the uninstalled
+                // list for subsequent refreshing.
+                if (target != null)
+                {
+                    // Set the bundle's persistent state to uninstalled.
+                    bundle.setPersistentStateUninstalled();
+
+                    // Put bundle in uninstalled bundle array.
+                    rememberUninstalledBundle(bundle);
+                }
+            }
+            finally
+            {
+                releaseGlobalLock();
             }
 
-            // Finally, put the uninstalled bundle into the
-            // uninstalled list for subsequent refreshing.
-            if (target != null)
-            {
-                // Set the bundle's persistent state to uninstalled.
-                bundle.setPersistentStateUninstalled();
-
-                // Put bundle in uninstalled bundle array.
-                rememberUninstalledBundle(bundle);
-            }
-            else
+            if (target == null)
             {
                 m_logger.log(
                     Logger.LOG_ERROR, "Unable to remove bundle from installed map!");
@@ -2545,10 +2579,30 @@ ex.printStackTrace();
                 bundle.setLastModified(System.currentTimeMillis());
             }
 
-            synchronized (m_installedBundleLock_Priority2)
+            // Acquire global lock.
+            boolean locked = acquireGlobalLock();
+            if (!locked)
             {
-                m_installedBundleMap.put(location, bundle);
-                m_installedBundleIndex.put(new Long(bundle.getBundleId()), bundle);
+                // If the calling thread holds bundle locks, then we might not
+                // be able to get the global lock.
+                throw new IllegalStateException(
+                    "Unable to acquire global lock to add bundle.");
+            }
+            try
+            {
+                // Use a copy-on-write approach to add the bundle
+                // to the installed maps.
+                Map[] maps = new Map[] {
+                    new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
+                    new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
+                };
+                maps[LOCATION_MAP_IDX].put(location, bundle);
+                maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
+                m_installedBundles = maps;
+            }
+            finally
+            {
+                releaseGlobalLock();
             }
 
             if (bundle.isExtension())
@@ -2591,10 +2645,7 @@ ex.printStackTrace();
     **/
     Bundle getBundle(String location)
     {
-        synchronized (m_installedBundleLock_Priority2)
-        {
-            return (Bundle) m_installedBundleMap.get(location);
-        }
+        return (Bundle) m_installedBundles[LOCATION_MAP_IDX].get(location);
     }
 
     /**
@@ -2607,25 +2658,21 @@ ex.printStackTrace();
     **/
     Bundle getBundle(long id)
     {
-        synchronized (m_installedBundleLock_Priority2)
+        BundleImpl bundle = (BundleImpl)
+            m_installedBundles[IDENTIFIER_MAP_IDX].get(new Long(id));
+        if (bundle != null)
         {
-            BundleImpl bundle = (BundleImpl) m_installedBundleIndex.get(new Long(id));
-            if (bundle != null)
-            {
-                return bundle;
-            }
+            return bundle;
         }
 
-        synchronized (m_uninstalledBundlesLock_Priority3)
+        List<BundleImpl> uninstalledBundles = m_uninstalledBundles;
+        for (int i = 0;
+            (uninstalledBundles != null) && (i < uninstalledBundles.size());
+            i++)
         {
-            for (int i = 0;
-                (m_uninstalledBundles != null) && (i < m_uninstalledBundles.length);
-                i++)
+            if (uninstalledBundles.get(i).getBundleId() == id)
             {
-                if (m_uninstalledBundles[i].getBundleId() == id)
-                {
-                    return m_uninstalledBundles[i];
-                }
+                return uninstalledBundles.get(i);
             }
         }
 
@@ -2641,16 +2688,12 @@ ex.printStackTrace();
     **/
     Bundle[] getBundles()
     {
-        synchronized (m_installedBundleLock_Priority2)
+        Map bundles = m_installedBundles[IDENTIFIER_MAP_IDX];
+        if (bundles.isEmpty())
         {
-            if (m_installedBundleMap.size() == 0)
-            {
-                return null;
-            }
-
-            return (Bundle[]) m_installedBundleIndex.values().toArray(
-                new Bundle[m_installedBundleIndex.size()]);
+            return null;
         }
+        return (Bundle[]) bundles.values().toArray(new Bundle[bundles.size()]);
     }
 
     void addBundleListener(Bundle bundle, BundleListener l)
@@ -3129,22 +3172,24 @@ ex.printStackTrace();
         else
         {
             // To create a list of all exported packages, we must look
-            // in the installed and uninstalled sets of bundles. To
-            // ensure a somewhat consistent view, we will gather all
-            // of this information from within the installed bundle
-            // lock.
-            synchronized (m_installedBundleLock_Priority2)
+            // in the installed and uninstalled sets of bundles.
+            boolean locked = acquireGlobalLock();
+            if (!locked)
+            {
+                // If the calling thread holds bundle locks, then we might not
+                // be able to get the global lock.
+                throw new IllegalStateException(
+                    "Unable to acquire global lock to retrieve exported packages.");
+            }
+            try
             {
                 // First get exported packages from uninstalled bundles.
-                synchronized (m_uninstalledBundlesLock_Priority3)
+                for (int bundleIdx = 0;
+                    (m_uninstalledBundles != null) && (bundleIdx < m_uninstalledBundles.size());
+                    bundleIdx++)
                 {
-                    for (int bundleIdx = 0;
-                        (m_uninstalledBundles != null) && (bundleIdx < m_uninstalledBundles.length);
-                        bundleIdx++)
-                    {
-                        BundleImpl bundle = m_uninstalledBundles[bundleIdx];
-                        getExportedPackages(bundle, list);
-                    }
+                    BundleImpl bundle = m_uninstalledBundles.get(bundleIdx);
+                    getExportedPackages(bundle, list);
                 }
 
                 // Now get exported packages from installed bundles.
@@ -3154,6 +3199,10 @@ ex.printStackTrace();
                     BundleImpl bundle = (BundleImpl) bundles[bundleIdx];
                     getExportedPackages(bundle, list);
                 }
+            }
+            finally
+            {
+                releaseGlobalLock();
             }
         }
 
@@ -3300,16 +3349,13 @@ ex.printStackTrace();
                 List list = new ArrayList();
 
                 // Add all unresolved bundles to the list.
-                synchronized (m_installedBundleLock_Priority2)
+                Iterator iter = m_installedBundles[LOCATION_MAP_IDX].values().iterator();
+                while (iter.hasNext())
                 {
-                    Iterator iter = m_installedBundleMap.values().iterator();
-                    while (iter.hasNext())
+                    BundleImpl bundle = (BundleImpl) iter.next();
+                    if (bundle.getState() == Bundle.INSTALLED)
                     {
-                        BundleImpl bundle = (BundleImpl) iter.next();
-                        if (bundle.getState() == Bundle.INSTALLED)
-                        {
-                            list.add(bundle);
-                        }
+                        list.add(bundle);
                     }
                 }
 
@@ -3395,27 +3441,21 @@ ex.printStackTrace();
             List list = new ArrayList();
 
             // First add all uninstalled bundles.
-            synchronized (m_uninstalledBundlesLock_Priority3)
+            for (int i = 0;
+                (m_uninstalledBundles != null) && (i < m_uninstalledBundles.size());
+                i++)
             {
-                for (int i = 0;
-                    (m_uninstalledBundles != null) && (i < m_uninstalledBundles.length);
-                    i++)
-                {
-                    list.add(m_uninstalledBundles[i]);
-                }
+                list.add(m_uninstalledBundles.get(i));
             }
 
             // Then add all updated bundles.
-            synchronized (m_installedBundleLock_Priority2)
+            Iterator iter = m_installedBundles[LOCATION_MAP_IDX].values().iterator();
+            while (iter.hasNext())
             {
-                Iterator iter = m_installedBundleMap.values().iterator();
-                while (iter.hasNext())
+                BundleImpl bundle = (BundleImpl) iter.next();
+                if (bundle.isRemovalPending())
                 {
-                    BundleImpl bundle = (BundleImpl) iter.next();
-                    if (bundle.isRemovalPending())
-                    {
-                        list.add(bundle);
-                    }
+                    list.add(bundle);
                 }
             }
 
@@ -4285,19 +4325,19 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
 
             // Delete uninstalled bundles.
             for (int i = 0;
-                (m_uninstalledBundles != null) && (i < m_uninstalledBundles.length);
+                (m_uninstalledBundles != null) && (i < m_uninstalledBundles.size());
                 i++)
             {
                 try
                 {
-                    m_uninstalledBundles[i].closeAndDelete();
+                    m_uninstalledBundles.get(i).closeAndDelete();
                 }
                 catch (Exception ex)
                 {
                     m_logger.log(
                         Logger.LOG_ERROR,
                         "Unable to remove "
-                        + m_uninstalledBundles[i]._getLocation(), ex);
+                        + m_uninstalledBundles.get(i)._getLocation(), ex);
                 }
             }
 
@@ -4499,76 +4539,65 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
 
     private void rememberUninstalledBundle(BundleImpl bundle)
     {
-        synchronized (m_uninstalledBundlesLock_Priority3)
+        boolean locked = acquireGlobalLock();
+        if (!locked)
+        {
+            // If the calling thread holds bundle locks, then we might not
+            // be able to get the global lock.
+            throw new IllegalStateException(
+                "Unable to acquire global lock to record uninstalled bundle.");
+        }
+        try
         {
             // Verify that the bundle is not already in the array.
             for (int i = 0;
-                (m_uninstalledBundles != null) && (i < m_uninstalledBundles.length);
+                (m_uninstalledBundles != null) && (i < m_uninstalledBundles.size());
                 i++)
             {
-                if (m_uninstalledBundles[i] == bundle)
+                if (m_uninstalledBundles.get(i) == bundle)
                 {
                     return;
                 }
             }
 
-            if (m_uninstalledBundles != null)
-            {
-                BundleImpl[] newBundles =
-                    new BundleImpl[m_uninstalledBundles.length + 1];
-                System.arraycopy(m_uninstalledBundles, 0,
-                    newBundles, 0, m_uninstalledBundles.length);
-                newBundles[m_uninstalledBundles.length] = bundle;
-                m_uninstalledBundles = newBundles;
-            }
-            else
-            {
-                m_uninstalledBundles = new BundleImpl[] { bundle };
-            }
+            // Use a copy-on-write approach to add the bundle
+            // to the uninstalled list.
+            List<BundleImpl> uninstalledBundles = new ArrayList(m_uninstalledBundles);
+            uninstalledBundles.add(bundle);
+            m_uninstalledBundles = uninstalledBundles;
+        }
+        finally
+        {
+            releaseGlobalLock();
         }
     }
 
     private void forgetUninstalledBundle(BundleImpl bundle)
     {
-        synchronized (m_uninstalledBundlesLock_Priority3)
+        boolean locked = acquireGlobalLock();
+        if (!locked)
+        {
+            // If the calling thread holds bundle locks, then we might not
+            // be able to get the global lock.
+            throw new IllegalStateException(
+                "Unable to acquire global lock to release uninstalled bundle.");
+        }
+        try
         {
             if (m_uninstalledBundles == null)
             {
                 return;
             }
 
-            int idx = -1;
-            for (int i = 0; i < m_uninstalledBundles.length; i++)
-            {
-                if (m_uninstalledBundles[i] == bundle)
-                {
-                    idx = i;
-                    break;
-                }
-            }
-
-            if (idx >= 0)
-            {
-                // If this is the only bundle, then point to empty list.
-                if ((m_uninstalledBundles.length - 1) == 0)
-                {
-                    m_uninstalledBundles = new BundleImpl[0];
-                }
-                // Otherwise, we need to do some array copying.
-                else
-                {
-                    BundleImpl[] newBundles =
-                        new BundleImpl[m_uninstalledBundles.length - 1];
-                    System.arraycopy(m_uninstalledBundles, 0, newBundles, 0, idx);
-                    if (idx < newBundles.length)
-                    {
-                        System.arraycopy(
-                            m_uninstalledBundles, idx + 1,
-                            newBundles, idx, newBundles.length - idx);
-                    }
-                    m_uninstalledBundles = newBundles;
-                }
-            }
+            // Use a copy-on-write approach to remove the bundle
+            // from the uninstalled list.
+            List<BundleImpl> uninstalledBundles = new ArrayList(m_uninstalledBundles);
+            uninstalledBundles.remove(bundle);
+            m_uninstalledBundles = uninstalledBundles;
+        }
+        finally
+        {
+            releaseGlobalLock();
         }
     }
 
