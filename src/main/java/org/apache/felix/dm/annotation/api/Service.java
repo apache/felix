@@ -136,7 +136,7 @@ public @interface Service
     /**
      * Sets list of provided interfaces. By default, the directly implemented interfaces are provided.
      */
-    Class<?>[] provide() default {};
+    Class<?>[] provides() default {};
 
     /**
      * Sets list of provided service properties.
