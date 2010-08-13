@@ -35,7 +35,7 @@ import org.osgi.service.log.LogService;
  * To create a Dictionary Service, you have to go the the web console and define a "Dictionary Services" factory
  * configuration instance, which will fire an instantiation of the corresponding dictionary service.
  */
-@Service(provide={SpellChecker.class}, 
+@Service(provides={SpellChecker.class}, 
          properties={@Property(name=CommandProcessor.COMMAND_SCOPE, value="dmsample.annotation"),
                      @Property(name=CommandProcessor.COMMAND_FUNCTION, values={"spellcheck"})})
 public class SpellChecker
