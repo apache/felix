@@ -42,11 +42,11 @@ public class FactoryConfigurationAdapterServiceBuilder extends ServiceComponentB
         Class<?> implClass = b.loadClass(srvMeta.getString(Params.impl));
         String factoryPid = srvMeta.getString(Params.factoryPid);
         String updated = srvMeta.getString(Params.updated);
-        String[] services = srvMeta.getStrings(Params.service, null);
+        String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         Service srv = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate)
-                        .setInterface(services, properties);
+                        .setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {

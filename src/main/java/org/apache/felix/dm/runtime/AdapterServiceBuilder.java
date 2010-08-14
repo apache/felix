@@ -44,12 +44,12 @@ public class AdapterServiceBuilder extends ServiceComponentBuilder
         throws Exception
     {
         Class<?> adapterImplClass = b.loadClass(srvMeta.getString(Params.impl));
-        String[] adapterService = srvMeta.getStrings(Params.adapterService, null);
-        Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.adapterProperties, null);
+        String[] provides = srvMeta.getStrings(Params.provides, null);
+        Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.properties, null);
         Class<?> adapteeService = b.loadClass(srvMeta.getString(Params.adapteeService));
         String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);     
         Service service = dm.createAdapterService(adapteeService, adapteeFilter)
-                            .setInterface(adapterService, adapterProperties);
+                            .setInterface(provides, adapterProperties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {

@@ -42,11 +42,11 @@ public class BundleAdapterServiceBuilder extends ServiceComponentBuilder
         int stateMask = srvMeta.getInt(Params.stateMask, Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE);
         String filter = srvMeta.getString(Params.filter, null);
         Class<?> adapterImplClass = b.loadClass(srvMeta.getString(Params.impl));
-        String[] service = srvMeta.getStrings(Params.service, null);
+        String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         Service srv = dm.createBundleAdapterService(stateMask, filter, propagate)
-                            .setInterface(service, properties);
+                            .setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
