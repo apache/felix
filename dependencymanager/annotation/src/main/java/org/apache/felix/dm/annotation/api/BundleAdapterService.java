@@ -39,6 +39,17 @@ public @Retention(RetentionPolicy.CLASS)
 @interface BundleAdapterService
 {
     /**
+     * The interface(s) to use when registering adapters. By default, the interface(s) directly implemented
+     * by the annotated class is (are) used.
+     */
+    Class<?>[] provides() default {};
+    
+    /**
+     * Additional properties to use with the service registration
+     */
+    Property[] properties() default {};
+    
+   /**
      * The filter used to match a given bundle.
      */
     String filter();
@@ -47,17 +58,6 @@ public @Retention(RetentionPolicy.CLASS)
      * the bundle state mask to apply
      */
     int stateMask() default Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
-    
-    /**
-     * The interface(s) to use when registering adapters. By default, the interface(s) directly implemented
-     * by the annotated class is (are) used.
-     */
-    Class<?>[] service() default {};
-    
-    /**
-     * Additional properties to use with the service registration
-     */
-    Property[] properties() default {};
     
     /**
      * Specifies if properties from the bundle should be propagated to the service.

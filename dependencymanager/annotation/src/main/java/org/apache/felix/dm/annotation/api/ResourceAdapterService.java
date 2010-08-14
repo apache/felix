@@ -38,19 +38,19 @@ import java.lang.annotation.Target;
 public @interface ResourceAdapterService
 {
     /**
-     * The filter condition to use with the resource.
-     */
-    String filter();
-
-    /**
      * The interface(s) to use when registering adapters
      */
-    Class<?>[] service() default {};
+    Class<?>[] provides() default {};
 
     /**
      * Additional properties to use with the adapter service registration
      */
     Property[] properties() default {};
+
+   /**
+     * The filter condition to use with the resource.
+     */
+    String filter();
 
     /**
      * <code>true</code> if properties from the resource should be propagated to the service.

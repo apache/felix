@@ -48,7 +48,7 @@ public class ExtraAdapterServiceProperties
     {
     }
     
-    @AdapterService(adapteeService=Provider.class, adapterProperties={@Property(name="foo2", value="bar2")})
+    @AdapterService(provides=Provider2.class, properties={@Property(name="foo2", value="bar2")}, adapteeService=Provider.class)
     public static class Provider2Impl implements Provider2
     {
         protected Provider m_adaptee;

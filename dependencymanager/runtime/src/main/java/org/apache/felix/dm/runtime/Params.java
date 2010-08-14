@@ -44,8 +44,6 @@ public enum Params
     propagate,
     updated,
     timeout,
-    adapterService,
-    adapterProperties,
     adapteeService,
     adapteeFilter,
     stateMask,

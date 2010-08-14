@@ -38,13 +38,13 @@ public @interface AdapterService
     /**
      * Sets the adapter service interface(s). By default, the directly implemented interface(s) is (are) used.
      */
-    Class<?>[] adapterService() default {};
+    Class<?>[] provides() default {};
 
     /**
      * Sets some additional properties to use with the adapter service registration. By default, 
      * the adapter will inherit all adaptee service properties.
      */
-    Property[] adapterProperties() default {};
+    Property[] properties() default {};
 
     /**
      * Sets the adaptee service interface this adapter is applying to.

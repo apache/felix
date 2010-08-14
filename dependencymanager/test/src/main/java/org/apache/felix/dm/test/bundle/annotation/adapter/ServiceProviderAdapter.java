@@ -23,7 +23,7 @@ import org.apache.felix.dm.annotation.api.AdapterService;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-@AdapterService(adapteeService = ServiceInterface.class, adapterProperties={@Property(name="param2", value="value2")})
+@AdapterService(adapteeService = ServiceInterface.class, properties={@Property(name="param2", value="value2")})
 public class ServiceProviderAdapter implements ServiceInterface3
 {
     // This is the adapted service
