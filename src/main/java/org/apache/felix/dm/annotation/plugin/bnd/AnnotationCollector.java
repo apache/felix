@@ -489,10 +489,10 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putClass(annotation, EntryParam.adapteeService, null);
 
         // Parse Adapter properties.
-        parseProperties(annotation, EntryParam.adapterProperties, writer);
+        parseProperties(annotation, EntryParam.properties, writer);
 
-        // Parse the optional adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.adapterService, m_interfaces);
+        // Parse the provided adapter service (use directly implemented interface by default).
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
         
         // Parse factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
@@ -529,7 +529,7 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the optional adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.service, m_interfaces);
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
@@ -564,8 +564,8 @@ public class AnnotationCollector extends ClassDataCollector
         // Parse Adapter properties.
         parseProperties(annotation, EntryParam.properties, writer);
 
-        // Parse the optional adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.service, m_interfaces);
+        // Parse the provided adapter service (use directly implemented interface by default).
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
@@ -598,8 +598,8 @@ public class AnnotationCollector extends ClassDataCollector
         // propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
 
-        // Parse the optional adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.service, m_interfaces);
+        // Parse the provided adapter service (use directly implemented interface by default).
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
 
         // Parse Adapter properties.
         parseProperties(annotation, EntryParam.properties, writer);

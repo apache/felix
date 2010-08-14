@@ -26,8 +26,6 @@ public enum EntryParam
     propagate, 
     updated, 
     timeout,
-    adapterService,
-    adapterProperties,
     adapteeService,
     adapteeFilter,
     stateMask,

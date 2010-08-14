@@ -36,6 +36,18 @@ import java.lang.annotation.Target;
 public @interface FactoryConfigurationAdapterService
 {
     /**
+     * The interface(s) to use when registering adapters. By default, directly implemented 
+     * interfaces will be registered in the OSGi registry.
+     */
+    Class<?>[] provides() default {};
+
+    /**
+     * Adapter Service properties. Notice that public factory configuration is also registered in service properties,
+     * (only if propagate is true). Public factory configuration properties are those which don't starts with a dot (".").
+     */
+    Property[] properties() default {};
+
+    /**
      * Returns the factory pid whose configurations will instantiate the annotated service class. (By default, the pid is the 
      * service class name).
      */
@@ -52,18 +64,6 @@ public @interface FactoryConfigurationAdapterService
      * @return true if configuration must be published along with the service, false if not.
      */
     boolean propagate() default false;
-
-    /**
-     * The interface(s) to use when registering adapters. By default, directly implemented 
-     * interfaces will be registered in the OSGi registry.
-     */
-    Class<?>[] service() default {};
-
-    /**
-     * Adapter Service properties. Notice that public factory configuration is also registered in service properties,
-     * (only if propagate is true). Public factory configuration properties are those which don't starts with a dot (".").
-     */
-    Property[] properties() default {};
 
     /**
      * The label used to display the tab name (or section) where the properties are displayed. Example: "Printer Service".
