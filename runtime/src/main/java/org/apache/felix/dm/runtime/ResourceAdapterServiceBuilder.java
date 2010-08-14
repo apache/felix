@@ -41,12 +41,12 @@ public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
     {
         String filter = srvMeta.getString(Params.filter, null);
         Class<?> implClass = b.loadClass(srvMeta.getString(Params.impl));
-        String[] service = srvMeta.getStrings(Params.service, null);
+        String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         String changed = srvMeta.getString(Params.changed, null /* no change callback if not specified explicitly */);
         Service srv = dm.createResourceAdapterService(filter, propagate, null, changed)
-                        .setInterface(service, properties);       
+                        .setInterface(provides, properties);       
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
