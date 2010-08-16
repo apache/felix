@@ -93,28 +93,81 @@ public class ServicePublisher
                   .setDefaultImplementation(unpublisher));
         }
     }
-
+    
+    private void publish() 
+    {
+        if (m_published.compareAndSet(false, true))
+        {
+            try
+            {
+                Log.instance().log(LogService.LOG_DEBUG, "publishing services %s",
+                                   Arrays.toString(m_services));
+                m_registration = m_bc.registerService(m_services, m_srv.getService(), m_srv.getServiceProperties());
+            }
+            catch (Throwable t)
+            {
+                if (t instanceof RuntimeException)
+                {
+                    throw (RuntimeException) t;
+                }
+                else
+                {
+                    throw new RuntimeException("Could not register services", t);
+                }
+            }
+        }
+    }
+    
+    private void unpublish()
+    {
+        if (m_published.compareAndSet(true, false))
+        {
+            try
+            {
+                if (m_registration != null) 
+                {
+                    Log.instance().log(LogService.LOG_DEBUG, "unpublishing services %s",
+                                       Arrays.toString(m_services));
+                    m_registration.unregister();
+                    m_registration = null;
+                }
+            }
+            catch (Throwable t)
+            {
+                if (t instanceof RuntimeException)
+                {
+                    throw (RuntimeException) t;
+                }
+                else
+                {
+                    throw new RuntimeException("Could not unregister services", t);
+                }
+            }
+        }
+    }
+     
     private class Publisher implements Runnable, ServiceStateListener
     {
-        private boolean m_started; // true if the service has started
-        
+        // true if the service has started
+        private boolean m_started; 
+        // flag used to delay early publisher until we are really started.
+        public boolean m_publishDelayed; 
+
         public void run()
         {
-            if (m_published.compareAndSet(false, true))
-            {
-                // Only register the service if it has been started. Otherwise delay the registration
-                // until the service start callback has been invoked.
-                synchronized (this) {
-                    if (! m_started)
-                    {
-                        Log.instance().log(LogService.LOG_DEBUG, "Delaying service publication for services %s (service not yet started)",
-                                           Arrays.toString(m_services));
+            // Only register the service if it has been started. Otherwise delay the registration
+            // until the service start callback has been invoked.
+            synchronized (this) {
+                if (! m_started)
+                {
+                    Log.instance().log(LogService.LOG_DEBUG, "Delaying service publication for services %s (service not yet started)",
+                                       Arrays.toString(m_services));
 
-                        return;
-                    }
+                    m_publishDelayed = true;       
+                    return;
                 }
-                publish();
             }
+            publish();
         }
 
         public void starting(Service service)
@@ -123,11 +176,16 @@ public class ServicePublisher
 
         public void started(Service service)
         {
+            boolean publishDelayed = false;
             synchronized (this)
             {
                 m_started = true;
+                if (m_publishDelayed) 
+                {
+                    publishDelayed = true;
+                }
             }
-            if (m_published.get())
+            if (publishDelayed)
             {
                 // Our runnable has been invoked before the service start callback has been called: 
                 // Now that we are started, we fire the service registration.
@@ -140,62 +198,21 @@ public class ServicePublisher
             synchronized (this)
             {
                 m_started = false;
+                m_publishDelayed = false;
             }
-
-            if (m_published.compareAndSet(true, false))
-            {
-                if (m_registration != null)
-                {
-                    Log.instance().log(LogService.LOG_DEBUG, "unpublishing services %s (service is stopping)",
-                                       Arrays.toString(m_services));
-
-                    m_registration.unregister();
-                    m_registration = null;
-                }
-            }
+            unpublish();
         }
 
         public void stopped(Service service)
         {
-        }
-        
-        private void publish()
-        {
-            try
-            {
-                Log.instance().log(LogService.LOG_DEBUG, "publishing services %s",
-                                   Arrays.toString(m_services));
-                m_registration = m_bc.registerService(m_services, m_srv.getService(), m_srv.getServiceProperties());
-            }
-            catch (Throwable t)
-            {
-                m_published.set(false);
-                if (t instanceof RuntimeException)
-                {
-                    throw (RuntimeException) t;
-                }
-                else
-                {
-                    throw new RuntimeException("Could not register services", t);
-                }
-            }
-        }
+        }        
     }
 
     private class Unpublisher implements Runnable
     {
         public void run()
         {
-            if (m_published.compareAndSet(true, false))
-            {
-                if (m_registration != null)
-                {
-                    Log.instance().log(LogService.LOG_DEBUG, "unpublishing services %s",
-                                       Arrays.toString(m_services));
-                    m_registration.unregister();
-                    m_registration = null;
-                }
-            }
+            unpublish();
         }
     }
 }
