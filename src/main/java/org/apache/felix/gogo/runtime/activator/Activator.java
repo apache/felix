@@ -90,6 +90,7 @@ public class Activator implements BundleActivator
         commandTracker.close();
         converterTracker.close();
         threadio.stop();
+        processor.stop();
     }
 
     private ServiceTracker trackOSGiCommands(final BundleContext context)
