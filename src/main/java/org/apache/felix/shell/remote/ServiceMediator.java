@@ -16,14 +16,7 @@
  */
 package org.apache.felix.shell.remote;
 
-import org.apache.felix.shell.ShellService;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -37,6 +30,7 @@ class ServiceMediator
     private final BundleContext m_context;
     private final ServiceTracker m_logTracker;
     private final ServiceTracker m_shellTracker;
+    private final ServiceTracker m_cpTracker;
 
     ServiceMediator(BundleContext context)
     {
@@ -45,21 +39,36 @@ class ServiceMediator
             ? m_context.getBundle().getLocation()
             : m_context.getBundle().getSymbolicName();
         m_bundleId = m_context.getBundle().getBundleId();
-        ServiceTracker logTracker = null;
+        m_logTracker = new ServiceTracker(
+            m_context, "org.osgi.service.log.LogService", null);
+        m_logTracker.open();
+        m_shellTracker = new ServiceTracker(
+            m_context, "org.apache.felix.shell.ShellService", null);
+        m_shellTracker.open();
+        m_cpTracker = new ServiceTracker(
+            m_context, "org.apache.felix.service.command.CommandProcessor", null);
+        m_cpTracker.open();
+    }
+
+    public Object getCommandProcessor(long wait)
+    {
+        Object svcObj = null;
         try
         {
-            logTracker = new ServiceTracker(m_context, LogService.class.getName(), null);
-            logTracker.open();
+            if (wait < 0)
+            {
+                svcObj = m_cpTracker.getService();
+            }
+            else
+            {
+                svcObj = m_cpTracker.waitForService(wait);
+            }
         }
-        catch (Throwable ex)
+        catch (InterruptedException e)
         {
-            // This means we don't have access to the log service package since it
-            // is optional, so don't track log services.
-            logTracker = null;
+            e.printStackTrace(System.err);
         }
-        m_logTracker = logTracker;
-        m_shellTracker = new ServiceTracker(m_context, ShellService.class.getName(), null);
-        m_shellTracker.open();
+        return svcObj;
     }
 
     /**
@@ -68,55 +77,53 @@ class ServiceMediator
      * @param wait time in milliseconds to wait for the reference if it isn't available.
      * @return the reference to the <tt>ShellService</tt> as obtained from the OSGi service layer.
      */
-    public ShellService getFelixShellService(long wait)
+    public Object getShellService(long wait)
     {
-        ShellService shell = null;
+        Object svcObj = null;
         try
         {
             if (wait < 0)
             {
-                shell = (ShellService) m_shellTracker.getService();
+                svcObj = m_shellTracker.getService();
             }
             else
             {
-                shell = (ShellService) m_shellTracker.waitForService(wait);
+                svcObj = m_shellTracker.waitForService(wait);
+            }
+
+            return svcObj;
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace(System.err);
+        }
+        return svcObj;
+    }//getFelixShellService
+
+    public Object getLogService(long wait)
+    {
+        Object svcObj = null;
+        try
+        {
+            if (wait < 0)
+            {
+                svcObj = m_logTracker.getService();
+            }
+            else
+            {
+                svcObj = m_logTracker.waitForService(wait);
             }
         }
         catch (InterruptedException e)
         {
             e.printStackTrace(System.err);
         }
-
-        return shell;
-    }//getFelixShellService
-
-    public Object getLogServiceLatch(long wait)
-    {
-        Object log = null;
-        if (m_logTracker != null)
-        {
-            try
-            {
-                if (wait < 0)
-                {
-                    log = m_logTracker.getService();
-                }
-                else
-                {
-                    log = m_logTracker.waitForService(wait);
-                }
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace(System.err);
-            }
-        }
-        return log;
+        return svcObj;
     }//getLogService
 
     public void info(String msg)
     {
-        Object log = getLogServiceLatch(NO_WAIT);
+        Object log = getLogService(NO_WAIT);
         if (log != null)
         {
             ((LogService) log).log(LogService.LOG_INFO, msg);
@@ -129,7 +136,7 @@ class ServiceMediator
 
     public void error(String msg, Throwable t)
     {
-        Object log = getLogServiceLatch(NO_WAIT);
+        Object log = getLogService(NO_WAIT);
         if (log != null)
         {
             ((LogService) log).log(LogService.LOG_ERROR, msg);
@@ -142,7 +149,7 @@ class ServiceMediator
 
     public void error(String msg)
     {
-        Object log = getLogServiceLatch(NO_WAIT);
+        Object log = getLogService(NO_WAIT);
         if (log != null)
         {
             ((LogService) log).log(LogService.LOG_ERROR, msg);
@@ -155,7 +162,7 @@ class ServiceMediator
 
     public void debug(String msg)
     {
-        Object log = getLogServiceLatch(NO_WAIT);
+        Object log = getLogService(NO_WAIT);
         if (log != null)
         {
             ((LogService) log).log(LogService.LOG_DEBUG, msg);
@@ -168,7 +175,7 @@ class ServiceMediator
 
     public void warn(String msg)
     {
-        Object log = getLogServiceLatch(NO_WAIT);
+        Object log = getLogService(NO_WAIT);
         if (log != null)
         {
             ((LogService) log).log(LogService.LOG_WARNING, msg);
@@ -219,6 +226,7 @@ class ServiceMediator
             m_logTracker.close();
         }
         m_shellTracker.close();
+        m_cpTracker.close();
     }//deactivate
 
     public static long WAIT_UNLIMITED = 0;

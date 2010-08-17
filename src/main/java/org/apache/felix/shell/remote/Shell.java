@@ -18,8 +18,9 @@ package org.apache.felix.shell.remote;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.Socket;
+import org.apache.felix.service.command.CommandProcessor;
+import org.apache.felix.service.command.CommandSession;
 
 import org.apache.felix.shell.ShellService;
 
@@ -62,61 +63,32 @@ class Shell implements Runnable
     {
         m_owner.registerConnection(this);
 
+        String msg = null;
+
         try
         {
             m_out = new TerminalPrintStream(
                 m_owner.getServices(), m_socket.getOutputStream());
-            BufferedReader in = new BufferedReader(
-                new TerminalReader(m_socket.getInputStream(), m_out));
-            ReentrantLock lock = new ReentrantLock();
 
-            // Print welcome banner.
-            m_out.println();
-            m_out.println("Felix Remote Shell Console:");
-            m_out.println("============================");
-            m_out.println("");
+            Object obj = null;
 
-            do
+            if ((obj = m_owner.getServices().getCommandProcessor(ServiceMediator.NO_WAIT))
+                != null)
             {
-                String line = "";
-                try
-                {
-                    m_out.print("-> ");
-                    line = in.readLine();
-                    //make sure to capture end of stream
-                    if (line == null)
-                    {
-                        m_out.println("exit");
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return;
-                }
-
-                line = line.trim();
-                if (line.equalsIgnoreCase("exit") || line.equalsIgnoreCase("disconnect"))
-                {
-                    return;
-                }
-
-                ShellService shs = m_owner.getServices().getFelixShellService(ServiceMediator.NO_WAIT);
-                try
-                {
-                    lock.acquire();
-                    shs.executeCommand(line, m_out, m_out);
-                }
-                catch (Exception ex)
-                {
-                    m_owner.getServices().error("Shell::run()", ex);
-                }
-                finally
-                {
-                    lock.release();
-                }
+                CommandProcessor cp = (CommandProcessor) obj;
+                CommandSession session =
+                    cp.createSession(m_socket.getInputStream(), m_out, m_out);
+                startGogoShell(session);
             }
-            while (true);
+            else if ((obj = m_owner.getServices().getShellService(ServiceMediator.NO_WAIT))
+                != null)
+            {
+                startFelixShell();
+            }
+            else
+            {
+                msg = "No shell services available...exiting.";
+            }
         }
         catch (IOException ex)
         {
@@ -125,9 +97,81 @@ class Shell implements Runnable
         finally
         {
             // no need to clean up in/out, since exit does it all
-            exit(null);
+            exit(msg);
         }
     }//run
+
+    private void startGogoShell(CommandSession session)
+    {
+        try
+        {
+            session.execute("gosh --login --noshutdown");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            session.close();
+        }
+    }
+
+    private void startFelixShell() throws IOException
+    {
+        BufferedReader in = new BufferedReader(
+            new TerminalReader(m_socket.getInputStream(), m_out));
+        ReentrantLock lock = new ReentrantLock();
+
+        // Print welcome banner.
+        m_out.println();
+        m_out.println("Felix Remote Shell Console:");
+        m_out.println("============================");
+        m_out.println("");
+
+        do
+        {
+            String line = "";
+            try
+            {
+                m_out.print("-> ");
+                line = in.readLine();
+                //make sure to capture end of stream
+                if (line == null)
+                {
+                    m_out.println("exit");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
+
+            line = line.trim();
+            if (line.equalsIgnoreCase("exit") || line.equalsIgnoreCase("disconnect"))
+            {
+                return;
+            }
+
+            ShellService shs = (ShellService)
+                m_owner.getServices().getShellService(ServiceMediator.NO_WAIT);
+            try
+            {
+                lock.acquire();
+                shs.executeCommand(line, m_out, m_out);
+            }
+            catch (Exception ex)
+            {
+                m_owner.getServices().error("Shell::run()", ex);
+            }
+            finally
+            {
+                lock.release();
+            }
+        }
+        while (true);
+    }
 
     private void exit(String message)
     {
