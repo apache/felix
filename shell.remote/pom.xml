@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Remote Shell</name>
     <description>
-        A simple remote textual user interface for Felix' shell service.
+        Provide remote access to Felix Shell or Gogo.
     </description>
     <version>1.0.5-SNAPSHOT</version>
     <artifactId>org.apache.felix.shell.remote</artifactId>
@@ -47,6 +47,11 @@
             <artifactId>org.apache.felix.shell</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.gogo.runtime</artifactId>
+            <version>0.6.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -65,9 +70,9 @@
                         <Private-Package>
                             org.apache.felix.shell.remote.*
                         </Private-Package>
-                        <Import-Package>
-                            org.osgi.service.log;resolution:=optional,* 
-                        </Import-Package>
+                        <DynamicImport-Package>
+                            org.apache.felix.service.command,org.apache.felix.shell,org.osgi.service.log
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
