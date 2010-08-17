@@ -44,31 +44,43 @@ public class Console implements Runnable
         {
             while (!quit)
             {
+                Object prompt = session.get("prompt");
+                if (prompt == null)
+                {
+                    prompt = "g! ";
+                }
+
+                CharSequence line = getLine(prompt.toString());
+
+                if (line == null)
+                {
+                    break;
+                }
+
                 try
                 {
-                    Object prompt = session.get("prompt");
-                    if (prompt == null)
-                    {
-                        prompt = "g! ";
-                    }
-
-                    CharSequence line = getLine(prompt.toString());
-
-                    if (line == null)
-                    {
-                        break;
-                    }
-
                     Object result = session.execute(line);
-                    session.put("_", result);    // set $_ to last result
+                    session.put("_", result); // set $_ to last result
 
-                    if (result != null && !Boolean.FALSE.equals(session.get(".Gogo.format")))
+                    if (result != null
+                        && !Boolean.FALSE.equals(session.get(".Gogo.format")))
                     {
                         out.println(session.format(result, Converter.INSPECT));
                     }
                 }
                 catch (Throwable e)
                 {
+                    final String SESSION_CLOSED = "session is closed";
+                    if ((e instanceof IllegalStateException) && SESSION_CLOSED.equals(e.getMessage()))
+                    {
+                        // FIXME: we assume IllegalStateException is because the session is closed;
+                        // but it may be for another reason, so we also check the message (yuk).
+                        // It would be better if the RFC-147 API threw a unique exception, such as
+                        // org.osgi.service.command.SessionClosedException
+                        out.println("gosh: " + e);
+                        quit = true;
+                    }
+                    
                     if (!quit)
                     {
                         session.put("exception", e);
@@ -79,7 +91,8 @@ public class Console implements Runnable
                             loc = "gogo";
                         }
 
-                        out.println(loc + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                        out.println(loc + ": " + e.getClass().getSimpleName() + ": "
+                            + e.getMessage());
                     }
                 }
             }
@@ -106,7 +119,7 @@ public class Console implements Runnable
             switch (c)
             {
                 case -1:
-                case 4:    // EOT, ^D from telnet
+                case 4: // EOT, ^D from telnet
                     quit = true;
                     break;
 
@@ -136,11 +149,6 @@ public class Console implements Runnable
         }
 
         return null;
-    }
-
-    public void close()
-    {
-        quit = true;
     }
 
 }
