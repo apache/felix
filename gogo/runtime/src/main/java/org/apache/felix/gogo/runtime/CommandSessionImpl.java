@@ -33,6 +33,7 @@ import java.util.*;
 
 public class CommandSessionImpl implements CommandSession, Converter
 {
+    public static final String SESSION_CLOSED = "session is closed";
     public static final String VARIABLES = ".variables";
     public static final String COMMANDS = ".commands";
     public static final String CONTEXT = ".context";
@@ -71,7 +72,7 @@ public class CommandSessionImpl implements CommandSession, Converter
 
         if (closed)
         {
-            throw new IllegalStateException("session is closed");
+            throw new IllegalStateException(SESSION_CLOSED);
         }
 
         Closure impl = new Closure(this, null, commandline);

@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.Map.Entry;
 
 import org.osgi.framework.BundleContext;
@@ -42,6 +43,7 @@ public class CommandProcessorImpl implements CommandProcessor
     protected final Map<String, Object> commands = new LinkedHashMap<String, Object>();
     protected final BundleContext context;
     protected final ThreadIO threadIO;
+    protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<CommandSession, Object>();
 
     public CommandProcessorImpl(ThreadIO tio, BundleContext context)
     {
@@ -54,9 +56,19 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public CommandSession createSession(InputStream in, PrintStream out, PrintStream err)
     {
-        return new CommandSessionImpl(this, in, out, err);
+        CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
+        sessions.put(session, null);
+        return session;
     }
 
+    public void stop()
+    {
+        for (CommandSession session : sessions.keySet())
+        {
+            session.close();
+        }
+    }
+    
     public void addConverter(Converter c)
     {
         converters.add(c);
