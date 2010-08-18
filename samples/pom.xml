@@ -15,47 +15,47 @@
     limitations under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <parent>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>felix</artifactId>
-    <version>1.0.4</version>
-    <relativePath>../../pom/pom.xml</relativePath>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <name>Apache Felix Dependency Manager Samples</name>
-  <version>3.0.0-SNAPSHOT</version>
-  <artifactId>org.apache.felix.dependencymanager.samples</artifactId>
-  <dependencies>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>4.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>4.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>org.apache.felix.dependencymanager</artifactId>
-      <version>3.0.0-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-          <useDefaultManifestFile>false</useDefaultManifestFile>
-         <compilerArgument>-g</compilerArgument>
-          <compilerVersion>1.5</compilerVersion>
-        </configuration> 
-      </plugin>
-    </plugins>
-  </build>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.apache.felix</groupId>
+		<artifactId>dependencymanager-reactor</artifactId>
+		<version>3.0.0-SNAPSHOT</version>
+	</parent>
+
+	<name>Apache Felix Dependency Manager Samples</name>
+	<artifactId>org.apache.felix.dependencymanager.samples</artifactId>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>org.apache.felix.dependencymanager</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+					<useDefaultManifestFile>false</useDefaultManifestFile>
+					<compilerArgument>-g</compilerArgument>
+					<compilerVersion>1.5</compilerVersion>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
