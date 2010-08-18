@@ -1,5 +1,13 @@
+Changes from 1.2.0 to 1.4.0
+---------------------------
+
+** Improvement
+    * [FELIX-2547] - Implement conditionalpermissioninfo encoding/decoding to match the spec.
+
+
 Changes from 1.0.0 to 1.2.0
 ---------------------------
+
 ** Task
     * [FELIX-2294] - Patch Framework Security for compatibility
 
