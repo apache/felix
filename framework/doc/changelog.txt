@@ -1,3 +1,19 @@
+Changes from 3.0.1 to 3.0.2
+---------------------------
+
+** Bug
+    * [FELIX-2421] - Implicit bootdelegation doesn't ignore classloaders if they are inner classes
+    * [FELIX-2437] - Deadlock on refrsh Import and refresh
+    * [FELIX-2451] - Felix uses System.out to print debug messages related to resolver...
+    * [FELIX-2459] - Wrong error message on a missing package
+    * [FELIX-2466] - Unknown attributes are not stripped from Fragment-Host header
+    * [FELIX-2473] - Subtring matching is incorreclty matching against an empty string
+    * [FELIX-2479] - Required bundles not correctly re-exporting their substitutable exports
+
+** Improvement
+    * [FELIX-2528] - Potential performance issue in resolver when uses constraint conflict is detected
+    * [FELIX-2529] - In some scenarios the resolver will not backtrack on imported package decisions
+
 Changes from 3.0.0 to 3.0.1
 ---------------------------
 
