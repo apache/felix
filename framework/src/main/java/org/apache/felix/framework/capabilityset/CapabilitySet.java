@@ -35,13 +35,15 @@ import org.apache.felix.framework.util.StringComparator;
 
 public class CapabilitySet
 {
-    private final Map<String, Map<Object, Set<Capability>>> m_indices =
-        new TreeMap<String, Map<Object, Set<Capability>>>(new StringComparator(false));
+    private final Map<String, Map<Object, Set<Capability>>> m_indices;
     private final Set<Capability> m_capList = new HashSet<Capability>();
     private final static SecureAction m_secureAction = new SecureAction();
 
-    public CapabilitySet(List<String> indexProps)
+    public CapabilitySet(List<String> indexProps, boolean caseSensitive)
     {
+        m_indices = (caseSensitive)
+            ? new TreeMap<String, Map<Object, Set<Capability>>>()
+            : new TreeMap<String, Map<Object, Set<Capability>>>(new StringComparator(false));
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(indexProps.get(i), new HashMap<Object, Set<Capability>>());
@@ -135,7 +137,7 @@ public class CapabilitySet
         if (caps != null)
         {
             caps.remove(cap);
-            if (caps.size() == 0)
+            if (caps.isEmpty())
             {
                 index.remove(capValue);
             }

@@ -56,7 +56,7 @@ public class ServiceRegistry
 
         List indices = new ArrayList();
         indices.add(Constants.OBJECTCLASS);
-        m_regCapSet = new CapabilitySet(indices);
+        m_regCapSet = new CapabilitySet(indices, false);
     }
 
     public ServiceReference[] getRegisteredServices(Bundle bundle)
