@@ -70,15 +70,15 @@ public class FelixResolverState implements Resolver.ResolverState
 
         List<String> indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(Capability.MODULE_NAMESPACE, new CapabilitySet(indices));
+        m_capSets.put(Capability.MODULE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
         indices.add(Capability.PACKAGE_ATTR);
-        m_capSets.put(Capability.PACKAGE_NAMESPACE, new CapabilitySet(indices));
+        m_capSets.put(Capability.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(Capability.HOST_NAMESPACE,  new CapabilitySet(indices));
+        m_capSets.put(Capability.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
 
     public synchronized void addModule(Module module)
@@ -139,7 +139,7 @@ public class FelixResolverState implements Resolver.ResolverState
         if (modules != null)
         {
             modules.remove(module);
-            if (modules.size() == 0)
+            if (modules.isEmpty())
             {
                 m_singletons.remove(module.getSymbolicName());
             }
@@ -381,7 +381,7 @@ public class FelixResolverState implements Resolver.ResolverState
                 CapabilitySet capSet = m_capSets.get(cap.getNamespace());
                 if (capSet == null)
                 {
-                    capSet = new CapabilitySet(null);
+                    capSet = new CapabilitySet(null, true);
                     m_capSets.put(cap.getNamespace(), capSet);
                 }
                 capSet.addCapability(cap);
