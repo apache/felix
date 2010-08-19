@@ -25,29 +25,56 @@ Sample description:
   
 How to test:
 
-  1) Install the following bundles:
+  - Install the following bundles:
 
-     org.apache.felix.configadmin
-     org.apache.felix.metatype
-     org.apache.felix.http.jetty (from trunk, because the latest released version seems to have a problem)
+     org.apache.felix.configadmin 
+     org.apache.felix.metatype 
+     org.apache.felix.http.jetty 
      org.apache.felix.webconsole
 
-     org.apache.felix.dependencymanager
-     org.apache.felix.dependencymanager.shell
-     org.apache.felix.dependencymanager.runtime
-     org.apache.felix.dependencymanager.samples.annotation
+  - compile dependency manager from trunk:
 
-  2) Start felix
-  3) Go to web console: in the Configuration panel, edit the "Dictionary Services"
+     svn checkout http://svn.apache.org/repos/asf/felix/trunk/dependencymanager dependencymanager
+     cd dependencymanager
+     mvn -Dmaven.test.skip=true install
+
+  - install the DM bundles into the fwk 
+
+     dependencymanager/core/target/org.apache.felix.dependencymanager-3.0.0-SNAPSHOT.jar
+     dependencymanager/shell/target/org.apache.felix.dependencymanager.shell-3.0.0-SNAPSHOT.jar
+     dependencymanager/runtime/target/org.apache.felix.dependencymanager.runtime-3.0.0-SNAPSHOT.jar
+     dependencymanager/samples.annotation/target/org.apache.felix.dependencymanager.samples.annotation-3.0.0-SNAPSHOT.jar
+
+  - Start felix
+
+    At this point, you should have the following running bundles:
+
+    START LEVEL 1
+    ID|State      |Level|Name
+     0|Active     |    0|System Bundle (3.0.1)
+     1|Active     |    1|Apache Felix Bundle Repository (1.6.2)
+     7|Active     |    1|Apache Felix Gogo Command (0.6.0)
+     8|Active     |    1|Apache Felix Gogo Runtime (0.6.0)
+     9|Active     |    1|Apache Felix Gogo Shell (0.6.0)
+    10|Active     |    1|Apache Felix Http Jetty (2.0.4)
+    11|Active     |    1|Apache Felix Metatype Service (1.0.4)
+    12|Active     |    1|Apache Felix Web Management Console (3.1.2)
+     2|Active     |    1|Apache Felix Configuration Admin Service (1.2.4)
+     3|Active     |    1|Apache Felix Dependency Manager (3.0.0.SNAPSHOT)
+     6|Active     |    1|Apache Felix Dependency Manager Shell (3.0.0.SNAPSHOT)
+     4|Active     |    1|Apache Felix Dependency Manager Runtime (3.0.0.SNAPSHOT)
+     5|Active     |    1|Apache Felix Dependency Manager Annotation Sample (3.0.0.SNAPSHOT)
+
+  - Go to web console: in the Configuration panel, edit the "Dictionary Services"
      Configuration, add some dictionaries. By default, an English dictionary is displayed. Just 
      click on "save", *then click on your refresh web browser*: you will see a new dictionary service
      instance. At this point, a DictionaryService service will be enabled (with the service property "lang=en"),  
      and the SpellCheck component will be injected with it. Then you should see the "spellcheck"
      command, when typing  "help" on the gogo shell.
 
-  5) Just type "spellcheck hello", and the command should reply a fantastic message, like "word hello is correct".
+  - Just type "spellcheck hello", and the command should reply a fantastic message, like "word hello is correct".
   
-  6) You can also click on the "Aspect Dictionary" button, in order to decorate the english dictionary with some 
+  - You can also click on the "Aspect Dictionary" button, in order to decorate the english dictionary with some 
      custom words.
      By default, the "aspect" word is pre configured, but you can click on the "+" button in order to add more words. 
      Then click on Save. At this point, the English DictionaryService will be decorated with the aspect service.
