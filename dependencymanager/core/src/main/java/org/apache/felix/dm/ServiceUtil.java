@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -82,21 +83,30 @@ public class ServiceUtil {
      */
     public static String toString(ServiceReference ref) {
         if (ref == null) {
-            throw new IllegalArgumentException("Service reference cannot be null.");
+            return "ServiceReference[null]";
         }
-        StringBuffer buf = new StringBuffer();
-        
-        buf.append("ServiceReference[" + ref.getBundle().getBundleId() + "]{");
-        String[] keys = ref.getPropertyKeys();
-        for (int i = 0; i < keys.length; i++) {
-            if (i > 0) { 
-                buf.append(','); 
+        else {
+            StringBuffer buf = new StringBuffer();
+            Bundle bundle = ref.getBundle();
+            if (bundle != null) {
+                buf.append("ServiceReference[");
+                buf.append(bundle.getBundleId());
+                buf.append("]{");
             }
-            buf.append(keys[i]);
-            buf.append('=');
-            buf.append(ref.getProperty(keys[i]));
+            else {
+                buf.append("ServiceReference[unregistered]{");
+            }
+            String[] keys = ref.getPropertyKeys();
+            for (int i = 0; i < keys.length; i++) {
+                if (i > 0) { 
+                    buf.append(','); 
+                }
+                buf.append(keys[i]);
+                buf.append('=');
+                buf.append(ref.getProperty(keys[i]));
+            }
+            buf.append("}");
+            return buf.toString();
         }
-        buf.append("}");
-        return buf.toString();
     }
 }
