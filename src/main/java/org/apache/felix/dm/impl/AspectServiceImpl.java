@@ -35,19 +35,18 @@ import org.osgi.framework.ServiceReference;
  * Aspect Service implementation. This class extends the FilterService in order to catch
  * some Service methods for configuring actual aspect service implementation.
  */
-public class AspectServiceImpl extends FilterService
-{
+public class AspectServiceImpl extends FilterService {
     public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig)
     { 
         super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
         m_service.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig))
-                 .add(dm.createServiceDependency()
-                      .setService(aspectInterface, createAspectFilter(aspectFilter))
-                      .setAutoConfig(false)
-                      .setCallbacks("added", "removed"));
+             .add(dm.createServiceDependency()
+                  .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
+                  .setAutoConfig(false)
+                  .setCallbacks("added", "removed"));
     }
 
-    private String createAspectFilter(String filter) {
+    private String createDependencyFilterForAspect(String filter) {
         // we only want to match services which are not themselves aspects
         if (filter == null || filter.length() == 0) {
             return "(!(" + DependencyManager.ASPECT + "=*))";
@@ -78,6 +77,7 @@ public class AspectServiceImpl extends FilterService
             List dependencies = m_service.getDependencies();
             // remove our internal dependency
             dependencies.remove(0);
+            // replace it with one that points to the specific service that just was passed in
             Properties serviceProperties = getServiceProperties(params);
             String[] serviceInterfaces = getServiceInterfaces();
             Service service = m_manager.createService()
@@ -86,7 +86,7 @@ public class AspectServiceImpl extends FilterService
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-                .add(getAspectDependency());
+                .add(getAspectDependency(params));
             
             configureAutoConfigState(service, m_service);
             
@@ -94,7 +94,7 @@ public class AspectServiceImpl extends FilterService
                 service.add(((Dependency) dependencies.get(i)).createCopy());
             }
 
-            for (int i = 0; i < m_stateListeners.size(); i ++) {
+            for (int i = 0; i < m_stateListeners.size(); i++) {
                 service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
             }
             return service;                
@@ -102,15 +102,16 @@ public class AspectServiceImpl extends FilterService
         
         private Properties getServiceProperties(Object[] params) {
             ServiceReference ref = (ServiceReference) params[0]; 
-            Object service = params[1];
             Properties props = new Properties();
-            // first add our aspect property
-            props.put(DependencyManager.ASPECT, ref.getProperty(Constants.SERVICE_ID));
-            // and the ranking
-            props.put(Constants.SERVICE_RANKING, Integer.valueOf(m_ranking));
             String[] keys = ref.getPropertyKeys();
             for (int i = 0; i < keys.length; i++) {
-                props.put(keys[i], ref.getProperty(keys[i]));
+                String key = keys[i];
+                if (key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(DependencyManager.ASPECT) || key.equals(Constants.OBJECTCLASS)) {
+                    // do not copy these
+                }
+                else {
+                    props.put(key, ref.getProperty(key));
+                }
             }
             if (m_serviceProperties != null) {
                 Enumeration e = m_serviceProperties.keys();
@@ -119,18 +120,21 @@ public class AspectServiceImpl extends FilterService
                     props.put(key, m_serviceProperties.get(key));
                 }
             }
+            // finally add our aspect property
+            props.put(DependencyManager.ASPECT, ref.getProperty(Constants.SERVICE_ID));
+            // and the ranking
+            props.put(Constants.SERVICE_RANKING, Integer.valueOf(m_ranking));
             return props;
         }
         
-        private String[] getServiceInterfaces()
-        {
+        private String[] getServiceInterfaces() {
             List serviceNames = new ArrayList();
             // Of course, we provide the aspect interface.
             serviceNames.add(m_aspectInterface.getName());
             // But also append additional aspect implementation interfaces.
             if (m_serviceInterfaces != null) {
                 for (int i = 0; i < m_serviceInterfaces.length; i ++) {
-                    if (! m_serviceInterfaces[i].equals(m_aspectInterface.getName())) {
+                    if (!m_serviceInterfaces[i].equals(m_aspectInterface.getName())) {
                         serviceNames.add(m_serviceInterfaces[i]);
                     }
                 }
@@ -138,24 +142,18 @@ public class AspectServiceImpl extends FilterService
             return (String[]) serviceNames.toArray(new String[serviceNames.size()]);
         }
 
-       private Dependency getAspectDependency() {
-           ServiceDependency sd = 
-               m_manager.createServiceDependency()
-                        .setService(m_aspectInterface, createAspectFilter(m_aspectFilter))
-                        .setRequired(true);
-        
-           if (m_field != null) {
-               sd.setAutoConfig(m_field);
-           }
-           return sd;
+        private Dependency getAspectDependency(Object[] params) {
+            ServiceReference ref = (ServiceReference) params[0];
+            ServiceDependency sd = m_manager.createServiceDependency().setService(m_aspectInterface, createAspectFilter(ref)).setRequired(true);
+            if (m_field != null) {
+                sd.setAutoConfig(m_field);
+            }
+            return sd;
         }
 
-       private String createAspectFilter(String filter) {
-           if (filter == null || filter.length() == 0) {
-               return "(|(!(" + Constants.SERVICE_RANKING + "=*))(" + Constants.SERVICE_RANKING + "<=" + (m_ranking - 1) + "))";
-           } else {
-               return "(&(|(!(" + Constants.SERVICE_RANKING + "=*))(" + Constants.SERVICE_RANKING + "<=" + (m_ranking - 1) + "))" + filter + ")";
-           }
-       }
+        private String createAspectFilter(ServiceReference ref) {
+            Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
+            return "(&(|(!(" + Constants.SERVICE_RANKING + "=*))(" + Constants.SERVICE_RANKING + "<=" + (m_ranking - 1) + "))(|(" + Constants.SERVICE_ID + "=" + sid + ")(" + DependencyManager.ASPECT + "=" + sid + ")))";
+        }
     }
 }
