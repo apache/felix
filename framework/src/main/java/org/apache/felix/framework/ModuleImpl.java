@@ -1444,7 +1444,7 @@ public class ModuleImpl implements Module
     }
 
     private Object doImplicitBootDelegation(Class[] classes, String name, boolean isClass)
-    throws ClassNotFoundException, ResourceNotFoundException
+        throws ClassNotFoundException, ResourceNotFoundException
     {
         // Start from 1 to skip security manager class.
         for (int i = 1; i < classes.length; i++)

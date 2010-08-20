@@ -26,8 +26,8 @@ import java.util.NoSuchElementException;
 
 public class ContentDirectoryContent implements Content
 {
-    private Content m_content = null;
-    private String m_rootPath = null;
+    private final Content m_content;
+    private final String m_rootPath;
 
     public ContentDirectoryContent(Content content, String path)
     {
@@ -37,16 +37,15 @@ public class ContentDirectoryContent implements Content
             ? path + "/" : path;
     }
 
-    public synchronized void close()
+    public void close()
     {
         // We do not actually close the associated content
         // from which we are filtering our directory because
         // we assume that this will be close manually by
         // the owner of that content.
-        m_content = null;
     }
 
-    public synchronized boolean hasEntry(String name) throws IllegalStateException
+    public boolean hasEntry(String name) throws IllegalStateException
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
         {
@@ -56,12 +55,12 @@ public class ContentDirectoryContent implements Content
         return m_content.hasEntry(m_rootPath + name);
     }
 
-    public synchronized Enumeration getEntries()
+    public Enumeration getEntries()
     {
         return new EntriesEnumeration(m_content.getEntries(), m_rootPath);
     }
 
-    public synchronized byte[] getEntryAsBytes(String name) throws IllegalStateException
+    public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
         {
@@ -71,7 +70,7 @@ public class ContentDirectoryContent implements Content
         return m_content.getEntryAsBytes(m_rootPath + name);
     }
 
-    public synchronized InputStream getEntryAsStream(String name)
+    public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
@@ -109,8 +108,8 @@ public class ContentDirectoryContent implements Content
 
     private static class EntriesEnumeration implements Enumeration
     {
-        private Enumeration m_enumeration = null;
-        private String m_rootPath = null;
+        private final Enumeration m_enumeration;
+        private final String m_rootPath;
         private String m_nextEntry = null;
 
         public EntriesEnumeration(Enumeration enumeration, String rootPath)
@@ -120,12 +119,12 @@ public class ContentDirectoryContent implements Content
             m_nextEntry = findNextEntry();
         }
 
-        public boolean hasMoreElements()
+        public synchronized boolean hasMoreElements()
         {
             return (m_nextEntry != null);
         }
 
-        public Object nextElement()
+        public synchronized Object nextElement()
         {
             if (m_nextEntry == null)
             {

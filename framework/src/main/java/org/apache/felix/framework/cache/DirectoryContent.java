@@ -54,7 +54,7 @@ public class DirectoryContent implements Content
         // Nothing to clean up.
     }
 
-    public synchronized boolean hasEntry(String name) throws IllegalStateException
+    public boolean hasEntry(String name) throws IllegalStateException
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
         {
@@ -64,7 +64,7 @@ public class DirectoryContent implements Content
         return new File(m_dir, name).exists();
     }
 
-    public synchronized Enumeration getEntries()
+    public Enumeration getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
         Enumeration e = new EntriesEnumeration(m_dir);
@@ -73,7 +73,7 @@ public class DirectoryContent implements Content
         return (e.hasMoreElements()) ? e : null;
     }
 
-    public synchronized byte[] getEntryAsBytes(String name) throws IllegalStateException
+    public byte[] getEntryAsBytes(String name) throws IllegalStateException
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
         {
@@ -120,7 +120,7 @@ public class DirectoryContent implements Content
         }
     }
 
-    public synchronized InputStream getEntryAsStream(String name)
+    public InputStream getEntryAsStream(String name)
         throws IllegalStateException, IOException
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
@@ -131,7 +131,7 @@ public class DirectoryContent implements Content
         return new FileInputStream(new File(m_dir, name));
     }
 
-    public synchronized Content getEntryAsContent(String entryName)
+    public Content getEntryAsContent(String entryName)
     {
         // If the entry name refers to the content itself, then
         // just return it immediately.
@@ -182,7 +182,7 @@ public class DirectoryContent implements Content
     }
 
 // TODO: SECURITY - This will need to consider security.
-    public synchronized String getEntryAsNativeLibrary(String entryName)
+    public String getEntryAsNativeLibrary(String entryName)
     {
         // Return result.
         String result = null;
@@ -299,8 +299,8 @@ public class DirectoryContent implements Content
 
     private static class EntriesEnumeration implements Enumeration
     {
-        private File m_dir = null;
-        private File[] m_children = null;
+        private final File m_dir;
+        private final File[] m_children;
         private int m_counter = 0;
 
         public EntriesEnumeration(File dir)
@@ -309,12 +309,12 @@ public class DirectoryContent implements Content
             m_children = listFilesRecursive(m_dir);
         }
 
-        public boolean hasMoreElements()
+        public synchronized boolean hasMoreElements()
         {
             return (m_children != null) && (m_counter < m_children.length);
         }
 
-        public Object nextElement()
+        public synchronized Object nextElement()
         {
             if ((m_children == null) || (m_counter >= m_children.length))
             {
@@ -338,7 +338,7 @@ public class DirectoryContent implements Content
             return sb.toString();
         }
 
-        public File[] listFilesRecursive(File dir)
+        private File[] listFilesRecursive(File dir)
         {
             File[] children = dir.listFiles();
             File[] combined = children;

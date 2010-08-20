@@ -482,7 +482,7 @@ public class JarContent implements Content
 
     private static class EntriesEnumeration implements Enumeration
     {
-        private Enumeration m_enumeration = null;
+        private final Enumeration m_enumeration;
 
         public EntriesEnumeration(Enumeration enumeration)
         {
