@@ -878,6 +878,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          * @param ref the service reference to add to the hidden list
          */
         private void hide(ServiceReference ref) {
+            if (DEBUG) { System.out.println("ServiceTracker.Tracked.hide " + ServiceUtil.toString(ref)); }
             m_hidden.add(ref);
         }
         
@@ -887,6 +888,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          * @param ref the service reference to remove from the hidden list
          */
         private void unhide(ServiceReference ref) {
+            if (DEBUG) { System.out.println("ServiceTracker.Tracked.unhide " + ServiceUtil.toString(ref)); }
             m_hidden.remove(ref);
         }
 	    
@@ -895,6 +897,58 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		 */
 		Tracked() {
 			super();
+		}
+		
+		void setInitial(Object[] list) {
+		    if (list == null) {
+		        return;
+		    }
+		    // we need to split this list into the highest matching service references for each aspect
+		    // and a list of 'hidden' service references
+		    int counter = list.length;
+		    for (int i = 0; i < list.length; i++) {
+		        ServiceReference sr = (ServiceReference) list[i];
+		        if (sr != null) {
+		            for (int j = 0; j < list.length; j++) {
+		                ServiceReference sr2 = (ServiceReference) list[j];
+		                if (sr2 != null && j != i) {
+		                    long sid = ServiceUtil.getServiceId(sr);
+                            long sid2 = ServiceUtil.getServiceId(sr2);
+                            if (sid == sid2) {
+                                long r = ServiceUtil.getRanking(sr);
+                                long r2 = ServiceUtil.getRanking(sr2);
+                                if (r > r2) {
+                                    if (DEBUG) { System.out.println("ServiceTracker.Tracked.setInitial: hiding " + ServiceUtil.toString(sr2)); }
+                                    hide(sr2);
+                                    list[j] = null;
+                                    counter--;
+                                }
+                                else {
+                                    if (DEBUG) { System.out.println("ServiceTracker.Tracked.setInitial: hiding " + ServiceUtil.toString(sr)); }
+                                    hide(sr);
+                                    list[i] = null;
+                                    counter--;
+                                    break;
+                                }
+                            }
+		                }
+		            }
+		        }
+		    }
+		    if (counter > 0) {
+		        Object[] result = new Object[counter];
+		        int index = 0;
+		        for (int i = 0; i < list.length; i++) {
+		            if (list[i] != null) {
+                        if (DEBUG) { System.out.println("ServiceTracker.Tracked.setInitial: propagating " + ServiceUtil.toString((ServiceReference) list[i])); }
+		                result[index] = list[i];
+		                index++;
+		            }
+		        }
+		        // we only invoke super if we actually have
+		        // results in our initial list
+		        super.setInitial(result);
+		    }
 		}
 
 		/**
