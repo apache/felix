@@ -21,18 +21,20 @@ package org.apache.felix.dm.test.bundle.annotation.publisher;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.annotation.api.BundleAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
-import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Service;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.framework.Bundle;
 
 /**
- * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
+ * Test a BundleAdapterService which provides its interface using a @ServiceLifecycle.
  */
-public class ServiceTestWthPublisher
+public class BundleAdapterServiceTestWithPublisher
 {
     public interface Provider
     {
@@ -41,30 +43,43 @@ public class ServiceTestWthPublisher
     @Service
     public static class Consumer
     {
-        @ServiceDependency(filter="(test=ServiceTestWthPublisher)")
+        @ServiceDependency(filter="(test=BundleAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
         
         @ServiceDependency(required=false, removed = "unbind")
         void bind(Map properties, Provider provider)
         {
             m_sequencer.step(1);
+            // check ProviderImpl properties
             if ("bar".equals(properties.get("foo")))
             {
                 m_sequencer.step(2);
             }
+            // check extra ProviderImpl properties (returned by start method)
             if ("bar2".equals(properties.get("foo2")))
             {
                 m_sequencer.step(3);
+            }
+            // check properties propagated from bundle
+            if ("org.apache.felix.dependencymanager".equals(properties.get("Bundle-SymbolicName"))) 
+            {
+                m_sequencer.step(4);
+            } else {
+                Thread.dumpStack();
+                System.out.println(properties);
             }
         }
 
         void unbind(Provider provider)
         {
-            m_sequencer.step(4);
+            m_sequencer.step(5);
         }
     }
     
-    @Service(properties={@Property(name="foo", value="bar")})
+    @BundleAdapterService(properties={@Property(name="foo", value="bar")},
+                          filter = "(Bundle-SymbolicName=org.apache.felix.dependencymanager)",
+                          stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE,
+                          propagate = true)
     public static class ProviderImpl implements Provider
     {
         @LifecycleController
@@ -73,7 +88,7 @@ public class ServiceTestWthPublisher
         @LifecycleController(start=false)
         Runnable m_unpublisher; // injected and used to unregister our service
         
-        @ServiceDependency(filter="(test=ServiceTestWthPublisher)")
+        @ServiceDependency(filter="(test=BundleAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
 
         @Init

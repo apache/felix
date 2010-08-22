@@ -18,7 +18,9 @@
  */
 package org.apache.felix.dm.runtime;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -26,11 +28,14 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Service;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
 /**
@@ -93,6 +98,9 @@ public class ServiceLifecycleHandler
     private List<MetaData> m_depsMeta;
     private List<Dependency> m_namedDeps = new ArrayList<Dependency>();
     private Bundle m_bundle;
+    private final AtomicBoolean m_started = new AtomicBoolean(false);
+    private ToggleServiceDependency m_toggle;
+    private final static Object SYNC = new Object();
 
     /**
      * Makes a new ServiceLifecycleHandler object. This objects allows to decorate the "init" service callback, in
@@ -119,7 +127,8 @@ public class ServiceLifecycleHandler
     /**
      * Handles an "init" lifecycle service callback. We just catch the "init" method, and callback 
      * the actual Service' init method, to see if a dependency customization map is returned.
-     * 
+     * We also check if a Lifecycle Controller is used. In this case, we add a hidden custom dependency,
+     * allowing to take control of when the component is actually started/stopped.
      * @param service The Annotated Service
      */
     @SuppressWarnings("unchecked")
@@ -127,15 +136,34 @@ public class ServiceLifecycleHandler
         throws Exception
     {
         Object serviceInstance = service.getService();
-        DependencyManager dm = service.getDependencyManager(); 
-        
+        DependencyManager dm = service.getDependencyManager();
+
+        // Check if a lifecycle controller is defined for this service. If true, then 
+        // We'll use the ToggleServiceDependency in order to manually activate/deactivate 
+        // the component ...
+        String starter = m_srvMeta.getString(Params.starter, null);
+        String stopper = m_srvMeta.getString(Params.stopper, null);
+
+        if (starter != null)
+        {
+            Log.instance().log(LogService.LOG_DEBUG, "Setting up a lifecycle controller for service %s", serviceInstance);
+            String componentName = serviceInstance.getClass().getName();
+            m_toggle = new ToggleServiceDependency();
+            service.add(m_toggle);
+            setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName));
+
+            if (stopper != null) {
+                setField(serviceInstance, stopper, Runnable.class, new ComponentStopper(componentName));
+            }
+        }
+
         // Invoke all composites' init methods, and for each one, check if a dependency
         // customization map is returned by the method. This map will be used to configure 
         // some dependency filters (or required flag).
-      
+
         Map<String, String> customization = new HashMap<String, String>();
         Object[] composites = service.getCompositionInstances();
-        for (Object composite : composites)
+        for (Object composite: composites)
         {
             Object o = invokeMethod(composite, m_init, dm, service);
             if (o != null && Map.class.isAssignableFrom(o.getClass()))
@@ -143,18 +171,19 @@ public class ServiceLifecycleHandler
                 customization.putAll((Map) o);
             }
         }
-       
+
         Log.instance().log(LogService.LOG_DEBUG,
                            "ServiceLifecycleHandler.init: invoked init method from service %s " +
-                           ", returned map: %s", serviceInstance, customization); 
-                                 
-        for (MetaData dependency : m_depsMeta) 
+                               ", returned map: %s", serviceInstance, customization);
+
+        for (MetaData dependency: m_depsMeta)
         {
             // Check if this dependency has a name, and if we find the name from the 
             // customization map, then apply filters and required flag from the map into it.
-            
+
             String name = dependency.getString(Params.name, null);
-            if (name != null) {
+            if (name != null)
+            {
                 String filter = customization.get(name + ".filter");
                 String required = customization.get(name + ".required");
 
@@ -179,9 +208,9 @@ public class ServiceLifecycleHandler
                 m_namedDeps.add(d);
                 service.add(d);
             }
-        }        
+        }
     }
-    
+
     /**
      * Handles the Service's start lifecycle callback. We just invoke the service "start" service callback on 
      * the service instance, as well as on all eventual service composites.
@@ -251,7 +280,7 @@ public class ServiceLifecycleHandler
     /**
      * Invoke a callback on all Service compositions.
      */
-    private void callbackComposites(Service service, String callback) 
+    private void callbackComposites(Service service, String callback)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         Object serviceInstance = service.getService();
@@ -268,25 +297,102 @@ public class ServiceLifecycleHandler
     private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        if (method != null) {
-            try 
+        if (method != null)
+        {
+            try
             {
                 return InvocationUtil.invokeCallbackMethod(
-                    serviceInstance, method, 
-                    new Class[][] { { Service.class }, {} }, 
-                    new Object[][] { { service }, {} }
+                                                           serviceInstance, method,
+                                                           new Class[][] { { Service.class }, {} },
+                                                           new Object[][] { { service }, {} }
                     );
-            } 
-            
-            catch (NoSuchMethodException e) 
+            }
+
+            catch (NoSuchMethodException e)
             {
                 // ignore this
             }
-            
+
             // Other exception will be thrown up to the ServiceImpl.invokeCallbackMethod(), which is 
             // currently invoking our method. So, no need to log something here, since the invokeCallbackMethod 
             // method is already logging any thrown exception.
         }
         return null;
+    }
+
+    /**
+     * Sets a field of an object by reflexion.
+     */
+    private void setField(Object instance, String fieldName, Class fieldClass, Object fieldValue)
+    {
+        Object serviceInstance = instance;
+        Class serviceClazz = serviceInstance.getClass();
+        if (Proxy.isProxyClass(serviceClazz))
+        {
+            serviceInstance = Proxy.getInvocationHandler(serviceInstance);
+            serviceClazz = serviceInstance.getClass();
+        }
+        while (serviceClazz != null)
+        {
+            Field[] fields = serviceClazz.getDeclaredFields();
+            for (int j = 0; j < fields.length; j++)
+            {
+                Field field = fields[j];
+                Class type = field.getType();
+                if (field.getName().equals(fieldName) && type.isAssignableFrom(fieldClass))
+                {
+                    try
+                    {
+                        field.setAccessible(true);
+                        // synchronized makes sure the field is actually written to immediately
+                        synchronized (SYNC)
+                        {
+                            field.set(serviceInstance, fieldValue);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RuntimeException("Could not set field " + field, e);
+                    }
+                }
+            }
+            serviceClazz = serviceClazz.getSuperclass();
+        }
+    }
+    
+    private class ComponentStarter implements Runnable {
+        private String m_componentName;
+
+        public ComponentStarter(String name)
+        {
+            m_componentName = name;
+        }
+
+        public void run()
+        {
+            if (m_started.compareAndSet(false, true)) {
+                Log.instance().log(LogService.LOG_DEBUG, "Lifecycle controller is activating the component %s",
+                                   m_componentName);
+                m_toggle.setAvailable(true);
+            }
+        }
+    }
+    
+    private class ComponentStopper implements Runnable {
+        private Object m_componentName;
+
+        public ComponentStopper(String componentName)
+        {
+            m_componentName = componentName;
+        }
+
+        public void run()
+        {
+            if (m_started.compareAndSet(true, false)) {
+                Log.instance().log(LogService.LOG_DEBUG, "Lifecycle controller is deactivating the component %s",
+                                   m_componentName);
+                m_toggle.setAvailable(false);
+            }
+        }
     }
 }

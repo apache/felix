@@ -24,22 +24,28 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Service;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
- * This test validates that a basic "ProviderImpl" which is instantiated from a FactorySet can register/unregister its
- * service using the Publisher annotation.
+ * A Service instantiated from a FactorySet, and which registers/unregisters its service,
+ * using the @ServiceLifecycle annotation.
  */
 public class FactoryServiceTestWthPublisher
 {
+    public interface Provider
+    {
+    }
+
     @Service
     public static class Consumer
     {
-        @ServiceDependency(filter="(test=testFactoryService)")
+        @ServiceDependency(filter="(test=FactoryServiceTestWthPublisher)")
         Sequencer m_sequencer;
         
         @ServiceDependency(required=false, removed = "unbind")
@@ -66,45 +72,33 @@ public class FactoryServiceTestWthPublisher
         }
     }
    
-    @Service(publisher="m_publisher", unpublisher="m_unpublisher", factorySet="MyFactory", properties={@Property(name="foo", value="bar")})
+    @Service(factorySet="MyFactory", properties={@Property(name="foo", value="bar")})
     public static class ProviderImpl implements Provider
     {
+        @LifecycleController
         Runnable m_publisher; // injected and used to register our service
+        
+        @LifecycleController(start=false)
         Runnable m_unpublisher; // injected and used to unregister our service
         
-        @ServiceDependency(filter="(test=testFactoryService)")
+        @ServiceDependency(filter="(test=FactoryServiceTestWthPublisher)")
         Sequencer m_sequencer;
+        
+        @Init
+        void init()
+        {
+            // register service in 1 second
+            Utils.schedule(m_publisher, 1000);
+            // unregister the service in 2 seconds
+            Utils.schedule(m_unpublisher, 2000);
+        }
         
         @Start
         Map start()
         {
-            // register service in 1 second
-            schedule(m_publisher, 1000);
-            // unregister the service in 2 seconds
-            schedule(m_unpublisher, 2000);
             // At this point, our service properties are the one specified in our @Service annotation + the one specified by our Factory.
             // We also append an extra service property here:
             return new HashMap() {{ put("foo3", "bar3"); }};
-        }
-
-        private void schedule(final Runnable task, final long n)
-        {
-            Thread t = new Thread() {
-                public void run()
-                {
-                    try
-                    {
-                        sleep(n);
-                    }
-                    catch (InterruptedException e)
-                    {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    task.run();
-                }
-            };
-            t.start();
         }
     }
     

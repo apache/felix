@@ -48,8 +48,9 @@ public class AdapterServiceBuilder extends ServiceComponentBuilder
         Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.properties, null);
         Class<?> adapteeService = b.loadClass(srvMeta.getString(Params.adapteeService));
         String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);     
-        Service service = dm.createAdapterService(adapteeService, adapteeFilter)
-                            .setInterface(provides, adapterProperties);
+        Service service = dm.createAdapterService(adapteeService, adapteeFilter);
+        service.setInterface(provides, adapterProperties);
+        
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
