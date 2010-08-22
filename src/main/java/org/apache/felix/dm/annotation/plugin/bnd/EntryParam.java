@@ -34,7 +34,7 @@ public enum EntryParam
     factoryConfigure,
     factoryMethod,
     field,
-    name,
-    publisher,
-    unpublisher
+    name, 
+    starter,
+    stopper,
 }

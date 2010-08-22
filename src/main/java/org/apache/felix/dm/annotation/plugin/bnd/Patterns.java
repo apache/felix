@@ -18,7 +18,7 @@ public class Patterns
     public final static Pattern CLASS = Pattern.compile("L([^;]+);");
     
     // Pattern used to parse the field on which a Publisher annotation may be applied on
-    public final static Pattern PUBLISHER = Pattern.compile("Ljava/lang/Runnable;");
+    public final static Pattern Runnable = Pattern.compile("Ljava/lang/Runnable;");
 
     /**
      * Parses a class.

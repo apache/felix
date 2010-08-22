@@ -36,6 +36,7 @@ import org.apache.felix.dm.annotation.api.ConfigurationDependency;
 import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ResourceDependency;
 import org.apache.felix.dm.annotation.api.Service;
@@ -60,27 +61,19 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_START = "L" + Start.class.getName().replace('.', '/') + ";";
     private final static String A_STOP = "L" + Stop.class.getName().replace('.', '/') + ";";
     private final static String A_DESTROY = "L" + Destroy.class.getName().replace('.', '/') + ";";
-    private final static String A_COMPOSITION = "L" + Composition.class.getName().replace('.', '/')
-        + ";";
+    private final static String A_COMPOSITION = "L" + Composition.class.getName().replace('.', '/') + ";";
+    private final static String A_LIFCLE_CTRL = "L" + LifecycleController.class.getName().replace('.', '/')+ ";";
+
     private final static String A_SERVICE = "L" + Service.class.getName().replace('.', '/') + ";";
-    private final static String A_SERVICE_DEP = "L"
-        + ServiceDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_CONFIGURATION_DEPENDENCY = "L"
-        + ConfigurationDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_BUNDLE_DEPENDENCY = "L"
-        + BundleDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_RESOURCE_DEPENDENCY = "L"
-        + ResourceDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_ASPECT_SERVICE = "L"
-        + AspectService.class.getName().replace('.', '/') + ";";
-    private final static String A_ADAPTER_SERVICE = "L"
-        + AdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_BUNDLE_ADAPTER_SERVICE = "L"
-        + BundleAdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_RESOURCE_ADAPTER_SERVICE = "L"
-        + ResourceAdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_FACTORYCONFIG_ADAPTER_SERVICE = "L"
-        + FactoryConfigurationAdapterService.class.getName().replace('.', '/') + ";";
+    private final static String A_SERVICE_DEP = "L" + ServiceDependency.class.getName().replace('.', '/') + ";";
+    private final static String A_CONFIGURATION_DEPENDENCY = "L" + ConfigurationDependency.class.getName().replace('.', '/') + ";";
+    private final static String A_BUNDLE_DEPENDENCY = "L" + BundleDependency.class.getName().replace('.', '/') + ";";
+    private final static String A_RESOURCE_DEPENDENCY = "L" + ResourceDependency.class.getName().replace('.', '/') + ";";
+    private final static String A_ASPECT_SERVICE = "L"+ AspectService.class.getName().replace('.', '/') + ";";
+    private final static String A_ADAPTER_SERVICE = "L" + AdapterService.class.getName().replace('.', '/') + ";";
+    private final static String A_BUNDLE_ADAPTER_SERVICE = "L" + BundleAdapterService.class.getName().replace('.', '/') + ";";
+    private final static String A_RESOURCE_ADAPTER_SERVICE = "L" + ResourceAdapterService.class.getName().replace('.', '/') + ";";
+    private final static String A_FACTORYCONFIG_ADAPTER_SERVICE = "L" + FactoryConfigurationAdapterService.class.getName().replace('.', '/') + ";";
 
     private Reporter m_reporter;
     private String m_className;
@@ -98,6 +91,8 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_initMethod;
     private String m_destroyMethod;
     private String m_compositionMethod;
+    private String m_starter;
+    private String m_stopper;
 
     /**
      * This class represents a DependencyManager component descriptor entry.
@@ -226,6 +221,9 @@ public class AnnotationCollector extends ClassDataCollector
         {
             Patterns.parseMethod(m_method, m_descriptor, Patterns.COMPOSITION);
             m_compositionMethod = m_method;
+        } else if (annotation.getName().equals(A_LIFCLE_CTRL)) 
+        {
+            parseLifecycleAnnotation(annotation);
         }
         else if (annotation.getName().equals(A_SERVICE_DEP))
         {
@@ -274,10 +272,6 @@ public class AnnotationCollector extends ClassDataCollector
         
         // factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
-
-        // Parse publisher/unpublisher attributes.
-        writer.putString(annotation, EntryParam.publisher, null);
-        writer.putString(annotation, EntryParam.unpublisher, null);
     }
 
     private void addCommonServiceParams(EntryWriter writer)
@@ -305,7 +299,22 @@ public class AnnotationCollector extends ClassDataCollector
         if (m_compositionMethod != null)
         {
             writer.put(EntryParam.composition, m_compositionMethod);
-        }        
+        }       
+        
+        if (m_starter != null) 
+        {
+            writer.put(EntryParam.starter, m_starter);
+        }
+        
+        if (m_stopper != null)
+        {
+            writer.put(EntryParam.stopper, m_stopper);
+            if (m_starter == null)
+            {
+                throw new IllegalArgumentException("Can't use a @LifecycleController annotation for stopping a service without declaring a " +
+                                                   "@LifecycleController that starts the component in class " + m_className);
+            }
+        }   
     }
 
     /**
@@ -652,6 +661,25 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.factoryMethod, null);
     }
 
+    private void parseLifecycleAnnotation(Annotation annotation)
+    {
+        Patterns.parseField(m_field, m_descriptor, Patterns.Runnable);
+        if ("true".equals(get(annotation,EntryParam.start.name(), "true")))
+        {
+            if (m_starter != null) {
+                throw new IllegalStateException("Lifecycle annotation already defined on field " + 
+                                                m_starter + " in class " + m_className);
+            }
+            m_starter = m_field;
+        } else {
+            if (m_stopper != null) {
+                throw new IllegalStateException("Lifecycle annotation already defined on field " + 
+                                                m_stopper + " in class " + m_className);
+            }
+            m_stopper = m_field;
+        }
+    }
+
     /**
      * Parse optional meta types annotation attributes
      * @param annotation
@@ -809,11 +837,11 @@ public class AnnotationCollector extends ClassDataCollector
             return false;
         }
 
-        // We must have at least a Service or an AspectService annotation.
+        // We must have at least a Service annotation.
         checkServiceDeclared(EntryType.Service, EntryType.AspectService, EntryType.AdapterService,
             EntryType.BundleAdapterService,
             EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
-
+        
         StringBuilder sb = new StringBuilder();
         sb.append("Parsed annotation for class ");
         sb.append(m_className);
