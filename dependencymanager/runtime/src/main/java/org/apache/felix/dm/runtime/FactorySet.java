@@ -367,28 +367,7 @@ public class FactorySet extends AbstractSet<Dictionary>
                 {
                      // Merge service properties with the configuration provided by the factory.
                     Dictionary serviceProperties = mergeSettings(m_serviceProperties, configuration);
-                    
-                    // Set the exposed service, unless a Publisher field is present.
-                    // If present, the publisher field means that we have to inject
-                    // a Runnable that will be called back by the service for firing a service 
-                    // registration.
-                    
-                    String publisherField = m_srvMeta.getString(Params.publisher, null);
-                    String unpublisherField = m_srvMeta.getString(Params.unpublisher, null);
-                    if (publisherField == null)
-                    {
-                        s.setInterface(m_provide, serviceProperties);
-                    } else
-                    {
-                       // Services will be manually provided by the service itself.
-                        ServicePublisher publisher = new ServicePublisher(publisherField,
-                                                                          unpublisherField,
-                                                                          s,
-                                                                          m_bundle.getBundleContext(),
-                                                                          m_provide,
-                                                                          serviceProperties);
-                        publisher.register(m_dm);
-                    }
+                    s.setInterface(m_provide, serviceProperties);
                 }
 
                 s.setComposition(m_srvMeta.getString(Params.composition, null));

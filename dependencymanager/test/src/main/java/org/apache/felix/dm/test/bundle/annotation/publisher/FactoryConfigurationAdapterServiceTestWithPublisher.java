@@ -18,9 +18,13 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.publisher;
 
+import java.io.IOException;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Property;
@@ -28,11 +32,13 @@ import org.apache.felix.dm.annotation.api.Service;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
- * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
+ * Test a FactoryConfigurationAdapterService which provides its interface using a @ServiceLifecycle.
  */
-public class ServiceTestWthPublisher
+public class FactoryConfigurationAdapterServiceTestWithPublisher
 {
     public interface Provider
     {
@@ -41,30 +47,48 @@ public class ServiceTestWthPublisher
     @Service
     public static class Consumer
     {
-        @ServiceDependency(filter="(test=ServiceTestWthPublisher)")
+        @ServiceDependency(filter="(test=FactoryConfigurationAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
         
         @ServiceDependency(required=false, removed = "unbind")
         void bind(Map properties, Provider provider)
         {
             m_sequencer.step(1);
+            // check ProviderImpl properties
             if ("bar".equals(properties.get("foo")))
             {
                 m_sequencer.step(2);
             }
+            // check extra ProviderImpl properties (returned by start method)
             if ("bar2".equals(properties.get("foo2")))
             {
                 m_sequencer.step(3);
+            }
+            // check Factory Configuration properties
+            if ("bar3".equals(properties.get("foo3")))
+            {
+                m_sequencer.step(4);
             }
         }
 
         void unbind(Provider provider)
         {
-            m_sequencer.step(4);
+            m_sequencer.step(5);
         }
     }
     
-    @Service(properties={@Property(name="foo", value="bar")})
+    @Service
+    public static class Configurator
+    {
+        @ServiceDependency
+        void bind(ConfigurationAdmin cm) throws IOException
+        {
+            Configuration cf = cm.createFactoryConfiguration("MyPid", null);
+            cf.update(new Hashtable() {{ put("foo3", "bar3"); }});
+        }
+    }
+    
+    @FactoryConfigurationAdapterService(propagate=true, properties={@Property(name="foo", value="bar")}, factoryPid="MyPid", updated="updated")
     public static class ProviderImpl implements Provider
     {
         @LifecycleController
@@ -73,9 +97,12 @@ public class ServiceTestWthPublisher
         @LifecycleController(start=false)
         Runnable m_unpublisher; // injected and used to unregister our service
         
-        @ServiceDependency(filter="(test=ServiceTestWthPublisher)")
+        @ServiceDependency(filter="(test=FactoryConfigurationAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
 
+        void updated(Dictionary conf) {
+        }
+        
         @Init
         void init()
         {
@@ -92,5 +119,6 @@ public class ServiceTestWthPublisher
             // in the @Service annotation.
             return new HashMap() {{ put("foo2", "bar2"); }};
         }
+
     }
 }

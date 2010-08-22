@@ -45,8 +45,8 @@ public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         String changed = srvMeta.getString(Params.changed, null /* no change callback if not specified explicitly */);
-        Service srv = dm.createResourceAdapterService(filter, propagate, null, changed)
-                        .setInterface(provides, properties);       
+        Service srv = dm.createResourceAdapterService(filter, propagate, null, changed);
+        srv.setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {

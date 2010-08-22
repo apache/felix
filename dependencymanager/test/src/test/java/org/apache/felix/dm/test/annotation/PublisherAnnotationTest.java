@@ -37,8 +37,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 /**
- * Use case: Verify the Publisher annotation, which allows a component to register/unregister
- * its service programatically.
+ * Use case: Verify the @ServiceLifecycle annotation, which allows a component to activate/deactivate itself programatically.
  */
 @RunWith(JUnit4TestRunner.class)
 public class PublisherAnnotationTest extends AnnotationBase
@@ -51,6 +50,7 @@ public class PublisherAnnotationTest extends AnnotationBase
             provision(
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.4"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager.runtime").versionAsInProject()),
             provision(
                 new BundleGenerator()
@@ -63,43 +63,81 @@ public class PublisherAnnotationTest extends AnnotationBase
     }
 
     /**
-     * A Provider that just registers/unregisters its service, using the Publisher annotation.
+     * Registers the Sequencer interface, for activating a given testcase
+     */
+    private void registerSequencer(DependencyManager m, final String testName) 
+    {
+        m.add(m.createService()
+              .setImplementation(this)
+              .setInterface(Sequencer.class.getName(),new Hashtable() {{
+                  put("test", testName);
+              }}));
+    }
+    
+    /**
+     * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
      */
     @Test
     public void testServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
-                                                                     new Hashtable() {{ put("test", "testService"); }}));
+        registerSequencer(m, "ServiceTestWthPublisher"); 
         m_ensure.waitForStep(4, 10000);
     }
     
     /**
-     * A Provider instantiated from a FactorySet, and which registers/unregisters its service, using the Publisher annotation.
+     * A Service instantiated from a FactorySet, and which registers/unregisters its service,
+     * using the @ServiceLifecycle annotation.
      */
     @Test
     public void testFactoryServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
-                                                                     new Hashtable() {{ put("test", "testFactoryService"); }}));
+        registerSequencer(m, "FactoryServiceTestWthPublisher"); 
         m_ensure.waitForStep(5, 10000);
     }
-    
+
     /**
-     * A Provider that registers its service, using the Publisher annotation, but very early: before
-     * the start callback is invoked ! In this case, we must verify that the runtime will delay the
-     * service registration until the service is fully started.
+     * Test an AdapterService which provides its interface using a @ServiceLifecycle.
      */
     @Test
-    public void testServiceWithEarlyPublisher(BundleContext context)
+    public void testAdapterServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
-                                                                     new Hashtable() {{ put("test", "testEarlyService"); }}));
+        registerSequencer(m, "AdapterServiceTestWithPublisher"); 
+        m_ensure.waitForStep(6, 10000);
+    }
+
+    /**
+     * Test a BundleAdapterService which provides its interface using a @ServiceLifecycle.
+     */
+    @Test
+    public void testBundleAdapterServiceWithPublisher(BundleContext context)
+    {
+        DependencyManager m = new DependencyManager(context);
+        registerSequencer(m, "BundleAdapterServiceTestWithPublisher"); 
+        m_ensure.waitForStep(5, 10000);
+    }
+
+    /**
+     * Test a ResourceAdapterService which provides its interface using a @ServiceLifecycle.
+     */
+    @Test
+    public void TestResourceAdapterServiceWithPublisher(BundleContext context)
+    {
+        DependencyManager m = new DependencyManager(context);
+        registerSequencer(m, "ResourceAdapterServiceTestWithPublisher"); 
+        m_ensure.waitForStep(5, 10000);
+    }
+
+    /**
+     * Test a FactoryConfigurationAdapterService which provides its interface using a @ServiceLifecycle.
+     */
+    @Test
+    public void testFactoryAdapterServiceWithPublisher(BundleContext context)
+    {
+        DependencyManager m = new DependencyManager(context);
+        registerSequencer(m, "FactoryConfigurationAdapterServiceTestWithPublisher"); 
         m_ensure.waitForStep(5, 10000);
     }
 }

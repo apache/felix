@@ -18,6 +18,25 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.publisher;
 
-public interface Provider
+public class Utils
 {
+    public static void schedule(final Runnable task, final long n)
+    {
+        Thread t = new Thread() {
+            public void run()
+            {
+                try
+                {
+                    sleep(n);
+                }
+                catch (InterruptedException e)
+                {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                task.run();
+            }
+        };
+        t.start();
+    }
 }

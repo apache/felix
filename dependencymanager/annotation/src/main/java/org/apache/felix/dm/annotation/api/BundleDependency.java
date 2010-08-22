@@ -58,7 +58,8 @@ public @interface BundleDependency
     int stateMask() default Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
 
     /**
-     * @TODO
+     * Specifies if the manifest headers from the bundle should be propagated to 
+     * the service properties.
      */
     boolean propagate() default false;
 }
