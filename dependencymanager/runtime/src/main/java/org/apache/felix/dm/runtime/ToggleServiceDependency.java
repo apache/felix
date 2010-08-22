@@ -31,120 +31,156 @@ import org.apache.felix.dm.DependencyService;
  * is available or not. It's used in the context of the LifecycleController class, in order to 
  * activate/deactivate a Component on demand.
  */
-public class ToggleServiceDependency implements Dependency, DependencyActivation {
+public class ToggleServiceDependency implements Dependency, DependencyActivation
+{
     private final List m_services = new ArrayList();
-    private boolean m_isAvailable;
-    private boolean m_stopped;
+    private volatile boolean m_isAvailable;
+    private volatile boolean m_stopped;
 
     public ToggleServiceDependency()
     {
     }
-    
-    public ToggleServiceDependency(boolean mIsAvailable)
+
+    public ToggleServiceDependency(boolean isAvailable)
     {
-        m_isAvailable = mIsAvailable;
+        m_isAvailable = isAvailable;
     }
 
-    public void setAvailable(boolean isAvailable) {
-        if (m_stopped) {
-            return;
+    public void setAvailable(boolean isAvailable)
+    {
+        synchronized (this)
+        {
+            if (m_stopped)
+            {
+                return;
+            }
+            boolean changed = m_isAvailable != isAvailable;
+            m_isAvailable = isAvailable;
+            
+            if (! changed) {
+                return;
+            }
         }
-        boolean changed = m_isAvailable != isAvailable;
-        m_isAvailable = isAvailable;
+        
         // invoked on every change
-        if (m_isAvailable) {
+        if (m_isAvailable)
+        {
             Object[] services = m_services.toArray();
-            for (int i = 0; i < services.length; i++) {
+            for (int i = 0; i < services.length; i++)
+            {
                 DependencyService ds = (DependencyService) services[i];
                 ds.dependencyAvailable(this);
-                if (!isRequired()) {
+                if (!isRequired())
+                {
                     invokeAdded(ds);
                 }
             }
         }
-        else {
+        else
+        {
             Object[] services = m_services.toArray();
-            for (int i = 0; i < services.length; i++) {
+            for (int i = 0; i < services.length; i++)
+            {
                 DependencyService ds = (DependencyService) services[i];
                 ds.dependencyUnavailable(this);
-                if (!isRequired()) {
+                if (!isRequired())
+                {
                     invokeRemoved(ds);
                 }
             }
         }
     }
-    
-    public Dependency createCopy() {
+
+    public Dependency createCopy()
+    {
         return new ToggleServiceDependency(m_isAvailable);
     }
 
-    public Object getAutoConfigInstance() {
+    public Object getAutoConfigInstance()
+    {
         return "" + m_isAvailable;
     }
 
-    public String getAutoConfigName() {
+    public String getAutoConfigName()
+    {
         return null;
     }
 
-    public Class getAutoConfigType() {
+    public Class getAutoConfigType()
+    {
         return String.class;
     }
 
-    public Dictionary getProperties() {
+    public Dictionary getProperties()
+    {
         return null;
     }
 
-    public void invokeAdded(DependencyService service) {
+    public void invokeAdded(DependencyService service)
+    {
         invoke(service, "added");
     }
 
-    public void invokeRemoved(DependencyService service) {
+    public void invokeRemoved(DependencyService service)
+    {
         invoke(service, "removed");
     }
-    
-    public void invoke(DependencyService dependencyService, String name) {
-        if (name != null) {
+
+    public void invoke(DependencyService dependencyService, String name)
+    {
+        if (name != null)
+        {
             dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name,
-              new Class[][] {{String.class}, {Object.class}, {}},
-              new Object[][] {{getAutoConfigInstance()}, {getAutoConfigInstance()}, {}}
-            );
+                                                   new Class[][] { { String.class }, { Object.class }, {} },
+                                                   new Object[][] { { getAutoConfigInstance() }, { getAutoConfigInstance() }, {} });
         }
     }
-    
-    private synchronized Object[] getCallbackInstances(DependencyService dependencyService) {
+
+    private synchronized Object[] getCallbackInstances(DependencyService dependencyService)
+    {
         return dependencyService.getCompositionInstances();
     }
 
-    public boolean isAutoConfig() {
+    public boolean isAutoConfig()
+    {
         return true;
     }
 
-    public boolean isAvailable() {
+    public boolean isAvailable()
+    {
         return m_isAvailable;
     }
 
-    public boolean isInstanceBound() {
+    public boolean isInstanceBound()
+    {
         return true;
     }
 
-    public boolean isPropagated() {
+    public boolean isPropagated()
+    {
         return false;
     }
 
-    public boolean isRequired() {
+    public boolean isRequired()
+    {
         return true;
     }
 
-    public void start(DependencyService service) {
-        synchronized (this) {
+    public void start(DependencyService service)
+    {
+        synchronized (this)
+        {
             m_services.add(service);
+            m_stopped = false;
         }
     }
 
-    public void stop(DependencyService service) {
-        synchronized (this) {
+    public void stop(DependencyService service)
+    {
+        synchronized (this)
+        {
             m_services.remove(service);
+            m_stopped = true;
         }
-        m_stopped = true;
     }
 }
