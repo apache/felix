@@ -36,7 +36,7 @@ How to test:
 
      svn checkout http://svn.apache.org/repos/asf/felix/trunk/dependencymanager dependencymanager
      cd dependencymanager
-     mvn -Dmaven.test.skip=true install
+     mvn -Dpackaging=plugins -Dmaven.test.skip=true install
 
   - install the DM bundles into the fwk 
 
