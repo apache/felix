@@ -100,12 +100,14 @@ public class ResourceAdapterServiceImpl extends FilterService {
             dependencies.remove(0);
             ResourceDependency resourceDependency = m_manager.createResourceDependency()
                  .setResource(resource)
-                 .setPropagate(m_propagate)
                  .setCallbacks(m_callbackInstance, null, m_callbackChanged, null)
                  .setAutoConfig(true)
                  .setRequired(true);
-            resourceDependency.setPropagate(m_propagate);
-            resourceDependency.setPropagate(m_propagateCallbackInstance, m_propagateCallbackMethod);
+            if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
+                resourceDependency.setPropagate(m_propagateCallbackInstance, m_propagateCallbackMethod);
+            } else {
+                resourceDependency.setPropagate(m_propagate);
+            }
             Service service = m_manager.createService()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
