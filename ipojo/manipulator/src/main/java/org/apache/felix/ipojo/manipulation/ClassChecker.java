@@ -285,6 +285,18 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             }
             return null;
         }
+
+        public AnnotationVisitor visitParameterAnnotation(int id,
+                String name, boolean visible) {
+            if (visible) {
+                AnnotationDescriptor ann = new AnnotationDescriptor(name, visible);
+                m_method.addParameterAnnotation(id, ann);
+                return ann;
+            }
+            return null;
+        }
+        
+        
     }
     
     /**
@@ -419,8 +431,33 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * attributes.
          * @param mv the method visitor visiting the destination method.
          */
-        public void visit(MethodVisitor mv) {
+        public void visitAnnotation(MethodVisitor mv) {
             AnnotationVisitor av = mv.visitAnnotation(m_name, m_visible);
+            for (int i = 0; i < m_simples.size(); i++) {
+                ((SimpleAttribute) m_simples.get(i)).visit(av);
+            }
+            for (int i = 0; i < m_enums.size(); i++) {
+                ((EnumAttribute) m_enums.get(i)).visit(av);
+            }
+            for (int i = 0; i < m_nested.size(); i++) {
+                ((AnnotationDescriptor) m_nested.get(i)).visit(av);
+            }
+            for (int i = 0; i < m_arrays.size(); i++) {
+                ((ArrayAttribute) m_arrays.get(i)).visit(av);
+            }
+            av.visitEnd();
+        }
+        
+        /**
+         * Methods allowing to recreate the visited (stored) parameter annotations
+         * into the destination method.
+         * This method recreate the annotations itself and any other 
+         * attributes.
+         * @param id the paramter id
+         * @param mv the method visitor visiting the destination method.
+         */
+        public void visitParameterAnnotation(int id, MethodVisitor mv) {
+            AnnotationVisitor av = mv.visitParameterAnnotation(id, m_name, m_visible);
             for (int i = 0; i < m_simples.size(); i++) {
                 ((SimpleAttribute) m_simples.get(i)).visit(av);
             }

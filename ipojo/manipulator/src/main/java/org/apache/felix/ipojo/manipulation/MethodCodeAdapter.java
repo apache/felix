@@ -100,4 +100,22 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
         }
     }
 
+    /**
+     * Visits a parameter annotation.
+     * @param id the parameter number.
+     * @param name the annotation name
+     * @param visible if te annotation visibility
+     * @return the <code>null</code> if the annotation is visible, otherwise returns
+     * {@link GeneratorAdapter#visitAnnotation(String, boolean)}
+     * @see org.objectweb.asm.MethodAdapter#visitParameterAnnotation(int, java.lang.String, boolean)
+     */
+    public AnnotationVisitor visitParameterAnnotation(int id, String name,
+            boolean visible) {
+        if (visible) {
+            return null;
+        } else {
+            return super.visitParameterAnnotation(id, name, visible);
+        }
+    }
+
 }

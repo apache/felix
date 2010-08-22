@@ -19,7 +19,9 @@
 package org.apache.felix.ipojo.manipulation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
 import org.apache.felix.ipojo.metadata.Attribute;
@@ -58,6 +60,11 @@ public class MethodDescriptor {
      * method. 
      */
     private List m_annotations;
+    
+    /**
+     * The association argument (number) - {@link AnnotationDescriptor}. 
+     */
+    private Map/*<Integer, List<AnnotationDescriptor>>*/ m_parameterAnnotations = new HashMap/*<Integer, List<AnnotationDescriptor>>*/();
 
     /**
      * Constructor.
@@ -88,8 +95,25 @@ public class MethodDescriptor {
         m_annotations.add(ann);
     }
     
+    /**
+     * Add an annotation to the current method.
+     * @param ann annotation to add
+     */
+    public void addParameterAnnotation(int id, AnnotationDescriptor ann) {
+        List list = (List) m_parameterAnnotations.get(new Integer(id));
+        if (list == null) {
+            list = new ArrayList();
+            m_parameterAnnotations.put(new Integer(id), list);
+        }
+        list.add(ann);
+    }
+    
     public List getAnnotations() {
         return m_annotations;
+    }
+    
+    public Map getParameterAnnotations() {
+        return m_parameterAnnotations;
     }
     
     public String getDescriptor() {
