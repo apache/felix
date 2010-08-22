@@ -19,6 +19,7 @@
 package org.apache.felix.ipojo.manipulation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -191,10 +192,10 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
             Type[] args = Type.getArgumentTypes(desc);
             if (args.length == 0) {
-                generateEmptyConstructor(access, signature, exceptions, md.getAnnotations());
+                generateEmptyConstructor(access, signature, exceptions, md.getAnnotations()); // No parameters, so no annotations parameters
                 m_foundSuitableConstructor = true;
             } else if (args.length == 1 && args[0].getClassName().equals("org.osgi.framework.BundleContext")) {
-                generateBCConstructor(access, signature, exceptions, md.getAnnotations());
+                generateBCConstructor(access, signature, exceptions, md.getAnnotations()); // One parameter, so no annotations parameters
                 m_foundSuitableConstructor = true;
             } else {
                 // Do nothing, the constructor does not match.
@@ -215,9 +216,9 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         MethodDescriptor md = getMethodDescriptor(name, desc);
         if (md == null) {
-            generateMethodHeader(access, name, desc, signature, exceptions, new ArrayList(0));
+            generateMethodHeader(access, name, desc, signature, exceptions, new ArrayList(0), new HashMap());
         } else {
-            generateMethodHeader(access, name, desc, signature, exceptions, md.getAnnotations());
+            generateMethodHeader(access, name, desc, signature, exceptions, md.getAnnotations(), md.getParameterAnnotations());
         }
         
         String id = generateMethodFlag(name, desc);
@@ -312,7 +313,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
                 AnnotationDescriptor ad = (AnnotationDescriptor) annotations.get(i);
-                ad.visit(mv);
+                ad.visitAnnotation(mv);
             }
         }
         
@@ -344,7 +345,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
                 AnnotationDescriptor ad = (AnnotationDescriptor) annotations.get(i);
-                ad.visit(mv);
+                ad.visitAnnotation(mv);
             }
         }
 
@@ -362,8 +363,9 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param signature : method signature.
      * @param exceptions : declared exceptions.
      * @param annotations : the annotations to move to this method.
+     * @param paramAnnotations : the parameter annotations to move to this method.
      */
-    private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions, List annotations) {
+    private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions, List annotations, Map paramAnnotations) {
         GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc); 
         
         mv.visitCode();
@@ -457,7 +459,20 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
                 AnnotationDescriptor ad = (AnnotationDescriptor) annotations.get(i);
-                ad.visit(mv);
+                ad.visitAnnotation(mv);
+            }
+        }
+        
+        // Move parameter annotations
+        if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
+            Iterator ids = paramAnnotations.keySet().iterator();
+            while(ids.hasNext()) {
+                Integer id = (Integer) ids.next();
+                List ads = (List) paramAnnotations.get(id);
+                for (int i = 0; i < ads.size(); i++) {
+                    AnnotationDescriptor ad = (AnnotationDescriptor) ads.get(i);
+                    ad.visitParameterAnnotation(id.intValue(), mv);
+                }
             }
         }
 
