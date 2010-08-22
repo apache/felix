@@ -1,10 +1,3 @@
-package org.apache.felix.dm.annotation.api;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,6 +16,12 @@ import java.lang.annotation.Target;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.felix.dm.annotation.api;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Injects a <code>Runnable</code> object in a Service for starting/stopping it programatically.
