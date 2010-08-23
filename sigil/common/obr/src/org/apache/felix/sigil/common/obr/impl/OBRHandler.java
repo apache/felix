@@ -132,7 +132,7 @@ final class OBRHandler extends DefaultHandler
             {
                 if (!sanity.add(uri))
                 {
-                    throw new RuntimeException(uri);
+                    throw new RuntimeException("Duplicate uri " + uri);
                 }
                 ISigilBundle b = ModelElementFactory.getInstance().newModelElement(
                     ISigilBundle.class);
