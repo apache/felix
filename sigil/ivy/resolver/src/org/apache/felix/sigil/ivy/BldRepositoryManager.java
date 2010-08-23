@@ -21,6 +21,9 @@ package org.apache.felix.sigil.ivy;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -43,78 +46,123 @@ public class BldRepositoryManager extends AbstractRepositoryManager
             "org.apache.felix.sigil.common.core.repository.SystemRepositoryProvider");
     };
 
-    private Map<String, Properties> repos;
+    private final Map<String, Properties> repos;
+    private final List<String> repositoryPath;
 
-    public BldRepositoryManager(Map<String, Properties> repos)
+    public BldRepositoryManager(List<String> repositoryPath, Map<String, Properties> repos)
     {
+        System.out.println("RepositoryPath=" + repositoryPath);
+        System.out.println("Repos=" + repos);
+        this.repositoryPath = repositoryPath;
         this.repos = repos;
     }
 
     @Override
     protected void loadRepositories()
     {
-        for (String name : repos.keySet())
+        scanRepositories(repositoryPath, repos, 0);
+    }
+
+    /**
+     * @param repos2 
+     * @param repositoryPath2
+     */
+    private int scanRepositories(List<String> repositoryPath, Map<String, Properties> repos, int start)
+    {
+        int count = start;
+        for (String name : repositoryPath)
         {
-            Properties repo = repos.get(name);
-            if (Boolean.parseBoolean(repo.getProperty("disabled", "false")))
-            {
-                continue;
-            }
-
-            String optStr = repo.getProperty("optional", "false");
-            boolean optional = Boolean.parseBoolean(optStr.trim());
-
-            String alias = repo.getProperty(IRepositoryConfig.REPOSITORY_PROVIDER);
-            if (alias == null)
-            {
-                Log.error("provider not specified for repository: " + name);
-                continue;
-            }
-
-            String provider = (aliases.containsKey(alias) ? aliases.get(alias) : alias);
-
-            if (alias.equals("obr"))
-            {
-                // cache is directory where synchronized bundles are stored;
-                // not needed in ivy.
-                repo.setProperty("cache", "/no-cache");
-                String index = repo.getProperty("index");
-
-                if (index == null)
-                {
-                    // index is created to cache OBR url
-                    File indexFile = new File(System.getProperty("java.io.tmpdir"),
-                        "obr-index-" + name);
-                    indexFile.deleteOnExit();
-                    repo.setProperty("index", indexFile.getAbsolutePath());
-                }
-                else
-                {
-                    if (!new File(index).getParentFile().mkdirs())
-                    {
-                        // ignore - but keeps findbugs happy
+            System.out.println("Building repository for " + name);
+            if ( IRepositoryConfig.WILD_CARD.equals(name) ) {
+                HashSet<String> defined = new HashSet<String>();
+                for (String n : repositoryPath) {
+                    if (!IRepositoryConfig.WILD_CARD.equals(n)) {
+                        defined.add(n);
                     }
                 }
+                List<String> path = new LinkedList<String>();
+                for (String key : repos.keySet()) {
+                    if (!defined.contains(key))
+                    {
+                        path.add(key);
+                    }
+                }
+                count = scanRepositories(path, repos, start + 1);
             }
-
-            int level = Integer.parseInt(repo.getProperty(
-                IRepositoryConfig.REPOSITORY_LEVEL,
-                Integer.toString(IBundleRepository.NORMAL_PRIORITY)));
-
-            try
-            {
-                IRepositoryProvider instance = (IRepositoryProvider) (Class.forName(provider).newInstance());
-                IBundleRepository repository = instance.createRepository(name, repo);
-                addRepository(repository, level);
-                Log.verbose("added repository: " + repository + " : " + level);
-            }
-            catch (Exception e)
-            {
-                String msg = "failed to create repository: ";
-                if (!optional)
-                    throw new Error(msg + repo + " " + e, e);
-                System.err.println("WARNING: " + msg + e);
+            else {
+                Properties props = repos.get(name);
+                IBundleRepository repo = buildRepository(name, props);
+                System.out.println("Built repository " + repo + " for " + name + " at " + count);
+                
+                if ( repo != null ) {
+                    addRepository(repo, count++);
+                }                
             }
         }
+        
+        return count;
+    }
+
+    /**
+     * @param repo
+     * @return 
+     */
+    private static IBundleRepository buildRepository(String name, Properties repo)
+    {
+        String optStr = repo.getProperty("optional", "false");
+        boolean optional = Boolean.parseBoolean(optStr.trim());
+
+        String alias = repo.getProperty(IRepositoryConfig.REPOSITORY_PROVIDER);
+        if (alias == null)
+        {
+            String msg = "provider not specified for repository: " + name;
+            
+            if (!optional)
+                throw new IllegalStateException(msg);
+            
+            Log.warn(msg);
+        }
+
+        String provider = (aliases.containsKey(alias) ? aliases.get(alias) : alias);
+
+        if (alias.equals("obr"))
+        {
+            // cache is directory where synchronized bundles are stored;
+            // not needed in ivy.
+            repo.setProperty("cache", "/no-cache");
+            String index = repo.getProperty("index");
+
+            if (index == null)
+            {
+                // index is created to cache OBR url
+                File indexFile = new File(System.getProperty("java.io.tmpdir"),
+                    "obr-index-" + name);
+                indexFile.deleteOnExit();
+                repo.setProperty("index", indexFile.getAbsolutePath());
+            }
+            else
+            {
+                if (!new File(index).getParentFile().mkdirs())
+                {
+                    // ignore - but keeps findbugs happy
+                }
+            }
+        }
+
+        try
+        {
+            IRepositoryProvider instance = (IRepositoryProvider) (Class.forName(provider).newInstance());
+            IBundleRepository repository = instance.createRepository(name, repo);
+            return repository;
+        }
+        catch (Exception e)
+        {
+            String msg = "failed to create repository: ";
+            if (!optional)
+                throw new IllegalStateException(msg + repo + " " + e, e);
+            Log.warn(msg + e);
+        }
+        
+        return null;
     }
 }

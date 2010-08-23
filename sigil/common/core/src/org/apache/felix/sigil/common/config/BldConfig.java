@@ -36,6 +36,7 @@ public class BldConfig
     // control properties
     public static final String C_BUNDLES = "-bundles";
     public static final String C_REPOSITORIES = "-repositories";
+    public static final String C_REPOSITORY_PATH = "-repositorypath";
 
     // string properties
     public static final String S_ACTIVATOR = "-activator";
@@ -75,7 +76,7 @@ public class BldConfig
     private static final String MAPATTR_REGEX = ";\\s*";
     private static final String MAPATTR_SEP = ";";
     private static final String SUBKEY_SEP = ";";
-
+    
     // configuration is stored in typed maps
     private Map<String, String> string = new TreeMap<String, String>();
     private Map<String, List<String>> list = new TreeMap<String, List<String>>();

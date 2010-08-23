@@ -19,6 +19,7 @@
 
 package org.apache.felix.sigil.ivy;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -32,9 +33,11 @@ import org.apache.felix.sigil.common.repository.ResolutionException;
 
 public class BldResolver implements IBldResolver
 {
-    private Map<String, Properties> repos;
-    private BldRepositoryManager manager;
+    private final Map<String, Properties> repos;
+    private final List<String> repositoryPath;
 
+    private BldRepositoryManager manager;
+    
     static
     {
         try
@@ -48,8 +51,9 @@ public class BldResolver implements IBldResolver
         }
     };
 
-    public BldResolver(Map<String, Properties> repos)
+    public BldResolver(List<String> repositoryPath, Map<String, Properties> repos)
     {
+        this.repositoryPath = repositoryPath;
         this.repos = repos;
     }
 
@@ -86,7 +90,7 @@ public class BldResolver implements IBldResolver
     {
         if (manager == null)
         {
-            manager = new BldRepositoryManager(repos);
+            manager = new BldRepositoryManager(repositoryPath, repos);
         }
 
         IResolutionMonitor ivyMonitor = new IResolutionMonitor()

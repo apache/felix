@@ -30,6 +30,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.jar.JarEntry;
@@ -37,6 +38,7 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.apache.felix.sigil.common.config.BldFactory;
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.ModelElementFactory;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
@@ -120,8 +122,10 @@ public class SigilResolver extends BasicResolver implements IBldResolver
                     uri = cwd.resolve(config);
                 }
 
-                Map<String, Properties> repositories = BldFactory.getConfig(uri).getRepositoryConfig();
-                resolver = new BldResolver(repositories);
+                IRepositoryConfig project = BldFactory.getConfig(uri);
+                List<String> repositoryPath = project.getRepositoryPath(); 
+                Map<String, Properties> repositories = project.getRepositoryConfig();
+                resolver = new BldResolver(repositoryPath, repositories);
             }
             catch (IOException e)
             {

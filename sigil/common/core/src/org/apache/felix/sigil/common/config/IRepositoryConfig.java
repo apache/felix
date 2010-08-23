@@ -19,18 +19,26 @@
 
 package org.apache.felix.sigil.common.config;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 public interface IRepositoryConfig
 {
     static final String REPOSITORY_PROVIDER = "provider";
-    static final String REPOSITORY_LEVEL = "level";
+    static final String WILD_CARD = "*";
+    
+    /**
+     * Return the ordered list of repositories to search
+     * for dependencies.
+     * 
+     * @return
+     */
+    List<String> getRepositoryPath();
 
     /**
      * get properties with which to instantiate repositories.
      * The key REPOSITORY_PROVIDER will be set to the fully qualified class name of the IRepositoryProvider.
-     * The key REPOSITORY_LEVEL indicates repository search order.
      * @return
      */
     Map<String, Properties> getRepositoryConfig();

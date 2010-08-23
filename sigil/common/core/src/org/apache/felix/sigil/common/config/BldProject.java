@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -648,11 +649,19 @@ public class BldProject implements IBldProject, IRepositoryConfig
         return list;
     }
 
-    // Implement IBldConfig: getRepositoryConfig
-
+    public List<String> getRepositoryPath() 
+    {
+        List<String> ids = config.getList(null, BldConfig.C_REPOSITORY_PATH);
+        
+        if (ids.isEmpty())
+            return Collections.singletonList(IRepositoryConfig.WILD_CARD);
+        
+        return ids;
+    }
+    
     public Map<String, Properties> getRepositoryConfig()
     {
-        HashMap<String, Properties> map = new HashMap<String, Properties>();
+        LinkedHashMap<String, Properties> map = new LinkedHashMap<String, Properties>();
         BldProperties bp = new BldProperties(baseDir, bldOverrides);
 
         for (String name : config.getList(null, BldConfig.C_REPOSITORIES))
