@@ -55,14 +55,12 @@ public class RepositoryMap
 
     synchronized RepositoryCache get(String id)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return cachedRepositories.get(id);
     }
 
     synchronized void put(String id, RepositoryCache cache)
     {
-        // TODO Auto-generated method stub
-
+        cachedRepositories.put(id, cache);
     }
 
 }
