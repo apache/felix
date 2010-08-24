@@ -25,6 +25,7 @@ import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Service;
 import org.apache.felix.dm.ServiceStateListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -63,7 +64,13 @@ public class AdapterServiceImpl extends FilterService
             Properties props = new Properties();
             String[] keys = ref.getPropertyKeys();
             for (int i = 0; i < keys.length; i++) {
-                props.put(keys[i], ref.getProperty(keys[i]));
+                String key = keys[i];
+                if (key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(DependencyManager.ASPECT) || key.equals(Constants.OBJECTCLASS)) {
+                    // do not copy these
+                }
+                else {
+                    props.put(key, ref.getProperty(key));
+                }
             }
             if (m_serviceProperties != null) {
                 Enumeration e = m_serviceProperties.keys();
