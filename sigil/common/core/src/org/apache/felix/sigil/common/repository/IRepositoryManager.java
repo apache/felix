@@ -33,19 +33,9 @@ public interface IRepositoryManager
 
     Collection<IBundleRepository> getRepositories();
 
-    Collection<IBundleRepository> getRepositories(int level);
-
-    void addLibrary(ILibrary library);
-
-    void removeLibrary(ILibrary library);
-
-    Collection<ILibrary> getLibraries();
-
-    ILibrary resolveLibrary(final ILibraryImport l);
-
     IBundleResolver getBundleResolver();
 
-    int[] getPriorityLevels();
+    ILibrary resolveLibrary(final ILibraryImport l);
 
     void visit(IModelWalker modelWalker);
 }

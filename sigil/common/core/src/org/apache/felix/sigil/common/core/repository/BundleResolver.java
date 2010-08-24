@@ -43,9 +43,9 @@ import org.apache.felix.sigil.common.model.osgi.IPackageExport;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
 import org.apache.felix.sigil.common.progress.IProgress;
+import org.apache.felix.sigil.common.repository.AbstractRepositoryManager;
 import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IBundleResolver;
-import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.common.repository.IResolution;
 import org.apache.felix.sigil.common.repository.IResolutionMonitor;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
@@ -348,9 +348,9 @@ public class BundleResolver implements IBundleResolver
         }
     };
 
-    private IRepositoryManager repositoryManager;
+    private AbstractRepositoryManager repositoryManager;
 
-    public BundleResolver(IRepositoryManager repositoryManager)
+    public BundleResolver(AbstractRepositoryManager repositoryManager)
     {
         this.repositoryManager = repositoryManager;
     }
