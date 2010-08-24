@@ -29,7 +29,7 @@
     <description>
         Provide remote access to Felix Shell or Gogo.
     </description>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
     <artifactId>org.apache.felix.shell.remote</artifactId>
     <dependencies>
         <dependency>
@@ -79,10 +79,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.shell.remote-1.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.shell.remote-1.1.0</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.shell.remote-1.1.0</url>
-  </scm>
 </project>
