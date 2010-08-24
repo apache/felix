@@ -75,7 +75,6 @@ public class ConfigTest extends TestCase
 
     public void testInherited() throws IOException
     {
-
         IBldProject project = BldFactory.getProject(base.resolve("inheritance/foo/sigil.properties"));
 
         ISigilBundle bundle = project.getDefaultBundle();
