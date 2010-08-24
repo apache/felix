@@ -1,0 +1,9 @@
+Changes from 1.0.4 to 1.1.0
+---------------------------
+
+** Bug
+    * [FELIX-1057] - stopping bundle causes NPE
+    * [FELIX-2192] - Remote shell has incorrect bundle symbolic name
+
+** New Feature
+    * [FELIX-2544] - Modify shell.remote to work with Gogo too
