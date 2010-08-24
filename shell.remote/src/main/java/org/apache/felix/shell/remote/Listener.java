@@ -60,6 +60,7 @@ class Listener
         m_listenerThread = new Thread(m_acceptor, "telnetconsole.Listener");
         m_listenerThread.start();
     }//activate
+
     public ServiceMediator getServices()
     {
         return m_services;
