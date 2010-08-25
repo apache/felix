@@ -35,6 +35,7 @@ import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 public class BldRepositoryManager extends AbstractRepositoryManager
 {
     private static Map<String, String> aliases = new HashMap<String, String>();
+    private final IRepositoryConfig config;
 
     static
     {
@@ -46,53 +47,49 @@ public class BldRepositoryManager extends AbstractRepositoryManager
             "org.apache.felix.sigil.common.core.repository.SystemRepositoryProvider");
     };
 
-    private final Map<String, Properties> repos;
-    private final List<String> repositoryPath;
-
-    public BldRepositoryManager(List<String> repositoryPath, Map<String, Properties> repos)
+    /**
+     * @param config
+     */
+    public BldRepositoryManager(IRepositoryConfig config)
     {
-        System.out.println("RepositoryPath=" + repositoryPath);
-        System.out.println("Repos=" + repos);
-        this.repositoryPath = repositoryPath;
-        this.repos = repos;
+        this.config = config;
     }
 
     @Override
     protected void loadRepositories()
     {
-        scanRepositories(repositoryPath, repos, 0);
+        scanRepositories(config.getRepositoryPath(), 0);
     }
 
     /**
-     * @param repos2 
-     * @param repositoryPath2
+     * @param list 
+     * @param config2
+     * @param i
      */
-    private int scanRepositories(List<String> repositoryPath, Map<String, Properties> repos, int start)
+    private int scanRepositories(List<String> path, int start)
     {
         int count = start;
-        for (String name : repositoryPath)
+        for (String name : path)
         {
-            System.out.println("Building repository for " + name);
             if ( IRepositoryConfig.WILD_CARD.equals(name) ) {
                 HashSet<String> defined = new HashSet<String>();
-                for (String n : repositoryPath) {
+                for (String n : path) {
                     if (!IRepositoryConfig.WILD_CARD.equals(n)) {
                         defined.add(n);
                     }
                 }
-                List<String> path = new LinkedList<String>();
-                for (String key : repos.keySet()) {
+                List<String> subpath = new LinkedList<String>();
+                for (String key : config.getAllRepositories()) {
                     if (!defined.contains(key))
                     {
-                        path.add(key);
+                        subpath.add(key);
                     }
                 }
-                count = scanRepositories(path, repos, start + 1);
+                count = scanRepositories(subpath, start + 1);
             }
             else {
-                Properties props = repos.get(name);
+                Properties props = config.getRepositoryConfig(name);
                 IBundleRepository repo = buildRepository(name, props);
-                System.out.println("Built repository " + repo + " for " + name + " at " + count);
                 
                 if ( repo != null ) {
                     addRepository(repo, count++);

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
@@ -33,10 +34,8 @@ import org.apache.felix.sigil.common.repository.ResolutionException;
 
 public class BldResolver implements IBldResolver
 {
-    private final Map<String, Properties> repos;
-    private final List<String> repositoryPath;
-
     private BldRepositoryManager manager;
+    private final IRepositoryConfig config;
     
     static
     {
@@ -51,10 +50,12 @@ public class BldResolver implements IBldResolver
         }
     };
 
-    public BldResolver(List<String> repositoryPath, Map<String, Properties> repos)
+    /**
+     * @param project
+     */
+    public BldResolver(IRepositoryConfig config)
     {
-        this.repositoryPath = repositoryPath;
-        this.repos = repos;
+        this.config = config;
     }
 
     public IResolution resolve(IModelElement element, boolean transitive)
@@ -90,7 +91,7 @@ public class BldResolver implements IBldResolver
     {
         if (manager == null)
         {
-            manager = new BldRepositoryManager(repositoryPath, repos);
+            manager = new BldRepositoryManager(this.config);
         }
 
         IResolutionMonitor ivyMonitor = new IResolutionMonitor()

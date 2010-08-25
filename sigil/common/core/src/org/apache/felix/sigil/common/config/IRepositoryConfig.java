@@ -19,14 +19,16 @@
 
 package org.apache.felix.sigil.common.config;
 
+import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 public interface IRepositoryConfig
 {
     static final String REPOSITORY_PROVIDER = "provider";
     static final String WILD_CARD = "*";
+    
+    URI getRepositoryDefinition(String name);
     
     /**
      * Return the ordered list of repositories to search
@@ -41,5 +43,10 @@ public interface IRepositoryConfig
      * The key REPOSITORY_PROVIDER will be set to the fully qualified class name of the IRepositoryProvider.
      * @return
      */
-    Map<String, Properties> getRepositoryConfig();
+    Properties getRepositoryConfig(String name);
+
+    /**
+     * @return
+     */
+    List<String> getAllRepositories();
 }

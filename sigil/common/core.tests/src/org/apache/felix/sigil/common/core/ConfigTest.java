@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.sigil.common.config.BldFactory;
 import org.apache.felix.sigil.common.config.IBldProject;
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.core.internal.model.osgi.PackageImport;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
@@ -96,6 +97,19 @@ public class ConfigTest extends TestCase
         //        i = imports.iterator().next();
         //        assertEquals( "org.bar", i.getPackageName() );
         //        assertEquals( VersionRange.parseVersionRange("2.0.0"), i.getVersions() );
+    }
+
+    public void testDefinition() throws IOException
+    {
+        IRepositoryConfig project = BldFactory.getConfig(base.resolve("repository/foo/sigil.properties"));
+
+        URI def = project.getRepositoryDefinition("foo");
+        assertNotNull(def);
+        assertTrue(def.toString().endsWith("repository/sigil-defaults.properties"));
+        
+        def = project.getRepositoryDefinition("baz");
+        assertNotNull(def);
+        assertTrue(def.toString().endsWith("repository/foo/sigil.properties"));
     }
 
 }

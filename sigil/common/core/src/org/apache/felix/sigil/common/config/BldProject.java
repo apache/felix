@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -64,7 +63,7 @@ public class BldProject implements IBldProject, IRepositoryConfig
     private static final String OVERRIDE_PREFIX = "sigil.";
     private static final int MAX_HEADER = 10240;
     // cache to avoid loading the same default config for each project
-    private static Map<URL, BldConfig> defaultsCache = new HashMap<URL, BldConfig>();
+    private static Map<URI, BldConfig> defaultsCache = new HashMap<URI, BldConfig>();
     private static Properties sysOverrides;
 
     private Properties bldOverrides;
@@ -80,9 +79,9 @@ public class BldProject implements IBldProject, IRepositoryConfig
 
     /* package */BldProject(URI relLoc, Properties overrides)
     {
-        config = new BldConfig();
-        convert = new BldConverter(config);
         loc = new File(".").toURI().resolve(relLoc).normalize();
+        config = new BldConfig(loc);
+        convert = new BldConverter(config);
         File f = new File(loc);
         lastModified = f.lastModified();
         baseDir = f.getParentFile();
@@ -187,22 +186,22 @@ public class BldProject implements IBldProject, IRepositoryConfig
                 }
                 file = file.getCanonicalFile();
 
-                URL url = file.toURI().toURL();
+                URI uri = file.toURI();
                 BldProperties bp = new BldProperties(file.getParentFile(), bldOverrides);
 
                 if (dflt == null)
                 {
-                    dflt = defaultsCache.get(url);
+                    dflt = defaultsCache.get(uri);
                     if (dflt != null)
                         return dflt;
 
-                    dflt = new BldConfig();
-                    defaultsCache.put(url, dflt);
+                    dflt = new BldConfig(uri);
+                    defaultsCache.put(uri, dflt);
                     cached = true;
                 }
 
                 Properties p = new Properties();
-                InputStream stream = url.openStream();
+                InputStream stream = uri.toURL().openStream();
                 p.load(stream);
                 stream.close();
 
@@ -659,26 +658,37 @@ public class BldProject implements IBldProject, IRepositoryConfig
         return ids;
     }
     
-    public Map<String, Properties> getRepositoryConfig()
+    public Properties getRepositoryConfig(String name)
     {
-        LinkedHashMap<String, Properties> map = new LinkedHashMap<String, Properties>();
         BldProperties bp = new BldProperties(baseDir, bldOverrides);
 
-        for (String name : config.getList(null, BldConfig.C_REPOSITORIES))
+        Properties repo = config.getProps(null, name);
+
+        for (Object k : repo.keySet())
         {
-            Properties repo = config.getProps(null, name);
-
-            for (Object k : repo.keySet())
-            {
-                String key = (String) k;
-                String value = repo.getProperty(key);
-                repo.setProperty(key, BldUtil.expand(value, bp));
-            }
-
-            map.put(name, repo);
+            String key = (String) k;
+            String value = repo.getProperty(key);
+            repo.setProperty(key, BldUtil.expand(value, bp));
         }
-        return map;
+        
+        return repo;
     }
+    
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.common.config.IRepositoryConfig#getAllRepositories()
+     */
+    public List<String> getAllRepositories()
+    {
+        return config.getList(null, BldConfig.C_REPOSITORIES);
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.common.config.IRepositoryConfig#getRepositoryDefinition(java.lang.String)
+     */
+    public URI getRepositoryDefinition(String name)
+    {
+        return config.getDefinition(null, name);
+    }    
 
     public Properties getOptions()
     {
@@ -1021,5 +1031,4 @@ public class BldProject implements IBldProject, IRepositoryConfig
     {
         return lastModified;
     }
-
 }

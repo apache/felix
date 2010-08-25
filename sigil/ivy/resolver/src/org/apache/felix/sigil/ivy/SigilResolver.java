@@ -123,9 +123,7 @@ public class SigilResolver extends BasicResolver implements IBldResolver
                 }
 
                 IRepositoryConfig project = BldFactory.getConfig(uri);
-                List<String> repositoryPath = project.getRepositoryPath(); 
-                Map<String, Properties> repositories = project.getRepositoryConfig();
-                resolver = new BldResolver(repositoryPath, repositories);
+                resolver = new BldResolver(project);
             }
             catch (IOException e)
             {

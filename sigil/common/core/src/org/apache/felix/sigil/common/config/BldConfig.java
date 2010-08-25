@@ -21,6 +21,7 @@ package org.apache.felix.sigil.common.config;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,13 +90,21 @@ public class BldConfig
 
     private Properties unknown = new Properties();
     private String comment = "";
+    private final URI location;
 
     public BldConfig()
     {
+        this.location = null;
+    }
+    
+    public BldConfig(URI loc)
+    {
+        this.location = loc;
     }
 
     public BldConfig(Properties p) throws IOException
     {
+        this.location = null;
         merge(p);
     }
 
@@ -112,6 +121,31 @@ public class BldConfig
     public Properties getUnknown()
     {
         return unknown;
+    }
+
+    /**
+     * @param name
+     * @return
+     */
+    public URI getDefinition(String id, String key)
+    {
+        URI def = null;
+        if (dflt != null)
+            def = dflt.getDefinition(id, key);
+
+        if ( def == null ) {
+            if (property.containsKey(key)) {
+                def = location;
+            }
+            else if (id != null && config.containsKey(id))
+            {
+                Properties p2 = config.get(id).getProps(null, key);
+                if (p2 != null)
+                    def = location;
+            }
+        }
+
+        return def;
     }
 
     public String getString(String id, String key)
@@ -559,5 +593,4 @@ public class BldConfig
         return "STRING: " + string + " LIST:" + list + " MAP: " + map + " PROPERTY: "
             + property + " CONFIG:" + config + "\nDFLT{ " + dflt + "}";
     }
-
 }
