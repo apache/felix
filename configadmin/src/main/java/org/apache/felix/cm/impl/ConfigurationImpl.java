@@ -432,19 +432,26 @@ class ConfigurationImpl extends ConfigurationBase
 
 
     /**
-     * Sets the last update time field to the current value of the last
-     * modification time field to indicate the properties of this configuration
-     * have been updated in the ManagedService[Factory].
+     * Sets the last update time field to the given value of the last
+     * modification time to indicate the version of configuration properties
+     * that have been updated in a ManagedService[Factory].
      * <p>
      * This method should only be called from the Update Thread after supplying
      * the configuration to the ManagedService[Factory].
+     *
+     * @param lastModificationTime The value of the
+     *      {@link #getLastModificationTime() last modification time field} at
+     *      which the properties have been extracted from the configuration to
+     *      be supplied to the service.
      */
-    void setLastUpdatedTime( )
+    void setLastUpdatedTime( long lastModificationTime )
     {
-        synchronized (this) {
-            this.lastUpdatedTime = getLastModificationTime();
+        synchronized ( this )
+        {
+            this.lastUpdatedTime = lastModificationTime;
         }
     }
+
 
     /**
      * Returns <code>false</code> if this configuration contains configuration

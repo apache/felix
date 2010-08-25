@@ -1146,7 +1146,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             // update the lastUpdatedTime if there is configuration
             if ( config != null && properties != null )
             {
-                config.setLastUpdatedTime();
+                config.setLastUpdatedTime( lastModificationTime );
                 log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
                     + config.getLastUpdatedTime(), null );
             }
@@ -1334,7 +1334,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
 
                     // update the lastUpdatedTime
-                    cfg.setLastUpdatedTime();
+                    cfg.setLastUpdatedTime( lastModificationTime );
                     log( LogService.LOG_DEBUG, "Updated configuration " + cfg.getPid() + " to update #"
                         + cfg.getLastUpdatedTime(), null );
                 }
@@ -1455,7 +1455,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             }
 
                             // update the lastUpdatedTime
-                            config.setLastUpdatedTime();
+                            config.setLastUpdatedTime( lastModificationTime );
                             log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
                                 + config.getLastUpdatedTime(), null );
                         }
@@ -1528,7 +1528,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             }
 
                             // update the lastUpdatedTime
-                            config.setLastUpdatedTime();
+                            config.setLastUpdatedTime( lastModificationTime );
                             log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
                                 + config.getLastUpdatedTime(), null );
                         }
