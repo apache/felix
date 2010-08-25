@@ -26,13 +26,19 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.felix.dm.BundleDependency;
+import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.Service;
+import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.TemporalServiceDependency;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -222,6 +228,8 @@ public class ServiceLifecycleHandler
     public void start(Service service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
+        // Check if some extra service properties are returned by start method.
+        
         DependencyManager dm = service.getDependencyManager();
         Map<String, String> extraProperties = new HashMap<String, String>();
         Object[] composites = service.getCompositionInstances();
@@ -253,6 +261,25 @@ public class ServiceLifecycleHandler
             else
             {
                 service.setServiceProperties(new Hashtable(extraProperties));
+            }
+        }
+        
+        // Remove "instance bound" flag from all dependencies, because we want to be deactivated
+        // once we lose one of our named dependencies (which are instance bound dependencies).
+        
+        Iterator it = m_namedDeps.iterator();
+        while (it.hasNext())
+        {
+            Dependency d = (Dependency) it.next();
+            try
+            {
+                InvocationUtil.invokeCallbackMethod(d, "setInstanceBound",
+                                                    new Class[][] { { Boolean.TYPE }, {} },
+                                                    new Object[][] { { Boolean.FALSE }, {} });
+            }
+            catch (NoSuchMethodException e)
+            {
+                Log.instance().log(LogService.LOG_ERROR, "Lifecycle handler could not reset instanceBound of dependency: %s", e, d);
             }
         }
     }
