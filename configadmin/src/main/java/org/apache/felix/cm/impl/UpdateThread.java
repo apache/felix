@@ -91,7 +91,11 @@ public class UpdateThread extends Thread
                 // set the thread name indicating the current task
                 setName( BASE_THREAD_NAME + " (" + task + ")" );
 
-                configurationManager.log( LogService.LOG_DEBUG, "Running task " + task, null );
+                if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    configurationManager.log( LogService.LOG_DEBUG, "Running task " + task, null );
+                }
+
                 task.run();
             }
             catch ( Throwable t )
@@ -120,7 +124,10 @@ public class UpdateThread extends Thread
     {
         synchronized ( updateTasks )
         {
-            configurationManager.log( LogService.LOG_DEBUG, "Scheduling task " + update, null );
+            if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                configurationManager.log( LogService.LOG_DEBUG, "Scheduling task " + update, null );
+            }
 
             // append to the task queue
             updateTasks.add( update );
