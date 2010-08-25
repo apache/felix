@@ -81,7 +81,7 @@ public class OBRRepositoryProvider implements IRepositoryProvider
         }
         catch (IOException e)
         {
-            throw new RepositoryException("Invalid repository url", e);
+            throw new RepositoryException(id + ": invalid repository url:" + urlStr, e);
         }
     }
 }
