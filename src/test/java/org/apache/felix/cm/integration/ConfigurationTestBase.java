@@ -19,6 +19,9 @@
 package org.apache.felix.cm.integration;
 
 
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.provision;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +42,8 @@ import org.junit.Before;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.OptionUtils;
+import org.ops4j.pax.exam.container.def.PaxRunnerOptions;
 import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -72,6 +77,20 @@ public abstract class ConfigurationTestBase
      */
     public static final boolean REDISPATCH_CONFIGURATION_ON_SET_BUNDLE_LOCATION = false;
 
+    // the name of the system property providing the bundle file to be installed and tested
+    protected static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
+
+    // the default bundle jar file name
+    protected static final String BUNDLE_JAR_DEFAULT = "target/configadmin.jar";
+
+    // the JVM option to set to enable remote debugging
+    protected static final String DEBUG_VM_OPTION = "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=30303";
+
+    // the actual JVM option set, extensions may implement a static
+    // initializer overwriting this value to have the configuration()
+    // method include it when starting the OSGi framework JVM
+    protected static String paxRunnerVmOption = null;
+
     @Inject
     protected BundleContext bundleContext;
 
@@ -92,14 +111,22 @@ public abstract class ConfigurationTestBase
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration()
     {
-        return CoreOptions.options(
-            CoreOptions.provision(
-                CoreOptions.bundle( new File("target/configadmin.jar").toURI().toString() ),
-                CoreOptions.mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" )
-            )
-//         , PaxRunnerOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=30303" )
-        // , PaxRunnerOptions.logProfile()
+        final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP, BUNDLE_JAR_DEFAULT );
+        final File bundleFile = new File( bundleFileName );
+        if ( !bundleFile.canRead() )
+        {
+            throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFileName + " specified in the "
+                + BUNDLE_JAR_SYS_PROP + " system property" );
+        }
+
+        final Option[] base = options(
+            provision(
+                CoreOptions.bundle( bundleFile.toURI().toString() ),
+                mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" )
+             )
         );
+        final Option vmOption = ( paxRunnerVmOption != null ) ? PaxRunnerOptions.vmOption( paxRunnerVmOption ) : null;
+        return OptionUtils.combine( base, vmOption );
     }
 
 
