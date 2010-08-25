@@ -665,7 +665,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     Object service = persistenceManagerTracker.getService( ref );
                     if ( service != null )
                     {
-                        pmList.add( service );
+                        pmList.add( new CachingPersistenceManagerProxy( ( PersistenceManager ) service ) );
                     }
                 }
 
