@@ -156,11 +156,9 @@ public class Configuration
         {
             Object service = new ManagedService()
             {
-                public synchronized void updated( Dictionary properties ) throws ConfigurationException
+                public void updated( Dictionary properties ) throws ConfigurationException
                 {
-                    configure( properties );
-                    stop();
-                    start();
+                    updateFromConfigAdmin(properties);
                 }
             };
             // add meta type provider if interfaces are available
@@ -183,6 +181,43 @@ public class Configuration
         {
             // don't care
         }
+    }
+
+    void updateFromConfigAdmin(final Dictionary config)
+    {
+        // do this in the background as we don't want to stop
+        // the config admin
+        new Thread()
+        {
+
+            public void run()
+            {
+                final ThreadPool aSyncPool;
+                final ThreadPool syncPool;
+                synchronized ( Configuration.this )
+                {
+                    // we will shutdown the pools later
+                    // to make the downtime as small as possible
+                    aSyncPool = m_async_pool;
+                    m_async_pool = null;
+                    syncPool = m_sync_pool;
+                    m_sync_pool = null;
+                    Configuration.this.stop();
+                    Configuration.this.configure( config );
+                    Configuration.this.start();
+                }
+                if (aSyncPool != null )
+                {
+                    aSyncPool.close();
+                }
+                if ( syncPool != null )
+                {
+                    syncPool.close();
+                }
+            }
+
+        }.start();
+
     }
 
     /**
@@ -262,7 +297,7 @@ public class Configuration
         }
     }
 
-    public synchronized void start()
+    private void start()
     {
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
                 PROP_CACHE_SIZE + "=" + m_cacheSize);
@@ -320,9 +355,9 @@ public class Configuration
     }
 
     /**
-     * Called to stop the event admin and restart it.
+     * Called to stop the event admin.
      */
-    public synchronized void stop()
+    private void stop()
     {
         // We need to unregister manually
         if ( m_registration != null )
@@ -335,7 +370,7 @@ public class Configuration
             m_admin.stop();
             m_admin = null;
         }
-        if ( m_async_pool != null )
+        if (m_async_pool != null )
         {
             m_async_pool.close();
             m_async_pool = null;
@@ -354,20 +389,24 @@ public class Configuration
      * down which is somewhat cumbersome given that the spec asks for return in
      * a timely manner.
      */
-    public synchronized void destroy()
+    public void destroy()
     {
-        if ( m_adapters != null )
+        synchronized ( this )
         {
-            for(int i=0;i<m_adapters.length;i++)
+            if ( m_adapters != null )
             {
-                m_adapters[i].destroy(m_bundleContext);
+                for(int i=0;i<m_adapters.length;i++)
+                {
+                    m_adapters[i].destroy(m_bundleContext);
+                }
+                m_adapters = null;
             }
-            m_adapters = null;
-        }
-        if ( m_managedServiceReg != null )
-        {
-            m_managedServiceReg.unregister();
-            m_managedServiceReg = null;
+            if ( m_managedServiceReg != null )
+            {
+                m_managedServiceReg.unregister();
+                m_managedServiceReg = null;
+            }
+            stop();
         }
     }
 
