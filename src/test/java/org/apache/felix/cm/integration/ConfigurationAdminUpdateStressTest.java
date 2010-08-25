@@ -154,9 +154,9 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
             if ( !_testLatch.await( 15, TimeUnit.SECONDS ) )
             {
 
-                log( LogService.LOG_ERROR, "create latch: " + _factoryConfigCreateLatch.getCount() );
-                log( LogService.LOG_ERROR, "update latch: " + _factoryConfigUpdateLatch.getCount() );
-                log( LogService.LOG_ERROR, "delete latch: " + _factoryConfigDeleteLatch.getCount() );
+                log( LogService.LOG_DEBUG, "create latch: " + _factoryConfigCreateLatch.getCount() );
+                log( LogService.LOG_DEBUG, "update latch: " + _factoryConfigUpdateLatch.getCount() );
+                log( LogService.LOG_DEBUG, "delete latch: " + _factoryConfigDeleteLatch.getCount() );
 
                 Assert.fail( "Test did not completed timely" );
             }
@@ -196,7 +196,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
             {
                 // pid created
                 _factoryConfigCreateLatch.countDown();
-                log( LogService.LOG_ERROR, "Config created; create latch= " + _factoryConfigCreateLatch.getCount() );
+                log( LogService.LOG_DEBUG, "Config created; create latch= " + _factoryConfigCreateLatch.getCount() );
             }
             else
             {
@@ -211,7 +211,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                             + number );
                     }
                     _factoryConfigUpdateLatch.countDown();
-                    log( LogService.LOG_ERROR, "Config updated; update latch= " + _factoryConfigUpdateLatch.getCount()
+                    log( LogService.LOG_DEBUG, "Config updated; update latch= " + _factoryConfigUpdateLatch.getCount()
                         + " (number=" + number + ")" );
                 }
                 catch ( ClassCastException e )
@@ -225,7 +225,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
         public void deleted( String pid )
         {
             _factoryConfigDeleteLatch.countDown();
-            log( LogService.LOG_ERROR, "Config deleted; delete latch= " + _factoryConfigDeleteLatch.getCount() );
+            log( LogService.LOG_DEBUG, "Config deleted; delete latch= " + _factoryConfigDeleteLatch.getCount() );
         }
 
 
