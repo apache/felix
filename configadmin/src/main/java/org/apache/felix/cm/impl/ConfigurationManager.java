@@ -562,38 +562,40 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         // remove the configuration from the cache
         removeConfiguration( config );
-        updateThread.schedule( new DeleteConfiguration( config, true ) );
-        log( LogService.LOG_DEBUG, "DeleteConfiguration(" + config.getPid() + ") scheduled", null );
+        fireConfigurationEvent( ConfigurationEvent.CM_DELETED, config.getPid(), config.getFactoryPid() );
+        updateThread.schedule( new DeleteConfiguration( config ) );
+        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            log( LogService.LOG_DEBUG, "DeleteConfiguration(" + config.getPid() + ") scheduled", null );
+        }
     }
 
 
     void updated( ConfigurationImpl config, boolean fireEvent )
     {
-        updateThread.schedule( new UpdateConfiguration( config, fireEvent ) );
-        log( LogService.LOG_DEBUG, "UpdateConfiguration(" + config.getPid() + ") scheduled", null );
-    }
-
-
-    void revokeConfiguration( ConfigurationImpl config )
-    {
-        updateThread.schedule( new DeleteConfiguration( config, false ) );
-
-        // immediately unbind the configuration
-        config.setDynamicBundleLocation( null );
-        config.setServiceReference( null );
-    }
-
-
-    void reassignConfiguration( ConfigurationImpl config )
-    {
-        updateThread.schedule( new UpdateConfiguration( config, false ) );
+        if ( fireEvent )
+        {
+            fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPid(), config.getFactoryPid() );
+        }
+        updateThread.schedule( new UpdateConfiguration( config ) );
+        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            log( LogService.LOG_DEBUG, "UpdateConfiguration(" + config.getPid() + ") scheduled", null );
+        }
     }
 
 
     void fireConfigurationEvent( int type, String pid, String factoryPid )
     {
-
-        updateThread.schedule( new FireConfigurationEvent( type, pid, factoryPid) );
+        FireConfigurationEvent event = new FireConfigurationEvent( type, pid, factoryPid );
+        if ( event.hasConfigurationEventListeners() )
+        {
+            updateThread.schedule( event );
+        }
+        else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            log( LogService.LOG_DEBUG, "No ConfigurationListeners to send " + event.getTypeName() + " event to.", null );
+        }
     }
 
 
@@ -696,7 +698,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 ManagedServiceUpdate update = new ManagedServiceUpdate( pids[i], sr, service );
                 updateThread.schedule( update );
-                log( LogService.LOG_DEBUG, "ManagedServiceUpdate(" + pids[i] + ") scheduled", null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "ManagedServiceUpdate(" + pids[i] + ") scheduled", null );
+                }
             }
         }
     }
@@ -711,7 +716,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 ManagedServiceFactoryUpdate update = new ManagedServiceFactoryUpdate( pids[i], sr, service );
                 updateThread.schedule( update );
-                log( LogService.LOG_DEBUG, "ManagedServiceFactoryUpdate(" + pids[i] + ") scheduled", null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "ManagedServiceFactoryUpdate(" + pids[i] + ") scheduled", null );
+                }
             }
         }
     }
@@ -893,6 +901,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
+    boolean isLogEnabled( int level )
+    {
+        return level <= logLevel;
+    }
+
+
     void log( int level, String message, Throwable t )
     {
         // log using the LogService if available
@@ -904,7 +918,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
         // Otherwise only log if more serious than the configured level
-        if ( level <= logLevel )
+        if ( isLogEnabled( level ) )
         {
             String code;
             switch ( level )
@@ -1007,7 +1021,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 log( LogService.LOG_ERROR, toString( target ) + ": Updating configuration caused a problem: "
                     + ce.getReason(), ce );
-
             }
         }
         else
@@ -1076,23 +1089,32 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             if ( properties != null && config != null && lastModificationTime <= config.getLastUpdatedTime()
                 && sr.equals( config.getServiceReference() ) )
             {
-                log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " at modification #"
-                    + config.getLastModificationTime() + " has already been updated to update #"
-                    + config.getLastUpdatedTime() + ", nothing to be done anymore.", null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " at modification #"
+                        + config.getLastModificationTime() + " has already been updated to update #"
+                        + config.getLastUpdatedTime() + ", nothing to be done anymore.", null );
+                }
                 return;
             }
 
             // check configuration and call plugins if existing
             if ( config != null )
             {
-                log( LogService.LOG_DEBUG, "Updating configuration " + config.getPid() + " to modification #"
-                    + config.getLastModificationTime(), null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "Updating configuration " + config.getPid() + " to modification #"
+                        + config.getLastModificationTime(), null );
+                }
 
                 Bundle serviceBundle = sr.getBundle();
                 if ( serviceBundle == null )
                 {
-                    log( LogService.LOG_INFO, "Service for PID " + pid
-                        + " seems to already have been unregistered, not updating with configuration", null );
+                    if ( isLogEnabled( LogService.LOG_INFO ) )
+                    {
+                        log( LogService.LOG_INFO, "Service for PID " + pid
+                            + " seems to already have been unregistered, not updating with configuration", null );
+                    }
                     return;
                 }
 
@@ -1147,8 +1169,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             if ( config != null && properties != null )
             {
                 config.setLastUpdatedTime( lastModificationTime );
-                log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
-                    + config.getLastUpdatedTime(), null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
+                        + config.getLastUpdatedTime(), null );
+                }
             }
         }
 
@@ -1255,8 +1280,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             Bundle serviceBundle = sr.getBundle();
             if ( serviceBundle == null )
             {
-                log( LogService.LOG_INFO, "ManagedServiceFactory for factory PID " + factoryPid
-                    + " seems to already have been unregistered, not updating with factory", null );
+                if ( isLogEnabled( LogService.LOG_INFO ) )
+                {
+                    log( LogService.LOG_INFO, "ManagedServiceFactory for factory PID " + factoryPid
+                        + " seems to already have been unregistered, not updating with factory", null );
+                }
                 return;
             }
 
@@ -1280,14 +1308,20 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                 if ( lastModificationTime <= cfg.getLastUpdatedTime() && sr.equals( cfg.getServiceReference() ) )
                 {
-                    log( LogService.LOG_DEBUG, "Configuration " + cfg.getPid() + " at modification #"
-                        + cfg.getLastModificationTime() + " has already been updated to update #"
-                        + cfg.getLastUpdatedTime() + ", nothing to be done anymore.", null );
+                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        log( LogService.LOG_DEBUG, "Configuration " + cfg.getPid() + " at modification #"
+                            + cfg.getLastModificationTime() + " has already been updated to update #"
+                            + cfg.getLastUpdatedTime() + ", nothing to be done anymore.", null );
+                    }
                     return;
                 }
 
-                log( LogService.LOG_DEBUG, "Updating configuration " + cfg.getPid() + " to modification #"
-                    + cfg.getLastModificationTime(), null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "Updating configuration " + cfg.getPid() + " to modification #"
+                        + cfg.getLastModificationTime(), null );
+                }
 
                 // check bundle location of configuration
                 if ( !cfg.tryBindLocation( serviceBundleLocation ) )
@@ -1323,7 +1357,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 // update the service with the configuration (if non-null)
                 if ( properties != null )
                 {
-                    log( LogService.LOG_DEBUG, sr + ": Updating configuration pid=" + cfg.getPid(), null );
+                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        log( LogService.LOG_DEBUG, sr + ": Updating configuration pid=" + cfg.getPid(), null );
+                    }
+
                     try
                     {
                         service.updated( cfg.getPid(), properties );
@@ -1335,8 +1373,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                     // update the lastUpdatedTime
                     cfg.setLastUpdatedTime( lastModificationTime );
-                    log( LogService.LOG_DEBUG, "Updated configuration " + cfg.getPid() + " to update #"
-                        + cfg.getLastUpdatedTime(), null );
+
+                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        log( LogService.LOG_DEBUG, "Updated configuration " + cfg.getPid() + " to update #"
+                            + cfg.getLastUpdatedTime(), null );
+                    }
                 }
             }
         }
@@ -1354,10 +1396,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         private final ConfigurationImpl config;
         private final Dictionary properties;
         private final long lastModificationTime;
-        private final boolean fireEvent;
 
 
-        UpdateConfiguration( final ConfigurationImpl config, boolean fireEvent )
+        UpdateConfiguration( final ConfigurationImpl config )
         {
             this.config = config;
             synchronized ( config )
@@ -1365,7 +1406,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 this.properties = config.getProperties( true );
                 this.lastModificationTime = config.getLastModificationTime();
             }
-            this.fireEvent = fireEvent;
         }
 
 
@@ -1380,14 +1420,20 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 // update)
                 if ( lastModificationTime <= config.getLastUpdatedTime() )
                 {
-                    log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " at modification #"
-                        + config.getLastModificationTime() + " has already been updated to update #"
-                        + config.getLastUpdatedTime() + ", nothing to be done anymore.", null );
+                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " at modification #"
+                            + config.getLastModificationTime() + " has already been updated to update #"
+                            + config.getLastUpdatedTime() + ", nothing to be done anymore.", null );
+                    }
                     return;
                 }
 
-                log( LogService.LOG_DEBUG, "Updating configuration " + config.getPid() + " to modification #"
-                    + config.getLastModificationTime(), null );
+                if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    log( LogService.LOG_DEBUG, "Updating configuration " + config.getPid() + " to modification #"
+                        + config.getLastModificationTime(), null );
+                }
 
                 if ( config.getFactoryPid() == null )
                 {
@@ -1456,8 +1502,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                             // update the lastUpdatedTime
                             config.setLastUpdatedTime( lastModificationTime );
-                            log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
-                                + config.getLastUpdatedTime(), null );
+
+                            if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                            {
+                                log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
+                                    + config.getLastUpdatedTime(), null );
+                            }
                         }
                     }
                 }
@@ -1529,8 +1579,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                             // update the lastUpdatedTime
                             config.setLastUpdatedTime( lastModificationTime );
-                            log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
-                                + config.getLastUpdatedTime(), null );
+
+                            if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                            {
+                                log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
+                                    + config.getLastUpdatedTime(), null );
+                            }
                         }
                     }
                 }
@@ -1538,15 +1592,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             catch ( InvalidSyntaxException ise )
             {
                 log( LogService.LOG_ERROR, "Service selection filter is invalid to update " + config, ise );
-            }
-            finally
-            {
-                // the update event has to be sent regardless of whether the
-                // configuration was updated in a managed service or not
-                if ( fireEvent )
-                {
-                    fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPid(), config.getFactoryPid() );
-                }
             }
         }
 
@@ -1601,10 +1646,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final ConfigurationImpl config;
         private final String configLocation;
-        private final boolean fireEvent;
 
 
-        DeleteConfiguration( ConfigurationImpl config, boolean fireEvent )
+        DeleteConfiguration( ConfigurationImpl config )
         {
             /*
              * NOTE: We keep the configuration because it might be cleared just
@@ -1613,7 +1657,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
              */
             this.config = config;
             this.configLocation = config.getBoundBundleLocation();
-            this.fireEvent = fireEvent;
         }
 
 
@@ -1700,15 +1743,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 log( LogService.LOG_ERROR, "Service selection filter is invalid to update " + config, ise );
             }
-            finally
-            {
-                // the delete event has to be sent regardless of whether the
-                // configuration was updated in a managed service or not
-                if ( fireEvent )
-                {
-                    fireConfigurationEvent( ConfigurationEvent.CM_DELETED, pid, factoryPid );
-                }
-            }
         }
 
         public String toString()
@@ -1719,43 +1753,90 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     private class FireConfigurationEvent implements Runnable
     {
-        private int type;
+        private final int type;
 
-        private String pid;
+        private final String pid;
 
-        private String factoryPid;
+        private final String factoryPid;
+
+        private final ServiceReference[] listenerReferences;
+
+        private final ConfigurationListener[] listeners;
+
+        private final Bundle[] listenerProvider;
 
 
-        FireConfigurationEvent( int type, String pid, String factoryPid )
+        private FireConfigurationEvent( final int type, final String pid, final String factoryPid)
         {
             this.type = type;
             this.pid = pid;
             this.factoryPid = factoryPid;
+
+            final ServiceReference[] srs = configurationListenerTracker.getServiceReferences();
+            if ( srs == null || srs.length == 0 )
+            {
+                this.listenerReferences = null;
+                this.listeners = null;
+                this.listenerProvider = null;
+            }
+            else
+            {
+                this.listenerReferences = srs;
+                this.listeners = new ConfigurationListener[srs.length];
+                this.listenerProvider = new Bundle[srs.length];
+                for ( int i = 0; i < srs.length; i++ )
+                {
+                    this.listeners[i] = ( ConfigurationListener ) configurationListenerTracker.getService( srs[i] );
+                    this.listenerProvider[i] = srs[i].getBundle();
+                }
+            }
+        }
+
+
+        boolean hasConfigurationEventListeners()
+        {
+            return this.listenerReferences != null;
+        }
+
+
+        String getTypeName()
+        {
+            switch ( type )
+            {
+                case ConfigurationEvent.CM_DELETED:
+                    return "CM_DELETED";
+                case ConfigurationEvent.CM_UPDATED:
+                    return "CM_UPDATED";
+                default:
+                    return "<UNKNOWN(" + type + ")>";
+            }
         }
 
 
         public void run()
         {
-            // get the listeners
-            ServiceReference[] srs = configurationListenerTracker.getServiceReferences();
-            if ( srs == null || srs.length == 0 )
-            {
-                return;
-            }
+            final String typeName = getTypeName();
+            final ConfigurationEvent event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
 
-            ConfigurationEvent event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
-
-            for ( int i = 0; i < srs.length; i++ )
+            for ( int i = 0; i < listeners.length; i++ )
             {
-                ConfigurationListener cl = ( ConfigurationListener ) configurationListenerTracker.getService( srs[i] );
-                try
+                if ( listenerProvider[i].getState() == Bundle.ACTIVE )
                 {
-                    cl.configurationEvent( event );
-                }
-                catch ( Throwable t )
-                {
-                    log( LogService.LOG_ERROR, "Unexpected problem delivery configuration event to "
-                        + ConfigurationManager.toString( srs[i] ), t );
+                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        log( LogService.LOG_DEBUG, "Sending " + typeName + " event for " + pid + " to "
+                            + ConfigurationManager.toString( listenerReferences[i] ), null );
+                    }
+
+                    try
+                    {
+                        listeners[i].configurationEvent( event );
+                    }
+                    catch ( Throwable t )
+                    {
+                        log( LogService.LOG_ERROR, "Unexpected problem delivery configuration event to "
+                            + ConfigurationManager.toString( listenerReferences[i] ), t );
+                    }
                 }
             }
         }
