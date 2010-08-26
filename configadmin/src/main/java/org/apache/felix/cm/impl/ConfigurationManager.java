@@ -122,6 +122,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // the thread used to schedule tasks required to run asynchronously
     private UpdateThread updateThread;
 
+    // the thread used to schedule events to be dispatched asynchronously
+    private UpdateThread eventThread;
+
     /**
      * The actual list of {@link PersistenceManager persistence managers} to use
      * when looking for configuration data. This list is built from the
@@ -192,8 +195,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         configurationListenerTracker.open();
 
         // initialize the asynchonous updater thread
-        this.updateThread = new UpdateThread( this );
-        this.updateThread.start();
+        ThreadGroup tg = new ThreadGroup( "Configuration Admin Service" );
+        tg.setDaemon( true );
+        this.updateThread = new UpdateThread( this, tg, "CM Configuration Updater" );
+        this.eventThread = new UpdateThread( this, tg, "CM Event Dispatcher" );
 
         // set up the location (might throw IllegalArgumentException)
         try
@@ -275,18 +280,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         if ( updateThread != null )
         {
-            // terminate asynchrounous updates
             updateThread.terminate();
+        }
 
-            // wait for all updates to terminate
-            try
-            {
-                updateThread.join();
-            }
-            catch ( InterruptedException ie )
-            {
-                // don't really care
-            }
+        if ( eventThread != null )
+        {
+            eventThread.terminate();
         }
 
         if ( logTracker != null )
@@ -590,7 +589,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         FireConfigurationEvent event = new FireConfigurationEvent( type, pid, factoryPid );
         if ( event.hasConfigurationEventListeners() )
         {
-            updateThread.schedule( event );
+            eventThread.schedule( event );
         }
         else if ( isLogEnabled( LogService.LOG_DEBUG ) )
         {
