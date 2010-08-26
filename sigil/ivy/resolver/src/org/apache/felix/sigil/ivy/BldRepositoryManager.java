@@ -20,6 +20,7 @@
 package org.apache.felix.sigil.ivy;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -58,17 +59,18 @@ public class BldRepositoryManager extends AbstractRepositoryManager
     @Override
     protected void loadRepositories()
     {
-        scanRepositories(config.getRepositoryPath(), 0);
+        List<IBundleRepository> list = new ArrayList<IBundleRepository>();
+        scanRepositories(config.getRepositoryPath(), list);
+        setRepositories(list.toArray(new IBundleRepository[list.size()]));
     }
-
+    
     /**
      * @param list 
      * @param config2
      * @param i
      */
-    private int scanRepositories(List<String> path, int start)
+    private void scanRepositories(List<String> path, List<IBundleRepository> list)
     {
-        int count = start;
         for (String name : path)
         {
             if ( IRepositoryConfig.WILD_CARD.equals(name) ) {
@@ -85,19 +87,17 @@ public class BldRepositoryManager extends AbstractRepositoryManager
                         subpath.add(key);
                     }
                 }
-                count = scanRepositories(subpath, start + 1);
+                scanRepositories(subpath, list);
             }
             else {
                 Properties props = config.getRepositoryConfig(name);
                 IBundleRepository repo = buildRepository(name, props);
                 
                 if ( repo != null ) {
-                    addRepository(repo, count++);
+                    list.add(repo);
                 }                
             }
         }
-        
-        return count;
     }
 
     /**
