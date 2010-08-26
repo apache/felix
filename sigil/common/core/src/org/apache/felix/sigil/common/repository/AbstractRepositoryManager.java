@@ -119,7 +119,7 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
         }
     }
 
-    protected void addRepository(IBundleRepository rep, int level)
+    private void addRepository(IBundleRepository rep, int level)
     {
         Type type = null;
 
@@ -154,27 +154,6 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
         }
 
         notifyListeners(new RepositoryChangeEvent(rep, type));
-    }
-
-    protected void removeRepository(IBundleRepository rep)
-    {
-        Type type = null;
-
-        synchronized (repositories)
-        {
-            if (repositories.remove(rep.getId()) != null)
-            {
-                order.remove(rep);
-                type = Type.REMOVED;
-                clearLevel(rep);
-                resetLevels();
-            }
-        }
-
-        if (type != null)
-        {
-            notifyListeners(new RepositoryChangeEvent(rep, type));
-        }
     }
 
     private void clearLevel(IBundleRepository rep)
