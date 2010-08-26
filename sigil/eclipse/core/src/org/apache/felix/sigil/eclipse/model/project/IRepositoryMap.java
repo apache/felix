@@ -17,20 +17,41 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.model.repository;
+package org.apache.felix.sigil.eclipse.model.project;
 
-import org.eclipse.swt.graphics.Image;
+import java.util.Properties;
 
-public interface IRepositoryType
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+
+/**
+ * @author dave
+ *
+ */
+public interface IRepositoryMap
 {
 
-    String getType();
+    public static class RepositoryCache
+    {
+        public final Properties pref;
+        public final IBundleRepository repo;
 
-    String getId();
+        public RepositoryCache(Properties pref, IBundleRepository repo)
+        {
+            this.pref = pref;
+            this.repo = repo;
+        }
+    }
 
-    Image getIcon();
+    /**
+     * @param uid
+     * @return
+     */
+    RepositoryCache get(String uid);
 
-    boolean isDynamic();
+    /**
+     * @param uid
+     * @param cache
+     */
+    void put(String uid, RepositoryCache cache);
 
-    String getProvider();
 }

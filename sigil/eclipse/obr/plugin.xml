@@ -25,6 +25,7 @@
             class="org.apache.felix.sigil.common.obr.OBRRepositoryProvider"
             dynamic="true"
             id="org.apache.felix.sigil.obr.provider"
+            alias="obr"
             type="OSGi Bundle Repository (OBR)">
       </provider>
    </extension>

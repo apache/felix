@@ -17,32 +17,19 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
+package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Properties;
 
-import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap;
 
-public class RepositoryMap
+public class RepositoryMap implements IRepositoryMap
 {
-    static class RepositoryCache
-    {
-        final Properties pref;
-        final IBundleRepository repo;
-
-        RepositoryCache(Properties pref, IBundleRepository repo)
-        {
-            this.pref = pref;
-            this.repo = repo;
-        }
-    }
-
     private HashMap<String, RepositoryCache> cachedRepositories = new HashMap<String, RepositoryCache>();
 
-    synchronized void retainAll(Collection<String> ids)
+    public synchronized void retainAll(Collection<String> ids)
     {
         for (Iterator<String> i = cachedRepositories.keySet().iterator(); i.hasNext();)
         {
@@ -53,12 +40,12 @@ public class RepositoryMap
         }
     }
 
-    synchronized RepositoryCache get(String id)
+    public synchronized RepositoryCache get(String id)
     {
         return cachedRepositories.get(id);
     }
 
-    synchronized void put(String id, RepositoryCache cache)
+    public synchronized void put(String id, RepositoryCache cache)
     {
         cachedRepositories.put(id, cache);
     }

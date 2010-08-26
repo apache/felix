@@ -75,18 +75,21 @@
             defaultLevel="-3"
             dynamic="false"
             id="org.apache.felix.sigil.core.workspaceprovider"
+            alias="project"
             type="Workspace Repository">
       </provider>
       <provider
             class="org.apache.felix.sigil.common.core.repository.FileSystemRepositoryProvider"
             dynamic="true"
             id="org.apache.felix.sigil.core.file"
+            alias="filesystem"
             type="File System Repository">
       </provider>
       <provider
             class="org.apache.felix.sigil.common.core.repository.SystemRepositoryProvider"
             dynamic="false"
             id="org.apache.felix.sigil.core.system"
+            alias="system"
             type="System Repository">
       </provider>
    </extension>

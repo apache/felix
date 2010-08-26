@@ -22,10 +22,12 @@ package org.apache.felix.sigil.eclipse.model.project;
 import java.util.Collection;
 
 import org.apache.felix.sigil.common.config.IBldProject;
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.ICompoundModelElement;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
+import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -35,7 +37,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.framework.Version;
-import org.osgi.service.prefs.Preferences;
 
 /**
  * Represents a sigil project. To get a reference to a ISigilProjectModel you can use the 
@@ -54,8 +55,6 @@ public interface ISigilProjectModel extends ICompoundModelElement
 
     // shortcut to getProject().getName()
     String getName();
-
-    Preferences getPreferences();
 
     /**
      * 
@@ -113,6 +112,18 @@ public interface ISigilProjectModel extends ICompoundModelElement
 
     IBldProject getBldProject() throws CoreException;
 
+    /**
+     * @return
+     */
+    IRepositoryConfig getRepositoryConfig() throws CoreException;
+    
     Collection<IClasspathEntry> findExternalClasspath(IProgressMonitor monitor)
         throws CoreException;
+
+    /**
+     * @param repositoryMap 
+     * @return
+     * @throws CoreException 
+     */
+    IRepositoryManager getRepositoryManager(IRepositoryMap repositoryMap) throws CoreException;
 }

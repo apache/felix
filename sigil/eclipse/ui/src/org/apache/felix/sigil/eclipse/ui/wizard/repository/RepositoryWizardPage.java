@@ -121,6 +121,8 @@ public abstract class RepositoryWizardPage extends WizardPage
         {
             e.store();
         }
+        getModel().getPreferences().setValue("provider", getModel().getType().getProvider());
+
     }
 
 }

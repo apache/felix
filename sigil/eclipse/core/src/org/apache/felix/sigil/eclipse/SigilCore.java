@@ -26,7 +26,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -47,8 +46,7 @@ import org.apache.felix.sigil.eclipse.internal.model.project.SigilModelRoot;
 import org.apache.felix.sigil.eclipse.internal.model.project.SigilProject;
 import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryConfiguration;
 import org.apache.felix.sigil.eclipse.internal.repository.eclipse.GlobalRepositoryManager;
-import org.apache.felix.sigil.eclipse.internal.repository.eclipse.RepositoryMap;
-import org.apache.felix.sigil.eclipse.internal.repository.eclipse.SigilRepositoryManager;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryMap;
 import org.apache.felix.sigil.eclipse.internal.resources.ProjectResourceListener;
 import org.apache.felix.sigil.eclipse.internal.resources.SigilProjectManager;
 import org.apache.felix.sigil.eclipse.model.project.ISigilModelRoot;
@@ -141,8 +139,6 @@ public class SigilCore extends AbstractUIPlugin
     public static final String PREFERENCES_REMOVE_IMPORT_FOR_EXPORT = BASE
         + ".removeImportForExport";
 
-    private static final Object NULL = new Object();
-
     // The shared instance
     private static SigilCore plugin;
 
@@ -153,7 +149,6 @@ public class SigilCore extends AbstractUIPlugin
     private static SigilProjectManager projectManager;
     private static OSGiInstallManager installs;
     private static ISigilModelRoot modelRoot;
-    private static HashMap<Object, SigilRepositoryManager> repositoryManagers = new HashMap<Object, SigilRepositoryManager>();
     private static GlobalRepositoryManager globalRepositoryManager;
     private static RepositoryMap repositoryMap;
 
@@ -316,13 +311,6 @@ public class SigilCore extends AbstractUIPlugin
             serializerTracker = null;
         }
 
-        for (SigilRepositoryManager m : repositoryManagers.values())
-        {
-            m.destroy();
-        }
-
-        repositoryManagers.clear();
-
         globalRepositoryManager.destroy();
         globalRepositoryManager = null;
 
@@ -435,48 +423,18 @@ public class SigilCore extends AbstractUIPlugin
         return globalRepositoryManager;
     }
 
-    public static IRepositoryManager getRepositoryManager(String set)
-    {
-        SigilRepositoryManager manager = null;
-
-        if (set == null)
-        {
-            manager = repositoryManagers.get(NULL);
-            if (manager == null)
-            {
-                manager = new SigilRepositoryManager(null, repositoryMap);
-                manager.initialise();
-                repositoryManagers.put(NULL, manager);
-            }
-        }
-        else
-        {
-            manager = repositoryManagers.get(set);
-
-            if (manager == null)
-            {
-                manager = new SigilRepositoryManager(set, repositoryMap);
-                manager.initialise();
-                repositoryManagers.put(set, manager);
-            }
-        }
-
-        return manager;
-    }
-
     public static IRepositoryManager getRepositoryManager(ISigilProjectModel model)
     {
-        return getRepositoryManager(loadProjectRepositorySet(model));
-    }
-
-    private static String loadProjectRepositorySet(ISigilProjectModel model)
-    {
-        if (model == null)
+        if ( model == null ) return globalRepositoryManager;
+        try
         {
-            return null;
+            return model.getRepositoryManager(repositoryMap);
         }
-
-        return model.getPreferences().get(REPOSITORY_SET, null);
+        catch (CoreException e)
+        {
+            warn("Failed to build repository manager for " + model, e);
+            return globalRepositoryManager;
+        }
     }
 
     public static IRepositoryConfiguration getRepositoryConfiguration()

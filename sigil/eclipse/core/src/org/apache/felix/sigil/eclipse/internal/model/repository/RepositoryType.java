@@ -24,22 +24,28 @@ import org.eclipse.swt.graphics.Image;
 
 public class RepositoryType implements IRepositoryType
 {
-    private String type;
-    private String id;
-    private Image icon;
-    private boolean dynamic;
+    private final String type;
+    private final String id;
+    private final String provider;
+    private final Image icon;
+    private final boolean dynamic;
 
-    public RepositoryType(String id, String type, boolean dynamic, Image icon)
+    public RepositoryType(String id, String provider, String type, boolean dynamic, Image icon)
     {
         this.id = id;
         this.type = type;
         this.dynamic = dynamic;
+        this.provider = provider;
         this.icon = icon;
     }
 
     public String getType()
     {
         return type;
+    }
+    
+    public String getProvider() {
+        return provider;
     }
 
     public String getId()

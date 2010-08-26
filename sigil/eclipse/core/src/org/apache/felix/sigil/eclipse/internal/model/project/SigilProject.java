@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 
 import org.apache.felix.sigil.common.config.BldFactory;
 import org.apache.felix.sigil.common.config.IBldProject;
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.model.AbstractCompoundModelElement;
 import org.apache.felix.sigil.common.model.ICapabilityModelElement;
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -50,7 +51,9 @@ import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
 import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.EclipseRepositoryManager;
 import org.apache.felix.sigil.eclipse.job.ThreadProgressMonitor;
+import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.eclipse.progress.ProgressAdapter;
@@ -60,16 +63,12 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.IScopeContext;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.INodeChangeListener;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -80,7 +79,6 @@ import org.eclipse.jdt.core.IParent;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.framework.Version;
-import org.osgi.service.prefs.Preferences;
 
 /**
  * @author dave
@@ -96,8 +94,6 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
     private IBldProject bldProject;
 
     private ISigilBundle bundle;
-
-    private IEclipsePreferences preferences;
 
     private List<IRequirementModelElement> lastReqs = new LinkedList<IRequirementModelElement>();
     private List<ICapabilityModelElement> lastCaps = new LinkedList<ICapabilityModelElement>();
@@ -327,59 +323,6 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
         marker.setAttribute(IMarker.SEVERITY, req.isOptional() ? IMarker.SEVERITY_WARNING
             : IMarker.SEVERITY_ERROR);
         marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
-    }
-
-    /**
-     * Returns the project custom preference pool.
-     * Project preferences may include custom encoding.
-     * @return IEclipsePreferences or <code>null</code> if the project
-     * 	does not have a java nature.
-     */
-    public Preferences getPreferences()
-    {
-        synchronized (this)
-        {
-            if (preferences == null)
-            {
-                preferences = loadPreferences();
-            }
-
-            return preferences;
-        }
-    }
-
-    /**
-     * @return
-     */
-    private synchronized IEclipsePreferences loadPreferences()
-    {
-        IScopeContext context = new ProjectScope(getProject());
-        final IEclipsePreferences eclipsePreferences = context.getNode(SigilCore.PLUGIN_ID);
-
-        // Listen to node removal from parent in order to reset cache
-        INodeChangeListener nodeListener = new IEclipsePreferences.INodeChangeListener()
-        {
-            public void added(IEclipsePreferences.NodeChangeEvent event)
-            {
-                // do nothing
-            }
-
-            public void removed(IEclipsePreferences.NodeChangeEvent event)
-            {
-                if (event.getChild() == eclipsePreferences)
-                {
-                    synchronized (SigilProject.this)
-                    {
-                        preferences = null;
-                    }
-                    ((IEclipsePreferences) eclipsePreferences.parent()).removeNodeChangeListener(this);
-                }
-            }
-        };
-
-        ((IEclipsePreferences) eclipsePreferences.parent()).addNodeChangeListener(nodeListener);
-
-        return eclipsePreferences;
     }
 
     public Collection<IClasspathEntry> findExternalClasspath(IProgressMonitor monitor)
@@ -728,6 +671,24 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
         }
     }
 
+    public IRepositoryConfig getRepositoryConfig() throws CoreException
+    {
+        try
+        {
+            return BldFactory.getConfig(project.getFile(IBldProject.PROJECT_FILE).getLocationURI());
+        }
+        catch (IOException e)
+        {
+            throw SigilCore.newCoreException("Failed to get project file: ", e);
+        }
+    }
+    
+    public IRepositoryManager getRepositoryManager(IRepositoryMap repositoryMap) throws CoreException {
+        IRepositoryConfig config = getRepositoryConfig();
+        config = new EclipseRepositoryConfig(config);
+        return new EclipseRepositoryManager(config, repositoryMap);
+    }
+    
     public boolean isInBundleClasspath(IPackageFragment root) throws JavaModelException
     {
         if (getBundle().getClasspathEntrys().isEmpty())

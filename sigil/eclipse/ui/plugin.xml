@@ -146,22 +146,6 @@
       </wizard>
    </extension>
    <extension
-         point="org.eclipse.ui.propertyPages">
-      <page
-            class="org.apache.felix.sigil.eclipse.ui.internal.preferences.project.ProjectPropertyPage"
-            id="org.apache.felix.sigil.ui.projectpage"
-            name="Repositories">
-         <filter
-               name="projectNature"
-               value="org.apache.felix.sigil.sigilnature"/>
-         <enabledWhen>
-            <adapt
-                  type="org.eclipse.core.resources.IProject">
-            </adapt>
-         </enabledWhen>
-      </page>
-   </extension>
-   <extension
          point="org.eclipse.ui.menus">
       <menuContribution
             locationURI="popup:org.eclipse.ui.popup.any">

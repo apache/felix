@@ -139,9 +139,10 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
                 String type = c.getAttribute("type");
                 boolean dynamic = Boolean.valueOf(c.getAttribute("dynamic"));
                 String icon = c.getAttribute("icon");
+                String provider = c.getAttribute("alias");
                 Image image = (icon == null || icon.trim().length() == 0) ? null
                     : loadImage(e, icon);
-                repositories.add(new RepositoryType(id, type, dynamic, image));
+                repositories.add(new RepositoryType(id, provider, type, dynamic, image));
             }
         }
 
@@ -160,7 +161,6 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
 
     public IRepositorySet getDefaultRepositorySet()
     {
-        //int level = findLevel( key + LEVEL, type, prefs );
         ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
         for (String s : PrefsUtils.stringToArray(getPreferences().getString(
             REPOSITORY_DEFAULT_SET)))
