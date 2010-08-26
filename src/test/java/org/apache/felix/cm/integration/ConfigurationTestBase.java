@@ -22,6 +22,7 @@ package org.apache.felix.cm.integration;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,7 +124,8 @@ public abstract class ConfigurationTestBase
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
                 mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" )
-             )
+             ),
+             waitForFrameworkStartup()
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? PaxRunnerOptions.vmOption( paxRunnerVmOption ) : null;
         return OptionUtils.combine( base, vmOption );
