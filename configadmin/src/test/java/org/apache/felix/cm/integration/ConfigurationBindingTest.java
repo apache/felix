@@ -292,6 +292,9 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         config.setBundleLocation( location );
         TestCase.assertEquals( location, config.getBundleLocation() );
 
+        // ensure configuration is settled before starting the bundle
+        delay();
+
         bundle.start();
 
         // give cm time for distribution
@@ -425,6 +428,9 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         TestCase.assertNull( config.getBundleLocation() );
         config.setBundleLocation( location );
         TestCase.assertEquals( location, config.getBundleLocation() );
+
+        // ensure configuration is settled before starting the bundle
+        delay();
 
         // start the bundle
         bundle.start();
