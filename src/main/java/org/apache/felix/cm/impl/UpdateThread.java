@@ -28,27 +28,32 @@ import org.osgi.service.log.LogService;
  * The <code>UpdateThread</code> is the thread used to update managed services
  * and managed service factories as well as to send configuration events.
  */
-public class UpdateThread extends Thread
+public class UpdateThread implements Runnable
 {
-
-    // the base name of the thread which is set while there is no
-    // task to run
-    private static final String BASE_THREAD_NAME = "Configuration Updater";
 
     // the configuration manager on whose behalf this thread is started
     // (this is mainly used for logging)
-    private ConfigurationManager configurationManager;
+    private final ConfigurationManager configurationManager;
+
+    // the thread's base name
+    private final String workerBaseName;
 
     // the queue of Runnable instances  to be run
-    private LinkedList updateTasks;
+    private final LinkedList updateTasks;
+
+    // the actual thread
+    private final Thread worker;
 
 
-    public UpdateThread( ConfigurationManager configurationManager )
+    public UpdateThread( final ConfigurationManager configurationManager, final ThreadGroup tg, final String name )
     {
-        super( BASE_THREAD_NAME );
-
         this.configurationManager = configurationManager;
+        this.workerBaseName = name;
+
         this.updateTasks = new LinkedList();
+        this.worker = new Thread( tg, this, name );
+        this.worker.setDaemon( true );
+        this.worker.start();
     }
 
 
@@ -89,7 +94,7 @@ public class UpdateThread extends Thread
             try
             {
                 // set the thread name indicating the current task
-                setName( BASE_THREAD_NAME + " (" + task + ")" );
+                worker.setName( workerBaseName + " (" + task + ")" );
 
                 if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
                 {
@@ -105,17 +110,27 @@ public class UpdateThread extends Thread
             finally
             {
                 // reset the thread name to "idle"
-                setName( BASE_THREAD_NAME );
+                worker.setName( workerBaseName );
             }
         }
     }
 
 
     // cause this thread to terminate by adding this thread to the end
-    // of the queue
+    // of the queue and wait for the thread to actually terminate
     void terminate()
     {
         schedule( this );
+
+        // wait for all updates to terminate
+        try
+        {
+            worker.join();
+        }
+        catch ( InterruptedException ie )
+        {
+            // don't really care
+        }
     }
 
 
