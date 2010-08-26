@@ -34,11 +34,6 @@ import org.eclipse.jdt.core.JavaCore;
 public class SigilClasspathContainerInitializer extends ClasspathContainerInitializer
 {
 
-    public SigilClasspathContainerInitializer()
-    {
-        // TODO Auto-generated constructor stub
-    }
-
     @Override
     public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project)
     {
