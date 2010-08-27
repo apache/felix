@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.IModelWalker;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
-import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -66,7 +65,7 @@ public class ExportedPackageFinder implements IJobRunnable
                 return !monitor.isCanceled();
             }
         };
-        SigilCore.getRepositoryManager(sigil).visit(walker);
+        sigil.getRepositoryManager().visit(walker);
         if (exports.size() > 0)
         {
             accumulator.addElements(exports);

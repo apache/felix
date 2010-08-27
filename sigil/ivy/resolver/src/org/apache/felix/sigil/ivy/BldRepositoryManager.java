@@ -91,11 +91,13 @@ public class BldRepositoryManager extends AbstractRepositoryManager
             }
             else {
                 Properties props = config.getRepositoryConfig(name);
-                IBundleRepository repo = buildRepository(name, props);
-                
-                if ( repo != null ) {
-                    list.add(repo);
-                }                
+                if (props != null) {
+                    IBundleRepository repo = buildRepository(name, props);
+                    
+                    if ( repo != null ) {
+                        list.add(repo);
+                    }
+                }
             }
         }
     }

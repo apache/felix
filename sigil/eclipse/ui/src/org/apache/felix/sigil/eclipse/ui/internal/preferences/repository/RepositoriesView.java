@@ -34,6 +34,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -98,11 +99,11 @@ public class RepositoriesView
 
         // Layout
         composite.setLayout(new GridLayout(2, false));
-        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 6));
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 7));
 
         createButtons(composite, repositoryView);
 
-        repositories = SigilCore.getRepositoryConfiguration().loadRepositories();
+        repositories = SigilCore.getRepositoryPreferences().loadRepositories();
         repositoryView.setInput(repositories);
 
         return composite;
@@ -114,10 +115,18 @@ public class RepositoriesView
         add.setText("Add...");
         add.setEnabled(true);
 
+        final Button upBtn = new Button(composite, SWT.PUSH);
+        upBtn.setText("Up");
+        upBtn.setEnabled(false);
+
+        final Button downBtn = new Button(composite, SWT.PUSH);
+        downBtn.setText("Down");
+        downBtn.setEnabled(false);
+        
         final Button edit = new Button(composite, SWT.PUSH);
         edit.setText("Edit...");
         edit.setEnabled(false);
-
+        
         final Button remove = new Button(composite, SWT.PUSH);
         remove.setText("Remove");
         remove.setEnabled(false);
@@ -125,7 +134,7 @@ public class RepositoriesView
         final Button refresh = new Button(composite, SWT.PUSH);
         refresh.setText("Refresh");
         refresh.setEnabled(false);
-
+                
         // Listeners
         add.addSelectionListener(new SelectionAdapter()
         {
@@ -162,6 +171,24 @@ public class RepositoriesView
             }
         });
 
+        upBtn.addSelectionListener(new SelectionAdapter()
+        {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+                up();
+            }
+        });
+        
+        downBtn.addSelectionListener(new SelectionAdapter()
+        {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+                down();
+            }
+        });
+        
         repositoryView.addSelectionChangedListener(new ISelectionChangedListener()
         {
             public void selectionChanged(SelectionChangedEvent event)
@@ -175,9 +202,13 @@ public class RepositoriesView
 
                     checkEditEnabled(edit, sel);
                     checkRemoveEnabled(remove, sel);
+                    upBtn.setEnabled(sel.size() == 1);
+                    downBtn.setEnabled(sel.size() == 1);
                 }
                 else
                 {
+                    upBtn.setEnabled(false);
+                    downBtn.setEnabled(false);
                     refresh.setEnabled(false);
                     edit.setEnabled(false);
                     remove.setEnabled(false);
@@ -185,10 +216,37 @@ public class RepositoriesView
             }
         });
 
+        // layout
         add.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        upBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        downBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
         edit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
         remove.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
     }
+    
+    private void up()
+    {
+        IRepositoryModel model = (IRepositoryModel) ((StructuredSelection) repositoryView.getSelection()).getFirstElement();
+        int i = repositories.indexOf(model);
+        if (i > 0)
+        {
+            repositories.remove(i);
+            repositories.add(i - 1, model);
+            repositoryView.refresh();
+        }
+    }
+
+    private void down()
+    {
+        IRepositoryModel model = (IRepositoryModel) ((StructuredSelection) repositoryView.getSelection()).getFirstElement();
+        int i = repositories.indexOf(model);
+        if (i < repositories.size() - 1)
+        {
+            repositories.remove(i);
+            repositories.add(i + 1, model);
+            repositoryView.refresh();
+        }
+    }    
 
     @SuppressWarnings("unchecked")
     private void checkRemoveEnabled(Button button, IStructuredSelection sel)

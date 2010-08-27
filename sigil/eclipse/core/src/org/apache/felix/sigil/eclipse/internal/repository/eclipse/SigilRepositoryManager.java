@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.sigil.common.repository.AbstractRepositoryManager;
@@ -33,9 +34,8 @@ import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 import org.apache.felix.sigil.common.repository.RepositoryException;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryMap;
-import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap.RepositoryCache;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.IRepositoryMap.RepositoryCache;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositorySet;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -50,13 +50,10 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 public class SigilRepositoryManager extends AbstractRepositoryManager implements IRepositoryManager, IPropertyChangeListener
 {
 
-    private final String repositorySet;
-
     private RepositoryMap cachedRepositories;
 
-    public SigilRepositoryManager(String repositorySet, RepositoryMap cachedRepositories)
+    public SigilRepositoryManager(RepositoryMap cachedRepositories)
     {
-        this.repositorySet = repositorySet;
         this.cachedRepositories = cachedRepositories;
     }
 
@@ -84,7 +81,7 @@ public class SigilRepositoryManager extends AbstractRepositoryManager implements
         ArrayList<IBundleRepository> repos = new ArrayList<IBundleRepository>();
         HashSet<String> ids = new HashSet<String>();
 
-        IRepositoryModel[] models = findRepositories();
+        List<IRepositoryModel> models = findRepositories();
         for (IRepositoryModel repo : models)
         {
             try
@@ -141,26 +138,9 @@ public class SigilRepositoryManager extends AbstractRepositoryManager implements
         return null;
     }
 
-    protected IRepositoryModel[] findRepositories()
+    protected List<IRepositoryModel> findRepositories()
     {
-        if (repositorySet == null)
-        {
-            return SigilCore.getRepositoryConfiguration().getDefaultRepositorySet().getRepositories();
-        }
-        else
-        {
-            IRepositorySet set = SigilCore.getRepositoryConfiguration().getRepositorySet(
-                repositorySet);
-            if (set == null)
-            {
-                SigilCore.error("Unknown repository set " + repositorySet);
-                return SigilCore.getRepositoryConfiguration().getDefaultRepositorySet().getRepositories();
-            }
-            else
-            {
-                return set.getRepositories();
-            }
-        }
+        return SigilCore.getRepositoryPreferences().loadRepositories();
     }
 
     private IBundleRepository loadRepository(String id, Properties pref,

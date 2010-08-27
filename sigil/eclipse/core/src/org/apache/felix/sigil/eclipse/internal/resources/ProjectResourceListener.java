@@ -35,11 +35,6 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
-//import org.eclipse.core.runtime.IProgressMonitor;
-//import org.eclipse.core.runtime.IStatus;
-//import org.eclipse.core.runtime.Status;
-//import org.eclipse.core.runtime.jobs.Job;
-
 public class ProjectResourceListener implements IResourceChangeListener
 {
     public static final int EVENT_MASKS = IResourceChangeEvent.PRE_DELETE

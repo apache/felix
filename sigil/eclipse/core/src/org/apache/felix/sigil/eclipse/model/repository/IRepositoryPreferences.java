@@ -19,13 +19,20 @@
 
 package org.apache.felix.sigil.eclipse.model.repository;
 
-public interface IRepositorySet
+import java.util.List;
+
+import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryType;
+import org.eclipse.core.runtime.CoreException;
+
+public interface IRepositoryPreferences
 {
-    void setRepository(IRepositoryModel id, int position);
+    List<IRepositoryModel> loadRepositories();
 
-    void removeRepository(IRepositoryModel id);
+    IRepositoryModel findRepository(String id);
 
-    IRepositoryModel[] getRepositories();
+    void saveRepositories(List<IRepositoryModel> repositories) throws CoreException;
 
-    void setRepositories(IRepositoryModel[] repositories);
+    List<RepositoryType> loadRepositoryTypes();
+
+    IRepositoryModel newRepositoryElement(IRepositoryType type);
 }

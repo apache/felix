@@ -53,7 +53,7 @@ public class RefreshSigilClasspathCommandHandler implements IResourceCommandHand
                         throws CoreException, InvocationTargetException,
                         InterruptedException
                     {
-                        model.resetClasspath(monitor);
+                        model.resetClasspath(monitor, true);
                     }
                 };
 

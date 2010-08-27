@@ -347,7 +347,7 @@ public class ResourcesDialogHelper
                         return !monitor.isCanceled();
                     }
                 };
-                SigilCore.getRepositoryManager(sigil).visit(walker);
+                sigil.getRepositoryManager().visit(walker);
                 if (!bundles.isEmpty())
                 {
                     dialog.addElements(bundles);

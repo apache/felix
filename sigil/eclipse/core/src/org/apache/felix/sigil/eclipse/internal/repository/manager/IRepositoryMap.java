@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.model.project;
+package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
 import java.util.Properties;
 

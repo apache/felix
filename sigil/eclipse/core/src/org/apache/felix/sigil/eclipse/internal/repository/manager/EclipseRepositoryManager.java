@@ -31,14 +31,16 @@ import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 import org.apache.felix.sigil.common.repository.RepositoryException;
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap;
-import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap.RepositoryCache;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.IRepositoryMap.RepositoryCache;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 
 /**
  * @author dave
  *
  */
-public class EclipseRepositoryManager extends AbstractRepositoryManager
+public class EclipseRepositoryManager extends AbstractRepositoryManager implements IPropertyChangeListener
 {
     private final IRepositoryConfig config;
     private final IRepositoryMap repositoryMap;
@@ -49,9 +51,25 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager
      */
     public EclipseRepositoryManager(IRepositoryConfig config, IRepositoryMap repositoryMap)
     {
-        this.config = config;
+        this.config = new EclipseRepositoryConfig(config);
         this.repositoryMap = repositoryMap;
     }
+    
+    @Override
+    public void initialise()
+    {
+        super.initialise();
+        SigilCore.getDefault().getPreferenceStore().addPropertyChangeListener(this);
+    }
+
+    public void destroy()
+    {
+        IPreferenceStore prefs = SigilCore.getDefault().getPreferenceStore();
+        if (prefs != null)
+        {
+            prefs.removePropertyChangeListener(this);
+        }
+    }    
 
     /* (non-Javadoc)
      * @see org.apache.felix.sigil.common.repository.AbstractRepositoryManager#loadRepositories()
@@ -91,12 +109,14 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager
             }
             else {
                 Properties props = config.getRepositoryConfig(name);
-                String uid = config.getRepositoryDefinition(name).toString() + name;
-                IBundleRepository repo = buildRepository(uid, name, props);
-                
-                if ( repo != null ) {
-                    list.add(repo);
-                }                
+                if (props != null) {
+                    String uid = config.getRepositoryDefinition(name).toString() + '#' + name;
+                    IBundleRepository repo = buildRepository(uid, name, props);
+                    
+                    if ( repo != null ) {
+                        list.add(repo);
+                    }
+                }
             }
         }
     }
@@ -122,6 +142,8 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager
                 SigilCore.log(msg);
             else
                 SigilCore.warn(msg);
+            
+            return null;
         }
 
         try
@@ -167,6 +189,17 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager
         catch (RuntimeException e)
         {
             throw new RepositoryException("Failed to build repositories", e);
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see org.eclipse.jface.util.IPropertyChangeListener#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
+     */
+    public void propertyChange(PropertyChangeEvent event)
+    {
+        if (event.getProperty().equals("repository.order"))
+        {
+            loadRepositories();
         }
     }
     

@@ -102,7 +102,7 @@ public class RepositoryTypeSelectionPage extends WizardSelectionPage implements 
                 {
                     IStructuredSelection sel = (IStructuredSelection) event.getSelection();
                     IRepositoryType type = (IRepositoryType) sel.getFirstElement();
-                    repositoryElement = SigilCore.getRepositoryConfiguration().newRepositoryElement(
+                    repositoryElement = SigilCore.getRepositoryPreferences().newRepositoryElement(
                         type);
                     selectWizardNode(new RepositoryWizardNode(repositoryElement));
                 }
@@ -110,7 +110,7 @@ public class RepositoryTypeSelectionPage extends WizardSelectionPage implements 
         });
 
         ArrayList<IRepositoryType> descriptors = new ArrayList<IRepositoryType>(
-            SigilCore.getRepositoryConfiguration().loadRepositoryTypes());
+            SigilCore.getRepositoryPreferences().loadRepositoryTypes());
 
         for (Iterator<IRepositoryType> i = descriptors.iterator(); i.hasNext();)
         {

@@ -95,7 +95,7 @@ public interface ISigilProjectModel extends ICompoundModelElement
      */
     IJavaProject getJavaModel();
 
-    void resetClasspath(IProgressMonitor monitor) throws CoreException;
+    void resetClasspath(IProgressMonitor monitor, boolean forceResolve) throws CoreException;
 
     IPath findBundleLocation() throws CoreException;
 
@@ -121,9 +121,8 @@ public interface ISigilProjectModel extends ICompoundModelElement
         throws CoreException;
 
     /**
-     * @param repositoryMap 
      * @return
      * @throws CoreException 
      */
-    IRepositoryManager getRepositoryManager(IRepositoryMap repositoryMap) throws CoreException;
+    IRepositoryManager getRepositoryManager();
 }

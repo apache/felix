@@ -93,7 +93,7 @@ public class SigilModelRoot implements ISigilModelRoot
                         else if (element instanceof ILibraryImport)
                         {
                             ILibraryImport l = (ILibraryImport) element;
-                            ILibrary lib = SigilCore.getRepositoryManager(sigil).resolveLibrary(
+                            ILibrary lib = sigil.getRepositoryManager().resolveLibrary(
                                 l);
 
                             if (lib != null)

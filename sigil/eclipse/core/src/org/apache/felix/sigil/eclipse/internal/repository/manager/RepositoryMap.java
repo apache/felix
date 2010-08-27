@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap;
 
 public class RepositoryMap implements IRepositoryMap
 {

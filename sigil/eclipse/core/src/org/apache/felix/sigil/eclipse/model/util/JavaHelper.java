@@ -168,7 +168,7 @@ public class JavaHelper
     {
         final LinkedList<IPackageExport> results = new LinkedList<IPackageExport>();
 
-        SigilCore.getRepositoryManager(project).visit(new IModelWalker()
+        project.getRepositoryManager().visit(new IModelWalker()
         {
             public boolean visit(IModelElement element)
             {
@@ -312,7 +312,7 @@ public class JavaHelper
                 else if (element instanceof IRequiredBundle)
                 {
                     IRequiredBundle rb = (IRequiredBundle) element;
-                    IRepositoryManager manager = SigilCore.getRepositoryManager(project);
+                    IRepositoryManager manager = project.getRepositoryManager();
                     ResolutionConfig config = new ResolutionConfig(
                         ResolutionConfig.INCLUDE_OPTIONAL
                             | ResolutionConfig.IGNORE_ERRORS);
@@ -366,7 +366,7 @@ public class JavaHelper
         IResolution resolution;
         try
         {
-            resolution = SigilCore.getRepositoryManager(sigil).getBundleResolver().resolve(
+            resolution = sigil.getRepositoryManager().getBundleResolver().resolve(
                 sigil, config, new ResolutionMonitorAdapter(monitor));
         }
         catch (ResolutionException e)

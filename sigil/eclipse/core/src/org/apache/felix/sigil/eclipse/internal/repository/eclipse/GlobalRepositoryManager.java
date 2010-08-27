@@ -19,27 +19,17 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
 
-import java.util.List;
-
 import org.apache.felix.sigil.common.repository.IRepositoryManager;
-import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.internal.repository.eclipse.SigilRepositoryManager;
 import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryMap;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 
 public class GlobalRepositoryManager extends SigilRepositoryManager implements IRepositoryManager
 {
 
     public GlobalRepositoryManager(RepositoryMap map)
     {
-        super(null, map);
+        super(map);
     }
 
-    @Override
-    protected IRepositoryModel[] findRepositories()
-    {
-        List<IRepositoryModel> repos = SigilCore.getRepositoryConfiguration().loadRepositories();
-        return repos.toArray(new IRepositoryModel[repos.size()]);
-    }
 
 }

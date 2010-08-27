@@ -93,7 +93,7 @@ public class ModelLabelProvider extends LabelProvider
         if (element instanceof IBundleRepository)
         {
             IBundleRepository rep = (IBundleRepository) element;
-            IRepositoryModel config = SigilCore.getRepositoryConfiguration().findRepository(
+            IRepositoryModel config = SigilCore.getRepositoryPreferences().findRepository(
                 rep.getId());
             return config.getType().getIcon();
         }
@@ -168,7 +168,7 @@ public class ModelLabelProvider extends LabelProvider
         if (element instanceof IBundleRepository)
         {
             IBundleRepository rep = (IBundleRepository) element;
-            IRepositoryModel config = SigilCore.getRepositoryConfiguration().findRepository(
+            IRepositoryModel config = SigilCore.getRepositoryPreferences().findRepository(
                 rep.getId());
             return config.getName();
         }

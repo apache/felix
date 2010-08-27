@@ -20,20 +20,26 @@ package org.apache.felix.sigil.eclipse.internal.resources;
 
 import java.util.HashMap;
 
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
+import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.internal.model.project.SigilProject;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.EclipseRepositoryManager;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.IRepositoryMap;
+import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 
 public class SigilProjectManager
 {
-    private static HashMap<IProject, SigilProject> projects = new HashMap<IProject, SigilProject>();
+    private static HashMap<IProject, ISigilProjectModel> projects = new HashMap<IProject, ISigilProjectModel>();
+    private static HashMap<ISigilProjectModel, EclipseRepositoryManager> repositoryManagers = new HashMap<ISigilProjectModel, EclipseRepositoryManager>();
 
-    public SigilProject getSigilProject(IProject project) throws CoreException
+    public ISigilProjectModel getSigilProject(IProject project) throws CoreException
     {
         if (project.hasNature(SigilCore.NATURE_ID))
         {
-            SigilProject p = null;
+            ISigilProjectModel p = null;
             synchronized (projects)
             {
                 p = projects.get(project);
@@ -54,9 +60,35 @@ public class SigilProjectManager
 
     public void flushSigilProject(IProject project)
     {
-        synchronized (project)
+        synchronized (projects)
         {
-            projects.remove(project);
+            ISigilProjectModel model = projects.remove(project);
+            if ( model != null ) {
+                EclipseRepositoryManager manager = repositoryManagers.remove(model);
+                manager.destroy();           
+            }            
+        }
+    }
+
+    /**
+     * @param model
+     * @param repositoryMap 
+     * @throws CoreException 
+     */
+    public IRepositoryManager getRepositoryManager(ISigilProjectModel model, IRepositoryMap repositoryMap) throws CoreException
+    {
+        synchronized( projects ) {
+            EclipseRepositoryManager manager = repositoryManagers.get(model);
+            
+            if ( manager == null ) {
+                IRepositoryConfig config = model.getRepositoryConfig();
+                
+                manager = new EclipseRepositoryManager(config, repositoryMap);
+                
+                repositoryManagers.put(model, manager);
+            }
+            
+            return manager;
         }
     }
 }

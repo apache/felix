@@ -259,7 +259,7 @@ public class BundleResolverView extends ViewPart
         };
 
         ISigilProjectModel project = findProject(element);
-        IRepositoryManager repository = SigilCore.getRepositoryManager(project);
+        IRepositoryManager repository = project.getRepositoryManager();
 
         int options = ResolutionConfig.IGNORE_ERRORS;
 

@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +32,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositoryConfiguration;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositorySet;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
-import org.apache.felix.sigil.eclipse.model.repository.RepositorySet;
 import org.apache.felix.sigil.eclipse.preferences.PrefsUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -48,19 +48,21 @@ import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.graphics.Image;
 import org.osgi.framework.Bundle;
 
-public class RepositoryConfiguration implements IRepositoryConfiguration
+public class RepositoryPreferences implements IRepositoryPreferences
 {
 
     private static final String REPOSITORY = "repository.";
-    private static final String REPOSITORY_SET = REPOSITORY + "set.";
-    private static final String REPOSITORY_SETS = REPOSITORY + "sets";
-    private static final String REPOSITORY_TIMESTAMP = REPOSITORY + "timestamp";
+    private static final String REPOSITORY_ORDER = REPOSITORY + "order";
     private static final String INSTANCES = ".instances";
     private static final String NAME = ".name";
     private static final String LOC = ".loc";
     private static final String TIMESTAMP = ".timestamp";
 
-    public static final String REPOSITORY_DEFAULT_SET = REPOSITORY + "default.set";
+    private static final HashMap<String, String> migrationTable = new HashMap<String, String>();
+    
+    static {
+        migrationTable.put("org.apache.felix.sigil.core.file", "filesystem");
+    }
 
     public List<IRepositoryModel> loadRepositories()
     {
@@ -91,6 +93,27 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
             }
 
         }
+        
+        final List<String> order = PrefsUtils.stringToList(prefs.getString(REPOSITORY_ORDER));
+        
+        Collections.sort(repositories, new Comparator<IRepositoryModel>() {
+            public int compare(IRepositoryModel o1, IRepositoryModel o2)
+            {
+                int i1 = order.indexOf(o1.getId());
+                int i2 = order.indexOf(o2.getId());
+                
+                if ( i1 < i2 ) {
+                    return -1;
+                }
+                else if ( i1 > i2 ) {
+                    return 1;
+                }
+                else {
+                    return 0;
+                }
+            }
+            
+        });
 
         return repositories;
     }
@@ -118,9 +141,23 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
         saveRepositoryPreferences(repositories, mapped);
         createNewEntries(mapped, prefs);
         deleteOldEntries(repositories, prefs);
-        // time stamp is used as a signal to the manager
-        // to update its view of the stored repositories
-        timeStamp(prefs);
+        // do this last as it is a signal to preferences
+        // listeners to read repo config
+        setRepositoryOrder(repositories, prefs);
+    }
+
+    /**
+     * @param repositories
+     * @param prefs
+     */
+    private void setRepositoryOrder(List<IRepositoryModel> repositories,
+        IPreferenceStore prefs)
+    {        
+        ArrayList<String> ids = new ArrayList<String>();
+        for(IRepositoryModel model : repositories) {
+            ids.add(model.getId());
+        }
+        prefs.setValue(REPOSITORY_ORDER, PrefsUtils.listToString(ids));
     }
 
     public List<RepositoryType> loadRepositoryTypes()
@@ -139,7 +176,7 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
                 String type = c.getAttribute("type");
                 boolean dynamic = Boolean.valueOf(c.getAttribute("dynamic"));
                 String icon = c.getAttribute("icon");
-                String provider = c.getAttribute("alias");
+                String provider = c.getAttribute("alias");                
                 Image image = (icon == null || icon.trim().length() == 0) ? null
                     : loadImage(e, icon);
                 repositories.add(new RepositoryType(id, provider, type, dynamic, image));
@@ -157,117 +194,6 @@ public class RepositoryConfiguration implements IRepositoryConfiguration
         prefs.setFilename(makeFileName(element));
         prefs.setValue("id", id);
         return element;
-    }
-
-    public IRepositorySet getDefaultRepositorySet()
-    {
-        ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
-        for (String s : PrefsUtils.stringToArray(getPreferences().getString(
-            REPOSITORY_DEFAULT_SET)))
-        {
-            IRepositoryModel rep = findRepository(s);
-            if (rep == null)
-            {
-                SigilCore.error("Missing repository for " + s);
-            }
-            else
-            {
-                reps.add(rep);
-            }
-        }
-        return new RepositorySet(reps);
-    }
-
-    public IRepositorySet getRepositorySet(String name)
-    {
-        String key = REPOSITORY_SET + name;
-        if (getPreferences().contains(key))
-        {
-            ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
-            for (String s : PrefsUtils.stringToArray(getPreferences().getString(key)))
-            {
-                IRepositoryModel rep = findRepository(s);
-                if (rep == null)
-                {
-                    throw new IllegalStateException("Missing repository for " + s);
-                }
-                reps.add(rep);
-            }
-            return new RepositorySet(reps);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    public Map<String, IRepositorySet> loadRepositorySets()
-    {
-        IPreferenceStore store = getPreferences();
-
-        HashMap<String, IRepositorySet> sets = new HashMap<String, IRepositorySet>();
-
-        for (String name : PrefsUtils.stringToArray(store.getString(REPOSITORY_SETS)))
-        {
-            String key = REPOSITORY_SET + name;
-            ArrayList<IRepositoryModel> reps = new ArrayList<IRepositoryModel>();
-            for (String s : PrefsUtils.stringToArray(getPreferences().getString(key)))
-            {
-                reps.add(findRepository(s));
-            }
-            sets.put(name, new RepositorySet(reps));
-        }
-
-        return sets;
-    }
-
-    public void saveRepositorySets(Map<String, IRepositorySet> sets)
-    {
-        IPreferenceStore store = getPreferences();
-
-        ArrayList<String> names = new ArrayList<String>();
-
-        for (Map.Entry<String, IRepositorySet> set : sets.entrySet())
-        {
-            String name = set.getKey();
-            String key = REPOSITORY_SET + name;
-            ArrayList<String> ids = new ArrayList<String>();
-            for (IRepositoryModel m : set.getValue().getRepositories())
-            {
-                ids.add(m.getId());
-            }
-            store.setValue(key, PrefsUtils.listToString(ids));
-            names.add(name);
-        }
-
-        for (String name : PrefsUtils.stringToArray(store.getString(REPOSITORY_SETS)))
-        {
-            if (!names.contains(name))
-            {
-                String key = REPOSITORY_SET + name;
-                store.setToDefault(key);
-            }
-        }
-
-        store.setValue(REPOSITORY_SETS, PrefsUtils.listToString(names));
-        timeStamp(store);
-    }
-
-    public void setDefaultRepositorySet(IRepositorySet defaultSet)
-    {
-        ArrayList<String> ids = new ArrayList<String>();
-        for (IRepositoryModel m : defaultSet.getRepositories())
-        {
-            ids.add(m.getId());
-        }
-        IPreferenceStore prefs = getPreferences();
-        prefs.setValue(REPOSITORY_DEFAULT_SET, PrefsUtils.listToString(ids));
-        timeStamp(prefs);
-    }
-
-    private void timeStamp(IPreferenceStore prefs)
-    {
-        prefs.setValue(REPOSITORY_TIMESTAMP, System.currentTimeMillis());
     }
 
     private IPreferenceStore getPreferences()

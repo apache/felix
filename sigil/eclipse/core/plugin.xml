@@ -65,7 +65,7 @@
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
-            class="org.apache.felix.sigil.eclipse.preferences.SigilPreferencesInitializer">
+            class="org.apache.felix.sigil.eclipse.internal.preferences.SigilPreferencesInitializer">
       </initializer>
    </extension>
    <extension

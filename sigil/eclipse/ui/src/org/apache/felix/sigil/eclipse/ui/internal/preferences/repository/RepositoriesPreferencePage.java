@@ -20,9 +20,7 @@
 package org.apache.felix.sigil.eclipse.ui.internal.preferences.repository;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositoryConfiguration;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositorySet;
-import org.apache.felix.sigil.eclipse.model.repository.RepositorySet;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences;
 import org.apache.felix.sigil.eclipse.ui.internal.preferences.ProjectDependentPreferencesPage;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -41,7 +39,6 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
 
     private boolean changed;
     private RepositoriesView viewPage;
-    private RepositorySetsView setPage;
 
     public RepositoriesPreferencePage()
     {
@@ -70,7 +67,6 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
     private Control initContents(Composite parent)
     {
         viewPage = new RepositoriesView(this);
-        setPage = new RepositorySetsView(this);
 
         Composite control = new Composite(parent, SWT.NONE);
 
@@ -79,10 +75,6 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
         TabItem view = new TabItem(folder, SWT.NONE);
         view.setText("Repositories");
         view.setControl(viewPage.createContents(folder));
-
-        TabItem sets = new TabItem(folder, SWT.NONE);
-        sets.setText("Sets");
-        sets.setControl(setPage.createContents(folder));
 
         control.setLayout(new GridLayout(1, true));
         folder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -101,12 +93,8 @@ public class RepositoriesPreferencePage extends ProjectDependentPreferencesPage 
     {
         try
         {
-            IRepositoryConfiguration config = SigilCore.getRepositoryConfiguration();
+            IRepositoryPreferences config = SigilCore.getRepositoryPreferences();
             config.saveRepositories(viewPage.getRepositories());
-            config.saveRepositorySets(setPage.getSets());
-            IRepositorySet defaultSet = new RepositorySet(
-                setPage.getDefaultRepositories());
-            config.setDefaultRepositorySet(defaultSet);
 
             setErrorMessage(null);
             getApplyButton().setEnabled(false);

@@ -125,12 +125,12 @@ public class SigilSearch extends AbstractUIPlugin
             if (index == null)
             {
                 index = new Index();
-                for (IBundleRepository rep : SigilCore.getRepositoryManager(sigil).getRepositories())
+                for (IBundleRepository rep : sigil.getRepositoryManager().getRepositories())
                 {
                     index(index, rep);
                 }
 
-                SigilCore.getRepositoryManager(sigil).addRepositoryChangeListener(
+                sigil.getRepositoryManager().addRepositoryChangeListener(
                     new IRepositoryChangeListener()
                     {
                         public void repositoryChanged(RepositoryChangeEvent event)

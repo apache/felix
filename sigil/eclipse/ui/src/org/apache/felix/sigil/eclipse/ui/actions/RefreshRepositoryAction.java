@@ -72,7 +72,7 @@ public class RefreshRepositoryAction extends DisplayAction
                     SubMonitor sub = SubMonitor.convert(monitor, projects.size() * 10);
                     for (ISigilProjectModel p : projects)
                     {
-                        p.resetClasspath(sub.newChild(10));
+                        p.resetClasspath(sub.newChild(10), false);
                     }
                 }
             }

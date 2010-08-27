@@ -51,9 +51,7 @@ import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
 import org.apache.felix.sigil.eclipse.PathUtil;
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.internal.repository.manager.EclipseRepositoryManager;
 import org.apache.felix.sigil.eclipse.job.ThreadProgressMonitor;
-import org.apache.felix.sigil.eclipse.model.project.IRepositoryMap;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.apache.felix.sigil.eclipse.progress.ProgressAdapter;
@@ -178,7 +176,7 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
     {
         SubMonitor progress = SubMonitor.convert(monitor, 100);
 
-        IRepositoryManager manager = SigilCore.getRepositoryManager(this);
+        IRepositoryManager manager = getRepositoryManager();
         ResolutionConfig config = new ResolutionConfig(ResolutionConfig.INCLUDE_OPTIONAL
             | ResolutionConfig.IGNORE_ERRORS);
 
@@ -444,8 +442,12 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
         return "SigilProject[" + getSymbolicName() + ":" + getVersion() + "]";
     }
 
-    public void resetClasspath(IProgressMonitor monitor) throws CoreException
+    public void resetClasspath(IProgressMonitor monitor, boolean forceResolve) throws CoreException
     {
+        if (forceResolve) {
+            processRequirementsChanges(monitor);
+        }
+        
         Path containerPath = new Path(SigilCore.CLASSPATH_CONTAINER_PATH);
         IJavaProject java = getJavaModel();
         ClasspathContainerInitializer init = JavaCore.getClasspathContainerInitializer(SigilCore.CLASSPATH_CONTAINER_PATH);
@@ -493,7 +495,7 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
                     IRequiredBundle rb = (IRequiredBundle) element;
                     try
                     {
-                        IRepositoryManager manager = SigilCore.getRepositoryManager(SigilProject.this);
+                        IRepositoryManager manager = SigilProject.this.getRepositoryManager();
                         ResolutionConfig config = new ResolutionConfig(
                             ResolutionConfig.IGNORE_ERRORS);
                         IResolution res = manager.getBundleResolver().resolve(rb, config,
@@ -683,12 +685,6 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
         }
     }
     
-    public IRepositoryManager getRepositoryManager(IRepositoryMap repositoryMap) throws CoreException {
-        IRepositoryConfig config = getRepositoryConfig();
-        config = new EclipseRepositoryConfig(config);
-        return new EclipseRepositoryManager(config, repositoryMap);
-    }
-    
     public boolean isInBundleClasspath(IPackageFragment root) throws JavaModelException
     {
         if (getBundle().getClasspathEntrys().isEmpty())
@@ -711,5 +707,13 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
                 parent.getRawClasspathEntry());
             return getBundle().getClasspathEntrys().contains(enc.trim());
         }
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel#getRepositoryManager()
+     */
+    public IRepositoryManager getRepositoryManager()
+    {
+        return SigilCore.getRepositoryManager(this);
     }
 }

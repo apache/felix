@@ -89,7 +89,7 @@ public class OSGiLauncher extends AbstractJavaLaunchConfigurationDelegate implem
         try
         {
             // TODO need to figure out a sensible repository manager for launch configs
-            IRepositoryManager manager = SigilCore.getRepositoryManager(null);
+            IRepositoryManager manager = SigilCore.getGlobalRepositoryManager();
             client.apply(form.resolve(new RuntimeBundleResolver(manager, config)));
         }
         catch (Exception e)

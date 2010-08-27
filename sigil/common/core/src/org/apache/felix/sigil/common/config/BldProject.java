@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -664,6 +663,11 @@ public class BldProject implements IBldProject, IRepositoryConfig
 
         Properties repo = config.getProps(null, name);
 
+        if ( repo.isEmpty() ) {
+            // XXX getProps returns and empty props vs null if not found?
+            return null;
+        }
+        
         for (Object k : repo.keySet())
         {
             String key = (String) k;

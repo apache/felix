@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.preferences;
+package org.apache.felix.sigil.eclipse.internal.preferences;
 
 import org.apache.felix.sigil.common.osgi.VersionRangeBoundingRule;
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryConfiguration;
+import org.apache.felix.sigil.eclipse.preferences.PrefsUtils;
+import org.apache.felix.sigil.eclipse.preferences.PromptablePreference;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -35,7 +36,15 @@ public class SigilPreferencesInitializer extends AbstractPreferenceInitializer
     public void initializeDefaultPreferences()
     {
         IPreferenceStore store = SigilCore.getDefault().getPreferenceStore();
+        setUpDefaults(store);
+        migrateOldPreferences(store);
+    }
 
+    /**
+     * @param store
+     */
+    private void setUpDefaults(IPreferenceStore store)
+    {
         store.setDefault(SigilCore.OSGI_INSTALL_CHECK_PREFERENCE, true);
 
         store.setDefault(SigilCore.DEFAULT_VERSION_LOWER_BOUND,
@@ -54,7 +63,14 @@ public class SigilPreferencesInitializer extends AbstractPreferenceInitializer
         store.setDefault(SigilCore.PREFERENCES_REBUILD_PROJECTS,
             PromptablePreference.Prompt.name());
 
-        store.setDefault(RepositoryConfiguration.REPOSITORY_DEFAULT_SET,
+        store.setDefault("repository.order",
             "org.apache.felix.sigil.core.workspaceprovider");
+    }
+    
+    /**
+     * @param store
+     */
+    private void migrateOldPreferences(IPreferenceStore store)
+    {
     }
 }

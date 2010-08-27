@@ -44,14 +44,14 @@ import org.apache.felix.sigil.eclipse.install.IOSGiInstallManager;
 import org.apache.felix.sigil.eclipse.internal.install.OSGiInstallManager;
 import org.apache.felix.sigil.eclipse.internal.model.project.SigilModelRoot;
 import org.apache.felix.sigil.eclipse.internal.model.project.SigilProject;
-import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryConfiguration;
+import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryPreferences;
 import org.apache.felix.sigil.eclipse.internal.repository.eclipse.GlobalRepositoryManager;
 import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryMap;
 import org.apache.felix.sigil.eclipse.internal.resources.ProjectResourceListener;
 import org.apache.felix.sigil.eclipse.internal.resources.SigilProjectManager;
 import org.apache.felix.sigil.eclipse.model.project.ISigilModelRoot;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
-import org.apache.felix.sigil.eclipse.model.repository.IRepositoryConfiguration;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
@@ -145,7 +145,7 @@ public class SigilCore extends AbstractUIPlugin
     private ServiceTracker descriptorTracker;
     private ServiceTracker registryTracker;
     private ServiceTracker serializerTracker;
-    private static IRepositoryConfiguration repositoryConfig;
+    private static IRepositoryPreferences repositoryPrefs;
     private static SigilProjectManager projectManager;
     private static OSGiInstallManager installs;
     private static ISigilModelRoot modelRoot;
@@ -270,7 +270,7 @@ public class SigilCore extends AbstractUIPlugin
 
         modelRoot = new SigilModelRoot();
 
-        repositoryConfig = new RepositoryConfiguration();
+        repositoryPrefs = new RepositoryPreferences();
 
         installs = new OSGiInstallManager();
 
@@ -428,23 +428,24 @@ public class SigilCore extends AbstractUIPlugin
         if ( model == null ) return globalRepositoryManager;
         try
         {
-            return model.getRepositoryManager(repositoryMap);
+            return projectManager.getRepositoryManager(model, repositoryMap);
         }
         catch (CoreException e)
         {
-            warn("Failed to build repository manager for " + model, e);
+            SigilCore.error("Failed to read repository config", e);
             return globalRepositoryManager;
-        }
+        }        
     }
 
-    public static IRepositoryConfiguration getRepositoryConfiguration()
+    public static IRepositoryPreferences getRepositoryPreferences()
     {
-        return repositoryConfig;
+        return repositoryPrefs;
     }
 
     public static void rebuildAllBundleDependencies(IProgressMonitor monitor)
     {
         Collection<ISigilProjectModel> projects = getRoot().getProjects();
+        
         if (!projects.isEmpty())
         {
             SubMonitor progress = SubMonitor.convert(monitor, projects.size() * 20);
@@ -480,7 +481,7 @@ public class SigilCore extends AbstractUIPlugin
     {
         try
         {
-            dependent.resetClasspath(progress.newChild(10));
+            dependent.resetClasspath(progress.newChild(10), false);
             dependent.getProject().build(IncrementalProjectBuilder.FULL_BUILD,
                 progress.newChild(10));
         }
