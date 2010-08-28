@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -248,7 +248,7 @@ public class ComponentTypeDescription {
             Element prop = new Element("property", "");
             prop.addAttribute(new Attribute("name", m_properties[i].getName()));
             prop.addAttribute(new Attribute("type", m_properties[i].getType()));
-            if (m_properties[i].getValue() == null) {
+            if (m_properties[i].isMandatory()  && m_properties[i].getValue() == null) {
                 prop.addAttribute(new Attribute("value", "REQUIRED"));
             } else {
                 prop.addAttribute(new Attribute("value", m_properties[i].getValue()));
