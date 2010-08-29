@@ -161,5 +161,23 @@ public interface ServiceDependency extends Dependency, ServiceComponentDependenc
      */
 	public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed);
     
-    public ServiceDependency setInstanceBound(boolean isInstanceBound);
+    /**
+     * Sets propagation of the service dependency properties to the provided service properties. Any additional
+     * service properties specified directly are merged with these.
+     */
+    public ServiceDependency setPropagate(boolean propagate);
+    
+    /**
+     * Sets an Object instance and a callback method used to propagate some properties to the provided service properties.
+     * The method will be invoked on the specified object instance and must have one of the following signatures:<p>
+     * <ul><li>Dictionary callback(ServiceReference, Object service) 
+     * <li>Dictionary callback(ServiceReference)
+     * </ul>
+     * @param instance the Object instance which is used to retrieve propagated service properties 
+     * @param method the method to invoke for retrieving the properties to be propagated to the service properties.
+     * @return this service dependency.
+     */
+    public ServiceDependency setPropagate(Object instance, String method);
+
+    public ServiceDependency setInstanceBound(boolean isInstanceBound);    
 }
