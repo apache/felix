@@ -164,4 +164,11 @@ public @interface ServiceDependency
      *  </pre></blockquote>
      */
     String name() default "";
+    
+    /**
+     * Returns true if the dependency service properties must be published along with the service. 
+     * Any additional service properties specified directly are merged with these.
+     * @return true if dependency service properties must be published along with the service, false if not.
+     */
+    boolean propagate() default false;
 }
