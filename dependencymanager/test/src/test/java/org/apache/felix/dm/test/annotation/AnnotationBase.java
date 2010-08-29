@@ -18,6 +18,9 @@
 */
 package org.apache.felix.dm.test.annotation;
 
+import java.util.Hashtable;
+
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.test.Base;
 import org.apache.felix.dm.test.Ensure;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -74,6 +77,18 @@ public class AnnotationBase extends Base implements Sequencer
         }
     }
 
+    /**
+     * Registers the Sequencer interface, for activating a given testcase
+     */
+    protected void registerSequencer(DependencyManager m, final String testName) 
+    {
+        m.add(m.createService()
+              .setImplementation(this)
+              .setInterface(Sequencer.class.getName(),new Hashtable() {{
+                  put("test", testName);
+              }}));
+    }
+    
     // ----------------------- Sequencer interface ------------------------------------------
 
     /**

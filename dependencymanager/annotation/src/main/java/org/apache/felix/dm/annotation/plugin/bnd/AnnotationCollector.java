@@ -388,6 +388,9 @@ public class AnnotationCollector extends ClassDataCollector
         if (name != null && ! m_dependencyNames.add(name)) {
             throw new IllegalArgumentException("Duplicate dependency name " + name + " in ServiceDependency annotation from class " + m_className);
         }
+        
+        // propagate attribute
+        writer.putString(annotation, EntryParam.propagate, null);
     }
 
     /**

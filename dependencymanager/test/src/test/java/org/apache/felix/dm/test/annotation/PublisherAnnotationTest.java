@@ -61,18 +61,6 @@ public class PublisherAnnotationTest extends AnnotationBase
                     .set("-plugin", "org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin")
                     .build()));            
     }
-
-    /**
-     * Registers the Sequencer interface, for activating a given testcase
-     */
-    private void registerSequencer(DependencyManager m, final String testName) 
-    {
-        m.add(m.createService()
-              .setImplementation(this)
-              .setInterface(Sequencer.class.getName(),new Hashtable() {{
-                  put("test", testName);
-              }}));
-    }
     
     /**
      * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.

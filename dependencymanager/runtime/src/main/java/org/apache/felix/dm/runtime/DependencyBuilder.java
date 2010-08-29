@@ -108,17 +108,18 @@ public class DependencyBuilder
         String removed = timeout != -1 ? null : m_metaData.getString(Params.removed, null);
         String autoConfigField = m_metaData.getString(Params.autoConfig, null);
         boolean required = "true".equals(m_metaData.getString(Params.required, "true"));
+        boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
 
         Dependency dp = createServiceDependency(dm, serviceClass,
             serviceFilter, defaultServiceImplClass, added, changed,
-            removed, autoConfigField, timeout, required, instanceBound);
+            removed, autoConfigField, timeout, required, instanceBound, propagate);
         return dp;
     }
 
     private Dependency createServiceDependency(DependencyManager dm, Class<?> serviceClass, 
         String serviceFilter, Class<?> defaultServiceImplClass, String added,
         String changed, String removed, String autoConfigField, long timeout, boolean required,
-        boolean instanceBound)
+        boolean instanceBound, boolean propagate)
     {
         ServiceDependency sd = timeout != -1 ? dm.createTemporalServiceDependency()
             : dm.createServiceDependency();
@@ -145,6 +146,7 @@ public class DependencyBuilder
         }
         
         sd.setInstanceBound(instanceBound);
+        sd.setPropagate(propagate);
         return sd;
     }
 
