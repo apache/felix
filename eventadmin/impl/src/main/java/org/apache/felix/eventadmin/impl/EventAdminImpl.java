@@ -18,9 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl;
 
+import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
 import org.apache.felix.eventadmin.impl.handler.HandlerTasks;
-import org.apache.felix.eventadmin.impl.tasks.DeliverTask;
-import org.apache.felix.eventadmin.impl.tasks.HandlerTask;
+import org.apache.felix.eventadmin.impl.tasks.*;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -47,7 +47,7 @@ public class EventAdminImpl implements EventAdmin
     private final DeliverTask m_postManager;
 
     // The synchronous event dispatcher
-    private final DeliverTask m_sendManager;
+    private final SyncDeliverTasks m_sendManager;
 
     /**
      * The constructor of the <tt>EventAdmin</tt> implementation. The
@@ -56,21 +56,26 @@ public class EventAdminImpl implements EventAdmin
      * <tt>DeliverTasks</tt> are used to dispatch the event.
      *
      * @param managers The factory used to determine applicable <tt>EventHandler</tt>
-     * @param postManager The asynchronous event dispatcher
-     * @param sendManager The synchronous event dispatcher
+     * @param syncPool The synchronous thread pool
+     * @param asyncPool The asynchronous thread pool
      */
     public EventAdminImpl(final HandlerTasks managers,
-        final DeliverTask postManager, final DeliverTask sendManager)
+            final ThreadPool syncPool,
+            final ThreadPool asyncPool,
+            final int timeout,
+            final String[] ignoreTimeout)
     {
         checkNull(managers, "Managers");
-        checkNull(postManager, "PostManager");
-        checkNull(sendManager, "SendManager");
+        checkNull(syncPool, "syncPool");
+        checkNull(asyncPool, "asyncPool");
 
         m_managers = managers;
 
-        m_postManager = postManager;
+        m_sendManager = new SyncDeliverTasks(syncPool,
+                (timeout > 100 ? timeout : 0),
+                ignoreTimeout);
 
-        m_sendManager = sendManager;
+        m_postManager = new AsyncDeliverTasks(asyncPool, m_sendManager);
     }
 
     /**
@@ -130,7 +135,17 @@ public class EventAdminImpl implements EventAdmin
         };
     }
 
-    /*
+    /**
+     * Update the event admin with new configuration.
+     */
+    public void update(final HandlerTasks managers, final int timeout,
+            final String[] ignoreTimeout)
+    {
+        m_managers = managers;
+        m_sendManager.update(timeout, ignoreTimeout);
+    }
+
+    /**
      * This is a utility method that uses the given DeliverTasks to create a
      * dispatch tasks that subsequently is used to dispatch the given HandlerTasks.
      */
@@ -149,7 +164,7 @@ public class EventAdminImpl implements EventAdmin
         }
     }
 
-    /*
+    /**
      * This is a utility method that will throw a <tt>NullPointerException</tt>
      * in case that the given object is null. The message will be of the form
      * "${name} + may not be null".
