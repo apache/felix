@@ -34,6 +34,7 @@ import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
+import org.apache.felix.sigil.eclipse.ui.actions.RefreshRepositoryAction;
 import org.apache.felix.sigil.eclipse.ui.util.DefaultTreeContentProvider;
 import org.apache.felix.sigil.eclipse.ui.util.ModelLabelProvider;
 import org.eclipse.jface.action.Action;
@@ -180,8 +181,7 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
             IBundleRepository rep = (IBundleRepository) treeViewer.getInput();
             if (rep != null)
             {
-                rep.refresh();
-                treeViewer.refresh();
+                new RefreshRepositoryAction(rep).run();
             }
         }
 

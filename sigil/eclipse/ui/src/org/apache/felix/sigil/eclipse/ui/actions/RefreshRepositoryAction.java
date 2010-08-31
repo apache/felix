@@ -20,6 +20,8 @@
 package org.apache.felix.sigil.eclipse.ui.actions;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.felix.sigil.common.repository.IBundleRepository;
@@ -34,12 +36,27 @@ import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 public class RefreshRepositoryAction extends DisplayAction
 {
-    private final IRepositoryModel[] model;
+    private final List<IBundleRepository> repositories;
 
+    public RefreshRepositoryAction(IBundleRepository...repositories) {
+        this.repositories = Arrays.asList(repositories);
+        
+    }
     public RefreshRepositoryAction(IRepositoryModel... model)
     {
         super("Refresh repository");
-        this.model = model;
+        ArrayList<IBundleRepository> reps = new ArrayList<IBundleRepository>(model.length);
+        for (IBundleRepository b : SigilCore.getGlobalRepositoryManager().getRepositories())
+        {
+            for (IRepositoryModel m : model)
+            {
+                if (b.getId().equals(m.getId()))
+                {
+                    reps.add(b);
+                }
+            }
+        }
+        this.repositories = reps;
     }
 
     @Override
@@ -47,27 +64,15 @@ public class RefreshRepositoryAction extends DisplayAction
     {
         WorkspaceModifyOperation op = new WorkspaceModifyOperation()
         {
-
             @Override
             protected void execute(IProgressMonitor monitor) throws CoreException,
                 InvocationTargetException, InterruptedException
             {
-                boolean changed = false;
-
-                for (IBundleRepository b : SigilCore.getGlobalRepositoryManager().getRepositories())
-                {
-                    for (IRepositoryModel m : model)
-                    {
-                        if (b.getId().equals(m.getId()))
-                        {
-                            b.refresh();
-                            changed = true;
-                        }
+                if ( !repositories.isEmpty() ) {
+                    for (IBundleRepository rep : repositories ) {
+                        rep.refresh();                        
                     }
-                }
-
-                if (changed)
-                {
+                    
                     List<ISigilProjectModel> projects = SigilCore.getRoot().getProjects();
                     SubMonitor sub = SubMonitor.convert(monitor, projects.size() * 10);
                     for (ISigilProjectModel p : projects)
