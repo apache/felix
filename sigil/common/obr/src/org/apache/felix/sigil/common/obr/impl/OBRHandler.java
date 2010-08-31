@@ -132,8 +132,11 @@ final class OBRHandler extends DefaultHandler
             {
                 if (!sanity.add(uri))
                 {
-                    throw new RuntimeException("Duplicate uri " + uri);
+                    // TODO replace with logging framework for build
+                    // should hook in with ide/build logging
+                    System.err.println(obrURL + " contains duplicate uri: " + uri);
                 }
+                
                 ISigilBundle b = ModelElementFactory.getInstance().newModelElement(
                     ISigilBundle.class);
                 IBundleModelElement info = ModelElementFactory.getInstance().newModelElement(
