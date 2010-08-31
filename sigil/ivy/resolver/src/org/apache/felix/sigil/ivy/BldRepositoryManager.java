@@ -108,6 +108,9 @@ public class BldRepositoryManager extends AbstractRepositoryManager
      */
     private static IBundleRepository buildRepository(String name, Properties repo)
     {
+        String disabled = repo.getProperty("disabled");
+        if ("true".equalsIgnoreCase(disabled == null ? null : disabled.trim())) return null;
+        
         String optStr = repo.getProperty("optional", "false");
         boolean optional = Boolean.parseBoolean(optStr.trim());
 
