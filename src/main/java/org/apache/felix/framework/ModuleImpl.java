@@ -732,7 +732,9 @@ public class ModuleImpl implements Module
                     // cause of the exception, since this would
                     // potentially leak internal module information.
                     throw new ClassNotFoundException(
-                        name + ": cannot resolve package "
+                        name + " not found because "
+                        + getBundle()
+                        + " cannot resolve: "
                         + ex.getRequirement());
                 }
                 else
@@ -748,7 +750,9 @@ public class ModuleImpl implements Module
 
                     // We need to throw a resource not found exception.
                     throw new ResourceNotFoundException(
-                        name + ": cannot resolve package "
+                        name + " not found because "
+                        + getBundle()
+                        + " cannot resolve: "
                         + ex.getRequirement());
                 }
             }
@@ -769,11 +773,13 @@ public class ModuleImpl implements Module
         {
             if (isClass)
             {
-                throw new ClassNotFoundException(name);
+                throw new ClassNotFoundException(
+                    name + " not found by " + this.getBundle());
             }
             else
             {
-                throw new ResourceNotFoundException(name);
+                throw new ResourceNotFoundException(
+                    name + " not found by " + this.getBundle());
             }
         }
 
