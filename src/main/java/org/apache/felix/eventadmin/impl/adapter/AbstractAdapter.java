@@ -37,11 +37,6 @@ public abstract class AbstractAdapter
      */
     public AbstractAdapter(final EventAdmin admin)
     {
-        update(admin);
-    }
-
-    public void update(final EventAdmin admin)
-    {
         if (null == admin)
         {
             throw new NullPointerException("EventAdmin must not be null");

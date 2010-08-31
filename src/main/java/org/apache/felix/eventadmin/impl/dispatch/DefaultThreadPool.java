@@ -67,10 +67,18 @@ public class DefaultThreadPool
                 }
             });
    	    }
-        super.setMinimumPoolSize(poolSize);
-        super.setMaximumPoolSize(poolSize + 10);
-        super.setKeepAliveTime(60000);
+   	    configure(poolSize);
+        setKeepAliveTime(60000);
         runWhenBlocked();
+    }
+
+    /**
+     * @see org.apache.felix.eventadmin.impl.dispatch.ThreadPool#configure(int)
+     */
+    public void configure(final int poolSize)
+    {
+        setMinimumPoolSize(poolSize);
+        setMaximumPoolSize(poolSize + 10);
     }
 
     /**
@@ -78,7 +86,7 @@ public class DefaultThreadPool
      */
     public void close()
     {
-	    shutdownAfterProcessingCurrentlyQueuedTasks();
+        shutdownNow();
 
 	    try
 	    {

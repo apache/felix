@@ -55,7 +55,7 @@ public class SyncDeliverTasks implements DeliverTask
     final ThreadPool m_pool;
 
     /** The timeout for event handlers, 0 = disabled. */
-    final long m_timeout;
+    long m_timeout;
 
     private static interface Matcher
     {
@@ -104,7 +104,7 @@ public class SyncDeliverTasks implements DeliverTask
     }
 
     /** The matchers for ignore timeout handling. */
-    private final Matcher[] m_ignoreTimeoutMatcher;
+    private Matcher[] m_ignoreTimeoutMatcher;
 
     /**
      * Construct a new sync deliver tasks.
@@ -114,6 +114,10 @@ public class SyncDeliverTasks implements DeliverTask
     public SyncDeliverTasks(final ThreadPool pool, final long timeout, final String[] ignoreTimeout)
     {
         m_pool = pool;
+        update(timeout, ignoreTimeout);
+    }
+
+    public void update(final long timeout, final String[] ignoreTimeout) {
         m_timeout = timeout;
         if ( ignoreTimeout == null || ignoreTimeout.length == 0 )
         {
@@ -121,7 +125,7 @@ public class SyncDeliverTasks implements DeliverTask
         }
         else
         {
-            m_ignoreTimeoutMatcher = new Matcher[ignoreTimeout.length];
+            Matcher[] ignoreTimeoutMatcher = new Matcher[ignoreTimeout.length];
             for(int i=0;i<ignoreTimeout.length;i++)
             {
                 String value = ignoreTimeout[i];
@@ -133,18 +137,19 @@ public class SyncDeliverTasks implements DeliverTask
                 {
                     if ( value.endsWith(".") )
                     {
-                        m_ignoreTimeoutMatcher[i] = new PackageMatcher(value.substring(0, value.length() - 1));
+                        ignoreTimeoutMatcher[i] = new PackageMatcher(value.substring(0, value.length() - 1));
                     }
                     else if ( value.endsWith("*") )
                     {
-                        m_ignoreTimeoutMatcher[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
+                        ignoreTimeoutMatcher[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
                     }
                     else
                     {
-                        m_ignoreTimeoutMatcher[i] = new ClassMatcher(value);
+                        ignoreTimeoutMatcher[i] = new ClassMatcher(value);
                     }
                 }
             }
+            m_ignoreTimeoutMatcher = ignoreTimeoutMatcher;
         }
     }
 
@@ -158,14 +163,15 @@ public class SyncDeliverTasks implements DeliverTask
         // we only check the classname if a timeout is configured
         if ( m_timeout > 0)
         {
-            if ( m_ignoreTimeoutMatcher != null )
+            final Matcher[] ignoreTimeoutMatcher = m_ignoreTimeoutMatcher;
+            if ( ignoreTimeoutMatcher != null )
             {
                 final String className = task.getHandlerClassName();
-                for(int i=0;i<m_ignoreTimeoutMatcher.length;i++)
+                for(int i=0;i<ignoreTimeoutMatcher.length;i++)
                 {
-                    if ( m_ignoreTimeoutMatcher[i] != null)
+                    if ( ignoreTimeoutMatcher[i] != null)
                     {
-                        if ( m_ignoreTimeoutMatcher[i].match(className) )
+                        if ( ignoreTimeoutMatcher[i].match(className) )
                         {
                             return false;
                         }

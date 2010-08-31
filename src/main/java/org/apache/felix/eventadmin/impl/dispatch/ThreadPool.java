@@ -39,11 +39,14 @@ public interface ThreadPool
      *
      * @param task The task to execute
      */
-    public void executeTask(final Runnable task);
+    void executeTask(final Runnable task);
 
     /**
      * Close the pool i.e, stop pooling threads. Note that subsequently, task will
      * still be executed but no pooling is taking place anymore.
      */
-    public void close();
+    void close();
+
+    /** Configure a new pool size. */
+    void configure(int poolSize);
 }

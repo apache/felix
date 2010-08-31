@@ -26,7 +26,6 @@ import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
 import org.apache.felix.eventadmin.impl.handler.*;
 import org.apache.felix.eventadmin.impl.security.*;
-import org.apache.felix.eventadmin.impl.tasks.*;
 import org.apache.felix.eventadmin.impl.util.LeastRecentlyUsedCacheMap;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.*;
@@ -135,6 +134,9 @@ public class Configuration
     // the wrapper).
     private volatile EventAdminImpl m_admin;
 
+    // This is the service factory for the event admin with the security impl
+    private volatile SecureEventAdminFactory m_secure_admin;
+
     // The registration of the security decorator factory (i.e., the service)
     private volatile ServiceRegistration m_registration;
 
@@ -149,7 +151,7 @@ public class Configuration
 
         // default configuration
         configure( null );
-        start();
+        startOrUpdate();
 
         // check for Configuration Admin configuration
         try
@@ -192,27 +194,10 @@ public class Configuration
 
             public void run()
             {
-                final ThreadPool aSyncPool;
-                final ThreadPool syncPool;
                 synchronized ( Configuration.this )
                 {
-                    // we will shutdown the pools later
-                    // to make the downtime as small as possible
-                    aSyncPool = m_async_pool;
-                    m_async_pool = null;
-                    syncPool = m_sync_pool;
-                    m_sync_pool = null;
-                    Configuration.this.stop();
                     Configuration.this.configure( config );
-                    Configuration.this.start();
-                }
-                if (aSyncPool != null )
-                {
-                    aSyncPool.close();
-                }
-                if ( syncPool != null )
-                {
-                    syncPool.close();
+                    Configuration.this.startOrUpdate();
                 }
             }
 
@@ -268,7 +253,8 @@ public class Configuration
             {
                 final StringTokenizer st = new StringTokenizer(value, ",");
                 m_ignoreTimeout = new String[st.countTokens()];
-                for(int i=0; i<m_ignoreTimeout.length; i++) {
+                for(int i=0; i<m_ignoreTimeout.length; i++)
+                {
                     m_ignoreTimeout[i] = st.nextToken();
                 }
             }
@@ -295,9 +281,14 @@ public class Configuration
                         "Value for property: " + PROP_IGNORE_TIMEOUT + " is neither a string nor a string array - Using default");
             }
         }
+        // a timeout less or equals to 100 means : disable timeout
+        if ( m_timeout <= 100 )
+        {
+            m_timeout = 0;
+        }
     }
 
-    private void start()
+    private void startOrUpdate()
     {
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
                 PROP_CACHE_SIZE + "=" + m_cacheSize);
@@ -321,6 +312,28 @@ public class Configuration
         final Filters filters = new CacheFilters(
             new LeastRecentlyUsedCacheMap(m_cacheSize), m_bundleContext);
 
+        // Note that this uses a lazy thread pool that will create new threads on
+        // demand - in case none of its cached threads is free - until threadPoolSize
+        // is reached. Subsequently, a threadPoolSize of 2 effectively disables
+        // caching of threads.
+        if ( m_sync_pool == null )
+        {
+            m_sync_pool = new DefaultThreadPool(m_threadPoolSize, true);
+        }
+        else
+        {
+            m_sync_pool.configure(m_threadPoolSize);
+        }
+        final int asyncThreadPoolSize = m_threadPoolSize > 5 ? m_threadPoolSize / 2 : 2;
+        if ( m_async_pool == null )
+        {
+            m_async_pool = new DefaultThreadPool(asyncThreadPoolSize, false);
+        }
+        else
+        {
+            m_async_pool.configure(asyncThreadPoolSize);
+        }
+
         // The handlerTasks object is responsible to determine concerned EventHandler
         // for a given event. Additionally, it keeps a list of blacklisted handlers.
         // Note that blacklisting is deactivated by selecting a different scheduler
@@ -329,57 +342,27 @@ public class Configuration
             new CleanBlackList(), topicHandlerFilters, filters,
             subscribePermissions);
 
-        // Note that this uses a lazy thread pool that will create new threads on
-        // demand - in case none of its cached threads is free - until threadPoolSize
-        // is reached. Subsequently, a threadPoolSize of 2 effectively disables
-        // caching of threads.
-        m_sync_pool = new DefaultThreadPool(m_threadPoolSize, true);
-        m_async_pool = new DefaultThreadPool(m_threadPoolSize > 5 ? m_threadPoolSize / 2 : 2, false);
-
-        final DeliverTask syncExecuter = new SyncDeliverTasks(m_sync_pool,
-                (m_timeout > 100 ? m_timeout : 0),
-                m_ignoreTimeout);
-        m_admin = createEventAdmin(m_bundleContext,
-                handlerTasks,
-                new AsyncDeliverTasks(m_async_pool, syncExecuter),
-                syncExecuter);
-
-        // register the admin wrapped in a service factory (SecureEventAdminFactory)
-        // that hands-out the m_admin object wrapped in a decorator that checks
-        // appropriated permissions of each calling bundle
-        m_registration = m_bundleContext.registerService(EventAdmin.class.getName(),
-            new SecureEventAdminFactory(m_admin, publishPermissions), null);
-
-        // Finally, adapt the outside events to our kind of events as per spec
-        adaptEvents(m_bundleContext, m_admin);
-    }
-
-    /**
-     * Called to stop the event admin.
-     */
-    private void stop()
-    {
-        // We need to unregister manually
-        if ( m_registration != null )
+        if ( m_admin == null )
         {
-            m_registration.unregister();
-            m_registration = null;
+            m_admin = new EventAdminImpl(handlerTasks, m_sync_pool, m_async_pool, m_timeout, m_ignoreTimeout);
+
+            // Finally, adapt the outside events to our kind of events as per spec
+            adaptEvents(m_admin);
+            // create secure admin factory which is a service factory
+            m_secure_admin = new SecureEventAdminFactory(m_admin, publishPermissions);
+
+            // register the admin wrapped in a service factory (SecureEventAdminFactory)
+            // that hands-out the m_admin object wrapped in a decorator that checks
+            // appropriated permissions of each calling bundle
+            m_registration = m_bundleContext.registerService(EventAdmin.class.getName(),
+                    m_secure_admin, null);
         }
-        if ( m_admin != null )
+        else
         {
-            m_admin.stop();
-            m_admin = null;
+            m_admin.update(handlerTasks, m_timeout, m_ignoreTimeout);
+            m_secure_admin.update(publishPermissions);
         }
-        if (m_async_pool != null )
-        {
-            m_async_pool.close();
-            m_async_pool = null;
-        }
-        if ( m_sync_pool != null )
-        {
-            m_sync_pool.close();
-            m_sync_pool = null;
-        }
+
     }
 
     /**
@@ -406,46 +389,40 @@ public class Configuration
                 m_managedServiceReg.unregister();
                 m_managedServiceReg = null;
             }
-            stop();
+            // We need to unregister manually
+            if ( m_registration != null )
+            {
+                m_registration.unregister();
+                m_registration = null;
+            }
+            if ( m_admin != null )
+            {
+                m_admin.stop();
+                m_admin = null;
+            }
+            if (m_async_pool != null )
+            {
+                m_async_pool.close();
+                m_async_pool = null;
+            }
+            if ( m_sync_pool != null )
+            {
+                m_sync_pool.close();
+                m_sync_pool = null;
+            }
         }
-    }
-
-    /**
-     * Create a event admin implementation.
-     * @param context      The bundle context
-     * @param handlerTasks
-     * @param asyncExecuters
-     * @param syncExecuters
-     * @return
-     */
-    protected EventAdminImpl createEventAdmin(BundleContext context,
-                                              HandlerTasks handlerTasks,
-                                              DeliverTask asyncExecuters,
-                                              DeliverTask syncExecuters)
-    {
-        return new EventAdminImpl(handlerTasks, asyncExecuters, syncExecuters);
     }
 
     /**
      * Init the adapters in org.apache.felix.eventadmin.impl.adapter
      */
-    private void adaptEvents(final BundleContext context, final EventAdmin admin)
+    private void adaptEvents(final EventAdmin admin)
     {
-        if ( m_adapters == null )
-        {
-            m_adapters = new AbstractAdapter[4];
-            m_adapters[0] = new FrameworkEventAdapter(context, admin);
-            m_adapters[1] = new BundleEventAdapter(context, admin);
-            m_adapters[2] = new ServiceEventAdapter(context, admin);
-            m_adapters[3] = new LogEventAdapter(context, admin);
-        }
-        else
-        {
-            for(int i=0; i<m_adapters.length; i++)
-            {
-                m_adapters[i].update(admin);
-            }
-        }
+        m_adapters = new AbstractAdapter[4];
+        m_adapters[0] = new FrameworkEventAdapter(m_bundleContext, admin);
+        m_adapters[1] = new BundleEventAdapter(m_bundleContext, admin);
+        m_adapters[2] = new ServiceEventAdapter(m_bundleContext, admin);
+        m_adapters[3] = new LogEventAdapter(m_bundleContext, admin);
     }
 
     private Object tryToCreateMetaTypeProvider(final Object managedService)
@@ -460,38 +437,6 @@ public class Configuration
             // we simply ignore this
         }
         return null;
-    }
-
-    /**
-     * Returns either the parsed int from the value of the property if it is set and
-     * not less then the min value or the default. Additionally, a warning is
-     * generated in case the value is erroneous (i.e., can not be parsed as an int or
-     * is less then the min value).
-     */
-    private int getIntProperty(final String key, final BundleContext context,
-        final int defaultValue, final int min)
-    {
-        final String value = context.getProperty(key);
-
-        if(null != value)
-        {
-            try {
-                final int result = Integer.parseInt(value);
-
-                if(result >= min)
-                {
-                    return result;
-                }
-
-                LogWrapper.getLogger().log(LogWrapper.LOG_WARNING,
-                        "Value for property: " + key + " is to low - Using default");
-            } catch (NumberFormatException e) {
-                LogWrapper.getLogger().log(LogWrapper.LOG_WARNING,
-                    "Unable to parse property: " + key + " - Using default", e);
-            }
-        }
-
-        return defaultValue;
     }
 
     /**
