@@ -19,9 +19,6 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +28,6 @@ import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
-import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * @author dave
