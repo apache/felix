@@ -22,6 +22,7 @@ package org.apache.felix.sigil.eclipse.ui.internal.views;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.felix.sigil.common.model.ICompoundModelElement;
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -35,6 +36,7 @@ import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.util.ModelHelper;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.apache.felix.sigil.eclipse.ui.actions.RefreshRepositoryAction;
+import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
 import org.apache.felix.sigil.eclipse.ui.util.DefaultTreeContentProvider;
 import org.apache.felix.sigil.eclipse.ui.util.ModelLabelProvider;
 import org.eclipse.jface.action.Action;
@@ -43,8 +45,11 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -55,6 +60,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
@@ -120,6 +126,7 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
         public void run()
         {
             treeViewer.setInput(rep);
+            tableViewer.setInput(rep);
             createMenu();
         }
 
@@ -201,6 +208,7 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
     }
 
     private TreeViewer treeViewer;
+    private TableViewer tableViewer;
 
     @Override
     public void createPartControl(Composite parent)
@@ -247,6 +255,7 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
             if (treeViewer.getInput() == null)
             {
                 treeViewer.setInput(rep);
+                tableViewer.setInput(rep);
             }
 
             RepositoryAction action = new RepositoryAction(rep);
@@ -258,13 +267,25 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
     {
         // components
         Composite control = new Composite(parent, SWT.NONE);
+        Table table = new Table(control, SWT.SINGLE);
+        table.setHeaderVisible(true);
         Tree tree = new Tree(control, SWT.NONE);
 
         // layout
         control.setLayout(new GridLayout(1, false));
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
         tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
-        // viewer
+        // viewers
+        createPropertiesViewer(table);
+        createContentsViewer(tree);
+    }
+
+    /**
+     * @param tree
+     */
+    private void createContentsViewer(Tree tree)
+    {
         treeViewer = new TreeViewer(tree);
         treeViewer.setContentProvider(new DefaultTreeContentProvider()
         {
@@ -303,7 +324,13 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
             public Object[] getElements(Object inputElement)
             {
                 IBundleRepository rep = (IBundleRepository) inputElement;
-                return getBundles(rep);
+                IRepositoryModel model = SigilCore.getRepositoryModel(rep);
+                if ( model.getProblem() == null ) {
+                    return getBundles(rep);
+                }
+                else {
+                    return new Object[] { model.getProblem() };
+                }
             }
         });
 
@@ -355,6 +382,49 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
                     }
                 }
             });
+    }
+
+    /**
+     * @param table
+     */
+    private void createPropertiesViewer(Table table)
+    {
+        tableViewer = new TableViewer(table);
+        tableViewer.setContentProvider(new DefaultTableProvider() {
+
+            public Object[] getElements(Object inputElement)
+            {
+                IBundleRepository rep = (IBundleRepository) inputElement;
+                IRepositoryModel model = SigilCore.getRepositoryModel(rep);
+                return toArray(model.getProperties().entrySet());
+            }            
+        });
+                
+        TableViewerColumn keyCol = new TableViewerColumn(tableViewer, SWT.NONE);
+        keyCol.getColumn().setText("Key");
+        keyCol.getColumn().setWidth(100);
+        keyCol.setLabelProvider(new ColumnLabelProvider() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public String getText(Object element)
+            {
+                Entry<String, String> entry = (Entry<String, String>) element;
+                return entry.getKey();
+            }            
+        });
+        
+        TableViewerColumn valCol = new TableViewerColumn(tableViewer, SWT.NONE);
+        valCol.getColumn().setText("Value");
+        valCol.getColumn().setWidth(500);
+        valCol.setLabelProvider(new ColumnLabelProvider() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public String getText(Object element)
+            {
+                Entry<String, String> entry = (Entry<String, String>) element;
+                return entry.getValue();
+            }            
+        });
     }
 
     @Override

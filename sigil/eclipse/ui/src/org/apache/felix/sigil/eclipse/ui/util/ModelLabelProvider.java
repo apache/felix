@@ -19,6 +19,8 @@
 
 package org.apache.felix.sigil.eclipse.ui.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Set;
 
 import org.apache.felix.sigil.common.model.IModelElement;
@@ -38,6 +40,8 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Version;
 
 public class ModelLabelProvider extends LabelProvider
@@ -90,11 +94,15 @@ public class ModelLabelProvider extends LabelProvider
         {
             return findPackage();
         }
-        if (element instanceof IBundleRepository)
+        else if (element instanceof IBundleRepository)
         {
             IBundleRepository rep = (IBundleRepository) element;
             IRepositoryModel config = SigilCore.getRepositoryModel(rep);
             return config.getType().getIcon();
+        }
+        else if (element instanceof Throwable) {
+            return PlatformUI.getWorkbench().getSharedImages().getImage(
+                ISharedImages.IMG_OBJS_ERROR_TSK);
         }
 
         return null;
@@ -169,6 +177,15 @@ public class ModelLabelProvider extends LabelProvider
             IBundleRepository rep = (IBundleRepository) element;
             IRepositoryModel config = SigilCore.getRepositoryModel(rep);
             return config.getName();
+        }
+        
+        if ( element instanceof Throwable ) {
+            Throwable t = (Throwable) element;
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            PrintStream print = new PrintStream(buf);
+            t.printStackTrace(print);
+            print.flush();
+            return buf.toString();
         }
 
         return element.toString();
