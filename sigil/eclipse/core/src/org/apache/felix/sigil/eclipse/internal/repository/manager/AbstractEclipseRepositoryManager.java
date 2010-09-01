@@ -28,8 +28,8 @@ import java.util.Properties;
 import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.repository.AbstractRepositoryManager;
 import org.apache.felix.sigil.common.repository.IBundleRepository;
-import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.EclipseRepositoryFactory.EclipseRepositoryProviderWrapper;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -108,11 +108,13 @@ public abstract class AbstractEclipseRepositoryManager extends AbstractRepositor
             else {
                 Properties props = config.getRepositoryConfig(name);
                 if (props != null) {
-                    String uid = config.getRepositoryDefinition(name).toString() + '#' + name;
-                    IBundleRepository repo = buildRepository(uid, props);
-                    
+                    String def = config.getRepositoryDefinition(name).toString();
+                    IBundleRepository repo = buildRepository(def, name, props);
                     if ( repo != null ) {
-                        list.add(repo);
+                        // filter singletons but maintain order
+                        if ( !list.contains(repo) ) {
+                            list.add(repo);
+                        }
                     }
                 }
             }
@@ -123,7 +125,7 @@ public abstract class AbstractEclipseRepositoryManager extends AbstractRepositor
      * @param repo
      * @return 
      */
-    private IBundleRepository buildRepository(String uid, Properties repo)
+    private IBundleRepository buildRepository(String def, String name, Properties repo)
     {
         String disabled = repo.getProperty("disabled", "false");
         if (Boolean.parseBoolean(disabled.trim())) return null;
@@ -134,7 +136,7 @@ public abstract class AbstractEclipseRepositoryManager extends AbstractRepositor
         String alias = repo.getProperty(IRepositoryConfig.REPOSITORY_PROVIDER);
         if (alias == null)
         {
-            String msg = "provider not specified for repository: " + uid;
+            String msg = "provider not specified for repository: " + def + "->" + name;
             
             if (optional)            
                 SigilCore.log(msg);
@@ -146,8 +148,9 @@ public abstract class AbstractEclipseRepositoryManager extends AbstractRepositor
 
         try
         {
-            IRepositoryProvider instance = EclipseRepositoryFactory.getProvider(alias);
-            IBundleRepository repository = repositoryCache.getRepository(uid, repo, instance);
+            EclipseRepositoryProviderWrapper wrapper = EclipseRepositoryFactory.getProvider(alias);
+            String uid = wrapper.getType().isDynamic() ? def + "#" + name : wrapper.getType().getName();
+            IBundleRepository repository = repositoryCache.getRepository(uid, repo, wrapper);
             return repository;
         }
         catch (Exception e)

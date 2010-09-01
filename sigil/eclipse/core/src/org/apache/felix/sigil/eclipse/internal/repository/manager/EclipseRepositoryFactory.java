@@ -61,12 +61,16 @@ public class EclipseRepositoryFactory
         {
             return new EclipseBundleRepository(delegate, type, id, properties);
         }
+        
+        public IRepositoryType getType() {
+            return type;
+        }
     }
     /**
      * @param alias
      * @return
      */
-    public static IRepositoryProvider getProvider(String alias)
+    public static EclipseRepositoryProviderWrapper getProvider(String alias)
     throws CoreException
     {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
