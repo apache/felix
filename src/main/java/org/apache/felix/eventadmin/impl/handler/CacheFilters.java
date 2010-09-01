@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,14 +19,12 @@
 package org.apache.felix.eventadmin.impl.handler;
 
 import org.apache.felix.eventadmin.impl.util.CacheMap;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.*;
 
 /**
  * This is an implementation of the <tt>Filters</tt> factory that uses a cache in
  * order to speed-up filter creation.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class CacheFilters implements Filters
@@ -38,9 +36,9 @@ public class CacheFilters implements Filters
     private final BundleContext m_context;
 
     /**
-     * The constructor of this factory. The cache is used to speed-up filter 
+     * The constructor of this factory. The cache is used to speed-up filter
      * creation.
-     * 
+     *
      * @param cache The cache to use
      * @param context The context of the bundle used to create the <tt>Filter</tt>
      *      objects
@@ -51,43 +49,42 @@ public class CacheFilters implements Filters
         {
             throw new NullPointerException("Cache may not be null");
         }
-        
+
         if(null == context)
         {
             throw new NullPointerException("Context may not be null");
         }
-        
+
         m_cache = cache;
 
         m_context = context;
     }
 
     /**
-     * Create a filter for the given filter string or return the nullFilter in case
+     * Create a filter for the given filter string or return the TRUE_FILTER in case
      * the string is <tt>null</tt>.
-     * 
+     *
      * @param filter The filter as a string
-     * @param nullFilter The default value to return if filter is <tt>null</tt>
-     * @return The <tt>Filter</tt> of the filter string or the nullFilter if the 
+     * @return The <tt>Filter</tt> of the filter string or the TRUE_FILTER if the
      *      filter string was <tt>null</tt>
      * @throws InvalidSyntaxException if <tt>BundleContext.createFilter()</tt>
      *      throws an <tt>InvalidSyntaxException</tt>
-     *      
-     * @see org.apache.felix.eventadmin.impl.handler.Filters#createFilter(java.lang.String, org.osgi.framework.Filter)
+     *
+     * @see org.apache.felix.eventadmin.impl.handler.Filters#createFilter(java.lang.String)
      */
-    public Filter createFilter(String filter, Filter nullFilter)
+    public Filter createFilter(String filter)
         throws InvalidSyntaxException
     {
         Filter result = (Filter) ((null != filter) ? m_cache.get(filter)
-            : nullFilter);
-        
+            : TRUE_FILTER);
+
         if (null == result)
         {
             result = m_context.createFilter(filter);
 
             m_cache.add(filter, result);
         }
-        
+
         return result;
     }
 

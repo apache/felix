@@ -18,7 +18,7 @@
  */
 package org.apache.felix.eventadmin.impl;
 
-import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
+import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.handler.HandlerTasks;
 import org.apache.felix.eventadmin.impl.tasks.*;
 import org.osgi.service.event.Event;
@@ -60,8 +60,8 @@ public class EventAdminImpl implements EventAdmin
      * @param asyncPool The asynchronous thread pool
      */
     public EventAdminImpl(final HandlerTasks managers,
-            final ThreadPool syncPool,
-            final ThreadPool asyncPool,
+            final DefaultThreadPool syncPool,
+            final DefaultThreadPool asyncPool,
             final int timeout,
             final String[] ignoreTimeout)
     {

@@ -22,13 +22,13 @@ import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import EDU.oswego.cs.dl.util.concurrent.*;
 
 /**
- * The DefaultThreadPool class implements the {@link ThreadPool} interface.
+ * A thread pool that allows to execute tasks using pooled threads in order
+ * to ease the thread creation overhead.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DefaultThreadPool
     extends PooledExecutor
-    implements ThreadPool
 {
 
     /**
@@ -73,7 +73,7 @@ public class DefaultThreadPool
     }
 
     /**
-     * @see org.apache.felix.eventadmin.impl.dispatch.ThreadPool#configure(int)
+     * Configure a new pool size.
      */
     public void configure(final int poolSize)
     {
@@ -82,7 +82,8 @@ public class DefaultThreadPool
     }
 
     /**
-     * @see org.apache.felix.eventadmin.impl.dispatch.ThreadPool#close()
+     * Close the pool i.e, stop pooling threads. Note that subsequently, task will
+     * still be executed but no pooling is taking place anymore.
      */
     public void close()
     {
@@ -99,7 +100,8 @@ public class DefaultThreadPool
     }
 
     /**
-     * @see org.apache.felix.eventadmin.impl.dispatch.ThreadPool#executeTask(java.lang.Runnable)
+     * Execute the task in a free thread or create a new one.
+     * @param task The task to execute
      */
     public void executeTask(Runnable task)
     {

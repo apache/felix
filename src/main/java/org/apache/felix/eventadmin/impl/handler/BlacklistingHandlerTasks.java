@@ -21,16 +21,12 @@ package org.apache.felix.eventadmin.impl.handler;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.eventadmin.impl.security.TopicPermissions;
+import org.apache.felix.eventadmin.impl.security.PermissionsUtil;
 import org.apache.felix.eventadmin.impl.tasks.HandlerTask;
 import org.apache.felix.eventadmin.impl.tasks.HandlerTaskImpl;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
+import org.osgi.framework.*;
+import org.osgi.service.event.*;
 
 /**
  * This class is an implementation of the HandlerTasks interface that does provide
@@ -59,9 +55,6 @@ public class BlacklistingHandlerTasks implements HandlerTasks
     // event handler is interested in a particular event
     private final Filters m_filters;
 
-    // Used to create and possibly cache topic permissions
-    private final TopicPermissions m_topicPermissions;
-
     /**
      * The constructor of the factory.
      *
@@ -69,18 +62,15 @@ public class BlacklistingHandlerTasks implements HandlerTasks
      * @param blackList The set to use for keeping track of blacklisted references
      * @param topicHandlerFilters The factory for topic handler filters
      * @param filters The factory for <tt>Filter</tt> objects
-     * @param topicPermissions The factory for permission objects of type PUBLISH
      */
     public BlacklistingHandlerTasks(final BundleContext context,
         final BlackList blackList,
-        final TopicHandlerFilters topicHandlerFilters, final Filters filters,
-        final TopicPermissions topicPermissions)
+        final TopicHandlerFilters topicHandlerFilters, final Filters filters)
     {
         checkNull(context, "Context");
         checkNull(blackList, "BlackList");
         checkNull(topicHandlerFilters, "TopicHandlerFilters");
         checkNull(filters, "Filters");
-        checkNull(topicPermissions, "TopicPermissions");
 
         m_context = context;
 
@@ -89,8 +79,6 @@ public class BlacklistingHandlerTasks implements HandlerTasks
         m_topicHandlerFilters = topicHandlerFilters;
 
         m_filters = filters;
-
-        m_topicPermissions = topicPermissions;
     }
 
     /**
@@ -129,14 +117,13 @@ public class BlacklistingHandlerTasks implements HandlerTasks
         {
             if (!m_blackList.contains(handlerRefs[i])
                 && handlerRefs[i].getBundle().hasPermission(
-                    m_topicPermissions.createTopicPermission(event.getTopic())))
+                        PermissionsUtil.createSubscribePermission(event.getTopic())))
             {
                 try
                 {
                     if (event.matches(m_filters.createFilter(
                         (String) handlerRefs[i]
-                            .getProperty(EventConstants.EVENT_FILTER),
-                        Filters.TRUE_FILTER)))
+                            .getProperty(EventConstants.EVENT_FILTER))))
                     {
                         result.add(new HandlerTaskImpl(handlerRefs[i],
                             event, this));

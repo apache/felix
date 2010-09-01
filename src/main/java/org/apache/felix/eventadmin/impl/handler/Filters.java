@@ -72,56 +72,15 @@ public interface Filters
     };
 
     /**
-     * A null filter object that does not match any given service reference.
-     */
-    Filter FALSE_FILTER = new Filter()
-    {
-
-        /**
-         * This is a null object that always returns <tt>false</tt>.
-         *
-         * @param reference An unused reference.
-         * @return <tt>false</tt>
-         */
-        public boolean match(final ServiceReference reference)
-        {
-           return false;
-        }
-
-        /**
-         * This is a null object that always returns <tt>false</tt>.
-         *
-         * @param dictionary An unused dictionary
-         * @return <tt>false</tt>
-         */
-        public boolean match(final Dictionary dictionary)
-        {
-            return false;
-        }
-
-        /**
-         * This is a null object that always returns <tt>false</tt>.
-         *
-         * @param dictionary An unused dictionary.
-         * @return <tt>false</tt>
-         */
-        public boolean matchCase(final Dictionary dictionary)
-        {
-            return false;
-        }
-    };
-
-    /**
-     * Create a filter for the given filter string or return the nullFilter in case
+     * Create a filter for the given filter string or return the TRUE_FILTER in case
      * the string is <tt>null</tt>.
      *
      * @param filter The filter as a string
-     * @param nullFilter The default value to return if filter is <tt>null</tt>
-     * @return The <tt>Filter</tt> of the filter string or the nullFilter if the
+     * @return The <tt>Filter</tt> of the filter string or the TRUE_FILTER if the
      *      filter string was null
      * @throws InvalidSyntaxException if <tt>BundleContext.createFilter()</tt>
      *      throws an <tt>InvalidSyntaxException</tt>
      */
-    Filter createFilter(final String filter, final Filter nullFilter)
+    Filter createFilter(final String filter)
         throws InvalidSyntaxException;
 }

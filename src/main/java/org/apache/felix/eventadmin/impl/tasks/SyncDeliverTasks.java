@@ -18,7 +18,7 @@
  */
 package org.apache.felix.eventadmin.impl.tasks;
 
-import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
+import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
 
 import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
 
@@ -52,7 +52,7 @@ import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
 public class SyncDeliverTasks implements DeliverTask
 {
     /** The thread pool used to spin-off new threads. */
-    final ThreadPool m_pool;
+    final DefaultThreadPool m_pool;
 
     /** The timeout for event handlers, 0 = disabled. */
     long m_timeout;
@@ -111,7 +111,7 @@ public class SyncDeliverTasks implements DeliverTask
      * @param pool The thread pool used to spin-off new threads.
      * @param timeout The timeout for an event handler, 0 = disabled
      */
-    public SyncDeliverTasks(final ThreadPool pool, final long timeout, final String[] ignoreTimeout)
+    public SyncDeliverTasks(final DefaultThreadPool pool, final long timeout, final String[] ignoreTimeout)
     {
         m_pool = pool;
         update(timeout, ignoreTimeout);
