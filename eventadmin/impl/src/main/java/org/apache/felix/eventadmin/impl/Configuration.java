@@ -23,16 +23,14 @@ import java.util.*;
 
 import org.apache.felix.eventadmin.impl.adapter.*;
 import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
-import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
 import org.apache.felix.eventadmin.impl.handler.*;
-import org.apache.felix.eventadmin.impl.security.*;
+import org.apache.felix.eventadmin.impl.security.SecureEventAdminFactory;
 import org.apache.felix.eventadmin.impl.util.LeastRecentlyUsedCacheMap;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.TopicPermission;
 import org.osgi.service.metatype.MetaTypeProvider;
 
 
@@ -124,18 +122,15 @@ public class Configuration
     private String[] m_ignoreTimeout;
 
     // The thread pool used - this is a member because we need to close it on stop
-    private volatile ThreadPool m_sync_pool;
+    private volatile DefaultThreadPool m_sync_pool;
 
-    private volatile ThreadPool m_async_pool;
+    private volatile DefaultThreadPool m_async_pool;
 
     // The actual implementation of the service - this is a member because we need to
     // close it on stop. Note, security is not part of this implementation but is
     // added via a decorator in the start method (this is the wrapped object without
     // the wrapper).
     private volatile EventAdminImpl m_admin;
-
-    // This is the service factory for the event admin with the security impl
-    private volatile SecureEventAdminFactory m_secure_admin;
 
     // The registration of the security decorator factory (i.e., the service)
     private volatile ServiceRegistration m_registration;
@@ -299,12 +294,6 @@ public class Configuration
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
             PROP_REQUIRE_TOPIC + "=" + m_requireTopic);
 
-        final TopicPermissions publishPermissions = new CacheTopicPermissions(
-            new LeastRecentlyUsedCacheMap(m_cacheSize), TopicPermission.PUBLISH);
-
-        final TopicPermissions subscribePermissions = new CacheTopicPermissions(
-            new LeastRecentlyUsedCacheMap(m_cacheSize), TopicPermission.SUBSCRIBE);
-
         final TopicHandlerFilters topicHandlerFilters =
             new CacheTopicHandlerFilters(new LeastRecentlyUsedCacheMap(m_cacheSize),
             m_requireTopic);
@@ -339,8 +328,7 @@ public class Configuration
         // Note that blacklisting is deactivated by selecting a different scheduler
         // below (and not in this HandlerTasks object!)
         final HandlerTasks handlerTasks = new BlacklistingHandlerTasks(m_bundleContext,
-            new CleanBlackList(), topicHandlerFilters, filters,
-            subscribePermissions);
+            new CleanBlackList(), topicHandlerFilters, filters);
 
         if ( m_admin == null )
         {
@@ -348,19 +336,16 @@ public class Configuration
 
             // Finally, adapt the outside events to our kind of events as per spec
             adaptEvents(m_admin);
-            // create secure admin factory which is a service factory
-            m_secure_admin = new SecureEventAdminFactory(m_admin, publishPermissions);
 
             // register the admin wrapped in a service factory (SecureEventAdminFactory)
             // that hands-out the m_admin object wrapped in a decorator that checks
             // appropriated permissions of each calling bundle
             m_registration = m_bundleContext.registerService(EventAdmin.class.getName(),
-                    m_secure_admin, null);
+                    new SecureEventAdminFactory(m_admin), null);
         }
         else
         {
             m_admin.update(handlerTasks, m_timeout, m_ignoreTimeout);
-            m_secure_admin.update(publishPermissions);
         }
 
     }

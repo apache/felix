@@ -20,7 +20,7 @@ package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.*;
 
-import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
+import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
 
 /**
  * This class does the actual work of the asynchronous event dispatch.
@@ -30,7 +30,7 @@ import org.apache.felix.eventadmin.impl.dispatch.ThreadPool;
 public class AsyncDeliverTasks implements DeliverTask
 {
     /** The thread pool to use to spin-off new threads. */
-    private final ThreadPool m_pool;
+    private final DefaultThreadPool m_pool;
 
     /** The deliver task for actually delivering the events. This
      * is the sync deliver tasks as this has all the code for timeout
@@ -49,7 +49,7 @@ public class AsyncDeliverTasks implements DeliverTask
      *      dispatching thread is used to send a synchronous event
      * @param deliverTask The deliver tasks for dispatching the event.
      */
-    public AsyncDeliverTasks(final ThreadPool pool, final DeliverTask deliverTask)
+    public AsyncDeliverTasks(final DefaultThreadPool pool, final DeliverTask deliverTask)
     {
         m_pool = pool;
         m_deliver_task = deliverTask;

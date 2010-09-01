@@ -35,26 +35,18 @@ public class SecureEventAdminFactory implements ServiceFactory
     // The EventAdmin to secure
     private final EventAdmin m_admin;
 
-    // The permission factory
-    private TopicPermissions m_topicPermissions;
-
     /**
      * The constructor of the factory. The factory will use the given event admin and
      * permission factory to create a new <tt>EventAdminSecurityDecorator</tt>
      * on any call to <tt>getService()</tt>.
      *
      * @param admin The <tt>EventAdmin</tt> service to secure.
-     * @param topicPermissions The permission factory to use for permission lookup.
      */
-    public SecureEventAdminFactory(final EventAdmin admin, final TopicPermissions
-        topicPermissions)
+    public SecureEventAdminFactory(final EventAdmin admin)
     {
         checkNull(admin, "Admin");
-        checkNull(topicPermissions, "TopicPermissions");
 
         m_admin = admin;
-
-        m_topicPermissions = topicPermissions;
     }
 
     /**
@@ -74,7 +66,7 @@ public class SecureEventAdminFactory implements ServiceFactory
         final ServiceRegistration registration)
     {
         // We don't need to cache this objects since the framework already does this.
-        return new EventAdminSecurityDecorator(bundle, m_admin, m_topicPermissions);
+        return new EventAdminSecurityDecorator(bundle, m_admin);
     }
 
     /**
@@ -105,10 +97,5 @@ public class SecureEventAdminFactory implements ServiceFactory
         {
             throw new NullPointerException(name + " may not be null");
         }
-    }
-
-    public void update(final TopicPermissions topicPermissions) {
-        checkNull(topicPermissions, "TopicPermissions");
-        m_topicPermissions = topicPermissions;
     }
 }
