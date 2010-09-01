@@ -20,33 +20,29 @@
 package org.apache.felix.sigil.eclipse.internal.model.repository;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
 import org.apache.felix.sigil.eclipse.preferences.PrefsUtils;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
-import org.eclipse.swt.graphics.Image;
-import org.osgi.framework.Bundle;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 
 public class RepositoryPreferences implements IRepositoryPreferences
 {
@@ -58,19 +54,13 @@ public class RepositoryPreferences implements IRepositoryPreferences
     private static final String LOC = ".loc";
     private static final String TIMESTAMP = ".timestamp";
 
-    private static final HashMap<String, String> migrationTable = new HashMap<String, String>();
-    
-    static {
-        migrationTable.put("org.apache.felix.sigil.core.file", "filesystem");
-    }
-
     public List<IRepositoryModel> loadRepositories()
     {
         IPreferenceStore prefs = SigilCore.getDefault().getPreferenceStore();
 
         ArrayList<IRepositoryModel> repositories = new ArrayList<IRepositoryModel>();
 
-        for (RepositoryType type : loadRepositoryTypes())
+        for (IRepositoryType type : loadRepositoryTypes())
         {
             String typeID = type.getId();
 
@@ -159,40 +149,13 @@ public class RepositoryPreferences implements IRepositoryPreferences
         }
         prefs.setValue(REPOSITORY_ORDER, PrefsUtils.listToString(ids));
     }
-
-    public List<RepositoryType> loadRepositoryTypes()
-    {
-        List<RepositoryType> repositories = new ArrayList<RepositoryType>();
-
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-
-        IExtensionPoint p = registry.getExtensionPoint(SigilCore.REPOSITORY_PROVIDER_EXTENSION_POINT_ID);
-
-        for (IExtension e : p.getExtensions())
-        {
-            for (IConfigurationElement c : e.getConfigurationElements())
-            {
-                String id = c.getAttribute("id");
-                String type = c.getAttribute("type");
-                boolean dynamic = Boolean.valueOf(c.getAttribute("dynamic"));
-                String icon = c.getAttribute("icon");
-                String provider = c.getAttribute("alias");                
-                Image image = (icon == null || icon.trim().length() == 0) ? null
-                    : loadImage(e, icon);
-                repositories.add(new RepositoryType(id, provider, type, dynamic, image));
-            }
-        }
-
-        return repositories;
-    }
+    
 
     public IRepositoryModel newRepositoryElement(IRepositoryType type)
     {
         String id = UUID.randomUUID().toString();
-        PreferenceStore prefs = new PreferenceStore();
-        RepositoryModel element = new RepositoryModel(id, "", type, prefs);
-        prefs.setFilename(makeFileName(element));
-        prefs.setValue("id", id);
+        RepositoryModel element = new RepositoryModel(id, type);
+        element.getProperties().setProperty("id", id);
         return element;
     }
 
@@ -264,7 +227,7 @@ public class RepositoryPreferences implements IRepositoryPreferences
         }
     }
 
-    private static void saveRepositoryPreferences(List<IRepositoryModel> repositories,
+    private void saveRepositoryPreferences(List<IRepositoryModel> repositories,
         HashMap<IRepositoryType, List<IRepositoryModel>> mapped) throws CoreException
     {
         for (IRepositoryModel rep : repositories)
@@ -272,7 +235,7 @@ public class RepositoryPreferences implements IRepositoryPreferences
             try
             {
                 createDir(makeFileName(rep));
-                rep.getPreferences().save();
+                toPreferenceStore(rep).save();
                 List<IRepositoryModel> list = mapped.get(rep.getType());
                 if (list == null)
                 {
@@ -299,10 +262,6 @@ public class RepositoryPreferences implements IRepositoryPreferences
     {
         String key = makeKey(element);
         prefs.setValue(key + LOC, makeFileName(element));
-        if (element.getType().isDynamic())
-        {
-            prefs.setValue(key + NAME, element.getName());
-        }
         prefs.setValue(key + TIMESTAMP, now());
     }
 
@@ -331,13 +290,10 @@ public class RepositoryPreferences implements IRepositoryPreferences
         return path.toOSString();
     }
 
-    private static RepositoryModel loadRepository(String id, String key,
-        RepositoryType type, IPreferenceStore prefs)
+    private RepositoryModel loadRepository(String id, String key,
+        IRepositoryType type, IPreferenceStore prefs)
     {
-        String name = type.isDynamic() ? prefs.getString(key + NAME) : type.getType();
-
-        PreferenceStore repPrefs = new PreferenceStore();
-        RepositoryModel element = new RepositoryModel(id, name, type, repPrefs);
+        RepositoryModel element = new RepositoryModel(id, type);
 
         String loc = prefs.getString(key + LOC);
 
@@ -346,54 +302,78 @@ public class RepositoryPreferences implements IRepositoryPreferences
             loc = makeFileName(element);
         }
 
-        repPrefs.setFilename(loc);
-
         if (new File(loc).exists())
         {
+            FileInputStream in = null; 
             try
             {
-                repPrefs.load();
+                in = new FileInputStream(loc);
+                Properties props = element.getProperties();
+                props.load(in);
+                
+                if (type.isDynamic() && !props.containsKey(RepositoryModel.NAME)) {
+                    String name = prefs.getString(key + NAME);
+                    props.setProperty(RepositoryModel.NAME, name);
+                }
+                
+                if (!props.containsKey(IRepositoryConfig.REPOSITORY_PROVIDER)) {
+                    props.put(IRepositoryConfig.REPOSITORY_PROVIDER, type.getProvider());
+                }
+
             }
             catch (IOException e)
             {
                 SigilCore.error("Failed to load properties for repository " + key, e);
             }
+            finally {
+                if ( in != null ) {
+                    try
+                    {
+                        in.close();
+                    }
+                    catch (IOException e)
+                    {
+                        SigilCore.error("Failed to close properties file " + loc, e);
+                    }
+                }
+            }
         }
 
-        repPrefs.setValue("id", id);
+        element.getProperties().setProperty("id", id);
 
         return element;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Image loadImage(IExtension ext, String icon)
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences#loadRepositoryTypes()
+     */
+    public List<IRepositoryType> loadRepositoryTypes()
     {
-        int i = icon.lastIndexOf("/");
-        String path = i == -1 ? "/" : icon.substring(0, i);
-        String name = i == -1 ? icon : icon.substring(i + 1);
-
-        Bundle b = Platform.getBundle(ext.getContributor().getName());
-
-        Enumeration<URL> en = b.findEntries(path, name, false);
-        Image image = null;
-
-        if (en.hasMoreElements())
-        {
-            try
-            {
-                image = SigilCore.loadImage(en.nextElement());
-            }
-            catch (IOException e)
-            {
-                SigilCore.error("Failed to load image", e);
-            }
-        }
-        else
-        {
-            SigilCore.error("No such image " + icon + " in bundle " + b.getSymbolicName());
-        }
-
-        return image;
+        return ExtensionUtils.loadRepositoryTypes();
     }
 
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences#getPreferenceStore(org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel)
+     */
+    public PreferenceStore toPreferenceStore(final IRepositoryModel model)
+    {
+        PreferenceStore store = new PreferenceStore();
+        store.setFilename(makeFileName(model));
+        
+        for (Map.Entry<Object, Object> e : model.getProperties().entrySet()) {
+            store.setValue((String) e.getKey(), (String) e.getValue());
+        }
+        
+        store.setValue("provider", model.getType().getProvider());
+
+        store.addPropertyChangeListener(new IPropertyChangeListener()
+        {            
+            public void propertyChange(PropertyChangeEvent event)
+            {
+                model.getProperties().setProperty(event.getProperty(), (String) event.getNewValue());
+            }
+        });
+        
+        return store;
+    }
 }

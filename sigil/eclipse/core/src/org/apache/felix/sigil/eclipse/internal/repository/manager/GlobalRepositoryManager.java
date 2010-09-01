@@ -17,19 +17,21 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.internal.repository.eclipse;
+package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
-import org.apache.felix.sigil.common.repository.IRepositoryManager;
-import org.apache.felix.sigil.eclipse.internal.repository.eclipse.SigilRepositoryManager;
-import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryMap;
-
-public class GlobalRepositoryManager extends SigilRepositoryManager implements IRepositoryManager
+/**
+ * @author dave
+ *
+ */
+public class GlobalRepositoryManager extends AbstractEclipseRepositoryManager
 {
 
-    public GlobalRepositoryManager(RepositoryMap map)
+    /**
+     * @param repositoryMap
+     */
+    public GlobalRepositoryManager(IRepositoryCache repositoryMap)
     {
-        super(map);
+        super(new GlobalRepositoryConfig(), repositoryMap);
     }
-
 
 }

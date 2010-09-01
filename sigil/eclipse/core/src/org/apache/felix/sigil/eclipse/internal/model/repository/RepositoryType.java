@@ -39,7 +39,7 @@ public class RepositoryType implements IRepositoryType
         this.icon = icon;
     }
 
-    public String getType()
+    public String getName()
     {
         return type;
     }

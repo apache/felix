@@ -132,7 +132,7 @@ public class OBRRepositoryWizardPage extends RepositoryWizardPage implements IWi
     {
         super.storeFields();
         IPath dir = Activator.getDefault().getStateLocation();
-        getModel().getPreferences().setValue( "index", dir.append( getModel().getId() + ".obr" ).toOSString() );
+        getModel().getProperties().setProperty( "index", dir.append( getModel().getId() + ".obr" ).toOSString() );
     }
 
 }

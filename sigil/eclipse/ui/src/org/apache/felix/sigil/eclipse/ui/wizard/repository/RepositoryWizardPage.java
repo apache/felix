@@ -21,8 +21,10 @@ package org.apache.felix.sigil.eclipse.ui.wizard.repository;
 
 import java.util.ArrayList;
 
+import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.eclipse.jface.preference.FieldEditor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -34,9 +36,10 @@ import org.eclipse.swt.widgets.Composite;
 public abstract class RepositoryWizardPage extends WizardPage
 {
 
-    private StringFieldEditor nameEditor;
     private ArrayList<FieldEditor> editors = new ArrayList<FieldEditor>();
     private RepositoryWizard wizard;
+    private IPreferenceStore prefs;
+    private StringFieldEditor nameEditor;
 
     protected RepositoryWizardPage(String pageName, RepositoryWizard parent)
     {
@@ -60,20 +63,13 @@ public abstract class RepositoryWizardPage extends WizardPage
         if (getModel().getType().isDynamic())
         {
             nameEditor = new StringFieldEditor("name", "Name:", control);
-            nameEditor.setStringValue(getModel().getName());
-            nameEditor.getTextControl(getFieldEditorParent()).addModifyListener(
-                new ModifyListener()
-                {
-                    public void modifyText(ModifyEvent e)
-                    {
-                        checkPageComplete();
-                    }
-                });
+            nameEditor.setEmptyStringAllowed(false);
+            addField(nameEditor);
         }
 
         createFieldEditors();
 
-        int cols = nameEditor == null ? 0 : nameEditor.getNumberOfControls();
+        int cols = 0;
         for (FieldEditor e : editors)
         {
             cols = Math.max(cols, e.getNumberOfControls());
@@ -81,15 +77,21 @@ public abstract class RepositoryWizardPage extends WizardPage
 
         control.setLayout(new GridLayout(cols, false));
 
-        if (nameEditor != null)
-        {
-            nameEditor.fillIntoGrid(getFieldEditorParent(), cols);
-        }
-
         for (FieldEditor e : editors)
         {
+            if (e instanceof StringFieldEditor) {
+                StringFieldEditor sfe = (StringFieldEditor) e;
+                sfe.getTextControl(getFieldEditorParent()).addModifyListener(
+                    new ModifyListener()
+                    {
+                        public void modifyText(ModifyEvent e)
+                        {
+                            checkPageComplete();
+                        }
+                    });
+            }
             e.fillIntoGrid(getFieldEditorParent(), cols);
-            e.setPreferenceStore(getModel().getPreferences());
+            e.setPreferenceStore(getStore());
             e.load();
         }
 
@@ -100,13 +102,33 @@ public abstract class RepositoryWizardPage extends WizardPage
     {
         if (nameEditor != null)
         {
-            setPageComplete(nameEditor.getStringValue().length() > 0);
+            int len = nameEditor.getStringValue().length();
+            boolean ok = len > 0;
+            setPageComplete(ok);
+            if ( !ok ) {
+                setErrorMessage("Name should not be empty");
+            }
+            else {
+                ok = nameEditor.getStringValue().trim().length() == len;
+                setPageComplete(ok);
+                if ( !ok ) {
+                    setErrorMessage("Name cannot start or end with whitespace");
+                }
+            }
         }
     }
 
     public IRepositoryModel getModel()
     {
         return wizard.getModel();
+    }
+    
+    protected IPreferenceStore getStore() {
+        if ( prefs == null ) {
+            prefs = SigilCore.getRepositoryPreferences().toPreferenceStore(getModel());
+        }
+        
+        return prefs;
     }
 
     protected Composite getFieldEditorParent()
@@ -116,13 +138,10 @@ public abstract class RepositoryWizardPage extends WizardPage
 
     public void storeFields()
     {
-        getModel().setName(nameEditor.getStringValue());
         for (FieldEditor e : editors)
         {
             e.store();
         }
-        getModel().getPreferences().setValue("provider", getModel().getType().getProvider());
-
     }
 
 }

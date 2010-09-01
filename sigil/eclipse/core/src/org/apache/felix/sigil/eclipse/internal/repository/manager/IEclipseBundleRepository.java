@@ -17,19 +17,16 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.model.repository;
+package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
-import java.util.Properties;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 
-public interface IRepositoryModel
+/**
+ * @author dave
+ *
+ */
+public interface IEclipseBundleRepository extends IBundleRepository
 {
-    String getId();
-
-    String getName();
-
-    Properties getProperties();
-
-    IRepositoryType getType();
-    
-    Throwable getProblem();
+    IRepositoryModel getModel();
 }

@@ -75,7 +75,7 @@ public class RepositoryTypeSelectionPage extends WizardSelectionPage implements 
             public String getText(Object element)
             {
                 IRepositoryType rep = (IRepositoryType) element;
-                return rep.getType();
+                return rep.getName();
             }
 
             @Override

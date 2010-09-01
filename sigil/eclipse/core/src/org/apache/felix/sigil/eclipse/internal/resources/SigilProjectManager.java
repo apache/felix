@@ -18,22 +18,28 @@
  */
 package org.apache.felix.sigil.eclipse.internal.resources;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.felix.sigil.common.config.IRepositoryConfig;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.internal.model.project.SigilProject;
-import org.apache.felix.sigil.eclipse.internal.repository.manager.EclipseRepositoryManager;
-import org.apache.felix.sigil.eclipse.internal.repository.manager.IRepositoryMap;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.ProjectRepositoryManager;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.IRepositoryCache;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 
 public class SigilProjectManager
 {
-    private static HashMap<IProject, ISigilProjectModel> projects = new HashMap<IProject, ISigilProjectModel>();
-    private static HashMap<ISigilProjectModel, EclipseRepositoryManager> repositoryManagers = new HashMap<ISigilProjectModel, EclipseRepositoryManager>();
+    private final HashMap<IProject, ISigilProjectModel> projects = new HashMap<IProject, ISigilProjectModel>();
+    private final HashMap<ISigilProjectModel, ProjectRepositoryManager> repositoryManagers = new HashMap<ISigilProjectModel, ProjectRepositoryManager>();    
+    private final IRepositoryCache repositoryCache;
+    
+    public SigilProjectManager(IRepositoryCache repositoryCache) {
+        this.repositoryCache = repositoryCache;
+    }
 
     public ISigilProjectModel getSigilProject(IProject project) throws CoreException
     {
@@ -63,32 +69,51 @@ public class SigilProjectManager
         synchronized (projects)
         {
             ISigilProjectModel model = projects.remove(project);
+            ArrayList<String> flush = new ArrayList<String>();
             if ( model != null ) {
-                EclipseRepositoryManager manager = repositoryManagers.remove(model);
-                manager.destroy();           
-            }            
+                ProjectRepositoryManager manager = repositoryManagers.remove(model);
+                manager.destroy();
+                for(IBundleRepository rep : manager.getRepositories()) {
+                    flush.add(rep.getId());
+                }
+            }
+            
+            for (ProjectRepositoryManager manager : repositoryManagers.values()) {
+                for(IBundleRepository rep : manager.getRepositories()) {
+                    flush.remove(rep.getId());
+                }
+            }
+            
+            repositoryCache.discard(flush);
         }
     }
 
     /**
      * @param model
-     * @param repositoryMap 
+     * @param repositoryCache 
      * @throws CoreException 
      */
-    public IRepositoryManager getRepositoryManager(ISigilProjectModel model, IRepositoryMap repositoryMap) throws CoreException
+    public IRepositoryManager getRepositoryManager(ISigilProjectModel model) throws CoreException
     {
         synchronized( projects ) {
-            EclipseRepositoryManager manager = repositoryManagers.get(model);
+            ProjectRepositoryManager manager = repositoryManagers.get(model);
             
             if ( manager == null ) {
-                IRepositoryConfig config = model.getRepositoryConfig();
-                
-                manager = new EclipseRepositoryManager(config, repositoryMap);
-                
+                manager = new ProjectRepositoryManager(model, repositoryCache);                
                 repositoryManagers.put(model, manager);
             }
             
             return manager;
+        }
+    }
+
+    /**
+     * 
+     */
+    public synchronized void destroy()
+    {
+        for(ProjectRepositoryManager man : repositoryManagers.values()) {
+            man.destroy();
         }
     }
 }

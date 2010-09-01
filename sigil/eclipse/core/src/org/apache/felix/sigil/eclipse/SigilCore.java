@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.sigil.common.config.IBldProject;
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.ICapabilityModelElement;
-import org.apache.felix.sigil.common.model.ModelElementFactory;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryManager;
@@ -43,14 +42,15 @@ import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.eclipse.install.IOSGiInstallManager;
 import org.apache.felix.sigil.eclipse.internal.install.OSGiInstallManager;
 import org.apache.felix.sigil.eclipse.internal.model.project.SigilModelRoot;
-import org.apache.felix.sigil.eclipse.internal.model.project.SigilProject;
 import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryPreferences;
-import org.apache.felix.sigil.eclipse.internal.repository.eclipse.GlobalRepositoryManager;
-import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryMap;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.GlobalRepositoryManager;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.IEclipseBundleRepository;
+import org.apache.felix.sigil.eclipse.internal.repository.manager.RepositoryCache;
 import org.apache.felix.sigil.eclipse.internal.resources.ProjectResourceListener;
 import org.apache.felix.sigil.eclipse.internal.resources.SigilProjectManager;
 import org.apache.felix.sigil.eclipse.model.project.ISigilModelRoot;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryPreferences;
 import org.apache.felix.sigil.eclipse.model.util.JavaHelper;
 import org.eclipse.core.resources.ICommand;
@@ -76,7 +76,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -142,15 +141,11 @@ public class SigilCore extends AbstractUIPlugin
     // The shared instance
     private static SigilCore plugin;
 
-    private ServiceTracker descriptorTracker;
-    private ServiceTracker registryTracker;
-    private ServiceTracker serializerTracker;
-    private static IRepositoryPreferences repositoryPrefs;
+    private static RepositoryPreferences repositoryPrefs;
     private static SigilProjectManager projectManager;
     private static OSGiInstallManager installs;
     private static ISigilModelRoot modelRoot;
     private static GlobalRepositoryManager globalRepositoryManager;
-    private static RepositoryMap repositoryMap;
 
     /**
      * Returns the shared instance
@@ -268,17 +263,16 @@ public class SigilCore extends AbstractUIPlugin
     {
         super.start(context);
 
-        modelRoot = new SigilModelRoot();
+        RepositoryCache repositoryCache = new RepositoryCache();
+        projectManager = new SigilProjectManager(repositoryCache);
 
-        repositoryPrefs = new RepositoryPreferences();
+        modelRoot = new SigilModelRoot();
 
         installs = new OSGiInstallManager();
 
-        repositoryMap = new RepositoryMap();
-        globalRepositoryManager = new GlobalRepositoryManager(repositoryMap);
+        repositoryPrefs = new RepositoryPreferences();
+        globalRepositoryManager = new GlobalRepositoryManager(repositoryCache);
         globalRepositoryManager.initialise();
-
-        projectManager = new SigilProjectManager();
 
         registerModelElements(context);
         registerResourceListeners();
@@ -293,26 +287,11 @@ public class SigilCore extends AbstractUIPlugin
      */
     public void stop(BundleContext context) throws Exception
     {
-        if (descriptorTracker != null)
-        {
-            descriptorTracker.close();
-            descriptorTracker = null;
-        }
-
-        if (registryTracker != null)
-        {
-            registryTracker.close();
-            registryTracker = null;
-        }
-
-        if (serializerTracker != null)
-        {
-            serializerTracker.close();
-            serializerTracker = null;
-        }
-
         globalRepositoryManager.destroy();
         globalRepositoryManager = null;
+        
+        projectManager.destroy();
+        projectManager = null;
 
         plugin = null;
 
@@ -404,8 +383,6 @@ public class SigilCore extends AbstractUIPlugin
     {
         // trick to get eclipse to lazy load BldCore for model elements
         BldCore.getLicenseManager();
-        ModelElementFactory.getInstance().register(ISigilProjectModel.class,
-            SigilProject.class, "project", "sigil", null);
     }
 
     public static IOSGiInstallManager getInstallManager()
@@ -428,7 +405,7 @@ public class SigilCore extends AbstractUIPlugin
         if ( model == null ) return globalRepositoryManager;
         try
         {
-            return projectManager.getRepositoryManager(model, repositoryMap);
+            return projectManager.getRepositoryManager(model);
         }
         catch (CoreException e)
         {
@@ -436,6 +413,16 @@ public class SigilCore extends AbstractUIPlugin
             return globalRepositoryManager;
         }        
     }
+    
+    /**
+     * @param rep
+     * @return
+     */
+    public static IRepositoryModel getRepositoryModel(IBundleRepository rep)
+    {
+        IEclipseBundleRepository cast = (IEclipseBundleRepository) rep;
+        return cast.getModel();
+    }    
 
     public static IRepositoryPreferences getRepositoryPreferences()
     {

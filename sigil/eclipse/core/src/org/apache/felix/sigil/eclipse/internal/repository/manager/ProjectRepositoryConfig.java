@@ -19,39 +19,32 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
-import java.util.Properties;
-
-import org.apache.felix.sigil.common.repository.IBundleRepository;
+import java.util.List;
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 
 /**
  * @author dave
  *
  */
-public interface IRepositoryMap
+public class ProjectRepositoryConfig extends AbstractEclipseRepositoryConfig
 {
 
-    public static class RepositoryCache
-    {
-        public final Properties pref;
-        public final IBundleRepository repo;
-
-        public RepositoryCache(Properties pref, IBundleRepository repo)
-        {
-            this.pref = pref;
-            this.repo = repo;
-        }
+    private final IRepositoryConfig projectConfig;
+    
+    public ProjectRepositoryConfig(IRepositoryConfig projectConfig) {
+        this.projectConfig = projectConfig;
     }
-
-    /**
-     * @param uid
-     * @return
+    
+    protected IRepositoryConfig[] getConfigs() {
+        return new IRepositoryConfig[] { projectConfig };
+    }
+    
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.common.config.IRepositoryConfig#getRepositoryPath()
      */
-    RepositoryCache get(String uid);
-
-    /**
-     * @param uid
-     * @param cache
-     */
-    void put(String uid, RepositoryCache cache);
+    public List<String> getRepositoryPath()
+    {
+        return projectConfig.getRepositoryPath();
+    }
 
 }

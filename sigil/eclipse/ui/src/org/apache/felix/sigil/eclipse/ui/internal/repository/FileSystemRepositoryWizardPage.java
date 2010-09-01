@@ -26,8 +26,6 @@ import org.apache.felix.sigil.eclipse.ui.wizard.repository.RepositoryWizardPage;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 
 public class FileSystemRepositoryWizardPage extends RepositoryWizardPage implements IWizardPage
 {
@@ -43,15 +41,6 @@ public class FileSystemRepositoryWizardPage extends RepositoryWizardPage impleme
     public void createFieldEditors()
     {
         dirEditor = new DirectoryFieldEditor("dir", "Directory:", getFieldEditorParent());
-        dirEditor.getTextControl(getFieldEditorParent()).addModifyListener(
-            new ModifyListener()
-            {
-                public void modifyText(ModifyEvent e)
-                {
-                    checkPageComplete();
-                }
-            });
-
         addField(dirEditor);
         addField(new BooleanFieldEditor("recurse", "Recurse:", getFieldEditorParent()));
     }

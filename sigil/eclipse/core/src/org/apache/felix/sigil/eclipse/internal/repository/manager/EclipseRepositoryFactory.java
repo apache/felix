@@ -19,8 +19,13 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
+import java.util.Properties;
+
+import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.internal.model.repository.ExtensionUtils;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -35,6 +40,28 @@ import org.eclipse.core.runtime.Platform;
 public class EclipseRepositoryFactory
 {
 
+    static class EclipseRepositoryProviderWrapper implements IRepositoryProvider {
+        private final IRepositoryProvider delegate;
+        private final IRepositoryType type;
+
+        /**
+         * @param provider
+         * @param type 
+         */
+        public EclipseRepositoryProviderWrapper(IRepositoryProvider provider, IRepositoryType type)
+        {
+            this.delegate = provider;
+            this.type = type;
+        }
+
+        /* (non-Javadoc)
+         * @see org.apache.felix.sigil.common.repository.IRepositoryProvider#createRepository(java.lang.String, java.util.Properties)
+         */
+        public IBundleRepository createRepository(String id, Properties properties)
+        {
+            return new EclipseBundleRepository(delegate, type, id, properties);
+        }
+    }
     /**
      * @param alias
      * @return
@@ -52,11 +79,14 @@ public class EclipseRepositoryFactory
                 if (alias.equals(c.getAttribute("alias")))
                 {
                     IRepositoryProvider provider = (IRepositoryProvider) c.createExecutableExtension("class");
-                    return provider;
+                    IRepositoryType type = ExtensionUtils.toRepositoryType(e, c);
+                    return new EclipseRepositoryProviderWrapper(provider, type);
                 }
             }
         }
 
         return null;
     }
+    
+    
 }

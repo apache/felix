@@ -17,19 +17,34 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.model.repository;
+package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
+import java.util.Collection;
 import java.util.Properties;
 
-public interface IRepositoryModel
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IRepositoryProvider;
+import org.apache.felix.sigil.common.repository.RepositoryException;
+
+/**
+ * @author dave
+ *
+ */
+public interface IRepositoryCache
 {
-    String getId();
+    /**
+     * @param sponsor
+     * @param uid
+     * @param props
+     * @param instance
+     * @return
+     * @throws RepositoryException
+     */
+    IBundleRepository getRepository(String uid, Properties props,
+        IRepositoryProvider instance) throws RepositoryException;
 
-    String getName();
-
-    Properties getProperties();
-
-    IRepositoryType getType();
-    
-    Throwable getProblem();
+    /**
+     * @param flush
+     */
+    void discard(Collection<String> ids);
 }

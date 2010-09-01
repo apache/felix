@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.Image;
 public interface IRepositoryType
 {
 
-    String getType();
+    String getName();
 
     String getId();
 

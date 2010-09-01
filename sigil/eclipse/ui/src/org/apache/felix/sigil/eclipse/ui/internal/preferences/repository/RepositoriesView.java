@@ -285,7 +285,7 @@ public class RepositoriesView
     }
 
     @SuppressWarnings("unchecked")
-    protected void refresh(Control parent, IStructuredSelection sel)
+    private void refresh(Control parent, IStructuredSelection sel)
     {
         ArrayList<IRepositoryModel> models = new ArrayList<IRepositoryModel>(sel.size());
 

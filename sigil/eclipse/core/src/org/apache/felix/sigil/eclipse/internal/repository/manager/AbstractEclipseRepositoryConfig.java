@@ -29,6 +29,7 @@ import java.util.Properties;
 
 import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -36,21 +37,20 @@ import org.eclipse.jface.preference.IPreferenceStore;
  * @author dave
  *
  */
-public class EclipseRepositoryConfig implements IRepositoryConfig
+public abstract class AbstractEclipseRepositoryConfig implements IRepositoryConfig
 {
 
-    private final IRepositoryConfig projectConfig;
-    
-    public EclipseRepositoryConfig(IRepositoryConfig projectConfig) {
-        this.projectConfig = projectConfig;
-    }
+    protected abstract IRepositoryConfig[] getConfigs();
     
     /* (non-Javadoc)
      * @see org.apache.felix.sigil.common.config.IRepositoryConfig#getAllRepositories()
      */
     public List<String> getAllRepositories()
     {
-        ArrayList<String> list = new ArrayList<String>(projectConfig.getAllRepositories());
+        ArrayList<String> list = new ArrayList<String>();
+        for (IRepositoryConfig c : getConfigs()) {
+            list.addAll(c.getAllRepositories());
+        }
         list.addAll(readRepositoryNames());
         return list;
     }
@@ -60,7 +60,16 @@ public class EclipseRepositoryConfig implements IRepositoryConfig
      */
     public Properties getRepositoryConfig(String name)
     {
-        Properties props = projectConfig.getRepositoryConfig(name);
+        Properties props = null;
+        for(IRepositoryConfig c : getConfigs()) {
+            props = c.getRepositoryConfig(name);
+            if ( props != null ) {
+                if ( !props.containsKey(RepositoryModel.NAME)) {
+                    props.setProperty(RepositoryModel.NAME, name);
+                }
+                break;
+            }
+        }
         if ( props == null ) {
             props = readRepositoryConfig(name);
         }
@@ -72,7 +81,13 @@ public class EclipseRepositoryConfig implements IRepositoryConfig
      */
     public URI getRepositoryDefinition(String name)
     {
-        URI def = projectConfig.getRepositoryDefinition(name);
+        URI def = null;
+        for(IRepositoryConfig c : getConfigs()) {
+            def = c.getRepositoryDefinition(name);
+            if ( def != null ) {
+                break;
+            }
+        }
         if ( def == null ) {
             if ( readRepositoryNames().contains(name) ) {
                 def = URI.create("sigil:eclipse:preferences");
@@ -81,18 +96,10 @@ public class EclipseRepositoryConfig implements IRepositoryConfig
         return def;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.felix.sigil.common.config.IRepositoryConfig#getRepositoryPath()
-     */
-    public List<String> getRepositoryPath()
-    {
-        return projectConfig.getRepositoryPath();
-    }
-
     /**
      * @return
      */
-    private static List<String> readRepositoryNames()
+    static List<String> readRepositoryNames()
     {
         List<IRepositoryModel> models = findRepositories();
         ArrayList<String> repos = new ArrayList<String>(models.size());
@@ -105,36 +112,12 @@ public class EclipseRepositoryConfig implements IRepositoryConfig
         return repos;
     }
 
-    private static Properties readRepositoryConfig(String name) {
-        IPreferenceStore prefs = SigilCore.getDefault().getPreferenceStore();
-
+    static Properties readRepositoryConfig(String name) {
         for (IRepositoryModel repo : findRepositories())
         {
-            try
-            {
-                String id = repo.getId();
-                if ( name.equals(id) ) {
-                    Properties pref = null;
-                    if (repo.getType().isDynamic())
-                    {
-                        String instance = "repository." + repo.getType().getId() + "." + id;
-                        String loc = prefs.getString(instance + ".loc");
-                        pref = loadPreferences(loc);                     
-                    }
-                    else
-                    {
-                        pref = new Properties();
-                    }
-                    
-                    if (!pref.containsKey(IRepositoryConfig.REPOSITORY_PROVIDER)) {
-                        pref.put(IRepositoryConfig.REPOSITORY_PROVIDER, repo.getType().getProvider());
-                    }
-                    return pref;
-                }
-            }
-            catch (IOException e)
-            {
-                SigilCore.error("Failed to load repository for " + repo, e);
+            String id = repo.getId();
+            if ( name.equals(id) ) {
+                return repo.getProperties();
             }
         }
         
@@ -145,31 +128,5 @@ public class EclipseRepositoryConfig implements IRepositoryConfig
     private static final List<IRepositoryModel> findRepositories()
     {
         return SigilCore.getRepositoryPreferences().loadRepositories();
-    }
-    
-    private static final Properties loadPreferences(String loc) throws FileNotFoundException,
-    IOException
-    {
-        FileInputStream in = null;
-        try
-        {
-            Properties pref = new Properties();
-            pref.load(new FileInputStream(loc));
-            return pref;
-        }
-        finally
-        {
-            if (in != null)
-            {
-                try
-                {
-                    in.close();
-                }
-                catch (IOException e)
-                {
-                    SigilCore.error("Failed to close file", e);
-                }
-            }
-        }
     }    
 }

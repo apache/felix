@@ -21,18 +21,18 @@ package org.apache.felix.sigil.eclipse.model.repository;
 
 import java.util.List;
 
-import org.apache.felix.sigil.eclipse.internal.model.repository.RepositoryType;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 public interface IRepositoryPreferences
 {
     List<IRepositoryModel> loadRepositories();
 
-    IRepositoryModel findRepository(String id);
-
     void saveRepositories(List<IRepositoryModel> repositories) throws CoreException;
 
-    List<RepositoryType> loadRepositoryTypes();
+    List<IRepositoryType> loadRepositoryTypes();
+    
+    IPreferenceStore toPreferenceStore(IRepositoryModel model);
 
     IRepositoryModel newRepositoryElement(IRepositoryType type);
 }

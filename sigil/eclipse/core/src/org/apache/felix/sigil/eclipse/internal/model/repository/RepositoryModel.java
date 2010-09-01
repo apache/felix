@@ -19,31 +19,46 @@
 
 package org.apache.felix.sigil.eclipse.internal.model.repository;
 
+import java.util.Properties;
+
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.model.repository.IRepositoryType;
-import org.eclipse.jface.preference.PreferenceStore;
 
 public class RepositoryModel implements IRepositoryModel
 {
-    private String id;
+    public static final String NAME = "name";
 
-    private String name;
+    private String id;
 
     private IRepositoryType type;
 
-    private PreferenceStore preferences;
+    private Properties properties = new Properties();
+    
+    private Throwable throwable;
 
-    public RepositoryModel(String id, String name, IRepositoryType type, PreferenceStore preferences)
+    public RepositoryModel(String id, IRepositoryType type)
     {
         this.id = id;
-        this.name = name;
         this.type = type;
-        this.preferences = preferences;
     }
 
-    public PreferenceStore getPreferences()
+    /**
+     * @param exception 
+     * @param id2
+     * @param type2
+     * @param properties2
+     */
+    public RepositoryModel(String id, IRepositoryType type, Properties properties, Exception exception)
     {
-        return preferences;
+        this.id = id;
+        this.type = type;
+        this.properties = properties;
+        this.throwable = exception;
+    }
+
+    public Properties getProperties()
+    {
+        return properties;
     }
 
     public IRepositoryType getType()
@@ -58,12 +73,16 @@ public class RepositoryModel implements IRepositoryModel
 
     public String getName()
     {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
+        if ( getType().isDynamic() ) {
+            String name = properties.getProperty(NAME);
+            if ( name == null ) {
+                name = id;
+            }
+            return name;
+        }
+        else {
+            return getType().getName();
+        }
     }
 
     @Override
@@ -88,6 +107,15 @@ public class RepositoryModel implements IRepositoryModel
 
     public String toString()
     {
-        return type.getId() + ":" + id + ":" + name;
+        return type.getId() + ":" + id + ":" + getName();
     }
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel#getProblem()
+     */
+    public Throwable getProblem()
+    {
+        return throwable;
+    }
+
 }

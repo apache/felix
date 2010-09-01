@@ -113,8 +113,7 @@ public class RepositoryViewPart extends ViewPart implements IRepositoryChangeLis
         public RepositoryAction(IBundleRepository rep)
         {
             this.rep = rep;
-            this.model = SigilCore.getRepositoryPreferences().findRepository(
-                rep.getId());
+            this.model = SigilCore.getRepositoryModel(rep);
         }
 
         @Override

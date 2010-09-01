@@ -29,9 +29,7 @@ import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.repository.AbstractRepositoryManager;
 import org.apache.felix.sigil.common.repository.IBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryProvider;
-import org.apache.felix.sigil.common.repository.RepositoryException;
 import org.apache.felix.sigil.eclipse.SigilCore;
-import org.apache.felix.sigil.eclipse.internal.repository.manager.IRepositoryMap.RepositoryCache;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -40,19 +38,19 @@ import org.eclipse.jface.util.PropertyChangeEvent;
  * @author dave
  *
  */
-public class EclipseRepositoryManager extends AbstractRepositoryManager implements IPropertyChangeListener
+public abstract class AbstractEclipseRepositoryManager extends AbstractRepositoryManager implements IPropertyChangeListener
 {
     private final IRepositoryConfig config;
-    private final IRepositoryMap repositoryMap;
+    private final IRepositoryCache repositoryCache;
     
-    /**
-     * @param config
-     * @param repositoryMap2 
-     */
-    public EclipseRepositoryManager(IRepositoryConfig config, IRepositoryMap repositoryMap)
+    public AbstractEclipseRepositoryManager(IRepositoryConfig config, IRepositoryCache repositoryMap)
     {
-        this.config = new EclipseRepositoryConfig(config);
-        this.repositoryMap = repositoryMap;
+        this.config = config;
+        this.repositoryCache = repositoryMap;
+    }
+    
+    public IRepositoryConfig getConfig() {
+        return config;
     }
     
     @Override
@@ -111,7 +109,7 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager implemen
                 Properties props = config.getRepositoryConfig(name);
                 if (props != null) {
                     String uid = config.getRepositoryDefinition(name).toString() + '#' + name;
-                    IBundleRepository repo = buildRepository(uid, name, props);
+                    IBundleRepository repo = buildRepository(uid, props);
                     
                     if ( repo != null ) {
                         list.add(repo);
@@ -125,10 +123,10 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager implemen
      * @param repo
      * @return 
      */
-    private IBundleRepository buildRepository(String uid, String name, Properties repo)
+    private IBundleRepository buildRepository(String uid, Properties repo)
     {
-        String disabled = repo.getProperty("disabled");
-        if ("true".equalsIgnoreCase(disabled == null ? null : disabled.trim())) return null;
+        String disabled = repo.getProperty("disabled", "false");
+        if (Boolean.parseBoolean(disabled.trim())) return null;
         
         String optStr = repo.getProperty("optional", "false");
         boolean optional = Boolean.parseBoolean(optStr.trim());
@@ -136,7 +134,7 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager implemen
         String alias = repo.getProperty(IRepositoryConfig.REPOSITORY_PROVIDER);
         if (alias == null)
         {
-            String msg = "provider not specified for repository: " + name;
+            String msg = "provider not specified for repository: " + uid;
             
             if (optional)            
                 SigilCore.log(msg);
@@ -149,7 +147,7 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager implemen
         try
         {
             IRepositoryProvider instance = EclipseRepositoryFactory.getProvider(alias);
-            IBundleRepository repository = loadRepository(uid, name, repo, instance);
+            IBundleRepository repository = repositoryCache.getRepository(uid, repo, instance);
             return repository;
         }
         catch (Exception e)
@@ -165,33 +163,6 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager implemen
         return null;
     }
     
-    private IBundleRepository loadRepository(String uid, String id, Properties pref,
-        IRepositoryProvider provider) throws RepositoryException
-    {
-        try
-        {
-            if (pref == null)
-            {
-                pref = new Properties();
-            }
-
-            RepositoryCache cache = repositoryMap.get(uid);
-
-            if (cache == null || !cache.pref.equals(pref))
-            {
-                IBundleRepository repo = provider.createRepository(id, pref);
-                cache = new RepositoryCache(pref, repo);
-                repositoryMap.put(uid, cache);
-            }
-
-            return cache.repo;
-        }
-        catch (RuntimeException e)
-        {
-            throw new RepositoryException("Failed to build repositories", e);
-        }
-    }
-
     /* (non-Javadoc)
      * @see org.eclipse.jface.util.IPropertyChangeListener#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
      */
@@ -202,5 +173,5 @@ public class EclipseRepositoryManager extends AbstractRepositoryManager implemen
             loadRepositories();
         }
     }
-    
+
 }

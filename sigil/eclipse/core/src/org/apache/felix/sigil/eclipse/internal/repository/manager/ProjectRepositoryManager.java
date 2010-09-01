@@ -19,34 +19,23 @@
 
 package org.apache.felix.sigil.eclipse.internal.repository.manager;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 
+import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.eclipse.core.runtime.CoreException;
 
-public class RepositoryMap implements IRepositoryMap
+/**
+ * @author dave
+ *
+ */
+public class ProjectRepositoryManager extends AbstractEclipseRepositoryManager
 {
-    private HashMap<String, RepositoryCache> cachedRepositories = new HashMap<String, RepositoryCache>();
-
-    public synchronized void retainAll(Collection<String> ids)
+    /**
+     * @param model
+     * @param repositoryMap2 
+     * @throws CoreException 
+     */
+    public ProjectRepositoryManager(ISigilProjectModel model, IRepositoryCache repositoryMap) throws CoreException
     {
-        for (Iterator<String> i = cachedRepositories.keySet().iterator(); i.hasNext();)
-        {
-            if (!ids.contains(i.next()))
-            {
-                i.remove();
-            }
-        }
+        super(new ProjectRepositoryConfig(model.getRepositoryConfig()), repositoryMap);
     }
-
-    public synchronized RepositoryCache get(String id)
-    {
-        return cachedRepositories.get(id);
-    }
-
-    public synchronized void put(String id, RepositoryCache cache)
-    {
-        cachedRepositories.put(id, cache);
-    }
-
 }
