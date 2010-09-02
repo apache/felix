@@ -38,7 +38,6 @@ import org.apache.felix.sigil.eclipse.ui.util.DefaultTableProvider;
 import org.apache.felix.sigil.eclipse.ui.util.ResourcesDialogHelper;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;

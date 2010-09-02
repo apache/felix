@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -228,8 +227,8 @@ public class SigilJunitRunner
         if (o instanceof String ) {
             return findTests(( String ) o);
         }
-        else if ( o instanceof Iterable ) {
-            Iterable i = ( Iterable ) o;
+        else if ( o instanceof Iterable<?> ) {
+            Iterable<?> i = ( Iterable<?> ) o;
             for ( Object t : i ) {
                 tests.add(doCoerce(t));
             }
