@@ -22,7 +22,7 @@
    <extension
          point="org.apache.felix.sigil.repositoryprovider">
       <provider
-            class="org.apache.felix.sigil.common.obr.OBRRepositoryProvider"
+            class="org.apache.felix.sigil.obr.eclipse.EclipseOBRRepositoryProvider"
             dynamic="true"
             id="org.apache.felix.sigil.obr.provider"
             alias="obr"

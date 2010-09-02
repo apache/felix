@@ -36,8 +36,8 @@ public class OBRRepositoryProvider implements IRepositoryProvider
     private static final String IN_MEMORY = "inmemory";
     private static final String UPDATE_PERIOD = "updatePeriod";
     private static final String AUTH_FILE = "auth";
-    private static final String CACHE_DIRECTORY = "cache";
-    private static final String INDEX_CACHE_FILE = "index";
+    public static final String CACHE_DIRECTORY = "cache";
+    public static final String INDEX_CACHE_FILE = "index";
 
     public IBundleRepository createRepository(String id, Properties preferences)
         throws RepositoryException
