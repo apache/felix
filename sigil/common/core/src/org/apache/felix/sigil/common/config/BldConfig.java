@@ -327,7 +327,7 @@ public class BldConfig
                     out.println(key + ": " + value);
                     out.println("");
                 }
-                else if (value instanceof List)
+                else if (value instanceof List<?>)
                 {
                     out.println(key + ": \\");
                     for (Object k : (List<?>) value)
@@ -336,7 +336,7 @@ public class BldConfig
                     }
                     out.println("");
                 }
-                else if (value instanceof Map)
+                else if (value instanceof Map<?,?>)
                 {
                     out.println(key + ": \\");
                     StringBuilder b = new StringBuilder();
