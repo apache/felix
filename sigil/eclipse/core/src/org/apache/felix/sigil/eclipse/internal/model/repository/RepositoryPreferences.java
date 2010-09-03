@@ -372,7 +372,7 @@ public class RepositoryPreferences implements IRepositoryPreferences
         {            
             public void propertyChange(PropertyChangeEvent event)
             {
-                model.getProperties().setProperty(event.getProperty(), (String) event.getNewValue());
+                model.getProperties().setProperty(event.getProperty(), event.getNewValue().toString());
             }
         });
         
