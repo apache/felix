@@ -27,12 +27,15 @@ import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IPackageImport;
 import org.apache.felix.sigil.common.model.osgi.IRequiredBundle;
+import org.apache.felix.sigil.common.repository.IBundleRepository;
+import org.apache.felix.sigil.common.repository.IBundleResolver;
 import org.apache.felix.sigil.common.repository.IRepositoryManager;
 import org.apache.felix.sigil.common.repository.IResolutionMonitor;
 import org.apache.felix.sigil.common.repository.ResolutionConfig;
 import org.apache.felix.sigil.common.repository.ResolutionException;
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel;
+import org.apache.felix.sigil.eclipse.model.repository.IRepositoryModel;
 import org.apache.felix.sigil.eclipse.repository.ResolutionMonitorAdapter;
 import org.apache.felix.sigil.eclipse.ui.SigilUI;
 import org.eclipse.core.runtime.CoreException;
@@ -48,6 +51,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPartService;
@@ -89,6 +94,8 @@ public class BundleResolverView extends ViewPart
     private int lastY;
 
     private Map<String, Boolean> displayed = new HashMap<String, Boolean>();
+    private org.eclipse.swt.widgets.Label repoPath;
+    private Composite viewComposite;
 
     private class ToggleDisplayAction extends Action
     {
@@ -158,19 +165,13 @@ public class BundleResolverView extends ViewPart
     public void createPartControl(Composite parent)
     {
         init();
-        createViewer(parent);
+        parent.setLayout(new FillLayout());
+        Composite composite = new Composite(parent, SWT.NONE);
+        createRepoPath(composite);
+        createViewer(composite);
+        doLayout(composite);
         createListeners();
         createMenu();
-    }
-
-    private void init()
-    {
-        displayed.put(LINK_LABELS, false);
-        displayed.put(LOCAL_LINKS, false);
-        displayed.put(DEPENDENTS, false);
-        displayed.put(OPTIONAL, false);
-        displayed.put(SATISFIED, true);
-        displayed.put(UNSATISFIED, true);
     }
 
     public BundleGraph getBundlegraph()
@@ -219,14 +220,30 @@ public class BundleResolverView extends ViewPart
             job.cancel();
         }
 
-        job = new Job("Resolving " + current)
+        ISigilProjectModel project = findProject(element);        
+        final IRepositoryManager repository = project == null ? SigilCore.getGlobalRepositoryManager() : project.getRepositoryManager();
+        
+        StringBuilder buf = new StringBuilder();
+        
+        for (IBundleRepository rep : repository.getRepositories()) {
+            IRepositoryModel mod = SigilCore.getRepositoryModel(rep);
+            if ( buf.length() > 0 ) {
+                buf.append(" -> ");                
+            }
+            buf.append(mod.getName());
+        }
+        
+        buf.insert(0, "Repository Path: ");
+        repoPath.setText(buf.toString());
+
+        job = new Job("Resolving " + element)
         {
             @Override
             protected IStatus run(IProgressMonitor progress)
             {
                 try
                 {
-                    resolve(element, progress);
+                    resolve(element, repository.getBundleResolver(), progress);
                     return Status.OK_STATUS;
                 }
                 catch (CoreException e)
@@ -238,7 +255,7 @@ public class BundleResolverView extends ViewPart
         job.schedule();
     }
 
-    private void resolve(IModelElement element, IProgressMonitor progress)
+    private void resolve(IModelElement element, IBundleResolver resolver, IProgressMonitor progress)
         throws CoreException
     {
         final BundleGraph graph = new BundleGraph();
@@ -258,9 +275,6 @@ public class BundleResolverView extends ViewPart
             }
         };
 
-        ISigilProjectModel project = findProject(element);
-        IRepositoryManager repository = project.getRepositoryManager();
-
         int options = ResolutionConfig.IGNORE_ERRORS;
 
         if (isDisplayed(DEPENDENTS))
@@ -276,7 +290,7 @@ public class BundleResolverView extends ViewPart
 
         try
         {
-            repository.getBundleResolver().resolve(element, config, monitor);
+            resolver.resolve(element, config, monitor);
         }
         catch (ResolutionException e)
         {
@@ -329,10 +343,29 @@ public class BundleResolverView extends ViewPart
         return l;
     }
 
+    /**
+     * @param composite
+     */
+    private void createRepoPath(Composite composite)
+    {
+        repoPath = new org.eclipse.swt.widgets.Label(composite, SWT.NONE);
+    }
+
+    private void init()
+    {
+        displayed.put(LINK_LABELS, false);
+        displayed.put(LOCAL_LINKS, false);
+        displayed.put(DEPENDENTS, false);
+        displayed.put(OPTIONAL, false);
+        displayed.put(SATISFIED, true);
+        displayed.put(UNSATISFIED, true);
+    }
+
     private void createViewer(Composite parent)
     {
-        parent.setLayout(new FillLayout());
-        viewer = new GraphViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL);
+        viewComposite = new Composite(parent, SWT.NONE);
+        viewComposite.setLayout(new FillLayout());
+        viewer = new GraphViewer(viewComposite, SWT.H_SCROLL | SWT.V_SCROLL);
         IContentProvider contentProvider = new BundleGraphContentProvider();
         viewer.setContentProvider(contentProvider);
         viewer.setLabelProvider(new BundleGraphLabelProvider(this));
@@ -343,6 +376,17 @@ public class BundleResolverView extends ViewPart
             : new RadialLayoutAlgorithm(style));
         viewer.addSelectionChangedListener(new BundleConnectionHighlighter(this));
         viewer.setInput(new BundleGraph());
+    }
+
+    /**
+     * @param parent 
+     * 
+     */
+    private void doLayout(Composite parent)
+    {
+        parent.setLayout(new GridLayout(1, true));
+        repoPath.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        viewComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
     }
 
     private void createMenu()
