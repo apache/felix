@@ -255,9 +255,12 @@ public class SigilBundle extends AbstractCompoundModelElement implements ISigilB
 
     public void addClasspathEntry(String encodedClasspath)
     {
+        encodedClasspath = encodedClasspath.trim();
         ArrayList<String> tmp = new ArrayList<String>(getClasspathEntrys());
-        tmp.add(encodedClasspath.trim());
-        classpath = tmp.toArray(new String[tmp.size()]);
+        if (!tmp.contains(encodedClasspath)) {
+            tmp.add(encodedClasspath);
+            classpath = tmp.toArray(new String[tmp.size()]);
+        }
     }
 
     public Collection<String> getClasspathEntrys()
