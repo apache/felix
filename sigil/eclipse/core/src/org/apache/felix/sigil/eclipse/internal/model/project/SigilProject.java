@@ -64,7 +64,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
@@ -118,8 +117,17 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
     {
         SubMonitor progress = SubMonitor.convert(monitor, 1000);
 
-        bldProjectFile.setContents(buildContents(), IFile.KEEP_HISTORY,
-            progress.newChild(10));
+        if (bldProjectFile.getLocation().toFile().exists())
+        {
+            bldProjectFile.setContents(buildContents(), IFile.KEEP_HISTORY,
+                progress.newChild(10));
+        }
+        else
+        {
+            bldProjectFile.create(buildContents(), true /* force */,
+                progress.newChild(5));
+            project.refreshLocal(IResource.DEPTH_ONE, progress.newChild(5));
+        }
 
         if (rebuildDependencies)
         {
@@ -354,31 +362,27 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
 
         try
         {
-            boolean newProject = false;
-
             synchronized (bldProjectFile)
             {
                 if (bundle == null)
-                {
-                    if (bldProjectFile.getLocation().toFile().exists())
+                {                   
+                    IPath loc = bldProjectFile.getLocation();
+                    if (loc == null) {
+                        // callers can protect against this by using 
+                        // checking exists()
+                        throw new IllegalStateException("Sigil project does not exist");
+                    }
+                    else if (loc.toFile().exists())
                     {
                         bundle = parseContents(bldProjectFile);
                     }
                     else
                     {
                         bundle = setupDefaults();
-                        newProject = true;
                     }
                 }
 
                 b = bundle;
-            }
-
-            if (newProject)
-            {
-                NullProgressMonitor npm = new NullProgressMonitor();
-                bldProjectFile.create(buildContents(), true /* force */, npm);
-                project.refreshLocal(IResource.DEPTH_ONE, npm);
             }
         }
         catch (CoreException e)
@@ -427,7 +431,8 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
     @Override
     public int hashCode()
     {
-        int hc = getSymbolicName().hashCode();
+        String bsn = getSymbolicName();
+        int hc = bsn == null ? 1 : bsn.hashCode();
         if (getVersion() != null)
         {
             hc *= getVersion().hashCode();
@@ -591,7 +596,6 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
             ISigilBundle.class);
         IBundleModelElement info = ModelElementFactory.getInstance().newModelElement(
             IBundleModelElement.class);
-        info.setSymbolicName(project.getName());
         bundle.setBundleInfo(info);
         bundle.setParent(this);
         return bundle;
@@ -715,5 +719,13 @@ public class SigilProject extends AbstractCompoundModelElement implements ISigil
     public IRepositoryManager getRepositoryManager()
     {
         return SigilCore.getRepositoryManager(this);
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.felix.sigil.eclipse.model.project.ISigilProjectModel#exists()
+     */
+    public boolean exists()
+    {
+        return project.exists() && project.getFile(IBldProject.PROJECT_FILE).exists();
     }
 }

@@ -91,7 +91,9 @@ public class SigilClassPathContainer implements IClasspathContainer
         try
         {
             IProgressMonitor monitor = ThreadProgressMonitor.getProgressMonitor();
-            entries = sigil.findExternalClasspath(monitor).toArray(new IClasspathEntry[0]);
+            if (sigil.exists()) {
+                entries = sigil.findExternalClasspath(monitor).toArray(new IClasspathEntry[0]);
+            }
         }
         catch (CoreException e)
         {

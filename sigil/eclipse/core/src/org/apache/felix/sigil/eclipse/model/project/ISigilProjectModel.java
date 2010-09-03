@@ -125,4 +125,9 @@ public interface ISigilProjectModel extends ICompoundModelElement
      * @throws CoreException 
      */
     IRepositoryManager getRepositoryManager();
+
+    /**
+     * @return
+     */
+    boolean exists();
 }

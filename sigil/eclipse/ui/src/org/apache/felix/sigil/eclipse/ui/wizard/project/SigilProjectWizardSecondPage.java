@@ -87,12 +87,16 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
     protected void performFinish(IProgressMonitor monitor) throws CoreException,
         InterruptedException
     {
-        changeToNewProject();
-        updateProject(monitor);
+        boolean updated = changeToNewProject();
+        if (!updated)
+        {
+            updateProject(monitor);
+        }
     }
 
-    private void changeToNewProject()
+    private boolean changeToNewProject()
     {
+        boolean updated = false;
         if (!created)
         {
             IWorkspace workspace = ResourcesPlugin.getWorkspace();
@@ -114,16 +118,20 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
 
             try
             {
-                workspace.run(op, Job.getJobManager().createProgressGroup());
+                workspace.run(op, workspace.getRoot(), IWorkspace.AVOID_UPDATE,
+                    Job.getJobManager().createProgressGroup());
                 setErrorMessage(null);
                 setPageComplete(true);
                 created = true;
+                updated = true;
             }
             catch (CoreException e)
             {
                 SigilCore.error("Failed to run workspace job", e);
             }
         }
+
+        return updated;
     }
 
     private void removeProject()
@@ -163,6 +171,7 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         currentProject = firstPage.getProjectHandle();
         currentProjectLocation = getProjectLocationURI();
 
+        String bsn = firstPage.getBundleSymbolicName();
         String description = firstPage.getDescription();
         Version projectVersion = firstPage.getVersion();
         String vendor = firstPage.getVendor();
@@ -187,8 +196,8 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
 
         configureJavaProject(new SubProgressMonitor(monitor, 3));
 
-        configureSigilProject(currentProject, description, projectVersion, vendor, name,
-            src, monitor);
+        configureSigilProject(currentProject, bsn, description, projectVersion, vendor,
+            name, src, monitor);
     }
 
     private IPath createSourcePath() throws CoreException
@@ -262,10 +271,16 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         return defaultJRELibrary;
     }
 
-    private void configureSigilProject(IProject project, String description,
+    private void configureSigilProject(IProject project, String bsn, String description,
         Version projectVersion, String vendorName, String bundleName, IPath src,
         IProgressMonitor monitor) throws CoreException
     {
+        if (bsn == null)
+        {
+            throw SigilCore.newCoreException("Expected bundle symbolic name to be set",
+                null);
+        }
+        
         ISigilProjectModel sigil = SigilCore.create(project);
         IClasspathEntry cp = JavaCore.newSourceEntry(src);
         String encodedClasspath = sigil.getJavaModel().encodeClasspathEntry(cp);
@@ -273,6 +288,8 @@ public class SigilProjectWizardSecondPage extends JavaCapabilityConfigurationPag
         ISigilBundle bundle = sigil.getBundle();
         bundle.addClasspathEntry(encodedClasspath);
 
+        // fine set up other values
+        bundle.getBundleInfo().setSymbolicName(bsn);
         if (description != null)
         {
             bundle.getBundleInfo().setDescription(description);
