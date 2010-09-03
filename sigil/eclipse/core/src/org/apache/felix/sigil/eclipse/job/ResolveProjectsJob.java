@@ -96,6 +96,9 @@ public class ResolveProjectsJob extends WorkspaceJob
 
     private boolean isDependent(ISigilProjectModel sigilProject)
     {
+        // fix for FELIX-2574
+        if (!sigilProject.exists()) return false;
+        
         if (capabilities == null)
         {
             return true;
