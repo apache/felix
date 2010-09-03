@@ -295,51 +295,53 @@ public class RepositoryPreferences implements IRepositoryPreferences
     {
         RepositoryModel element = new RepositoryModel(id, type);
 
-        String loc = prefs.getString(key + LOC);
+        Properties props = element.getProperties();
+        if ( type.isDynamic()) {
+            String loc = prefs.getString(key + LOC);
 
-        if (loc == null || loc.trim().length() == 0)
-        {
-            loc = makeFileName(element);
-        }
-
-        if (new File(loc).exists())
-        {
-            FileInputStream in = null; 
-            try
+            if (loc == null || loc.trim().length() == 0)
             {
-                in = new FileInputStream(loc);
-                Properties props = element.getProperties();
-                props.load(in);
-                
-                if (type.isDynamic() && !props.containsKey(RepositoryModel.NAME)) {
-                    String name = prefs.getString(key + NAME);
-                    props.setProperty(RepositoryModel.NAME, name);
-                }
-                
-                if (!props.containsKey(IRepositoryConfig.REPOSITORY_PROVIDER)) {
-                    props.put(IRepositoryConfig.REPOSITORY_PROVIDER, type.getProvider());
-                }
+                loc = makeFileName(element);
+            }
 
-            }
-            catch (IOException e)
+            if (new File(loc).exists())
             {
-                SigilCore.error("Failed to load properties for repository " + key, e);
-            }
-            finally {
-                if ( in != null ) {
-                    try
-                    {
-                        in.close();
+                FileInputStream in = null; 
+                try
+                {
+                    in = new FileInputStream(loc);
+                    props.load(in);
+                    
+                    if (type.isDynamic() && !props.containsKey(RepositoryModel.NAME)) {
+                        String name = prefs.getString(key + NAME);
+                        props.setProperty(RepositoryModel.NAME, name);
                     }
-                    catch (IOException e)
-                    {
-                        SigilCore.error("Failed to close properties file " + loc, e);
+                    
+                }
+                catch (IOException e)
+                {
+                    SigilCore.error("Failed to load properties for repository " + key, e);
+                }
+                finally {
+                    if ( in != null ) {
+                        try
+                        {
+                            in.close();
+                        }
+                        catch (IOException e)
+                        {
+                            SigilCore.error("Failed to close properties file " + loc, e);
+                        }
                     }
                 }
             }
         }
 
-        element.getProperties().setProperty("id", id);
+        if (!props.containsKey(IRepositoryConfig.REPOSITORY_PROVIDER)) {
+            props.setProperty(IRepositoryConfig.REPOSITORY_PROVIDER, type.getProvider());
+        }
+
+        props.setProperty("id", id);
 
         return element;
     }
