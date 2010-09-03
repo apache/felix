@@ -263,4 +263,9 @@ $(document).ready(function() {
 		$.cookies.set('felix.webconsole.locale', $(this).attr('alt'));
 		location.reload();
 	});
+	var locale = $.cookies.get('felix.webconsole.locale');
+	if (locale) {
+		if ( !$.datepicker.regional[locale] ) locale = '';
+		$.datepicker.setDefaults($.datepicker.regional[locale]);
+	}
 });
