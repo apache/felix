@@ -38,13 +38,13 @@
   <typedef name="sigil" classname="org.apache.felix.sigil.ivy.SigilResolver" />
 
   <parsers>
-    <sigil-parser config="${ivy.settings.dir}/sigil-repos.properties"
+    <sigil-parser config="${ivy.settings.dir}/sigil-defaults.properties"
     		quiet="true"/>
   </parsers>
 
   <resolvers>
     <sigil name="sigil"
-	   config="${ivy.settings.dir}/sigil-repos.properties"
+	   config="${ivy.settings.dir}/sigil-defaults.properties"
 	   extractBCP="true"
            cache="sigil"/>
 
