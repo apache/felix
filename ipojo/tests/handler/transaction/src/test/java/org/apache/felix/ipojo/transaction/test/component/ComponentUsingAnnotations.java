@@ -11,21 +11,21 @@ public class ComponentUsingAnnotations {
     Transaction transaction;
 
 
-    @org.apache.felix.ipojo.transaction.Transactionnal
+    @org.apache.felix.ipojo.transaction.Transactional
     public void doSomethingBad() throws NullPointerException {
     }
 
-    @org.apache.felix.ipojo.transaction.Transactionnal(propagation="required")
+    @org.apache.felix.ipojo.transaction.Transactional(propagation="required")
     public void doSomethingBad2() throws UnsupportedOperationException {
 
     }
 
-    @org.apache.felix.ipojo.transaction.Transactionnal(propagation="supported", norollbackfor= {"java.lang.Exception"})
+    @org.apache.felix.ipojo.transaction.Transactional(propagation="supported", norollbackfor= {"java.lang.Exception"})
     public void doSomethingGood() {
 
     }
 
-    @org.apache.felix.ipojo.transaction.Transactionnal(timeout=1000, exceptiononrollback=true)
+    @org.apache.felix.ipojo.transaction.Transactional(timeout=1000, exceptiononrollback=true)
     public void doSomethingLong() {
 
     }

@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target(ElementType.METHOD)
-public @interface Transactionnal {
+public @interface Transactional {
 
     /**
      * Sets the transaction timeout.

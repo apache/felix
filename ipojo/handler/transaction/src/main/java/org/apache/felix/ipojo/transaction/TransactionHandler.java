@@ -32,7 +32,7 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
 
     private static final String ONROLLBACK_ATTRIBUTE= "onrollback";
 
-    private static final String TRANSACTIONNAL_ELEMENT = "transactionnal";
+    private static final String TRANSACTIONAL_ELEMENT = "transactional";
 
     private static final String METHOD_ATTRIBUTE = "method";
 
@@ -90,9 +90,9 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
         }
 
 
-        Element[] sub = elements[0].getElements(TRANSACTIONNAL_ELEMENT);
+        Element[] sub = elements[0].getElements(TRANSACTIONAL_ELEMENT);
         if (sub == null  || sub.length == 0) {
-            throw new ConfigurationException("The handler " + NAMESPACE + ":" + NAME + " must have " + TRANSACTIONNAL_ELEMENT + " subelement");
+            throw new ConfigurationException("The handler " + NAMESPACE + ":" + NAME + " must have " + TRANSACTIONAL_ELEMENT + " subelement");
         }
 
         for (int i = 0; i < sub.length; i++) {
