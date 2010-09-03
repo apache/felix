@@ -34,7 +34,7 @@ import org.apache.felix.sigil.utils.GlobCompiler;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 
-public class ProfileManager
+class ProfileManager
 {
     private static final Pattern[] BOOT_DELEGATION_PATTERNS = new Pattern[] {
             GlobCompiler.compile("org.ietf.jgss"), GlobCompiler.compile("org.omg.*"),
@@ -43,7 +43,7 @@ public class ProfileManager
 
     private static HashMap<String, Properties> profiles;
 
-    public static boolean isBootDelegate(ISigilProjectModel project, String packageName)
+    static boolean isBootDelegate(ISigilProjectModel project, String packageName)
     {
         if (packageName.startsWith("java."))
         {
@@ -60,7 +60,7 @@ public class ProfileManager
         return false;
     }
 
-    public static Properties findProfileForVersion(String javaVersion)
+    static Properties findProfileForVersion(String javaVersion)
     {
         Map<String, Properties> profiles = loadProfiles();
 

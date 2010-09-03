@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.sigil.eclipse.property;
+package org.apache.felix.sigil.eclipse.internal.property;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
 import org.eclipse.core.expressions.PropertyTester;

@@ -25,7 +25,7 @@
    <extension
          point="org.eclipse.core.expressions.propertyTesters">
       <propertyTester
-            class="org.apache.felix.sigil.eclipse.property.SigilPropertyTester"
+            class="org.apache.felix.sigil.eclipse.internal.property.SigilPropertyTester"
             id="org.apache.felix.sigil.property.SigilPropertyTester"
             namespace="org.apache.felix.sigil"
             properties="isSigilProject"
