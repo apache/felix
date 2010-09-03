@@ -89,18 +89,19 @@ public class EditorViewPartListener implements IPartListener2
             {
                 IFileEditorInput f = (IFileEditorInput) input;
                 IProject project = f.getFile().getProject();
-                try
-                {
-                    ISigilProjectModel model = SigilCore.create(project);
-                    if (model != null)
+                if ( SigilCore.isSigilProject(project)) {
+                    try
                     {
-                        bundleResolverView.setInput(model);
+                        ISigilProjectModel model = SigilCore.create(project);
+                        if (model != null)
+                        {
+                            bundleResolverView.setInput(model);
+                        }
                     }
-                }
-                catch (CoreException e)
-                {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    catch (CoreException e)
+                    {
+                        SigilCore.error("Failed to update resolver view", e);
+                    }
                 }
             }
         }
