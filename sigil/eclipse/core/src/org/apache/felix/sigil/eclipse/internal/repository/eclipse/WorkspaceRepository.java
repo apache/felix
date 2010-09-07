@@ -39,10 +39,14 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeManager;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 
 public class WorkspaceRepository extends AbstractBundleRepository implements IResourceChangeListener
 {
@@ -88,7 +92,7 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
 
         for (IPackageExport pe : bundle.getBundleInfo().getExports())
         {
-            final String packagePath = pe.getPackageName().replace('.', '/');
+            final String packagePath = pe.getPackageName();
             if (!packages.contains(packagePath))
             {
                 bundle.getBundleInfo().removeExport(pe);
@@ -116,10 +120,9 @@ public class WorkspaceRepository extends AbstractBundleRepository implements IRe
                         IContentType ct = contentTypeManager.findContentTypeFor(f.getName());
                         if (ct != null && ct.isKindOf(javaContentType))
                         {
-                            IPath p = f.getProjectRelativePath();
-                            p = p.removeLastSegments(1);
-                            p = p.removeFirstSegments(1);
-                            packages.add(p.toString());
+                            ICompilationUnit cu = (ICompilationUnit) JavaCore.create(f);
+                            IPackageFragment pf = (IPackageFragment) cu.getAncestor(IJavaElement.PACKAGE_FRAGMENT);
+                            packages.add(pf.getElementName());
                         }
                     }
 
