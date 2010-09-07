@@ -151,28 +151,25 @@ public class Configuration
         // check for Configuration Admin configuration
         try
         {
-            Object service = new ManagedService()
+            Object service = tryToCreateManagedService();
+            if ( service != null )
             {
-                public void updated( Dictionary properties ) throws ConfigurationException
+                // add meta type provider if interfaces are available
+                Object enhancedService = tryToCreateMetaTypeProvider(service);
+                final String[] interfaceNames;
+                if ( enhancedService == null )
                 {
-                    updateFromConfigAdmin(properties);
+                    interfaceNames = new String[] {ManagedService.class.getName()};
                 }
-            };
-            // add meta type provider if interfaces are available
-            Object enhancedService = tryToCreateMetaTypeProvider(service);
-            final String[] interfaceNames;
-            if ( enhancedService == null )
-            {
-                interfaceNames = new String[] {ManagedService.class.getName()};
+                else
+                {
+                    interfaceNames = new String[] {ManagedService.class.getName(), MetaTypeProvider.class.getName()};
+                    service = enhancedService;
+                }
+                Dictionary props = new Hashtable();
+                props.put( Constants.SERVICE_PID, PID );
+                m_managedServiceReg = m_bundleContext.registerService( interfaceNames, service, props );
             }
-            else
-            {
-                interfaceNames = new String[] {ManagedService.class.getName(), MetaTypeProvider.class.getName()};
-                service = enhancedService;
-            }
-            Dictionary props = new Hashtable();
-            props.put( Constants.SERVICE_PID, PID );
-            m_managedServiceReg = m_bundleContext.registerService( interfaceNames, service, props );
         }
         catch ( Throwable t )
         {
@@ -417,7 +414,27 @@ public class Configuration
             return new MetaTypeProviderImpl((ManagedService)managedService,
                     m_cacheSize, m_threadPoolSize, m_timeout, m_requireTopic,
                     m_ignoreTimeout);
-        } catch (Throwable t)
+        }
+        catch (Throwable t)
+        {
+            // we simply ignore this
+        }
+        return null;
+    }
+
+    private Object tryToCreateManagedService()
+    {
+        try
+        {
+            return new ManagedService()
+            {
+                public void updated( Dictionary properties ) throws ConfigurationException
+                {
+                    updateFromConfigAdmin(properties);
+                }
+            };
+        }
+        catch (Throwable t)
         {
             // we simply ignore this
         }
