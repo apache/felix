@@ -1046,9 +1046,10 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     }
 
     public String getName() {
-        if (m_serviceName instanceof String[]) {
+        Object serviceName = m_serviceName;
+        if (serviceName instanceof String[]) {
             StringBuffer sb = new StringBuffer();
-            String[] names = (String[]) m_serviceName;
+            String[] names = (String[]) serviceName;
             for (int i = 0; i < names.length; i++) {
                 if (i > 0) {
                     sb.append(", ");
@@ -1057,11 +1058,17 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
             }
             return sb.toString();
         }
-        else if (m_serviceName instanceof String) {
-            return m_serviceName.toString();
+        else if (serviceName instanceof String) {
+            return serviceName.toString();
         }
         else {
-            return m_implementation.toString();
+            Object implementation = m_implementation;
+            if (implementation != null) {
+                return implementation.toString();
+            }
+            else {
+                return super.toString();
+            }
         }
     }
 
