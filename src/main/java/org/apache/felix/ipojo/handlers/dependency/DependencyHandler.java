@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,32 +52,32 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * Proxy settings property.
      */
     public static final String PROXY_SETTINGS_PROPERTY = "ipojo.proxy";
-    
+
     /**
      * Proxy type property.
      */
     public static final String PROXY_TYPE_PROPERTY = "ipojo.proxy.type";
-    
+
     /**
      * Proxy type value: smart.
      */
     public static final String SMART_PROXY = "smart";
-    
+
     /**
      * Proxy type value: dynamic-proxy.
      */
     public static final String DYNAMIC_PROXY = "dynamic-proxy";
-    
+
     /**
      * Proxy settings value: enabled.
      */
     public static final String PROXY_ENABLED = "enabled";
-    
+
     /**
      * Proxy settings value: disabled.
      */
     public static final String PROXY_DISABLED = "disabled";
-    
+
     /**
      * Dependency field type : Vector
      * The dependency will be injected as a vector.
@@ -89,7 +89,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * The dependency will be injected as a list.
      */
     protected static final int LIST = 1;
-    
+
     /**
      * Dependency Field Type : Set.
      * The dependency will be injected as a set.
@@ -105,7 +105,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * Is the handler started.
      */
     private boolean m_started;
-    
+
     /**
      * The handler description.
      */
@@ -204,7 +204,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * @return true if the dependency is valid
      * @throws ConfigurationException : the checked dependency is not correct
      */
-    private boolean checkDependency(Dependency dep, PojoMetadata manipulation) throws ConfigurationException {       
+    private boolean checkDependency(Dependency dep, PojoMetadata manipulation) throws ConfigurationException {
         // Check the internal type of dependency
         String field = dep.getField();
         DependencyCallback[] callbacks = dep.getCallbacks();
@@ -284,7 +284,16 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             }
             setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
         }
-        
+
+        // Disable proxy on scalar dependency targeting non-interface specification
+        if (! dep.isAggregate()  && dep.isProxy()) {
+        	if (! dep.getSpecification().isInterface()) {
+        		warn("Proxies cannot be used on service dependency targetting non interface " +
+        				"service specification " + dep.getSpecification().getName());
+        		dep.setProxy(false);
+        	}
+        }
+
         // Disables proxy on null (nullable=false)
 //        if (dep.isProxy()  && dep.isOptional() && ! dep.supportsNullable()) {
 //            dep.setProxy(false);
@@ -333,7 +342,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                             + "] are not the same");
                     }
                 }
-            
+
                 try {
                     dep.setSpecification(getInstanceManager().getContext().getBundle().loadClass(className));
                 } catch (ClassNotFoundException e) {
@@ -358,15 +367,15 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
         // Create the dependency according to the component metadata
         Element[] deps = componentMetadata.getElements("Requires");
-        
+
         // Get instance filters.
         Dictionary filtersConfiguration = (Dictionary) configuration.get("requires.filters");
         Dictionary fromConfiguration = (Dictionary) configuration.get("requires.from");
-        
+
         for (int i = 0; deps != null && i < deps.length; i++) {
             // Create the dependency metadata
             String field = deps[i].getAttribute("field");
-            
+
             String serviceSpecification = deps[i].getAttribute("interface");
             // the 'interface' attribute is deprecated
             if (serviceSpecification != null) {
@@ -374,7 +383,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             } else {
                 serviceSpecification = deps[i].getAttribute("specification");
             }
-            
+
             String filter = deps[i].getAttribute("filter");
             String opt = deps[i].getAttribute("optional");
             boolean optional = opt != null && opt.equalsIgnoreCase("true");
@@ -383,10 +392,10 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             String agg = deps[i].getAttribute("aggregate");
             boolean aggregate = agg != null && agg.equalsIgnoreCase("true");
             String identitity = deps[i].getAttribute("id");
-            
+
             String nul = deps[i].getAttribute("nullable");
             boolean nullable = nul == null || nul.equalsIgnoreCase("true");
-            
+
             boolean isProxy = true;
             // Detect proxy default value.
             String setting = getInstanceManager().getContext().getProperty(PROXY_SETTINGS_PROPERTY);
@@ -395,7 +404,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             } else if (setting != null  && PROXY_DISABLED.equals(setting)) {
                 isProxy = false;
             }
-            
+
             String proxy = deps[i].getAttribute("proxy");
             // If proxy == null, use default value
             if (proxy != null) {
@@ -406,9 +415,9 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                         warn("The configuration of a service dependency overrides the proxy mode");
                     }
                     isProxy = true;
-                }   
+                }
             }
-            
+
             String scope = deps[i].getAttribute("scope");
             BundleContext context = getInstanceManager().getContext(); // Get the default bundle context.
             if (scope != null) {
@@ -449,7 +458,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     filter = fromFilter;
                 }
             }
-            
+
             Filter fil = null;
             if (filter != null) {
                 try {
@@ -458,7 +467,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     throw new ConfigurationException("A requirement filter is invalid : " + filter + " - " + e.getMessage());
                 }
             }
-            
+
 
             Class spec = null;
             if (serviceSpecification != null) {
@@ -468,7 +477,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             int policy = DependencyModel.getPolicy(deps[i]);
             Comparator cmp = DependencyModel.getComparator(deps[i], getInstanceManager().getGlobalContext());
 
-            
+
             Dependency dep = new Dependency(this, field, spec, fil, optional, aggregate, nullable, isProxy, identitity, context, policy, cmp, defaultImplem);
 
             // Look for dependency callback :
@@ -510,7 +519,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 }
             }
         }
-        
+
         m_description = new DependencyHandlerDescription(this, m_dependencies); // Initialize the description.
     }
 
@@ -522,7 +531,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         // Start the dependencies
         for (int i = 0; i < m_dependencies.length; i++) {
             Dependency dep = m_dependencies[i];
-           
+
             dep.start();
         }
         // Check the state
