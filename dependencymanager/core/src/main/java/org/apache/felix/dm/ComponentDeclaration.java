@@ -19,24 +19,24 @@
 package org.apache.felix.dm;
 
 /**
- * Describes a service component. Service components form descriptions of services
+ * Describes a component. Component declarations form descriptions of components
  * that are managed by the dependency manager. They can be used to query their state
  * for monitoring tools. The dependency manager shell command is an example of
  * such a tool.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface ServiceComponent {
+public interface ComponentDeclaration {
     /** Names for the states of this component. */
     public static final String[] STATE_NAMES = { "unregistered", "registered" };
     /** State constant for an unregistered component. */
     public static final int STATE_UNREGISTERED = 0;
     /** State constant for a registered component. */
     public static final int STATE_REGISTERED = 1;
-    /** Returns a list of dependencies associated with this service component. */
-    public ServiceComponentDependency[] getComponentDependencies();
-    /** Returns the name of this service component. */
+    /** Returns a list of dependencies associated with this component. */
+    public ComponentDependencyDeclaration[] getComponentDependencies();
+    /** Returns the name of this component. */
     public String getName();
-    /** Returns the state of this service component. */
+    /** Returns the state of this component. */
     public int getState();
 }

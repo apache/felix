@@ -30,15 +30,15 @@ import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceComponentDependency;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
-public class ResourceDependencyImpl extends DependencyBase implements ResourceDependency, ResourceHandler, DependencyActivation, ServiceComponentDependency {
+public class ResourceDependencyImpl extends DependencyBase implements ResourceDependency, ResourceHandler, DependencyActivation, ComponentDependencyDeclaration {
 	private volatile BundleContext m_context;
 	private volatile ServiceRegistration m_registration;
 //	private long m_resourceCounter;
@@ -203,7 +203,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     private void invoke(DependencyService ds, URL serviceInstance, String name) {
         if (name != null) {
             ds.invokeCallbackMethod(getCallbackInstances(ds), name,
-                new Class[][] {{ Service.class, URL.class }, { Service.class, Object.class }, { Service.class },  { URL.class }, { Object.class }, {}},
+                new Class[][] {{ Component.class, URL.class }, { Component.class, Object.class }, { Component.class },  { URL.class }, { Object.class }, {}},
                 new Object[][] {{ ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface() }, { serviceInstance }, { serviceInstance }, {}}
             );
         }

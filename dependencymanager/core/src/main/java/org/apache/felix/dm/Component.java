@@ -24,63 +24,67 @@ import java.util.List;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * Service interface.
+ * Component interface. Components are the main building blocks for OSGi applications.
+ * They can publish themselves as a service, and they can have dependencies. These
+ * dependencies will influence their life cycle as component will only be activated
+ * when all required dependencies are available.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface Service {
+public interface Component {
     /**
-     * Adds a new dependency to this service.
+     * Adds a new dependency to this component.
      * 
      * @param dependency the dependency to add
-     * @return this service
+     * @return this component
      */
-    public Service add(Dependency dependency);
-    public Service add(List dependencies);
+    public Component add(Dependency dependency);
+    public Component add(List dependencies);
     
     /**
-     * Removes a dependency from this service.
+     * Removes a dependency from this component.
      * 
      * @param dependency the dependency to remove
-     * @return this service
+     * @return this component
      */
-    public Service remove(Dependency dependency);
+    public Component remove(Dependency dependency);
 
     /**
-     * Sets the public interface under which this service should be registered
+     * Sets the public interface under which this component should be registered
      * in the OSGi service registry.
      *  
      * @param serviceName the name of the service interface
      * @param properties the properties for this service
-     * @return this service
+     * @return this component
      */
-    public Service setInterface(String serviceName, Dictionary properties);
+    public Component setInterface(String serviceName, Dictionary properties);
     
     /**
-     * Sets the public interfaces under which this service should be registered
+     * Sets the public interfaces under which this component should be registered
      * in the OSGi service registry.
      *  
      * @param serviceNames the names of the service interface
-     * @param properties the properties for this service
-     * @return this service
+     * @param properties the properties for these services
+     * @return this component
      */
-    public Service setInterface(String[] serviceNames, Dictionary properties);
+    public Component setInterface(String[] serviceNames, Dictionary properties);
     
     /**
-     * Sets the implementation for this service. You can actually specify
+     * Sets the implementation for this component. You can actually specify
      * an instance you have instantiated manually, or a <code>Class</code>
      * that will be instantiated using its default constructor when the
-     * required dependencies are resolved (effectively giving you a lazy
-     * instantiation mechanism).
+     * required dependencies are resolved, effectively giving you a lazy
+     * instantiation mechanism.
      * 
      * There are four special methods that are called when found through
-     * reflection to give you some life-cycle management options:
+     * reflection to give you life cycle management options:
      * <ol>
-     * <li><code>init()</code> is invoked right after the instance has been
-     * created, and before any dependencies are resolved, and can be used to
-     * initialize the internal state of the instance</li>
-     * <li><code>start()</code> is invoked after the required dependencies
-     * are resolved and injected, and before the service is registered</li>
+     * <li><code>init()</code> is invoked after the instance has been
+     * created and dependencies have been resolved, and can be used to
+     * initialize the internal state of the instance or even to add more
+     * dependencies based on runtime state</li>
+     * <li><code>start()</code> is invoked right before the service is 
+     * registered</li>
      * <li><code>stop()</code> is invoked right after the service is
      * unregistered</li>
      * <li><code>destroy()</code> is invoked after all dependencies are
@@ -93,10 +97,10 @@ public interface Service {
      * fine-grained control, you can register as a service state listener too.
      * 
      * @param implementation the implementation
-     * @return this service
-     * @see ServiceStateListener
+     * @return this component
+     * @see ComponentStateListener
      */
-    public Service setImplementation(Object implementation);
+    public Component setImplementation(Object implementation);
     
     /**
      * Returns a list of dependencies.
@@ -106,75 +110,92 @@ public interface Service {
     public List getDependencies();
     
     /**
-     * Returns the service registration for this service. The method
+     * Returns the service registration for this component. The method
      * will return <code>null</code> if no service registration is
-     * available.
+     * available, for example if this component is not registered as a
+     * service at all.
      * 
      * @return the service registration
      */
     public ServiceRegistration getServiceRegistration();
     
     /**
-     * Returns the service instance for this service. The method will
-     * return <code>null</code> if no service instance is available.
+     * Returns the component instance for this component. The method will
+     * return <code>null</code> if no component instance is available.
      * 
-     * @return the service instance
+     * @return the component instance
      */
     public Object getService();
 
     /**
-     * Returns the service properties associated with the service.
+     * Returns the service properties associated with the component.
      * 
      * @return the properties or <code>null</code> if there are none
      */
     public Dictionary getServiceProperties();
     
     /**
-     * Sets the service properties associated with the service. If the service
+     * Sets the service properties associated with the component. If the service
      * was already registered, it will be updated.
      * 
      * @param serviceProperties the properties
      */
-    public Service setServiceProperties(Dictionary serviceProperties);
+    public Component setServiceProperties(Dictionary serviceProperties);
     
     /**
      * Sets the names of the methods used as callbacks. These methods, when found, are
-     * invoked as part of the life-cycle management of the service implementation. The
-     * methods should not have any parameters.
+     * invoked as part of the life cycle management of the component implementation. The
+     * dependency manager will look for a method of this name with the following signatures,
+     * in this order:
+     * <ol>
+     * <li>method(Component component)</li>
+     * <li>method()</li>
+     * </ol>
      * 
      * @param init the name of the init method
      * @param start the name of the start method
      * @param stop the name of the stop method
      * @param destroy the name of the destroy method
-     * @return the service instance
+     * @return the component
      */
-    public Service setCallbacks(String init, String start, String stop, String destroy);
-    public Service setCallbacks(Object instance, String init, String start, String stop, String destroy);
+    public Component setCallbacks(String init, String start, String stop, String destroy);
+    /**
+     * Sets the names of the methods used as callbacks. These methods, when found, are
+     * invoked on the specified instance as part of the life cycle management of the component
+     * implementation.
+     * <p>
+     * See setCallbacks(String init, String start, String stop, String destroy) for more
+     * information on the signatures. Specifying an instance means you can create a manager
+     * that will be invoked whenever the life cycle of a component changes and this manager
+     * can then decide how to expose this life cycle to the actual component, offering an
+     * important indirection when developing your own component models.
+     */
+    public Component setCallbacks(Object instance, String init, String start, String stop, String destroy);
 
     // listener
     /**
-     * Adds a service state listener to this service.
+     * Adds a component state listener to this component.
      * 
      * @param listener the state listener
      */
-    public void addStateListener(ServiceStateListener listener);
+    public void addStateListener(ComponentStateListener listener);
 
     /**
-     * Removes a service state listener from this service.
+     * Removes a component state listener from this component.
      * 
      * @param listener the state listener
      */
-    public void removeStateListener(ServiceStateListener listener);
+    public void removeStateListener(ComponentStateListener listener);
     
     /**
-     * Starts the service. This activates the dependency tracking mechanism
-     * for this service.
+     * Starts the component. This activates the dependency tracking mechanism
+     * for this component.
      */
     public void start();
     
     /**
-     * Stops the service. This deactivates the dependency tracking mechanism
-     * for this service.
+     * Stops the component. This deactivates the dependency tracking mechanism
+     * for this component.
      */
     public void stop();
     
@@ -183,28 +204,28 @@ public interface Service {
      * both the factory class and method to invoke. The method should return
      * the implementation, and can use any method to create it. Actually, this
      * can be used together with <code>setComposition</code> to create a
-     * composition of instances that work together to implement a service. The
+     * composition of instances that work together to implement a component. The
      * factory itself can also be instantiated lazily by not specifying an
      * instance, but a <code>Class</code>.
      * 
      * @param factory the factory instance or class
      * @param createMethod the name of the create method
      */
-    public Service setFactory(Object factory, String createMethod);
+    public Component setFactory(Object factory, String createMethod);
 	
 	/**
 	 * Sets the factory to use to create the implementation. You specify the
 	 * method to invoke. The method should return the implementation, and can
 	 * use any method to create it. Actually, this can be used together with
 	 * <code>setComposition</code> to create a composition of instances that
-	 * work together to implement a service.
+	 * work together to implement a component.
 	 * <p>
 	 * Note that currently, there is no default for the factory, so please use
 	 * <code>setFactory(factory, createMethod)</code> instead.
 	 * 
 	 * @param createMethod the name of the create method
 	 */
-	public Service setFactory(String createMethod);
+	public Component setFactory(String createMethod);
 	
 	/**
 	 * Sets the instance and method to invoke to get back all instances that
@@ -215,7 +236,7 @@ public interface Service {
 	 * @param instance the instance that has the method
 	 * @param getMethod the method to invoke
 	 */
-	public Service setComposition(Object instance, String getMethod);
+	public Component setComposition(Object instance, String getMethod);
 	
 	/**
 	 * Sets the method to invoke on the service implementation to get back all
@@ -225,44 +246,44 @@ public interface Service {
 	 * 
 	 * @param getMethod the method to invoke
 	 */
-	public Service setComposition(String getMethod);
+	public Component setComposition(String getMethod);
 	
 	/**
-	 * Returns the composition instances that make up this service, or just the
-	 * service instance if it does not have a composition, or an empty array if
-	 * the service has not even been instantiated.
+	 * Returns the composition instances that make up this component, or just the
+	 * component instance if it does not have a composition, or an empty array if
+	 * the component has not even been instantiated.
 	 */
 	public Object[] getCompositionInstances();
 	
 	/**
-	 * Returns the dependency manager associated with this service.
+	 * Returns the dependency manager associated with this component.
 	 */
 	public DependencyManager getDependencyManager();
 
 	/**
-	 * Configures auto configuration of injected classes in the service instance.
+	 * Configures auto configuration of injected classes in the component instance.
 	 * The following injections are currently performed, unless you explicitly
 	 * turn them off:
 	 * <dl>
 	 * <dt>BundleContext</dt><dd>the bundle context of the bundle</dd>
      * <dt>ServiceRegistration</dt><dd>the service registration used to register your service</dd>
      * <dt>DependencyManager</dt><dd>the dependency manager instance</dd>
-     * <dt>Service</dt><dd>the service instance of the dependency manager</dd>
+     * <dt>Component</dt><dd>the component instance of the dependency manager</dd>
 	 * </dl>
 	 * 
 	 * @param clazz the class (from the list above)
 	 * @param autoConfig <code>false</code> to turn off auto configuration
 	 */
-    public Service setAutoConfig(Class clazz, boolean autoConfig);
+    public Component setAutoConfig(Class clazz, boolean autoConfig);
     
     /**
-     * Configures auto configuration of injected classes in the service instance.
+     * Configures auto configuration of injected classes in the component instance.
      * 
      * @param clazz the class (from the list above)
      * @param instanceName the name of the instance to inject the class into
      * @see setAutoConfig(Class, boolean)
      */
-    public Service setAutoConfig(Class clazz, String instanceName);
+    public Component setAutoConfig(Class clazz, String instanceName);
 
     /**
      * Returns the status of auto configuration of the specified class.

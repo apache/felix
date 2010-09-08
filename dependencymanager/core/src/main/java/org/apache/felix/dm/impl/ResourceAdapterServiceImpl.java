@@ -26,8 +26,8 @@ import java.util.Properties;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceDependency;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 
 /**
  * Resource adapter service implementation. This class extends the FilterService in order to catch
@@ -42,7 +42,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
      * @param dm the dependency manager used to create our internal adapter service
      */
     public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_callbackInstance = callbackInstance;
         m_callbackChanged = callbackChanged;
         m_service.setImplementation(new ResourceAdapterImpl(resourceFilter, propagate))
@@ -53,7 +53,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
     }
 
     public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_callbackInstance = callbackInstance;
         m_callbackChanged = callbackChanged;
         m_service.setImplementation(new ResourceAdapterImpl(resourceFilter, propagateCallbackInstance, propagateCallbackMethod))
@@ -84,7 +84,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
             m_propagateCallbackMethod = propagateCallbackMethod;
         }
 
-        public Service createService(Object[] properties) {
+        public Component createService(Object[] properties) {
             URL resource = (URL) properties[0]; 
             Properties props = new Properties();
             if (m_serviceProperties != null) {
@@ -108,7 +108,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
             } else {
                 resourceDependency.setPropagate(m_propagate);
             }
-            Service service = m_manager.createService()
+            Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
@@ -121,7 +121,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
             }
 
             for (int i = 0; i < m_stateListeners.size(); i ++) {
-                service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
+                service.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
             return service;
         }

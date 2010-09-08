@@ -50,7 +50,7 @@
 						<Bundle-Name>Apache Felix Dependency Manager</Bundle-Name>
 						<Bundle-Description>A bundle that provides a run-time service dependency manager.</Bundle-Description>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-						<Export-Package>org.apache.felix.dm;version="3.0.0"</Export-Package>
+						<Export-Package>org.apache.felix.dm;version="3.0.0",org.apache.felix.dm.tracker;version="3.0.0"</Export-Package>
 						<Import-Package>!org.apache.felix.dm,*</Import-Package>
 						<Private-Package>org.apache.felix.dm.impl,org.apache.felix.dm.impl.dependencies,org.apache.felix.dm.impl.tracker,org.apache.felix.dm.impl.metatype</Private-Package>
 						<!-- Uncomment this line to include source code in the bundle.

@@ -27,12 +27,12 @@ import java.util.List;
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyService;
-import org.apache.felix.dm.ServiceComponentDependency;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
-import org.apache.felix.dm.impl.tracker.BundleTracker;
-import org.apache.felix.dm.impl.tracker.BundleTrackerCustomizer;
+import org.apache.felix.dm.tracker.BundleTracker;
+import org.apache.felix.dm.tracker.BundleTrackerCustomizer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -40,7 +40,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.log.LogService;
 
-public class BundleDependencyImpl extends DependencyBase implements BundleDependency, BundleTrackerCustomizer, ServiceComponentDependency {
+public class BundleDependencyImpl extends DependencyBase implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
 	private final BundleContext m_context;
 	private boolean m_isStarted;
 	private BundleTracker m_tracker;

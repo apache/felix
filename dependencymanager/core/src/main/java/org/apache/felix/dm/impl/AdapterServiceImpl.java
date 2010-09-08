@@ -23,8 +23,8 @@ import java.util.Properties;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -42,7 +42,7 @@ public class AdapterServiceImpl extends FilterService
      */
     public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter)
     {
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_service.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter))
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
@@ -59,7 +59,7 @@ public class AdapterServiceImpl extends FilterService
             m_adapteeFilter = adapteeFilter;
         }
         
-        public Service createService(Object[] properties) {
+        public Component createService(Object[] properties) {
             ServiceReference ref = (ServiceReference) properties[0]; 
             Properties props = new Properties();
             String[] keys = ref.getPropertyKeys();
@@ -81,7 +81,7 @@ public class AdapterServiceImpl extends FilterService
             }
             List dependencies = m_service.getDependencies();
             dependencies.remove(0);
-            Service service = m_manager.createService()
+            Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
@@ -99,7 +99,7 @@ public class AdapterServiceImpl extends FilterService
             }
             
             for (int i = 0; i < m_stateListeners.size(); i ++) {
-                service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
+                service.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
             return service;
         }

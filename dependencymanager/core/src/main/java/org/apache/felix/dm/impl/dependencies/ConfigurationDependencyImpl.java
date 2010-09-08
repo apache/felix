@@ -31,7 +31,7 @@ import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.ServiceComponentDependency;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
@@ -62,7 +62,7 @@ import org.osgi.service.log.LogService;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ConfigurationDependencyImpl extends DependencyBase implements ConfigurationDependency, ManagedService, ServiceComponentDependency, DependencyActivation {
+public class ConfigurationDependencyImpl extends DependencyBase implements ConfigurationDependency, ManagedService, ComponentDependencyDeclaration, DependencyActivation {
 	private BundleContext m_context;
 	private String m_pid;
 	private ServiceRegistration m_registration;

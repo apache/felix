@@ -25,17 +25,17 @@ import java.util.List;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.ServiceRegistration;
 
 /**
  * This class allows to filter a Service interface. All Aspect/Adapters extends this class
  * in order to add functionality to the default Service implementation.
  */
-public class FilterService implements Service
+public class FilterService implements Component
 {
-    protected ServiceImpl m_service;
+    protected ComponentImpl m_service;
     protected List m_stateListeners = new ArrayList();
     protected String m_init = "init";
     protected String m_start = "start";
@@ -50,12 +50,12 @@ public class FilterService implements Service
     protected String m_factoryCreateMethod;
     protected Dictionary m_serviceProperties;
 
-    public FilterService(Service service)
+    public FilterService(Component service)
     {
-        m_service = (ServiceImpl) service;
+        m_service = (ComponentImpl) service;
     }
 
-    public Service add(Dependency dependency)
+    public Component add(Dependency dependency)
     {
         m_service.add(dependency);
         // Add the dependency (if optional) to all already instantiated services.
@@ -71,7 +71,7 @@ public class FilterService implements Service
         return this;
     }
 
-    public Service add(List dependencies)
+    public Component add(List dependencies)
     {
         m_service.add(dependencies);
         // Add the dependencies to all already instantiated services.
@@ -93,7 +93,7 @@ public class FilterService implements Service
         return this;
     }
 
-    public void addStateListener(ServiceStateListener listener)
+    public void addStateListener(ComponentStateListener listener)
     {
         synchronized (this)
         {
@@ -127,7 +127,7 @@ public class FilterService implements Service
         return m_service.getServiceRegistration();
     }
 
-    public Service remove(Dependency dependency)
+    public Component remove(Dependency dependency)
     {
         m_service.remove(dependency);
         // Remove the dependency (if optional) from all already instantiated services.
@@ -144,7 +144,7 @@ public class FilterService implements Service
         return this;
     }
 
-    public void removeStateListener(ServiceStateListener listener)
+    public void removeStateListener(ComponentStateListener listener)
     {
         synchronized (this)
         {
@@ -158,7 +158,7 @@ public class FilterService implements Service
         }
     }
 
-    public synchronized Service setCallbacks(Object instance, String init, String start, String stop,
+    public synchronized Component setCallbacks(Object instance, String init, String start, String stop,
                                              String destroy)
     {
         m_service.ensureNotActive();
@@ -170,13 +170,13 @@ public class FilterService implements Service
         return this;
     }
 
-    public Service setCallbacks(String init, String start, String stop, String destroy)
+    public Component setCallbacks(String init, String start, String stop, String destroy)
     {
         setCallbacks(null, init, start, stop, destroy);
         return this;
     }
 
-    public synchronized Service setComposition(Object instance, String getMethod)
+    public synchronized Component setComposition(Object instance, String getMethod)
     {
         m_service.ensureNotActive();
         m_compositionInstance = instance;
@@ -184,14 +184,14 @@ public class FilterService implements Service
         return this;
     }
 
-    public synchronized Service setComposition(String getMethod)
+    public synchronized Component setComposition(String getMethod)
     {
         m_service.ensureNotActive();
         m_compositionMethod = getMethod;
         return this;
     }
 
-    public synchronized Service setFactory(Object factory, String createMethod)
+    public synchronized Component setFactory(Object factory, String createMethod)
     {
         m_service.ensureNotActive();
         m_factory = factory;
@@ -199,24 +199,24 @@ public class FilterService implements Service
         return this;
     }
 
-    public Service setFactory(String createMethod)
+    public Component setFactory(String createMethod)
     {
         return setFactory(null, createMethod);
     }
 
-    public synchronized Service setImplementation(Object implementation)
+    public synchronized Component setImplementation(Object implementation)
     {
         m_service.ensureNotActive();
         m_serviceImpl = implementation;
         return this;
     }
 
-    public Service setInterface(String serviceName, Dictionary properties)
+    public Component setInterface(String serviceName, Dictionary properties)
     {
         return setInterface(new String[] { serviceName }, properties);
     }
 
-    public synchronized Service setInterface(String[] serviceInterfaces, Dictionary properties) {
+    public synchronized Component setInterface(String[] serviceInterfaces, Dictionary properties) {
         m_service.ensureNotActive();
         if (serviceInterfaces != null) {
             m_serviceInterfaces = new String[serviceInterfaces.length];
@@ -226,7 +226,7 @@ public class FilterService implements Service
         return this;
     }
 
-    public Service setServiceProperties(Dictionary serviceProperties)
+    public Component setServiceProperties(Dictionary serviceProperties)
     {
         synchronized (this)
         {
@@ -261,12 +261,12 @@ public class FilterService implements Service
         return m_service.getDependencyManager();
     }
 
-    public Service setAutoConfig(Class clazz, boolean autoConfig) {
+    public Component setAutoConfig(Class clazz, boolean autoConfig) {
         m_service.setAutoConfig(clazz, autoConfig);
         return this;
     }
 
-    public Service setAutoConfig(Class clazz, String instanceName) {
+    public Component setAutoConfig(Class clazz, String instanceName) {
         m_service.setAutoConfig(clazz, instanceName);
         return this;
     }
