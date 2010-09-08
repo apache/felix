@@ -22,7 +22,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 
 public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
@@ -45,7 +45,7 @@ public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
         String changed = srvMeta.getString(Params.changed, null /* no change callback if not specified explicitly */);
-        Service srv = dm.createResourceAdapterService(filter, propagate, null, changed);
+        Component srv = dm.createResourceAdapterService(filter, propagate, null, changed);
         srv.setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)

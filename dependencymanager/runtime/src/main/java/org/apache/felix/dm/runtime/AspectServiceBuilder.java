@@ -22,7 +22,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
@@ -52,7 +52,7 @@ public class AspectServiceBuilder extends ServiceComponentBuilder
         Object implClass = b.loadClass(implClassName);        
         String field = srvMeta.getString(Params.field, null);  
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
-        Service service = dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
+        Component service = dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
                             .setServiceProperties(aspectProperties);
         if (factoryMethod == null)
         {

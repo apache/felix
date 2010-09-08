@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
@@ -341,7 +341,7 @@ public class FactorySet extends AbstractSet<Dictionary>
             try
             {
                 // Create the Service / impl
-                Service s = m_dm.createService();
+                Component s = m_dm.createComponent();
                 Class implClass = m_bundle.loadClass(m_srvMeta.getString(Params.impl));
                 String factoryMethod = m_srvMeta.getString(Params.factoryMethod, null);
                 if (factoryMethod == null)
@@ -418,7 +418,7 @@ public class FactorySet extends AbstractSet<Dictionary>
             if (m_provide != null)
             {
                 Dictionary settings = mergeSettings(m_serviceProperties, configuration);
-                ((Service) service).setServiceProperties(settings);
+                ((Component) service).setServiceProperties(settings);
             }
         }
     }
@@ -430,7 +430,7 @@ public class FactorySet extends AbstractSet<Dictionary>
         Object service = m_services.remove(serviceKey);
         if (service != null && service != SERVICE_CREATING)
         {
-            m_dm.remove((Service) service);
+            m_dm.remove((Component) service);
         }
     }
 
@@ -440,9 +440,9 @@ public class FactorySet extends AbstractSet<Dictionary>
         {
             for (Object service: m_services.values())
             {
-                if (service instanceof Service)
+                if (service instanceof Component)
                 {
-                    m_dm.remove((Service) service);
+                    m_dm.remove((Component) service);
                 }
             }
         }
