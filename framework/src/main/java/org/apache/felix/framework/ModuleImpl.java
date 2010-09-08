@@ -39,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import org.apache.felix.framework.Felix.FelixResolver;
 import org.apache.felix.framework.cache.JarContent;
@@ -57,6 +56,7 @@ import org.apache.felix.framework.resolver.WireImpl;
 import org.apache.felix.framework.resolver.WireModuleImpl;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.IteratorToEnumeration;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
@@ -990,7 +990,7 @@ public class ModuleImpl implements Module
 
     private Enumeration getResourcesLocal(String name)
     {
-        Vector v = new Vector();
+        List l = new ArrayList();
 
         // Special case "/" so that it returns a root URLs for
         // each bundle class path entry...this isn't very
@@ -1000,7 +1000,7 @@ public class ModuleImpl implements Module
         {
             for (int i = 0; i < contentPath.length; i++)
             {
-                v.addElement(createURL(i + 1, name));
+                l.add(createURL(i + 1, name));
             }
         }
         else
@@ -1020,12 +1020,12 @@ public class ModuleImpl implements Module
                     // that we can differentiate between module content URLs
                     // (where the path will start with 0) and module class
                     // path URLs.
-                    v.addElement(createURL(i + 1, name));
+                    l.add(createURL(i + 1, name));
                 }
             }
         }
 
-        return v.elements();
+        return new IteratorToEnumeration(l.iterator());
     }
 
     // TODO: API: Investigate how to handle this better, perhaps we need
