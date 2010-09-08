@@ -22,7 +22,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 
 /**
@@ -48,7 +48,7 @@ public class AdapterServiceBuilder extends ServiceComponentBuilder
         Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.properties, null);
         Class<?> adapteeService = b.loadClass(srvMeta.getString(Params.adapteeService));
         String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);     
-        Service service = dm.createAdapterService(adapteeService, adapteeFilter);
+        Component service = dm.createAdapterService(adapteeService, adapteeFilter);
         service.setInterface(provides, adapterProperties);
         
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
