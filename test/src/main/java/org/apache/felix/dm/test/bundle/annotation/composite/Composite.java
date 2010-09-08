@@ -16,7 +16,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 /**
  * The CompositeService is also made up of this Class.
  */
-public class Component
+public class Composite
 {
     // Injected dependency (from CompositeService)
     private Sequencer m_sequencer;

@@ -28,9 +28,12 @@ import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
-public class ServiceBuilder extends ServiceComponentBuilder
+/**
+ * Builds a DependencyManager Component.
+ */
+public class ComponentBuilder extends AbstractBuilder
 {
-    private final static String TYPE = "Service";
+    private final static String TYPE = "Component";
     private final static String DM_FACTORY_NAME = "dm.factory.name";
 
     @Override
@@ -40,7 +43,7 @@ public class ServiceBuilder extends ServiceComponentBuilder
     }
 
     @Override
-    public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
         Component service = dm.createComponent();
@@ -50,7 +53,7 @@ public class ServiceBuilder extends ServiceComponentBuilder
         if (factory == null)
         {
             Log.instance().log(LogService.LOG_INFO, 
-                               "ServiceBuilder: building service %s with dependencies %s",
+                               "ComponentBuilder: building service %s with dependencies %s",
                                srvMeta, depsMeta);
 
             String impl = srvMeta.getString(Params.impl);
@@ -79,7 +82,7 @@ public class ServiceBuilder extends ServiceComponentBuilder
         else
         {
             Log.instance().log(LogService.LOG_INFO, 
-                               "ServiceBuilder: providing factory set for service %s with dependencies %s",
+                               "ComponentBuilder: providing factory set for service %s with dependencies %s",
                                srvMeta, depsMeta);
 
             // We don't instantiate the service, but instead we provide a Set in the registry.

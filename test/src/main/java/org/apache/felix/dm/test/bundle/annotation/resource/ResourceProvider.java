@@ -28,7 +28,7 @@ import junit.framework.Assert;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.annotation.api.Destroy;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -37,7 +37,7 @@ import org.osgi.framework.InvalidSyntaxException;
 /**
  * Provides some simple resources.
  */
-@Service
+@Component
 public class ResourceProvider
 {
     private volatile BundleContext m_context;

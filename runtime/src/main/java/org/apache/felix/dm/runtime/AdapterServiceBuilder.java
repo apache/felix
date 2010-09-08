@@ -28,7 +28,7 @@ import org.osgi.framework.Bundle;
 /**
  * Builded called when the JSON parser find an adapter service descriptor.
  */
-public class AdapterServiceBuilder extends ServiceComponentBuilder
+public class AdapterServiceBuilder extends AbstractBuilder
 {
     /** The type attribute specified in the JSON descriptor */
     private final static String TYPE = "AdapterService";
@@ -40,7 +40,7 @@ public class AdapterServiceBuilder extends ServiceComponentBuilder
     }
 
     @Override
-    public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
         Class<?> adapterImplClass = b.loadClass(srvMeta.getString(Params.impl));

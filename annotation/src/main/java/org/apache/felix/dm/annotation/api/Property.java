@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation used to describe a property key-value pair. It is used when
- * declaring {@link Service#properties()} attribute.
+ * declaring {@link Component#properties()} attribute.
  */
 @Retention(RetentionPolicy.CLASS)
 @Target( { ElementType.ANNOTATION_TYPE })

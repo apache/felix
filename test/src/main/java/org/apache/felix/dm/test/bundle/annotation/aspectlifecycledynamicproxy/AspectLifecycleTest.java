@@ -18,13 +18,13 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.aspectlifecycledynamicproxy;
 
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 
 /**
  * Tests an aspect service, and ensure that its lifecycle methods are properly invoked (init/start/stop/destroy)
  */
-@Service
+@Component
 public class AspectLifecycleTest
 {
     @ServiceDependency

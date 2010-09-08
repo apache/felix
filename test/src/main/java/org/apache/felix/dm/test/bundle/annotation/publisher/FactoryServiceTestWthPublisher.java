@@ -27,7 +27,7 @@ import java.util.Set;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.LifecycleController;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -42,7 +42,7 @@ public class FactoryServiceTestWthPublisher
     {
     }
 
-    @Service
+    @Component
     public static class Consumer
     {
         @ServiceDependency(filter="(test=FactoryServiceTestWthPublisher)")
@@ -72,7 +72,7 @@ public class FactoryServiceTestWthPublisher
         }
     }
    
-    @Service(factorySet="MyFactory", properties={@Property(name="foo", value="bar")})
+    @Component(factorySet="MyFactory", properties={@Property(name="foo", value="bar")})
     public static class ProviderImpl implements Provider
     {
         @LifecycleController
@@ -102,7 +102,7 @@ public class FactoryServiceTestWthPublisher
         }
     }
     
-    @Service
+    @Component
     public static class ProviderImplFactory 
     {
         @ServiceDependency(filter="(dm.factory.name=MyFactory)")

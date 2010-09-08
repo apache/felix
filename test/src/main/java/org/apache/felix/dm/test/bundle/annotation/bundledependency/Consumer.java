@@ -19,7 +19,7 @@
 package org.apache.felix.dm.test.bundle.annotation.bundledependency;
 
 import org.apache.felix.dm.annotation.api.Destroy;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.BundleDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
@@ -30,7 +30,7 @@ import org.osgi.framework.Bundle;
 /**
  * Simple Consumer which has a BundleDependency dependency.
  */
-@Service
+@Component
 public class Consumer
 {
     protected volatile boolean m_added;

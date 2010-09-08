@@ -25,7 +25,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 
-public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
+public class ResourceAdapterServiceBuilder extends AbstractBuilder
 {
     private final static String TYPE = "ResourceAdapterService";
 
@@ -36,7 +36,7 @@ public class ResourceAdapterServiceBuilder extends ServiceComponentBuilder
     }
 
     @Override
-    public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
         throws Exception
     {
         String filter = srvMeta.getString(Params.filter, null);

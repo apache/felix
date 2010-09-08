@@ -28,7 +28,7 @@ import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -44,7 +44,7 @@ public class FactoryConfigurationAdapterServiceTestWithPublisher
     {
     }
 
-    @Service
+    @Component
     public static class Consumer
     {
         @ServiceDependency(filter="(test=FactoryConfigurationAdapterServiceTestWithPublisher)")
@@ -77,7 +77,7 @@ public class FactoryConfigurationAdapterServiceTestWithPublisher
         }
     }
     
-    @Service
+    @Component
     public static class Configurator
     {
         @ServiceDependency

@@ -21,7 +21,7 @@ package org.apache.felix.dm.samples.annotation;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -35,9 +35,9 @@ import org.osgi.service.log.LogService;
  * To create a Dictionary Service, you have to go the the web console and define a "Dictionary Services" factory
  * configuration instance, which will fire an instantiation of the corresponding dictionary service.
  */
-@Service(provides={SpellChecker.class}, 
-         properties={@Property(name=CommandProcessor.COMMAND_SCOPE, value="dmsample.annotation"),
-                     @Property(name=CommandProcessor.COMMAND_FUNCTION, values={"spellcheck"})})
+@Component(provides={SpellChecker.class}, 
+           properties={@Property(name=CommandProcessor.COMMAND_SCOPE, value="dmsample.annotation"),
+                       @Property(name=CommandProcessor.COMMAND_FUNCTION, values={"spellcheck"})})
 public class SpellChecker
 {
     /**

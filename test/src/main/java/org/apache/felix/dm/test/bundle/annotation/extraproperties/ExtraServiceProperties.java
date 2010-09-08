@@ -21,7 +21,7 @@ package org.apache.felix.dm.test.bundle.annotation.extraproperties;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
@@ -37,7 +37,7 @@ public class ExtraServiceProperties
     {
     }
 
-    @Service(properties={@Property(name="foo", value="bar")})
+    @Component(properties={@Property(name="foo", value="bar")})
     public static class ProviderImpl implements Provider
     {
         @Start
@@ -47,7 +47,7 @@ public class ExtraServiceProperties
         }
     }
     
-    @Service
+    @Component
     public static class Consumer
     {
         @ServiceDependency(filter="(test=ExtraServiceProperties)")

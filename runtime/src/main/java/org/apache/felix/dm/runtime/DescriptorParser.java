@@ -36,9 +36,9 @@ import org.osgi.service.log.LogService;
  */
 public class DescriptorParser
 {
-    private Map<String, ServiceComponentBuilder> m_builders = new HashMap<String, ServiceComponentBuilder>();
+    private Map<String, AbstractBuilder> m_builders = new HashMap<String, AbstractBuilder>();
 
-    public void addBuilder(ServiceComponentBuilder sb)
+    public void addBuilder(AbstractBuilder sb)
     {
         m_builders.put(sb.getType(), sb);
     }
@@ -54,7 +54,7 @@ public class DescriptorParser
         JSONMetaData serviceMetaData = new JSONMetaData(json);
 
         String type = (String) json.get("type");
-        ServiceComponentBuilder builder = m_builders.get(type);
+        AbstractBuilder builder = m_builders.get(type);
         if (builder == null)
         {
             throw new IllegalArgumentException("Invalid descriptor"
@@ -71,6 +71,6 @@ public class DescriptorParser
         }
 
         // and Invoke the builder
-        builder.buildService(serviceMetaData, serviceDependencies, b, dm);
+        builder.build(serviceMetaData, serviceDependencies, b, dm);
     }
 }

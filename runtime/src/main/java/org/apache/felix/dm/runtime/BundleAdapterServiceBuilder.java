@@ -25,7 +25,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 
-public class BundleAdapterServiceBuilder extends ServiceComponentBuilder
+public class BundleAdapterServiceBuilder extends AbstractBuilder
 {
     private final static String TYPE = "BundleAdapterService";
 
@@ -36,7 +36,7 @@ public class BundleAdapterServiceBuilder extends ServiceComponentBuilder
     }
 
     @Override
-    public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
         throws Exception
     {
         int stateMask = srvMeta.getInt(Params.stateMask, Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE);

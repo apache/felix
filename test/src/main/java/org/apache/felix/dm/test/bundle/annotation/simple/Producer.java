@@ -18,7 +18,7 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.simple;
 
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
@@ -27,7 +27,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 /**
  * Provides a <code>Runnable</code> service, which is required by the {@link Consumer} class.
  */
-@Service
+@Component
 public class Producer implements Runnable
 {
     @ServiceDependency

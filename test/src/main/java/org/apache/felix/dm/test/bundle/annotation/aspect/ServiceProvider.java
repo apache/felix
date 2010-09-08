@@ -18,11 +18,11 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.aspect;
 
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-@Service
+@Component
 public class ServiceProvider implements ServiceInterface
 {
     @ServiceDependency(filter = "(test=aspect.ServiceProvider)")

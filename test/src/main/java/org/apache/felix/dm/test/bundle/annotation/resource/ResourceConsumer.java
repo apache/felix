@@ -23,7 +23,7 @@ import java.net.URL;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.annotation.api.ResourceDependency;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -32,7 +32,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 /**
  * A Component which has a resource dependency.
  */
-@Service
+@Component
 public class ResourceConsumer
 {
     @ServiceDependency(required=true,filter = "(test=resource)")

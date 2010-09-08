@@ -19,13 +19,13 @@
 package org.apache.felix.dm.test.bundle.annotation.multiple;
 
 import org.apache.felix.dm.annotation.api.Composition;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-@Service(provides = { ServiceProvider2.class }, factoryMethod="create")
+@Component(provides = { ServiceProvider2.class }, factoryMethod="create")
 public class ServiceProvider2
 {
     Composite m_composite = new Composite();
