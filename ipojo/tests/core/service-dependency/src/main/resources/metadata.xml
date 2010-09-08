@@ -1,5 +1,5 @@
 <ipojo>
-<!-- 
+<!--
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
   xmlns="org.apache.felix.ipojo"
@@ -9,7 +9,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="FooProviderType-1" architecture="true">
     <provides />
   </component>
-  
+
   <!--  Simple Dependencies -->
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CheckServiceProvider"
@@ -71,7 +71,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CheckServiceProvider"
     name="ProxiedSimpleCheckServiceProvider" architecture="true">
@@ -132,7 +132,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
 
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CheckServiceProvider"
@@ -296,7 +296,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CheckServiceProvider"
     name="ProxiedSimpleOptionalCheckServiceProvider" architecture="true">
@@ -356,8 +356,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       <callback type="unbind" method="propertiesDictionaryUnbind" />
     </requires>
     <provides />
-  </component>	
-  
+  </component>
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CheckServiceProvider"
     name="BothOptionalNoNullableCheckServiceProvider" architecture="true">
@@ -582,7 +582,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     <requires field="fs" />
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.MultipleCheckService"
     name="VoidMultipleCheckServiceProvider" architecture="true">
@@ -637,7 +637,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.MultipleCheckService"
     name="BothMultipleCheckServiceProvider" architecture="true">
@@ -674,7 +674,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.MultipleCheckService"
     name="DictMultipleCheckServiceProvider" architecture="true" >
@@ -693,7 +693,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.MethodMultipleCheckService"
     name="MObjectMultipleCheckServiceProvider" architecture="true">
@@ -780,7 +780,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.MultipleCheckService"
     name="ProxiedSimpleOptionalMultipleCheckServiceProvider"
@@ -818,7 +818,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.MethodMultipleCheckService"
     name="MObjectOptionalMultipleCheckServiceProvider"
@@ -841,7 +841,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  
+
   <!-- Aggregate dependency as List -->
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.ListCheckService"
@@ -854,7 +854,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     classname="org.apache.felix.ipojo.test.scenarios.component.ListCheckService"
     name="OptionalListCheckServiceProvider"
     architecture="true">
-    <requires proxy="false" 
+    <requires proxy="false"
       specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true" />
     <provides />
   </component>
@@ -871,7 +871,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true" />
     <provides />
   </component>
-  
+
   <!-- Aggregate dependency as Vector -->
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.VectorCheckService"
@@ -889,7 +889,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true" />
     <provides />
   </component>
-  
+
   <!-- Aggregate dependency as Set -->
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.SetCheckService"
@@ -917,7 +917,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true" />
     <provides />
   </component>
-  
+
   <!-- Aggregate dependency as Collection -->
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CollectionCheckService"
@@ -935,7 +935,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     classname="org.apache.felix.ipojo.test.scenarios.component.CollectionCheckService"
     name="OptionalCollectionCheckServiceProvider"
     architecture="true">
-    <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true" 
+    <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true"
       proxy="false"
     />
     <provides />
@@ -944,22 +944,22 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     classname="org.apache.felix.ipojo.test.scenarios.component.CollectionCheckService"
     name="ProxiedOptionalCollectionCheckServiceProvider"
     architecture="true">
-    <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true" 
+    <requires specification="org.apache.felix.ipojo.test.scenarios.service.dependency.service.FooService" field="fs" optional="true"
       proxy="false"
     />
     <provides />
   </component>
-  
-  
+
+
   <!-- Modify method test -->
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType2"
     name="FooProviderType-Updatable" architecture="true">
     <provides>
-      <property name="foo" field="m_foo" value="foo"/> 
+      <property name="foo" field="m_foo" value="foo"/>
     </provides>
   </component>
-  
+
   <component
     classname="org.apache.felix.ipojo.test.scenarios.component.CheckServiceProvider"
     name="VoidModifyCheckServiceProvider" architecture="true">
@@ -1034,7 +1034,15 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       <provides/>
       <requires field="fs" optional="true"/>
       <callback transition="validate" method="start"/>
-    <callback transition="invalidate" method="stop"/>  
+    <callback transition="invalidate" method="stop"/>
   </component>
-  
+
+  <component
+  	classname="org.apache.felix.ipojo.test.scenarios.service.dependency.proxy.CheckServiceUsingStringService"
+  	immediate="true">
+    <provides/>
+    <requires field="string"/>
+    <requires field="map"/>
+  </component>
+
 </ipojo>
