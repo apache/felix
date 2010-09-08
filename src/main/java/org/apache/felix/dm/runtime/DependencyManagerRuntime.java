@@ -58,7 +58,7 @@ public class DependencyManagerRuntime implements SynchronousBundleListener
         
         // Instantiates our descriptor parser, and register our service builders into it.
         m_parser = new DescriptorParser();
-        m_parser.addBuilder(new ServiceBuilder());
+        m_parser.addBuilder(new ComponentBuilder());
         m_parser.addBuilder(new AspectServiceBuilder());
         m_parser.addBuilder(new AdapterServiceBuilder());
         m_parser.addBuilder(new BundleAdapterServiceBuilder());
