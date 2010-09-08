@@ -7,7 +7,7 @@ import org.osgi.service.log.LogService;
 
 public class Activator extends DependencyActivatorBase {
     public void init(BundleContext context, DependencyManager manager) throws Exception {
-        manager.add(createService()
+        manager.add(createComponent()
             .setImplementation(DataGenerator.class)
             .add(createServiceDependency()
                 .setService(Store.class)

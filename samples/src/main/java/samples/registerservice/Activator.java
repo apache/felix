@@ -6,7 +6,7 @@ import org.osgi.framework.BundleContext;
 
 public class Activator extends DependencyActivatorBase {
     public void init(BundleContext context, DependencyManager manager) throws Exception {
-        manager.add(createService()
+        manager.add(createComponent()
             .setInterface(Store.class.getName(), null)
             .setImplementation(MemoryStore.class)
         );
