@@ -53,6 +53,9 @@ public class ConvertProjectCommandHandler implements IResourceCommandHandler
                         SigilCore.makeSigilProject(project, monitor);
                         IJavaProject java = JavaCore.create(project);
                         ISigilProjectModel sigil = SigilCore.create(project);
+                        String bsn = project.getName();
+                        sigil.getBundle().getBundleInfo().setSymbolicName(bsn);
+
                         IClasspathEntry[] entries = java.getRawClasspath();
                         for (int i = 0; i < entries.length; i++)
                         {
@@ -73,5 +76,4 @@ public class ConvertProjectCommandHandler implements IResourceCommandHandler
 
         return null;
     }
-
 }
