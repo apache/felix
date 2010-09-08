@@ -26,7 +26,7 @@ import junit.framework.Assert;
 
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -35,7 +35,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 /**
  * This service will be instantiated by our MyServiceFactory class.
  */
-@Service(factorySet = "MyServiceFactory", 
+@Component(factorySet = "MyServiceFactory", 
          factoryConfigure = "configure", properties = { @Property(name = "foo", value = "bar") })
 public class MyService implements MyServiceInterface
 {

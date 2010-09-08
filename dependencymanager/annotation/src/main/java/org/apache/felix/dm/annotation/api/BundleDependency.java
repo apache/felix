@@ -62,4 +62,14 @@ public @interface BundleDependency
      * the service properties.
      */
     boolean propagate() default false;
+    
+    /**
+     * The name used when dynamically configuring this dependency from the init method.
+     * Specifying this attribute allows to dynamically configure the dependency 
+     * <code>filter</code> and <code>required</code> flag from the Service's init method.
+     * All unnamed dependencies will be injected before the init() method; so from the init() method, you can
+     * then pick up whatever information needed from already injected (unnamed) dependencies, and configure dynamically
+     * your named dependencies, which will then be calculated once the init() method returns.
+     */
+    String name() default "";
 }

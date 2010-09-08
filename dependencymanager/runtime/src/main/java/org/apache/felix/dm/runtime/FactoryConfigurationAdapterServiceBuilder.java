@@ -25,7 +25,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 
-public class FactoryConfigurationAdapterServiceBuilder extends ServiceComponentBuilder
+public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
 {
     private final static String TYPE = "FactoryConfigurationAdapterService";
 
@@ -36,7 +36,7 @@ public class FactoryConfigurationAdapterServiceBuilder extends ServiceComponentB
     }
 
     @Override
-    public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
         throws Exception
     {
         Class<?> implClass = b.loadClass(srvMeta.getString(Params.impl));

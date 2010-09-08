@@ -26,7 +26,7 @@ import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
-public class AspectServiceBuilder extends ServiceComponentBuilder
+public class AspectServiceBuilder extends AbstractBuilder
 {
     private final static String TYPE = "AspectService";
 
@@ -37,7 +37,7 @@ public class AspectServiceBuilder extends ServiceComponentBuilder
     }
 
     @Override
-    public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
         throws Exception
     {
         Log.instance().log(LogService.LOG_INFO,

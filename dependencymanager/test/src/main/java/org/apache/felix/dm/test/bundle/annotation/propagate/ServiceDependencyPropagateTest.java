@@ -21,7 +21,7 @@ package org.apache.felix.dm.test.bundle.annotation.propagate;
 import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -31,7 +31,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
  */
 public class ServiceDependencyPropagateTest
 {
-    @Service
+    @Component
     public static class Consumer {
         private Map m_producerProps;
 
@@ -55,14 +55,14 @@ public class ServiceDependencyPropagateTest
         }
     }
     
-    @Service(provides={Producer.class}, properties={@Property(name="foo", value="bar")})
+    @Component(provides={Producer.class}, properties={@Property(name="foo", value="bar")})
     public static class Producer {
         @ServiceDependency(propagate=true)
         Producer2 m_producer;
     }
     
 
-    @Service(provides={Producer2.class}, properties={@Property(name="foo2", value="bar2")})
+    @Component(provides={Producer2.class}, properties={@Property(name="foo2", value="bar2")})
     public static class Producer2 {
     }
 }

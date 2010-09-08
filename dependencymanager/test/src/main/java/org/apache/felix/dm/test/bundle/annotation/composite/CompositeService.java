@@ -17,7 +17,7 @@ import java.util.Map;
 import org.apache.felix.dm.annotation.api.Composition;
 import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.Init;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -26,11 +26,11 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 /**
  * This service is also composed of the Component object.
  */
-@Service
+@Component
 public class CompositeService
 {
     /* We are composed of this object, which will also be injected with our dependencies */
-    private Component m_component = new Component();
+    private Composite m_composite = new Composite();
 
     /* This dependency filter will be configured from our init method */
     @ServiceDependency(name = "D")
@@ -63,7 +63,7 @@ public class CompositeService
     @Composition
     Object[] getComposition()
     {
-        return new Object[] { this, m_component };
+        return new Object[] { this, m_composite };
     }
 
     /** 

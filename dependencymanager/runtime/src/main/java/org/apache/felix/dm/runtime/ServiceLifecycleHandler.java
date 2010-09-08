@@ -310,7 +310,6 @@ public class ServiceLifecycleHandler
     private void callbackComposites(Component service, String callback)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        Object serviceInstance = service.getService();
         Object[] composites = service.getCompositionInstances();
         for (Object composite: composites)
         {

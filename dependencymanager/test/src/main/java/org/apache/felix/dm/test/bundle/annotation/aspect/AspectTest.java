@@ -18,10 +18,10 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.aspect;
 
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 
-@Service
+@Component
 public class AspectTest
 {
     @ServiceDependency

@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.AdapterService;
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -43,7 +43,7 @@ public class ExtraAdapterServiceProperties
     }
 
 
-    @Service(properties={@Property(name="foo", value="bar")})
+    @Component(properties={@Property(name="foo", value="bar")})
     public static class ProviderImpl implements Provider
     {
     }
@@ -60,7 +60,7 @@ public class ExtraAdapterServiceProperties
         }
     }
     
-    @Service
+    @Component
     public static class Consumer
     {
         @ServiceDependency(filter="(test=ExtraAdapterServiceProperties)")

@@ -18,21 +18,18 @@
  */
 package org.apache.felix.dm.runtime;
 
-import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.List;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
- * The builder which creates a DependencyManager Service (a Service and all its derived classes (Aspect/Adapters).
+ * base class for all kind of DM component builders (for Component, Aspect, Adapters ...).
  */
-public abstract class ServiceComponentBuilder
+public abstract class AbstractBuilder
 {
     /**
      * Returns the service component type.
@@ -44,7 +41,7 @@ public abstract class ServiceComponentBuilder
      * @param serviceMetaData the service component metadata parsed from the descriptor file.
      * @param serviceDependencies the service component dependencies metadata parsed from the descriptor file.
      */
-    abstract void buildService(MetaData serviceMetaData, List<MetaData> serviceDependencies, Bundle b,
+    abstract void build(MetaData serviceMetaData, List<MetaData> serviceDependencies, Bundle b,
         DependencyManager dm)
         throws Exception;
 

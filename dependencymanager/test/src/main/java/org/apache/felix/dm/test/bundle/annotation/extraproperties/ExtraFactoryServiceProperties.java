@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -36,7 +36,7 @@ public class ExtraFactoryServiceProperties
     {
     }
 
-    @Service(properties={@Property(name="foo", value="bar")}, factorySet="MyFactory")
+    @Component(properties={@Property(name="foo", value="bar")}, factorySet="MyFactory")
     public static class ProviderImpl implements Provider
     {
         @Start
@@ -46,7 +46,7 @@ public class ExtraFactoryServiceProperties
         }
     }
     
-    @Service
+    @Component
     public static class ProviderImplFactory
     {
         @ServiceDependency
@@ -59,7 +59,7 @@ public class ExtraFactoryServiceProperties
         }
     }
     
-    @Service
+    @Component
     public static class Consumer
     {
         @ServiceDependency(filter="(test=ExtraFactoryServiceProperties)")

@@ -20,10 +20,10 @@ package org.apache.felix.dm.test.bundle.annotation.factoryconfadapter;
 
 import java.util.Map;
 
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 
-@Service
+@Component
 public class ServiceClient
 {
     @ServiceDependency(changed="changeServiceProvider")

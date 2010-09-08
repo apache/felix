@@ -5,7 +5,7 @@ package org.apache.felix.dm.annotation.plugin.bnd;
  */
 public enum EntryType
 {
-    Service, 
+    Component, 
     AspectService,
     AdapterService,
     BundleAdapterService,

@@ -12,11 +12,11 @@
 package org.apache.felix.dm.test.bundle.annotation.composite;
 
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-@Service(properties = @Property(name = "foo", value = "bar1"))
+@Component(properties = @Property(name = "foo", value = "bar1"))
 public class Dependency1 implements Runnable
 {
     @ServiceDependency
