@@ -37,14 +37,14 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class ServiceImpl implements Service
 {
-    private org.apache.felix.dm.Service m_delegate;
+    private org.apache.felix.dm.Component m_delegate;
     private Map m_stateListeners = new HashMap();
     private ArrayList m_dependencies = new ArrayList();
 
     public ServiceImpl(DependencyManager dm)
     {
         org.apache.felix.dm.DependencyManager dmDelegate = (org.apache.felix.dm.DependencyManager) dm.getDelegate();
-        m_delegate = dmDelegate.createService();
+        m_delegate = dmDelegate.createComponent();
     }
 
     public Service add(Dependency dependency)
@@ -88,24 +88,24 @@ public class ServiceImpl implements Service
 
     public void addStateListener(final ServiceStateListener listener)
     {
-        org.apache.felix.dm.ServiceStateListener wrappedListener = new org.apache.felix.dm.ServiceStateListener()
+        org.apache.felix.dm.ComponentStateListener wrappedListener = new org.apache.felix.dm.ComponentStateListener()
         {
-            public void started(org.apache.felix.dm.Service service)
+            public void started(org.apache.felix.dm.Component service)
             {
                 listener.started(ServiceImpl.this);
             }
 
-            public void starting(org.apache.felix.dm.Service service)
+            public void starting(org.apache.felix.dm.Component service)
             {
                 listener.starting(ServiceImpl.this);
             }
 
-            public void stopped(org.apache.felix.dm.Service service)
+            public void stopped(org.apache.felix.dm.Component service)
             {
                 listener.stopped(ServiceImpl.this);
             }
 
-            public void stopping(org.apache.felix.dm.Service service)
+            public void stopping(org.apache.felix.dm.Component service)
             {
                 listener.stopping(ServiceImpl.this);
             }
@@ -119,10 +119,10 @@ public class ServiceImpl implements Service
 
     public void removeStateListener(ServiceStateListener listener)
     {
-        org.apache.felix.dm.ServiceStateListener wrappedListener = null;
+        org.apache.felix.dm.ComponentStateListener wrappedListener = null;
         synchronized (m_stateListeners)
         {
-            wrappedListener = (org.apache.felix.dm.ServiceStateListener) m_stateListeners.remove(listener);
+            wrappedListener = (org.apache.felix.dm.ComponentStateListener) m_stateListeners.remove(listener);
         }
         if (wrappedListener != null)
         {
