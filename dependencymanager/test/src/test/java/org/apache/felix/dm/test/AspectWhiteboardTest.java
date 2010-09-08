@@ -28,7 +28,7 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,12 +57,12 @@ public class AspectWhiteboardTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create service providers and consumer
-        Service sp1 = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-        Service sp2 = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+        Component sp1 = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+        Component sp2 = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
         ServiceConsumer sci = new ServiceConsumer(e);
-        Service sc = m.createService().setImplementation(sci).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(false).setCallbacks("add", "remove"));
-        Service sa2 = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(new ServiceAspect(e, 3));
-        Service sa1 = m.createAspectService(ServiceInterface.class, null, 10, null).setImplementation(new ServiceAspect(e, 4));
+        Component sc = m.createComponent().setImplementation(sci).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(false).setCallbacks("add", "remove"));
+        Component sa2 = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(new ServiceAspect(e, 3));
+        Component sa1 = m.createAspectService(ServiceInterface.class, null, 10, null).setImplementation(new ServiceAspect(e, 4));
         
         // start with a service consumer
         System.out.println("Adding consumer");

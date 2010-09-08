@@ -72,7 +72,7 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer to the adapter bundle service (see main/src/.../factoryconfadapter/*.java). 
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), null));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), null));
         ConfigurationAdmin cm = (ConfigurationAdmin) context.getService(context.getServiceReference(ConfigurationAdmin.class.getName()));
         try
         {

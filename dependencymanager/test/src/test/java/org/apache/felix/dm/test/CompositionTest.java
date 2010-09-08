@@ -23,7 +23,7 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -49,8 +49,8 @@ public class CompositionTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Service sp = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-        Service sc = m.createService().setImplementation(new ServiceConsumer(e))
+        Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+        Component sc = m.createComponent().setImplementation(new ServiceConsumer(e))
                                       .setComposition("getComposition")
                                       .add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", null));
         m.add(sp);

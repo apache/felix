@@ -32,7 +32,7 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,10 +66,10 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Service provider = m.createService().setImplementation(new ServiceProvider()).setInterface(ServiceInterface.class.getName(), null);
+        Component provider = m.createComponent().setImplementation(new ServiceProvider()).setInterface(ServiceInterface.class.getName(), null);
         ServiceDependency dependency = m.createServiceDependency().setService(ServiceInterface.class).setRequired(true);
-        Service consumer1 = m.createService().setImplementation(new ServiceConsumer(e, 1)).add(dependency);
-        Service consumer2 = m.createService().setImplementation(new ServiceConsumer(e, 4)).add(dependency);
+        Component consumer1 = m.createComponent().setImplementation(new ServiceConsumer(e, 1)).add(dependency);
+        Component consumer2 = m.createComponent().setImplementation(new ServiceConsumer(e, 4)).add(dependency);
         
         m.add(provider);
         m.add(consumer1);
@@ -87,10 +87,10 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Service provider = m.createService().setImplementation(new ConfigurationProvider(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component provider = m.createComponent().setImplementation(new ConfigurationProvider(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         ConfigurationDependency dependency = m.createConfigurationDependency().setPid("test");
-        Service consumer1 = m.createService().setImplementation(new ConfigurationConsumer(e, 2)).add(dependency);
-        Service consumer2 = m.createService().setImplementation(new ConfigurationConsumer(e, 3)).add(dependency);
+        Component consumer1 = m.createComponent().setImplementation(new ConfigurationConsumer(e, 2)).add(dependency);
+        Component consumer2 = m.createComponent().setImplementation(new ConfigurationConsumer(e, 3)).add(dependency);
         
         // add the configuration provider that should publish the configuration as step 1
         m.add(provider);
@@ -119,8 +119,8 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
         Ensure e = new Ensure();
         // create a service provider and consumer
         BundleDependency dependency = m.createBundleDependency().setFilter("(Bundle-SymbolicName=org.apache.felix.dependencymanager)").setRequired(true);
-        Service consumer1 = m.createService().setImplementation(new BundleConsumer(e, 1)).add(dependency);
-        Service consumer2 = m.createService().setImplementation(new BundleConsumer(e, 2)).add(dependency);
+        Component consumer1 = m.createComponent().setImplementation(new BundleConsumer(e, 1)).add(dependency);
+        Component consumer2 = m.createComponent().setImplementation(new BundleConsumer(e, 2)).add(dependency);
         
         m.add(consumer1);
         e.waitForStep(1, 15000);
@@ -137,9 +137,9 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
         Ensure e = new Ensure();
         // create a service provider and consumer
         ResourceDependency dependency = m.createResourceDependency().setFilter("(" + ResourceHandler.HOST + "=localhost)").setRequired(true);
-        Service consumer1 = m.createService().setImplementation(new ResourceConsumer(e, 1)).add(dependency);
-        Service consumer2 = m.createService().setImplementation(new ResourceConsumer(e, 2)).add(dependency);
-        Service resourceProvider = m.createService().setImplementation(new ResourceProvider()).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove"));;
+        Component consumer1 = m.createComponent().setImplementation(new ResourceConsumer(e, 1)).add(dependency);
+        Component consumer2 = m.createComponent().setImplementation(new ResourceConsumer(e, 2)).add(dependency);
+        Component resourceProvider = m.createComponent().setImplementation(new ResourceProvider()).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove"));;
         m.add(resourceProvider);
         m.add(consumer1);
         e.waitForStep(1, 15000);

@@ -82,7 +82,7 @@ public class AnnotationBase extends Base implements Sequencer
      */
     protected void registerSequencer(DependencyManager m, final String testName) 
     {
-        m.add(m.createService()
+        m.add(m.createComponent()
               .setImplementation(this)
               .setInterface(Sequencer.class.getName(),new Hashtable() {{
                   put("test", testName);

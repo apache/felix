@@ -30,7 +30,7 @@ import java.util.Properties;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -63,7 +63,7 @@ public class FactoryConfigurationAdapterTest extends Base
         
         // Create a Configuration instance, which will create/update/remove a configuration for factoryPid "MyFactoryPid"
         ConfigurationCreator configurator = new ConfigurationCreator("MyFactoryPid", "key", "value1");
-        Service s1 = m.createService()
+        Component s1 = m.createComponent()
             .setImplementation(configurator)
             .add(m.createServiceDependency()
                 .setService(ConfigurationAdmin.class)
@@ -71,7 +71,7 @@ public class FactoryConfigurationAdapterTest extends Base
 
         // Create an Adapter that will be instantiated, once the configuration is created.
         // This Adapter provides an AdapterService, and depends on an AdapterExtraDependency service.
-        Service s2 = m.createFactoryConfigurationAdapterService("MyFactoryPid", "updated", true /* propagate CM settings */)
+        Component s2 = m.createFactoryConfigurationAdapterService("MyFactoryPid", "updated", true /* propagate CM settings */)
                       .setInterface(AdapterService.class.getName(), new Properties() {{ put("foo", "bar"); }})
                       .setImplementation(Adapter.class);
 
@@ -81,12 +81,12 @@ public class FactoryConfigurationAdapterTest extends Base
             .setAutoConfig(true));
         
         // Create extra adapter service dependency upon which our adapter depends on.
-        Service s3 = m.createService()
+        Component s3 = m.createComponent()
             .setImplementation(new AdapterExtraDependency())
             .setInterface(AdapterExtraDependency.class.getName(), null);
         
         // Create an AdapterService Consumer
-        Service s4 = m.createService()
+        Component s4 = m.createComponent()
             .setImplementation(AdapterServiceConsumer.class)
             .add(m.createServiceDependency()
                 .setService(AdapterService.class)

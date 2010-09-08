@@ -24,7 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -49,9 +49,9 @@ public class ServiceDependencyInjectionTest {
         DependencyManager m = new DependencyManager(context);
         // create a service provider and consumer
         ServiceProvider provider = new ServiceProvider();
-        Service sp = m.createService().setImplementation(provider).setInterface(ServiceInterface2.class.getName(), null);
-        Service sc = m.createService().setImplementation(new ServiceConsumer()).add(m.createServiceDependency().setService(ServiceInterface2.class).setRequired(true));
-        Service sc2 = m.createService()
+        Component sp = m.createComponent().setImplementation(provider).setInterface(ServiceInterface2.class.getName(), null);
+        Component sc = m.createComponent().setImplementation(new ServiceConsumer()).add(m.createServiceDependency().setService(ServiceInterface2.class).setRequired(true));
+        Component sc2 = m.createComponent()
             .setImplementation(new ServiceConsumerNamedInjection())
             .add(m.createServiceDependency().setService(ServiceInterface2.class).setRequired(false).setAutoConfig("m_service"))
             .add(m.createServiceDependency().setService(ServiceInterface2.class).setRequired(false).setAutoConfig("m_service2"))

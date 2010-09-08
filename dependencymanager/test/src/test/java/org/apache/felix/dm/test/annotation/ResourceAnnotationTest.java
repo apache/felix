@@ -70,7 +70,7 @@ public class ResourceAnnotationTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         Properties props = new Properties() {{ put("test", "resource"); }};
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         super.stopBundle("ResourceTest", context);
         m_ensure.waitForStep(1, 10000);
     }
@@ -84,7 +84,7 @@ public class ResourceAnnotationTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         Properties props = new Properties() {{ put("test", "adapter"); }};
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         super.stopBundle("ResourceTest", context);
         m_ensure.waitForStep(2, 10000);
     }

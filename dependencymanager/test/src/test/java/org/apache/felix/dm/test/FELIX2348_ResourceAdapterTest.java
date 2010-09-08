@@ -65,7 +65,7 @@ public class FELIX2348_ResourceAdapterTest extends Base {
         Ensure e = new Ensure();
         m.add(m.createResourceAdapterService("(&(path=/path/to/*.txt)(host=localhost))", false, null, "changed")
               .setImplementation(new ResourceAdapter(e)));
-        m.add(m.createService().setImplementation(new ResourceProvider(e)).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove")));
+        m.add(m.createComponent().setImplementation(new ResourceProvider(e)).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove")));
         e.waitForStep(3, 5000);
      }
     

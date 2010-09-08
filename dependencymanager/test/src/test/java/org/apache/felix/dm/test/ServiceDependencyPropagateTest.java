@@ -27,7 +27,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -59,16 +59,16 @@ public class ServiceDependencyPropagateTest extends Base {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
-        Service c1 = m.createService()
+        Component c1 = m.createComponent()
                       .setImplementation(new C1(e))
                       .add(m.createServiceDependency().setService(C2.class).setRequired(true).setCallbacks("bind", null));
 
-        Service c2 = m.createService()
+        Component c2 = m.createComponent()
                       .setInterface(C2.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
                       .setImplementation(new C2())
                       .add(m.createServiceDependency().setService(C3.class).setRequired(true).setPropagate(true));
 
-        Service c3 = m.createService()
+        Component c3 = m.createComponent()
                       .setInterface(C3.class.getName(), new Hashtable() {{ put("foo2", "bar2"); }})
                       .setImplementation(new C3());
         
@@ -88,17 +88,17 @@ public class ServiceDependencyPropagateTest extends Base {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
-        Service c1 = m.createService()
+        Component c1 = m.createComponent()
                       .setImplementation(new C1(e))
                       .add(m.createServiceDependency().setService(C2.class).setRequired(true).setCallbacks("bind", null));
 
         C2 c2Impl = new C2();
-        Service c2 = m.createService()
+        Component c2 = m.createComponent()
                       .setInterface(C2.class.getName(), new Hashtable() {{ put("foo", "bar"); }})
                       .setImplementation(c2Impl)
                       .add(m.createServiceDependency().setService(C3.class).setRequired(true).setPropagate(c2Impl, "getServiceProperties"));
         
-        Service c3 = m.createService()
+        Component c3 = m.createComponent()
                       .setInterface(C3.class.getName(), null)
                       .setImplementation(new C3());
         

@@ -24,7 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -50,7 +50,7 @@ public class BundleDependencyTest extends Base {
         DependencyManager m = new DependencyManager(context);
         // create a service provider and consumer
         Consumer c = new Consumer();
-        Service consumer = m.createService().setImplementation(c).add(m.createBundleDependency().setCallbacks("add", "remove"));
+        Component consumer = m.createComponent().setImplementation(c).add(m.createBundleDependency().setCallbacks("add", "remove"));
         // add the service consumer
         m.add(consumer);
         // check if at least one bundle was found
@@ -62,7 +62,7 @@ public class BundleDependencyTest extends Base {
         
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
-        Service consumerWithFilter = m.createService().setImplementation(new FilteredConsumer(e)).add(m.createBundleDependency().setFilter("(Bundle-SymbolicName=org.apache.felix.dependencymanager)").setCallbacks("add", "remove"));
+        Component consumerWithFilter = m.createComponent().setImplementation(new FilteredConsumer(e)).add(m.createBundleDependency().setFilter("(Bundle-SymbolicName=org.apache.felix.dependencymanager)").setCallbacks("add", "remove"));
         // add a consumer with a filter
         m.add(consumerWithFilter);
         e.step(2);
@@ -79,7 +79,7 @@ public class BundleDependencyTest extends Base {
         
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
-        Service consumerWithFilter = m.createService()
+        Component consumerWithFilter = m.createComponent()
             .setImplementation(new FilteredConsumerRequired(e))
             .add(m.createBundleDependency()
                 .setRequired(true)

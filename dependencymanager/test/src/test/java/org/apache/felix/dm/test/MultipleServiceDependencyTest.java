@@ -25,7 +25,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -52,9 +52,9 @@ public class MultipleServiceDependencyTest extends Base {
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer
-       Service provider = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-       Service providerWithHighRank = m.createService().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), new Properties() {{ put(Constants.SERVICE_RANKING, Integer.valueOf(5)); }});
-       Service consumer = m.createService().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
+       Component provider = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+       Component providerWithHighRank = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), new Properties() {{ put(Constants.SERVICE_RANKING, Integer.valueOf(5)); }});
+       Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
        m.add(provider);
        m.add(providerWithHighRank);
        m.add(consumer);
@@ -73,9 +73,9 @@ public class MultipleServiceDependencyTest extends Base {
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer
-       Service provider = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-       Service provider2 = m.createService().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), null);
-       Service consumer = m.createService().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
+       Component provider = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+       Component provider2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), null);
+       Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
        m.add(provider2);
        m.add(consumer);
        e.waitForStep(3, 15000);
@@ -94,9 +94,9 @@ public class MultipleServiceDependencyTest extends Base {
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer
-       Service provider = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-       Service provider2 = m.createService().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), null);
-       Service consumer = m.createService().setImplementation(new ServiceConsumer(e))
+       Component provider = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+       Component provider2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface.class.getName(), null);
+       Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e))
          .add(m.createServiceDependency()
               .setService(ServiceInterface.class)
               .setRequired(true)

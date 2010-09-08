@@ -64,7 +64,7 @@ public class AdapterAnnotationTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer to the adapeter bundle service (see main/src/.../adapter/*.java). 
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), null));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), null));
         m_ensure.waitForStep(4, 10000);
     }
 }

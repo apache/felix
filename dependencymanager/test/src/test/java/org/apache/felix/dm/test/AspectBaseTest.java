@@ -29,7 +29,7 @@ import java.util.Properties;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,9 +63,9 @@ public class AspectBaseTest extends Base {
         // create a service provider and consumer
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
-        Service sp = m.createService().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
-        Service sc = m.createService().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig(true));
-        Service sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
+        Component sp = m.createComponent().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
+        Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig(true));
+        Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
         m.add(sc);
         m.add(sp);
         // after the provider was added, the consumer's add should have been invoked once
@@ -96,9 +96,9 @@ public class AspectBaseTest extends Base {
         // create a service provider and consumer
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
-        Service sp = m.createService().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
-        Service sc = m.createService().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig(true));
-        Service sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
+        Component sp = m.createComponent().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
+        Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig(true));
+        Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
         // we first add the aspect
         m.add(sa);
         // then the service provider
@@ -134,11 +134,11 @@ public class AspectBaseTest extends Base {
         
         // create service providers and consumers
         ServiceConsumer c = new ServiceConsumer(e);
-        Service sp = m.createService().setImplementation(new ServiceProvider(e, "a")).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
-        Service sp2 = m.createService().setImplementation(new ServiceProvider(e, "b")).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "b"); }});
-        Service sc = m.createService().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove"));
-        Service sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
-        Service sa2 = m.createAspectService(ServiceInterface.class, null, 10, null).setImplementation(ServiceAspect.class);
+        Component sp = m.createComponent().setImplementation(new ServiceProvider(e, "a")).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
+        Component sp2 = m.createComponent().setImplementation(new ServiceProvider(e, "b")).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "b"); }});
+        Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove"));
+        Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
+        Component sa2 = m.createAspectService(ServiceInterface.class, null, 10, null).setImplementation(ServiceAspect.class);
         m.add(sp);
         m.add(sp2);
         m.add(sa);

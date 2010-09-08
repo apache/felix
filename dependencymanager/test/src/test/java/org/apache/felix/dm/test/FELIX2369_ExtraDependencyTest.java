@@ -24,7 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -55,8 +55,8 @@ public class FELIX2369_ExtraDependencyTest extends Base
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service consumer and provider
-        Service sp1 = m.createService().setInterface(MyService1.class.getName(), null).setImplementation(new MyService1Impl());
-        Service sc = m.createService().setImplementation(new MyClient(e, 1));
+        Component sp1 = m.createComponent().setInterface(MyService1.class.getName(), null).setImplementation(new MyService1Impl());
+        Component sc = m.createComponent().setImplementation(new MyClient(e, 1));
         
         // provides the MyService1 service (but not the MyService2, which is required by MyClient).
         m.add(sp1);
@@ -90,7 +90,7 @@ public class FELIX2369_ExtraDependencyTest extends Base
             m_startStep = startStep;
         }
         
-        public void init(Service s) {
+        public void init(Component s) {
             DependencyManager dm = s.getDependencyManager();
             m_ensure.step(m_startStep);
             s.add(dm.createServiceDependency() // this dependency is available at this point

@@ -69,7 +69,7 @@ public class ExtraServicePropertiesTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), 
                                                                      new Hashtable() {{ put("test", "ExtraServiceProperties"); }}));
         m_ensure.waitForStep(2, 10000);
     }
@@ -82,7 +82,7 @@ public class ExtraServicePropertiesTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), 
                                                                      new Hashtable() {{ put("test", "ExtraFactoryServiceProperties"); }}));
         m_ensure.waitForStep(3, 10000);
     }
@@ -95,7 +95,7 @@ public class ExtraServicePropertiesTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), 
                                                                      new Hashtable() {{ put("test", "ExtraAdapterServiceProperties"); }}));
         m_ensure.waitForStep(3, 10000);
     }
@@ -108,7 +108,7 @@ public class ExtraServicePropertiesTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), 
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), 
                                                                      new Hashtable() {{ put("test", "ExtraAspectServiceProperties"); }}));
         m_ensure.waitForStep(3, 10000);
     }

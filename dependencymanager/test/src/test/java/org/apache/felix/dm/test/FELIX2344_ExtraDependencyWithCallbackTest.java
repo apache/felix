@@ -24,7 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -56,10 +56,10 @@ public class FELIX2344_ExtraDependencyWithCallbackTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service consumer and provider
-        Service sp = m.createService().setInterface(ProviderInterface.class.getName(), null).setImplementation(ProviderImpl.class);
-        Service sc = m.createService().setImplementation(new Client(e, false, 1));
-        Service sc2 = m.createService().setImplementation(new Client(e, true, 5));
-        Service sc3 = m.createService().setImplementation(new Client(e, true, 9));
+        Component sp = m.createComponent().setInterface(ProviderInterface.class.getName(), null).setImplementation(ProviderImpl.class);
+        Component sc = m.createComponent().setImplementation(new Client(e, false, 1));
+        Component sc2 = m.createComponent().setImplementation(new Client(e, true, 5));
+        Component sc3 = m.createComponent().setImplementation(new Client(e, true, 9));
         
         // add the provider first, then add the consumer which initially will have no dependencies
         // but via the init() method an optional dependency with a callback method will be added
@@ -102,7 +102,7 @@ public class FELIX2344_ExtraDependencyWithCallbackTest extends Base {
             m_startStep = startStep;
         }
 
-        public void init(Service s) {
+        public void init(Component s) {
             DependencyManager dm = s.getDependencyManager();
             m_ensure.step(m_startStep);
             s.add(dm.createServiceDependency()

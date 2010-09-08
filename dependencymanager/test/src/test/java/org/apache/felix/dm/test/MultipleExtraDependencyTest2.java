@@ -25,7 +25,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,23 +55,23 @@ public class MultipleExtraDependencyTest2 extends Base {
         DependencyManager m = new DependencyManager(context);
         Ensure e = new Ensure();
         
-        Service sp2 = m.createService()
+        Component sp2 = m.createComponent()
             .setImplementation(ServiceProvider2.class).setInterface(ServiceProvider2.class.getName(), null)
             .setCallbacks("init", "start", "stop", null)
             .setComposition("getComposition");
         
-        Service sp = m.createService()
+        Component sp = m.createComponent()
               .setImplementation(ServiceProvider.class)
               .setInterface(ServiceInterface.class.getName(), new Hashtable() {{ put("foo", "bar"); }})                            
               .setCallbacks("init", "start", "stop", null);
         
-        Service sc = m.createService()
+        Component sc = m.createComponent()
               .setImplementation(ServiceConsumer.class)
               .setCallbacks("init", "start", "stop", null);
         
         // Provide the Sequencer service to the MultipleAnnotationsTest class.
-        Service sequencer = 
-            m.createService().setImplementation(new SequencerImpl(e))
+        Component sequencer = 
+            m.createComponent().setImplementation(new SequencerImpl(e))
                              .setInterface(Sequencer.class.getName(), null);
         m.add(sp2);
         m.add(sp);
@@ -140,7 +140,7 @@ public class MultipleExtraDependencyTest2 extends Base {
         volatile ServiceInterface m_service;
         ServiceDependency m_d1, m_d2;
 
-        public void init(Object serviceInstance, DependencyManager m, Service s)
+        public void init(Object serviceInstance, DependencyManager m, Component s)
         {
            s.add(m_d1 = m.createServiceDependency()
                    .setService(Sequencer.class)
@@ -174,7 +174,7 @@ public class MultipleExtraDependencyTest2 extends Base {
         ServiceProvider2 m_serviceProvider2;
         ServiceDependency m_d1, m_d2;
 
-        public void init(Object serviceInstance, DependencyManager m, Service s)
+        public void init(Object serviceInstance, DependencyManager m, Component s)
         {
             s.add(m_d1 = m.createServiceDependency()
                   .setService(Sequencer.class)
@@ -224,7 +224,7 @@ public class MultipleExtraDependencyTest2 extends Base {
         Runnable m_runnable;
         ServiceDependency m_d1, m_d2;
 
-        public void init(Object serviceInstance, DependencyManager m, Service s)
+        public void init(Object serviceInstance, DependencyManager m, Component s)
         {
             s.add(m_d1 = m.createServiceDependency()
                   .setService(Runnable.class, "(foo=bar)")
