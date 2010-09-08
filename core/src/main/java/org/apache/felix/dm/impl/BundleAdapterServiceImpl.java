@@ -24,8 +24,8 @@ import java.util.Properties;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.Bundle;
 
 /**
@@ -39,7 +39,7 @@ public class BundleAdapterServiceImpl extends FilterService
      */
     public BundleAdapterServiceImpl(DependencyManager dm, int bundleStateMask, String bundleFilter, boolean propagate)
     {
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_service.setImplementation(new BundleAdapterImpl(bundleStateMask, bundleFilter, propagate))
                  .add(dm.createBundleDependency()
                       .setFilter(bundleFilter)
@@ -58,7 +58,7 @@ public class BundleAdapterServiceImpl extends FilterService
             m_propagate = propagate;
         }
         
-        public Service createService(Object[] properties) {
+        public Component createService(Object[] properties) {
             Bundle bundle = (Bundle) properties[0];
             Properties props = new Properties();
             if (m_serviceProperties != null) {
@@ -72,7 +72,7 @@ public class BundleAdapterServiceImpl extends FilterService
             // the first dependency is always the dependency on the bundle, which
             // will be replaced with a more specific dependency below
             dependencies.remove(0);
-            Service service = m_manager.createService()
+            Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
@@ -91,7 +91,7 @@ public class BundleAdapterServiceImpl extends FilterService
             }
 
             for (int i = 0; i < m_stateListeners.size(); i ++) {
-                service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
+                service.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
             return service;
         }

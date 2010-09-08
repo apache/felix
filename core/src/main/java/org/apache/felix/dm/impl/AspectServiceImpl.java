@@ -25,9 +25,9 @@ import java.util.Properties;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceDependency;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -38,7 +38,7 @@ import org.osgi.framework.ServiceReference;
 public class AspectServiceImpl extends FilterService {
     public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig)
     { 
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_service.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig))
              .add(dm.createServiceDependency()
                   .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
@@ -73,14 +73,14 @@ public class AspectServiceImpl extends FilterService {
             m_field = field;
         }
         
-        public Service createService(Object[] params) {
+        public Component createService(Object[] params) {
             List dependencies = m_service.getDependencies();
             // remove our internal dependency
             dependencies.remove(0);
             // replace it with one that points to the specific service that just was passed in
             Properties serviceProperties = getServiceProperties(params);
             String[] serviceInterfaces = getServiceInterfaces();
-            Service service = m_manager.createService()
+            Component service = m_manager.createComponent()
                 .setInterface(serviceInterfaces, serviceProperties)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
@@ -95,7 +95,7 @@ public class AspectServiceImpl extends FilterService {
             }
 
             for (int i = 0; i < m_stateListeners.size(); i++) {
-                service.addStateListener((ServiceStateListener) m_stateListeners.get(i));
+                service.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
             return service;                
         }

@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceReference;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface ServiceDependency extends Dependency, ServiceComponentDependency {
+public interface ServiceDependency extends Dependency, ComponentDependencyDeclaration {
     /**
      * Sets the name of the service that should be tracked. 
      * 

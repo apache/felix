@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
@@ -44,7 +44,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
 {
     public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate)
     {
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_service
@@ -55,7 +55,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
     public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate,
                                                   BundleContext bctx, Logger logger, String heading, String description, String localization, PropertyMetaData[] properyMetaData)
     {
-        super(dm.createService()); // This service will be filtered by our super class, allowing us to take control.
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_service
@@ -110,9 +110,9 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
         /**
          * Method called from our superclass, when we need to create a service.
          */
-        public Service createService(Object[] properties) {
+        public Component createService(Object[] properties) {
             Dictionary settings = (Dictionary) properties[0];     
-            Service newService = m_dm.createService();        
+            Component newService = m_dm.createComponent();        
             Object impl = null;
             
             try {
@@ -141,7 +141,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
             newService.setComposition(m_compositionInstance, m_compositionMethod); // if not set, no effect
             newService.setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy); // if not set, no effect
             for (int i = 0; i < m_stateListeners.size(); i ++) {
-                newService.addStateListener((ServiceStateListener) m_stateListeners.get(i));
+                newService.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
 
             return newService;
@@ -154,7 +154,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
         public void updateService(Object[] properties) 
         {
             Dictionary settings = (Dictionary) properties[0];
-            Service service = (Service) properties[1];
+            Component service = (Component) properties[1];
             Object impl = service.getService();
            
             try

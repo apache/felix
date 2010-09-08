@@ -20,25 +20,24 @@ package org.apache.felix.dm;
 
 import java.util.Dictionary;
 
-
 /**
- * Generic dependency for a service. A dependency can be required or not.
- * A dependency will be activated by the service it belongs to. The service
+ * Generic dependency for a component. A dependency can be required or not.
+ * A dependency will be activated by the component it belongs to. The component
  * will call the <code>start(Service service)</code> and 
  * <code>stop(Service service)</code> methods.
  * 
  * After it has been started, a dependency must callback
- * the associated service's <code>dependencyAvailable()</code> and 
+ * the associated component's <code>dependencyAvailable()</code> and 
  * <code>dependencyUnavailable()</code>
  * methods. State changes of the dependency itself may only be made as long as
- * the dependency is not 'active', meaning it is associated with a running service.
+ * the dependency is not 'active', meaning it is associated with a running component.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface Dependency {
     /**
      * Returns <code>true</code> if this a required dependency. Required dependencies
-     * are dependencies that must be available before the service can be activated.
+     * are dependencies that must be available before the component can be activated.
      * 
      * @return <code>true</code> if the dependency is required
      */
@@ -61,11 +60,11 @@ public interface Dependency {
 
     /**
      * Returns <code>true>code> if auto configuration is enabled for this dependency.
-     * Auto configuration means that a dependency is injected in the service instance
+     * Auto configuration means that a dependency is injected in the component instance
      * when it's available, and if it's unavailable, a "null object" will be inserted
      * instead.
      * 
-     * @return <code>true>code> if auto configuration is enabled for this dependency
+     * @return <code>true</code> if auto configuration is enabled for this dependency
      */
     public boolean isAutoConfig();
     
@@ -84,7 +83,7 @@ public interface Dependency {
     public Object getAutoConfigInstance();
     
     /**
-     * Returns the name of the member in the class of the service instance
+     * Returns the name of the member in the class of the component instance
      * to inject into. If you specify this, not all members of the right
      * type will be injected, only the member whose name matches.
      * 

@@ -20,8 +20,8 @@ package org.apache.felix.dm;
 
 import java.util.List;
 
+import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.Logger;
-import org.apache.felix.dm.impl.ServiceImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -40,7 +40,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     private Logger m_logger;
     
     /**
-     * Initialize the dependency manager. Here you can add all services and their dependencies.
+     * Initialize the dependency manager. Here you can add all components and their dependencies.
      * If something goes wrong and you do not want your bundle to be started, you can throw an
      * exception. This exception will be passed on to the <code>start()</code> method of the
      * bundle activator, causing the bundle not to start.
@@ -52,9 +52,10 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     public abstract void init(BundleContext context, DependencyManager manager) throws Exception;
     
     /**
-     * Destroy the dependency manager. Here you can remove all services and their dependencies.
+     * Destroy the dependency manager. Here you can remove all components and their dependencies.
      * Actually, the base class will clean up your dependencies anyway, so most of the time you
      * don't need to do anything here.
+     * <p>
      * If something goes wrong and you do not want your bundle to be stopped, you can throw an
      * exception. This exception will be passed on to the <code>stop()</code> method of the
      * bundle activator, causing the bundle not to stop.
@@ -121,12 +122,12 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
     
     /**
-     * Creates a new service.
+     * Creates a new component.
      * 
-     * @return the new service
+     * @return the new component
      */
-    public Service createService() {
-        return m_manager.createService();
+    public Component createComponent() {
+        return m_manager.createComponent();
     }
     
     /**
@@ -158,8 +159,9 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
     
     /**
-     * Creates a new configuration property MetaData.
-     * @return a new configuration property MetaData
+     * Creates a new configuration property metadata.
+     * 
+     * @return the configuration property metadata
      */
     public PropertyMetaData createPropertyMetaData() {
         return m_manager.createPropertyMetaData();
@@ -173,55 +175,92 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     public BundleDependency createBundleDependency() {
         return m_manager.createBundleDependency();
     }
-    
+
+    /**
+     * Creates a new resource dependency.
+     * 
+     * @return the resource dependency
+     */
     public ResourceDependency createResourceDependency() {
         return m_manager.createResourceDependency();
     }
 
-    public Service createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
+    /**
+     * Creates a new aspect service.
+     * 
+     * @return the aspect service
+     */
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
         return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, attributeName);
     }
-    
-    public Service createAdapterService(Class serviceInterface, String serviceFilter) {
+
+    /**
+     * Creates a new adapter service.
+     * 
+     * @return the adapter service
+     */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter);
     }
-    
-    public Service createResourceAdapter(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
+
+    /**
+     * Creates a new resource adapter service.
+     * 
+     * @return the resource adapter service
+     */
+    public Component createResourceAdapter(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
         return m_manager.createResourceAdapterService(resourceFilter, propagate, callbackInstance, callbackChanged);
     }
-    
-    public Service createResourceAdapter(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
+
+    /**
+     * Creates a new resource adapter service.
+     * 
+     * @return the resource adapter service
+     */
+    public Component createResourceAdapter(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
         return m_manager.createResourceAdapterService(resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackChanged);
     }
     
-    public Service createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
+    /**
+     * Creates a new bundle adapter service.
+     * 
+     * @return the bundle adapter service
+     */
+    public Component createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
         return m_manager.createBundleAdapterService(bundleStateMask, bundleFilter, propagate);
     }
 
-    public Service createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
+    /**
+     * Creates a new factory configuration adapter service.
+     * 
+     * @return the factory configuration adapter service
+     */
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
         return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate);
     }
     
-   public Service createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, 
-       String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) 
-   {
-       return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate,
-           heading, desc, localization, propertiesMetaData);
+    /**
+     * Creates a new factory configuration adapter service.
+     * 
+     * @return the factory configuration adapter service
+     */
+   public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) {
+       return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, heading, desc, localization, propertiesMetaData);
    }
 
     /**
-     * Cleans up all services and their dependencies.
+     * Cleans up all components and their dependencies.
      * 
      * @param manager the dependency manager
      */
     private void cleanup(DependencyManager manager) {
         List services = manager.getServices();
         for (int i = services.size() - 1; i >= 0; i--) {
-            Service service = (Service) services.get(i);
+            Component service = (Component) services.get(i);
             manager.remove(service);
             // remove any state listeners that are still registered
-            if (service instanceof ServiceImpl) {
-                ServiceImpl si = (ServiceImpl) service;
+            if (service instanceof ComponentImpl) {
+                ComponentImpl si = (ComponentImpl) service;
                 si.removeStateListeners();
             }
         }

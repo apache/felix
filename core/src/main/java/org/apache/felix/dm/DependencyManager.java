@@ -25,10 +25,10 @@ import java.util.List;
 import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.AspectServiceImpl;
 import org.apache.felix.dm.impl.BundleAdapterServiceImpl;
+import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.FactoryConfigurationAdapterServiceImpl;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.ResourceAdapterServiceImpl;
-import org.apache.felix.dm.impl.ServiceImpl;
 import org.apache.felix.dm.impl.dependencies.BundleDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ConfigurationDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ResourceDependencyImpl;
@@ -38,8 +38,8 @@ import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
 import org.osgi.framework.BundleContext;
 
 /**
- * The dependency manager manages all services and their dependencies. Using 
- * this API you can declare all services and their dependencies. Under normal
+ * The dependency manager manages all components and their dependencies. Using 
+ * this API you can declare all components and their dependencies. Under normal
  * circumstances, you get passed an instance of this class through the
  * <code>DependencyActivatorBase</code> subclass you use as your
  * <code>BundleActivator</code>, but it is also possible to create your
@@ -76,7 +76,7 @@ public class DependencyManager {
      * 
      * @param service the service to add
      */
-    public void add(Service service) {
+    public void add(Component service) {
         m_services.add(service);
         service.start();
     }
@@ -87,7 +87,7 @@ public class DependencyManager {
      * 
      * @param service the service to remove
      */
-    public void remove(Service service) {
+    public void remove(Component service) {
         service.stop();
         m_services.remove(service);
     }
@@ -97,8 +97,8 @@ public class DependencyManager {
      * 
      * @return the new service
      */
-    public Service createService() {
-        return new ServiceImpl(m_context, this, m_logger);
+    public Component createComponent() {
+        return new ComponentImpl(m_context, this, m_logger);
     }
     
     /**
@@ -129,8 +129,9 @@ public class DependencyManager {
     }
     
     /**
-     * Creates a new configuration property MetaData.
-     * @return a new Configuration property MetaData.
+     * Creates a new configuration property metadata.
+     * 
+     * @return the configuration property metadata.
      */
     public PropertyMetaData createPropertyMetaData() {
         return new PropertyMetaDataImpl();
@@ -175,10 +176,10 @@ public class DependencyManager {
      * @param serviceFilter the filter condition to use with the service interface
      * @param ranking the level used to organize the aspect chain ordering
      * @param attributeName the aspect implementation field name where to inject original service. 
-     *                  If null, any field matching the original service will be injected.
+     *     If null, any field matching the original service will be injected.
      * @return a service that acts as a factory for generating aspects
      */
-    public Service createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
         return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, attributeName);
     }
     
@@ -204,7 +205,7 @@ public class DependencyManager {
      * @param serviceFilter the filter condition to use with the service interface
      * @return a service that acts as a factory for generating adapters
      */
-    public Service createAdapterService(Class serviceInterface, String serviceFilter) {
+    public Component createAdapterService(Class serviceInterface, String serviceFilter) {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter);
     }
         
@@ -234,11 +235,11 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating resource adapters
      * @see Resource
      */
-    public Service createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
+    public Component createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
         return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, callbackChanged);
     }
     
-    public Service createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
+    public Component createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
         return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackChanged);
     }
     
@@ -269,7 +270,7 @@ public class DependencyManager {
      * @param propagate <code>true</code> if properties from the bundle should be propagated to the service
      * @return a service that acts as a factory for generating bundle adapters
      */
-    public Service createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
+    public Component createBundleAdapterService(int bundleStateMask, String bundleFilter, boolean propagate) {
         return new BundleAdapterServiceImpl(this, bundleStateMask, bundleFilter, propagate);
     }
 
@@ -296,7 +297,7 @@ public class DependencyManager {
      * @param propagate true if public factory configuration should be propagated to the adapter service properties
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
      */
-    public Service createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
         return new FactoryConfigurationAdapterServiceImpl(this, factoryPid, update, propagate);
     }
     
@@ -346,7 +347,7 @@ public class DependencyManager {
      * @param propertiesMetaData Array of MetaData regarding configuration properties
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
      */
-    public Service createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, 
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, 
                                                             String heading, String desc, String localization,
                                                             PropertyMetaData[] propertiesMetaData) 
     {

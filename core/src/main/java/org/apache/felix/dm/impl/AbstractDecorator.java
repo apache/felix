@@ -27,8 +27,8 @@ import java.util.Map;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceStateListener;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -39,7 +39,7 @@ public abstract class AbstractDecorator  {
     protected volatile DependencyManager m_manager;
     private final Map m_services = new HashMap();
     
-    public abstract Service createService(Object[] properties);
+    public abstract Component createService(Object[] properties);
     
     /**
      * Extra method, which may be used by sub-classes, when adaptee has changed.
@@ -60,35 +60,35 @@ public abstract class AbstractDecorator  {
         }
         Iterator i = services.values().iterator();
         while (i.hasNext()) {
-            ((Service) i.next()).setServiceProperties(serviceProperties);
+            ((Component) i.next()).setServiceProperties(serviceProperties);
         }
     }
     
     /**
      * Remove a StateListener from all already instantiated services.
      */
-    public void addStateListener(ServiceStateListener listener) {
+    public void addStateListener(ComponentStateListener listener) {
         Map services = new HashMap();
         synchronized (this) {
             services.putAll(m_services);
         }
         Iterator i = services.values().iterator();
         while (i.hasNext()) {
-            ((Service) i.next()).addStateListener(listener);
+            ((Component) i.next()).addStateListener(listener);
         } 
     }
 
     /**
      * Remove a StateListener from all already instantiated services.
      */
-    public void removeStateListener(ServiceStateListener listener) {
+    public void removeStateListener(ComponentStateListener listener) {
         Map services = new HashMap();
         synchronized (this) {
             services.putAll(m_services);
         }
         Iterator i = services.values().iterator();
         while (i.hasNext()) {
-            ((Service) i.next()).removeStateListener(listener);
+            ((Component) i.next()).removeStateListener(listener);
         } 
     }
     
@@ -102,7 +102,7 @@ public abstract class AbstractDecorator  {
         }
         Iterator i = services.values().iterator();
         while (i.hasNext()) {
-            ((Service) i.next()).add(d);
+            ((Component) i.next()).add(d);
         } 
     }
     
@@ -116,7 +116,7 @@ public abstract class AbstractDecorator  {
         }
         Iterator i = services.values().iterator();
         while (i.hasNext()) {
-            ((Service) i.next()).add(dependencies);
+            ((Component) i.next()).add(dependencies);
         } 
     }
 
@@ -130,16 +130,16 @@ public abstract class AbstractDecorator  {
         }
         Iterator i = services.values().iterator();
         while (i.hasNext()) {
-            ((Service) i.next()).remove(d);
+            ((Component) i.next()).remove(d);
         } 
     }
     
     // callbacks for FactoryConfigurationAdapterImpl
     public void updated(String pid, Dictionary properties) throws ConfigurationException {
         try {
-            Service service;
+            Component service;
             synchronized (this) {
-                service = (Service) m_services.get(pid);
+                service = (Component) m_services.get(pid);
             }
             if (service == null) { 
                 service = createService(new Object[] { properties });
@@ -164,9 +164,9 @@ public abstract class AbstractDecorator  {
     }
 
     public void deleted(String pid) {
-        Service service = null;
+        Component service = null;
         synchronized (this) {
-            service = (Service) m_services.remove(pid);
+            service = (Component) m_services.remove(pid);
         }
         if (service != null)
         {
@@ -176,13 +176,13 @@ public abstract class AbstractDecorator  {
 
     // callbacks for resources
     public void added(URL resource) {
-        Service newService = createService(new Object[] { resource });
+        Component newService = createService(new Object[] { resource });
         m_services.put(resource, newService);
         m_manager.add(newService);
     }
 
     public void removed(URL resource) {
-        Service newService = (Service) m_services.remove(resource);
+        Component newService = (Component) m_services.remove(resource);
         if (newService == null) {
             System.out.println("Service should not be null here, dumping stack.");
             Thread.dumpStack();
@@ -194,13 +194,13 @@ public abstract class AbstractDecorator  {
     
     // callbacks for services
     public void added(ServiceReference ref, Object service) {
-        Service newService = createService(new Object[] { ref, service });
+        Component newService = createService(new Object[] { ref, service });
         m_services.put(ref, newService);
         m_manager.add(newService);
     }
     
     public void removed(ServiceReference ref, Object service) {
-        Service newService = (Service) m_services.remove(ref);
+        Component newService = (Component) m_services.remove(ref);
         if (newService == null) {
             System.out.println("Service should not be null here, dumping stack.");
             Thread.dumpStack();
@@ -212,13 +212,13 @@ public abstract class AbstractDecorator  {
     
     // callbacks for bundles
     public void added(Bundle bundle) {
-        Service newService = createService(new Object[] { bundle });
+        Component newService = createService(new Object[] { bundle });
         m_services.put(bundle, newService);
         m_manager.add(newService);
     }
     
     public void removed(Bundle bundle) {
-        Service newService = (Service) m_services.remove(bundle);
+        Component newService = (Component) m_services.remove(bundle);
         if (newService == null) {
             System.out.println("Service should not be null here, dumping stack.");
             Thread.dumpStack();
@@ -231,19 +231,19 @@ public abstract class AbstractDecorator  {
     public void stop() { 
         Iterator i = m_services.values().iterator();
         while (i.hasNext()) {
-            m_manager.remove((Service) i.next());
+            m_manager.remove((Component) i.next());
         }
         m_services.clear();
     }    
     
-    public void configureAutoConfigState(Service target, Service source) {
+    public void configureAutoConfigState(Component target, Component source) {
         configureAutoConfigState(target, source, BundleContext.class);
         configureAutoConfigState(target, source, ServiceRegistration.class);
         configureAutoConfigState(target, source, DependencyManager.class);
-        configureAutoConfigState(target, source, Service.class);
+        configureAutoConfigState(target, source, Component.class);
     }
 
-    private void configureAutoConfigState(Service target, Service source, Class clazz) {
+    private void configureAutoConfigState(Component target, Component source, Class clazz) {
         String name = source.getAutoConfigInstance(clazz);
         if (name != null) {
             target.setAutoConfig(clazz, name);

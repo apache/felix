@@ -19,14 +19,14 @@
 package org.apache.felix.dm;
 
 /**
- * Describes a service component dependency. They form descriptions of dependencies
+ * Describes a component dependency. They form descriptions of dependencies
  * that are managed by the dependency manager. They can be used to query their state
  * for monitoring tools. The dependency manager shell command is an example of
  * such a tool.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface ServiceComponentDependency {
+public interface ComponentDependencyDeclaration {
     /** Names for the states of this dependency. */
     public static final String[] STATE_NAMES = { 
         "optional unavailable", 
