@@ -43,9 +43,9 @@ public class NonCachingOBRBundleRepository extends AbstractOBRBundleRepository
     	});
     } */
 
-    public NonCachingOBRBundleRepository(String id, URL repositoryURL, File obrCache, File bundleCache, long updatePeriod, File authFile)
+    public NonCachingOBRBundleRepository(String id, URL repositoryURL, File obrCache, File bundleCache, long updatePeriod, File authFile, boolean offline)
     {
-        super(id, repositoryURL, obrCache, bundleCache, updatePeriod, authFile);
+        super(id, repositoryURL, obrCache, bundleCache, updatePeriod, authFile, offline);
     }
 
     @Override

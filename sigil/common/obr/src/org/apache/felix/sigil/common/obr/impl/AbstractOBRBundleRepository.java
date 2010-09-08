@@ -41,15 +41,17 @@ public abstract class AbstractOBRBundleRepository extends AbstractBundleReposito
 {
     private static SAXParserFactory factory = SAXParserFactory.newInstance();
 
-    private URL obrURL;
-    private File obrlCache;
-    private File bundleCache;
-    private long updatePeriod;
+    private final URL obrURL;
+    private final File obrlCache;
+    private final File bundleCache;
+    private final long updatePeriod;
     private final File authFile;
     private final Properties authMap = new Properties();
-    private long authLastModified;
+    private final boolean offline;
 
-    public AbstractOBRBundleRepository(String id, URL repositoryURL, File obrCache, File bundleCache, long updatePeriod, File authFile)
+    private long authLastModified;
+    
+    public AbstractOBRBundleRepository(String id, URL repositoryURL, File obrCache, File bundleCache, long updatePeriod, File authFile, boolean offline)
     {
         super(id);
         this.obrURL = repositoryURL;
@@ -57,6 +59,7 @@ public abstract class AbstractOBRBundleRepository extends AbstractBundleReposito
         this.bundleCache = bundleCache;
         this.updatePeriod = updatePeriod;
         this.authFile = authFile;
+        this.offline = offline;
     }
 
     public void refresh()
@@ -104,6 +107,8 @@ public abstract class AbstractOBRBundleRepository extends AbstractBundleReposito
         {
             authMap.clear();
             authMap.load(new FileInputStream(authFile));
+            
+            authLastModified = authFile.lastModified();
         }
 
         String authKey = "";
@@ -232,7 +237,7 @@ public abstract class AbstractOBRBundleRepository extends AbstractBundleReposito
         if (!getObrlCache().exists())
             return true;
 
-        return getObrlCache().lastModified() + getUpdatePeriod() < System.currentTimeMillis();
+        return !offline && getObrlCache().lastModified() + getUpdatePeriod() < System.currentTimeMillis();
     }
 
     private URL getObrURL()

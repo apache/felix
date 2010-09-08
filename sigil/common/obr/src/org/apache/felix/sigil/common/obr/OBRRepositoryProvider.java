@@ -38,6 +38,7 @@ public class OBRRepositoryProvider implements IRepositoryProvider
     private static final String AUTH_FILE = "auth";
     public static final String CACHE_DIRECTORY = "cache";
     public static final String INDEX_CACHE_FILE = "index";
+    public static final String OFFLINE = "offline";
 
     public IBundleRepository createRepository(String id, Properties preferences)
         throws RepositoryException
@@ -58,8 +59,10 @@ public class OBRRepositoryProvider implements IRepositoryProvider
             File authFile = auth == null ? null : new File(auth);
             Long up = preferences.containsKey(UPDATE_PERIOD) ? Long.parseLong(preferences.getProperty(UPDATE_PERIOD))
                 : 60 * 60 * 24 * 7;
+            
+            boolean offline = preferences.containsKey(OFFLINE) ? Boolean.parseBoolean(preferences.getProperty(OFFLINE)) : false;
 
-            if (testURL.openConnection().getLastModified() == 0)
+            if (!offline && testURL.openConnection().getLastModified() == 0)
             {
                 String msg = "Failed to read OBR index: ";
                 if (!indexCache.exists())
@@ -71,12 +74,12 @@ public class OBRRepositoryProvider implements IRepositoryProvider
             if (preferences.getProperty(IN_MEMORY) == null)
             {
                 return new NonCachingOBRBundleRepository(id, repositoryURL, indexCache,
-                    localCache, updatePeriod, authFile);
+                    localCache, updatePeriod, authFile, offline);
             }
             else
             {
                 return new CachingOBRBundleRepository(id, repositoryURL, indexCache,
-                    localCache, updatePeriod, authFile);
+                    localCache, updatePeriod, authFile, offline);
             }
         }
         catch (IOException e)

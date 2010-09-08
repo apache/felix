@@ -33,9 +33,9 @@ public class CachingOBRBundleRepository extends AbstractOBRBundleRepository
 
     private SoftReference<List<ISigilBundle>> bundles;
 
-    public CachingOBRBundleRepository(String id, URL repositoryURL, File obrCache, File bundleCache, long updatePeriod, File authFile)
+    public CachingOBRBundleRepository(String id, URL repositoryURL, File obrCache, File bundleCache, long updatePeriod, File authFile, boolean offline)
     {
-        super(id, repositoryURL, obrCache, bundleCache, updatePeriod, authFile);
+        super(id, repositoryURL, obrCache, bundleCache, updatePeriod, authFile, offline);
     }
 
     @Override
