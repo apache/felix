@@ -36,7 +36,7 @@ import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceDependency;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.TemporalServiceDependency;
 import org.osgi.framework.Bundle;
@@ -118,7 +118,7 @@ public class ServiceLifecycleHandler
      * @param srvMeta The Service MetaData
      * @param depMeta The Dependencies MetaData
      */
-    public ServiceLifecycleHandler(Service srv, Bundle srvBundle, DependencyManager dm,
+    public ServiceLifecycleHandler(Component srv, Bundle srvBundle, DependencyManager dm,
                                    MetaData srvMeta, List<MetaData> depMeta)
     {
         m_srvMeta = srvMeta;
@@ -138,7 +138,7 @@ public class ServiceLifecycleHandler
      * @param service The Annotated Service
      */
     @SuppressWarnings("unchecked")
-    public void init(Service service)
+    public void init(Component service)
         throws Exception
     {
         Object serviceInstance = service.getService();
@@ -225,7 +225,7 @@ public class ServiceLifecycleHandler
      * Such extra properties takes precedence over existing service properties.
      */
     @SuppressWarnings("unchecked")
-    public void start(Service service)
+    public void start(Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         // Check if some extra service properties are returned by start method.
@@ -288,7 +288,7 @@ public class ServiceLifecycleHandler
      * Handles the Service's stop lifecycle callback. We just invoke the service "stop" callback on 
      * the service instance, as well as on all eventual service composites.
      */
-    public void stop(Service service)
+    public void stop(Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         callbackComposites(service, m_stop);
@@ -298,7 +298,7 @@ public class ServiceLifecycleHandler
      * Handles the Service's destroy lifecycle callback. We just invoke the service "destroy" callback on 
      * the service instance, as well as on all eventual service composites.
      */
-    public void destroy(Service service)
+    public void destroy(Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         callbackComposites(service, m_destroy);
@@ -307,7 +307,7 @@ public class ServiceLifecycleHandler
     /**
      * Invoke a callback on all Service compositions.
      */
-    private void callbackComposites(Service service, String callback)
+    private void callbackComposites(Component service, String callback)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         Object serviceInstance = service.getService();
@@ -321,7 +321,7 @@ public class ServiceLifecycleHandler
     /**
      * Invoke a callback on an Object instance.
      */
-    private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Service service)
+    private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         if (method != null)
@@ -330,7 +330,7 @@ public class ServiceLifecycleHandler
             {
                 return InvocationUtil.invokeCallbackMethod(
                                                            serviceInstance, method,
-                                                           new Class[][] { { Service.class }, {} },
+                                                           new Class[][] { { Component.class }, {} },
                                                            new Object[][] { { service }, {} }
                     );
             }

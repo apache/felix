@@ -22,7 +22,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 
 public class BundleAdapterServiceBuilder extends ServiceComponentBuilder
@@ -45,7 +45,7 @@ public class BundleAdapterServiceBuilder extends ServiceComponentBuilder
         String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
-        Service srv = dm.createBundleAdapterService(stateMask, filter, propagate);
+        Component srv = dm.createBundleAdapterService(stateMask, filter, propagate);
         srv.setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)

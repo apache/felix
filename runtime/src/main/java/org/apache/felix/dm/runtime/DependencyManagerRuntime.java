@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -88,8 +88,8 @@ public class DependencyManagerRuntime implements SynchronousBundleListener
 
         for (DependencyManager dm: m_managers.values())
         {
-            List<Service> services = new ArrayList<Service>(dm.getServices());
-            for (Service service: services)
+            List<Component> services = new ArrayList<Component>(dm.getServices());
+            for (Component service: services)
             {
                 dm.remove(service);
             }
@@ -159,8 +159,8 @@ public class DependencyManagerRuntime implements SynchronousBundleListener
         DependencyManager dm = m_managers.remove(b);
         if (dm != null)
         {
-            List<Service> services = new ArrayList(dm.getServices());
-            for (Service service : services)
+            List<Component> services = new ArrayList(dm.getServices());
+            for (Component service : services)
             {
                 m_log.log(LogService.LOG_INFO, "Runtime: Removing service: " + service);
                 dm.remove(service);

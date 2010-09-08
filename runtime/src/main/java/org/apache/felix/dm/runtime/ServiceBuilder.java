@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
@@ -43,7 +43,7 @@ public class ServiceBuilder extends ServiceComponentBuilder
     public void buildService(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
-        Service service = dm.createService();
+        Component service = dm.createComponent();
         String factory = srvMeta.getString(Params.factorySet, null);
 
         // Check if we must provide a Set Factory.

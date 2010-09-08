@@ -42,7 +42,7 @@ public class Activator extends DependencyActivatorBase
         // and we'll eventually use a Null LogService Object.
 
         boolean logActive = "true".equals(context.getProperty("dm.runtime.log"));
-        dm.add(createService()
+        dm.add(createComponent()
                .setImplementation(DependencyManagerRuntime.class)
                .add(createServiceDependency()
                    .setService(LogService.class)

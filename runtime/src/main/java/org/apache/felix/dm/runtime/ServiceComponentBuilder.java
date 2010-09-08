@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -51,7 +51,7 @@ public abstract class ServiceComponentBuilder
     /**
      * Set common Service parameters, if provided from our Component descriptor
      */
-    protected void setCommonServiceParams(Service service, MetaData serviceMetaData)
+    protected void setCommonServiceParams(Component service, MetaData serviceMetaData)
         throws Exception
     {
         String init = serviceMetaData.getString(Params.init, null);
@@ -71,7 +71,7 @@ public abstract class ServiceComponentBuilder
      * handled differently, and are managed by the ServiceLifecycleHandler class.
      * @throws Exception 
      */
-    protected static void addUnamedDependencies(Bundle b, DependencyManager dm, Service s, 
+    protected static void addUnamedDependencies(Bundle b, DependencyManager dm, Component s, 
                                                 MetaData srvMeta, List<MetaData> depsMeta) 
         throws Exception
     {
