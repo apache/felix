@@ -451,8 +451,13 @@ public class JavaHelper
                     IPath path = JavaCore.getResolvedVariablePath(e.getPath());
                     if (path != null)
                     {
+                        IPath spath = e.getSourceAttachmentPath();
+                        if (spath != null) {
+                            spath = JavaCore.getResolvedVariablePath(spath);
+                        }
+                        
                         entries.add(JavaCore.newLibraryEntry(path,
-                            e.getSourceAttachmentPath(), e.getSourceAttachmentRootPath(),
+                            spath, e.getSourceAttachmentRootPath(),
                             rules, attributes, export));
                     }
                     break;
