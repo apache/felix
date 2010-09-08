@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -97,7 +97,7 @@ public class FilePersistenceManagerTest extends TestCase
 
     public void testQuoting() throws IOException
     {
-        check( "QuotingSeparators", "\\()[]{}.,=" );
+        check( "QuotingSeparators", "\\()[]{}.,=\"\"''" );
         check( "QuotingWellKnown", "BSP:\b, TAB:\t, LF:\n, FF:\f, CR:\r" );
         check( "QuotingControl", new String( new char[]
             { 5, 10, 32, 64 } ) );
@@ -122,8 +122,8 @@ public class FilePersistenceManagerTest extends TestCase
         check( "IntegerVector", new Vector( Arrays.asList( new Integer[]
                                                                        { new Integer( 0 ), new Integer( 1 ), new Integer( 2 ) } ) ) );
     }
-    
-    
+
+
     public void testList() throws IOException
     {
         check( "StringList", Arrays.asList( new String[]
@@ -152,6 +152,16 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    // test configuration keys not conforming to the recommended specification
+    // for configuration keys in OSGi CM 1.3, 104.4.2, Configuration Properties
+    public void testNonSpecKeys() throws IOException {
+        check( "with\ttab", "the value" );
+        check( "with blank", "the value" );
+        check( "\\()[]{}.,=\"\"''", "quoted key" );
+        check( "\"with quotes\"", "key with quotes" );
+        check( "=leading equals", "leading equals" );
+    }
+
     private void check( String name, Object value ) throws IOException
     {
         Dictionary props = new Hashtable();
@@ -165,7 +175,7 @@ public class FilePersistenceManagerTest extends TestCase
     {
         fpm.store( pid, props );
 
-        assertTrue( new File( file, pid + ".config" ).exists() );
+        assertTrue( new File( file, FilePersistenceManager.encodePid( pid ) + ".config" ).exists() );
 
         Dictionary loaded = fpm.load( pid );
         assertNotNull( loaded );

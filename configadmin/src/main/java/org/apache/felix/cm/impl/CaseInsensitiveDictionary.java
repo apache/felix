@@ -267,32 +267,6 @@ class CaseInsensitiveDictionary extends Dictionary
         {
             throw new IllegalArgumentException( "Key [" + key + "] must not be an empty string" );
         }
-
-        // check for trailing dot
-        if ( key.endsWith( "." ) )
-        {
-            throw new IllegalArgumentException( "Key [" + key + "] must not end with a dot" );
-        }
-
-        // check for legal characters and non-consecutive dots
-        int lastDot = Integer.MIN_VALUE;
-        for ( int i = 0; i < key.length(); i++ )
-        {
-            char c = key.charAt( i );
-            if ( c == '.' )
-            {
-                if ( lastDot == i - 1 )
-                {
-                    throw new IllegalArgumentException( "Key [" + key + "] must not have consecutive dots" );
-                }
-                lastDot = i;
-            }
-            else if ( ( c < '0' || c > '9' ) && ( c < 'a' || c > 'z' ) && ( c < 'A' || c > 'Z' ) && c != '_'
-                && c != '-' )
-            {
-                throw new IllegalArgumentException( "Key [" + key + "] contains illegal character" );
-            }
-        }
     }
 
 

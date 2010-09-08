@@ -210,11 +210,14 @@ public class CaseInsensitiveDictionaryTest extends TestCase
 
     public void testKeyDots()
     {
-        testFailingKey( "." );
+        // FELIX-2184 these keys are all valid (but not recommended)
+        CaseInsensitiveDictionary.checkKey( "." );
+        CaseInsensitiveDictionary.checkKey( "a.b.c." );
+        CaseInsensitiveDictionary.checkKey( ".a.b.c." );
+        CaseInsensitiveDictionary.checkKey( "a..b" );
+
+        // valid key as of OSGi Compendium R4.2 (CM 1.3)
         CaseInsensitiveDictionary.checkKey( ".a.b.c" );
-        testFailingKey( "a.b.c." );
-        testFailingKey( ".a.b.c." );
-        testFailingKey( "a..b" );
     }
 
 
@@ -222,11 +225,13 @@ public class CaseInsensitiveDictionaryTest extends TestCase
     {
         testFailingKey( null );
         testFailingKey( "" );
-        testFailingKey( " " );
-        testFailingKey( "§" );
-        testFailingKey( "${yikes}" );
-        testFailingKey( "a key with spaces" );
-        testFailingKey( "fail:key" );
+
+        // FELIX-2184 these keys are all valid (but not recommended)
+        CaseInsensitiveDictionary.checkKey( " " );
+        CaseInsensitiveDictionary.checkKey( "§" );
+        CaseInsensitiveDictionary.checkKey( "${yikes}" );
+        CaseInsensitiveDictionary.checkKey( "a key with spaces" );
+        CaseInsensitiveDictionary.checkKey( "fail:key" );
     }
 
 

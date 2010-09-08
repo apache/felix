@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,7 @@ import java.util.Map;
  * form a <code>java.io.InputStream</code> and writing to a
  * <code>java.io.OutputStream</code> on behalf of the
  * {@link FilePersistenceManager} class.
- * 
+ *
  * <pre>
  * cfg = prop &quot;=&quot; value .
  *  prop = symbolic-name . // 1.4.2 of OSGi Core Specification
@@ -148,6 +148,7 @@ public class ConfigurationHandler
         NAME_CHARS.set( '_' );
         NAME_CHARS.set( '-' );
         NAME_CHARS.set( '.' );
+        NAME_CHARS.set( '\\' );
 
         TOKEN_CHARS = new BitSet();
         TOKEN_CHARS.set( TOKEN_EQ );
@@ -186,7 +187,7 @@ public class ConfigurationHandler
      * <p>
      * This method writes at the current location in the stream and does not
      * close the outputstream.
-     * 
+     *
      * @param out
      *            The <code>OutputStream</code> to write the configurtion data
      *            to.
@@ -220,7 +221,7 @@ public class ConfigurationHandler
      * <p>
      * This method reads from the current location in the stream upto the end of
      * the stream but does not close the stream at the end.
-     * 
+     *
      * @param ins
      *            The <code>InputStream</code> from which to read the
      *            configuration data.
@@ -289,7 +290,7 @@ public class ConfigurationHandler
      * value = type ( "[" values "]" | "(" values ")" | simple ) . values =
      * value { "," value } . simple = "{" stringsimple "}" . type = // 1-char
      * type code . stringsimple = // quoted string representation of the value .
-     * 
+     *
      * @param pr
      * @return
      * @throws IOException
@@ -320,7 +321,9 @@ public class ConfigurationHandler
                 return readCollection( type, pr );
 
             case TOKEN_VAL_OPEN:
-                return readSimple( type, pr );
+                Object value = readSimple( type, pr );
+                ensureNext( pr, TOKEN_VAL_CLOS );
+                return value;
 
             default:
                 return null;
@@ -344,6 +347,8 @@ public class ConfigurationHandler
                 // abort due to error
                 return null;
             }
+
+            ensureNext( pr, TOKEN_VAL_CLOS );
 
             list.add( value );
 
@@ -386,6 +391,8 @@ public class ConfigurationHandler
                 // abort due to error
                 return null;
             }
+
+            ensureNext( pr, TOKEN_VAL_CLOS );
 
             collection.add( value );
 
@@ -463,6 +470,16 @@ public class ConfigurationHandler
     }
 
 
+    private void ensureNext( PushbackReader pr, int expected ) throws IOException
+    {
+        int next = read( pr );
+        if ( next != expected )
+        {
+            readFailure( next, expected );
+        }
+    }
+
+
     private boolean checkNext( PushbackReader pr, int expected ) throws IOException
     {
         int next = read( pr );
@@ -527,11 +544,13 @@ public class ConfigurationHandler
                 // eof
                 case -1: // fall through
 
-                    // separator token
+                // separator token
+                case TOKEN_EQ:
                 case TOKEN_VAL_CLOS:
+                    pr.unread( c );
                     return buf.toString();
 
-                    // no escaping
+                // no escaping
                 default:
                     buf.append( ( char ) c );
             }
@@ -550,10 +569,11 @@ public class ConfigurationHandler
         }
 
         // check whether there is a name
-        if ( NAME_CHARS.get( c ) )
+        if ( NAME_CHARS.get( c ) || !TOKEN_CHARS.get( c ) )
         {
             // read the property name
-            tokenValue = readName( pr, ( char ) c );
+            pr.unread( c );
+            tokenValue = readQuoted( pr );
             return ( token = TOKEN_NAME );
         }
 
@@ -576,28 +596,6 @@ public class ConfigurationHandler
             c = read( pr );
         }
         return c;
-    }
-
-
-    private String readName( PushbackReader pr, char firstChar ) throws IOException
-    {
-        StringBuffer buf = new StringBuffer();
-        buf.append( firstChar );
-
-        int c = read( pr );
-        while ( c >= 0 && NAME_CHARS.get( c ) )
-        {
-            buf.append( ( char ) c );
-            c = read( pr );
-        }
-        pr.unread( c );
-
-        if ( buf.charAt( 0 ) == '.' || buf.charAt( buf.length() - 1 ) == '.' )
-        {
-            throw new IOException( "Name (" + buf + ") must not start or end with a dot" );
-        }
-
-        return buf.toString();
     }
 
 
@@ -763,6 +761,8 @@ public class ConfigurationHandler
             {
                 case '\\':
                 case TOKEN_VAL_CLOS:
+                case ' ':
+                case TOKEN_EQ:
                     out.write( '\\' );
                     out.write( c );
                     break;
