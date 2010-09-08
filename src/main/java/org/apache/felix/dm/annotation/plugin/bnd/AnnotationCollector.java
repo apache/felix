@@ -39,7 +39,7 @@ import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ResourceDependency;
-import org.apache.felix.dm.annotation.api.Service;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
@@ -64,7 +64,7 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_COMPOSITION = "L" + Composition.class.getName().replace('.', '/') + ";";
     private final static String A_LIFCLE_CTRL = "L" + LifecycleController.class.getName().replace('.', '/')+ ";";
 
-    private final static String A_SERVICE = "L" + Service.class.getName().replace('.', '/') + ";";
+    private final static String A_COMPONENT = "L" + Component.class.getName().replace('.', '/') + ";";
     private final static String A_SERVICE_DEP = "L" + ServiceDependency.class.getName().replace('.', '/') + ";";
     private final static String A_CONFIGURATION_DEPENDENCY = "L" + ConfigurationDependency.class.getName().replace('.', '/') + ";";
     private final static String A_BUNDLE_DEPENDENCY = "L" + BundleDependency.class.getName().replace('.', '/') + ";";
@@ -177,9 +177,9 @@ public class AnnotationCollector extends ClassDataCollector
     {
         m_reporter.trace("Parsed annotation: %s", annotation);
 
-        if (annotation.getName().equals(A_SERVICE))
+        if (annotation.getName().equals(A_COMPONENT))
         {
-            parseServiceAnnotation(annotation);
+            parseComponentAnnotation(annotation);
         }
         else if (annotation.getName().equals(A_ASPECT_SERVICE))
         {
@@ -243,13 +243,9 @@ public class AnnotationCollector extends ClassDataCollector
         }
     }
 
-    /**
-     * Parses a Service annotation.
-     * @param annotation The Service annotation.
-     */
-    private void parseServiceAnnotation(Annotation annotation)
+    private void parseComponentAnnotation(Annotation annotation)
     {
-        EntryWriter writer = new EntryWriter(EntryType.Service);
+        EntryWriter writer = new EntryWriter(EntryType.Component);
         m_writers.add(writer);
 
         // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
@@ -383,11 +379,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.removed, null); 
         
         // name attribute
-        writer.putString(annotation, EntryParam.name, null);
-        String name = annotation.get(EntryParam.name.toString());
-        if (name != null && ! m_dependencyNames.add(name)) {
-            throw new IllegalArgumentException("Duplicate dependency name " + name + " in ServiceDependency annotation from class " + m_className);
-        }
+        parseDependencyName(writer, annotation);
         
         // propagate attribute
         writer.putString(annotation, EntryParam.propagate, null);
@@ -642,6 +634,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.required, null);
         writer.putString(annotation, EntryParam.stateMask, null);
         writer.putString(annotation, EntryParam.propagate, null);
+        parseDependencyName(writer, annotation);
     }
 
     private void parseRersourceDependencyAnnotation(Annotation annotation)
@@ -662,8 +655,27 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.required, null);
         writer.putString(annotation, EntryParam.propagate, null);
         writer.putString(annotation, EntryParam.factoryMethod, null);
+        parseDependencyName(writer, annotation);
     }
 
+    /**
+     * Parse the name of a given dependency.
+     * @param writer The writer where to write the dependency name
+     * @param annotation the dependency to be parsed
+     */
+    private void parseDependencyName(EntryWriter writer, Annotation annotation)
+    {
+        String name = annotation.get(EntryParam.name.toString());
+        if (name != null) 
+        {
+            if(! m_dependencyNames.add(name))
+            {
+                throw new IllegalArgumentException("Duplicate dependency name " + name + " in Dependency " + annotation + " from class " + m_className);
+            }
+            writer.put(EntryParam.name, name);
+        }
+    }
+    
     private void parseLifecycleAnnotation(Annotation annotation)
     {
         Patterns.parseField(m_field, m_descriptor, Patterns.Runnable);
@@ -841,7 +853,7 @@ public class AnnotationCollector extends ClassDataCollector
         }
 
         // We must have at least a Service annotation.
-        checkServiceDeclared(EntryType.Service, EntryType.AspectService, EntryType.AdapterService,
+        checkServiceDeclared(EntryType.Component, EntryType.AspectService, EntryType.AdapterService,
             EntryType.BundleAdapterService,
             EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
         
