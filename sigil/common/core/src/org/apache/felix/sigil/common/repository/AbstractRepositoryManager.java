@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.felix.sigil.common.config.IRepositoryConfig;
 import org.apache.felix.sigil.common.core.repository.BundleResolver;
 import org.apache.felix.sigil.common.model.IModelWalker;
 import org.apache.felix.sigil.common.model.eclipse.ILibrary;
@@ -44,14 +45,28 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
 
     private boolean initialised;
 
-    private HashMap<String, IBundleRepository> repositories = new HashMap<String, IBundleRepository>();
-    private ArrayList<IBundleRepository> order = new ArrayList<IBundleRepository>();
-    private TreeMap<Integer, HashSet<IBundleRepository>> levelMap = new TreeMap<Integer, HashSet<IBundleRepository>>();
+    private final HashMap<String, IBundleRepository> repositories = new HashMap<String, IBundleRepository>();
+    private final ArrayList<IBundleRepository> order = new ArrayList<IBundleRepository>();
+    private final TreeMap<Integer, HashSet<IBundleRepository>> levelMap = new TreeMap<Integer, HashSet<IBundleRepository>>();
+    private final ArrayList<ILibrary> libraries = new ArrayList<ILibrary>();
+    
+    private final BundleResolver resolver = new BundleResolver(this);
+
     private int[] levels;
 
-    private BundleResolver resolver = new BundleResolver(this);
-
-    private ArrayList<ILibrary> libraries = new ArrayList<ILibrary>();
+    private final IRepositoryConfig config;
+    
+    public AbstractRepositoryManager(IRepositoryConfig config) {
+        this.config = config;
+    }
+    
+    /**
+     * @return
+     */
+    protected IRepositoryConfig getConfig()
+    {
+        return config;
+    }
 
     public void initialise()
     {
@@ -85,6 +100,7 @@ public abstract class AbstractRepositoryManager implements IRepositoryManager, I
 
     public void notifyChange(IBundleRepository repository)
     {
+        
         notifyListeners(new RepositoryChangeEvent(repository, Type.CHANGED));
     }
 

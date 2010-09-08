@@ -36,7 +36,6 @@ import org.apache.felix.sigil.common.repository.IRepositoryProvider;
 public class BldRepositoryManager extends AbstractRepositoryManager
 {
     private static Map<String, String> aliases = new HashMap<String, String>();
-    private final IRepositoryConfig config;
 
     static
     {
@@ -53,14 +52,14 @@ public class BldRepositoryManager extends AbstractRepositoryManager
      */
     public BldRepositoryManager(IRepositoryConfig config)
     {
-        this.config = config;
+        super(config);
     }
 
     @Override
     protected void loadRepositories()
     {
         List<IBundleRepository> list = new ArrayList<IBundleRepository>();
-        scanRepositories(config.getRepositoryPath(), list);
+        scanRepositories(getConfig().getRepositoryPath(), list);
         setRepositories(list.toArray(new IBundleRepository[list.size()]));
     }
     
@@ -81,7 +80,7 @@ public class BldRepositoryManager extends AbstractRepositoryManager
                     }
                 }
                 List<String> subpath = new LinkedList<String>();
-                for (String key : config.getAllRepositories()) {
+                for (String key : getConfig().getAllRepositories()) {
                     if (!defined.contains(key))
                     {
                         subpath.add(key);
@@ -90,7 +89,7 @@ public class BldRepositoryManager extends AbstractRepositoryManager
                 scanRepositories(subpath, list);
             }
             else {
-                Properties props = config.getRepositoryConfig(name);
+                Properties props = getConfig().getRepositoryConfig(name);
                 if (props != null) {
                     IBundleRepository repo = buildRepository(name, props);
                     

@@ -45,6 +45,7 @@ public abstract class AbstractEclipseRepositoryManager extends AbstractRepositor
     
     public AbstractEclipseRepositoryManager(IRepositoryConfig config, IRepositoryCache repositoryMap)
     {
+        super(config);
         this.config = config;
         this.repositoryCache = repositoryMap;
     }

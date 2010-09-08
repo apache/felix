@@ -348,7 +348,7 @@ public class BundleResolver implements IBundleResolver
         }
     };
 
-    private AbstractRepositoryManager repositoryManager;
+    private final AbstractRepositoryManager repositoryManager;
 
     public BundleResolver(AbstractRepositoryManager repositoryManager)
     {
