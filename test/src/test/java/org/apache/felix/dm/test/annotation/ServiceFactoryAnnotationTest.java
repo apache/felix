@@ -61,7 +61,7 @@ public class ServiceFactoryAnnotationTest extends AnnotationBase
         {
             DependencyManager m = new DependencyManager(context);
             // We provide ourself as a "Sequencer" service to the annotated bundles. 
-            m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), null));
+            m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), null));
             // Check if the test.annotation components have been initialized orderly
             m_ensure.waitForStep(10, 10000);
         }        

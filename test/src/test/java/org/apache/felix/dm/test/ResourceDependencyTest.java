@@ -36,7 +36,7 @@ import junit.framework.Assert;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -66,17 +66,17 @@ public class ResourceDependencyTest extends Base {
         Ensure e = new Ensure();
         // create a service provider and consumer
         ResourceConsumer c = new ResourceConsumer(e);
-        Service consumer = m.createService()
+        Component consumer = m.createComponent()
             .setImplementation(c)
             .add(m.createResourceDependency()
                 .setFilter("(&(path=/path/to/*.txt)(host=localhost))")
                 .setCallbacks("add", "remove"));
-        Service dynamicProxyConsumer = m.createService()
+        Component dynamicProxyConsumer = m.createComponent()
             .setFactory(new ResourceConsumerFactory(e), "create")
             .add(m.createResourceDependency()
                     .setFilter("(path=*.doc)")
                     .setCallbacks("add", null)); 
-        Service resourceProvider = m.createService()
+        Component resourceProvider = m.createComponent()
             .setImplementation(new ResourceProvider(e))
             .add(m.createServiceDependency()
                 .setService(ResourceHandler.class)

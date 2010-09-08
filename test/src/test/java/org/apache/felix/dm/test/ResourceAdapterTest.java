@@ -66,7 +66,7 @@ public class ResourceAdapterTest extends Base {
         // create a resource provider
         ResourceProvider provider = new ResourceProvider(e);
         // activate it
-        m.add(m.createService().setImplementation(provider).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove")));
+        m.add(m.createComponent().setImplementation(provider).add(m.createServiceDependency().setService(ResourceHandler.class).setCallbacks("add", "remove")));
         // create a resource adapter for our single resource
         // note that we can provide an actual implementation instance here because there will be only one
         // adapter, normally you'd want to specify a Class here

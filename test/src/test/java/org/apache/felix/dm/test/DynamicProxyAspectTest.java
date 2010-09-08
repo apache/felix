@@ -29,7 +29,7 @@ import java.lang.reflect.Proxy;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -56,18 +56,18 @@ public class DynamicProxyAspectTest extends Base {
         Ensure e = new Ensure();
         
         // create two service providers, each providing a different service interface
-        Service sp1 = m.createService().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-        Service sp2 = m.createService().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface2.class.getName(), null);
+        Component sp1 = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+        Component sp2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface2.class.getName(), null);
         
         // create a dynamic proxy based aspect and hook it up to both services
-        Service a1 = m.createAspectService(ServiceInterface.class, null, 10, "m_service")
+        Component a1 = m.createAspectService(ServiceInterface.class, null, 10, "m_service")
             .setFactory(new Factory(e, ServiceInterface.class, "ServiceInterfaceProxy"), "create");
-        Service a2 = m.createAspectService(ServiceInterface2.class, null, 10, "m_service")
+        Component a2 = m.createAspectService(ServiceInterface2.class, null, 10, "m_service")
             .setFactory(new Factory(e, ServiceInterface2.class, "ServiceInterfaceProxy2"), "create");
 
         // create a client that invokes a method on boths services, validate that it goes
         // through the proxy twice
-        Service sc = m.createService()
+        Component sc = m.createComponent()
             .setImplementation(new ServiceConsumer(e))
             .add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true))
             .add(m.createServiceDependency().setService(ServiceInterface2.class).setRequired(true))

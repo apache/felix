@@ -27,7 +27,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.test.BundleGenerator;
 import org.apache.felix.dm.test.Ensure;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
@@ -69,18 +69,18 @@ public class TemporalAnnotationTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the TemporalServiceDependencyTest service. 
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), null));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), null));
                  
         Runnable r = Ensure.createRunnableStep(m_ensure, 1);
         Dictionary props = new Hashtable() {{ put("test", "temporal"); }};
-        Service s = m.createService().setImplementation(r).setInterface(Runnable.class.getName(), props);        
+        Component s = m.createComponent().setImplementation(r).setInterface(Runnable.class.getName(), props);        
         m.add(s);
         m_ensure.waitForStep(1, 15000);
         m.remove(s);
         m_ensure.step(2);
         sleep(500);
         r = Ensure.createRunnableStep(m_ensure, 3);
-        s = m.createService().setImplementation(r).setInterface(Runnable.class.getName(), props);
+        s = m.createComponent().setImplementation(r).setInterface(Runnable.class.getName(), props);
         m.add(s);
         m_ensure.waitForStep(3, 15000);
         m.remove(s);

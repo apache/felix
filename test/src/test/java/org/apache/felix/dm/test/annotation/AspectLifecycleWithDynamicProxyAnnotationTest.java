@@ -27,7 +27,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.test.BundleGenerator;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
@@ -70,12 +70,12 @@ public class AspectLifecycleWithDynamicProxyAnnotationTest extends AnnotationBas
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer server to the ServiceProvider service
         Dictionary props = new Hashtable() {{ put("test", "aspectLifecycle.ServiceProvider"); }};
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         // Check if the ServiceProvider has been injected in the AspectTest service.
         m_ensure.waitForStep(1, 10000);
         // Provide the Sequencer server to the ServiceProviderAspect service
         props = new Hashtable() {{ put("test", "aspectLifecycle.ServiceProviderAspect"); }};
-        Service seq = m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props);
+        Component seq = m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props);
         m.add(seq);
         // Check if the AspectTest has been injected with the aspect
         m_ensure.waitForStep(3, 10000);

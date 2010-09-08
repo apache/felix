@@ -68,12 +68,12 @@ public class AspectAnnotationTest extends AnnotationBase
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer to the "ServiceProvider" service (see main/src/.../AspectTest.java). 
         Dictionary props = new Hashtable() {{ put("test", "aspect.ServiceProvider"); }};
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         // Check if the ServiceProvider has been injected in the AspectTest service.
         m_ensure.waitForStep(1, 10000);
         // Provide the Sequencer for activating the ServiceProviderAspect service
         props = new Hashtable() {{ put("test", "aspect.ServiceProviderAspect"); }};
-        m.add(m.createService().setImplementation(this).setInterface(Sequencer.class.getName(), props));
+        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         // And check if the AspectTest has been injected with the aspect
         m_ensure.waitForStep(2, 10000);
     }

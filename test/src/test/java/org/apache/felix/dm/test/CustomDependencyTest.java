@@ -41,7 +41,7 @@ public class CustomDependencyTest extends Base {
         Toggle toggle = new Toggle();
         
         // create a service that has our custom dependency as its only dependency
-        dm.add(dm.createService()
+        dm.add(dm.createComponent()
             .setImplementation(new ServiceImpl(e))
             .add(new CustomDependency(toggle))
             );

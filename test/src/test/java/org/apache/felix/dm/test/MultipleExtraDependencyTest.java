@@ -25,7 +25,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -54,7 +54,7 @@ public class MultipleExtraDependencyTest extends Base {
         DependencyManager m = new DependencyManager(context);
         Ensure e = new Ensure();
         
-        Service sp2 = m.createService()
+        Component sp2 = m.createComponent()
               .setImplementation(ServiceProvider2.class).setInterface(ServiceProvider2.class.getName(), null)
               .add(m.createServiceDependency()
                    .setService(Runnable.class, "(foo=bar)")
@@ -67,7 +67,7 @@ public class MultipleExtraDependencyTest extends Base {
               .setCallbacks(null, "start", "stop", null)
               .setComposition("getComposition");
         
-        Service sp = m.createService()
+        Component sp = m.createComponent()
               .setImplementation(ServiceProvider.class)
               .setInterface(ServiceInterface.class.getName(), 
                             new Hashtable() {{ put("foo", "bar"); }})
@@ -81,7 +81,7 @@ public class MultipleExtraDependencyTest extends Base {
                    .setCallbacks("bind", "unbind"))
               .setCallbacks(null, "start", "stop", null);
         
-        Service sc = m.createService()
+        Component sc = m.createComponent()
               .setImplementation(ServiceConsumer.class)
               .add(m.createServiceDependency()
                    .setService(Sequencer.class)
@@ -94,8 +94,8 @@ public class MultipleExtraDependencyTest extends Base {
               .setCallbacks(null, "start", "stop", null);
         
         // Provide the Sequencer service to the MultipleAnnotationsTest class.
-        Service sequencer = 
-            m.createService().setImplementation(new SequencerImpl(e))
+        Component sequencer = 
+            m.createComponent().setImplementation(new SequencerImpl(e))
                              .setInterface(Sequencer.class.getName(), null);
         m.add(sp2);
         m.add(sp);

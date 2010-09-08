@@ -24,7 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Service;
+import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -53,13 +53,13 @@ public class FELIX2344_ExtraDependencyWithAutoConfigTest extends Base {
         // Helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // Create a service provider
-        Service sp = m.createService().setInterface(ProviderInterface.class.getName(), null).setImplementation(ProviderImpl.class);
+        Component sp = m.createComponent().setInterface(ProviderInterface.class.getName(), null).setImplementation(ProviderImpl.class);
         // Create a service consumer with a required/autoconfig dependency over the service provider.
         Client c1;
-        Service sc1 = m.createService().setImplementation((c1 = new Client(e, true, 1)));
+        Component sc1 = m.createComponent().setImplementation((c1 = new Client(e, true, 1)));
         // Create a second service consumer with an optional/autoconfig dependency over the service provider.
         Client c2;
-        Service sc2 = m.createService().setImplementation(c2 = new Client(e, false, 3));
+        Component sc2 = m.createComponent().setImplementation(c2 = new Client(e, false, 3));
 
         // Add service provider and consumer sc1 (required dependency over provider)
         m.add(sc1);
@@ -99,7 +99,7 @@ public class FELIX2344_ExtraDependencyWithAutoConfigTest extends Base {
             m_startStep = startStep;
         }
         
-        public void init(Service s) {
+        public void init(Component s) {
             DependencyManager dm = s.getDependencyManager();
             s.add(dm.createServiceDependency()
                 .setInstanceBound(true)

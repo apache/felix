@@ -64,7 +64,7 @@ public class CompositeAnnotationsTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(m.createService() .setImplementation(this).setInterface(Sequencer.class.getName(), null));
+        m.add(m.createComponent() .setImplementation(this).setInterface(Sequencer.class.getName(), null));
         // Check if the components have been initialized orderly
         m_ensure.waitForStep(4, 10000);
         // Stop the bundle
