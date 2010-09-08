@@ -233,7 +233,7 @@ public class ResolverImpl implements Resolver
         // If the module doesn't have dynamic imports, then just return
         // immediately.
         List<Requirement> dynamics = module.getDynamicRequirements();
-        if ((dynamics == null) || (dynamics.size() == 0))
+        if ((dynamics == null) || dynamics.isEmpty())
         {
             return null;
         }
@@ -446,7 +446,7 @@ public class ResolverImpl implements Resolver
             // If there are no candidates for the current requirement
             // and it is not optional, then create, cache, and throw
             // a resolve exception.
-            if ((candidates.size() == 0) && !req.isOptional())
+            if (candidates.isEmpty() && !req.isOptional())
             {
                 String msg = "Unable to resolve " + module
                     + ": missing requirement " + req;
@@ -518,7 +518,7 @@ public class ResolverImpl implements Resolver
             }
         }
 
-        if (candidates.size() == 0)
+        if (candidates.isEmpty())
         {
             candidateMap.remove(dynReq);
             if (rethrow == null)

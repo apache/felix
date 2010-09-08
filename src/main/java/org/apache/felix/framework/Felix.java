@@ -4103,7 +4103,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
             // If the module doesn't have dynamic imports, then just return
             // immediately.
             List<Requirement> dynamics = module.getDynamicRequirements();
-            if ((dynamics == null) || (dynamics.size() == 0))
+            if ((dynamics == null) || dynamics.isEmpty())
             {
                 return false;
             }
@@ -4140,12 +4140,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                 module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
             Set<Capability> candidates = m_resolverState.getCandidates(module, req, false);
 
-            if (candidates.size() == 0)
-            {
-                return false;
-            }
-
-            return true;
+            return !candidates.isEmpty();
         }
 
         private void markResolvedModules(Map<Module, List<Wire>> wireMap)
