@@ -18,46 +18,45 @@
  */
 package org.apache.felix.dm;
 
-
 /**
- * This interface can be used to register a service state listener. Service
- * state listeners are called whenever a service state changes. You get notified
- * when the service is starting, started, stopping and stopped. Each callback
- * includes a reference to the service in question.
+ * This interface can be used to register a component state listener. Component
+ * state listeners are called whenever a component state changes. You get notified
+ * when the component is starting, started, stopping and stopped. Each callback
+ * includes a reference to the component in question.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface ServiceStateListener {
+public interface ComponentStateListener {
     /**
-     * Called when the service is starting. At this point, the required
+     * Called when the component is starting. At this point, the required
      * dependencies have been injected, but the service has not been registered
      * yet.
      * 
-     * @param service the service
+     * @param component the component
      */
-    public void starting(Service service);
+    public void starting(Component component);
     
     /**
-     * Called when the service is started. At this point, the service has been
+     * Called when the component is started. At this point, the component has been
      * registered.
      * 
-     * @param service the service
+     * @param component the component
      */
-    public void started(Service service);
+    public void started(Component component);
     
     /**
-     * Called when the service is stopping. At this point, the service is still
+     * Called when the component is stopping. At this point, the component is still
      * registered.
      * 
-     * @param service the service
+     * @param component the component
      */
-    public void stopping(Service service);
+    public void stopping(Component component);
     
     /**
-     * Called when the service is stopped. At this point, the service has been
+     * Called when the component is stopped. At this point, the component has been
      * unregistered.
      * 
-     * @param service the service
+     * @param component the component
      */
-    public void stopped(Service service);
+    public void stopped(Component component);
 }

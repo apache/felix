@@ -14,19 +14,18 @@ package org.apache.felix.dm;
 /**
  * This interface defines meta data regarding a given configuration property.
  */
-public interface PropertyMetaData
-{
+public interface PropertyMetaData {
     /**
      * The label used to display the property. Example: "Log Level".
      * @return The label used to display the property (may be localized)
      */
-    PropertyMetaData setHeading(String heading);
+    public PropertyMetaData setHeading(String heading);
 
     /**
      * The key of a ConfigurationAdmin property. Example: "printer.logLevel"
      * @return The Configuration Admin property name
      */
-    PropertyMetaData setId(String id);
+    public PropertyMetaData setId(String id);
 
     /**
      * Returns the property primitive type. If must be either one of the following types:<p>
@@ -41,7 +40,7 @@ public interface PropertyMetaData
      *    <li>Boolean.class</li>
      * </ul>
      */
-    PropertyMetaData setType(Class type);
+    public PropertyMetaData setType(Class type);
 
     /**
      * Returns a default for this property. The object must be of the appropriate type as defined by the cardinality and getType(). 
@@ -50,14 +49,14 @@ public interface PropertyMetaData
      * If the cardinality is 1, it must contain 0 or 1 elements. If it is -5, it must contain from 0 to max 5 elements. Note that 
      * the special case of a 0 cardinality, meaning a single value, does not allow arrays or vectors of 0 elements. 
      */
-    PropertyMetaData setDefaults(String[] defaults);
+    public PropertyMetaData setDefaults(String[] defaults);
 
     /**
      * Returns the property description. The description may be localized and must describe the semantics of this type and any 
      * constraints. Example: "Select the log level for the Printer Service".
      * @return a localizable description of the property.
      */
-    PropertyMetaData setDescription(String description);
+    public PropertyMetaData setDescription(String description);
 
     /**
      * Return the cardinality of this property. The OSGi environment handles multi valued properties in arrays ([]) or in Vector objects. 
@@ -71,16 +70,16 @@ public interface PropertyMetaData
      * <li> x = 0                     1 occurrence required</li>
      * </ul>
      */
-    PropertyMetaData setCardinality(int cardinality);
+    public PropertyMetaData setCardinality(int cardinality);
 
     /**
      * Tells if this property is required or not.
      */
-    PropertyMetaData setRequired(boolean required);
+    public PropertyMetaData setRequired(boolean required);
 
     /**
      * Return a list of valid options for this property (the labels may be localized).
      * @return the list of valid options for this property.
      */
-    PropertyMetaData addOption(String optionLabel, String optionValue);
+    public PropertyMetaData addOption(String optionLabel, String optionValue);
 }

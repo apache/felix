@@ -51,5 +51,5 @@ public interface DependencyService {
      */
     public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
     
-    public Service getServiceInterface();
+    public Component getServiceInterface();
 }

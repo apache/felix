@@ -11,12 +11,11 @@
  */
 package org.apache.felix.dm;
 
-
 /**
  * Configuration dependency that can track the availability of a (valid) configuration. To use
  * it, specify a PID for the configuration. The dependency is always required, because if it is
  * not, it does not make sense to use the dependency manager. In that scenario, simply register
- * your service as a <code>ManagedService(Factory)</code> and handle everything yourself. Also,
+ * your component as a <code>ManagedService(Factory)</code> and handle everything yourself. Also,
  * only managed services are supported, not factories. There are a couple of things you need to
  * be aware of when implementing the <code>updated(Dictionary)</code> method:
  * <ul>
@@ -30,7 +29,7 @@ package org.apache.felix.dm;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface ConfigurationDependency extends Dependency, ServiceComponentDependency
+public interface ConfigurationDependency extends Dependency, ComponentDependencyDeclaration
 {
   ConfigurationDependency setCallback(String callback);
 
@@ -72,5 +71,4 @@ public interface ConfigurationDependency extends Dependency, ServiceComponentDep
   ConfigurationDependency add(PropertyMetaData properties);
   
   ConfigurationDependency setInstanceBound(boolean isInstanceBound);
-
 }

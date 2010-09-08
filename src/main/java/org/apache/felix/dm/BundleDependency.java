@@ -13,54 +13,54 @@ package org.apache.felix.dm;
 
 import org.osgi.framework.Bundle;
 
-public interface BundleDependency extends Dependency, ServiceComponentDependency
+public interface BundleDependency extends Dependency, ComponentDependencyDeclaration
 {
   /**
-   * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
+   * Sets the callbacks for this dependency. These callbacks can be used as hooks whenever a
    * dependency is added or removed. When you specify callbacks, the auto configuration feature
    * is automatically turned off, because we're assuming you don't need it in this case.
    * 
-   * @param added the method to call when a service was added
-   * @param removed the method to call when a service was removed
-   * @return this service dependency
+   * @param added the method to call when a bundle was added
+   * @param removed the method to call when a bundle was removed
+   * @return this bundle dependency
    */
   BundleDependency setCallbacks(String added, String removed);
 
   /**
-   * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
+   * Sets the callbacks for this dependency. These callbacks can be used as hooks whenever a
    * dependency is added, changed or removed. When you specify callbacks, the auto configuration
    * feature is automatically turned off, because we're assuming you don't need it in this case.
    * 
-   * @param added the method to call when a service was added
-   * @param changed the method to call when a service was changed
-   * @param removed the method to call when a service was removed
-   * @return this service dependency
+   * @param added the method to call when a bundle was added
+   * @param changed the method to call when a bundle was changed
+   * @param removed the method to call when a bundle was removed
+   * @return this bundle dependency
    */
   BundleDependency setCallbacks(String added, String changed, String removed);
 
   /**
-   * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
+   * Sets the callbacks for this dependency. These callbacks can be used as hooks whenever a
    * dependency is added or removed. They are called on the instance you provide. When you
    * specify callbacks, the auto configuration feature is automatically turned off, because
    * we're assuming you don't need it in this case.
    * 
    * @param instance the instance to call the callbacks on
-   * @param added the method to call when a service was added
-   * @param removed the method to call when a service was removed
-   * @return this service dependency
+   * @param added the method to call when a bundle was added
+   * @param removed the method to call when a bundle was removed
+   * @return this bundle dependency
    */
   BundleDependency setCallbacks(Object instance, String added, String removed);
 
   /**
-   * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
+   * Sets the callbacks for this dependency. These callbacks can be used as hooks whenever a
    * dependency is added, changed or removed. They are called on the instance you provide. When
    * you specify callbacks, the auto configuration feature is automatically turned off, because
    * we're assuming you don't need it in this case.
    * 
    * @param instance the instance to call the callbacks on
-   * @param added the method to call when a service was added
-   * @param changed the method to call when a service was changed
-   * @param removed the method to call when a service was removed
+   * @param added the method to call when a bundle was added
+   * @param changed the method to call when a bundle was changed
+   * @param removed the method to call when a bundle was removed
    * @return this service dependency
    */
   BundleDependency setCallbacks(Object instance, String added, String changed, String removed);

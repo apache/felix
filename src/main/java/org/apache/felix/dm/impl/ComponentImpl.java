@@ -32,26 +32,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentDeclaration;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.DependencyService;
-import org.apache.felix.dm.Service;
-import org.apache.felix.dm.ServiceComponent;
-import org.apache.felix.dm.ServiceComponentDependency;
-import org.apache.felix.dm.ServiceStateListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * Service implementation.
+ * Component implementation.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceImpl implements Service, DependencyService, ServiceComponent {
+public class ComponentImpl implements Component, DependencyService, ComponentDeclaration {
     private static final Class[] VOID = new Class[] {};
 	private static final ServiceRegistration NULL_REGISTRATION;
-    private static final ServiceStateListener[] SERVICE_STATE_LISTENER_TYPE = new ServiceStateListener[] {};
+    private static final ComponentStateListener[] SERVICE_STATE_LISTENER_TYPE = new ComponentStateListener[] {};
 
     private final Object SYNC = new Object();
     private final BundleContext m_context;
@@ -102,7 +102,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     private Map m_autoConfig = new HashMap();
     private Map m_autoConfigInstance = new HashMap();
 
-    public ServiceImpl(BundleContext context, DependencyManager manager, Logger logger) {
+    public ComponentImpl(BundleContext context, DependencyManager manager, Logger logger) {
     	m_logger = logger;
         m_state = new State((List) m_dependencies.clone(), false, false, false);
         m_context = context;
@@ -115,7 +115,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         m_autoConfig.put(BundleContext.class, Boolean.TRUE);
         m_autoConfig.put(ServiceRegistration.class, Boolean.TRUE);
         m_autoConfig.put(DependencyManager.class, Boolean.TRUE);
-        m_autoConfig.put(Service.class, Boolean.TRUE);
+        m_autoConfig.put(Component.class, Boolean.TRUE);
     }
 
     private void calculateStateChanges() {
@@ -222,7 +222,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         m_executor.execute();
     }
     
-    public Service add(final Dependency dependency) {
+    public Component add(final Dependency dependency) {
     	State oldState, newState;
         synchronized (m_dependencies) {
         	oldState = m_state;
@@ -254,7 +254,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         return this;
     }
 
-    public Service add(List dependencies) {
+    public Component add(List dependencies) {
         // TODO review if this can be done more smartly
         for (int i = 0; i < dependencies.size(); i++) {
             add((Dependency) dependencies.get(i));
@@ -262,7 +262,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         return this;
     }
 
-    public Service remove(Dependency dependency) {
+    public Component remove(Dependency dependency) {
     	State oldState, newState;
         synchronized (m_dependencies) {
         	oldState = m_state;
@@ -296,7 +296,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         return m_serviceInstance;
     }
     
-    public Service getServiceInterface() {
+    public Component getServiceInterface() {
         return this;
     }
 
@@ -338,7 +338,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 
     public synchronized void start() {
     	if (m_serviceRegistration == null) {
-	        m_serviceRegistration = m_context.registerService(ServiceComponent.class.getName(), this, null);
+	        m_serviceRegistration = m_context.registerService(ComponentDeclaration.class.getName(), this, null);
 	    	State oldState, newState;
 	        synchronized (m_dependencies) {
 	        	oldState = m_state;
@@ -363,21 +363,21 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     	}
     }
 
-    public synchronized Service setInterface(String serviceName, Dictionary properties) {
+    public synchronized Component setInterface(String serviceName, Dictionary properties) {
 	    ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
 	    return this;
 	}
 
-	public synchronized Service setInterface(String[] serviceName, Dictionary properties) {
+	public synchronized Component setInterface(String[] serviceName, Dictionary properties) {
 	    ensureNotActive();
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
 	    return this;
 	}
 
-	public synchronized Service setCallbacks(String init, String start, String stop, String destroy) {
+	public synchronized Component setCallbacks(String init, String start, String stop, String destroy) {
 	    ensureNotActive();
 	    m_callbackInit = init;
 	    m_callbackStart = start;
@@ -386,7 +386,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 	    return this;
 	}
 	
-    public synchronized Service setCallbacks(Object instance, String init, String start, String stop, String destroy) {
+    public synchronized Component setCallbacks(Object instance, String init, String start, String stop, String destroy) {
         ensureNotActive();
         m_callbackInstance = instance;
         m_callbackInit = init;
@@ -398,31 +398,31 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 	
 	
 
-	public synchronized Service setImplementation(Object implementation) {
+	public synchronized Component setImplementation(Object implementation) {
 	    ensureNotActive();
 	    m_implementation = implementation;
 	    return this;
 	}
 
-	public synchronized Service setFactory(Object factory, String createMethod) {
+	public synchronized Component setFactory(Object factory, String createMethod) {
 	    ensureNotActive();
 		m_instanceFactory = factory;
 		m_instanceFactoryCreateMethod = createMethod;
 		return this;
 	}
 
-	public synchronized Service setFactory(String createMethod) {
+	public synchronized Component setFactory(String createMethod) {
 		return setFactory(null, createMethod);
 	}
 
-	public synchronized Service setComposition(Object instance, String getMethod) {
+	public synchronized Component setComposition(Object instance, String getMethod) {
 	    ensureNotActive();
 		m_compositionManager = instance;
 		m_compositionManagerGetMethod = getMethod;
 		return this;
 	}
 
-	public synchronized Service setComposition(String getMethod) {
+	public synchronized Component setComposition(String getMethod) {
 		return setComposition(null, getMethod);
 	}
 
@@ -437,7 +437,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 	    return null;
 	}
 
-	public synchronized Service setServiceProperties(Dictionary serviceProperties) {
+	public synchronized Component setServiceProperties(Dictionary serviceProperties) {
 	    m_serviceProperties = serviceProperties;
 	    if ((m_registration != null) && (m_serviceName != null)) {
 	        m_registration.setProperties(calculateServiceProperties());
@@ -446,7 +446,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 	}
 
 	// service state listener methods
-	public void addStateListener(ServiceStateListener listener) {
+	public void addStateListener(ComponentStateListener listener) {
     	synchronized (m_stateListeners) {
 		    m_stateListeners.add(listener);
     	}
@@ -462,7 +462,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     	}
 	}
 
-	public void removeStateListener(ServiceStateListener listener) {
+	public void removeStateListener(ComponentStateListener listener) {
     	synchronized (m_stateListeners) {
     		m_stateListeners.remove(listener);
     	}
@@ -475,7 +475,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 	}
 
 	private void stateListenersStarting() {
-		ServiceStateListener[] list = getListeners();
+		ComponentStateListener[] list = getListeners();
 		for (int i = 0; i < list.length; i++) {
 		    try {
 		        list[i].starting(this);
@@ -487,7 +487,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
 	}
 
 	private void stateListenersStarted() {
-        ServiceStateListener[] list = getListeners();
+        ComponentStateListener[] list = getListeners();
         for (int i = 0; i < list.length; i++) {
             try {
                 list[i].started(this);
@@ -499,7 +499,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     }
 
     private void stateListenersStopping() {
-        ServiceStateListener[] list = getListeners();
+        ComponentStateListener[] list = getListeners();
         for (int i = 0; i < list.length; i++) {
             try {
                 list[i].stopping(this);
@@ -511,7 +511,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     }
 
     private void stateListenersStopped() {
-        ServiceStateListener[] list = getListeners();
+        ComponentStateListener[] list = getListeners();
         for (int i = 0; i < list.length; i++) {
             try {
                 list[i].stopped(this);
@@ -522,9 +522,9 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         }
     }
 
-	private ServiceStateListener[] getListeners() {
+	private ComponentStateListener[] getListeners() {
 		synchronized (m_stateListeners) {
-			return (ServiceStateListener[]) m_stateListeners.toArray(SERVICE_STATE_LISTENER_TYPE);
+			return (ComponentStateListener[]) m_stateListeners.toArray(SERVICE_STATE_LISTENER_TYPE);
 		}
 	}
 
@@ -632,7 +632,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
             // ask the service for its composition instances
             Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
             invokeCallbackMethod(instances, name, 
-                new Class[][] {{ Service.class }, {}}, 
+                new Class[][] {{ Component.class }, {}}, 
                 new Object[][] {{ this }, {}});
         }
     }
@@ -762,18 +762,18 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
             if (((Boolean) m_autoConfig.get(DependencyManager.class)).booleanValue()) {
                 configureImplementation(DependencyManager.class, m_manager, (String) m_autoConfigInstance.get(DependencyManager.class));
             }
-            if (((Boolean) m_autoConfig.get(Service.class)).booleanValue()) {
-                configureImplementation(Service.class, this, (String) m_autoConfigInstance.get(Service.class));
+            if (((Boolean) m_autoConfig.get(Component.class)).booleanValue()) {
+                configureImplementation(Component.class, this, (String) m_autoConfigInstance.get(Component.class));
             }
     	}
     }
 
-    public synchronized Service setAutoConfig(Class clazz, boolean autoConfig) {
+    public synchronized Component setAutoConfig(Class clazz, boolean autoConfig) {
         m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
         return this;
     }
     
-    public synchronized Service setAutoConfig(Class clazz, String instanceName) {
+    public synchronized Component setAutoConfig(Class clazz, String instanceName) {
         m_autoConfig.put(clazz, Boolean.valueOf(instanceName != null));
         m_autoConfigInstance.put(clazz, instanceName);
         return this;
@@ -1003,7 +1003,7 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     
     // ServiceComponent interface
     
-    static class SCDImpl implements ServiceComponentDependency {
+    static class SCDImpl implements ComponentDependencyDeclaration {
         private final String m_name;
         private final int m_state;
         private final String m_type;
@@ -1027,14 +1027,14 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
         }
     }
     
-    public ServiceComponentDependency[] getComponentDependencies() {
+    public ComponentDependencyDeclaration[] getComponentDependencies() {
         List deps = getDependencies();
         if (deps != null) {
-            ServiceComponentDependency[] result = new ServiceComponentDependency[deps.size()];
+            ComponentDependencyDeclaration[] result = new ComponentDependencyDeclaration[deps.size()];
             for (int i = 0; i < result.length; i++) {
                 Dependency dep = (Dependency) deps.get(i);
-                if (dep instanceof ServiceComponentDependency) {
-                    result[i] = (ServiceComponentDependency) dep;
+                if (dep instanceof ComponentDependencyDeclaration) {
+                    result[i] = (ComponentDependencyDeclaration) dep;
                 }
                 else {
                     result[i] = new SCDImpl(dep.toString(), (dep.isAvailable() ? 1 : 0) + (dep.isRequired() ? 2 : 0), dep.getClass().getName());
@@ -1081,6 +1081,6 @@ public class ServiceImpl implements Service, DependencyService, ServiceComponent
     }
     
     static {
-        NULL_REGISTRATION = (ServiceRegistration) Proxy.newProxyInstance(ServiceImpl.class.getClassLoader(), new Class[] {ServiceRegistration.class}, new DefaultNullObject());
+        NULL_REGISTRATION = (ServiceRegistration) Proxy.newProxyInstance(ComponentImpl.class.getClassLoader(), new Class[] {ServiceRegistration.class}, new DefaultNullObject());
     }
 }

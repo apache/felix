@@ -33,13 +33,13 @@ import java.util.Set;
 
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyService;
-import org.apache.felix.dm.ServiceComponentDependency;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
-import org.apache.felix.dm.impl.tracker.ServiceTracker;
-import org.apache.felix.dm.impl.tracker.ServiceTrackerCustomizer;
+import org.apache.felix.dm.tracker.ServiceTracker;
+import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -51,7 +51,7 @@ import org.osgi.service.log.LogService;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceDependencyImpl extends DependencyBase implements ServiceDependency, ServiceTrackerCustomizer, ServiceComponentDependency {
+public class ServiceDependencyImpl extends DependencyBase implements ServiceDependency, ServiceTrackerCustomizer, ComponentDependencyDeclaration {
     protected List m_services = new ArrayList();
     protected volatile ServiceTracker m_tracker;
     protected BundleContext m_context;
