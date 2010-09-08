@@ -26,6 +26,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 
 import org.apache.felix.sigil.eclipse.SigilCore;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageRegistry;
@@ -123,8 +124,7 @@ public class SigilUI extends AbstractUIPlugin
         }
     }
 
-    public static void runWorkspaceOperationSync(IRunnableWithProgress op, Shell shell)
-        throws Throwable
+    public static void runWorkspaceOperationSync(IRunnableWithProgress op, Shell shell) throws CoreException
     {
         if (shell == null)
         {
@@ -136,7 +136,12 @@ public class SigilUI extends AbstractUIPlugin
         }
         catch (InvocationTargetException e)
         {
-            throw e.getCause();
+            if (e.getCause() instanceof CoreException) {
+                throw (CoreException) e.getCause();
+            }
+            else {
+                throw SigilCore.newCoreException("Failed to execute task", e.getCause());
+            }
         }
         catch (InterruptedException e1)
         {
