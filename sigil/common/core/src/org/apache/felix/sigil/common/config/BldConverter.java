@@ -278,7 +278,8 @@ public class BldConverter
         String idBsn = id != null ? id : ids.get(0);
         String oldBsn = config.getString(id, BldConfig.S_SYM_NAME);
         String bsn = info.getSymbolicName();
-
+        if (bsn == null) throw new IllegalArgumentException("Missing bundle symbolic name");
+        
         if (!bsn.equals(idBsn) || oldBsn != null)
             config.setString(id, BldConfig.S_SYM_NAME, bsn);
 
