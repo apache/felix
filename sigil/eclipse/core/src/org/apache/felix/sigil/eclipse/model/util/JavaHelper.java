@@ -440,27 +440,30 @@ public class JavaHelper
             attributes, export));
         for (IClasspathEntry e : n.getJavaModel().getRawClasspath())
         {
-            switch (e.getEntryKind())
-            {
-                case IClasspathEntry.CPE_LIBRARY:
-                    entries.add(JavaCore.newLibraryEntry(e.getPath(),
-                        e.getSourceAttachmentPath(), e.getSourceAttachmentRootPath(),
-                        rules, attributes, export));
-                    break;
-                case IClasspathEntry.CPE_VARIABLE:
-                    IPath path = JavaCore.getResolvedVariablePath(e.getPath());
-                    if (path != null)
-                    {
-                        IPath spath = e.getSourceAttachmentPath();
-                        if (spath != null) {
-                            spath = JavaCore.getResolvedVariablePath(spath);
-                        }
-                        
-                        entries.add(JavaCore.newLibraryEntry(path,
-                            spath, e.getSourceAttachmentRootPath(),
+            String encoded = n.getJavaModel().encodeClasspathEntry(e);
+            if ( n.getBundle().getClasspathEntrys().contains(encoded) ) {
+                switch (e.getEntryKind())
+                {
+                    case IClasspathEntry.CPE_LIBRARY:
+                        entries.add(JavaCore.newLibraryEntry(e.getPath(),
+                            e.getSourceAttachmentPath(), e.getSourceAttachmentRootPath(),
                             rules, attributes, export));
-                    }
-                    break;
+                        break;
+                    case IClasspathEntry.CPE_VARIABLE:
+                        IPath path = JavaCore.getResolvedVariablePath(e.getPath());
+                        if (path != null)
+                        {
+                            IPath spath = e.getSourceAttachmentPath();
+                            if (spath != null) {
+                                spath = JavaCore.getResolvedVariablePath(spath);
+                            }
+                            
+                            entries.add(JavaCore.newLibraryEntry(path,
+                                spath, e.getSourceAttachmentRootPath(),
+                                rules, attributes, export));
+                        }
+                        break;
+                }
             }
         }
 
