@@ -59,21 +59,11 @@ public class BuildDevice {
 		root.addNode(spec);
 		return root;
 	}
-	
-	private static Device buildRootDeviceNode(Node root,ServiceReference sr){		
-		Node dev = new Node(Device.ELEM_NAME);
-		root.addNode(dev);
-		DeviceData dd = new DeviceData();
-		dd.setDescriptionURI("/gen-desc.xml");
-		dev.setUserData(dd);
-		Device devUPnP = new Device(root,dev);
 
-
+	private static String extractDeviceType(ServiceReference sr) {
 		Object aux = sr.getProperty(UPnPDevice.TYPE);
-		if(aux==null){
-			devUPnP.setDeviceType(null);		
-		}else if(aux instanceof String){
-			devUPnP.setDeviceType((String) aux);
+		if(aux instanceof String){
+			return (String) aux;
 		}else if(aux instanceof String[]){
 			//The property key UPnP.device.type should be a String
 			String[] v = (String[]) aux;
@@ -87,9 +77,21 @@ public class BuildDevice {
 					maxindex=i;
 				}				
 			}
-			devUPnP.setDeviceType(v[maxindex]);
+			return v[maxindex];
+		}else{
+			return "";
 		}				
-		
+	}
+	
+	private static Device buildRootDeviceNode(Node root, ServiceReference sr){		
+		Node dev = new Node(Device.ELEM_NAME);
+		root.addNode(dev);
+		DeviceData dd = new DeviceData();
+		dd.setDescriptionURI("/gen-desc.xml");
+		dev.setUserData(dd);
+		Device devUPnP = new Device(root,dev);
+
+		devUPnP.setDeviceType(extractDeviceType(sr));
 		devUPnP.setFriendlyName((String) sr.getProperty(UPnPDevice.FRIENDLY_NAME));
 		devUPnP.setManufacture((String) sr.getProperty(UPnPDevice.MANUFACTURER));
 		devUPnP.setManufactureURL((String) sr.getProperty(UPnPDevice.MANUFACTURER_URL));
@@ -139,6 +141,7 @@ public class BuildDevice {
 		
 		Device devUPnP = new Device(dev);
 		
+		devUPnP.setDeviceType(extractDeviceType(sr));
 		devUPnP.setFriendlyName((String) sr.getProperty(UPnPDevice.FRIENDLY_NAME));
 		devUPnP.setManufacture((String) sr.getProperty(UPnPDevice.MANUFACTURER));
 		devUPnP.setManufactureURL((String) sr.getProperty(UPnPDevice.MANUFACTURER_URL));

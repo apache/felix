@@ -12,13 +12,42 @@
   <artifactId>org.apache.felix.upnp.basedriver</artifactId>
   <version>0.9.0-SNAPSHOT</version>
 
+  <properties>
+    <cyberdomo.jdk14.version>1.8.0</cyberdomo.jdk14.version>
+    <cyberdomo.jdk13.version>1.8.0</cyberdomo.jdk13.version>
+    <cyberlink.jdk14.version>1.7.0</cyberlink.jdk14.version>
+  </properties>
+
   <profiles>
+    <profile>
+      <id>LATEST</id>
+      <repositories>
+        <repository>
+          <id>release.domoware.isti.cnr.it</id>
+          <name>Domoware Java Repository</name>
+          <url>http://domoware.isti.cnr.it/maven2/</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>snapshot.domoware.isti.cnr.it</id>
+          <name>Domoware Java Snapshot Repository</name>
+          <url>http://domoware.isti.cnr.it/maven2-snap/</url>
+          <releases><enabled>false</enabled></releases>
+        </repository>
+      </repositories>
+      <properties>
+        <cyberdomo.jdk14.version>1.9.0-SNAPSHOT</cyberdomo.jdk14.version>
+        <cyberdomo.jdk13.version>1.8.1-SNAPSHOT</cyberdomo.jdk13.version>
+        <cyberlink.jdk14.version>1.8.0-SNAPSHOT</cyberlink.jdk14.version>
+      </properties>
+    </profile>
+
     <profile>
       <id>cyberlink</id>
       <activation>
       	<property>
-	  <name>cyberlink</name><value>true</value>
-	</property>	
+          <name>cyberlink</name><value>true</value>
+        </property>	
       </activation>
 
       <repositories>
@@ -53,7 +82,8 @@
                     <Export-Package>
                       org.apache.felix.upnp.basedriver.controller;version=0.1.0,
                       org.apache.felix.upnp.basedriver.util;version=0.3.0,
-                      org.apache.felix.upnp.basedriver.resources;version=0.3.0
+                      org.apache.felix.upnp.basedriver.resources;version=0.3.0,
+                      org.osgi.service.upnp;version=1.1.0
                     </Export-Package>
                     <Import-Package>
                       org.osgi.*, javax.xml.parsers, org.w3c.dom, org.xml.sax,
@@ -117,7 +147,8 @@
             <Export-Package>
               org.apache.felix.upnp.basedriver.controller;version=0.1.0,
               org.apache.felix.upnp.basedriver.util;version=0.3.0,
-              org.apache.felix.upnp.basedriver.resources;version=0.3.0
+              org.apache.felix.upnp.basedriver.resources;version=0.3.0,
+              org.osgi.service.upnp;version=1.1.0
             </Export-Package>
             <Import-Package>
               org.osgi.*, javax.xml.parsers, org.w3c.dom, org.xml.sax
@@ -141,7 +172,8 @@
                 <Export-Package>
                   org.apache.felix.upnp.basedriver.controller;version=0.1.0,
                   org.apache.felix.upnp.basedriver.util;version=0.3.0,
-                  org.apache.felix.upnp.basedriver.resources;version=0.3.0
+                  org.apache.felix.upnp.basedriver.resources;version=0.3.0,
+                  org.osgi.service.upnp;version=1.1.0
                 </Export-Package>
                 <Import-Package>
                   org.osgi.*
@@ -202,13 +234,13 @@
     <dependency>
       <groupId>it.cnr.isti.domoware.cyberdomo</groupId>
       <artifactId>upnp-stack</artifactId>
-      <version>1.8.0</version>
+      <version>${cyberdomo.jdk14.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>it.cnr.isti.domoware.cyberdomo</groupId>
       <artifactId>upnp-stack-jdk13</artifactId>
-      <version>1.8.0</version>
+      <version>${cyberdomo.jdk13.version}</version>
       <optional>true</optional>
     </dependency>
   </dependencies>
