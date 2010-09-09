@@ -35,6 +35,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -149,6 +150,27 @@ public class SigilUI extends AbstractUIPlugin
         }
     }
 
+    public static void runWorkspaceOperationSync(IRunnableWithProgress op) throws CoreException
+    {
+        try
+        {
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow().run(false, true, op);
+        }
+        catch (InvocationTargetException e)
+        {
+            if (e.getCause() instanceof CoreException) {
+                throw (CoreException) e.getCause();
+            }
+            else {
+                throw SigilCore.newCoreException("Failed to execute task", e.getCause());
+            }
+        }
+        catch (InterruptedException e1)
+        {
+            SigilCore.log("Workspace operation interrupted");
+        }
+    }
+    
     public static IWorkbenchWindow getActiveWorkbenchWindow()
     {
         return getDefault().getWorkbench().getActiveWorkbenchWindow();
