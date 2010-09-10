@@ -32,7 +32,7 @@ import java.util.TreeMap;
 
 import org.apache.felix.sigil.common.util.QuoteUtil;
 
-public class BldConfig
+public class BldConfig implements Cloneable
 {
     // control properties
     public static final String C_BUNDLES = "-bundles";
@@ -592,5 +592,67 @@ public class BldConfig
     {
         return "STRING: " + string + " LIST:" + list + " MAP: " + map + " PROPERTY: "
             + property + " CONFIG:" + config + "\nDFLT{ " + dflt + "}";
+    }
+    
+    public BldConfig clone() {
+        try
+        {
+            BldConfig bc = (BldConfig) super.clone();
+            bc.string = new TreeMap<String, String>(bc.string);
+            bc.list = cloneMap(bc.list);
+            bc.map = cloneMap(bc.map);
+            bc.config = new TreeMap<String, BldConfig>(bc.config);
+            bc.property = new TreeMap<String, Properties>(bc.property);
+
+            // default config - not modified or saved
+            // bc.dflt = bc.dflt.clone();
+
+            bc.unknown = cloneProps(bc.unknown);
+            
+            return bc;
+        }
+        catch (CloneNotSupportedException e)
+        {
+            throw new IllegalStateException(e);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static <K, V> Map<K, V> cloneMap(Map<K,V> map) {
+        Map clone = new TreeMap();
+        for (Map.Entry<?,?> e : map.entrySet()) {
+            if ( e.getValue() == null ) {
+                clone.put(e.getKey(), null);
+            }
+            else if ( e.getValue() instanceof List<?> ) {
+                clone.put(e.getKey(), new ArrayList((List<?>) e.getValue()));
+            }
+            else if (e.getValue() instanceof Map<?,?>) {
+                clone.put(e.getKey(), cloneMap((Map<?,?>)e.getValue()));
+            }
+            else if (e.getValue() instanceof String) {
+                clone.put(e.getKey(), e.getValue());
+            }
+            else if (e.getValue() instanceof BldConfig) {
+                BldConfig c = (BldConfig) e.getValue();
+                clone.put(e.getKey(), c.clone());
+            }
+            else if (e.getValue() instanceof Properties) {
+                Properties p = (Properties) e.getValue();
+                clone.put(e.getKey(), cloneProps(p));
+            }
+            else {
+                throw new IllegalStateException("Unexpected value: " + e.getValue());
+            }
+        }
+        return clone;
+    }
+    
+    private static Properties cloneProps(Properties p) {
+        Properties props = new Properties();
+        for (Map.Entry<?,?> pe : props.entrySet()) {
+            props.put(pe.getKey(), pe.getValue());
+        }
+        return props;
     }
 }

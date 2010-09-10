@@ -57,7 +57,7 @@ import org.apache.felix.sigil.common.model.osgi.IPackageImport.OSGiImport;
 import org.apache.felix.sigil.common.osgi.VersionRange;
 import org.apache.felix.sigil.common.osgi.VersionTable;
 
-public class BldProject implements IBldProject, IRepositoryConfig
+public class BldProject implements IBldProject, IRepositoryConfig, Cloneable
 {
     private static final String OVERRIDE_PREFIX = "sigil.";
     private static final int MAX_HEADER = 10240;
@@ -839,6 +839,22 @@ public class BldProject implements IBldProject, IRepositoryConfig
 
         for (File d : dirs)
             findSrcPkgs(d, pkg, result);
+    }
+    
+    public BldProject clone() {
+        BldProject p;
+        try
+        {
+            p = (BldProject) super.clone();
+            p.config = p.config.clone();
+            p.convert = new BldConverter(p.config);
+            p.requirements = p.requirements == null ? null : p.requirements.clone();
+        }
+        catch (CloneNotSupportedException e)
+        {
+            throw new IllegalStateException(e);
+        }
+        return p;
     }
 
     /**

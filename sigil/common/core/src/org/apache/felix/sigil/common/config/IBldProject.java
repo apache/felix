@@ -129,6 +129,8 @@ public interface IBldProject
      * gets the last modification date of the project file.
      */
     long getLastModified();
+    
+    IBldProject clone();
 
     interface IBldBundle
     {
