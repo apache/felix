@@ -258,30 +258,31 @@ public class JavaHelper
         IProgressMonitor monitor)
     {
         LinkedList<IPackageImport> imports = new LinkedList<IPackageImport>();
-
-        for (String packageName : findJavaImports(project, monitor))
-        {
-            if (!ProfileManager.isBootDelegate(project, packageName))
-            { // these must come from boot classloader
-                try
-                {
-                    if (!project.isInClasspath(packageName, monitor))
+        Set<String> names = findJavaImports(project, monitor);
+        if ( !monitor.isCanceled() ) {
+            for (String packageName : names)
+            {
+                if (!ProfileManager.isBootDelegate(project, packageName))
+                { // these must come from boot classloader
+                    try
                     {
-                        Collection<IPackageExport> exports = findExportsForPackage(
-                            project, packageName);
-                        if (!exports.isEmpty())
+                        if (!project.isInClasspath(packageName, monitor))
                         {
-                            imports.add(select(exports));
+                            Collection<IPackageExport> exports = findExportsForPackage(
+                                project, packageName);
+                            if (!exports.isEmpty())
+                            {
+                                imports.add(select(exports));
+                            }
                         }
                     }
-                }
-                catch (CoreException e)
-                {
-                    SigilCore.error("Failed to check classpath", e);
+                    catch (CoreException e)
+                    {
+                        SigilCore.error("Failed to check classpath", e);
+                    }
                 }
             }
         }
-
         return imports;
     }
 
@@ -297,53 +298,55 @@ public class JavaHelper
 
         final Set<String> packages = findJavaImports(project, monitor);
 
-        project.visit(new IModelWalker()
-        {
-            public boolean visit(IModelElement element)
+        if (!monitor.isCanceled()) {
+            project.visit(new IModelWalker()
             {
-                if (element instanceof IPackageImport)
+                public boolean visit(IModelElement element)
                 {
-                    IPackageImport pi = (IPackageImport) element;
-                    if (!packages.contains(pi.getPackageName()))
+                    if (element instanceof IPackageImport)
                     {
-                        unused.add(pi);
-                    }
-                }
-                else if (element instanceof IRequiredBundle)
-                {
-                    IRequiredBundle rb = (IRequiredBundle) element;
-                    IRepositoryManager manager = project.getRepositoryManager();
-                    ResolutionConfig config = new ResolutionConfig(
-                        ResolutionConfig.INCLUDE_OPTIONAL
-                            | ResolutionConfig.IGNORE_ERRORS);
-                    try
-                    {
-                        IResolution r = manager.getBundleResolver().resolve(rb, config,
-                            new ResolutionMonitorAdapter(monitor));
-                        ISigilBundle bundle = r.getProvider(rb);
-                        boolean found = false;
-                        for (IPackageExport pe : bundle.getBundleInfo().getExports())
+                        IPackageImport pi = (IPackageImport) element;
+                        if (!packages.contains(pi.getPackageName()))
                         {
-                            if (packages.contains(pe.getPackageName()))
+                            unused.add(pi);
+                        }
+                    }
+                    else if (element instanceof IRequiredBundle)
+                    {
+                        IRequiredBundle rb = (IRequiredBundle) element;
+                        IRepositoryManager manager = project.getRepositoryManager();
+                        ResolutionConfig config = new ResolutionConfig(
+                            ResolutionConfig.INCLUDE_OPTIONAL
+                                | ResolutionConfig.IGNORE_ERRORS);
+                        try
+                        {
+                            IResolution r = manager.getBundleResolver().resolve(rb, config,
+                                new ResolutionMonitorAdapter(monitor));
+                            ISigilBundle bundle = r.getProvider(rb);
+                            boolean found = false;
+                            for (IPackageExport pe : bundle.getBundleInfo().getExports())
                             {
-                                found = true;
-                                break;
+                                if (packages.contains(pe.getPackageName()))
+                                {
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found)
+                            {
+                                unused.add(rb);
                             }
                         }
-
-                        if (!found)
+                        catch (ResolutionException e)
                         {
-                            unused.add(rb);
+                            SigilCore.error("Failed to resolve " + rb, e);
                         }
                     }
-                    catch (ResolutionException e)
-                    {
-                        SigilCore.error("Failed to resolve " + rb, e);
-                    }
+                    return !monitor.isCanceled();
                 }
-                return true;
-            }
-        });
+            });
+        }
 
         return unused;
     }
@@ -860,7 +863,9 @@ public class JavaHelper
         Set<String> imports = new HashSet<String>();
 
         findJavaModelImports(project, imports, monitor);
-        findTextImports(project, imports, monitor);
+        if ( !monitor.isCanceled() ) {
+            findTextImports(project, imports, monitor);
+        }
 
         return imports;
     }
@@ -905,6 +910,10 @@ public class JavaHelper
         {
             for (IPackageFragment root : project.getJavaModel().getPackageFragments())
             {
+                if ( monitor.isCanceled() ) {
+                    return;
+                }
+                
                 IPackageFragmentRoot rt = (IPackageFragmentRoot) root.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 
                 if (isInClassPath(project, rt))

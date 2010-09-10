@@ -65,6 +65,10 @@ public class ResolveProjectDependenciesAction extends DisplayAction
                 List<IPackageImport> imports = JavaHelper.findRequiredImports(project,
                     monitor);
 
+                if (monitor.isCanceled()) {
+                    return Status.CANCEL_STATUS;
+                }
+                
                 if (imports.isEmpty())
                 {
                     info(shell, "No new dependencies found");

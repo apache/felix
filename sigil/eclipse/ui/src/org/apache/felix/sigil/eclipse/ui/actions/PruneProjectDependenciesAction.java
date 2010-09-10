@@ -62,6 +62,8 @@ public class PruneProjectDependenciesAction extends DisplayAction
                 Collection<IModelElement> unused = JavaHelper.findUnusedReferences(
                     project, monitor);
 
+                if (monitor.isCanceled()) return Status.CANCEL_STATUS;
+                
                 if (unused.isEmpty())
                 {
                     info(shell, "No unused references found");
