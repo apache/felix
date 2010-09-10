@@ -84,4 +84,9 @@ public class BundleCapability extends AbstractModelElement implements IBundleCap
 
         return hc;
     }
+    
+    @Override
+    public String toString() {
+        return "BundleCapability[" + bsn + ":version=" + version + "]";
+    }
 }
