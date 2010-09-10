@@ -52,6 +52,12 @@
 
   <profiles>
   <profile>
+    <id>junit4osgi</id>
+    <modules>
+      <module>junit4osgi</module>
+    </modules>
+  </profile>
+  <profile>
     <id>java5</id>
     <activation>
       <jdk>1.5</jdk>
