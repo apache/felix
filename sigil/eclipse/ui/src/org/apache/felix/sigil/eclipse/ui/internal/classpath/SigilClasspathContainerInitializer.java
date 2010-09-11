@@ -46,6 +46,8 @@ public class SigilClasspathContainerInitializer extends ClasspathContainerInitia
         throws CoreException
     {
         ISigilProjectModel sigil = SigilCore.create(project.getProject());
+        
+        SigilClassPathContainer.flushCachedClassPath(sigil);
 
         IClasspathContainer sigilContainer = new SigilClassPathContainer(sigil);
 
@@ -53,15 +55,24 @@ public class SigilClasspathContainerInitializer extends ClasspathContainerInitia
 
         IClasspathContainer[] respectiveContainers = new IClasspathContainer[] { sigilContainer };
 
+        
+        JavaCore.setClasspathContainer(containerPath, affectedProjects,
+            respectiveContainers, getMonitor());
+    }
+
+    /**
+     * @return
+     */
+    private IProgressMonitor getMonitor()
+    {
         IProgressMonitor monitor = ThreadProgressMonitor.getProgressMonitor();
 
         if (monitor == null)
         {
             monitor = Job.getJobManager().createProgressGroup();
         }
-
-        JavaCore.setClasspathContainer(containerPath, affectedProjects,
-            respectiveContainers, monitor);
+        
+        return monitor;
     }
 
     @Override
@@ -76,10 +87,7 @@ public class SigilClasspathContainerInitializer extends ClasspathContainerInitia
 
         IClasspathContainer[] respectiveContainers = new IClasspathContainer[] { sigilContainer };
 
-        IProgressMonitor monitor = Job.getJobManager().createProgressGroup();
-
         JavaCore.setClasspathContainer(containerPath, affectedProjects,
-            respectiveContainers, monitor);
+            respectiveContainers, getMonitor());
     }
-
 }
