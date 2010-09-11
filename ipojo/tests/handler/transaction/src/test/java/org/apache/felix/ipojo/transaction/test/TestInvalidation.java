@@ -5,6 +5,7 @@ import static org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOBuilder.withiPOJO
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.MavenUtils.asInProject;
+import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repository;
 
 import java.io.File;
 import java.io.InputStream;
@@ -96,15 +97,15 @@ public class TestInvalidation {
                         mavenBundle().groupId("org.ops4j.pax.logging").artifactId("pax-logging-api").version(asInProject()),
                         mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.ipojo").version(asInProject()),
                         mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.ipojo.handler.transaction").version(asInProject()),
-                        mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.transaction").version(asInProject()),
+                        mavenBundle().groupId("org.ow2.chameleon").artifactId("transaction-geronimo").version(asInProject()),
                         mavenBundle().groupId("org.ow2.chameleon.testing").artifactId("osgi-helpers").versionAsInProject()
                 ),
                 provision(
                         service,
                         fooimpl,
                         test
-                    )
-                ,
+                    ),
+                repository("http://maven.ow2.org/maven2-snapshot/"),
                 new Customizer() {
                     @Override
                     public InputStream customizeTestProbe( InputStream testProbe )
@@ -131,6 +132,7 @@ public class TestInvalidation {
         ServiceReference ref = ipojo.getServiceReferenceByName(CheckService.class.getName(), under.getInstanceName());
         Assert.assertNotNull(ref);
 
+        osgi.waitForService(TransactionManager.class.getName(), null, 5000);
         CheckService cs = (CheckService) osgi.getServiceObject(ref);
         TransactionManager tm = (TransactionManager) osgi.getServiceObject(TransactionManager.class.getName(), null);
 
