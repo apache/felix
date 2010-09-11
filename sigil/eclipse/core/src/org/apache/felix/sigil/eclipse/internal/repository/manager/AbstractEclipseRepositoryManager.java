@@ -150,7 +150,7 @@ public abstract class AbstractEclipseRepositoryManager extends AbstractRepositor
         try
         {
             EclipseRepositoryProviderWrapper wrapper = EclipseRepositoryFactory.getProvider(alias);
-            String uid = wrapper.getType().isDynamic() ? def + "#" + name : wrapper.getType().getName();
+            String uid = wrapper.getType().isDynamic() ? def + "#" + name : wrapper.getType().getId();
             IBundleRepository repository = repositoryCache.getRepository(uid, repo, wrapper);
             return repository;
         }
