@@ -3,11 +3,11 @@
 		<provides/>
 		<requires field="foo"/>
 		<tr:transaction field="transaction">
-			<transactionnal method="doSomethingGood" propagation="requiresnew"/>
-			<transactionnal method="getCurrentTransaction" propagation="requiresnew"/>
-			<transactionnal method="doSomethingBad" propagation="requiresnew" exceptiononrollback="true"/>
-			<transactionnal method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="requiresnew"/>
-			<transactionnal method="doSomethingLong" propagation="requiresnew"/>
+			<transactional method="doSomethingGood" propagation="requiresnew"/>
+			<transactional method="getCurrentTransaction" propagation="requiresnew"/>
+			<transactional method="doSomethingBad" propagation="requiresnew" exceptiononrollback="true"/>
+			<transactional method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="requiresnew"/>
+			<transactional method="doSomethingLong" propagation="requiresnew"/>
 		</tr:transaction>
 	</component>
 	
@@ -15,11 +15,11 @@
 		<provides/>
 		<requires field="foo" />
 		<tr:transaction field="transaction" onCommit="onCommit" onRollback="onRollback">
-			<transactionnal method="doSomethingGood" propagation="requiresnew"/>
-			<transactionnal method="getCurrentTransaction" propagation="requiresnew"/>
-			<transactionnal method="doSomethingBad" propagation="requiresnew"/>
-			<transactionnal method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="requiresnew"/>
-			<transactionnal method="doSomethingLong" propagation="requiresnew"/>
+			<transactional method="doSomethingGood" propagation="requiresnew"/>
+			<transactional method="getCurrentTransaction" propagation="requiresnew"/>
+			<transactional method="doSomethingBad" propagation="requiresnew"/>
+			<transactional method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="requiresnew"/>
+			<transactional method="doSomethingLong" propagation="requiresnew"/>
 		</tr:transaction>
 	</component>
 </ipojo>

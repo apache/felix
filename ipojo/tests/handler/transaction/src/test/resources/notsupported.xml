@@ -3,11 +3,11 @@
 		<provides/>
 		<requires field="foo"/>
 		<tr:transaction field="transaction">
-			<transactionnal method="doSomethingGood" propagation="notsupported"/>
-			<transactionnal method="getCurrentTransaction" propagation="notsupported"/>
-			<transactionnal method="doSomethingBad" propagation="notsupported"/>
-			<transactionnal method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="notsupported"/>
-			<transactionnal method="doSomethingLong" propagation="notsupported"/>
+			<transactional method="doSomethingGood" propagation="notsupported"/>
+			<transactional method="getCurrentTransaction" propagation="notsupported"/>
+			<transactional method="doSomethingBad" propagation="notsupported"/>
+			<transactional method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="notsupported"/>
+			<transactional method="doSomethingLong" propagation="notsupported"/>
 		</tr:transaction>
 	</component>
 	
@@ -15,11 +15,11 @@
 		<provides/>
 		<requires field="foo" />
 		<tr:transaction field="transaction" onCommit="onCommit" onRollback="onRollback">
-			<transactionnal method="doSomethingGood" propagation="notsupported"/>
-			<transactionnal method="getCurrentTransaction" propagation="notsupported"/>
-			<transactionnal method="doSomethingBad" propagation="notsupported"/>
-			<transactionnal method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="notsupported"/>
-			<transactionnal method="doSomethingLong" propagation="notsupported"/>
+			<transactional method="doSomethingGood" propagation="notsupported"/>
+			<transactional method="getCurrentTransaction" propagation="notsupported"/>
+			<transactional method="doSomethingBad" propagation="notsupported"/>
+			<transactional method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="notsupported"/>
+			<transactional method="doSomethingLong" propagation="notsupported"/>
 		</tr:transaction>
 	</component>
 </ipojo>
