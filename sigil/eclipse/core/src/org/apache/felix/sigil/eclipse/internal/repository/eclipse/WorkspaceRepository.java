@@ -45,7 +45,6 @@ import org.eclipse.core.runtime.content.IContentTypeManager;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 
 public class WorkspaceRepository extends AbstractBundleRepository implements IResourceChangeListener
