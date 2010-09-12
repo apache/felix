@@ -34,6 +34,11 @@
       <artifactId>org.apache.felix.ipojo</artifactId>
       <version>1.7.0-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.ipojo.handler.whiteboard</artifactId>
+      <version>1.5.0-SNAPSHOT</version>
+    </dependency>
 	<dependency>
 		<groupId>org.osgi</groupId>
 		<artifactId>org.osgi.core</artifactId>
@@ -105,6 +110,16 @@
 								/>
 								<provides/>
 						</component>
+
+						<component classname="org.apache.felix.ipojo.test.FooWhiteBoardPattern" name="under-providers-lifecycle">
+								<wbp:wbp
+									filter="(objectclass=org.apache.felix.ipojo.test.FooService)"
+									onArrival="onArrival" onDeparture="onDeparture" onModification="onModification"
+								/>
+								<provides/>
+								<callback transition="validate" method="start"/>
+								<callback transition="invalidate" method="stop"/>
+						</component>
 					</ipojo>
 					]]>
 					</metadata>
@@ -112,6 +127,23 @@
 			</execution>
 		</executions>
 	</plugin>
+	<plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-junit4osgi-plugin</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <configuration>
+              <org.osgi.http.port>8083</org.osgi.http.port>
+              </configuration>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

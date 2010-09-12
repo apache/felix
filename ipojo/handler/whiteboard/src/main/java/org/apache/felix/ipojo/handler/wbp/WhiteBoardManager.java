@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,37 +32,37 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class WhiteBoardManager implements TrackerCustomizer {
-    
+
     /**
-     * The monitored filter. 
+     * The monitored filter.
      */
     private Filter m_filter;
-    
+
     /**
-     * The onArrival method. 
+     * The onArrival method.
      */
     private Callback m_onArrival;
-    
+
     /**
-     * The onDeparture method. 
+     * The onDeparture method.
      */
     private Callback m_onDeparture;
-    
+
     /**
-     * The onModify method. 
+     * The onModify method.
      */
     private Callback m_onModification;
-    
+
     /**
-     * The service tracker. 
+     * The service tracker.
      */
     private Tracker m_tracker;
-    
+
     /**
-     * The attached handler. 
+     * The attached handler.
      */
     private PrimitiveHandler m_handler;
-    
+
     /**
      * Constructor.
      * @param handler the attached handler
@@ -81,14 +81,17 @@ public class WhiteBoardManager implements TrackerCustomizer {
         m_filter = filter;
         m_tracker = new Tracker(handler.getInstanceManager().getContext(), m_filter, this);
     }
-    
+
+
+
     /**
      * Opens the tracker.
      */
     public void start() {
+    	// Calling several times open is no-effect.
         m_tracker.open();
     }
-    
+
     /**
      * Closes the tracker.
      */
