@@ -29,19 +29,19 @@
   <artifactId> org.apache.felix.ipojo.handler.whiteboard </artifactId>
   <groupId>org.apache.felix</groupId>
   <version>1.5.0-SNAPSHOT</version>
-  
+
   <description>
   iPOJO extension to easily implement a white-board pattern (host).
   </description>
   <url>
   http://felix.apache.org/site/white-board-pattern-handler.html
   </url>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>${project.version}</version>
+      <version>1.6.4</version>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -68,7 +68,7 @@
             <Private-Package> org.apache.felix.ipojo.handler.wbp
             </Private-Package>
             <Bundle-Name>${project.name}</Bundle-Name>
-            <Include-Resource> 
+            <Include-Resource>
               META-INF/LICENSE=LICENSE,
               META-INF/NOTICE=NOTICE,
               META-INF/DEPENDENCIES=DEPENDENCIES

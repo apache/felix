@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 
+import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.metadata.Element;
@@ -33,19 +34,19 @@ import org.osgi.framework.InvalidSyntaxException;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class WhiteBoardPatternHandler extends PrimitiveHandler {
-    
+
     /**
      * The handler namespace.
      */
     public static final String NAMESPACE = "org.apache.felix.ipojo.whiteboard";
-    
+
     /**
-     * The white board pattern to manage. By default just one. 
+     * The white board pattern to manage. By default just one.
      */
     private List m_managers = new ArrayList(1);
 
     /**
-     * Configure method. Parses the metadata to analyze white-board-pattern elements. 
+     * Configure method. Parses the metadata to analyze white-board-pattern elements.
      * @param elem the component type description
      * @param dict the instance description
      * @throws ConfigurationException if the description is not valid.
@@ -58,14 +59,14 @@ public class WhiteBoardPatternHandler extends PrimitiveHandler {
             String onArrival = elems[i].getAttribute("onArrival");
             String onDeparture = elems[i].getAttribute("onDeparture");
             String onModification = elems[i].getAttribute("onModification");
-            
+
             if (filter == null) {
                 throw new ConfigurationException("The white board pattern element requires a filter attribute");
             }
             if (onArrival == null || onDeparture == null) {
                 throw new ConfigurationException("The white board pattern element requires the onArrival and onDeparture attributes");
             }
-            
+
             try {
                 WhiteBoardManager wbm = new WhiteBoardManager(this, getInstanceManager().getContext().createFilter(filter), onArrival, onDeparture, onModification);
                 m_managers.add(wbm);
@@ -73,27 +74,38 @@ public class WhiteBoardPatternHandler extends PrimitiveHandler {
                 throw new ConfigurationException("The filter " + filter + " is invalid : " + e);
             }
         }
-        
+
     }
 
     /**
-     * Start method. Starts managers.
+     * Start method.
      * @see org.apache.felix.ipojo.Handler#start()
      */
     public void start() {
-        for (int i = 0; i < m_managers.size(); i++) {
-            ((WhiteBoardManager) m_managers.get(i)).start();
-        }
     }
 
+
+
     /**
+     * Start managers if we're valid.
+     * @see org.apache.felix.ipojo.Handler#stateChanged(int)
+     */
+    public void stateChanged(int state) {
+		if (state == ComponentInstance.VALID) {
+			for (int i = 0; i < m_managers.size(); i++) {
+	            ((WhiteBoardManager) m_managers.get(i)).start();
+	        }
+		}
+	}
+
+	/**
      * Stop method. Stops managers.
      * @see org.apache.felix.ipojo.Handler#stop()
      */
     public void stop() {
         for (int i = 0; i < m_managers.size(); i++) {
             ((WhiteBoardManager) m_managers.get(i)).stop();
-        } 
+        }
     }
 
 }
