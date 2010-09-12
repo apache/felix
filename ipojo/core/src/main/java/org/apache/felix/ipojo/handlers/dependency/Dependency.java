@@ -247,6 +247,13 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             refs = getServiceReferences(); // Stack confinement.
         }
 
+        // This is a pretty strange case, but we don't have any service.
+        // This may happen during refresh.
+        // So we just return.
+        if (refs == null) {
+        	return;
+        }
+
         // Call bind callback.
         for (int j = 0; m_callbacks != null && j < m_callbacks.length; j++) { // The array is constant.
             if (m_callbacks[j].getMethodType() == DependencyCallback.BIND) {
