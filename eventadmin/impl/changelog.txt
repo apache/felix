@@ -1,0 +1,28 @@
+Changes from 1.2.2 to 1.2.4
+---------------------------
+
+** Bug
+    * [FELIX-2582] - Event admin requires config admin packages
+    * [FELIX-2431] - EventAdmin service unregistered but not registered again on ConfigAdmin startup
+
+** Improvement
+    * [FELIX-2562] - Remove object caches
+    * [FELIX-2558] - Handle configuration changes without restarting event admin service
+
+
+Changes from 1.0.0 to 1.2.2
+---------------------------
+
+** Bug
+    * [FELIX-2089] - IllegalStateException thrown by LogWrapper if logging after bundle stop
+
+** Improvement
+    * [FELIX-1875] - Add R4.2 support for Event Admin
+    * [FELIX-1913] - All events are processed in a queue
+    * [FELIX-2020] - Make event admin configurable through configuration admin
+    * [FELIX-1960] - Fine-grained timeout configuration
+    * [FELIX-664]  - Event Admin OBR description
+
+
+Initial Release 1.0.0
+---------------------
