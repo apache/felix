@@ -25,12 +25,12 @@ Sample description:
   
 How to test:
 
-  - Install the following bundles:
+  - Install the following bundles (with same or higher version):
 
-     org.apache.felix.configadmin 
-     org.apache.felix.metatype 
-     org.apache.felix.http.jetty 
-     org.apache.felix.webconsole
+     org.apache.felix.configadmin-1.2.8.jar
+     org.apache.felix.metatype-1.0.4.jar
+     org.apache.felix.http.jetty-2.0.4.jar
+     org.apache.felix.webconsole-3.1.2.jar
 
   - compile dependency manager from trunk:
 
