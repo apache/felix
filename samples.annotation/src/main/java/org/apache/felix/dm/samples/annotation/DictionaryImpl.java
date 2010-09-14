@@ -52,14 +52,20 @@ import org.osgi.service.log.LogService;
             cardinality=0),
         @PropertyMetaData(
             heading="Dictionary words",
-            description="Declare here the list of words supported by this dictionary.",
+            description="Declare here the list of words supported by this dictionary. This properties starts with a Dot and won't be propagated with Dictionary OSGi service properties.",
             defaults={"hello", "world"},
-            id="words",
+            id=DictionaryImpl.WORDS,
             cardinality=Integer.MAX_VALUE)
     }
 )  
 public class DictionaryImpl implements DictionaryService
 {
+    /**
+     * The key of our config admin dictionary values. This key stats with a "." (dot), meaning
+     * that this property won't be propagated along with our OSGi service properties.
+     */
+    final static String WORDS = ".words";
+    
     /**
      * We store all configured words in a thread-safe data structure, because ConfigAdmin
      * may invoke our updated method at any time.
@@ -79,12 +85,12 @@ public class DictionaryImpl implements DictionaryService
 
     /**
      * Our service will be initialized from ConfigAdmin.
-     * @param config The configuration where we'll lookup our words list (key="words").
+     * @param config The configuration where we'll lookup our words list (key=".words").
      */
     protected void updated(Dictionary<String, ?> config) {
         m_lang = (String) config.get("lang");
         m_words.clear();
-        String[] words = (String[]) config.get("words");
+        String[] words = (String[]) config.get(WORDS);
         for (String word : words) {
             m_words.add(word);
         }
