@@ -54,7 +54,7 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
             systemProperty(DMLOG_PROPERTY).value( "true" ),
             provision(
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.4"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.8"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager.runtime").versionAsInProject()),
             provision(
@@ -81,14 +81,10 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
             cf.update(new Hashtable() {{ put("foo", "bar"); }});
             // Wait for the ServiceProvider activation.
             m_ensure.waitForStep(2, 10000);
-            // Avoid bug in CM (FELIX-1545), which may miss some updates
-            sleep(200); 
             // Update conf
             cf.update(new Hashtable() {{ put("foo", "bar2"); }});            
             // Wait for effective update
             m_ensure.waitForStep(4, 10000);
-            // Avoid bug in CM (FELIX-1545), which may miss some updates
-            sleep(200);
             // Remove configuration.
             cf.delete();
             // Check if ServiceProvider has been stopped.

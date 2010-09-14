@@ -55,7 +55,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
             provision(
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.4")
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.8")
             )
         );
     }    
@@ -97,14 +97,10 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
         // add the first consumer, and wait until its updated() method is invoked
         m.add(consumer1);
         e.waitForStep(2, 15000);
-        // Avoid bug in CM (FELIX-1545), which may miss some updates
-        sleep(200);
 
         // add the second consumer, and wait until its updated() method is invoked
         m.add(consumer2);
         e.waitForStep(3, 15000);
-        // Avoid bug in CM (FELIX-1545), which may miss some updates
-        sleep(200);
 
         // break down the test again
         m.remove(consumer2);
