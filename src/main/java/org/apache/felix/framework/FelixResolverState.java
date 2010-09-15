@@ -174,7 +174,7 @@ public class FelixResolverState implements Resolver.ResolverState
             {
                 // Ignore
             }
-            m_logger.log(Logger.LOG_ERROR,
+            m_logger.log(host.getBundle(), Logger.LOG_ERROR,
                 "Serious error attaching fragments.", ex);
         }
     }
@@ -301,7 +301,7 @@ public class FelixResolverState implements Resolver.ResolverState
                     {
                         // Ignore
                     }
-                    m_logger.log(Logger.LOG_ERROR,
+                    m_logger.log(host.getBundle(), Logger.LOG_ERROR,
                         "Serious error attaching fragments.", ex);
                 }
 
@@ -360,7 +360,7 @@ public class FelixResolverState implements Resolver.ResolverState
                         {
                             // Ignore
                         }
-                        m_logger.log(Logger.LOG_ERROR,
+                        m_logger.log(host.getBundle(), Logger.LOG_ERROR,
                             "Serious error attaching fragments.", ex);
                     }
 
@@ -499,7 +499,7 @@ public class FelixResolverState implements Resolver.ResolverState
                 {
                     // Ignore
                 }
-                m_logger.log(Logger.LOG_ERROR,
+                m_logger.log(host.getBundle(), Logger.LOG_ERROR,
                     "Serious error attaching fragments.", ex);
             }
         }
@@ -538,7 +538,8 @@ public class FelixResolverState implements Resolver.ResolverState
         }
         catch (Exception ex)
         {
-            m_logger.log(Logger.LOG_ERROR, "Error detaching fragments.", ex);
+            m_logger.log(
+                host.getBundle(), Logger.LOG_ERROR, "Error detaching fragments.", ex);
         }
         // Set wires to null, which will remove the module from all
         // of its dependent modules.

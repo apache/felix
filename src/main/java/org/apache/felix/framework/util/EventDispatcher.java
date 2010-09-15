@@ -735,7 +735,7 @@ public class EventDispatcher
                 }
                 catch (Throwable th)
                 {
-                    logger.log(
+                    logger.log(bundle,
                         Logger.LOG_ERROR,
                         "EventDispatcher: Error during dispatch.", th);
                 }
