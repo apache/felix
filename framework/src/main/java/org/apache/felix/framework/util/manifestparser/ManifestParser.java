@@ -1183,7 +1183,10 @@ public class ManifestParser
             String s = (String) headerMap.get(Constants.BUNDLE_SYMBOLICNAME);
             s = (s == null) ? (String) headerMap.get(Constants.BUNDLE_NAME) : s;
             s = (s == null) ? headerMap.toString() : s;
-            logger.log(Logger.LOG_WARNING, "Only R4 bundles can be fragments: " + s);
+            logger.log(
+                owner.getBundle(),
+                Logger.LOG_WARNING,
+                "Only R4 bundles can be fragments: " + s);
         }
 
         return reqs;

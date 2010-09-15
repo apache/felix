@@ -263,7 +263,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
             catch (Exception ex)
             {
                 m_registry.getLogger().log(
-                    Logger.LOG_ERROR, "ServiceRegistrationImpl: Error ungetting service.", ex);
+                    m_bundle,
+                    Logger.LOG_ERROR,
+                    "ServiceRegistrationImpl: Error ungetting service.",
+                    ex);
             }
         }
     }

@@ -86,27 +86,40 @@ public class Logger implements ServiceListener
 
     public final void log(int level, String msg)
     {
-        _log(null, level, msg, null);
+        _log(null, null, level, msg, null);
     }
 
     public final void log(int level, String msg, Throwable throwable)
     {
-        _log(null, level, msg, throwable);
+        _log(null, null, level, msg, throwable);
     }
 
     public final void log(ServiceReference sr, int level, String msg)
     {
-        _log(sr, level, msg, null);
+        _log(null, sr, level, msg, null);
     }
 
     public final void log(ServiceReference sr, int level, String msg, Throwable throwable)
     {
-        _log(sr, level, msg, throwable);
+        _log(null, sr, level, msg, throwable);
     }
 
-    protected void doLog(ServiceReference sr, int level, String msg, Throwable throwable)
+    public final void log(Bundle bundle, int level, String msg)
+    {
+        _log(bundle, null, level, msg, null);
+    }
+
+    public final void log(Bundle bundle, int level, String msg, Throwable throwable)
+    {
+        _log(bundle, null, level, msg, throwable);
+    }
+
+    protected void doLog(
+        Bundle bundle, ServiceReference sr, int level,
+        String msg, Throwable throwable)
     {
         String s = (sr == null) ? null : "SvcRef " + sr;
+        s = (s == null) ? null : s + " Bundle '" + bundle.getBundleId() + "'";
         s = (s == null) ? msg : s + " " + msg;
         s = (throwable == null) ? s : s + " (" + throwable + ")";
         switch (level)
@@ -137,7 +150,9 @@ public class Logger implements ServiceListener
         }
     }
 
-    private void _log(ServiceReference sr, int level, String msg, Throwable throwable)
+    private void _log(
+        Bundle bundle, ServiceReference sr, int level,
+        String msg, Throwable throwable)
     {
         // Save our own copy just in case it changes. We could try to do
         // more conservative locking here, but let's be optimistic.
@@ -153,7 +168,7 @@ public class Logger implements ServiceListener
             // Otherwise, default logging action.
             else
             {
-                doLog(sr, level, msg, throwable);
+                doLog(bundle, sr, level, msg, throwable);
             }
         }
     }

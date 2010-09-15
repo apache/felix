@@ -1107,7 +1107,7 @@ public class Felix extends BundleImpl implements Framework
                     if (impl.getState() != Bundle.UNINSTALLED)
                     {
                         fireFrameworkEvent(FrameworkEvent.ERROR, impl, ex);
-                        m_logger.log(
+                        m_logger.log(impl,
                             Logger.LOG_ERROR,
                             "Error locking " + impl._getLocation(), ex);
                     }
@@ -1145,7 +1145,7 @@ public class Felix extends BundleImpl implements Framework
                         catch (Throwable th)
                         {
                             fireFrameworkEvent(FrameworkEvent.ERROR, impl, th);
-                            m_logger.log(
+                            m_logger.log(impl,
                                 Logger.LOG_ERROR,
                                 "Error starting " + impl._getLocation(), th);
                         }
@@ -1174,7 +1174,7 @@ public class Felix extends BundleImpl implements Framework
                         catch (Throwable th)
                         {
                             fireFrameworkEvent(FrameworkEvent.ERROR, impl, th);
-                            m_logger.log(
+                            m_logger.log(impl,
                                 Logger.LOG_ERROR,
                                 "Error stopping " + impl._getLocation(), th);
                         }
@@ -1289,7 +1289,7 @@ public class Felix extends BundleImpl implements Framework
         catch (IllegalStateException ex)
         {
             fireFrameworkEvent(FrameworkEvent.ERROR, impl, ex);
-            m_logger.log(
+            m_logger.log(impl,
                 Logger.LOG_ERROR,
                 "Error locking " + impl._getLocation(), ex);
             return;
@@ -1330,12 +1330,16 @@ public class Felix extends BundleImpl implements Framework
                 catch (Throwable th)
                 {
                     rethrow = th;
-                    m_logger.log(Logger.LOG_ERROR, "Error starting/stopping bundle.", th);
+                    m_logger.log(
+                        impl,
+                        Logger.LOG_ERROR, "Error starting/stopping bundle.", th);
                 }
             }
             else
             {
-                m_logger.log(Logger.LOG_WARNING, "Bundle start level must be greater than zero.");
+                m_logger.log(
+                    impl,
+                    Logger.LOG_WARNING, "Bundle start level must be greater than zero.");
             }
         }
         finally
@@ -1554,6 +1558,7 @@ public class Felix extends BundleImpl implements Framework
             catch (Exception ex)
             {
                 m_logger.log(
+                    bundle,
                     Logger.LOG_WARNING,
                     "Exception while evaluating the permission.",
                     ex);
@@ -1988,7 +1993,8 @@ public class Felix extends BundleImpl implements Framework
                     }
                     catch (Exception busted)
                     {
-                        m_logger.log(Logger.LOG_ERROR, "Unable to rollback.", busted);
+                        m_logger.log(
+                            bundle, Logger.LOG_ERROR, "Unable to rollback.", busted);
                     }
 
                     throw ex;
@@ -1996,7 +2002,8 @@ public class Felix extends BundleImpl implements Framework
             }
             catch (Throwable ex)
             {
-                m_logger.log(Logger.LOG_ERROR, "Unable to update the bundle.", ex);
+                m_logger.log(
+                    bundle, Logger.LOG_ERROR, "Unable to update the bundle.", ex);
                 rethrow = ex;
             }
 
@@ -2035,7 +2042,7 @@ public class Felix extends BundleImpl implements Framework
                             }
                             catch (Exception ex)
                             {
-                                m_logger.log(
+                                m_logger.log(bundle,
                                     Logger.LOG_ERROR,
                                     "Unable to immediately purge the bundle revisions.", ex);
                             }
@@ -2054,7 +2061,7 @@ public class Felix extends BundleImpl implements Framework
             if ((oldState == Bundle.ACTIVE) && Util.isFragment(bundle.getCurrentModule()))
             {
                 bundle.setPersistentStateInactive();
-                m_logger.log(Logger.LOG_WARNING,
+                m_logger.log(bundle, Logger.LOG_WARNING,
                     "Previously active bundle was updated to a fragment, resetting state to inactive: "
                     + bundle);
             }
@@ -2092,7 +2099,7 @@ public class Felix extends BundleImpl implements Framework
             }
             catch (Exception ex)
             {
-                m_logger.log(Logger.LOG_ERROR, "Unable to close input stream.", ex);
+                m_logger.log(bundle, Logger.LOG_ERROR, "Unable to close input stream.", ex);
             }
 
             // Release bundle lock.
@@ -2192,7 +2199,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable th)
                 {
-                    m_logger.log(Logger.LOG_ERROR, "Error stopping bundle.", th);
+                    m_logger.log(bundle, Logger.LOG_ERROR, "Error stopping bundle.", th);
                     rethrow = th;
                 }
             }
@@ -2335,7 +2342,7 @@ public class Felix extends BundleImpl implements Framework
 
             if (target == null)
             {
-                m_logger.log(
+                m_logger.log(bundle,
                     Logger.LOG_ERROR, "Unable to remove bundle from installed map!");
             }
 
@@ -2378,7 +2385,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                     catch (Exception ex)
                     {
-                        m_logger.log(
+                        m_logger.log(bundle,
                             Logger.LOG_ERROR,
                             "Unable to immediately garbage collect the bundle.", ex);
                     }
@@ -2551,7 +2558,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                     catch (Exception ex1)
                     {
-                        m_logger.log(
+                        m_logger.log(bundle,
                             Logger.LOG_ERROR,
                             "Could not remove from cache.", ex1);
                     }
@@ -2622,7 +2629,7 @@ public class Felix extends BundleImpl implements Framework
             }
             catch (IOException ex)
             {
-                m_logger.log(
+                m_logger.log(bundle,
                     Logger.LOG_ERROR,
                     "Unable to close input stream.", ex);
                 // Not much else we can do.
@@ -3032,7 +3039,7 @@ public class Felix extends BundleImpl implements Framework
         }
         catch (Exception ex)
         {
-            m_logger.log(Logger.LOG_ERROR, ex.getMessage());
+            m_logger.log(bundle, Logger.LOG_ERROR, ex.getMessage());
             return null;
         }
     }
@@ -3379,7 +3386,7 @@ public class Felix extends BundleImpl implements Framework
                 catch (BundleException ex)
                 {
                     result = false;
-                    m_logger.log(
+                    m_logger.log(targets[i],
                         Logger.LOG_WARNING,
                         "Unable to resolve bundle " + targets[i].getBundleId(),
                         ex);
@@ -4071,7 +4078,10 @@ public class Felix extends BundleImpl implements Framework
                             wires.addAll(module.getWires());
                             wires.add(candidateWire);
                             ((ModuleImpl) module).setWires(wires);
-m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
+                            m_logger.log(
+                                module.getBundle(),
+                                Logger.LOG_DEBUG,
+                                "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                         }
                     }
                 }
@@ -4164,7 +4174,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                     // only modules may not have wires.
                     for (int wireIdx = 0; wireIdx < wires.size(); wireIdx++)
                     {
-                        m_logger.log(
+                        m_logger.log(module.getBundle(),
                             Logger.LOG_DEBUG,
                             "WIRE: " + wires.get(wireIdx));
                     }
@@ -4177,7 +4187,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                         ((ModuleImpl) fragments.get(i)).setResolved();
                         // Update the state of the module's bundle to resolved as well.
                         markBundleResolved(fragments.get(i));
-                        m_logger.log(
+                        m_logger.log(((ModuleImpl) fragments.get(i)).getBundle(),
                             Logger.LOG_DEBUG,
                             "FRAGMENT WIRE: " + fragments.get(i) + " -> hosted by -> " + module);
                     }
@@ -4215,7 +4225,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                 {
                     if (bundle.getState() != Bundle.INSTALLED)
                     {
-                        m_logger.log(
+                        m_logger.log(bundle,
                             Logger.LOG_WARNING,
                             "Received a resolve event for a bundle that has already been resolved.");
                     }
@@ -4330,7 +4340,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                     catch (Exception ex)
                     {
                         fireFrameworkEvent(FrameworkEvent.ERROR, bundle, ex);
-                        m_logger.log(Logger.LOG_ERROR, "Unable to purge bundle "
+                        m_logger.log(bundle, Logger.LOG_ERROR, "Unable to purge bundle "
                             + bundle._getLocation(), ex);
                     }
                 }
@@ -4347,7 +4357,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                 }
                 catch (Exception ex)
                 {
-                    m_logger.log(
+                    m_logger.log(m_uninstalledBundles.get(i),
                         Logger.LOG_ERROR,
                         "Unable to remove "
                         + m_uninstalledBundles.get(i)._getLocation(), ex);
@@ -4371,7 +4381,7 @@ m_logger.log(Logger.LOG_DEBUG, "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                 }
                 catch (Throwable throwable)
                 {
-                    m_logger.log(
+                    m_logger.log(Felix.this,
                         Logger.LOG_WARNING,
                         "Exception stopping a system bundle activator.",
                         throwable);

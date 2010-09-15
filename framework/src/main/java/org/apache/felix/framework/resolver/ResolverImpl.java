@@ -36,6 +36,7 @@ import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.RequirementImpl;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
 public class ResolverImpl implements Resolver
@@ -109,6 +110,7 @@ public class ResolverImpl implements Resolver
                     {
                         rethrow = ex;
                         m_logger.log(
+                            module.getBundle(),
                             Logger.LOG_DEBUG,
                             "Current candidate permutation failed, will try another if possible.",
                             ex);
@@ -189,6 +191,7 @@ public class ResolverImpl implements Resolver
                     {
                         rethrow = ex;
                         m_logger.log(
+                            module.getBundle(),
                             Logger.LOG_DEBUG,
                             "Current candidate permutation failed, will try another if possible.",
                             ex);
@@ -456,7 +459,11 @@ public class ResolverImpl implements Resolver
                 }
                 rethrow = new ResolveException(msg, module, req);
                 resultCache.put(module, rethrow);
-                m_logger.log(Logger.LOG_DEBUG, "No viable candidates", rethrow);
+                m_logger.log(
+                    module.getBundle(),
+                    Logger.LOG_DEBUG,
+                    "No viable candidates",
+                    rethrow);
                 throw rethrow;
             }
             // If we actually have candidates for the requirement, then
@@ -897,7 +904,11 @@ public class ResolverImpl implements Resolver
                             + module + " between an import "
                             + sourceBlame + " and a fragment import "
                             + blame, module, blame.m_reqs.get(0));
-                        m_logger.log(Logger.LOG_DEBUG, "Conflicting fragment import", ex);
+                        m_logger.log(
+                            module.getBundle(),
+                            Logger.LOG_DEBUG,
+                            "Conflicting fragment import",
+                            ex);
                         throw ex;
                     }
                 }
@@ -969,7 +980,13 @@ public class ResolverImpl implements Resolver
                 {
                     m_usesPermutations.add(permutation);
                 }
-                m_logger.log(Logger.LOG_DEBUG, "Conflict between an export and import", rethrow);
+                Bundle bundle =
+                    (rethrow.getModule() != null) ? rethrow.getModule().getBundle() : null;
+                m_logger.log(
+                    bundle,
+                    Logger.LOG_DEBUG,
+                    "Conflict between an export and import",
+                    rethrow);
                 throw rethrow;
             }
         }
@@ -1062,7 +1079,14 @@ public class ResolverImpl implements Resolver
                         permutateIfNeeded(candidateMap, req, m_importPermutations);
                     }
 
-                    m_logger.log(Logger.LOG_DEBUG, "Conflict between imports", rethrow);
+                    Bundle bundle =
+                        (rethrow.getModule() != null)
+                            ? rethrow.getModule().getBundle() : null;
+                    m_logger.log(
+                        bundle,
+                        Logger.LOG_DEBUG,
+                        "Conflict between imports",
+                        rethrow);
                     throw rethrow;
                 }
             }

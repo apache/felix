@@ -199,6 +199,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             m_capabilities = new ArrayList<Capability>(0);
             m_logger.log(
+                felix,
                 Logger.LOG_ERROR,
                 "Error parsing system bundle export statement: "
                 + syspkgs, ex);
@@ -325,6 +326,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             catch (Exception ex)
             {
                 m_logger.log(
+                    bundle,
                     Logger.LOG_ERROR,
                     "Error parsing extension bundle export statement: "
                     + bundle.getCurrentModule().getHeaders().get(Constants.EXPORT_PACKAGE), ex);
@@ -340,7 +342,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             else
             {
                 // We don't support extensions (i.e., the parent is not an URLClassLoader).
-                m_logger.log(Logger.LOG_WARNING,
+                m_logger.log(bundle, Logger.LOG_WARNING,
                     "Unable to add extension bundle to FrameworkClassLoader - Maybe not an URLClassLoader?");
                 throw new UnsupportedOperationException(
                     "Unable to add extension bundle to FrameworkClassLoader - Maybe not an URLClassLoader?");
@@ -394,7 +396,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
             catch (Throwable ex)
             {
-                m_logger.log(Logger.LOG_WARNING,
+                m_logger.log(bundle, Logger.LOG_WARNING,
                     "Unable to start Felix Extension Activator", ex);
             }
         }

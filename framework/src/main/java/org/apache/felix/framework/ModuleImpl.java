@@ -523,7 +523,8 @@ public class ModuleImpl implements Module
             }
             catch (Exception ex)
             {
-                m_logger.log(Logger.LOG_ERROR, "Unable to get module class path.", ex);
+                m_logger.log(
+                    m_bundle, Logger.LOG_ERROR, "Unable to get module class path.", ex);
             }
         }
         return m_contentPath;
@@ -603,7 +604,7 @@ public class ModuleImpl implements Module
                 {
 // TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
 //       need to create an "Eventer" class like "Logger" perhaps.
-                    m_logger.log(Logger.LOG_INFO,
+                    m_logger.log(m_bundle, Logger.LOG_INFO,
                         "Class path entry not found: "
                         + classPathStrings.get(i));
                 }
@@ -646,7 +647,7 @@ public class ModuleImpl implements Module
         }
         catch (ResourceNotFoundException ex)
         {
-            m_logger.log(
+            m_logger.log(m_bundle,
                 Logger.LOG_DEBUG,
                 ex.getMessage());
         }
@@ -1107,7 +1108,7 @@ public class ModuleImpl implements Module
          }
          catch (MalformedURLException ex)
          {
-             m_logger.log(
+             m_logger.log(m_bundle,
                  Logger.LOG_ERROR,
                  "Unable to create resource URL.",
                  ex);
