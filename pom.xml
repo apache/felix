@@ -58,6 +58,7 @@
                         <Export-Package>
                         </Export-Package>
                         <Import-Package>
+                            org.apache.felix.service.command; status="provisional",
                             *
                         </Import-Package>
                         <Private-Package>
