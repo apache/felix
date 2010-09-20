@@ -50,7 +50,7 @@
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.6.0</version>
+            <version>0.7.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
@@ -71,7 +71,7 @@
                             org.apache.felix.shell.remote.*
                         </Private-Package>
                         <DynamicImport-Package>
-                            org.apache.felix.service.command,org.apache.felix.shell,org.osgi.service.log
+                            org.osgi.service.command; status="provisional",org.apache.felix.shell,org.osgi.service.log
                         </DynamicImport-Package>
                         <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
