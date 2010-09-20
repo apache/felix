@@ -49,7 +49,8 @@ public class Shell
     {
         this.context = context;
         this.processor = processor;
-        String baseDir = System.getProperty("gosh.home", System.getProperty("user.dir"));
+        String baseDir = context.getProperty("gosh.home");
+        baseDir = (baseDir == null) ? context.getProperty("user.dir") : baseDir;
         baseURI = new File(baseDir).toURI();
     }
 

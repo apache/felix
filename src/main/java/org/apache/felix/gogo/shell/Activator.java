@@ -34,15 +34,17 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator, Runnable
 {
+    private BundleContext context;
     private ServiceTracker commandProcessorTracker;
     private Set<ServiceRegistration> regs = new HashSet<ServiceRegistration>();
     private CommandSession session;
     private Shell shell;
     private Thread thread;
 
-    public void start(final BundleContext context) throws Exception
+    public void start(final BundleContext ctxt) throws Exception
     {
-        commandProcessorTracker = processorTracker(context);
+        context = ctxt;
+        commandProcessorTracker = processorTracker();
     }
 
     public void stop(BundleContext context) throws Exception
@@ -68,7 +70,8 @@ public class Activator implements BundleActivator, Runnable
         try
         {
             Thread.sleep(100);    // wait for gosh command to be registered
-            String args = System.getProperty("gosh.args", "");
+            String args = context.getProperty("gosh.args");
+            args = (args == null) ? "" : args;
             session.execute("gosh --login " + args);
         }
         catch (Exception e)
@@ -120,7 +123,7 @@ public class Activator implements BundleActivator, Runnable
         thread.start();
     }
 
-    private ServiceTracker processorTracker(BundleContext context)
+    private ServiceTracker processorTracker()
     {
         ServiceTracker t = new ServiceTracker(context, CommandProcessor.class.getName(),
             null)
@@ -147,5 +150,4 @@ public class Activator implements BundleActivator, Runnable
         t.open();
         return t;
     }
-
 }
