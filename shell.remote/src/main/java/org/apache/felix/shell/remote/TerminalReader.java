@@ -29,8 +29,8 @@ import java.io.Reader;
  */
 class TerminalReader extends Reader
 {
-    protected InputStream m_in;
-    protected PrintStream m_out;
+    protected final InputStream m_in;
+    protected final PrintStream m_out;
     protected boolean m_echo = false;
     protected boolean m_eof = false;
 
@@ -169,6 +169,7 @@ class TerminalReader extends Reader
     {
         m_in.close();
     }//close
+
     /**
      * <b>Bell</b><br>
      * The ANSI defined byte code for the NVT bell.

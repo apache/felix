@@ -19,10 +19,10 @@ package org.apache.felix.shell.remote;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.Socket;
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.CommandSession;
 
 import org.apache.felix.shell.ShellService;
+import org.apache.felix.service.command.CommandProcessor;
+import org.apache.felix.service.command.CommandSession;
 
 /**
  * Implements the shell.

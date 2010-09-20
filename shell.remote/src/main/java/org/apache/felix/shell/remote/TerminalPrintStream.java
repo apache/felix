@@ -16,10 +16,8 @@
  */
 package org.apache.felix.shell.remote;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.SocketException;
 
 /**
  * Class implementing a <tt>TerminalPrintStream</tt>.
@@ -38,45 +36,54 @@ class TerminalPrintStream extends PrintStream
     {
         super(tout);
         m_services = services;
-    }//constructor
+    }
 
     public void print(String str)
     {
-        try
+        if (out != null)
         {
-            byte[] bytes = str.getBytes();
-            out.write(bytes, 0, bytes.length);
-            flush();
-        }
-        catch (Exception ex)
-        {
-            if (!m_isClosed)
+            try
             {
-                m_services.error("TerminalPrintStream::print()", ex);
+                byte[] bytes = str.getBytes();
+                out.write(bytes, 0, bytes.length);
+                flush();
+            }
+            catch (Exception ex)
+            {
+                if (!m_isClosed)
+                {
+                    m_services.error("TerminalPrintStream::print()", ex);
+                }
             }
         }
-    }//print
+    }
 
     public void println(String str)
     {
         print(str + "\r\n");
-    }//println
+    }
 
     public void flush()
     {
-        try
+        if (out != null)
         {
-            out.flush();
+            try
+            {
+                out.flush();
+            }
+            catch (Exception ex)
+            {
+                if (!m_isClosed)
+                {
+                    m_services.error("TerminalPrintStream::println()", ex);
+                }
+            }
         }
-        catch (IOException ex)
-        {
-            m_services.error("TerminalPrintStream::println()", ex);
-        }
-    }//flush
+    }
 
     public void close()
     {
         m_isClosed = true;
         super.close();
     }
-}//class TerminalPrintStream
+}
