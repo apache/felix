@@ -20,16 +20,18 @@ package org.apache.felix.gogo.runtime;
 /**
  * Thrown if an unknown command is entered into a shell or passed on the command line
  */
-public class CommandNotFoundException extends IllegalArgumentException {
+public class CommandNotFoundException extends IllegalArgumentException
+{
     private final String command;
 
-
-    public CommandNotFoundException(String command) {
+    public CommandNotFoundException(String command)
+    {
         super("Command not found: " + command);
         this.command = command;
     }
 
-    public String getCommand() {
+    public String getCommand()
+    {
         return command;
     }
 }
