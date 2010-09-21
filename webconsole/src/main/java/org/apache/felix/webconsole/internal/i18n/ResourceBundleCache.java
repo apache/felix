@@ -169,7 +169,7 @@ class ResourceBundleCache
         }
         else if ( locale.getCountry().length() != 0 )
         {
-            return new Locale( locale.getLanguage() );
+            return new Locale( locale.getLanguage(), "" ); //$NON-NLS-1$
         }
         else if ( !locale.getLanguage().equals( DEFAULT_LOCALE.getLanguage() ) )
         {
