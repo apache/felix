@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -72,7 +72,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @see InstanceStateListener
      */
     protected List m_listeners = null;
-    
+
     /**
      * The content of the current instance.
      */
@@ -139,7 +139,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * [id=>{@link Method}].
      */
     private Map m_methods = new HashMap();
-    
+
 
     /**
      * Creates a new Component Manager.
@@ -1079,7 +1079,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     }
 
     /**
-     * This method is called by the manipulated class each time that a PUTFILED instruction is executed.
+     * This method is called by the manipulated class each time that a PUTFIELD instruction is executed.
      * The method calls the {@link PrimitiveHandler#onSet(Object, String, Object)} method on each field
      * interceptors monitoring this field.
      * This method can be invoked with a <code>null</code> pojo argument when the changes comes from another
@@ -1088,21 +1088,22 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @param fieldName the field name on which the PUTFIELD instruction is called
      * @param objectValue the new value of the field
      */
-    public void onSet(Object pojo, String fieldName, Object objectValue) {
-        Object value = null; // Stack confinement
-        synchronized (this) {
-            value = m_fields.get(fieldName);
-        }
-        if ((value != null && !value.equals(objectValue)) || (value == null && objectValue != null)) {
-            synchronized (this) {
-                m_fields.put(fieldName, objectValue);
-            }
-            FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration.get(fieldName);
-            for (int i = 0; list != null && i < list.length; i++) {
-                list[i].onSet(null, fieldName, objectValue); // Outside a synchronized block.
-            }
-        }
-    }
+	public void onSet(final Object pojo, final String fieldName, final Object objectValue) {
+		synchronized (this) {
+			// First, store the new value.
+			// This must be done in a synchronized block to avoid
+			// concurrent modification
+			m_fields.put(fieldName, objectValue);
+		}
+		// The registrations cannot be modified, so we can directly access
+		// the interceptor list.
+		FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration
+				.get(fieldName);
+		for (int i = 0; list != null && i < list.length; i++) {
+			 // The callback must be call outside the synchronization block.
+			list[i].onSet(null, fieldName, objectValue);
+		}
+	}
 
 
     /**
