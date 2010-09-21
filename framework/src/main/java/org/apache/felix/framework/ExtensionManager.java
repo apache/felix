@@ -440,9 +440,27 @@ class ExtensionManager extends URLStreamHandler implements Content
 
                 // Append exported package information.
                 exportSB.append(m_capabilities.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue());
-                exportSB.append("; version=\"");
-                exportSB.append(m_capabilities.get(i).getAttribute(Capability.VERSION_ATTR).getValue());
-                exportSB.append("\"");
+                for (Directive dir : m_capabilities.get(i).getDirectives())
+                {
+                    exportSB.append("; ");
+                    exportSB.append(dir.getName());
+                    exportSB.append(":=\"");
+                    exportSB.append(dir.getValue());
+                    exportSB.append("\"");
+                }
+                for (Attribute attr : m_capabilities.get(i).getAttributes())
+                {
+                    if (!attr.getName().equals(Capability.PACKAGE_ATTR)
+                        && !attr.getName().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
+                        && !attr.getName().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
+                    {
+                        exportSB.append("; ");
+                        exportSB.append(attr.getName());
+                        exportSB.append("=\"");
+                        exportSB.append(attr.getValue());
+                        exportSB.append("\"");
+                    }
+                }
 
                 // Remember exported packages.
                 exportNames.add(m_capabilities.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue());
