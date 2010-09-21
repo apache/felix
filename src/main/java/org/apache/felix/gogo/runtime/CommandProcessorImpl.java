@@ -21,13 +21,7 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.Map.Entry;
 
 import org.osgi.framework.BundleContext;
@@ -41,17 +35,13 @@ public class CommandProcessorImpl implements CommandProcessor
 {
     protected final Set<Converter> converters = new HashSet<Converter>();
     protected final Map<String, Object> commands = new LinkedHashMap<String, Object>();
-    protected final BundleContext context;
+    protected final Map<String, Object> constants = new HashMap<String, Object>();
     protected final ThreadIO threadIO;
     protected final WeakHashMap<CommandSession, Object> sessions = new WeakHashMap<CommandSession, Object>();
 
-    public CommandProcessorImpl(ThreadIO tio, BundleContext context)
+    public CommandProcessorImpl(ThreadIO tio)
     {
         threadIO = tio;
-        this.context = context;
-        addCommand("osgi", this, "addCommand");
-        addCommand("osgi", this, "removeCommand");
-        addCommand("osgi", this, "eval");
     }
 
     public CommandSession createSession(InputStream in, PrintStream out, PrintStream err)
@@ -82,11 +72,6 @@ public class CommandProcessorImpl implements CommandProcessor
     public Set<String> getCommands()
     {
         return commands.keySet();
-    }
-
-    BundleContext getContext()
-    {
-        return context;
     }
 
     Function getCommand(String name, final Object path)
@@ -159,6 +144,16 @@ public class CommandProcessorImpl implements CommandProcessor
         {
             addCommand(scope, target, function);
         }
+    }
+
+    public Object addConstant(String name, Object target)
+    {
+        return constants.put(name, target);
+    }
+
+    public Object removeConstant(String name)
+    {
+        return constants.remove(name);
     }
 
     public void addCommand(String scope, Object target, String function)

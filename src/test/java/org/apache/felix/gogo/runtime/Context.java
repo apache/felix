@@ -36,7 +36,10 @@ public class Context extends CommandProcessorImpl
 
     public Context()
     {
-        super(threadio, null);
+        super(threadio);
+        addCommand("osgi", this, "addCommand");
+        addCommand("osgi", this, "removeCommand");
+        addCommand("osgi", this, "eval");
         session = (CommandSessionImpl) createSession(System.in, System.out, System.err);
     }
 
