@@ -45,9 +45,18 @@ public class Activator implements BundleActivator
     private ServiceRegistration processorRegistration;
     private ServiceRegistration threadioRegistration;
     
+    public static final String CONTEXT = ".context";
+
     protected ServiceRegistration newProcessor(ThreadIO tio, BundleContext context)
     {
-        processor = new CommandProcessorImpl(tio, context);
+        processor = new CommandProcessorImpl(tio);
+
+        // Setup the variables and commands exposed in an OSGi environment.
+        processor.addConstant(CONTEXT, context);
+        processor.addCommand("osgi", processor, "addCommand");
+        processor.addCommand("osgi", processor, "removeCommand");
+        processor.addCommand("osgi", processor, "eval");
+
         return context.registerService(CommandProcessor.class.getName(), processor, null);
     }
 
