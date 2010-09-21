@@ -36,7 +36,6 @@ public class CommandSessionImpl implements CommandSession, Converter
     public static final String SESSION_CLOSED = "session is closed";
     public static final String VARIABLES = ".variables";
     public static final String COMMANDS = ".commands";
-    public static final String CONTEXT = ".context";
     private static final String COLUMN = "%-20s %s\n";
     
     protected InputStream in;
@@ -98,9 +97,9 @@ public class CommandSessionImpl implements CommandSession, Converter
             return processor.getCommands();
         }
 
-        if (CONTEXT.equals(name))
+        if( processor.constants.containsKey(name) )
         {
-            return processor.getContext();
+            return processor.constants.get(name);
         }
 
         if (variables.containsKey(name))
