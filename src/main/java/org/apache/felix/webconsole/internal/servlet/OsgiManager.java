@@ -965,7 +965,7 @@ public class OsgiManager extends GenericServlet
             final String name = FilenameUtils.getBaseName(img.getFile());
             try
             {
-                final String locale = new Locale(name).getDisplayLanguage();
+                final String locale = new Locale(name, "").getDisplayLanguage(); //$NON-NLS-1$
                 map.put(name, null != locale ? locale : name);
             }
             catch (Throwable t)
