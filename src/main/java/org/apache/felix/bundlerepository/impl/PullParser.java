@@ -330,15 +330,15 @@ public class PullParser extends RepositoryParser
             }
             else if (EXTEND.equals(name))
             {
-                requirement.setExtend(Boolean.parseBoolean(value));
+                requirement.setExtend(Boolean.valueOf(value).booleanValue());
             }
             else if (MULTIPLE.equals(name))
             {
-                requirement.setMultiple(Boolean.parseBoolean(value));
+                requirement.setMultiple(Boolean.valueOf(value).booleanValue());
             }
             else if (OPTIONAL.equals(name))
             {
-                requirement.setOptional(Boolean.parseBoolean(value));
+                requirement.setOptional(Boolean.valueOf(value).booleanValue());
             }
         }
         int event;
