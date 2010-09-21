@@ -452,7 +452,7 @@ public class Closure implements Function, Evaluate
                     }
                 }
 
-                throw new IllegalArgumentException("Command not found: " + scmd);
+                throw new CommandNotFoundException(scmd);
             }
         }
         return ((Function) x).execute(session, values);
