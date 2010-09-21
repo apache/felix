@@ -16,22 +16,19 @@
  */
 package org.apache.felix.http.base.internal.service;
 
-import org.apache.felix.http.api.ExtHttpService;
-import org.apache.felix.http.base.internal.context.ServletContextManager;
-import org.apache.felix.http.base.internal.context.ExtServletContext;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
-import org.apache.felix.http.base.internal.handler.FilterHandler;
-import org.apache.felix.http.base.internal.handler.ServletHandler;
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.NamespaceException;
-import org.osgi.framework.Bundle;
-import javax.servlet.Filter;
-import javax.servlet.ServletException;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
 import java.util.Dictionary;
 import java.util.HashSet;
+
+import javax.servlet.*;
+
+import org.apache.felix.http.api.ExtHttpService;
+import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.apache.felix.http.base.internal.context.ServletContextManager;
+import org.apache.felix.http.base.internal.handler.*;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.NamespaceException;
 
 public final class HttpServiceImpl
     implements ExtHttpService
@@ -63,6 +60,9 @@ public final class HttpServiceImpl
     public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context)
         throws ServletException
     {
+        if (filter == null ) {
+            throw new IllegalArgumentException("Filter must not be null");
+        }
         FilterHandler handler = new FilterHandler(getServletContext(context), filter, pattern, ranking);
         handler.setInitParams(initParams);
         this.handlerRegistry.addFilter(handler);
@@ -88,10 +88,12 @@ public final class HttpServiceImpl
     public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context)
         throws ServletException, NamespaceException
     {
+        if (servlet == null ) {
+            throw new IllegalArgumentException("Servlet must not be null");
+        }
         if (!isAliasValid(alias)) {
             throw new IllegalArgumentException( "Malformed servlet alias [" + alias + "]");
         }
-        
         ServletHandler handler = new ServletHandler(getServletContext(context), servlet, alias);
         handler.setInitParams(initParams);
         this.handlerRegistry.addServlet(handler);
@@ -104,7 +106,7 @@ public final class HttpServiceImpl
         if (!isNameValid(name)) {
             throw new IllegalArgumentException( "Malformed resource name [" + name + "]");
         }
-        
+
         try {
             Servlet servlet = new ResourceServlet(name);
             registerServlet(alias, servlet, null, context);
