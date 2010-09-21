@@ -16,25 +16,28 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import java.io.IOException;
+import java.util.regex.Pattern;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.felix.http.base.internal.context.ExtServletContext;
-import java.io.IOException;
 
 public final class FilterHandler
     extends AbstractHandler implements Comparable<FilterHandler>
 {
     private final Filter filter;
-    private final String pattern;
+    private final Pattern regex;
     private final int ranking;
 
     public FilterHandler(ExtServletContext context, Filter filter, String pattern, int ranking)
     {
         super(context);
         this.filter = filter;
-        this.pattern = pattern;
         this.ranking = ranking;
+	    this.regex = Pattern.compile(pattern);
     }
 
     public Filter getFilter()
@@ -62,7 +65,7 @@ public final class FilterHandler
             uri = "/";
         }
 
-        return uri.matches(this.pattern);
+        return this.regex.matcher(uri).matches();
     }
 
     public void handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
