@@ -959,8 +959,6 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 hasChanged = true;
             }
         }
-        // TODO use a boolean to speed up the test
-        //if ((result != null && !result.equals(initialValue)) || (result == null && initialValue != null)) {
         if (hasChanged) {
             // A change occurs => notify the change
             //TODO consider just changing the reference, however multiple thread can be an issue
