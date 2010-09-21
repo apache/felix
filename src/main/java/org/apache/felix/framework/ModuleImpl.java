@@ -155,6 +155,9 @@ public class ModuleImpl implements Module
     // Thread local to keep track of deferred activation.
     private static final ThreadLocal m_deferredActivation = new ThreadLocal();
 
+    // Flag indicating whether we are on an old JVM or not.
+    private volatile static boolean m_isPreJava5 = false;
+
     /**
      * This constructor is used by the extension manager, since it needs
      * a constructor that does not throw an exception.
@@ -1282,26 +1285,43 @@ public class ModuleImpl implements Module
     {
         if (m_classLoader == null)
         {
-            if (System.getSecurityManager() != null)
+            // Determine which class loader to use based on which
+            // Java platform we are running on.
+            Class clazz;
+            if (m_isPreJava5)
             {
-                try
-                {
-                    Constructor ctor = (Constructor) m_secureAction.getConstructor(
-                        ModuleClassLoader.class,
-                        new Class[] { ModuleImpl.class, ClassLoader.class });
-                    m_classLoader = (ModuleClassLoader)
-                        m_secureAction.invoke(ctor,
-                        new Object[] { this, determineParentClassLoader() });
-                }
-                catch (Exception ex)
-                {
-                    throw new RuntimeException("Unable to create module class loader: "
-                        + ex.getMessage() + " [" + ex.getClass().getName() + "]");
-                }
+                clazz = ModuleClassLoader.class;
             }
             else
             {
-                m_classLoader = new ModuleClassLoader(determineParentClassLoader());
+                try
+                {
+                    clazz = ModuleClassLoaderJava5.class;
+                }
+                catch (Throwable th)
+                {
+                    // If we are on pre-Java5 then we will get a verify error
+                    // here since we try to override a getResources() which is
+                    // a final method in pre-Java5.
+                    m_isPreJava5 = true;
+                    clazz = ModuleClassLoader.class;
+                }
+            }
+
+            // Use SecureAction to create the class loader if security is
+            // enabled; otherwise, create it directly.
+            try
+            {
+                Constructor ctor = (Constructor) m_secureAction.getConstructor(
+                    clazz, new Class[] { ModuleImpl.class, ClassLoader.class });
+                m_classLoader = (ModuleClassLoader)
+                    m_secureAction.invoke(ctor,
+                    new Object[] { this, determineParentClassLoader() });
+            }
+            catch (Exception ex)
+            {
+                throw new RuntimeException("Unable to create module class loader: "
+                    + ex.getMessage() + " [" + ex.getClass().getName() + "]");
             }
         }
         return m_classLoader;
@@ -1652,6 +1672,24 @@ public class ModuleImpl implements Module
         m_dexFileClassConstructor = dexFileClassConstructor;
         m_dexFileClassLoadDex= dexFileClassLoadDex;
         m_dexFileClassLoadClass = dexFileClassLoadClass;
+    }
+
+    public class ModuleClassLoaderJava5 extends ModuleClassLoader
+    {
+        public ModuleClassLoaderJava5(ClassLoader parent)
+        {
+            super(parent);
+        }
+
+        public Enumeration getResources(String name)
+        {
+            return ModuleImpl.this.getResourcesByDelegation(name);
+        }
+
+        protected Enumeration findResources(String name)
+        {
+            return getResourcesLocal(name);
+        }
     }
 
     public class ModuleClassLoader extends SecureClassLoader implements BundleReference
