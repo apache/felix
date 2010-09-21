@@ -78,7 +78,7 @@ public class Clause
         for (int i = 0; directives != null && i < directives.length; i++)
         {
             sb.append(";").append(directives[i].getName()).append(":=");
-            if (directives[i].getValue().contains(","))
+            if (directives[i].getValue().indexOf(",") >= 0)
             {
                 sb.append("\"").append(directives[i].getValue()).append("\"");
             }
@@ -90,7 +90,7 @@ public class Clause
         for (int i = 0; attributes != null && i < attributes.length; i++)
         {
             sb.append(";").append(attributes[i].getName()).append("=");
-            if (attributes[i].getValue().contains(","))
+            if (attributes[i].getValue().indexOf(",") >= 0)
             {
                 sb.append("\"").append(attributes[i].getValue()).append("\"");
             }
