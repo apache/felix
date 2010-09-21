@@ -605,8 +605,8 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             if (stack[i].getClassLoader() != null) 
             {
                 String name = stack[i].getClassLoader().getClass().getName();
-                if ("org.apache.felix.framework.ModuleImpl$ModuleClassLoader".equals(name) 
-                    || "org.apache.felix.framework.searchpolicy.ContentClassLoader".equals(name))
+                if (name.startsWith("org.apache.felix.framework.ModuleImpl$ModuleClassLoader")
+                    || name.equals("org.apache.felix.framework.searchpolicy.ContentClassLoader"))
                 {
                     targetClass = stack[i];
                     break;
