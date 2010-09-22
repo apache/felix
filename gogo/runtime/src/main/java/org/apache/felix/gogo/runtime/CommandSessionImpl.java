@@ -23,6 +23,7 @@ package org.apache.felix.gogo.runtime;
 
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
 import org.apache.felix.service.threadio.ThreadIO;
 
 import java.io.InputStream;
@@ -102,6 +103,22 @@ public class CommandSessionImpl implements CommandSession, Converter
             return processor.constants.get(name);
         }
 
+        if (variables.containsKey("#" + name))
+        {
+            Object f = variables.get("#" + name);
+            if (f instanceof Function)
+            {
+                try
+                {
+                    f = ((Function) f).execute(this, null);
+                }
+                catch (Exception e)
+                {
+                    // Ignore
+                }
+            }
+            return f;
+        }
         if (variables.containsKey(name))
         {
             return variables.get(name);
