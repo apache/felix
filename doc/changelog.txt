@@ -1,3 +1,19 @@
+Changes from 3.0.2 to 3.0.3
+---------------------------
+
+** Bug
+    * [FELIX-2548] - Resolver should use case sensitive indexing for capabilities
+    * [FELIX-2569] - Felix bundle classloader always delegates to parent loader in getResources()
+    * [FELIX-2589] - SecurityException "SecurityManager already installed" is thrown when calling Framework.init() multiple times with FRAMEWORK_SECURITY set
+    * [FELIX-2598] - Hang in Felix: thread owing a bundle lock waits for ever to lock it again
+    * [FELIX-2599] - When specifying the packages exported by the system bundle, attributes and directives on packages do not show up in the system bundle headers
+
+** Improvement
+    * [FELIX-1022] - Classloader Exceptions should be more informative
+    * [FELIX-2549] - Fix some synchronization issues in content handling
+    * [FELIX-2555] - Log messages should contain the bundle id, when available
+    * [FELIX-2597] - Deadlock during delivery of resolved event
+
 Changes from 3.0.1 to 3.0.2
 ---------------------------
 
