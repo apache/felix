@@ -528,48 +528,48 @@ public class Felix extends BundleImpl implements Framework
             Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE);
         try
         {
-            String security = (String) m_configMap.get(Constants.FRAMEWORK_SECURITY);
-            if (security != null)
-            {
-                if (System.getSecurityManager() != null)
-                {
-                    throw new SecurityException("SecurityManager already installed");
-                }
-                security = security.trim();
-                if (Constants.FRAMEWORK_SECURITY_OSGI.equalsIgnoreCase(security) || (security.length() == 0))
-                {
-                    // TODO: SECURITY - we only need our own security manager to convert the exceptions
-                    //       because the 4.2.0 ct does expect them like this in one case. 
-                    System.setSecurityManager(m_securityManager = new SecurityManager()
-                    {
-                        public void checkPermission(Permission perm) 
-                        {
-                            try
-                            {
-                                super.checkPermission(perm);
-                            }
-                            catch (AccessControlException ex)
-                            {
-                                throw new SecurityException(ex);
-                            }
-                        }
-                    });
-                }
-                else
-                {
-                    try 
-                    {
-                        System.setSecurityManager(m_securityManager = 
-                            (SecurityManager) Class.forName(security).newInstance());
-                    } 
-                    catch (Throwable t)
-                    {
-                        throw new SecurityException("Unable to install custom SecurityManager: " + security, t); 
-                    }
-                }
-            }
             if ((getState() == Bundle.INSTALLED) || (getState() == Bundle.RESOLVED))
             {
+                String security = (String) m_configMap.get(Constants.FRAMEWORK_SECURITY);
+                if (security != null)
+                {
+                    if (System.getSecurityManager() != null)
+                    {
+                        throw new SecurityException("SecurityManager already installed");
+                    }
+                    security = security.trim();
+                    if (Constants.FRAMEWORK_SECURITY_OSGI.equalsIgnoreCase(security) || (security.length() == 0))
+                    {
+                        // TODO: SECURITY - we only need our own security manager to convert the exceptions
+                        //       because the 4.2.0 ct does expect them like this in one case. 
+                        System.setSecurityManager(m_securityManager = new SecurityManager()
+                        {
+                            public void checkPermission(Permission perm) 
+                            {
+                                try
+                                {
+                                    super.checkPermission(perm);
+                                }
+                                catch (AccessControlException ex)
+                                {
+                                    throw new SecurityException(ex);
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        try 
+                        {
+                            System.setSecurityManager(m_securityManager = 
+                                (SecurityManager) Class.forName(security).newInstance());
+                        } 
+                        catch (Throwable t)
+                        {
+                            throw new SecurityException("Unable to install custom SecurityManager: " + security, t); 
+                        }
+                    }
+                }
                 // Get any system bundle activators.
                 m_activatorList = (List) m_configMutableMap.get(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
                 m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
