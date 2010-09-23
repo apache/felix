@@ -632,22 +632,34 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         Map langMap = (Map) request.getAttribute(WebConsoleConstants.ATTR_LANG_MAP);
         if (null != langMap && !langMap.isEmpty())
         {
+            // determine the currently selected locale from the request and fail-back
+            // to the default locale if not set
+            // if locale is missing in locale map, the default 'en' locale is used
+            Locale reqLocale = request.getLocale();
+            String locale = null != reqLocale ? reqLocale.getLanguage()
+                : Locale.getDefault().getLanguage();
+            if (!langMap.containsKey(locale))
+            {
+                locale = Locale.getDefault().getLanguage();
+            }
+            if (!langMap.containsKey(locale))
+            {
+                locale = "en"; //$NON-NLS-1$
+            }
+
             pw.println("<div id='langSelect'>"); //$NON-NLS-1$
-            pw.println(" <span class='ui-icon ui-icon-comment'>&nbsp;</span>"); //$NON-NLS-1$
+            pw.println(" <span>"); //$NON-NLS-1$
+            printLocaleElement(pw, appRoot, locale, langMap.get(locale));
+            pw.println(" </span>"); //$NON-NLS-1$
             pw.println(" <span class='flags ui-helper-hidden'>"); //$NON-NLS-1$
             for (Iterator li = langMap.keySet().iterator(); li.hasNext();)
             {
                 // <img src="us.gif" alt="en" title="English"/>
                 final Object l = li.next();
-                pw.print("  <img src='"); //$NON-NLS-1$
-                pw.print(appRoot);
-                pw.print("/res/flags/"); //$NON-NLS-1$
-                pw.print(l);
-                pw.print(".gif' alt='"); //$NON-NLS-1$
-                pw.print(l);
-                pw.print("' title='"); //$NON-NLS-1$
-                pw.print(langMap.get(l));
-                pw.println("'/>"); //$NON-NLS-1$
+                if (!l.equals(locale))
+                {
+                    printLocaleElement(pw, appRoot, l, langMap.get(l));
+                }
             }
 
             pw.println(" </span>"); //$NON-NLS-1$
@@ -655,6 +667,19 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
     }
 
+    private static final void printLocaleElement(PrintWriter pw, String appRoot,
+        Object langCode, Object langName)
+    {
+        pw.print("  <img src='"); //$NON-NLS-1$
+        pw.print(appRoot);
+        pw.print("/res/flags/"); //$NON-NLS-1$
+        pw.print(langCode);
+        pw.print(".gif' alt='"); //$NON-NLS-1$
+        pw.print(langCode);
+        pw.print("' title='"); //$NON-NLS-1$
+        pw.print(langName);
+        pw.println("'/>"); //$NON-NLS-1$
+    }
 
     /**
      * This method is responsible for generating the footer of the page.
