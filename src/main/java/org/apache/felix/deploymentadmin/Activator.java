@@ -34,7 +34,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
 public class Activator extends DependencyActivatorBase {
 
     public void init(BundleContext context, DependencyManager manager) throws Exception {
-        manager.add(createService()
+        manager.add(createComponent()
             .setInterface(DeploymentAdmin.class.getName(), null)
             .setImplementation(DeploymentAdminImpl.class)
             .add(createServiceDependency()
