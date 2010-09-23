@@ -247,18 +247,15 @@ public class JarContent implements Content
             // to avoid a race condition.
             synchronized (m_revisionLock)
             {
-                if (!BundleCache.getSecureAction().fileExists(extractJar))
+                try
                 {
-                    try
-                    {
-                        extractEmbeddedJar(entryName);
-                    }
-                    catch (Exception ex)
-                    {
-                        m_logger.log(
-                            Logger.LOG_ERROR,
-                            "Unable to extract embedded JAR file.", ex);
-                    }
+                    extractEmbeddedJar(entryName);
+                }
+                catch (Exception ex)
+                {
+                    m_logger.log(
+                        Logger.LOG_ERROR,
+                        "Unable to extract embedded JAR file.", ex);
                 }
             }
             return new JarContent(
