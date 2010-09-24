@@ -69,7 +69,6 @@ public class BundleArchive
 
     private static final transient String BUNDLE_ID_FILE = "bundle.id";
     private static final transient String BUNDLE_LOCATION_FILE = "bundle.location";
-    private static final transient String CURRENT_LOCATION_FILE = "current.location";
     private static final transient String REVISION_LOCATION_FILE = "revision.location";
     private static final transient String BUNDLE_STATE_FILE = "bundle.state";
     private static final transient String BUNDLE_START_LEVEL_FILE = "bundle.startlevel";
@@ -87,7 +86,6 @@ public class BundleArchive
     private long m_id = -1;
     private final File m_archiveRootDir;
     private String m_originalLocation = null;
-    private String m_currentLocation = null;
     private int m_persistentState = -1;
     private int m_startLevel = -1;
     private long m_lastModified = -1;
@@ -143,7 +141,7 @@ public class BundleArchive
         initialize();
 
         // Add a revision for the content.
-        revise(m_originalLocation, is);
+        revise(false, m_originalLocation, is);
     }
 
     /**
@@ -202,7 +200,7 @@ public class BundleArchive
         // to read the location from the current revision - if that fails we
         // likely have an old bundle cache and read the location the old way.
         // The next revision will update the bundle cache.
-        revise(getRevisionLocation(revisionCount - 1), null);
+        revise(true, getRevisionLocation(revisionCount - 1), null);
     }
 
     /**
@@ -351,41 +349,44 @@ public class BundleArchive
         // Write the bundle state.
         OutputStream os = null;
         BufferedWriter bw = null;
-        try
+        if (m_persistentState != state)
         {
-            os = BundleCache.getSecureAction()
-                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_STATE_FILE));
-            bw = new BufferedWriter(new OutputStreamWriter(os));
-            String s = null;
-            switch (state)
+            try
             {
-                case Bundle.ACTIVE:
-                    s = ACTIVE_STATE;
-                    break;
-                case Bundle.STARTING:
-                    s = STARTING_STATE;
-                    break;
-                case Bundle.UNINSTALLED:
-                    s = UNINSTALLED_STATE;
-                    break;
-                default:
-                    s = INSTALLED_STATE;
-                    break;
+                os = BundleCache.getSecureAction()
+                    .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_STATE_FILE));
+                bw = new BufferedWriter(new OutputStreamWriter(os));
+                String s = null;
+                switch (state)
+                {
+                    case Bundle.ACTIVE:
+                        s = ACTIVE_STATE;
+                        break;
+                    case Bundle.STARTING:
+                        s = STARTING_STATE;
+                        break;
+                    case Bundle.UNINSTALLED:
+                        s = UNINSTALLED_STATE;
+                        break;
+                    default:
+                        s = INSTALLED_STATE;
+                        break;
+                }
+                bw.write(s, 0, s.length());
+                m_persistentState = state;
             }
-            bw.write(s, 0, s.length());
-            m_persistentState = state;
-        }
-        catch (IOException ex)
-        {
-            m_logger.log(
-                Logger.LOG_ERROR,
-                getClass().getName() + ": Unable to record state - " + ex);
-            throw ex;
-        }
-        finally
-        {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
+            catch (IOException ex)
+            {
+                m_logger.log(
+                    Logger.LOG_ERROR,
+                    getClass().getName() + ": Unable to record state - " + ex);
+                throw ex;
+            }
+            finally
+            {
+                if (bw != null) bw.close();
+                if (os != null) os.close();
+            }
         }
     }
 
@@ -616,7 +617,7 @@ public class BundleArchive
      * @param location the location string associated with the revision.
      * @throws Exception if any error occurs.
     **/
-    public synchronized void revise(String location, InputStream is)
+    public synchronized void revise(boolean isReload, String location, InputStream is)
         throws Exception
     {
         // If we have an input stream, then we have to use it
@@ -633,7 +634,10 @@ public class BundleArchive
             throw new Exception("Unable to revise archive.");
         }
 
-        setRevisionLocation(location, (m_revisions == null) ? 0 : m_revisions.length);
+        if (!isReload)
+        {
+            setRevisionLocation(location, (m_revisions == null) ? 0 : m_revisions.length);
+        }
 
         // Add new revision to revision array.
         if (m_revisions == null)
@@ -869,74 +873,6 @@ public class BundleArchive
                 .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_LOCATION_FILE));
             bw = new BufferedWriter(new OutputStreamWriter(os));
             bw.write(m_originalLocation, 0, m_originalLocation.length());
-        }
-        finally
-        {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
-        }
-    }
-
-    /**
-     * <p>
-     * Returns the current location associated with the bundle archive,
-     * which is the last location from which the bundle was updated. It is
-     * necessary to keep track of this so it is possible to determine what
-     * kind of revision needs to be created when recreating revisions when
-     * the framework restarts.
-     * </p>
-     * @return the last update location.
-     * @throws Exception if any error occurs.
-    **/
-    private String getCurrentLocation() throws Exception
-    {
-        if (m_currentLocation == null)
-        {
-            // Read current location.
-            InputStream is = null;
-            BufferedReader br = null;
-            try
-            {
-                is = BundleCache.getSecureAction()
-                    .getFileInputStream(new File(m_archiveRootDir, CURRENT_LOCATION_FILE));
-                br = new BufferedReader(new InputStreamReader(is));
-                m_currentLocation = br.readLine();
-            }
-            catch (FileNotFoundException ex)
-            {
-                return getLocation();
-            }
-            finally
-            {
-                if (br != null) br.close();
-                if (is != null) is.close();
-            }
-        }
-        return m_currentLocation;
-    }
-
-    /**
-     * <p>
-     * Set the current location associated with the bundle archive,
-     * which is the last location from which the bundle was updated. It is
-     * necessary to keep track of this so it is possible to determine what
-     * kind of revision needs to be created when recreating revisions when
-     * the framework restarts.
-     * </p>
-     * @throws Exception if any error occurs.
-    **/
-    private void setCurrentLocation(String location) throws Exception
-    {
-        // Save current location.
-        OutputStream os = null;
-        BufferedWriter bw = null;
-        try
-        {
-            os = BundleCache.getSecureAction()
-                .getFileOutputStream(new File(m_archiveRootDir, CURRENT_LOCATION_FILE));
-            bw = new BufferedWriter(new OutputStreamWriter(os));
-            bw.write(location, 0, location.length());
-            m_currentLocation = location;
         }
         finally
         {

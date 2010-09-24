@@ -1072,7 +1072,7 @@ class BundleImpl implements Bundle
         throws Exception
     {
         // This operation will increase the revision count for the bundle.
-        m_archive.revise(location, is);
+        m_archive.revise(false, location, is);
         try
         {
             Module module = createModule();
