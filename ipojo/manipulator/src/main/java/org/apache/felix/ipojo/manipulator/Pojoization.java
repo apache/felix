@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -229,7 +228,7 @@ public class Pojoization {
 
         // Start the manipulation
         manipulateJarFile(out);
-        
+
         // Check that all declared components are manipulated
         for (int i = 0; i < m_components.size(); i++) {
             ComponentInfo ci = (ComponentInfo) m_components.get(i);
@@ -293,15 +292,15 @@ public class Pojoization {
         ClassReader cr = new ClassReader(inC);
         MetadataCollector collector = new MetadataCollector();
         cr.accept(collector, 0);
-        
+
         if (collector.isIgnoredBecauseOfMissingComponent()) {
             warn("Annotation processing ignored in " + collector.getClassName() + " - @Component missing");
         } else if (collector.isComponentType()) {
             boolean toskip = false;
             for (int i = 0; !toskip && i < m_metadata.size(); i++) {
                 Element meta = (Element)  m_metadata.get(i);
-                if (! meta.getName().equals("instance") // Only if its a component type definition, 
-                                                                 // so skip instance declaration 
+                if (! meta.getName().equals("instance") // Only if its a component type definition,
+                                                                 // so skip instance declaration
                         && meta.containsAttribute("name")
                         && meta.getAttribute("name").equalsIgnoreCase(collector.getComponentTypeDeclaration().getAttribute("name"))) {
                     toskip = true;
@@ -312,7 +311,7 @@ public class Pojoization {
                 // if no metadata or empty one, create a new array.
                 Element elem = collector.getComponentTypeDeclaration();
                 m_metadata.add(elem);
-                
+
                 String name = elem.getAttribute("classname");
                 name = name.replace('.', '/');
                 name += ".class";
@@ -321,7 +320,7 @@ public class Pojoization {
                 ComponentInfo info = new ComponentInfo(name, elem);
                 info.m_bytecode = inC;
                 m_components.add(info);
-                
+
                 // Instantiate ?
                 if (collector.getInstanceDeclaration() != null) {
                     warn("Declaring an empty instance of " + elem.getAttribute("classname"));
@@ -330,7 +329,7 @@ public class Pojoization {
             }
         }
     }
-    
+
     /**
      * Copies an input stream into an output stream but does not close the streams.
      * @param in the input stream
@@ -386,7 +385,7 @@ public class Pojoization {
                         jos.putNextEntry(curEntry);
                         InputStream currIn = m_inputJar.getInputStream(curEntry);
                         copyStreamWithoutClosing(currIn, jos);
-                        
+
                         currIn.close();
                         jos.closeEntry();
                     }
