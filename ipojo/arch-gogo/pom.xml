@@ -60,7 +60,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1</version>
         </dependency>
     </dependencies>
     <build>
@@ -90,7 +90,7 @@
                             http://felix.apache.org/site/ipojo-arch-command.html
                         </Bundle-DocURL>
                         <Private-Package>org.apache.felix.ipojo.arch.gogo</Private-Package>
-                        <Include-Resource> 
+                        <Include-Resource>
                           META-INF/LICENSE=LICENSE,
                           META-INF/NOTICE=NOTICE,
                           META-INF/DEPENDENCIES=DEPENDENCIES
