@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,9 +64,9 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * True if the visited class is a component type declaration (i.e. contains the @component annotation).
      */
     private boolean m_containsComponentAnnotation = false;
-    
+
     private boolean m_ignoredBecauseOfMissingComponent = false;
-    
+
     /**
      * Map of [element ids, element].
      * This map is used to easily get an already created element.
@@ -79,7 +79,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * Stored element are added under referred element.
      */
     private Map m_elements = new HashMap();
-    
+
     /**
      * Instance declaration.
      */
@@ -94,23 +94,23 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
     public Element getComponentTypeDeclaration() {
         return m_elem;
     }
-    
+
     public Element getInstanceDeclaration() {
         return m_instance;
     }
-    
+
     public boolean isComponentType() {
         return m_containsComponentAnnotation;
     }
-    
+
     public boolean isIgnoredBecauseOfMissingComponent() {
         return m_ignoredBecauseOfMissingComponent;
     }
-    
+
     public String getClassName() {
         return m_className;
     }
-    
+
     /**
      * Start visiting a class.
      * Initialize the getter/setter generator, add the _cm field, add the pojo interface.
@@ -165,7 +165,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
         if (desc.equals("Lorg/apache/felix/ipojo/annotations/HandlerDeclaration;")) {
             return new HandlerDeclarationVisitor();
         }
-        
+
         // @Instantiate
         if (desc.equals("Lorg/apache/felix/ipojo/annotations/Instantiate;")) {
             return new InstantiateVisitor();
@@ -220,7 +220,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
             m_ignoredBecauseOfMissingComponent = true;
             return;
         }
-        
+
         // Recompute the tree
         Set elems = getElements().keySet();
         Iterator it = elems.iterator();
@@ -308,6 +308,14 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
         public AnnotationVisitor visitArray(String arg0) {
             if (arg0.equals("specifications")) {
                 return new InterfaceArrayVisitor();
+            } else if (arg0.equals("properties")) {
+            	// Create a new simple visitor to visit the nested ServiceProperty annotations
+            	// Collected properties are collected in m_prov
+            	return new EmptyVisitor() {
+            		public AnnotationVisitor visitAnnotation(String ignored, String desc) {
+                    	return new PropertyAnnotationParser(m_prov);
+        			}
+            	};
             } else {
                 return null;
             }
@@ -354,17 +362,18 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
 
         }
 
+
     }
-    
+
     /**
      * Parse the @Instantitate annotation.
      */
     private class InstantiateVisitor extends EmptyVisitor implements AnnotationVisitor {
         /**
-         * Instance name. 
+         * Instance name.
          */
         private String m_name;
-        
+
         /**
          * Visit an annotation attribute.
          * @param arg0 the attribute name
@@ -377,7 +386,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
                 return;
             }
         }
-        
+
         /**
          * End of the visit. Creates the instance element.
          * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
@@ -393,7 +402,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
         }
     }
 
-    
+
     /**
      * Parse the @component annotation.
      */

@@ -10,25 +10,25 @@ import org.apache.felix.ipojo.test.scenarios.annotations.service.CheckService;
 import org.apache.felix.ipojo.test.scenarios.annotations.service.FooService;
 
 public class ServiceProdiving extends OSGiTestCase {
-    
+
     private IPOJOHelper helper;
-    
+
     public void setUp() {
         helper = new IPOJOHelper(this);
     }
-    
+
     public void testProvidesSimple() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.ProvidesSimple");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
     }
-    
+
     public void testProvidesDouble() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.ProvidesDouble");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
     }
-    
+
     public void testProvidesTriple() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.ProvidesTriple");
         Element[] provs = meta.getElements("provides");
@@ -38,7 +38,7 @@ public class ServiceProdiving extends OSGiTestCase {
         List list = ParseUtils.parseArraysAsList(itfs);
         assertTrue("Provides CS ", list.contains(CheckService.class.getName()));
     }
-    
+
     public void testProvidesQuatro() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.ProvidesQuatro");
         Element[] provs = meta.getElements("provides");
@@ -49,7 +49,7 @@ public class ServiceProdiving extends OSGiTestCase {
         assertTrue("Provides CS ", list.contains(CheckService.class.getName()));
         assertTrue("Provides Foo ", list.contains(FooService.class.getName()));
     }
-    
+
     public void testProperties() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.ProvidesProperties");
         Element[] provs = meta.getElements("provides");
@@ -73,15 +73,60 @@ public class ServiceProdiving extends OSGiTestCase {
         Element baa = getPropertyByName(props, "baa");
         assertEquals("Check baa field", "m_baa", baa.getAttribute("field"));
         assertEquals("Check baa name", "baa", baa.getAttribute("name"));
-        
+
         //Bar
         Element baz = getPropertyByName(props, "baz");
         assertEquals("Check baz field", "m_baz", baz.getAttribute("field"));
-        assertEquals("Check baz name", "baz", baz.getAttribute("name"));        
-        
-        
+        assertEquals("Check baz name", "baz", baz.getAttribute("name"));
     }
-    
+
+    public void testStaticProperties() {
+        Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.ProvidesStaticProperties");
+        Element[] provs = meta.getElements("provides");
+        assertNotNull("Provides exists ", provs);
+        Element prov = provs[0];
+        Element[] props = prov.getElements("property");
+        assertEquals("Number of properties", props.length, 9);
+        //Prop1
+        Element foo = getPropertyByName(props, "prop1");
+        assertNull(foo.getAttribute("field"));
+        assertEquals("prop1", foo.getAttribute("value"));
+
+        //Prop2
+        Element prop2 = getPropertyByName(props, "prop2");
+        assertNull(prop2.getAttribute("field"));
+        assertNull(prop2.getAttribute("value"));
+
+        // Props
+        Element prop = getPropertyByName(props, "props");
+        assertNull(prop.getAttribute("field"));
+        assertEquals("{prop1, prop2}", prop.getAttribute("value"));
+
+        // Mandatory
+        Element mandatory = getPropertyByName(props, "mandatory1");
+        assertNull(mandatory.getAttribute("field"));
+        assertNull(mandatory.getAttribute("value"));
+        assertEquals("true", mandatory.getAttribute("mandatory"));
+
+        //Bar
+        Element bar = getPropertyByName(props, "bar");
+        assertEquals("Check bar field", "bar", bar.getAttribute("field"));
+        assertEquals("Check bar value", "4", bar.getAttribute("value"));
+        assertEquals("Check mandatory value", "true", bar.getAttribute("mandatory"));
+        //Boo
+        Element boo = getPropertyByName(props, "boo");
+        assertEquals("Check boo field", "boo", boo.getAttribute("field"));
+        //Baa
+        Element baa = getPropertyByName(props, "baa");
+        assertEquals("Check baa field", "m_baa", baa.getAttribute("field"));
+        assertEquals("Check baa name", "baa", baa.getAttribute("name"));
+
+        //Bar
+        Element baz = getPropertyByName(props, "baz");
+        assertEquals("Check baz field", "m_baz", baz.getAttribute("field"));
+        assertEquals("Check baz name", "baz", baz.getAttribute("name"));
+    }
+
     public void testServiceController() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.PSServiceController");
         Element[] provs = meta.getElements("provides");
@@ -91,7 +136,7 @@ public class ServiceProdiving extends OSGiTestCase {
         assertEquals(1, provs[0].getElements("controller").length);
         assertEquals("false", provs[0].getElements("controller")[0].getAttribute("value"));
     }
-    
+
     public void testServiceControllerWithSpecification() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.PSServiceControllerSpec");
         Element[] provs = meta.getElements("provides");
@@ -117,7 +162,7 @@ public class ServiceProdiving extends OSGiTestCase {
         fail("Property  " + name + " not found");
         return null;
     }
-    
-    
+
+
 
 }
