@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -222,7 +222,19 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         // updated method
         String upd = confs[0].getAttribute("updated");
         if (upd != null) {
-            m_updated = new Callback(upd, new Class[] {Dictionary.class}, false, getInstanceManager());
+        	MethodMetadata method = getPojoMetadata().getMethod(upd);
+        	if (method == null) {
+        		throw new ConfigurationException("The updated method is not found in the class "
+        				+ getInstanceManager().getClassName());
+        	} else if (method.getMethodArguments().length == 0) {
+        		m_updated = new Callback(upd, new Class[0], false, getInstanceManager());
+        	} else if (method.getMethodArguments().length == 1
+        			&& method.getMethodArguments()[0].equals(Dictionary.class.getName())) {
+        		m_updated = new Callback(upd, new Class[] {Dictionary.class}, false, getInstanceManager());
+        	} else {
+        		throw new ConfigurationException("The updated method is found in the class "
+        				+ getInstanceManager().getClassName() + " must have either no argument or a Dictionary");
+        	}
         }
 
         for (int i = 0; configurables != null && i < configurables.length; i++) {
@@ -295,14 +307,14 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             props.put(Constants.SERVICE_PID, m_managedServicePID);
             props.put("instance.name", getInstanceManager().getInstanceName());
             props.put("factory.name", getInstanceManager().getFactory().getFactoryName());
-            
+
             // Security Check
-            if (SecurityHelper.hasPermissionToRegisterService(ManagedService.class.getName(), 
+            if (SecurityHelper.hasPermissionToRegisterService(ManagedService.class.getName(),
                     getInstanceManager().getContext())) {
                 m_sr = getInstanceManager().getContext().registerService(ManagedService.class.getName(), this, props);
             } else {
-                error("Cannot register the ManagedService - The bundle " 
-                        + getInstanceManager().getContext().getBundle().getBundleId() 
+                error("Cannot register the ManagedService - The bundle "
+                        + getInstanceManager().getContext().getBundle().getBundleId()
                         + " does not have the permission to register the service");
             }
         }
@@ -375,7 +387,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 }
             }
             if (!found) {
-                // The property is not a configurable property, aadd it to the toPropagate list.
+                // The property is not a configurable property, add it to the toPropagate list.
                 toPropagate.put(name, value);
             }
         }
@@ -463,6 +475,24 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         if (m_updated == null) {
             return;
         }
+
+        if (m_updated.getArguments().length == 0) {
+        	// We don't have to compute the properties,
+        	// we just call the callback.
+        	try {
+                if (instance == null) {
+                    m_updated.call(new Object[0]);
+                } else {
+                    m_updated.call(instance, new Object[0]);
+                }
+            } catch (Exception e) {
+                error("Cannot call the updated method " + m_updated.getMethod() + " : " + e.getMessage());
+            }
+            return;
+        }
+
+        // Else we must compute the properties.
+
         Properties props = new Properties();
         for (int i = 0; i < m_configurableProperties.size(); i++) {
             String n = ((Property) m_configurableProperties.get(i)).getName();
@@ -546,6 +576,6 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     public HandlerDescription getDescription() {
         return m_description;
     }
-    
+
 
 }
