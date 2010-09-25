@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,7 @@ import org.osgi.framework.BundleContext;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class XMLReport extends Report {
-    
+
     /**
      * List of results.
      */
@@ -136,7 +136,7 @@ public class XMLReport extends Report {
         if (stackTrace != null) {
             element.setValue(stackTrace);
         }
-        
+
         addOutputStreamElement(out, "system-out", testCase);
 
         addOutputStreamElement(err, "system-err", testCase);
@@ -150,7 +150,7 @@ public class XMLReport extends Report {
 
     /**
      * Generates the XML reports.
-     * @param test the test 
+     * @param test the test
      * @param tr the test result
      * @param reportsDirectory the directory in which reports are created.
      * @param bc the bundle context (to get installed bundles)
@@ -211,6 +211,7 @@ public class XMLReport extends Report {
         Xpp3Dom testCase = new Xpp3Dom("testcase");
         testCase.setAttribute("name", getReportName(test));
         testCase.setAttribute("time", Long.toString(runTime) + " sec");
+        testCase.setAttribute("classname", test.getClass().getName());
         return testCase;
     }
 
@@ -264,7 +265,7 @@ public class XMLReport extends Report {
      */
     private void showProperties(Xpp3Dom testSuite, BundleContext bc, Map configuration) {
         Xpp3Dom properties = createElement(testSuite, "properties");
-        
+
         Properties systemProperties = System.getProperties();
 
         if (systemProperties != null) {
@@ -287,7 +288,7 @@ public class XMLReport extends Report {
 
             }
         }
-        
+
         if (configuration != null) {
             Iterator it = configuration.keySet().iterator();
 
@@ -313,7 +314,7 @@ public class XMLReport extends Report {
             }
         }
 
-        Xpp3Dom buns = createElement(properties, "bundles");
+        Xpp3Dom bundle = createElement(properties, "property");
         Bundle[] bundles = bc.getBundles();
         for (int i = 0; i < bundles.length; i++) {
             String sn = bundles[i].getSymbolicName();
@@ -334,13 +335,12 @@ public class XMLReport extends Report {
                 default:
                     break;
             }
-            Xpp3Dom bundle = createElement(buns, "bundle");
             bundle.setAttribute("symbolic-name", sn);
             bundle.setAttribute("state", state);
         }
 
     }
-    
+
     /**
      * Adds messages written during the test execution in the
      * XML tree.
