@@ -45,7 +45,7 @@
     <module>handler/whiteboard</module>
     <module>api</module>
     <module>online-manipulator</module>
-    <!-- remove junit4osgi during the release process 
+    <!-- remove junit4osgi during the release process
     <module>junit4osgi</module> -->
   </modules>
 
@@ -64,7 +64,7 @@
     </activation>
     <modules>
       <module>annotations</module>
-      <module>arch-gogo</module>
+      <!-- <module>arch-gogo</module>  -->
       <module>handler/jmx</module>
       <module>webconsole-plugin</module>
       <module>handler/transaction</module>
@@ -77,7 +77,7 @@
     </activation>
     <modules>
       <module>annotations</module>
-      <module>arch-gogo</module>
+      <!-- <module>arch-gogo</module>  -->
       <module>handler/jmx</module>
       <module>webconsole-plugin</module>
       <module>handler/transaction</module>
