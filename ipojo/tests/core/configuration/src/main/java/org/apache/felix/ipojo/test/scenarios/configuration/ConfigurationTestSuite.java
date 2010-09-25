@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,6 +39,8 @@ public class ConfigurationTestSuite {
         ots.addTestSuite(UpdatedMethod.class);
         ots.addTestSuite(UpdatedMethodAndManagedServiceFactory.class);
         ots.addTestSuite(UpdatedMethodAndManagedService.class);
+        ots.addTestSuite(UpdatedNoArgMethodAndManagedService.class);
+        ots.addTestSuite(UpdatedNoArgMethodAndManagedServiceFactory.class);
         ots.addTestSuite(ArchitectureTest.class);
         return ots;
     }

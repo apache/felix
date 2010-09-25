@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -79,6 +79,8 @@ public class Callback {
         m_manager = manager;
         if (args != null) {
             computeArguments(args);
+        } else {
+        	m_args = new String[0];
         }
     }
 
@@ -143,7 +145,7 @@ public class Callback {
                             break;
                         }
                     }
-                    if (argIndex == m_args.length) { // No mismatch detected. 
+                    if (argIndex == m_args.length) { // No mismatch detected.
                         return methods[i]; // It is the looked method.
                     }
                 }
@@ -170,7 +172,7 @@ public class Callback {
         if (m_methodObj == null) {
             throw new NoSuchMethodException(m_method);
         } else {
-            if (! m_methodObj.isAccessible()) { 
+            if (! m_methodObj.isAccessible()) {
                 // If not accessible, try to set the accessibility.
                 m_methodObj.setAccessible(true);
             }
@@ -209,7 +211,7 @@ public class Callback {
      * Invokes the method on every created objects with the specified
      * arguments.
      * @param arg the method arguments
-     * @return the result of the invocation, <code>null</code> for 
+     * @return the result of the invocation, <code>null</code> for
      * <code>void</code> method, the last result for instance containing
      * several objects.
      * @throws NoSuchMethodException if the callback method is not found
@@ -244,7 +246,7 @@ public class Callback {
      * arguments.
      * @param instance the instance on which call the method
      * @param arg the argument array
-     * @return the result of the invocation, <code>null</code> for 
+     * @return the result of the invocation, <code>null</code> for
      * <code>void</code> method
      * @throws NoSuchMethodException if the callback method is not found
      * @throws IllegalAccessException if the callback method cannot be called
@@ -264,5 +266,13 @@ public class Callback {
      */
     public String getMethod() {
         return m_method;
+    }
+
+    /**
+     * Gets the method arguments.
+     * @return the arguments.
+     */
+    public String[] getArguments() {
+    	return m_args;
     }
 }

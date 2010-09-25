@@ -18,39 +18,24 @@
  */
 package org.apache.felix.ipojo.test.scenarios.component;
 
-import java.util.Dictionary;
 import java.util.Properties;
 
 import org.apache.felix.ipojo.test.scenarios.configuration.service.FooService;
 import org.osgi.framework.BundleContext;
 
-public class FooProviderType1 implements FooService {
+public class FooProviderType2 implements FooService {
 
 	private int m_bar;
 	private String m_foo;
 
     private BundleContext m_context;
 
-    private static FooProviderType1 singleton;
     private static int count = 0;
 
     private int updated;
-    private Dictionary lastupdated;
 
-    private static FooProviderType1 singleton(BundleContext bc) {
-        if (singleton == null) {
-            count++;
-            singleton = new FooProviderType1(bc);
-        }
-        return singleton;
-    }
 
-    public static FooProviderType1 several(BundleContext bc) {
-        count++;
-        return new FooProviderType1(bc);
-    }
-
-    public FooProviderType1(BundleContext bc) {
+    public FooProviderType2(BundleContext bc) {
         if (bc ==null) {
             throw new RuntimeException("Injected bundle context null");
         }
@@ -72,9 +57,6 @@ public class FooProviderType1 implements FooService {
         p.put("count", new Integer(count));
 
         p.put("updated", new Integer(updated));
-        if (lastupdated != null) {
-            p.put("lastupdated", lastupdated);
-        }
 
 
 		return p;
@@ -119,15 +101,14 @@ public class FooProviderType1 implements FooService {
 	 * @param foo
 	 * @param bc
 	 */
-	public FooProviderType1(int bar, String foo, BundleContext bc) {
+	public FooProviderType2(int bar, String foo, BundleContext bc) {
 	    m_bar = bar;
 	    m_foo = foo;
 	    m_context = bc;
 	}
 
-	public void updated(Dictionary props) {
+	public void updated() {
         updated++;
-        lastupdated = props;
     }
 
 }

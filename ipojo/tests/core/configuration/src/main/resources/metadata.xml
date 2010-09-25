@@ -289,10 +289,36 @@
 			<property name="bar" field="m_bar" />
 		</properties>
 	</component>
+	<component
+		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType2"
+		name="CONFIG-FooProviderType-4Updated2" architecture="true">
+		<provides>
+			<property name="foo" field="m_foo" />
+			<property name="bar" field="m_bar" />
+			<property name="baz" type="java.lang.String" />
+		</provides>
+		<properties propagation="true" pid="FooProvider-3" updated="updated">
+			<property name="foo" field="m_foo" />
+			<property name="bar" field="m_bar" />
+		</properties>
+	</component>
 
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType1"
 		name="CONFIG-FooProviderType-3Updated" architecture="true">
+		<provides>
+			<property name="foo" field="m_foo" />
+			<property name="bar" field="m_bar" />
+			<property name="baz" type="java.lang.String" />
+		</provides>
+		<properties propagation="true" updated="updated">
+			<property name="foo" field="m_foo" />
+			<property name="bar" field="m_bar" />
+		</properties>
+	</component>
+	<component
+		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType2"
+		name="CONFIG-FooProviderType-3Updated2" architecture="true">
 		<provides>
 			<property name="foo" field="m_foo" />
 			<property name="bar" field="m_bar" />
