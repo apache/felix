@@ -145,7 +145,7 @@ public class WireModuleImpl implements Wire
         if (m_packages.contains(pkgName))
         {
             Enumeration urls = m_exporter.getResourcesByDelegation(name);
-            if (urls != null)
+            if (urls.hasMoreElements())
             {
                 return urls;
             }

@@ -835,8 +835,7 @@ public class ModuleImpl implements Module
             requestSet.add(name);
             try
             {
-                Enumeration urls = findResourcesByDelegation(name);
-                return (urls.hasMoreElements()) ? urls : null;
+                return findResourcesByDelegation(name);
             }
             finally
             {
