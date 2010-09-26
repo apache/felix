@@ -210,7 +210,8 @@ public class XMLReport extends Report {
     private Xpp3Dom createTestElement(Test test, long runTime) {
         Xpp3Dom testCase = new Xpp3Dom("testcase");
         testCase.setAttribute("name", getReportName(test));
-        testCase.setAttribute("time", Long.toString(runTime) + " sec");
+        double time = (double) runTime / (double) 1000;
+        testCase.setAttribute("time", Double.toString(time));
         testCase.setAttribute("classname", test.getClass().getName());
         return testCase;
     }
@@ -224,7 +225,7 @@ public class XMLReport extends Report {
     private Xpp3Dom createTestSuiteElement(Test test, long runTime) {
         Xpp3Dom testCase = new Xpp3Dom("testsuite");
         testCase.setAttribute("name", getReportName(test));
-        testCase.setAttribute("time", Long.toString(runTime) + " sec");
+        testCase.setAttribute("time", Long.toString(runTime));
         return testCase;
     }
 
