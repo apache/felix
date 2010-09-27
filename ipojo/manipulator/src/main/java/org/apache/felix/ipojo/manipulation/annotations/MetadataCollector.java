@@ -65,6 +65,9 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      */
     private boolean m_containsComponentAnnotation = false;
 
+    /**
+     * True if the visited class does not have the @Component annotation.
+     */
     private boolean m_ignoredBecauseOfMissingComponent = false;
 
     /**
@@ -460,7 +463,8 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
          * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
          */
         public void visit(String arg0, Object arg1) {
-            if (arg0.equals("public_factory")) {
+            if (arg0.equals("public_factory")  || arg0.equals("publicFactory")) {
+            	// public_factory is deprecated, but must sill be supported
                 m_factory = arg1.toString();
                 return;
             }
@@ -484,7 +488,8 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
                 m_managedservice = arg1.toString();
                 return;
             }
-            if (arg0.equals("factory_method")) {
+            if (arg0.equals("factory_method")  || arg0.equals("factoryMethod")) {
+            	// factory_method is deprecated, but must still be supported.
                 m_method = arg1.toString();
                 return;
             }

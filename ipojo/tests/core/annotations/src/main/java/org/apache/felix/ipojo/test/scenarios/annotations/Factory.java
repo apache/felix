@@ -12,6 +12,16 @@ public class Factory extends OSGiTestCase {
         helper = new IPOJOHelper(this);
     }
 
+    public void testArchDeprecated() {
+        Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.FactoryDeprecated");
+        String fact = meta.getAttribute("public");
+        String name = meta.getAttribute("name");
+        assertNotNull("Factory exists ", fact);
+        assertEquals("Factory value", "true", fact);
+        assertNotNull("Name exists ", name);
+        assertEquals("Name value", "org.apache.felix.ipojo.test.scenarios.component.FactoryDeprecated", name);
+    }
+
     public void testArch() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.Factory");
         String fact = meta.getAttribute("public");
@@ -34,6 +44,13 @@ public class Factory extends OSGiTestCase {
 
     public void testFactoryMethod() {
         Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.FactoryMethod");
+        String method = meta.getAttribute("factory-method");
+        assertNotNull("Method exists ", method);
+        assertEquals("Method value", "create", method);
+    }
+
+    public void testFactoryMethodDeprecated() {
+        Element meta = helper.getMetadata("org.apache.felix.ipojo.test.scenarios.component.FactoryMethodDeprecated");
         String method = meta.getAttribute("factory-method");
         assertNotNull("Method exists ", method);
         assertEquals("Method value", "create", method);
