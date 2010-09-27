@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,8 +32,15 @@ public @interface Component {
     /**
      * Set if the component type is public.
      * Default: true
+     * @deprecated renamed to publicFactory.
      */
     boolean public_factory() default true;
+
+    /**
+     * Set if the component type is public.
+     * Default: true
+     */
+    boolean publicFactory() default true;
 
     /**
      * Set the component type name.
@@ -70,8 +77,17 @@ public @interface Component {
      * from a static method. The specified method must be a static
      * method and return a pojo object.
      * By default, iPOJO uses the 'regular' constructor.
+     * @deprecated now is called <tt>factoryMethod</tt>.
      */
     String factory_method() default "";
+
+    /**
+     * Set the factory-method, if the pojo has to be created
+     * from a static method. The specified method must be a static
+     * method and return a pojo object.
+     * By default, iPOJO uses the 'regular' constructor.
+     */
+    String factoryMethod() default "";
 
     /**
      * Set the version of the component type.
