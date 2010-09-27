@@ -163,7 +163,7 @@ public class WireImpl implements Wire
             // If no resource was found, then we must throw an exception
             // since the exporter for this package did not contain the
             // requested class.
-            if (!urls.hasMoreElements())
+            if ((urls == null) || !urls.hasMoreElements())
             {
                 throw new ResourceNotFoundException(name);
             }

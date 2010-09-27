@@ -861,8 +861,7 @@ public class ModuleImpl implements Module
             // The spec states that if the bundle cannot be resolved, then
             // only the local bundle's resources should be searched. So we
             // will ask the module's own class path.
-            urls = getResourcesLocal(name);
-            return urls;
+            return getResourcesLocal(name);
         }
 
         // Get the package of the target class/resource.
