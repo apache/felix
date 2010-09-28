@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,18 +24,18 @@ import java.lang.annotation.Target;
 
 /**
  * Event Admin Subscriber handler.
- * Be aware that despite is it provided in the annotations jar, 
+ * Be aware that despite is it provided in the annotations jar,
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target(ElementType.METHOD)
 public @interface Subscriber {
-    
+
     /**
      * Sets the subscriber name.
      */
     String name();
-    
+
     /**
      * Sets topics on which event are received.
      * The topics are separated by a ',' such as in
@@ -43,23 +43,38 @@ public @interface Subscriber {
      * Default : no topics (configured in the instance configuration)
      */
     String topics() default "";
-    
+
+    /**
+     * Sets the data key in which the data is
+     * stored.
+     * Default : no key
+     * @deprecated replaced by dataKey
+     */
+    String data_key() default "";
+
+    /**
+     * Sets the data type (type of the received data).
+     * Default : no type.
+     * @deprecated replaced by dataType
+     */
+    String data_type() default "";
+
     /**
      * Sets the data key in which the data is
      * stored.
      * Default : no key
      */
-    String data_key() default "";
-    
+    String dataKey() default "";
+
     /**
      * Sets the data type (type of the received data).
      * Default : no type.
      */
-    String data_type() default "";
-    
-    
+    String dataType() default "";
+
+
     /**
-     * Sets the event filter. Only event matching with the 
+     * Sets the event filter. Only event matching with the
      * specified LDAP filter are received.
      * default : no filter;
      */
