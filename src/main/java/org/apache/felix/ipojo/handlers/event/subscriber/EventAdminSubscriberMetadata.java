@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,7 @@ import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * Represent an subscriber.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 class EventAdminSubscriberMetadata {
@@ -109,7 +109,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Constructor.
-     * 
+     *
      * @param bundleContext the bundle context of the managed instance.
      * @param subscriber the subscriber metadata.
      * @throws ConfigurationException if the configuration of the component or
@@ -158,15 +158,25 @@ class EventAdminSubscriberMetadata {
 
         // DATA_KEY_ATTRIBUTE
         m_dataKey = subscriber.getAttribute(DATA_KEY_ATTRIBUTE);
-        if (m_dataKey == null) { // Alternative configuration
+        if (m_dataKey == null) { // Alternative configurations (data_key and dataKey)
+        	// XML
             m_dataKey = subscriber.getAttribute("data_key");
+            if (m_dataKey == null) {
+            	// Annotation
+            	m_dataKey = subscriber.getAttribute("dataKey");
+            }
         }
-        
+
         String t = subscriber.getAttribute(DATA_TYPE_ATTRIBUTE);
-        if (t == null) { // Alternative configuration
+        if (t == null) { // Alternative configurations
+        	// XML
             t = subscriber.getAttribute("data_type");
+            if (t == null) {
+            	/// Annotation
+            	t = subscriber.getAttribute("dataType");
+            }
         }
-        
+
         if (t != null) {
             // Check that the data-key attribute is set.
             if (m_dataKey == null) {
@@ -194,7 +204,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Sets the topics attribute of the subscriber.
-     * 
+     *
      * @param topicsString the comma separated list of the topics to listen
      * @throws ConfigurationException if the specified topic list is malformed
      */
@@ -214,7 +224,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Sets the filter attribute of the subscriber.
-     * 
+     *
      * @param filterString the string representation of the event filter
      * @throws ConfigurationException if the LDAP filter is malformed
      */
@@ -228,7 +238,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Checks that the required instance configurable attributes are all set.
-     * 
+     *
      * @throws ConfigurationException if a required attribute is missing
      */
     public void check() throws ConfigurationException {
@@ -241,7 +251,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Gets the name attribute of the subscriber.
-     * 
+     *
      * @return the name
      */
     public String getName() {
@@ -250,7 +260,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Gets the topics attribute of the subscriber.
-     * 
+     *
      * @return the topics
      */
     public String[] getTopics() {
@@ -259,7 +269,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Gets the callback attribute of the subscriber.
-     * 
+     *
      * @return the callback
      */
     public String getCallback() {
@@ -268,7 +278,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Gets the data key attribute of the subscriber.
-     * 
+     *
      * @return the dataKey
      */
     public String getDataKey() {
@@ -277,7 +287,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Gets the data type attribute of the subscriber.
-     * 
+     *
      * @return the dataType
      */
     public Class getDataType() {
@@ -286,7 +296,7 @@ class EventAdminSubscriberMetadata {
 
     /**
      * Gets the filter attribute of the subscriber.
-     * 
+     *
      * @return the filter
      */
     public Filter getFilter() {
