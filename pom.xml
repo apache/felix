@@ -29,7 +29,7 @@
     <description>
         Provide remote access to Felix Shell or Gogo.
     </description>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.2</version>
     <artifactId>org.apache.felix.shell.remote</artifactId>
     <dependencies>
         <dependency>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1</version>
         </dependency>
     </dependencies>
     <build>
@@ -71,7 +71,7 @@
                             org.apache.felix.shell.remote.*
                         </Private-Package>
                         <DynamicImport-Package>
-                            org.apache.felix.service.command,org.apache.felix.shell,org.osgi.service.log
+                            org.apache.felix.service.command; status="provisional",org.apache.felix.shell,org.osgi.service.log
                         </DynamicImport-Package>
                         <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
@@ -79,4 +79,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.shell.remote-1.1.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.shell.remote-1.1.2</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.shell.remote-1.1.2</url>
+  </scm>
 </project>
