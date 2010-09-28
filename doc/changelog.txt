@@ -1,3 +1,8 @@
+Version 1.0.1
+-------------
+** Bug
+    * [FELIX-2632] Arch Gogo is not compatible with the new gogo (0.6.1)
+
 Version 1.0.0
 -------------
-    * Initial release 
+    * Initial release
