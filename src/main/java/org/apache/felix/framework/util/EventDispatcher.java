@@ -60,7 +60,7 @@ public class EventDispatcher
     static final int LISTENER_SECURITY_OFFSET = 4;
     static final int LISTENER_ARRAY_INCREMENT = 5;
 
-    private Logger m_logger = null;
+    private final Logger m_logger;
     private volatile ServiceRegistry m_serviceRegistry = null;
 
     // Representation of an empty listener list.
@@ -592,7 +592,7 @@ public class EventDispatcher
         }
 
         // Fire all framework listeners on a separate thread.
-        fireEventAsynchronously(m_logger, Request.FRAMEWORK_EVENT, listeners, event);
+        fireEventAsynchronously(this, Request.FRAMEWORK_EVENT, listeners, event);
     }
 
     public void fireBundleEvent(BundleEvent event)
@@ -608,7 +608,7 @@ public class EventDispatcher
 
         // Fire synchronous bundle listeners immediately on the calling thread.
         fireEventImmediately(
-            m_logger, Request.BUNDLE_EVENT, syncListeners, event, null);
+            this, Request.BUNDLE_EVENT, syncListeners, event, null);
 
         // The spec says that asynchronous bundle listeners do not get events
         // of types STARTING, STOPPING, or LAZY_ACTIVATION.
@@ -617,7 +617,7 @@ public class EventDispatcher
             (event.getType() != BundleEvent.LAZY_ACTIVATION))
         {
             // Fire asynchronous bundle listeners on a separate thread.
-            fireEventAsynchronously(m_logger, Request.BUNDLE_EVENT, listeners, event);
+            fireEventAsynchronously(this, Request.BUNDLE_EVENT, listeners, event);
         }
     }
 
@@ -660,11 +660,11 @@ public class EventDispatcher
 
         // Fire all service events immediately on the calling thread.
         fireEventImmediately(
-            m_logger, Request.SERVICE_EVENT, listeners, event, oldProps);
+            this, Request.SERVICE_EVENT, listeners, event, oldProps);
     }
 
-    private void fireEventAsynchronously(
-        Logger logger, int type, Object[] listeners, EventObject event)
+    private static void fireEventAsynchronously(
+        EventDispatcher dispatcher, int type, Object[] listeners, EventObject event)
     {
         //TODO: should possibly check this within thread lock, seems to be ok though without
         // If dispatch thread is stopped, then ignore dispatch request.
@@ -688,7 +688,7 @@ public class EventDispatcher
         }
 
         // Initialize dispatch request.
-        req.m_logger = logger;
+        req.m_dispatcher = dispatcher;
         req.m_type = type;
         req.m_listeners = listeners;
         req.m_event = event;
@@ -704,7 +704,8 @@ public class EventDispatcher
     }
 
     private static void fireEventImmediately(
-        Logger logger, int type, Object[] listeners, EventObject event, Dictionary oldProps)
+        EventDispatcher dispatcher, int type, Object[] listeners,
+        EventObject event, Dictionary oldProps)
     {
         if (listeners.length > 0)
         {
@@ -735,9 +736,15 @@ public class EventDispatcher
                 }
                 catch (Throwable th)
                 {
-                    logger.log(bundle,
-                        Logger.LOG_ERROR,
-                        "EventDispatcher: Error during dispatch.", th);
+                    if ((type != Request.FRAMEWORK_EVENT)
+                        || (((FrameworkEvent) event).getType() != FrameworkEvent.ERROR))
+                    {
+                        dispatcher.m_logger.log(bundle,
+                            Logger.LOG_ERROR,
+                            "EventDispatcher: Error during dispatch.", th);
+                        dispatcher.fireFrameworkEvent(
+                            new FrameworkEvent(FrameworkEvent.ERROR, bundle, th));
+                    }
                 }
             }
         }
@@ -939,12 +946,13 @@ public class EventDispatcher
             // NOTE: We don't catch any exceptions here, because
             // the invoked method shields us from exceptions by
             // catching Throwables when it invokes callbacks.
-            fireEventImmediately(req.m_logger, req.m_type, req.m_listeners, req.m_event, null);
+            fireEventImmediately(
+                req.m_dispatcher, req.m_type, req.m_listeners, req.m_event, null);
 
             // Put dispatch request in cache.
             synchronized (m_requestPool)
             {
-                req.m_logger = null;
+                req.m_dispatcher = null;
                 req.m_type = -1;
                 req.m_listeners = null;
                 req.m_event = null;
@@ -1154,7 +1162,7 @@ public class EventDispatcher
         public static final int BUNDLE_EVENT = 1;
         public static final int SERVICE_EVENT = 2;
 
-        public Logger m_logger = null;
+        public EventDispatcher m_dispatcher = null;
         public int m_type = -1;
         public Object[] m_listeners = null;
         public EventObject m_event = null;
