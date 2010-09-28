@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,18 +24,18 @@ import java.lang.annotation.Target;
 
 /**
  * Event Admin Publisher handler.
- * Be aware that despite is it provided in the annotations jar, 
+ * Be aware that despite is it provided in the annotations jar,
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target(ElementType.FIELD)
 public @interface Publisher {
-    
+
     /**
      * Sets the publisher name.
      */
     String name();
-    
+
     /**
      * Sets topics on which event are sent.
      * The topics are separated by a ',' such as in
@@ -43,18 +43,26 @@ public @interface Publisher {
      * Default : no topics (configured in the instance configuration)
      */
     String topics() default "";
-    
+
     /**
      * Enables/Disables synchronous sending.
-     * Default : false (asynchronous) 
+     * Default : false (asynchronous)
      */
     boolean synchronous() default false;
-    
+
+    /**
+     * Sets the data key in which the data is
+     * put.
+     * Default : user.data
+     * @deprecated replaced by dataKey
+     */
+    String data_key() default "user.data";
+
     /**
      * Sets the data key in which the data is
      * put.
      * Default : user.data
      */
-    String data_key() default "user.data";
+    String dataKey() default "user.data";
 
 }

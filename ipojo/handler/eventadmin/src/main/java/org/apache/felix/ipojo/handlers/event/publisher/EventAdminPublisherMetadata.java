@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,7 @@ import org.apache.felix.ipojo.parser.ParseUtils;
 
 /**
  * Represent a publisher.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 class EventAdminPublisherMetadata {
@@ -96,7 +96,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Constructs a publisher from its metadata description.
-     * 
+     *
      * @param publisher the publisher metadata description.
      * @throws ConfigurationException if the configuration of the component or
      *             the instance is invalid.
@@ -151,7 +151,11 @@ class EventAdminPublisherMetadata {
         if (publisher.containsAttribute(DATA_KEY_ATTRIBUTE)) {
             m_dataKey = publisher.getAttribute(DATA_KEY_ATTRIBUTE);
         } else if (publisher.containsAttribute("data_key")) {
+        	// XML Case
             m_dataKey = publisher.getAttribute("data_key");
+        } else if (publisher.containsAttribute("dataKey")) {
+        	// Annotation case.
+        	m_dataKey = publisher.getAttribute("dataKey");
         } else {
             m_dataKey = DEFAULT_DATA_KEY_VALUE;
         }
@@ -159,7 +163,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Sets the topics attribute of the publisher.
-     * 
+     *
      * @param topicsString the comma separated list of the topics on which
      *            events are sent
      * @throws ConfigurationException the specified topic string is malformed
@@ -180,7 +184,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Checks that the required instance configurable attributes are all set.
-     * 
+     *
      * @throws ConfigurationException if a required attribute is missing
      */
     public void check() throws ConfigurationException {
@@ -193,7 +197,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Gets the name attribute of the publisher.
-     * 
+     *
      * @return the name
      */
     public String getName() {
@@ -202,7 +206,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Gets the field attribute of the publisher.
-     * 
+     *
      * @return the field
      */
     public String getField() {
@@ -211,7 +215,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Gets the topics attribute of the publisher.
-     * 
+     *
      * @return the topics
      */
     public String[] getTopics() {
@@ -220,7 +224,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Gets the synchronous attribute of the publisher.
-     * 
+     *
      * @return the synchronous mode
      */
     public boolean isSynchronous() {
@@ -229,7 +233,7 @@ class EventAdminPublisherMetadata {
 
     /**
      * Gets the dataKey attribute of the publisher.
-     * 
+     *
      * @return the data key
      */
     public String getDataKey() {
