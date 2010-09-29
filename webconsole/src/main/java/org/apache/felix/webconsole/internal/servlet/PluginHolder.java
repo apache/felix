@@ -270,11 +270,10 @@ class PluginHolder implements ServiceListener
      */
     void setServletContext( ServletContext servletContext )
     {
-        this.servletContext = servletContext;
-
         final Plugin[] plugin = getPlugins();
         if ( servletContext != null )
         {
+            this.servletContext = servletContext;
             for ( int i = 0; i < plugin.length; i++ )
             {
                 try
@@ -291,8 +290,13 @@ class PluginHolder implements ServiceListener
         {
             for ( int i = 0; i < plugin.length; i++ )
             {
-                plugin[i].destroy();
+                try {
+                    plugin[i].destroy();
+                } catch (Throwable t) {
+                    // TODO: log !!
+                }
             }
+            this.servletContext = null;
         }
     }
 
