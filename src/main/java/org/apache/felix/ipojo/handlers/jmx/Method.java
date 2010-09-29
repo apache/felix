@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,13 +26,14 @@ import java.lang.annotation.Target;
  * Allows exposing methods in the MBean.
  * This annotation must be used only if the {@link Config} annotation
  * is used.
- * Be aware that despite is it provided in the annotations jar, 
+ * Be aware that despite is it provided in the annotations jar,
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * @deprecated replaced by {@link JMXMethod}
  */
 @Target(ElementType.METHOD)
 public @interface Method {
-        
+
     /**
      * Gets the method description.
      * Default : no description
