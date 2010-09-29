@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,40 +22,34 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
- * JMX Handler annotation.
- * Allows exposing the instances as a JMX MBean.
- * Be aware that despite is it provided in the annotations jar,
+ * JMX Property annotation.
+ * Allows exposing properties in the MBean.
+ * This annotation must be used only if the {@link Config} annotation
+ * is used.
+ * Be aware that despite is it provided in the annotations jar, 
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.TYPE)
-public @interface Config {
-
+@Target(ElementType.FIELD)
+public @interface JMXProperty {
+        
     /**
-     * Enables or Disables MOSGi usage.
-     * If MOSGi is used, MBeans are exposed with the MOSGi mechanism.
-     * Otherwise the MBean Platform Server is used.
-     * Default : false
+     * Sets the property name.
      */
-    boolean usesMOSGi() default false;
-
+    String name();
+    
     /**
-     * Sets the MBean object name.
-     * Default : 'package-name:factory-name:instance-name'.
+     * Sets the access permission.
+     * Possible values are 'r' (default) or 'w'.
+     * 'w' implies read and write access.
      */
-    String objectname() default "";
-
+    String rights() default "r";
+    
     /**
-     * Sets the MBean domain.
-     * Default : 'package-name'
+     * Enables notification on the current property.
+     * Notifications are disable by default.
      */
-    String domain() default "";
-
-    /**
-     * Sets the MBean name.
-     * Default : 'instance-name'
-     */
-    String name() default "";
-
+    boolean notification() default false;
+    
 
 }

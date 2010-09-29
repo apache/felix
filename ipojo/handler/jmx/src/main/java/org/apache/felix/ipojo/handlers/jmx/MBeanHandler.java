@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,10 @@
 package org.apache.felix.ipojo.handlers.jmx;
 
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.List;
 import java.util.Properties;
 
 import javax.management.MBeanRegistration;
@@ -27,6 +30,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
+import org.apache.felix.ipojo.FieldInterceptor;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
@@ -97,6 +101,11 @@ public class MBeanHandler extends PrimitiveHandler {
     private static final String JMX_METHOD_ELT = "method";
 
     /**
+     * The alternative name of a method element.
+     */
+    private static final String JMX_METHOD_ELT_ALT = "method";
+
+    /**
      * The name of the property or method name attribute.
      */
     private static final String JMX_NAME_ELT = "name";
@@ -110,6 +119,11 @@ public class MBeanHandler extends PrimitiveHandler {
      * The name of a property element.
      */
     private static final String JMX_PROPERTY_ELT = "property";
+
+    /**
+     * The alternative name of a property element.
+     */
+    private static final String JMX_PROPERTY_ELT_ALT = "property";
 
     /**
      * The name of the field attribute.
@@ -215,15 +229,15 @@ public class MBeanHandler extends PrimitiveHandler {
             return;
         }
 
+        Element mbean = mbeans[0];
+
         // retrieve kind of MBeanServer to use
-        m_usesMOSGi = Boolean.parseBoolean(mbeans[0]
-            .getAttribute(JMX_USES_MOSGI_ELT));
+        m_usesMOSGi = Boolean.parseBoolean(mbean.getAttribute(JMX_USES_MOSGI_ELT));
 
         // retrieve object name
-        m_completeObjNameElt = mbeans[0].getAttribute(JMX_OBJ_NAME_ELT);
-        m_domainElt = mbeans[0].getAttribute(JMX_OBJ_NAME_DOMAIN_ELT);
-        m_objNameWODomainElt = mbeans[0]
-            .getAttribute(JMX_OBJ_NAME_WO_DOMAIN_ELT);
+        m_completeObjNameElt = mbean.getAttribute(JMX_OBJ_NAME_ELT);
+        m_domainElt = mbean.getAttribute(JMX_OBJ_NAME_DOMAIN_ELT);
+        m_objNameWODomainElt = mbean.getAttribute(JMX_OBJ_NAME_WO_DOMAIN_ELT);
 
         // test if Pojo is interested in registration callbacks
         m_registerCallbacks = manipulation
@@ -248,87 +262,98 @@ public class MBeanHandler extends PrimitiveHandler {
         }
 
         // set property
-        Element[] attributes = mbeans[0].getElements(JMX_PROPERTY_ELT, m_namespace);
-
-        if (attributes == null) {
-            attributes = mbeans[0].getElements(JMX_PROPERTY_ELT);
-            if (attributes != null) {
-                warn("The JMX property element should use the '" + m_namespace + "' namespace.");
-            }
+        Element[] attributes = mbean.getElements(JMX_PROPERTY_ELT, m_namespace);
+        Element[] attributesAlt = mbean.getElements(JMX_PROPERTY_ELT_ALT, m_namespace);
+        List<Element> listOfAttributes = new ArrayList<Element>();
+        if (attributes != null) {
+        	listOfAttributes.addAll(Arrays.asList(attributes));
+        }
+        if (attributesAlt != null) {
+        	listOfAttributes.addAll(Arrays.asList(attributesAlt));
         }
 
-        // String[] fields = new String[attributes.length];
-        if (attributes != null) {
-            for (int i = 0; attributes != null && i < attributes.length; i++) {
-                boolean notif = false;
-                String rights;
-                String name;
-                String field = attributes[i].getAttribute(JMX_FIELD_ELT);
+        Element[] attributesOld = mbeans[0].getElements(JMX_PROPERTY_ELT);
+        if (attributesOld != null) {
+            warn("The JMX property element should use the '" + m_namespace + "' namespace.");
+            listOfAttributes.addAll(Arrays.asList(attributesOld));
+        }
 
-                if (attributes[i].containsAttribute(JMX_NAME_ELT)) {
-                    name = attributes[i].getAttribute(JMX_NAME_ELT);
-                } else {
-                    name = field;
-                }
-                if (attributes[i].containsAttribute(JMX_RIGHTS_ELT)) {
-                    rights = attributes[i].getAttribute(JMX_RIGHTS_ELT);
-                } else {
-                    rights = "r";
-                }
+        for (Element attribute : listOfAttributes) {
+            boolean notif = false;
+            String rights;
+            String name;
+            String field = attribute.getAttribute(JMX_FIELD_ELT);
 
-                PropertyField property = new PropertyField(name, field, rights,
-                    getTypeFromAttributeField(field, manipulation));
-
-                if (attributes[i].containsAttribute(JMX_NOTIFICATION_ELT)) {
-                    notif = Boolean.parseBoolean(attributes[i]
-                        .getAttribute(JMX_NOTIFICATION_ELT));
-                }
-
-                property.setNotifiable(notif);
-
-                if (notif) {
-                    // add the new notifiable property in structure
-                    NotificationField notification = new NotificationField(
-                        name, this.getClass().getName() + "." + field, null);
-                    m_jmxConfigFieldMap.addNotificationFromName(name,
-                        notification);
-                }
-                m_jmxConfigFieldMap.addPropertyFromName(name, property);
-                getInstanceManager().register(manipulation.getField(field),
-                    this);
-                info("property exposed:" + name + " " + field + ":"
-                        + getTypeFromAttributeField(field, manipulation) + " "
-                        + rights + ", Notif=" + notif);
+            if (attribute.containsAttribute(JMX_NAME_ELT)) {
+                name = attribute.getAttribute(JMX_NAME_ELT);
+            } else {
+                name = field;
             }
+            if (attribute.containsAttribute(JMX_RIGHTS_ELT)) {
+                rights = attribute.getAttribute(JMX_RIGHTS_ELT);
+            } else {
+                rights = "r";
+            }
+
+            PropertyField property = new PropertyField(name, field, rights,
+                getTypeFromAttributeField(field, manipulation));
+
+            if (attribute.containsAttribute(JMX_NOTIFICATION_ELT)) {
+                notif = Boolean.parseBoolean(attribute
+                    .getAttribute(JMX_NOTIFICATION_ELT));
+            }
+
+            property.setNotifiable(notif);
+
+            if (notif) {
+                // add the new notifiable property in structure
+                NotificationField notification = new NotificationField(
+                    name, this.getClass().getName() + "." + field, null);
+                m_jmxConfigFieldMap.addNotificationFromName(name,
+                    notification);
+            }
+            m_jmxConfigFieldMap.addPropertyFromName(name, property);
+            getInstanceManager().register(manipulation.getField(field),
+                this);
+            info("property exposed:" + name + " " + field + ":"
+                    + getTypeFromAttributeField(field, manipulation) + " "
+                    + rights + ", Notif=" + notif);
         }
 
         // set methods
-        Element[] methods = mbeans[0].getElements(JMX_METHOD_ELT, m_namespace);
-
-        if (methods == null) {
-            methods = mbeans[0].getElements(JMX_METHOD_ELT);
-            if (methods != null) {
-                warn("The JMX method element should use the '" + m_namespace + "' namespace.");
-            }
+        Element[] methods = mbean.getElements(JMX_METHOD_ELT, m_namespace);
+        Element[] methodsAlt = mbean.getElements(JMX_METHOD_ELT_ALT, m_namespace);
+        List<Element> listOfMethods = new ArrayList<Element>();
+        if (methods != null) {
+        	listOfMethods.addAll(Arrays.asList(methods));
+        }
+        if (methodsAlt != null) {
+        	listOfMethods.addAll(Arrays.asList(methodsAlt));
         }
 
-        for (int i = 0; methods != null && i < methods.length; i++) {
-            String name = methods[i].getAttribute(JMX_NAME_ELT);
+        Element[] methodsOld = mbeans[0].getElements(JMX_PROPERTY_ELT);
+        if (methodsOld != null) {
+            warn("The JMX method element should use the '" + m_namespace + "' namespace.");
+            listOfMethods.addAll(Arrays.asList(methodsOld));
+        }
+
+        for (Element method : listOfMethods) {
+            String name = method.getAttribute(JMX_NAME_ELT);
             if (name == null) {
-                name = methods[i].getAttribute("method");
+                name = method.getAttribute("method");
             }
             String description = null;
-            if (methods[i].containsAttribute(JMX_DESCRIPTION_ELT)) {
-                description = methods[i].getAttribute(JMX_DESCRIPTION_ELT);
+            if (method.containsAttribute(JMX_DESCRIPTION_ELT)) {
+                description = method.getAttribute(JMX_DESCRIPTION_ELT);
             }
 
-            MethodField[] method = getMethodsFromName(name, manipulation,
+            MethodField[] meth = getMethodsFromName(name, manipulation,
                 description);
 
-            for (int j = 0; j < method.length; j++) {
-                m_jmxConfigFieldMap.addMethodFromName(name, method[j]);
+            for (int j = 0; j < meth.length; j++) {
+                m_jmxConfigFieldMap.addMethodFromName(name, meth[j]);
 
-                info("method exposed:" + method[j].getReturnType() + " " + name);
+                info("method exposed:" + meth[j].getReturnType() + " " + name);
             }
         }
 
