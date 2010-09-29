@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,7 @@ import org.osgi.framework.BundleContext;
 
 /**
  * Useful variables used for the tests of the Event Admin Handler.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class EahTestUtils {
@@ -44,7 +44,7 @@ public class EahTestUtils {
      * admin service.
      */
     public static final long BLACK_LIST_TIME = 5000L;
-    
+
     /**
      * The long amount of time.
      */
@@ -57,7 +57,7 @@ public class EahTestUtils {
 
     /**
      * Construct a new Event Admin Handler Tests utility instance.
-     * 
+     *
      * @param context
      *            the bundle context
      */
@@ -67,7 +67,7 @@ public class EahTestUtils {
 
     /**
      * Return the (asynchronous) donut provider factory.
-     * 
+     *
      * @return the (asynchronous) donut provider factory
      */
     public Factory getDonutProviderFactory() {
@@ -76,7 +76,7 @@ public class EahTestUtils {
 
     /**
      * Return the synchronous donut provider factory.
-     * 
+     *
      * @return the synchronous donut provider factory
      */
     public Factory getSynchronousDonutProviderFactory() {
@@ -85,8 +85,19 @@ public class EahTestUtils {
     }
 
     /**
+     * Return the synchronous donut provider factory using
+     * dataKey
+     *
+     * @return the synchronous donut provider factory
+     */
+    public Factory getSynchronousDonutProvider2Factory() {
+        return IPojoTestUtils.getFactoryByName(m_context,
+                "synchronous-donut-provider-2");
+    }
+
+    /**
      * Return the (asynchronous) donut event provider factory.
-     * 
+     *
      * @return the (asynchronous) donut event provider factory
      */
     public Factory getDonutEventProviderFactory() {
@@ -96,7 +107,7 @@ public class EahTestUtils {
 
     /**
      * Return the synchronous donut event provider factory.
-     * 
+     *
      * @return the synchronous donut event provider factory
      */
     public Factory getSynchronousDonutEventProviderFactory() {
@@ -106,7 +117,7 @@ public class EahTestUtils {
 
     /**
      * Return the event provider factory.
-     * 
+     *
      * @return the event provider factory
      */
     public Factory getEventProviderFactory() {
@@ -115,7 +126,7 @@ public class EahTestUtils {
 
     /**
      * Return the synchronous event provider factory.
-     * 
+     *
      * @return the synchronous event provider factory
      */
     public Factory getSynchronousEventProviderFactory() {
@@ -125,7 +136,7 @@ public class EahTestUtils {
 
     /**
      * Return the donut consumer factory.
-     * 
+     *
      * @return the donut consumer factory
      */
     public Factory getDonutConsumerFactory() {
@@ -133,8 +144,18 @@ public class EahTestUtils {
     }
 
     /**
+     * Return the donut consumer factory using dataKey
+     * and dataType.
+     *
+     * @return the donut consumer factory
+     */
+    public Factory getDonutConsumer2Factory() {
+        return IPojoTestUtils.getFactoryByName(m_context, "donut-consumer-2");
+    }
+
+    /**
      * Return the donut event consumer factory.
-     * 
+     *
      * @return the donut event consumer factory
      */
     public Factory getDonutEventConsumerFactory() {
@@ -144,7 +165,7 @@ public class EahTestUtils {
 
     /**
      * Return the event consumer factory.
-     * 
+     *
      * @return the event consumer factory
      */
     public Factory getEventConsumerFactory() {
@@ -153,7 +174,7 @@ public class EahTestUtils {
 
     /**
      * Return the event tracker.
-     * 
+     *
      * @return the event consumer factory
      */
     public Factory getEventTrackerFactory() {
@@ -162,7 +183,7 @@ public class EahTestUtils {
 
     /**
      * Utility method that causes the current thread to sleep.
-     * 
+     *
      * @param millis
      *            the number of milliseconds to wait
      */
@@ -184,7 +205,7 @@ public class EahTestUtils {
 
     /**
      * Return the index of the given donut flavour in the flavour array.
-     * 
+     *
      * @return the index of the given flavour or -1 if not found
      */
     public static int flavourIndex(String flavour) {

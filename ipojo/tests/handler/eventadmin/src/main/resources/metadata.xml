@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ipojo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd 
-	    org.apache.felix.ipojo.handlers.event http://felix.apache.org/ipojo/schemas/SNAPSHOT/event-admin.xsd"
+	xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
 	xmlns="org.apache.felix.ipojo"
 	xmlns:ev="org.apache.felix.ipojo.handlers.event">
-	
+
 	<!-- The (asynchronous) donut provider -->
 	<component classname="org.apache.felix.ipojo.test.donut.DonutProviderImpl"
 		name="donut-provider">
@@ -16,7 +15,7 @@
 		<ev:publisher name="donut-publisher" field="m_publisher"
 			topics="food/donuts" data-key="food" synchronous="false"/>
 	</component>
-	
+
 	<!-- The synchronous donut provider -->
 	<component classname="org.apache.felix.ipojo.test.donut.DonutProviderImpl"
 		name="synchronous-donut-provider">
@@ -28,7 +27,19 @@
 		<ev:publisher name="donut-publisher" field="m_publisher"
 			topics="food/donuts" data-key="food" synchronous="true"/>
 	</component>
-	
+
+		<!-- The synchronous donut provider using dataKey -->
+	<component classname="org.apache.felix.ipojo.test.donut.DonutProviderImpl"
+		name="synchronous-donut-provider-2">
+		<!-- Expose the donut provider service -->
+		<provides specifications="org.apache.felix.ipojo.test.donut.DonutProvider">
+			<property name="name" field="m_name" value="Unknown donut vendor"/>
+		</provides>
+		<!-- Donut publisher -->
+		<ev:publisher name="donut-publisher" field="m_publisher"
+			topics="food/donuts" dataKey="food" synchronous="true"/>
+	</component>
+
 	<!-- The (asynchronous) donut event provider -->
 	<component
 		classname="org.apache.felix.ipojo.test.donut.DonutEventProviderImpl"
@@ -41,7 +52,7 @@
 		<ev:publisher name="event-publisher" field="m_publisher"
 			topics="food/donuts" synchronous="false"/>
 	</component>
-	
+
 	<!-- The synchronous donut event provider -->
 	<component
 		classname="org.apache.felix.ipojo.test.donut.DonutEventProviderImpl"
@@ -54,7 +65,7 @@
 		<ev:publisher name="event-publisher" field="m_publisher"
 			topics="food/donuts" synchronous="true"/>
 	</component>
-	
+
 	<!-- The (asynchronous) event provider -->
 	<component
 		classname="org.apache.felix.ipojo.test.donut.AsyncEventProviderImpl"
@@ -66,7 +77,7 @@
 		<!-- Direcly interacts with the Event Admin service -->
 		<requires field="m_ea"/>
 	</component>
-	
+
 	<!-- The synchronous event provider -->
 	<component
 		classname="org.apache.felix.ipojo.test.donut.SyncEventProviderImpl"
@@ -78,7 +89,7 @@
 		<!-- Direcly interacts with the Event Admin service -->
 		<requires field="m_ea"/>
 	</component>
-	
+
 	<!-- The donut consumer -->
 	<component classname="org.apache.felix.ipojo.test.donut.DonutConsumerImpl"
 		name="donut-consumer">
@@ -92,7 +103,22 @@
 			topics="food/donuts" data-key="food"
 			data-type="org.apache.felix.ipojo.test.donut.Donut"/>
 	</component>
-	
+
+		<!-- The donut consumer using dataKey and dataType -->
+	<component classname="org.apache.felix.ipojo.test.donut.DonutConsumerImpl"
+		name="donut-consumer-2">
+		<!-- Expose the donut consumer service -->
+		<provides specifications="org.apache.felix.ipojo.test.donut.DonutConsumer">
+			<property name="name" field="m_name" value="Unknown donut consumer"/>
+			<property name="slow" field="m_isSlow" value="false"/>
+		</provides>
+		<!-- Donut events subscriber -->
+		<ev:subscriber name="donut-subscriber" callback="receiveDonut"
+			topics="food/donuts" dataKey="food"
+			dataType="org.apache.felix.ipojo.test.donut.Donut"/>
+	</component>
+
+
 	<!-- The donut event consumer -->
 	<component classname="org.apache.felix.ipojo.test.donut.DonutConsumerImpl"
 		name="donut-event-consumer">
@@ -105,7 +131,7 @@
 		<ev:subscriber name="donut-event-subscriber" callback="receiveEvent"
 			topics="food/donuts"/>
 	</component>
-	
+
 	<!-- The event consumer -->
 	<component classname="org.apache.felix.ipojo.test.donut.EventConsumerImpl"
 		name="event-consumer">
@@ -117,7 +143,7 @@
 			<property name="event.topics" type="String" value="food/donuts"/>
 		</provides>
 	</component>
-	
+
 	<!-- The event tracker -->
 	<component classname="org.apache.felix.ipojo.test.donut.EventTrackerImpl"
 		name="event-tracker">
@@ -128,8 +154,8 @@
 			<property name="event.topics" type="String" value="food/donuts"/>
 		</provides>
 	</component>
-	
-	
+
+
 	<!-- Example instances -->
 	<instance component="donut-provider" name="zeifhgbzre">
 		<property name="name" value="Zeifhgbzre donuts"/>
@@ -138,5 +164,5 @@
 		<property name="name" value="Zeifhgbzre simpson"/>
 		<property name="slow" value="false"/>
 	</instance>
-	
+
 </ipojo>

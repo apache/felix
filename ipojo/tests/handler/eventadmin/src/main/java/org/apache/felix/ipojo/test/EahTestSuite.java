@@ -42,6 +42,7 @@ public class EahTestSuite {
                 bc);
         ots.addTestSuite(BadTests.class);
         ots.addTestSuite(GoodTests.class);
+        ots.addTestSuite(GoodTestsWithNewAttributes.class);
         return ots;
     }
 
