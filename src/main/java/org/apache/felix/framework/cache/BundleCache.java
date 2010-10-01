@@ -154,7 +154,7 @@ public class BundleCache
             archiveList.toArray(new BundleArchive[archiveList.size()]);
     }
 
-    public BundleArchive create(long id, String location, InputStream is)
+    public BundleArchive create(long id, String location, int startLevel, InputStream is)
         throws Exception
     {
         File cacheDir = determineCacheDir(m_configMap);
@@ -167,7 +167,8 @@ public class BundleCache
         {
             // Create the archive and add it to the list of archives.
             BundleArchive ba =
-                new BundleArchive(m_logger, m_configMap, archiveRootDir, id, location, is);
+                new BundleArchive(
+                    m_logger, m_configMap, archiveRootDir, id, location, startLevel, is);
             return ba;
         }
         catch (Exception ex)
