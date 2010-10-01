@@ -39,7 +39,7 @@ public class Activator extends DependencyActivatorBase {
     	Dictionary properties = new Properties();
         properties.put(Constants.SERVICE_PID, "org.osgi.deployment.rp.autoconf");
         
-        manager.add(createService()
+        manager.add(createComponent()
             .setInterface(ResourceProcessor.class.getName(), properties)
             .setImplementation(AutoConfResourceProcessor.class)
             .add(createServiceDependency()
