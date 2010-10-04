@@ -67,23 +67,31 @@ public class BundleArchive
     public static final transient String REFERENCE_PROTOCOL = "reference:";
     public static final transient String INPUTSTREAM_PROTOCOL = "inputstream:";
 
-    private static final transient String BUNDLE_INFO_FILE = "bundle.info";
+    private static final transient String BUNDLE_ID_FILE = "bundle.id";
+    private static final transient String BUNDLE_LOCATION_FILE = "bundle.location";
     private static final transient String REVISION_LOCATION_FILE = "revision.location";
+    private static final transient String BUNDLE_STATE_FILE = "bundle.state";
+    private static final transient String BUNDLE_START_LEVEL_FILE = "bundle.startlevel";
+    private static final transient String REFRESH_COUNTER_FILE = "refresh.counter";
+    private static final transient String BUNDLE_LASTMODIFIED_FILE = "bundle.lastmodified";
     private static final transient String REVISION_DIRECTORY = "version";
     private static final transient String DATA_DIRECTORY = "data";
+    private static final transient String ACTIVE_STATE = "active";
+    private static final transient String STARTING_STATE = "starting";
+    private static final transient String INSTALLED_STATE = "installed";
+    private static final transient String UNINSTALLED_STATE = "uninstalled";
 
     private final Logger m_logger;
     private final Map m_configMap;
-    private final File m_archiveRootDir;
-
     private long m_id = -1;
+    private final File m_archiveRootDir;
     private String m_originalLocation = null;
     private int m_persistentState = -1;
     private int m_startLevel = -1;
     private long m_lastModified = -1;
-    private long m_refreshCount = -1;
-
     private BundleRevision[] m_revisions = null;
+
+    private long m_refreshCount = -1;
 
     /**
      * <p>
@@ -116,7 +124,7 @@ public class BundleArchive
      * @throws Exception if any error occurs.
     **/
     public BundleArchive(Logger logger, Map configMap, File archiveRootDir, long id,
-        String location, int startLevel, InputStream is) throws Exception
+        String location, InputStream is) throws Exception
     {
         m_logger = logger;
         m_configMap = configMap;
@@ -128,10 +136,6 @@ public class BundleArchive
                 "Bundle ID cannot be less than or equal to zero.");
         }
         m_originalLocation = location;
-        m_persistentState = Bundle.INSTALLED;
-        m_startLevel = startLevel;
-        m_lastModified = System.currentTimeMillis();
-        m_refreshCount = 0;
 
         // Save state.
         initialize();
@@ -158,9 +162,6 @@ public class BundleArchive
         m_logger = logger;
         m_configMap = configMap;
         m_archiveRootDir = archiveRootDir;
-
-        // Read previously saved state.
-        readBundleInfo();
 
         // Add a revision for each one that already exists in the file
         // system. The file system might contain more than one revision
@@ -211,6 +212,36 @@ public class BundleArchive
     **/
     public synchronized long getId() throws Exception
     {
+        if (m_id <= 0)
+        {
+            // Read bundle location.
+            InputStream is = null;
+            BufferedReader br = null;
+            try
+            {
+                is = BundleCache.getSecureAction()
+                    .getFileInputStream(new File(m_archiveRootDir, BUNDLE_ID_FILE));
+                br = new BufferedReader(new InputStreamReader(is));
+                m_id = Long.parseLong(br.readLine());
+            }
+            catch (FileNotFoundException ex)
+            {
+                // HACK: Get the bundle identifier from the archive root directory
+                // name, which is of the form "bundle<id>" where <id> is the bundle
+                // identifier numbers. This is a hack to deal with old archives that
+                // did not save their bundle identifier, but instead had it passed
+                // into them. Eventually, this can be removed.
+                m_id = Long.parseLong(
+                    m_archiveRootDir.getName().substring(
+                        BundleCache.BUNDLE_DIR_PREFIX.length()));
+            }
+            finally
+            {
+                if (br != null) br.close();
+                if (is != null) is.close();
+            }
+        }
+
         return m_id;
     }
 
@@ -223,6 +254,24 @@ public class BundleArchive
     **/
     public synchronized String getLocation() throws Exception
     {
+        if (m_originalLocation == null)
+        {
+            // Read bundle location.
+            InputStream is = null;
+            BufferedReader br = null;
+            try
+            {
+                is = BundleCache.getSecureAction()
+                    .getFileInputStream(new File(m_archiveRootDir, BUNDLE_LOCATION_FILE));
+                br = new BufferedReader(new InputStreamReader(is));
+                m_originalLocation = br.readLine();
+            }
+            finally
+            {
+                if (br != null) br.close();
+                if (is != null) is.close();
+            }
+        }
         return m_originalLocation;
     }
 
@@ -237,6 +286,52 @@ public class BundleArchive
     **/
     public synchronized int getPersistentState() throws Exception
     {
+        if (m_persistentState < 0)
+        {
+            // Get bundle state file.
+            File stateFile = new File(m_archiveRootDir, BUNDLE_STATE_FILE);
+
+            // If the state file doesn't exist, then
+            // assume the bundle was installed.
+            if (!BundleCache.getSecureAction().fileExists(stateFile))
+            {
+                m_persistentState = Bundle.INSTALLED;
+            }
+            else
+            {
+                // Read the bundle state.
+                InputStream is = null;
+                BufferedReader br = null;
+                try
+                {
+                    is = BundleCache.getSecureAction()
+                        .getFileInputStream(stateFile);
+                    br = new BufferedReader(new InputStreamReader(is));
+                    String s = br.readLine();
+                    if ((s != null) && s.equals(ACTIVE_STATE))
+                    {
+                        m_persistentState = Bundle.ACTIVE;
+                    }
+                    else if ((s != null) && s.equals(STARTING_STATE))
+                    {
+                        m_persistentState = Bundle.STARTING;
+                    }
+                    else if ((s != null) && s.equals(UNINSTALLED_STATE))
+                    {
+                        m_persistentState = Bundle.UNINSTALLED;
+                    }
+                    else
+                    {
+                        m_persistentState = Bundle.INSTALLED;
+                    }
+                }
+                finally
+                {
+                    if (br != null) br.close();
+                    if (is != null) is.close();
+                }
+            }
+        }
         return m_persistentState;
     }
 
@@ -251,10 +346,47 @@ public class BundleArchive
     **/
     public synchronized void setPersistentState(int state) throws Exception
     {
+        // Write the bundle state.
+        OutputStream os = null;
+        BufferedWriter bw = null;
         if (m_persistentState != state)
         {
-            m_persistentState = state;
-            writeBundleInfo();
+            try
+            {
+                os = BundleCache.getSecureAction()
+                    .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_STATE_FILE));
+                bw = new BufferedWriter(new OutputStreamWriter(os));
+                String s = null;
+                switch (state)
+                {
+                    case Bundle.ACTIVE:
+                        s = ACTIVE_STATE;
+                        break;
+                    case Bundle.STARTING:
+                        s = STARTING_STATE;
+                        break;
+                    case Bundle.UNINSTALLED:
+                        s = UNINSTALLED_STATE;
+                        break;
+                    default:
+                        s = INSTALLED_STATE;
+                        break;
+                }
+                bw.write(s, 0, s.length());
+                m_persistentState = state;
+            }
+            catch (IOException ex)
+            {
+                m_logger.log(
+                    Logger.LOG_ERROR,
+                    getClass().getName() + ": Unable to record state - " + ex);
+                throw ex;
+            }
+            finally
+            {
+                if (bw != null) bw.close();
+                if (os != null) os.close();
+            }
         }
     }
 
@@ -267,6 +399,36 @@ public class BundleArchive
     **/
     public synchronized int getStartLevel() throws Exception
     {
+        if (m_startLevel < 0)
+        {
+            // Get bundle start level file.
+            File levelFile = new File(m_archiveRootDir, BUNDLE_START_LEVEL_FILE);
+
+            // If the start level file doesn't exist, then
+            // return an error.
+            if (!BundleCache.getSecureAction().fileExists(levelFile))
+            {
+                m_startLevel = -1;
+            }
+            else
+            {
+                // Read the bundle start level.
+                InputStream is = null;
+                BufferedReader br= null;
+                try
+                {
+                    is = BundleCache.getSecureAction()
+                        .getFileInputStream(levelFile);
+                    br = new BufferedReader(new InputStreamReader(is));
+                    m_startLevel = Integer.parseInt(br.readLine());
+                }
+                finally
+                {
+                    if (br != null) br.close();
+                    if (is != null) is.close();
+                }
+            }
+        }
         return m_startLevel;
     }
 
@@ -279,10 +441,29 @@ public class BundleArchive
     **/
     public synchronized void setStartLevel(int level) throws Exception
     {
-        if (m_startLevel != level)
+        // Write the bundle start level.
+        OutputStream os = null;
+        BufferedWriter bw = null;
+        try
         {
+            os = BundleCache.getSecureAction()
+                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_START_LEVEL_FILE));
+            bw = new BufferedWriter(new OutputStreamWriter(os));
+            String s = Integer.toString(level);
+            bw.write(s, 0, s.length());
             m_startLevel = level;
-            writeBundleInfo();
+        }
+        catch (IOException ex)
+        {
+            m_logger.log(
+                Logger.LOG_ERROR,
+                getClass().getName() + ": Unable to record start level - " + ex);
+            throw ex;
+        }
+        finally
+        {
+            if (bw != null) bw.close();
+            if (os != null) os.close();
         }
     }
 
@@ -295,6 +476,35 @@ public class BundleArchive
     **/
     public synchronized long getLastModified() throws Exception
     {
+        if (m_lastModified < 0)
+        {
+            // Get bundle last modification time file.
+            File lastModFile = new File(m_archiveRootDir, BUNDLE_LASTMODIFIED_FILE);
+
+            // If the last modification file doesn't exist, then
+            // return an error.
+            if (!BundleCache.getSecureAction().fileExists(lastModFile))
+            {
+                m_lastModified = 0;
+            }
+            else
+            {
+                // Read the bundle start level.
+                InputStream is = null;
+                BufferedReader br= null;
+                try
+                {
+                    is = BundleCache.getSecureAction().getFileInputStream(lastModFile);
+                    br = new BufferedReader(new InputStreamReader(is));
+                    m_lastModified = Long.parseLong(br.readLine());
+                }
+                finally
+                {
+                    if (br != null) br.close();
+                    if (is != null) is.close();
+                }
+            }
+        }
         return m_lastModified;
     }
 
@@ -310,10 +520,29 @@ public class BundleArchive
     **/
     public synchronized void setLastModified(long lastModified) throws Exception
     {
-        if (m_lastModified != lastModified)
+        // Write the bundle last modification time.
+        OutputStream os = null;
+        BufferedWriter bw = null;
+        try
         {
+            os = BundleCache.getSecureAction()
+                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_LASTMODIFIED_FILE));
+            bw = new BufferedWriter(new OutputStreamWriter(os));
+            String s = Long.toString(lastModified);
+            bw.write(s, 0, s.length());
             m_lastModified = lastModified;
-            writeBundleInfo();
+        }
+        catch (IOException ex)
+        {
+            m_logger.log(
+                Logger.LOG_ERROR,
+                getClass().getName() + ": Unable to record last modification time - " + ex);
+            throw ex;
+        }
+        finally
+        {
+            if (bw != null) bw.close();
+            if (os != null) os.close();
         }
     }
 
@@ -631,7 +860,19 @@ public class BundleArchive
                 throw new IOException("Unable to create archive directory.");
             }
 
-            writeBundleInfo();
+            // Save id.
+            os = BundleCache.getSecureAction()
+                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_ID_FILE));
+            bw = new BufferedWriter(new OutputStreamWriter(os));
+            bw.write(Long.toString(m_id), 0, Long.toString(m_id).length());
+            bw.close();
+            os.close();
+
+            // Save location string.
+            os = BundleCache.getSecureAction()
+                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_LOCATION_FILE));
+            bw = new BufferedWriter(new OutputStreamWriter(os));
+            bw.write(m_originalLocation, 0, m_originalLocation.length());
         }
         finally
         {
@@ -787,6 +1028,39 @@ public class BundleArchive
     **/
     private long getRefreshCount() throws Exception
     {
+        // If the refresh counter is not yet initialized, do so now.
+        if (m_refreshCount < 0)
+        {
+            // Get refresh counter file.
+            File counterFile = new File(m_archiveRootDir, REFRESH_COUNTER_FILE);
+
+            // If the refresh counter file doesn't exist, then
+            // assume the counter is at zero.
+            if (!BundleCache.getSecureAction().fileExists(counterFile))
+            {
+                m_refreshCount = 0;
+            }
+            else
+            {
+                // Read the bundle refresh counter.
+                InputStream is = null;
+                BufferedReader br = null;
+                try
+                {
+                    is = BundleCache.getSecureAction()
+                        .getFileInputStream(counterFile);
+                    br = new BufferedReader(new InputStreamReader(is));
+                    long counter = Long.parseLong(br.readLine());
+                    return counter;
+                }
+                finally
+                {
+                    if (br != null) br.close();
+                    if (is != null) is.close();
+                }
+            }
+        }
+
         return m_refreshCount;
     }
 
@@ -804,102 +1078,29 @@ public class BundleArchive
      * As a result of the unique name, the JVM will then reload the
      * native library without a problem.
     **/
-    private void setRefreshCount(long count)
+    private void setRefreshCount(long counter)
         throws Exception
     {
-        if (m_refreshCount != count)
-        {
-            m_refreshCount = count;
-            writeBundleInfo();
-        }
-    }
+        // Get refresh counter file.
+        File counterFile = new File(m_archiveRootDir, REFRESH_COUNTER_FILE);
 
-    private void readBundleInfo() throws Exception
-    {
-        File infoFile = new File(m_archiveRootDir, BUNDLE_INFO_FILE);
-
-        // Read the bundle start level.
-        InputStream is = null;
-        BufferedReader br= null;
-        try
-        {
-            is = BundleCache.getSecureAction()
-                .getFileInputStream(infoFile);
-            br = new BufferedReader(new InputStreamReader(is));
-
-            // Read id.
-            m_id = Long.parseLong(br.readLine());
-            // Read location.
-            m_originalLocation = br.readLine();
-            // Read state.
-            m_persistentState = Integer.parseInt(br.readLine());
-            // Read start level.
-            m_startLevel = Integer.parseInt(br.readLine());
-            // Read last modified.
-            m_lastModified = Long.parseLong(br.readLine());
-            // Read refresh count.
-            m_refreshCount = Long.parseLong(br.readLine());
-        }
-        catch (FileNotFoundException ex)
-        {
-            // If there wasn't an info file, then maybe this is an old-style
-            // bundle cache, so try to read the files individually. We can
-            // delete this eventually.
-            m_id = readId();
-            m_originalLocation = readLocation();
-            m_persistentState = readPersistentState();
-            m_startLevel = readStartLevel();
-            m_lastModified = readLastModified();
-            m_refreshCount = readRefreshCount();
-        }
-        finally
-        {
-            if (br != null) br.close();
-            if (is != null) is.close();
-        }
-    }
-
-    private void writeBundleInfo() throws Exception
-    {
-        // Write the bundle start level.
+        // Write the refresh counter.
         OutputStream os = null;
         BufferedWriter bw = null;
         try
         {
             os = BundleCache.getSecureAction()
-                .getFileOutputStream(new File(m_archiveRootDir, BUNDLE_INFO_FILE));
+                .getFileOutputStream(counterFile);
             bw = new BufferedWriter(new OutputStreamWriter(os));
-
-            // Write id.
-            String s = Long.toString(m_id);
+            String s = Long.toString(counter);
             bw.write(s, 0, s.length());
-            bw.newLine();
-            // Write location.
-            s = (m_originalLocation == null) ? "" : m_originalLocation;
-            bw.write(s, 0, s.length());
-            bw.newLine();
-            // Write state.
-            s = Integer.toString(m_persistentState);
-            bw.write(s, 0, s.length());
-            bw.newLine();
-            // Write start level.
-            s = Integer.toString(m_startLevel);
-            bw.write(s, 0, s.length());
-            bw.newLine();
-            // Write last modified.
-            s = Long.toString(m_lastModified);
-            bw.write(s, 0, s.length());
-            bw.newLine();
-            // Write refresh count.
-            s = Long.toString(m_refreshCount);
-            bw.write(s, 0, s.length());
-            bw.newLine();
+            m_refreshCount = counter;
         }
         catch (IOException ex)
         {
             m_logger.log(
                 Logger.LOG_ERROR,
-                getClass().getName() + ": Unable to cache bundle info - " + ex);
+                getClass().getName() + ": Unable to write refresh counter: " + ex);
             throw ex;
         }
         finally
@@ -907,208 +1108,5 @@ public class BundleArchive
             if (bw != null) bw.close();
             if (os != null) os.close();
         }
-    }
-
-    //
-    // Deprecated bundle cache format to be deleted eventually.
-    //
-
-    private static final transient String BUNDLE_ID_FILE = "bundle.id";
-    private static final transient String BUNDLE_LOCATION_FILE = "bundle.location";
-    private static final transient String BUNDLE_STATE_FILE = "bundle.state";
-    private static final transient String BUNDLE_START_LEVEL_FILE = "bundle.startlevel";
-    private static final transient String BUNDLE_LASTMODIFIED_FILE = "bundle.lastmodified";
-    private static final transient String REFRESH_COUNTER_FILE = "refresh.counter";
-
-    private long readId() throws Exception
-    {
-        long id;
-
-        InputStream is = null;
-        BufferedReader br = null;
-        try
-        {
-            is = BundleCache.getSecureAction()
-                .getFileInputStream(new File(m_archiveRootDir, BUNDLE_ID_FILE));
-            br = new BufferedReader(new InputStreamReader(is));
-            id = Long.parseLong(br.readLine());
-        }
-        catch (FileNotFoundException ex)
-        {
-            // HACK: Get the bundle identifier from the archive root directory
-            // name, which is of the form "bundle<id>" where <id> is the bundle
-            // identifier numbers. This is a hack to deal with old archives that
-            // did not save their bundle identifier, but instead had it passed
-            // into them. Eventually, this can be removed.
-            id = Long.parseLong(
-                m_archiveRootDir.getName().substring(
-                    BundleCache.BUNDLE_DIR_PREFIX.length()));
-        }
-        finally
-        {
-            if (br != null) br.close();
-            if (is != null) is.close();
-        }
-
-        return id;
-    }
-
-    private String readLocation() throws Exception
-    {
-        InputStream is = null;
-        BufferedReader br = null;
-        try
-        {
-            is = BundleCache.getSecureAction()
-                .getFileInputStream(new File(m_archiveRootDir, BUNDLE_LOCATION_FILE));
-            br = new BufferedReader(new InputStreamReader(is));
-            return br.readLine();
-        }
-        finally
-        {
-            if (br != null) br.close();
-            if (is != null) is.close();
-        }
-    }
-
-    private static final transient String ACTIVE_STATE = "active";
-    private static final transient String STARTING_STATE = "starting";
-    private static final transient String UNINSTALLED_STATE = "uninstalled";
-
-    private int readPersistentState() throws Exception
-    {
-        int state = Bundle.INSTALLED;
-
-        // Get bundle state file.
-        File stateFile = new File(m_archiveRootDir, BUNDLE_STATE_FILE);
-
-        // If the state file doesn't exist, then
-        // assume the bundle was installed.
-        if (BundleCache.getSecureAction().fileExists(stateFile))
-        {
-            // Read the bundle state.
-            InputStream is = null;
-            BufferedReader br = null;
-            try
-            {
-                is = BundleCache.getSecureAction()
-                    .getFileInputStream(stateFile);
-                br = new BufferedReader(new InputStreamReader(is));
-                String s = br.readLine();
-                if ((s != null) && s.equals(ACTIVE_STATE))
-                {
-                    state = Bundle.ACTIVE;
-                }
-                else if ((s != null) && s.equals(STARTING_STATE))
-                {
-                    state = Bundle.STARTING;
-                }
-                else if ((s != null) && s.equals(UNINSTALLED_STATE))
-                {
-                    state = Bundle.UNINSTALLED;
-                }
-                else
-                {
-                    state = Bundle.INSTALLED;
-                }
-            }
-            catch (Exception ex)
-            {
-                state = Bundle.INSTALLED;
-            }
-            finally
-            {
-                if (br != null) br.close();
-                if (is != null) is.close();
-            }
-        }
-
-        return state;
-    }
-
-    private int readStartLevel() throws Exception
-    {
-        int level = -1;
-
-        // Get bundle start level file.
-        File levelFile = new File(m_archiveRootDir, BUNDLE_START_LEVEL_FILE);
-
-        // If the start level file doesn't exist, then
-        // return an error.
-        if (!BundleCache.getSecureAction().fileExists(levelFile))
-        {
-            level = -1;
-        }
-        else
-        {
-            // Read the bundle start level.
-            InputStream is = null;
-            BufferedReader br= null;
-            try
-            {
-                is = BundleCache.getSecureAction()
-                    .getFileInputStream(levelFile);
-                br = new BufferedReader(new InputStreamReader(is));
-                level = Integer.parseInt(br.readLine());
-            }
-            finally
-            {
-                if (br != null) br.close();
-                if (is != null) is.close();
-            }
-        }
-        return level;
-    }
-
-    private long readLastModified() throws Exception
-    {
-        long last = 0;
-
-        InputStream is = null;
-        BufferedReader br = null;
-        try
-        {
-            is = BundleCache.getSecureAction()
-                .getFileInputStream(new File(m_archiveRootDir, BUNDLE_LASTMODIFIED_FILE));
-            br = new BufferedReader(new InputStreamReader(is));
-            last = Long.parseLong(br.readLine());
-        }
-        catch (Exception ex)
-        {
-            last = 0;
-        }
-        finally
-        {
-            if (br != null) br.close();
-            if (is != null) is.close();
-        }
-
-        return last;
-    }
-
-    private long readRefreshCount() throws Exception
-    {
-        long count = 0;
-
-        InputStream is = null;
-        BufferedReader br = null;
-        try
-        {
-            is = BundleCache.getSecureAction()
-                .getFileInputStream(new File(m_archiveRootDir, REFRESH_COUNTER_FILE));
-            br = new BufferedReader(new InputStreamReader(is));
-            count = Long.parseLong(br.readLine());
-        }
-        catch (Exception ex)
-        {
-            count = 0;
-        }
-        finally
-        {
-            if (br != null) br.close();
-            if (is != null) is.close();
-        }
-
-        return count;
     }
 }
