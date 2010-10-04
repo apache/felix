@@ -1,3 +1,14 @@
+Changes from 3.0.3 to 3.0.4
+---------------------------
+
+** Bug
+    * [FELIX-2584] - No FrameworkEvent.ERROR on unchecked exception in event listener
+    * [FELIX-2629] - [Framework] Module class loader should return an empty enumeration for getResources()
+
+** Improvement
+    * [FELIX-2619] - [Framework] Bundle cache is rechecking nonexistent files again and again
+    * [FELIX-2626] - [Framework] Bundle cache is rewriting some files when restarting bundles
+
 Changes from 3.0.2 to 3.0.3
 ---------------------------
 
