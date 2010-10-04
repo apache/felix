@@ -623,7 +623,10 @@ class BundleImpl implements Bundle
             }
         }
 
-        return getFramework().getBundleResources(this, name);
+        // Spec says we should return null when resources not found,
+        // even though ClassLoader.getResources() returns empty enumeration.
+        Enumeration e = getFramework().getBundleResources(this, name);
+        return ((e == null) || !e.hasMoreElements()) ? null : e;
     }
 
     /**
