@@ -22,8 +22,8 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -49,10 +49,20 @@ public class AdapterTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-        Component sp2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface2.class.getName(), null);
-        Component sc = m.createComponent().setImplementation(new ServiceConsumer()).add(m.createServiceDependency().setService(ServiceInterface3.class).setRequired(true));
-        Component sa = m.createAdapterService(ServiceInterface.class, null).setInterface(ServiceInterface3.class.getName(), null).setImplementation(new ServiceAdapter(e));
+        Component sp = m.createComponent()
+            .setInterface(ServiceInterface.class.getName(), null)
+            .setImplementation(new ServiceProvider(e));
+        Component sp2 = m.createComponent()
+        .setInterface(ServiceInterface2.class.getName(), null)
+            .setImplementation(new ServiceProvider2(e));
+        Component sc = m.createComponent()
+            .setImplementation(new ServiceConsumer())
+            .add(m.createServiceDependency()
+                .setService(ServiceInterface3.class)
+                .setRequired(true));
+        Component sa = m.createAdapterService(ServiceInterface.class, null)
+            .setInterface(ServiceInterface3.class.getName(), null)
+            .setImplementation(new ServiceAdapter(e));
         m.add(sc);
         m.add(sp);
         m.add(sp2);
