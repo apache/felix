@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import org.osgi.service.event.EventAdmin;
 
 /**
  * Event Publisher Handler.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class EventAdminPublisherHandler extends PrimitiveHandler {
@@ -73,7 +73,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
     /**
      * Initializes the component type.
-     * 
+     *
      * @param cd the component type description to populate
      * @param metadata the component type metadata
      * @throws ConfigurationException if the given metadata is incorrect.
@@ -93,6 +93,12 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
         // Get Metadata publishers
         Element[] publishers = metadata.getElements("publisher", NAMESPACE);
+
+        // if publisher is null, look for 'publishes' elements
+        if (publishers == null  || publishers.length == 0) {
+        	publishers = metadata.getElements("publishes", NAMESPACE);
+        }
+
         if (publishers != null) {
 
             // Maps used to check name and field are unique
@@ -139,7 +145,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
     /**
      * Constructor.
-     * 
+     *
      * @param metadata the component type metadata
      * @param conf the instance configuration
      * @throws ConfigurationException if one event publication is not correct
@@ -158,6 +164,11 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
         // Get Metadata publishers
         Element[] publishers = metadata.getElements("publisher", NAMESPACE);
+
+        // if publisher is null, look for 'publishes' elements
+        if (publishers == null  || publishers.length == 0) {
+        	publishers = metadata.getElements("publishes", NAMESPACE);
+        }
 
         if (publishers != null) {
             // then check publishers are well formed and fill the publishers'
@@ -205,7 +216,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
     /**
      * Starts the handler instance.
-     * 
+     *
      * This method does nothing.
      */
     // @Override
@@ -214,7 +225,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
     /**
      * Stops the handler instance.
-     * 
+     *
      * This method does nothing.
      */
     // @Override
@@ -224,11 +235,11 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
     /**
      * Field interceptor callback. This method is called when the component
      * attempt to one of its Publisher field.
-     * 
+     *
      * @param pojo the accessed field
      * @param fieldName the name of the accessed field
      * @param value the value of the field (useless here)
-     * 
+     *
      * @return the Publisher associated with the accessed field's name
      */
     // @Override
@@ -245,7 +256,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
     /**
      * This method is called by managed publishers to obtain the current
      * EventAdmin service.
-     * 
+     *
      * @return the current EventAdmin service.
      */
     public EventAdmin getEventAdminService() {
