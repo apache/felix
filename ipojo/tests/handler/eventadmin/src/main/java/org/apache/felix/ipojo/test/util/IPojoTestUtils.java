@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import org.osgi.service.cm.ManagedServiceFactory;
 
 /**
  * Useful iPOJO methods used for the tests of the Event Admin Handler.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class IPojoTestUtils {
@@ -148,6 +148,24 @@ public class IPojoTestUtils {
         } catch (InvalidSyntaxException e) {
             System.err.println("Cannot get the factory " + factoryName + " : "
                     + e.getMessage());
+            return null;
+        }
+    }
+
+    public static HandlerFactory[] getHandlerFactories(BundleContext bc) {
+        ServiceReference[] refs;
+        try {
+            refs = bc.getServiceReferences(HandlerFactory.class.getName(), null);
+            if (refs == null) {
+                System.err.println("Cannot get the handler factories");
+                return null;
+            }
+            HandlerFactory[] factories = new HandlerFactory[refs.length];
+            for (int i = 0; i < factories.length; i++) {
+            	factories[i] = (HandlerFactory) bc.getService(refs[i]);
+            }
+            return factories;
+        } catch (InvalidSyntaxException e) {
             return null;
         }
     }

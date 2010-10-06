@@ -30,37 +30,44 @@
     <packaging>bundle</packaging>
     <name>iPOJO Event Admin Handler Test Suite</name>
     <artifactId>tests.eventadmin.handler</artifactId>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.7.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.handler.eventadmin</artifactId>
-            <version>1.7.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.junit4osgi</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-    </dependencies>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.ipojo</artifactId>
+			<version>1.7.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.ipojo.handler.eventadmin</artifactId>
+			<version>1.7.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.ipojo.junit4osgi</artifactId>
+			<version>1.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+			<version>4.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.eventadmin</artifactId>
+			<version>1.2.2</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
     <build>
         <plugins>
             <plugin>
@@ -91,6 +98,26 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+		        <groupId>org.apache.felix</groupId>
+		        <artifactId>maven-junit4osgi-plugin
+		        </artifactId>
+		        <version>1.1.0-SNAPSHOT</version>
+		        <executions>
+		          <execution>
+		            <goals>
+		              <goal>test</goal>
+		            </goals>
+		            <configuration>
+		              <hideOutputs>false</hideOutputs>
+		              <logService>false</logService>
+		              <configuration>
+		              <org.osgi.http.port>8083</org.osgi.http.port>
+		              </configuration>
+		            </configuration>
+		          </execution>
+		        </executions>
+		     </plugin>
         </plugins>
     </build>
 </project>

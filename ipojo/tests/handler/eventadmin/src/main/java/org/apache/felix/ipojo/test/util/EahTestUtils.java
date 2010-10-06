@@ -75,6 +75,15 @@ public class EahTestUtils {
     }
 
     /**
+     * Return the (asynchronous) donut provider using publishes factory.
+     *
+     * @return the (asynchronous) donut provider using publishes factory
+     */
+    public Factory getDonutProviderUsingPublishesFactory() {
+        return IPojoTestUtils.getFactoryByName(m_context, "donut-provider-publishes");
+    }
+
+    /**
      * Return the synchronous donut provider factory.
      *
      * @return the synchronous donut provider factory

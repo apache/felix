@@ -16,6 +16,18 @@
 			topics="food/donuts" data-key="food" synchronous="false"/>
 	</component>
 
+		<!-- The (asynchronous) donut provider using publishes -->
+	<component classname="org.apache.felix.ipojo.test.donut.DonutProviderImpl"
+		name="donut-provider-publishes">
+		<!-- Expose the donut provider service -->
+		<provides specifications="org.apache.felix.ipojo.test.donut.DonutProvider">
+			<property name="name" field="m_name" value="Unknown donut vendor"/>
+		</provides>
+		<!-- Donut publisher -->
+		<ev:publishes name="donut-publisher" field="m_publisher"
+			topics="food/donuts" dataKey="food" synchronous="false"/>
+	</component>
+
 	<!-- The synchronous donut provider -->
 	<component classname="org.apache.felix.ipojo.test.donut.DonutProviderImpl"
 		name="synchronous-donut-provider">

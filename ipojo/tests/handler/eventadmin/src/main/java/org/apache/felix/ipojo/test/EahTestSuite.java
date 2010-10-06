@@ -43,6 +43,7 @@ public class EahTestSuite {
         ots.addTestSuite(BadTests.class);
         ots.addTestSuite(GoodTests.class);
         ots.addTestSuite(GoodTestsWithNewAttributes.class);
+        ots.addTestSuite(PublishesTests.class);
         return ots;
     }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,7 @@ public class AnnotationsTestSuite extends TestSuite {
         ots.addTestSuite(PolicyDependency.class);
         ots.addTestSuite(FilteredDependency.class);
         ots.addTestSuite(RankedDependency.class);
-        
+
         // External handler annotations
         ots.addTestSuite(TemporalDependencies.class);
         ots.addTestSuite(JMX.class);
