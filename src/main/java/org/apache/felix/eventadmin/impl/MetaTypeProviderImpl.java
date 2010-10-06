@@ -119,7 +119,7 @@ public class MetaTypeProviderImpl
                     "pure optimization! The value is a list of strings. If a string ends with a dot, " +
                     "all handlers in exactly this package are ignored. If the string ends with a star, " +
                     "all handlers in this package and all subpackages are ignored. If the string neither " +
-                    "ends with a dot nor with a start, this is assumed to define an exact class name.",
+                    "ends with a dot nor with a star, this is assumed to define an exact class name.",
                     AttributeDefinition.STRING, m_ignoreTimeout, Integer.MAX_VALUE, null, null));
             ocd = new ObjectClassDefinition()
             {
