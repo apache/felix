@@ -21,9 +21,7 @@ import java.io.*;
 import java.net.URL;
 import java.text.*;
 import java.util.*;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -104,7 +102,21 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         super.deactivate();
     }
 
-
+    /**
+     * Returns the requested printer name if the current request contains one
+     */
+    private String getRequestedPrinterName(final HttpServletRequest request)
+    {
+        String name = request.getPathInfo();
+        final int dotPos = name.lastIndexOf('.');
+        if ( dotPos != -1 )
+        {
+            name = name.substring(0, dotPos);
+        }
+        name = name.substring( name.lastIndexOf('/') + 1);
+        name = WebConsoleUtil.urlDecode( name );
+        return name;
+    }
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -115,7 +127,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         {
             response.setContentType( "text/plain; charset=utf-8" );
             ConfigurationWriter pw = new PlainTextConfigurationWriter( response.getWriter() );
-            printConfigurationStatus( pw, ConfigurationPrinter.MODE_TXT );
+            printConfigurationStatus( pw, ConfigurationPrinter.MODE_TXT, getRequestedPrinterName(request) );
             pw.flush();
         }
         else if ( request.getPathInfo().endsWith( ".zip" ) )
@@ -132,7 +144,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             zip.setMethod( ZipOutputStream.DEFLATED );
 
             final ConfigurationWriter pw = new ZipConfigurationWriter( zip );
-            printConfigurationStatus( pw, ConfigurationPrinter.MODE_ZIP );
+            printConfigurationStatus( pw, ConfigurationPrinter.MODE_ZIP, getRequestedPrinterName(request) );
             pw.flush();
 
             addAttachments( pw, ConfigurationPrinter.MODE_ZIP );
@@ -143,10 +155,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             WebConsoleUtil.setNoCache( response );
             response.setContentType( "text/html; charset=utf-8" );
 
-            String name = request.getPathInfo();
-            name = name.substring( name.lastIndexOf('/') + 1);
-            name = name.substring(0, name.length() - 4);
-            name = WebConsoleUtil.urlDecode( name );
+            final String name = getRequestedPrinterName(request);
 
             ConfigurationWriter pw = new HtmlConfigurationWriter( response.getWriter() );
             pw.println ( "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"" );
@@ -154,12 +163,12 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             pw.println ( "<html xmlns=\"http://www.w3.org/1999/xhtml\">" );
             pw.println ( "<head><title>dummy</title></head><body><div>" );
 
-            Collection printers = getConfigurationPrinters();
-            for (Iterator i = printers.iterator(); i.hasNext();)
+            Collection printers = getPrintersForLabel(name);
+            if ( printers != null )
             {
-                final PrinterDesc desc = (PrinterDesc) i.next();
-                if (desc.label.equals( name ) )
+                for (Iterator i = printers.iterator(); i.hasNext();)
                 {
+                    final PrinterDesc desc = (PrinterDesc) i.next();
                     printConfigurationPrinter( pw, desc, ConfigurationPrinter.MODE_WEB );
                     pw.println( "</div></body></html>" );
                     return;
@@ -232,10 +241,35 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         pw.flush();
     }
 
-
-    private void printConfigurationStatus( ConfigurationWriter pw, final String mode )
+    private List getPrintersForLabel(final String label)
     {
+        List list = null;
         for ( Iterator cpi = getConfigurationPrinters().iterator(); cpi.hasNext(); )
+        {
+            final PrinterDesc desc = (PrinterDesc) cpi.next();
+            if (desc.label.equals( label ) )
+            {
+                if ( list == null )
+                {
+                    list = new ArrayList();
+                    list.add(desc);
+                }
+            }
+        }
+        return list;
+    }
+
+    private void printConfigurationStatus( ConfigurationWriter pw, final String mode, final String optionalLabel )
+    {
+        // check if we have printers for that label
+        Collection printers = getPrintersForLabel(optionalLabel);
+        if ( printers == null )
+        {
+            // if not use all
+            printers = getConfigurationPrinters();
+        }
+
+        for ( Iterator cpi = printers.iterator(); cpi.hasNext(); )
         {
             final PrinterDesc desc = (PrinterDesc) cpi.next();
             if ( desc.match(mode) )
