@@ -20,9 +20,7 @@ package org.apache.felix.webconsole.internal;
 
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -58,7 +56,6 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
      * Creates a new wrapper for a Web Console Plugin
      *
      * @param label the label
-     * @param title the title
      * @param plugin the plugin itself
      * @param serviceReference reference to the plugin
      */
