@@ -18,12 +18,18 @@
  */
 package org.apache.felix.webconsole;
 
-import java.security.GeneralSecurityException;
-
+/**
+ * The <code>WebConsoleSecurityProvider</code> is a service interface allowing
+ * to use an external system to authenticate users before granting access to
+ * the Web Console.
+ *
+ * @since Web Console 3.0.2
+ */
 public interface WebConsoleSecurityProvider {
 
     /**
-     * Check if the user with the specified password exists and return an object identifying the user, else null
+     * Check if the user with the specified password exists and return an
+     * object identifying the user, else null
      */
     public Object authenticate(String username, String password);
 
