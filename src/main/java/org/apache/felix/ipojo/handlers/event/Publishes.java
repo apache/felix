@@ -27,10 +27,9 @@ import java.lang.annotation.Target;
  * Be aware that despite is it provided in the annotations jar,
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- * @deprecated replaced by Publishes
  */
 @Target(ElementType.FIELD)
-public @interface Publisher {
+public @interface Publishes {
 
     /**
      * Sets the publisher name.
@@ -50,14 +49,6 @@ public @interface Publisher {
      * Default : false (asynchronous)
      */
     boolean synchronous() default false;
-
-    /**
-     * Sets the data key in which the data is
-     * put.
-     * Default : user.data
-     * @deprecated replaced by dataKey
-     */
-    String data_key() default "user.data";
 
     /**
      * Sets the data key in which the data is
