@@ -103,7 +103,23 @@ public class ServiceUtil {
                 }
                 buf.append(keys[i]);
                 buf.append('=');
-                buf.append(ref.getProperty(keys[i]));
+                Object val = ref.getProperty(keys[i]);
+                if (val instanceof String[]) {
+                    String[] valArray = (String[]) val;
+                    StringBuffer valBuf = new StringBuffer();
+                    valBuf.append('{');
+                    for (int j = 0; j < valArray.length; j++) {
+                        if (valBuf.length() > 1) {
+                            valBuf.append(',');
+                        }
+                        valBuf.append(valArray[j].toString());
+                    }
+                    valBuf.append('}');
+                    buf.append(valBuf);
+                }
+                else {
+                    buf.append(val.toString());
+                }
             }
             buf.append("}");
             return buf.toString();
