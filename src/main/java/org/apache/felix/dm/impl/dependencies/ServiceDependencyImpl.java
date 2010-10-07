@@ -31,9 +31,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyService;
-import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.InvocationUtil;
@@ -775,7 +775,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             }
         }
         if (m_trackedServiceReference != null) {
-            sb.append("service.id=" + m_trackedServiceReference.getProperty(Constants.SERVICE_ID));
+            sb.append("{service.id=" + m_trackedServiceReference.getProperty(Constants.SERVICE_ID)+"}");
         }
         return sb.toString();
     }
