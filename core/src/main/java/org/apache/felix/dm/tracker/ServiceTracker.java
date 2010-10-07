@@ -822,22 +822,24 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	    private ServiceReference highestHidden(long serviceId) {
 	        ServiceReference result = null;
 	        int max = Integer.MIN_VALUE;
-	        for (int i = 0; i < m_hidden.size(); i++) {
-	            ServiceReference ref = (ServiceReference) m_hidden.get(i);
-	            Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
-	            Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
-	            if ((aid != null && aid.longValue() == serviceId) 
-	                || (aid == null && sid != null && sid.longValue() == serviceId)) {
-	                Integer ranking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
-	                int r = 0;
-	                if (ranking != null) {
-	                    r = ranking.intValue();
-	                }
-	                if (r > max) {
-	                    max = r;
-	                    result = ref;
-	                }
-	            }
+	        synchronized (m_hidden) {
+    	        for (int i = 0; i < m_hidden.size(); i++) {
+    	            ServiceReference ref = (ServiceReference) m_hidden.get(i);
+    	            Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
+    	            Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
+    	            if ((aid != null && aid.longValue() == serviceId) 
+    	                || (aid == null && sid != null && sid.longValue() == serviceId)) {
+    	                Integer ranking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
+    	                int r = 0;
+    	                if (ranking != null) {
+    	                    r = ranking.intValue();
+    	                }
+    	                if (r > max) {
+    	                    max = r;
+    	                    result = ref;
+    	                }
+    	            }
+    	        }
 	        }
 	        return result;
 	    }
@@ -879,7 +881,10 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          */
         private void hide(ServiceReference ref) {
             if (DEBUG) { System.out.println("ServiceTracker.Tracked.hide " + ServiceUtil.toString(ref)); }
-            m_hidden.add(ref);
+            synchronized (m_hidden) {
+                if (DEBUG) { if (m_hidden.contains(ref)) { System.out.println("ServiceTracker.Tracked.hide ERROR: " + ServiceUtil.toString(ref)); }};
+                m_hidden.add(ref);
+            }
         }
         
         /**
@@ -889,7 +894,10 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          */
         private void unhide(ServiceReference ref) {
             if (DEBUG) { System.out.println("ServiceTracker.Tracked.unhide " + ServiceUtil.toString(ref)); }
-            m_hidden.remove(ref);
+            synchronized (m_hidden) {
+                if (DEBUG) { if (!m_hidden.contains(ref)) { System.out.println("ServiceTracker.Tracked.unhide ERROR: " + ServiceUtil.toString(ref)); }};
+                m_hidden.remove(ref);
+            }
         }
 	    
 		/**
@@ -979,7 +987,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 				    ServiceReference higher = null;
 				    ServiceReference lower = null;
 				    boolean isAspect = ServiceUtil.isAspect(reference);
-				    if (isAspect) {
+				    if (true /* WAS isAspect */) {
     				    long sid = ServiceUtil.getServiceId(reference);
     				    ServiceReference sr = highestTracked(sid);
     				    if (sr != null) {
@@ -1054,7 +1062,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 						else {
 		                    higher = null;
 		                    isAspect = ServiceUtil.isAspect(reference);
-		                    if (isAspect) {
+		                    if (true /* WAS isAspect */) {
 		                        long sid = ServiceUtil.getServiceId(reference);
 		                        ServiceReference sr = highestHidden(sid);
 		                        if (sr != null) {
@@ -1084,7 +1092,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 				case ServiceEvent.UNREGISTERING :
                     higher = null;
                     isAspect = ServiceUtil.isAspect(reference);
-                    if (isAspect) {
+                    if (true /* WAS isAspect */) {
                         long sid = ServiceUtil.getServiceId(reference);
                         ServiceReference sr = highestHidden(sid);
                         if (sr != null) {
