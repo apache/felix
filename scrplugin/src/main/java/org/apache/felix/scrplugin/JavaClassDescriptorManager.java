@@ -270,6 +270,10 @@ public abstract class JavaClassDescriptorManager
         final List<JavaClass> classes = new ArrayList<JavaClass>();
         for ( int i = 0; i < sources.length; i++ )
         {
+            if (sources[i].getClasses() == null || sources[i].getClasses().length == 0)
+            {
+                continue;
+            }
             for ( int j = 0; j < sources[i].getClasses().length; j++ )
             {
                 final JavaClass clazz = sources[i].getClasses()[j];
