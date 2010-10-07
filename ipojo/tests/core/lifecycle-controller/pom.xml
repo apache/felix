@@ -118,6 +118,17 @@
 											<property name="conf" field="m_conf" method="setConf" />
 										</properties>
 									 </component>
+
+									 <component
+										classname="org.apache.felix.ipojo.test.scenarios.component.ConfigurableLifecycleControllerTest"
+										name="LFC-Test-Configurable" architecture="true">
+										<provides />
+										<!-- The property and the controller share the same field -->
+										<controller field="m_state" />
+										<properties>
+											<property name="state" field="m_state" />
+										</properties>
+									 </component>
 								 </ipojo>
 								 ]]>
 							</metadata>
@@ -133,6 +144,25 @@
 					<target>1.4</target>
 				</configuration>
 			</plugin>
+			<plugin>
+	        <groupId>org.apache.felix</groupId>
+	        <artifactId>maven-junit4osgi-plugin
+	        </artifactId>
+	        <version>1.1.0-SNAPSHOT</version>
+	        <executions>
+	          <execution>
+	            <goals>
+	              <goal>test</goal>
+	            </goals>
+	            <configuration>
+	              <logService>false</logService>
+	              <configuration>
+	              <org.osgi.http.port>8083</org.osgi.http.port>
+	              </configuration>
+	            </configuration>
+	          </execution>
+	        </executions>
+      		</plugin>
 		</plugins>
 	</build>
 </project>

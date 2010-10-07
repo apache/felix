@@ -16,22 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo.test.scenarios.lfc;
+package org.apache.felix.ipojo.test.scenarios.component;
 
-import junit.framework.Test;
+import java.util.Properties;
 
-import org.apache.felix.ipojo.junit4osgi.OSGiTestSuite;
-import org.osgi.framework.BundleContext;
+import org.apache.felix.ipojo.test.scenarios.lfc.service.CheckService;
 
-public class LifeCycleControllerTestSuite {
+public class ConfigurableLifecycleControllerTest implements CheckService {
 
+	// This is both a property and the controller.
+    private boolean m_state;
 
-    public static Test suite(BundleContext bc) {
-        OSGiTestSuite ots = new OSGiTestSuite("Lifecycle Controller Test Suite", bc);
-        ots.addTestSuite( LifeCycleControllerTest.class);
-        ots.addTestSuite( ImmediateLifeCycleControllerTest.class);
-        ots.addTestSuite(ConfigurableLifeCycleControllerTest.class);
-        return ots;
+    public boolean check() {
+        return m_state;
+    }
+
+    public Properties getProps() {
+       Properties props = new Properties();
+       props.put("state", new Boolean(m_state));
+       return props;
     }
 
 }
+

@@ -291,6 +291,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         // Get the provided service handler :
         m_providedServiceHandler = (ProvidedServiceHandler) getHandler(HandlerFactory.IPOJO_NAMESPACE + ":provides");
 
+
         // Propagation
         if (m_mustPropagate) {
             for (int i = 0; i < m_configurableProperties.size(); i++) {
@@ -300,6 +301,15 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 }
             }
             reconfigure(m_toPropagate);
+        }
+
+
+        // Give initial values
+        for (int i = 0; i < m_configurableProperties.size(); i++) {
+        	Property prop = (Property) m_configurableProperties.get(i);
+        	if (prop.hasField() && prop.getValue() != Property.NO_VALUE && prop.getValue() != null) {
+        		getInstanceManager().onSet(null, prop.getField(), prop.getValue());
+        	}
         }
 
         if (m_managedServicePID != null && m_sr == null) {
