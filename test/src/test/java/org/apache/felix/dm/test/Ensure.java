@@ -106,4 +106,33 @@ public class Ensure {
     public static Runnable createRunnableStep(final Ensure ensure, final int nr) {
         return new Runnable() { public void run() { ensure.step(nr); }};
     }
+    
+    public synchronized void steps(Steps steps) {
+        steps.next(this);
+    }
+    
+    /** 
+     * Helper class for naming a list of step numbers. If used with the steps(Steps) method
+     * you can define at which steps in time this point should be passed. That means you can
+     * check methods that will get invoked multiple times during a test.
+     */
+    public static class Steps {
+        private final int[] m_steps;
+        private int m_stepIndex;
+
+        /** 
+         * Create a list of steps and initialize the step counter to zero.
+         */
+        public Steps(int... steps) {
+            m_steps = steps;
+            m_stepIndex = 0;
+        }
+
+        /**
+         * Ensure we're at the right step. Will throw an index out of bounds exception if we enter this step more often than defined.
+         */
+        public void next(Ensure ensure) {
+            ensure.step(m_steps[m_stepIndex++]);
+        }
+    }
 }
