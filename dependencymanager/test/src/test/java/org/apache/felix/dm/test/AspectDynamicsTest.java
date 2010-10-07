@@ -22,8 +22,8 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -49,26 +49,52 @@ public class AspectDynamicsTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
-        Component sp2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface2.class.getName(), null);
-        Component sc = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
-        Component sa = m.createAspectService(ServiceInterface.class, null, 1, null).setImplementation(new ServiceAspect(e));
-        m.add(sc);
-        m.add(sp);
+        Component provider = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
+        Component provider2 = m.createComponent().setImplementation(new ServiceProvider2(e)).setInterface(ServiceInterface2.class.getName(), null);
+        Component consumer = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true));
+        Component aspect = m.createAspectService(ServiceInterface.class, null, 1, null).setImplementation(new ServiceAspect(e));
+        
+        m.add(consumer);
+        m.add(provider);
+        // the consumer should invoke the provider here, and when done, arrive at step 3
+        // finally wait for step 6 before continuing
         e.waitForStep(3, 15000);
-        m.add(sa);
+        
+        m.add(aspect);
+        // after adding the aspect, we wait for its init to be invoked, arriving at
+        // step 4 after an instance bound dependency was added (on a service provided by
+        // provider 2)
         e.waitForStep(4, 15000);
-        m.add(sp2);
+        
+        m.add(provider2);
+        
+        // after adding provider 2, we should now see the aspect being started, so
+        // we wait for step 5 to happen
         e.waitForStep(5, 15000);
+        
+        // now we continue with step 6, which will trigger the next part of the consumer's
+        // run method to be executed
         e.step(6);
-        e.waitForStep(9, 15000);
-        m.remove(sa);
+        
+        // invoking step 7, 8 and 9 when invoking the aspect which in turn invokes the
+        // dependency and the original service, so we wait for that to finish here, which
+        // is after step 10 has been reached (the client will now wait for step 12)
+        e.waitForStep(10, 15000);
+        
+        m.remove(aspect);
+        // removing the aspect should trigger step 11 (in the stop method of the aspect)
         e.waitForStep(11, 15000);
+        
+        // step 12 triggers the client to continue
         e.step(12);
+        
+        // wait for step 13, the final invocation of the provided service (without aspect)
         e.waitForStep(13, 15000);
-        m.remove(sp2);
-        m.remove(sp);
-        m.remove(sc);
+        
+        // clean up
+        m.remove(provider2);
+        m.remove(provider);
+        m.remove(consumer);
     }
     
     static interface ServiceInterface {
@@ -112,7 +138,11 @@ public class AspectDynamicsTest extends Base {
             m_ensure = e;
         }
         public void init() {
-            m_service.add(m_manager.createServiceDependency().setInstanceBound(true).setRequired(true).setService(ServiceInterface2.class));
+            m_service.add(m_manager.createServiceDependency()
+                .setService(ServiceInterface2.class)
+                .setRequired(true)
+                .setInstanceBound(true)
+            );
             m_ensure.step(4);
         }
         public void start() {
