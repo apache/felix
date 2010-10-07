@@ -21,10 +21,10 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -87,7 +87,6 @@ public class AdapterServiceImpl extends FilterService
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-//                .add(dependencies)
                 .add(m_manager.createServiceDependency()
                      .setService(m_adapteeInterface, ref)
                      .setRequired(true));
@@ -102,6 +101,9 @@ public class AdapterServiceImpl extends FilterService
                 service.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
             return service;
+        }
+        public String toString() {
+            return "Adapter for " + m_adapteeInterface + ((m_adapteeFilter != null) ? " with filter " + m_adapteeFilter : "");
         }
     }
 }
