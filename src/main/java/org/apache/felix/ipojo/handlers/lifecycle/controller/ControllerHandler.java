@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,11 +35,15 @@ import org.apache.felix.ipojo.parser.PojoMetadata;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ControllerHandler extends PrimitiveHandler {
-    
+
     /**
      * Actual handler (i.e. field value) state
      */
     private boolean m_state;
+	/**
+	 * The controller field name.
+	 */
+	private String m_field;
 
     /**
      * Configure method.
@@ -51,28 +55,40 @@ public class ControllerHandler extends PrimitiveHandler {
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         Element[] controller = metadata.getElements("controller");
-        String field = controller[0].getAttribute("field");   
-        getInstanceManager().register(new FieldMetadata(field, "boolean"), this);
+        m_field = controller[0].getAttribute("field");
+        getInstanceManager().register(new FieldMetadata(m_field, "boolean"), this);
     }
 
     /**
      * Start method.
-     * Nothing to do.
+     * This methods initializes the controller value.
      * @see org.apache.felix.ipojo.Handler#start()
      */
-    public void start() { 
-        m_state = true;
+    public void start() {
+    	// On start we should ask for the value
+    	Object o = getInstanceManager().getFieldValue(m_field);
+    	if (o == null || ! (o instanceof Boolean)) {
+    		m_state = true;
+    	} else {
+    		m_state = ((Boolean) o).booleanValue();
+    	}
+
+    	if ( ! m_state) {
+    		setValidity(false);
+    	}
     }
 
     /**
      * Stop method.
-     * Nothing to do. 
+     * Nothing to do.
      * @see org.apache.felix.ipojo.Handler#stop()
      */
-    public void stop() { 
+    public void stop() {
         // Nothing to do.
     }
-    
+
+
+
     /**
      * GetterCallback.
      * @param pojo : the pojo object on which the field is accessed
@@ -82,13 +98,13 @@ public class ControllerHandler extends PrimitiveHandler {
      * @return : the handler state.
      */
     public Object onGet(Object pojo, String field, Object value) {
-        if (m_state) { 
+        if (m_state) {
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;
         }
     }
-    
+
     /**
      * SetterCallback.
      * @param pojo : the pojo object on which the field is accessed
@@ -103,8 +119,10 @@ public class ControllerHandler extends PrimitiveHandler {
                 m_state = newValue;
                 if (m_state) {
                     ((InstanceManager) getHandlerManager()).setState(ComponentInstance.VALID);
+                    setValidity(true);
                 } else {
                     ((InstanceManager) getHandlerManager()).setState(ComponentInstance.INVALID);
+                    setValidity(false);
                 }
             }
         } else {
@@ -112,7 +130,7 @@ public class ControllerHandler extends PrimitiveHandler {
             getInstanceManager().stop();
         }
     }
-    
+
     /**
      * Initialize the component factory.
      * The controller field is checked to avoid configure check.
@@ -129,13 +147,13 @@ public class ControllerHandler extends PrimitiveHandler {
         if (field == null) {
             throw new ConfigurationException("Lifecycle controller : the controller element needs to contain a field attribute");
         }
-        
+
         PojoMetadata method = getFactory().getPojoMetadata();
         FieldMetadata fieldMetadata = method.getField(field);
         if (fieldMetadata == null) {
             throw new ConfigurationException("Lifecycle controller : The field " + field + " does not exist in the implementation class");
         }
-        
+
         if (!fieldMetadata.getFieldType().equalsIgnoreCase("boolean")) {
             throw new ConfigurationException("Lifecycle controller : The field " + field + " must be a boolean (" + fieldMetadata.getFieldType() + " found)");
         }
