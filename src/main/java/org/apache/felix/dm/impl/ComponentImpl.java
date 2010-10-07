@@ -130,6 +130,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
     
     private void calculateStateChanges(final State oldState, final State newState) {
+        System.out.println("SS from " + oldState + "\n   to   " + newState);
+        
         if (oldState.isInactive() && (newState.isTrackingOptional())) {
             m_executor.enqueue(new Runnable() {
                 public void run() {
@@ -158,6 +160,11 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
             m_executor.enqueue(new Runnable() {
                 public void run() {
                     // TODO as far as I can see there is nothing left to do here
+                    
+                    
+                    //////////unbindService(newState);
+                    
+                    
                 }});
         }
         if (oldState.isTrackingOptional() && newState.isWaitingForRequired()) {
@@ -222,6 +229,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         m_executor.execute();
     }
     
+    // TODO fix code duplication between add(Dependency) and add(List)
     public Component add(final Dependency dependency) {
     	State oldState, newState;
         synchronized (m_dependencies) {
@@ -229,36 +237,85 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
             m_dependencies.add(dependency);
         }
         
-        if (dependency.isInstanceBound()) {
-            // At this point: this dependency is added from init(): but we don't want to start it now, 
-            // because if we start it, and if the required dependency is available, then the service.start() 
-            // method will be called, and this is a problem if a further
-            // required (but unavailable) dependency is then added again from the init() method ...
-            // Once the init() method will return, the activateService method will then calculate the state changes,
-            // but at this point, all added extra-dependencies will be known.
-            return this;
-        } 
+//        if (dependency.isInstanceBound()) {
+//            // At this point: this dependency is added from init(): but we don't want to start it now, 
+//            // because if we start it, and if the required dependency is available, then the service.start() 
+//            // method will be called, and this is a problem if a further
+//            // required (but unavailable) dependency is then added again from the init() method ...
+//            // Once the init() method will return, the activateService method will then calculate the state changes,
+//            // but at this point, all added extra-dependencies will be known.
+//            return this;
+//        } 
         
-        if (oldState.isAllRequiredAvailable() || (oldState.isWaitingForRequiredInstantiated() && dependency.isRequired()) || (oldState.isWaitingForRequired() && dependency.isRequired())) {
-        	((DependencyActivation) dependency).start(this);
+        ///
+        
+//        if (oldState.isAllRequiredAvailable() || (oldState.isWaitingForRequiredInstantiated() && dependency.isRequired()) || (oldState.isWaitingForRequired() && dependency.isRequired())) {
+//        	((DependencyActivation) dependency).start(this);
+//        }
+        
+        // if we're inactive, don't do anything, otherwise we might want to start
+        // the dependency
+        if (!oldState.isInactive()) {
+            // if the dependency is required, it should be started regardless of the state
+            // we're in
+            if (dependency.isRequired()) {
+                ((DependencyActivation) dependency).start(this);
+            }
+            else {
+                // if the dependency is optional, it should only be started if we're in
+                // bound state
+                if (oldState.isBound()) {
+                    ((DependencyActivation) dependency).start(this);
+                }
+            }
         }
 
         synchronized (m_dependencies) {
             // starting the dependency above might have triggered another state change, so
             // we have to fetch the current state again
-            oldState = m_state;
             newState = new State((List) m_dependencies.clone(), !oldState.isInactive(), m_isInstantiated, m_isBound);
             m_state = newState;
         }
         calculateStateChanges(oldState, newState);
         return this;
     }
-
+    
     public Component add(List dependencies) {
-        // TODO review if this can be done more smartly
-        for (int i = 0; i < dependencies.size(); i++) {
-            add((Dependency) dependencies.get(i));
+        State oldState, newState;
+        synchronized (m_dependencies) {
+            oldState = m_state;
+            for (int i = 0; i < dependencies.size(); i++) {
+                m_dependencies.add(dependencies.get(i));
+            }
         }
+        
+        // if we're inactive, don't do anything, otherwise we might want to start
+        // the dependencies
+        if (!oldState.isInactive()) {
+            for (int i = 0; i < dependencies.size(); i++) {
+                Dependency dependency = (Dependency) dependencies.get(i);
+                // if the dependency is required, it should be started regardless of the state
+                // we're in
+                if (dependency.isRequired()) {
+                    ((DependencyActivation) dependency).start(this);
+                }
+                else {
+                    // if the dependency is optional, it should only be started if we're in
+                    // bound state
+                    if (oldState.isBound()) {
+                        ((DependencyActivation) dependency).start(this);
+                    }
+                }
+            }
+        }
+
+        synchronized (m_dependencies) {
+            // starting the dependency above might have triggered another state change, so
+            // we have to fetch the current state again
+            newState = new State((List) m_dependencies.clone(), !oldState.isInactive(), m_isInstantiated, m_isBound);
+            m_state = newState;
+        }
+        calculateStateChanges(oldState, newState);
         return this;
     }
 
@@ -544,8 +601,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         // then we invoke the init callback so the service can further initialize
         // itself
         invoke(init);
-        // start extra/required dependencies which might have been added from the init() method.
-        startExtraRequiredDependencies();
+//        // start extra/required dependencies which might have been added from the init() method.
+//        startExtraRequiredDependencies();
         // see if any of this caused further state changes
         calculateStateChanges();
     }
@@ -567,7 +624,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
             start = m_callbackStart;
         }
         
-        // configure service with extra-dependencies which might have been added from init() method.
+//        // configure service with extra-dependencies which might have been added from init() method.
         configureServiceWithExtraDependencies(state);
         // inform the state listeners we're starting
         stateListenersStarting();
