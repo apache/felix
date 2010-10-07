@@ -23,8 +23,8 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -88,7 +88,7 @@ public class FELIX2344_ExtraDependencyWithAutoConfigTest extends Base {
     
     // This client is not using callbacks, but instead, it uses auto config.
     public static class Client {
-        ProviderInterface m_provider = null;
+        volatile ProviderInterface m_provider;
         private Ensure m_ensure;
         private final boolean m_required;
         private final int m_startStep;

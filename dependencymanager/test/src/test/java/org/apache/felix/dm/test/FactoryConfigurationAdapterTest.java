@@ -29,8 +29,8 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -170,7 +170,7 @@ public class FactoryConfigurationAdapterTest extends Base
     }
 
     public static class Adapter implements AdapterService {
-        AdapterExtraDependency m_extraDependency; // extra dependency.
+        volatile AdapterExtraDependency m_extraDependency; // extra dependency.
         private int updateCount;
         
         void updated(Dictionary settings) {

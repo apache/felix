@@ -28,8 +28,8 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -117,6 +117,8 @@ public class AspectBaseTest extends Base {
         // after removing the aspect, the consumer should get the original service back, so
         // remove and add will be invoked
         e.waitForStep(4, 2000);
+        
+        Assert.assertEquals("a", c.invoke());
         
         m.remove(sp);
         // after removing the original service, the consumer's remove should be called once

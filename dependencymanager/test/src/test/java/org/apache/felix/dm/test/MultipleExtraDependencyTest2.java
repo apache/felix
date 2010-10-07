@@ -24,8 +24,8 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 
 import java.util.Hashtable;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -134,36 +134,33 @@ public class MultipleExtraDependencyTest2 extends Base {
         public void doService();
     }
     
-    public static class ServiceConsumer
-    {
+    public static class ServiceConsumer {
         volatile Sequencer m_sequencer;
         volatile ServiceInterface m_service;
         ServiceDependency m_d1, m_d2;
 
-        public void init(Object serviceInstance, DependencyManager m, Component s)
-        {
-           s.add(m_d1 = m.createServiceDependency()
-                   .setService(Sequencer.class)
-                   .setRequired(true)
-                   .setInstanceBound(true)
-                   .setAutoConfig("m_sequencer"));
-           s.add(m_d2 = m.createServiceDependency()
-                   .setService(ServiceInterface.class, "(foo=bar)")
-                   .setRequired(true)
-                   .setInstanceBound(true)
-                   .setAutoConfig("m_service"));
+        public void init(Component s) {
+            DependencyManager m = s.getDependencyManager();
+            s.add(m_d1 = m.createServiceDependency()
+                .setService(Sequencer.class)
+                .setRequired(true)
+                .setInstanceBound(true)
+                .setAutoConfig("m_sequencer"));
+            s.add(m_d2 = m.createServiceDependency()
+                .setService(ServiceInterface.class, "(foo=bar)")
+                .setRequired(true)
+                .setInstanceBound(true)
+                .setAutoConfig("m_service"));
         }
         
-        void start()
-        {
+        void start() {
             m_d1.setInstanceBound(false);
             m_d2.setInstanceBound(false);
             m_sequencer.step(6);
             m_service.doService();
         }
 
-        void stop()
-        {
+        void stop() {
             m_sequencer.step(8);
         }
     }
@@ -174,8 +171,9 @@ public class MultipleExtraDependencyTest2 extends Base {
         ServiceProvider2 m_serviceProvider2;
         ServiceDependency m_d1, m_d2;
 
-        public void init(Object serviceInstance, DependencyManager m, Component s)
+        public void init(Component s)
         {
+            DependencyManager m = s.getDependencyManager();
             s.add(m_d1 = m.createServiceDependency()
                   .setService(Sequencer.class)
                   .setRequired(true)
@@ -224,8 +222,9 @@ public class MultipleExtraDependencyTest2 extends Base {
         Runnable m_runnable;
         ServiceDependency m_d1, m_d2;
 
-        public void init(Object serviceInstance, DependencyManager m, Component s)
+        public void init(Component s)
         {
+            DependencyManager m = s.getDependencyManager();
             s.add(m_d1 = m.createServiceDependency()
                   .setService(Runnable.class, "(foo=bar)")
                   .setRequired(false)
