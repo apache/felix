@@ -130,8 +130,6 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
     
     private void calculateStateChanges(final State oldState, final State newState) {
-        System.out.println("SS from " + oldState + "\n   to   " + newState);
-        
         if (oldState.isInactive() && (newState.isTrackingOptional())) {
             m_executor.enqueue(new Runnable() {
                 public void run() {
