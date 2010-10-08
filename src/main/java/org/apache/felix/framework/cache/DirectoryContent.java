@@ -20,6 +20,8 @@ package org.apache.felix.framework.cache;
 
 import org.apache.felix.framework.resolver.Content;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
@@ -129,6 +131,23 @@ public class DirectoryContent implements Content
         }
 
         return new FileInputStream(new File(m_dir, name));
+    }
+
+    public URL getEntryAsURL(String name)
+    {
+        if ((name.length() > 0) && (name.charAt(0) == '/'))
+        {
+            name = name.substring(1);
+        }
+
+        try
+        {
+            return new File(m_dir, name).toURI().toURL();
+        }
+        catch (MalformedURLException e)
+        {
+            return null;
+        }
     }
 
     public Content getEntryAsContent(String entryName)

@@ -1091,6 +1091,19 @@ public class ModuleImpl implements Module
         return getContentPath()[index - 1].getEntryAsStream(urlPath);
     }
 
+    public URL getLocalURL(int index, String urlPath)
+    {
+        if (urlPath.startsWith("/"))
+        {
+            urlPath = urlPath.substring(1);
+        }
+        if (index == 0)
+        {
+            return m_content.getEntryAsURL(urlPath);
+        }
+        return getContentPath()[index - 1].getEntryAsURL(urlPath);
+    }
+
     private URL createURL(int port, String path)
     {
          // Add a slash if there is one already, otherwise
