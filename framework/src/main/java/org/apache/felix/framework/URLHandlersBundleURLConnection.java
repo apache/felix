@@ -28,7 +28,7 @@ import org.apache.felix.framework.resolver.Module;
 
 import org.apache.felix.framework.util.Util;
 
-public class URLHandlersBundleURLConnection extends URLConnection
+class URLHandlersBundleURLConnection extends URLConnection
 {
     private Felix m_framework;
     private Module m_targetModule;
@@ -201,7 +201,8 @@ public class URLHandlersBundleURLConnection extends URLConnection
      *
      * @return the local URL
      */
-    public URL getLocalURL()
+    // TODO: REMOVE - Remove when class path scanning is implemented.
+    URL getLocalURL()
     {
         if ((m_targetModule == null) || (m_classPathIdx < 0))
         {

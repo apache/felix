@@ -1091,6 +1091,7 @@ public class ModuleImpl implements Module
         return getContentPath()[index - 1].getEntryAsStream(urlPath);
     }
 
+    // TODO: REMOVE - Remove when class path scanning is implemented.
     public URL getLocalURL(int index, String urlPath)
     {
         if (urlPath.startsWith("/"))
