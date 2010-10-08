@@ -21,6 +21,7 @@ package org.apache.felix.framework.cache;
 import org.apache.felix.framework.resolver.Content;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
@@ -79,6 +80,11 @@ public class ContentDirectoryContent implements Content
         }
 
         return m_content.getEntryAsStream(m_rootPath + name);
+    }
+
+    public URL getEntryAsURL(String name)
+    {
+        return m_content.getEntryAsURL(m_rootPath + name);
     }
 
     public Content getEntryAsContent(String name)

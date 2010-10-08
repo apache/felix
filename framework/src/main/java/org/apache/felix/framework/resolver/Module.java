@@ -72,4 +72,5 @@ public interface Module
         throws IOException;
     InputStream getInputStream(int index, String urlPath)
         throws IOException;
+    URL getLocalURL(int index, String urlPath);
 }

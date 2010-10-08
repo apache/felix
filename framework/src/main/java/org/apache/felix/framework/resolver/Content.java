@@ -20,6 +20,7 @@ package org.apache.felix.framework.resolver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Enumeration;
 
 public interface Content
@@ -109,4 +110,15 @@ public interface Content
      *         corresponding entry was found, <tt>null</tt> otherwise.
     **/
     String getEntryAsNativeLibrary(String name);
+
+    /**
+     * <p>
+     *  This method allows retrieving an entry as a plain standard URL.
+     * </p>
+     *
+     * @param name The name of the entry to retrieve as a URL
+     * @return A URL using a standard protocol such as file, jar
+     *           or null if not possible.
+     */
+    URL getEntryAsURL(String name);
 }

@@ -610,6 +610,11 @@ class ExtensionManager extends URLStreamHandler implements Content
         return null;
     }
 
+    public URL getEntryAsURL(String name)
+    {
+        return null;
+    }
+
     //
     // Utility methods.
     //
@@ -756,6 +761,11 @@ class ExtensionManager extends URLStreamHandler implements Content
         public InputStream getInputStream(int index, String urlPath)
         {
             return getClass().getClassLoader().getResourceAsStream(urlPath);
+        }
+
+        public URL getLocalURL(int index, String urlPath)
+        {
+            return getClass().getClassLoader().getResource(urlPath);
         }
     }
 }

@@ -28,7 +28,7 @@ import org.apache.felix.framework.resolver.Module;
 
 import org.apache.felix.framework.util.Util;
 
-class URLHandlersBundleURLConnection extends URLConnection
+public class URLHandlersBundleURLConnection extends URLConnection
 {
     private Felix m_framework;
     private Module m_targetModule;
@@ -194,5 +194,19 @@ class URLHandlersBundleURLConnection extends URLConnection
         // path of the JAR file...so it would take some
         // re-arranging to get this to work.
         return null;
+    }
+
+    /**
+     * Retrieve the entry as a URL using standard protocols such as file: and jar:
+     *
+     * @return the local URL
+     */
+    public URL getLocalURL()
+    {
+        if ((m_targetModule == null) || (m_classPathIdx < 0))
+        {
+            return url;
+        }
+        return m_targetModule.getLocalURL(m_classPathIdx, url.getPath());
     }
 }

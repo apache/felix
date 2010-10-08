@@ -23,6 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -188,6 +190,18 @@ public class JarContent implements Content
         }
 
         return is;
+    }
+
+    public URL getEntryAsURL(String name)
+    {
+        try
+        {
+            return new URL("jar:" + m_file.toURI().toURL().toExternalForm() + "!/" + name);
+        }
+        catch (MalformedURLException e)
+        {
+            return null;
+        }
     }
 
     public Content getEntryAsContent(String entryName)
