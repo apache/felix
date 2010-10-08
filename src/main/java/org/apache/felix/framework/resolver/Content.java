@@ -120,5 +120,6 @@ public interface Content
      * @return A URL using a standard protocol such as file, jar
      *           or null if not possible.
      */
+    // TODO: REMOVE - Remove when class path scanning is implemented.
     URL getEntryAsURL(String name);
 }

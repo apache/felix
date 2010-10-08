@@ -72,5 +72,6 @@ public interface Module
         throws IOException;
     InputStream getInputStream(int index, String urlPath)
         throws IOException;
+    // TODO: REMOVE - Remove when class path scanning is implemented.
     URL getLocalURL(int index, String urlPath);
 }
