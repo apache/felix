@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,7 @@ import org.osgi.framework.BundleContext;
 /**
  * Implementation of the handler factory interface.
  * This factory is able to create handler manager.
- * A handler manager is an iPOJO instance containing a handler object. 
+ * A handler manager is an iPOJO instance containing a handler object.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class HandlerManagerFactory extends ComponentFactory implements HandlerFactory {
@@ -47,11 +47,11 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
 
     /**
      * The handler start level.
-     * Lower levels are priority and so are configured and started 
-     * before higher levels, and are stopped after. 
+     * Lower levels are priority and so are configured and started
+     * before higher levels, and are stopped after.
      */
     private final int m_level;
-    
+
     /**
      * Creates a handler factory.
      * @param context the bundle context
@@ -60,7 +60,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
      */
     public HandlerManagerFactory(BundleContext context, Element metadata) throws ConfigurationException {
         super(context, metadata);
-        
+
         // Get the name
         m_factoryName = metadata.getAttribute("name");
         if (m_factoryName == null) { throw new ConfigurationException("An Handler needs a name"); }
@@ -87,7 +87,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
         } else {
             m_namespace = IPOJO_NAMESPACE; // Set to the iPOJO default namespace if not specified.
         }
-    }    
+    }
 
     public String getNamespace() {
         return m_namespace;
@@ -137,7 +137,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
         instance.configure(m_componentMetadata, configuration);
         return instance;
     }
-    
+
 
     /**
      * Computes required handlers. This method does not manipulate any
@@ -168,6 +168,8 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
             list.add(new RequiredHandler("architecture", null));
         }
 
+        // The auto-attached handler list is ignored for handlers to avoid loops.
+
         return list;
     }
 
@@ -189,7 +191,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
         /**
          * Add properties to publish.
          * <li>handler.name</li>
-         * <li>handler.namespace</li> 
+         * <li>handler.namespace</li>
          * <li>handler.type</li>
          * <li>handler.level if the level is not Integer.MAX</li>
          * @return returns the dictionary to publish.
@@ -206,7 +208,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
             }
             return props;
         }
-        
+
         public String[] getFactoryInterfacesToPublish() {
             return new String[] {HandlerFactory.class.getName()};
         }
