@@ -38,7 +38,7 @@ public class AutoHandlerTest extends OSGiTestCase {
 
 	public void setUp() {
 		factory = (ComponentFactory) Utils.getFactoryByName(getContext(), "HANDLER-HandlerTesterWO");
-		System.clearProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE);
+		System.setProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE, "");
 	}
 
 	public void tearDown() {
@@ -47,10 +47,17 @@ public class AutoHandlerTest extends OSGiTestCase {
 		}
 		instance = null;
 
-		System.clearProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE);
+		System.setProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE, "");
+
 	}
 
 	public void testRequiredHandlerList() {
+		System.setProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE, "");
+
+		factory.stop();
+		factory.restart();
+		factory.start();
+
 		List list = factory.getRequiredHandlers();
 		assertFalse(list.contains("org.apache.felix.ipojo.test.handler.checkservice:check"));
 
@@ -63,6 +70,8 @@ public class AutoHandlerTest extends OSGiTestCase {
 
 		list = factory.getRequiredHandlers();
 		assertTrue(list.contains("org.apache.felix.ipojo.test.handler.checkservice:check"));
+
+		System.setProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE, "");
 
 	}
 
@@ -81,5 +90,10 @@ public class AutoHandlerTest extends OSGiTestCase {
 		assertNotNull(hd);
 		assertTrue(hd instanceof CheckServiceHandlerDescription);
 
+		System.setProperty(ORG_APACHE_FELIX_IPOJO_HANDLER_AUTO_PRIMITIVE, "");
+
+		factory.stop();
+		factory.restart();
+		factory.start();
 	}
 }
