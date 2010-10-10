@@ -9,3 +9,5 @@ target/
 *.iws
 *.ipr
 velocity.log
+maven-eclipse.xml
+.externalToolBuilders
