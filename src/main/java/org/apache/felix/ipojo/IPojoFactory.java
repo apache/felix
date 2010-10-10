@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -166,7 +166,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         }
 
         m_requiredHandlers = getRequiredHandlerList(); // Call sub-class to get the list of required handlers.
-        
+
         m_logger.log(Logger.INFO, "New factory created : " + m_factoryName);
     }
 
@@ -307,7 +307,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             m_logger.log(Logger.ERROR, e.getMessage());
             throw new ConfigurationException(e.getMessage(), m_factoryName);
         }
-        
+
 
     }
 
@@ -545,7 +545,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         m_described = false;
         m_componentDesc = null;
         m_componentInstances.clear();
-        
+
         m_logger.log(Logger.INFO, "Factory " + m_factoryName + " stopped");
 
     }
@@ -586,17 +586,26 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
         if (m_isPublic) {
             // Exposition of the factory service
-            BundleContext bc = SecurityHelper.selectContextToRegisterServices(m_componentDesc.getFactoryInterfacesToPublish(), 
+            BundleContext bc = SecurityHelper.selectContextToRegisterServices(m_componentDesc.getFactoryInterfacesToPublish(),
                     m_context, getIPOJOBundleContext());
             m_sr =
                     bc.registerService(m_componentDesc.getFactoryInterfacesToPublish(), this, m_componentDesc
                             .getPropertiesToPublish());
         }
-        
+
         m_logger.log(Logger.INFO, "Factory " + m_factoryName + " started");
 
     }
-    
+
+    /**
+     * For testing purpose <b>ONLY</b>.
+     * This method recomputes the required handler list.
+     */
+    public void restart() {
+    	// Call sub-class to get the list of required handlers.
+        m_requiredHandlers = getRequiredHandlerList();
+    }
+
     /**
      * Gets the iPOJO Bundle Context.
      * @return the iPOJO Bundle Context
@@ -774,7 +783,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         String name = (String) ref.getProperty(Handler.HANDLER_NAME_PROPERTY);
         String namespace = (String) ref.getProperty(Handler.HANDLER_NAMESPACE_PROPERTY);
         if (HandlerFactory.IPOJO_NAMESPACE.equals(namespace)) {
-            return name.equalsIgnoreCase(req.getName()) && req.getNamespace() == null; 
+            return name.equalsIgnoreCase(req.getName()) && req.getNamespace() == null;
         }
         return name.equalsIgnoreCase(req.getName()) && namespace.equalsIgnoreCase(req.getNamespace());
     }

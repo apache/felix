@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.parser.ParseUtils;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.Logger;
 import org.apache.felix.ipojo.util.Tracker;
@@ -48,6 +49,15 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentFactory extends IPojoFactory implements TrackerCustomizer {
+
+	/**
+	 * System property set to automatically attach primitive handlers to primitive
+	 * component types.
+	 * The value is a String parsed as a list (comma separated). Each element is
+	 * the fully qualified name of the handler <code>namespace:name</code>.
+	 */
+	public static final String HANDLER_AUTO_PRIMITIVE = "org.apache.felix.ipojo.handler.auto.primitive";
+
 
     /**
      * The tracker used to track required handler factories.
@@ -272,6 +282,8 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * Computes required handlers.
      * This method does not manipulate any non-immutable fields,
      * so does not need to be synchronized.
+     * This method checks the {@link ComponentFactory#HANDLER_AUTO_PRIMITIVE}
+     * system property to add the listed handlers to the required handler set.
      * @return the required handler list.
      */
     public List getRequiredHandlerList() {
@@ -314,6 +326,29 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         String imm = m_componentMetadata.getAttribute("immediate");
         if (!list.contains(reqCallback) && imm != null && imm.equalsIgnoreCase("true")) {
             list.add(reqCallback);
+        }
+
+        // Manage auto attached handler.
+        String v = System.getProperty(HANDLER_AUTO_PRIMITIVE);
+        if (v != null  && v.length() != 0) {
+        	String[] hs = ParseUtils.split(v, ",");
+        	for (int i = 0; i < hs.length; i++) {
+        		String h = hs[i].trim();
+        		String[] segments = h.split(":");
+        		RequiredHandler rq = null;
+        		if (segments.length == 2) { // External handler
+        			rq = new RequiredHandler(segments[1], segments[0]);
+        		} else if (segments.length == 1) { // Core handler
+        			rq = new RequiredHandler(segments[1], null);
+        		} // Others case are ignored.
+
+        		if (rq != null) {
+        			// Check it's not already contained
+        			if (! list.contains(rq)) {
+        				list.add(rq);
+        			}
+        		}
+        	}
         }
 
 
@@ -407,7 +442,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
     public String getVersion() {
         return m_version;
     }
-    
+
     public ClassLoader getBundleClassLoader() {
         return m_classLoader;
     }
