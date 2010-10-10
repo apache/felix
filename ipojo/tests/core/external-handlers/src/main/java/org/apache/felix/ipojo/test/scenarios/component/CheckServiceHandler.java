@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,21 +30,21 @@ import org.apache.felix.ipojo.test.scenarios.eh.service.CheckService;
 import org.osgi.framework.ServiceRegistration;
 
 public class CheckServiceHandler extends PrimitiveHandler implements CheckService {
-	
+
 	ServiceRegistration sr;
 	boolean isValid;
 	int changes = 0;
 	static final String NAMESPACE = "org.apache.felix.ipojo.test.handler.checkservice";
-	
+
 	Properties props = new Properties();
 
 	public void configure(Element metadata, Dictionary configuration) {
 		Element[] meta = metadata.getElements("check", NAMESPACE);
-		if(meta == null) { return;	}		
-		// Get handler props 
+		if(meta == null) { return;	}
+		// Get handler props
 		props.put("instance.name", configuration.get("instance.name"));
 		if(configuration.get("csh.simple") != null) { props.put("Simple", configuration.get("csh.simple")); }
-		if(configuration.get("csh.map") != null) { 
+		if(configuration.get("csh.map") != null) {
 			Dictionary m = (Dictionary) configuration.get("csh.map");
             if (m.size() > 0) {
                 props.put("Map1", m.get("a"));
@@ -53,28 +53,28 @@ public class CheckServiceHandler extends PrimitiveHandler implements CheckServic
             }
 		}
 		props.put("changes", new Integer(changes));
-		
+
 	}
-	
+
 	public void initializeComponentFactory(ComponentTypeDescription cd, Element metadata) {
 	    cd.addProperty(new PropertyDescription("csh.simple", "java.lang.String", null));
         cd.addProperty(new PropertyDescription("csh.map", "java.util.Dictionary", null));
 	}
-	
+
 	public void start() {
 		if(sr == null) {
 			sr = getInstanceManager().getContext().registerService(CheckService.class.getName(), this, props);
 		}
 		isValid = true;
 	}
-	
+
 	public void stop() {
 		isValid = false;
 		synchronized(this) {
 			if(sr != null) { sr.unregister(); }
 		}
 	}
-	
+
 	public boolean check() {
 		if(isValid) { isValid = false;}
 		else { isValid = true; }
@@ -84,7 +84,7 @@ public class CheckServiceHandler extends PrimitiveHandler implements CheckServic
 	public Properties getProps() {
 		return props;
 	}
-	
+
 	public void stateChanged(int state) {
 		if (sr != null) {
 		    changes++;
@@ -96,7 +96,7 @@ public class CheckServiceHandler extends PrimitiveHandler implements CheckServic
 	public String getName() {
 		return NAMESPACE;
 	}
-	
+
 	public HandlerDescription getDescription() {
 		return new CheckServiceHandlerDescription(this);
 	}

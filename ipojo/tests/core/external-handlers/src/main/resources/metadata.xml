@@ -29,5 +29,11 @@
 		<!-- Empty dictionary -->
 		</property>
 	</instance>
-	
+
+	<!-- The handler will be added using the auto handler property -->
+	<component
+		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType1"
+		name="HANDLER-HandlerTesterWO" architecture="true">
+	</component>
+
 </ipojo>
