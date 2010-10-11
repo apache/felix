@@ -227,9 +227,12 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         for (Iterator i = printers.iterator(); i.hasNext();)
         {
             final PrinterDesc desc = (PrinterDesc) i.next();
-            final String label = desc.label;
-            final String title = desc.title;
-            pw.print("<li><a href='" + pluginRoot + label + ".nfo'>" + title + "</a></li>" );
+            if ( desc.match(ConfigurationPrinter.MODE_WEB) )
+            {
+                final String label = desc.label;
+                final String title = desc.title;
+                pw.print("<li><a href='" + pluginRoot + label + ".nfo'>" + title + "</a></li>" );
+            }
         }
         pw.println("</ul> <!-- end tabs on top -->");
         pw.println();
