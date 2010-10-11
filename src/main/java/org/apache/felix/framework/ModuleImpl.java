@@ -158,6 +158,13 @@ public class ModuleImpl implements Module
     // Flag indicating whether we are on an old JVM or not.
     private volatile static boolean m_isPreJava5 = false;
 
+    static ThreadLocal<Boolean> m_jarUrl = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return false;
+        }
+    };
+
     /**
      * This constructor is used by the extension manager, since it needs
      * a constructor that does not throw an exception.
@@ -1091,7 +1098,6 @@ public class ModuleImpl implements Module
         return getContentPath()[index - 1].getEntryAsStream(urlPath);
     }
 
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     public URL getLocalURL(int index, String urlPath)
     {
         if (urlPath.startsWith("/"))
@@ -1107,6 +1113,10 @@ public class ModuleImpl implements Module
 
     private URL createURL(int port, String path)
     {
+         if (useJarUrl())
+         {
+             return getLocalURL(port, path);
+         }
          // Add a slash if there is one already, otherwise
          // the is no slash separating the host from the file
          // in the resulting URL.
@@ -1129,6 +1139,13 @@ public class ModuleImpl implements Module
                  ex);
          }
          return null;
+    }
+
+    private boolean useJarUrl()
+    {
+        String val = (String) ((BundleImpl) getBundle()).getFramework()
+                        .getConfig().get("org.apache.felix.jarurls");
+        return m_jarUrl.get() && Boolean.parseBoolean(val);
     }
 
     //
