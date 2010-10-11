@@ -1712,7 +1712,16 @@ public class ModuleImpl implements Module
 
         public Enumeration getResources(String name)
         {
-            return ModuleImpl.this.getResourcesByDelegation(name);
+            boolean jarUrl = m_jarUrl.get();
+            try
+            {
+                m_jarUrl.set(true);
+                return ModuleImpl.this.getResourcesByDelegation(name);
+            }
+            finally
+            {
+                m_jarUrl.set(jarUrl);
+            }
         }
 
         protected Enumeration findResources(String name)
@@ -2013,7 +2022,16 @@ public class ModuleImpl implements Module
 
         public URL getResource(String name)
         {
-            return ModuleImpl.this.getResourceByDelegation(name);
+            boolean jarUrl = m_jarUrl.get();
+            try
+            {
+                m_jarUrl.set(true);
+                return ModuleImpl.this.getResourceByDelegation(name);
+            }
+            finally
+            {
+                m_jarUrl.set(jarUrl);
+            }
         }
 
         protected URL findResource(String name)
@@ -2028,7 +2046,16 @@ public class ModuleImpl implements Module
         // can't. As a workaround, we make findResources() delegate instead.
         protected Enumeration findResources(String name)
         {
-            return getResourcesByDelegation(name);
+            boolean jarUrl = m_jarUrl.get();
+            try
+            {
+                m_jarUrl.set(true);
+                return getResourcesByDelegation(name);
+            }
+            finally
+            {
+                m_jarUrl.set(jarUrl);
+            }
         }
 
         protected String findLibrary(String name)
