@@ -392,11 +392,14 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 m_isStarted = false;
                 needsStopping = true;
             }
-            m_services.remove(service);
         }
         if (needsStopping) {
             m_tracker.close();
             m_tracker = null;
+        }
+        //moved this down
+        synchronized (this) {
+            m_services.remove(service);
         }
     }
 
@@ -461,6 +464,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         synchronized (this) {
             services = m_services.toArray();
         }
+
         for (int i = 0; i < services.length; i++) {
             DependencyService ds = (DependencyService) services[i];
             if (makeUnavailable) {
