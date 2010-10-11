@@ -21,10 +21,15 @@ package org.apache.felix.dm.test;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+
+import java.util.Arrays;
+import java.util.List;
+
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -93,16 +98,19 @@ public class FELIX2369_ExtraDependencyTest extends Base
         public void init(Component s) {
             DependencyManager dm = s.getDependencyManager();
             m_ensure.step(m_startStep);
-            s.add(dm.createServiceDependency() // this dependency is available at this point
-                .setInstanceBound(true)
-                .setService(MyService1.class)
-                .setRequired(false)
-                .setCallbacks("bind", null));
-            s.add(dm.createServiceDependency() // not available: we should not be started
-                  .setInstanceBound(true)
-                  .setService(MyService2.class)
-                  .setRequired(true)
-                  .setAutoConfig("m_myService2"));
+            List extra = Arrays.asList(new ServiceDependency[] {
+                    dm.createServiceDependency() // this dependency is available at this point
+                      .setInstanceBound(true)
+                      .setService(MyService1.class)
+                      .setRequired(false)
+                      .setCallbacks("bind", null),
+                    dm.createServiceDependency() // not available: we should not be started
+                      .setInstanceBound(true)
+                      .setService(MyService2.class)
+                      .setRequired(true)
+                      .setAutoConfig("m_myService2")
+            });
+            s.add(extra);
         }
 
         public void start() {
