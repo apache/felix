@@ -212,8 +212,10 @@ public class ServiceLifecycleHandler
                                    dependency, m_srvMeta);
                 Dependency d = depBuilder.build(m_bundle, dm, true);
                 m_namedDeps.add(d);
-                service.add(d);
             }
+            
+            // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
+            service.add(m_namedDeps);
         }
     }
 
