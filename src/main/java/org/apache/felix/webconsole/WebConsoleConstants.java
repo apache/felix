@@ -19,6 +19,7 @@
 package org.apache.felix.webconsole;
 
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
@@ -61,6 +62,20 @@ public interface WebConsoleConstants
      * @since 2.0.0
      */
     public static final String PLUGIN_TITLE = "felix.webconsole.title";
+
+    /**
+     * The property marking a service as a configuration printer.
+     * This can be any service having either a printConfiguration(PrintWriter)
+     * or printConfiguration(PrintWriter, String) method - this is according
+     * to the ConfigurationPrinter and ModeAwareConfigurationPrinter
+     * interfaces.
+     *
+     * If a service has a {@link #PLUGIN_LABEL}, {@link #PLUGIN_TITLE} and
+     * this property, it is treated as a configuration printer servce.
+     *
+     * @since 3.1.4
+     */
+    public static final String CONFIG_PRINTER_MODES = "felix.webconsole.configprinter.modes";
 
     /**
      * The name of the service registration properties providing references

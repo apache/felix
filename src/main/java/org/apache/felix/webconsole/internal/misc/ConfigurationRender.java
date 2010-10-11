@@ -18,6 +18,7 @@ package org.apache.felix.webconsole.internal.misc;
 
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.text.*;
 import java.util.*;
@@ -31,8 +32,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.felix.webconsole.*;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 
 
@@ -280,11 +280,23 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    private final ArrayList getConfigurationPrinters()
+    private final synchronized List getConfigurationPrinters()
     {
         if ( cfgPrinterTracker == null )
         {
-            cfgPrinterTracker = new ServiceTracker( getBundleContext(), ConfigurationPrinter.SERVICE, null );
+            try
+            {
+                cfgPrinterTracker = new ServiceTracker( getBundleContext(),
+                        getBundleContext().createFilter("(|(" + Constants.OBJECTCLASS + "=" + ConfigurationPrinter.class.getName() + ")" +
+                                "(&(" + WebConsoleConstants.PLUGIN_LABEL + "=*)(&("
+                                + WebConsoleConstants.PLUGIN_TITLE + "=*)("
+                                + WebConsoleConstants.CONFIG_PRINTER_MODES + "=*))))"),
+                        null );
+            }
+            catch (InvalidSyntaxException e)
+            {
+                // ignore
+            }
             cfgPrinterTracker.open();
             cfgPrinterTrackerCount = -1;
         }
@@ -297,10 +309,56 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             {
                 for ( int i = 0; i < refs.length; i++ )
                 {
-                    ConfigurationPrinter cfgPrinter = ( ConfigurationPrinter ) cfgPrinterTracker.getService( refs[i] );
-                    addConfigurationPrinter( cp, cfgPrinter, refs[i].getBundle(), refs[i]
-                        .getProperty( WebConsoleConstants.PLUGIN_LABEL ), refs[i]
-                        .getProperty( ConfigurationPrinter.PROPERTY_MODES ) );
+                    final ServiceReference ref = refs[i];
+                    final Object service = cfgPrinterTracker.getService( ref );
+                    if ( service != null )
+                    {
+                        if ( service instanceof ConfigurationPrinter )
+                        {
+                            final ConfigurationPrinter cfgPrinter = (ConfigurationPrinter) service;
+                            addConfigurationPrinter( cp, cfgPrinter, refs[i].getBundle(),
+                                    ref.getProperty( WebConsoleConstants.PLUGIN_LABEL ),
+                                    ref.getProperty( ConfigurationPrinter.PROPERTY_MODES ) );
+                        }
+                        else
+                        {
+                            ConfigurationPrinter cfgPrinter = null;
+                            // first: printConfiguration(PrintWriter, String)
+                            try
+                            {
+                                final Method method = service.getClass().getDeclaredMethod("printConfiguration",
+                                        new Class[] {PrintWriter.class, String.class});
+                                cfgPrinter = new ModeAwareConfigurationPrinterAdapter(service,
+                                        (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE ), method);
+                            }
+                            catch (NoSuchMethodException nsme)
+                            {
+                                // ignore
+                            }
+                            if ( cfgPrinter == null )
+                            {
+                                // second: printConfiguration(PrintWriter)
+                                try
+                                {
+                                   final Method method = service.getClass().getDeclaredMethod("printConfiguration",
+                                           new Class[] {PrintWriter.class});
+                                   cfgPrinter = new ConfigurationPrinterAdapter(service,
+                                           (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE ), method);
+                                }
+                                catch (NoSuchMethodException nsme)
+                                {
+                                    // ignore
+                                }
+                            }
+
+                            if ( cfgPrinter != null )
+                            {
+                                addConfigurationPrinter( cp, cfgPrinter, ref.getBundle(),
+                                        ref.getProperty( WebConsoleConstants.PLUGIN_LABEL ),
+                                        ref.getProperty( WebConsoleConstants.CONFIG_PRINTER_MODES ) );
+                            }
+                        }
+                    }
                 }
             }
             configurationPrinters = new ArrayList(cp.values());
@@ -311,28 +369,28 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    private final void addConfigurationPrinter( final SortedMap printers, final ConfigurationPrinter cfgPrinter,
-        final Bundle provider, final Object labelProperty, final Object mode )
+    private final void addConfigurationPrinter( final SortedMap printers,
+            final ConfigurationPrinter cfgPrinter,
+            final Bundle provider,
+            final Object labelProperty,
+            final Object mode )
     {
-        if ( cfgPrinter != null )
+        final String title = getTitle( cfgPrinter.getTitle(), provider );
+        String sortKey = title;
+        if ( printers.containsKey( sortKey ) )
         {
-            final String title = getTitle( cfgPrinter.getTitle(), provider );
-            String sortKey = title;
-            if ( printers.containsKey( sortKey ) )
+            int idx = -1;
+            String idxTitle;
+            do
             {
-                int idx = -1;
-                String idxTitle;
-                do
-                {
-                    idx++;
-                    idxTitle = sortKey + idx;
-                }
-                while ( printers.containsKey( idxTitle ) );
-                sortKey = idxTitle;
+                idx++;
+                idxTitle = sortKey + idx;
             }
-            String label = ( labelProperty instanceof String ) ? ( String ) labelProperty : sortKey;
-            printers.put( sortKey, new PrinterDesc( cfgPrinter, title, label, mode ) );
+            while ( printers.containsKey( idxTitle ) );
+            sortKey = idxTitle;
         }
+        String label = ( labelProperty instanceof String ) ? ( String ) labelProperty : sortKey;
+        printers.put( sortKey, new PrinterDesc( cfgPrinter, title, label, mode ) );
     }
 
 
