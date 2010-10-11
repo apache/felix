@@ -282,6 +282,18 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         }
     }
 
+    private Method searchMethod(final Object obj, final String mName, final Class[] params)
+    {
+        try
+        {
+            return obj.getClass().getDeclaredMethod(mName, params);
+        }
+        catch (NoSuchMethodException nsme)
+        {
+            // ignore
+        }
+        return null;
+    }
 
     private final synchronized List getConfigurationPrinters()
     {
@@ -326,31 +338,25 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
                         else
                         {
                             ConfigurationPrinter cfgPrinter = null;
+
                             // first: printConfiguration(PrintWriter, String)
-                            try
+                            final Method method2Params = this.searchMethod(service, "printConfiguration",
+                                    new Class[] {PrintWriter.class, String.class});
+                            if ( method2Params != null )
                             {
-                                final Method method = service.getClass().getDeclaredMethod("printConfiguration",
-                                        new Class[] {PrintWriter.class, String.class});
                                 cfgPrinter = new ModeAwareConfigurationPrinterAdapter(service,
-                                        (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE ), method);
+                                        (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE ), method2Params);
                             }
-                            catch (NoSuchMethodException nsme)
-                            {
-                                // ignore
-                            }
+
                             if ( cfgPrinter == null )
                             {
                                 // second: printConfiguration(PrintWriter)
-                                try
+                                final Method method1Params = this.searchMethod(service, "printConfiguration",
+                                        new Class[] {PrintWriter.class});
+                                if ( method1Params != null )
                                 {
-                                   final Method method = service.getClass().getDeclaredMethod("printConfiguration",
-                                           new Class[] {PrintWriter.class});
                                    cfgPrinter = new ConfigurationPrinterAdapter(service,
-                                           (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE ), method);
-                                }
-                                catch (NoSuchMethodException nsme)
-                                {
-                                    // ignore
+                                           (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE ), method1Params);
                                 }
                             }
 
@@ -662,13 +668,29 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             if ( desc.match(mode) )
             {
                 // check if printer implements binary configuration printer
+                URL[] attachments = null;
                 if ( desc.printer instanceof AttachmentProvider )
                 {
-                    final URL[] attachments = ((AttachmentProvider)desc.printer).getAttachments(mode);
-                    if ( attachments != null )
+                    attachments = ((AttachmentProvider)desc.printer).getAttachments(mode);
+                }
+                else
+                {
+                    final Method m = this.searchMethod(desc.printer, "getAttachments", new Class[] {String.class});
+                    if ( m != null )
                     {
-                        cf.handleAttachments( desc.title, attachments );
+                        try
+                        {
+                            attachments = (URL[])m.invoke(desc.printer, new Object[] {mode});
+                        }
+                        catch (Throwable t)
+                        {
+                            // ignore this!
+                        }
                     }
+                }
+                if ( attachments != null )
+                {
+                    cf.handleAttachments( desc.title, attachments );
                 }
             }
         }
