@@ -812,7 +812,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	class Tracked extends AbstractTracked implements ServiceListener {
 	    /** A list of services that are currently hidden because there is an aspect available with a higher ranking. */
 	    private final List m_hidden = new ArrayList();
-
+	    
 	    /**
 	     * Returns the highest hidden aspect for the specified service ID.
 	     * 
@@ -981,33 +981,30 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 						+ event.getType() + "]: " + reference);  
 			}
 
+			long sid = ServiceUtil.getServiceId(reference);
 			switch (event.getType()) {
 				case ServiceEvent.REGISTERED :
 				case ServiceEvent.MODIFIED :
 				    ServiceReference higher = null;
 				    ServiceReference lower = null;
-				    boolean isAspect = ServiceUtil.isAspect(reference);
-				    if (true /* WAS isAspect */) {
-    				    long sid = ServiceUtil.getServiceId(reference);
-    				    ServiceReference sr = highestTracked(sid);
-    				    if (sr != null) {
-    				        int ranking = ServiceUtil.getRanking(reference);
-    				        int trackedRanking = ServiceUtil.getRanking(sr);
-    				        if (ranking > trackedRanking) {
-    				            // found a higher ranked one!
-    				            if (DEBUG) {
-    				                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a higher ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
-    				            }
-    				            higher = sr;
-    				        }
-    				        else {
-    				            // found lower ranked one!
-                                if (DEBUG) {
-                                    System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
-                                }
-    				            lower = sr;
-    				        }
-    				    }
+				    ServiceReference sr = highestTracked(sid);
+				    if (sr != null) {
+				        int ranking = ServiceUtil.getRanking(reference);
+				        int trackedRanking = ServiceUtil.getRanking(sr);
+				        if (ranking > trackedRanking) {
+				            // found a higher ranked one!
+				            if (DEBUG) {
+				                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a higher ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
+				            }
+				            higher = sr;
+				        }
+				        else {
+				            // found lower ranked one!
+                            if (DEBUG) {
+                                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
+                            }
+				            lower = sr;
+				        }
 				    }
 				    
 					if (listenerFilter != null) { // service listener added with filter
@@ -1060,26 +1057,21 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 							 */
 						}
 						else {
-		                    higher = null;
-		                    isAspect = ServiceUtil.isAspect(reference);
-		                    if (true /* WAS isAspect */) {
-		                        long sid = ServiceUtil.getServiceId(reference);
-		                        ServiceReference sr = highestHidden(sid);
-		                        if (sr != null) {
-	                                if (DEBUG) {
-	                                    System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a hidden aspect: " + ServiceUtil.toString(reference));
-	                                }
-		                            higher = sr;
+		                    ServiceReference ht = highestTracked(sid);
+		                    ServiceReference hh = highestHidden(sid);
+		                    if (reference.equals(ht)) {
+		                        try {
+		                            if (hh != null) {
+		                                unhide(hh);
+		                                track(hh, null);
+		                            }
+		                        }
+		                        finally {
+		                            untrack(reference, event);
 		                        }
 		                    }
-		                    try {
-    		                    if (higher != null) {
-    		                        unhide(higher);
-    		                        track(higher, null);
-    		                    }
-		                    }
-		                    finally {
-		                        untrack(reference, event);
+		                    else {
+		                        unhide(reference);
 		                    }
 							/*
 							 * If the customizer throws an unchecked exception,
@@ -1090,27 +1082,22 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 					break;
                 case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ :
 				case ServiceEvent.UNREGISTERING :
-                    higher = null;
-                    isAspect = ServiceUtil.isAspect(reference);
-                    if (true /* WAS isAspect */) {
-                        long sid = ServiceUtil.getServiceId(reference);
-                        ServiceReference sr = highestHidden(sid);
-                        if (sr != null) {
-                            if (DEBUG) {
-                                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a hidden aspect: " + ServiceUtil.toString(reference));
-                            }
-                            higher = sr;
-                        }
-                    }
-                    try {
-                        if (higher != null) {
-                            unhide(higher);
-                            track(higher, null);
-                        }
-                    }
-                    finally {
-                        untrack(reference, event);
-                    }
+				    ServiceReference ht = highestTracked(sid);
+				    ServiceReference hh = highestHidden(sid);
+				    if (reference.equals(ht)) {
+				        try {
+    				        if (hh != null) {
+    				            unhide(hh);
+    				            track(hh, null);
+    				        }
+				        }
+				        finally {
+				            untrack(reference, event);
+				        }
+				    }
+				    else {
+				        unhide(reference);
+				    }
 					/*
 					 * If the customizer throws an unchecked exception, it is
 					 * safe to let it propagate
