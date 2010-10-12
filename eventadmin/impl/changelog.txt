@@ -1,3 +1,10 @@
+Changes from 1.2.4 to 1.2.6
+---------------------------
+
+** Bug
+    * [FELIX-2608] - Threads should be daemon threads
+
+
 Changes from 1.2.2 to 1.2.4
 ---------------------------
 
