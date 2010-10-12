@@ -179,7 +179,14 @@ function renderDetails( data ) {
                     for(var pi in prop.value) {
                         var value = prop.value[pi];
                         if (i > 0) { txt = txt + "<br/>"; }
-                        txt = txt + value;
+		                var span;
+		                if (value.substring(0, 6) == "INFO: ") {
+		                	txt = txt + "<span class='ui-state-info-text'>" + value.substring(5) + "</span>";
+		                } else if (value.substring(0, 7) == "ERROR: ") {
+		                	txt = txt + "<span class='ui-state-error-text'>" + value.substring(6) + "</span>";
+		                } else {
+		                	txt = txt + value;
+		                }
                         i++;
                     }
                 } else {
