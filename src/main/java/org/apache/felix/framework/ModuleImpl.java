@@ -1526,16 +1526,22 @@ public class ModuleImpl implements Module
             {
                 break;
             }
+            // Break if the current class came from a bundle, since we should
+            // not implicitly boot delegate in that case.
+            else if (ModuleClassLoader.class.isInstance(classes[i].getClassLoader()))
+            {
+                break;
+            }
             else if (isClassNotLoadedFromBundle(classes[i]))
             {
-                // If the instigating class was not from a bundle,
-                // then delegate to the parent class loader; otherwise,
-                // break out of loop and return null.
+                // Check if the current class was loaded from a class loader that
+                // came from a bundle and if so then enforce strict OSGi rules
+                // and do not implicitly boot delegate.
                 boolean delegate = true;
                 ClassLoader last = null;
                 for (ClassLoader cl = classes[i].getClassLoader(); 
-                (cl != null) && (last != cl); 
-                cl = cl.getClass().getClassLoader())
+                    (cl != null) && (last != cl);
+                    cl = cl.getClass().getClassLoader())
                 {
                     last = cl;
                     if (ModuleClassLoader.class.isInstance(cl))
@@ -1553,8 +1559,8 @@ public class ModuleImpl implements Module
                     {
                         // Return the class or resource from the parent class loader.
                         return (isClass)
-                        ? (Object) this.getClass().getClassLoader().loadClass(name)
-                            : (Object) this.getClass().getClassLoader().getResource(name);
+                            ? (Object) this.getClass().getClassLoader().loadClass(name)
+                                : (Object) this.getClass().getClassLoader().getResource(name);
                     }
                     catch (NoClassDefFoundError ex)
                     {
