@@ -42,11 +42,6 @@ public class CoordinatorImpl implements Coordinator {
         return mgr.create(name);
     }
 
-    void unregister(final CoordinationImpl c) {
-        // TODO: check permission
-        mgr.unregister(c);
-    }
-
     public Coordination begin(String name) {
         // TODO: check permission
         return mgr.begin(name);

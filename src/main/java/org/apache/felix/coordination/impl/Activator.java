@@ -20,23 +20,39 @@ package org.apache.felix.coordination.impl;
 
 import java.util.Hashtable;
 
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
+import org.apache.felix.jmx.service.coordination.CoordinatorMBean;
 import org.apache.felix.service.coordination.Coordinator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
 @SuppressWarnings("deprecation")
 public class Activator implements BundleActivator {
 
     private CoordinationMgr mgr;
 
+    private ServiceTracker mbeanServerTracker;
+
     private ServiceRegistration coordinatorService;
 
-    public void start(BundleContext context) throws Exception {
+    public void start(BundleContext context) {
         mgr = new CoordinationMgr();
+
+        try {
+            mbeanServerTracker = new MBeanServerTracker(context, mgr);
+            mbeanServerTracker.open();
+        } catch (MalformedObjectNameException e) {
+            // TODO log
+        }
 
         ServiceFactory factory = new CoordinatorFactory(mgr);
         Hashtable<String, String> props = new Hashtable<String, String>();
@@ -47,10 +63,15 @@ public class Activator implements BundleActivator {
             Coordinator.class.getName(), factory, props);
     }
 
-    public void stop(BundleContext context) throws Exception {
+    public void stop(BundleContext context) {
         if (coordinatorService != null) {
             coordinatorService.unregister();
             coordinatorService = null;
+        }
+
+        if (mbeanServerTracker != null) {
+            mbeanServerTracker.close();
+            mbeanServerTracker = null;
         }
 
         mgr.cleanUp();
@@ -73,5 +94,43 @@ public class Activator implements BundleActivator {
             // nothing to do
         }
 
+    }
+
+    static final class MBeanServerTracker extends ServiceTracker {
+
+        private final CoordinationMgr mgr;
+
+        private final ObjectName objectName;
+
+        MBeanServerTracker(final BundleContext context,
+                final CoordinationMgr mgr) throws MalformedObjectNameException {
+            super(context, MBeanServer.class.getName(), null);
+            this.mgr = mgr;
+            this.objectName = new ObjectName(CoordinatorMBean.OBJECTNAME);
+        }
+
+        @Override
+        public Object addingService(ServiceReference reference) {
+            MBeanServer server = (MBeanServer) super.addingService(reference);
+
+            try {
+                server.registerMBean(mgr, objectName);
+            } catch (Exception e) {
+                // TODO: log
+            }
+
+            return server;
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            try {
+                ((MBeanServer) service).unregisterMBean(objectName);
+            } catch (Exception e) {
+                // TODO: log
+            }
+
+            super.removedService(reference, service);
+        }
     }
 }
