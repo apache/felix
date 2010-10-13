@@ -25,8 +25,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
+import org.osgi.util.tracker.ServiceTracker;
 
 
 final class OsgiManagerHttpContext implements HttpContext
@@ -38,18 +40,25 @@ final class OsgiManagerHttpContext implements HttpContext
 
     private static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
 
-    String realm;
-
-    WebConsoleSecurityProvider securityProvider;
-
     private final HttpContext base;
 
+    private final ServiceTracker tracker;
 
-    OsgiManagerHttpContext( HttpService httpService, String realm, WebConsoleSecurityProvider securityProvider)
+    private final String username;
+
+    private final String password;
+
+    private final String realm;
+
+
+    OsgiManagerHttpContext( HttpService httpService, final ServiceTracker tracker, final String username,
+        final String password, final String realm )
     {
-        this.base = httpService.createDefaultHttpContext();
+        this.tracker = tracker;
+        this.username = username;
+        this.password = password;
         this.realm = realm;
-        this.securityProvider = securityProvider;
+        this.base = httpService.createDefaultHttpContext();
     }
 
 
@@ -87,11 +96,12 @@ final class OsgiManagerHttpContext implements HttpContext
      */
     public boolean handleSecurity( HttpServletRequest request, HttpServletResponse response )
     {
+        Object provider = tracker.getService();
 
-        // don't care for authentication if no user name is configured
-        if ( this.securityProvider == null )
+        // check whether the security provider can fully handle the request
+        if ( provider instanceof WebConsoleSecurityProvider2 )
         {
-            return true;
+            return ( ( WebConsoleSecurityProvider2 ) provider ).authenticate( request, response );
         }
 
         // Return immediately if the header is missing
@@ -110,27 +120,30 @@ final class OsgiManagerHttpContext implements HttpContext
                 String authInfo = authHeader.substring( blank ).trim();
 
                 // Check whether authorization type matches
-                if ( authType.equalsIgnoreCase( AUTHENTICATION_SCHEME_BASIC ))
+                if ( authType.equalsIgnoreCase( AUTHENTICATION_SCHEME_BASIC ) )
                 {
                     try
                     {
                         String srcString = base64Decode( authInfo );
-                        int i = srcString.indexOf(':');
-                        String username = srcString.substring(0, i);
-                        String password = srcString.substring(i + 1);
+                        int i = srcString.indexOf( ':' );
+                        String username = srcString.substring( 0, i );
+                        String password = srcString.substring( i + 1 );
 
                         // authenticate
-                        Object id = securityProvider.authenticate( username, password );
-                        if (id != null) {
+                        if ( authenticate( provider, username, password ) )
+                        {
                             // as per the spec, set attributes
-                            request.setAttribute( HttpContext.AUTHENTICATION_TYPE, "" );
+                            request.setAttribute( HttpContext.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
                             request.setAttribute( HttpContext.REMOTE_USER, username );
+
+                            // set web console user attribute
+                            request.setAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE, username );
 
                             // succeed
                             return true;
                         }
                     }
-                    catch (Exception e)
+                    catch ( Exception e )
                     {
                         // Ignore
                     }
@@ -143,7 +156,7 @@ final class OsgiManagerHttpContext implements HttpContext
         {
             response.setHeader( HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"" );
             response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
-            response.setContentLength(0);
+            response.setContentLength( 0 );
             response.flushBuffer();
         }
         catch ( IOException ioe )
@@ -155,7 +168,28 @@ final class OsgiManagerHttpContext implements HttpContext
         return false;
     }
 
-    public static String base64Decode( String srcString )
+
+    public boolean authorize( final HttpServletRequest request, String role )
+    {
+        Object user = request.getAttribute( WebConsoleSecurityProvider2.USER_ATTRIBUTE );
+        if ( user != null )
+        {
+            WebConsoleSecurityProvider provider = ( WebConsoleSecurityProvider ) tracker.getService();
+            if ( provider != null )
+            {
+                return provider.authorize( user, role );
+            }
+
+            // no provider, grant access (backwards compatibility)
+            return true;
+        }
+
+        // missing user in the request, deny access
+        return false;
+    }
+
+
+    private static String base64Decode( String srcString )
     {
         byte[] transformed = Base64.decodeBase64( srcString );
         try
@@ -166,6 +200,20 @@ final class OsgiManagerHttpContext implements HttpContext
         {
             return new String( transformed );
         }
+    }
+
+
+    private boolean authenticate( Object provider, String username, String password )
+    {
+        if ( provider != null )
+        {
+            return ( ( WebConsoleSecurityProvider ) provider ).authenticate( username, password ) != null;
+        }
+        if ( this.username.equals( username ) && this.password.equals( password ) )
+        {
+            return true;
+        }
+        return false;
     }
 
 }

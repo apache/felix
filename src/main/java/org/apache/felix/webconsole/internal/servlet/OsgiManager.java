@@ -347,6 +347,13 @@ public class OsgiManager extends GenericServlet
             configurationListener = null;
         }
 
+        // stop tracking security provider
+        if ( securityProviderTracker != null )
+        {
+            securityProviderTracker.close();
+            securityProviderTracker = null;
+        }
+
         this.bundleContext = null;
     }
 
@@ -708,7 +715,8 @@ public class OsgiManager extends GenericServlet
         // register the servlet and resources
         try
         {
-            HttpContext httpContext = new OsgiManagerHttpContext( httpService, realm, new SecurityProvider( securityProviderTracker, userId, password ) );
+            HttpContext httpContext = new OsgiManagerHttpContext( httpService, securityProviderTracker, userId,
+                password, realm );
 
             Dictionary servletConfig = toStringConfig( config );
 
@@ -950,7 +958,7 @@ public class OsgiManager extends GenericServlet
         }
         return stringConfig;
     }
-    
+
     private Map langMap;
 
     private final Map getLangMap()
@@ -975,35 +983,6 @@ public class OsgiManager extends GenericServlet
             }
         }
         return langMap = map;
-    }
-
-    static class SecurityProvider implements WebConsoleSecurityProvider {
-
-        final ServiceTracker tracker;
-        final String username;
-        final String password;
-
-        SecurityProvider( ServiceTracker tracker, String username, String password ) {
-            this.tracker = tracker;
-            this.username = username;
-            this.password = password;
-        }
-
-        public Object authenticate(String username, String password) {
-            WebConsoleSecurityProvider provider = (WebConsoleSecurityProvider) tracker.getService();
-            if (provider != null) {
-                return provider.authenticate(username, password);
-            }
-            if (this.username.equals(username) && this.password.equals(password)) {
-                return username;
-            }
-            return null;
-        }
-
-        public boolean authorize(Object user, String role) {
-            // no op: authorize everything
-            return true;
-        }
     }
 
 }

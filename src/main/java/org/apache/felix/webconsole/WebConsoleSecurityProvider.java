@@ -18,24 +18,41 @@
  */
 package org.apache.felix.webconsole;
 
+
 /**
  * The <code>WebConsoleSecurityProvider</code> is a service interface allowing
- * to use an external system to authenticate users before granting access to
- * the Web Console.
+ * to use an external system to authenticate users before granting access to the
+ * Web Console.
  *
- * @since Web Console 3.0.2
+ * @since 3.1.0; Web Console Bundle 3.1.0
  */
-public interface WebConsoleSecurityProvider {
+public interface WebConsoleSecurityProvider
+{
 
     /**
-     * Check if the user with the specified password exists and return an
-     * object identifying the user, else null
+     * Authenticates the user with the given user name and password.
+     *
+     * @param username The name of the user presented by the client
+     * @param password The password presented by the client
+     * @return Some object representing the authenticated user indicating general
+     *         access to be granted to the web console. If the user cannot be
+     *         authenticated (e.g. unknown user name or wrong password) or the
+     *         user must not be allowed access to the web console at all
+     *         <code>null</code> must be returned from this method.
      */
-    public Object authenticate(String username, String password);
+    public Object authenticate( String username, String password );
+
 
     /**
-     * Check that the authenticated user has the given role permission
+     * Checks whether bthe authenticated user has the given role permission.
+     *
+     * @param user The object referring to the authenticated user. This is the
+     *      object returned from the {@link #authenticate(String, String)}
+     *      method and will never be <code>null</code>.
+     * @param role The requested role
+     * @return <code>true</code> if the user is given permission for the given
+     *      role.
      */
-    public boolean authorize(Object user, String role);
+    public boolean authorize( Object user, String role );
 
 }
