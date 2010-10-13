@@ -66,6 +66,8 @@ public class BundleCache
 {
     public static final String CACHE_BUFSIZE_PROP = "felix.cache.bufsize";
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
+    // TODO: CACHE - Remove this once we migrate the cache format.
+    public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
 
     protected static transient int BUFSIZE = 4096;
     protected static transient final String CACHE_DIR_NAME = "felix-cache";
@@ -154,7 +156,7 @@ public class BundleCache
             archiveList.toArray(new BundleArchive[archiveList.size()]);
     }
 
-    public BundleArchive create(long id, String location, InputStream is)
+    public BundleArchive create(long id, int startLevel, String location, InputStream is)
         throws Exception
     {
         File cacheDir = determineCacheDir(m_configMap);
@@ -167,7 +169,8 @@ public class BundleCache
         {
             // Create the archive and add it to the list of archives.
             BundleArchive ba =
-                new BundleArchive(m_logger, m_configMap, archiveRootDir, id, location, is);
+                new BundleArchive(
+                    m_logger, m_configMap, archiveRootDir, id, startLevel, location, is);
             return ba;
         }
         catch (Exception ex)
