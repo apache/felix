@@ -2461,7 +2461,7 @@ public class Felix extends BundleImpl implements Framework
                 try
                 {
                     // Add the bundle to the cache.
-                    ba = m_cache.create(id, location, is);
+                    ba = m_cache.create(id, getInitialBundleStartLevel(), location, is);
                 }
                 catch (Exception ex)
                 {
@@ -2575,15 +2575,6 @@ public class Felix extends BundleImpl implements Framework
                 {
                     throw new BundleException("Could not create bundle object.", ex);
                 }
-            }
-
-            // If the bundle is new, then set its start level; existing
-            // bundles already have their start level set.
-            if (isNew)
-            {
-                // This will persistently set the bundle's start level.
-                bundle.setStartLevel(getInitialBundleStartLevel());
-                bundle.setLastModified(System.currentTimeMillis());
             }
 
             // Acquire global lock.
