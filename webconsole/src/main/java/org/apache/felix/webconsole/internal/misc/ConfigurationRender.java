@@ -156,7 +156,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
 
             final String name = getRequestedPrinterName(request);
 
-            ConfigurationWriter pw = new HtmlConfigurationWriter( response.getWriter() );
+            HtmlConfigurationWriter pw = new HtmlConfigurationWriter( response.getWriter() );
             pw.println ( "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"" );
             pw.println ( "  \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" );
             pw.println ( "<html xmlns=\"http://www.w3.org/1999/xhtml\">" );
@@ -168,7 +168,9 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
                 for (Iterator i = printers.iterator(); i.hasNext();)
                 {
                     final ConfigurationPrinterAdapter desc = (ConfigurationPrinterAdapter) i.next();
+                    pw.enableFilter( desc.escapeHtml() );
                     printConfigurationPrinter( pw, desc, ConfigurationPrinter.MODE_WEB );
+                    pw.enableFilter( false );
                     pw.println( "</div></body></html>" );
                     return;
                 }
@@ -226,7 +228,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         for (Iterator i = printers.iterator(); i.hasNext();)
         {
             final ConfigurationPrinterAdapter desc = (ConfigurationPrinterAdapter) i.next();
-            if ( desc.match(ConfigurationPrinter.MODE_WEB) )
+            if ( desc.match( ConfigurationPrinter.MODE_WEB ) )
             {
                 final String label = desc.label;
                 final String title = desc.title;
@@ -487,15 +489,19 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         }
 
 
+        void enableFilter( final boolean doFilter )
+        {
+            this.doFilter = doFilter;
+        }
+
+
         public void title( String title )
         {
-            doFilter = true;
         }
 
 
         public void end()
         {
-            doFilter = false;
         }
 
 
