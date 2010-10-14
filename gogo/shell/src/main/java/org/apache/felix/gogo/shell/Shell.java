@@ -61,6 +61,7 @@ public class Shell
                 "  args are available as session variables $1..$9 and $args.",
                 "Usage: gosh [OPTIONS] [script-file [args..]]",
                 "  -c --command             pass all remaining args to sub-shell",
+                "  -i --nointeractive       don't start interactive session",
                 "     --login               login shell (same session, reads etc/gosh_profile)",
                 "  -s --noshutdown          don't shutdown framework when script completes",
                 "  -x --xtrace              echo commands before execution",
@@ -71,6 +72,7 @@ public class Shell
         List<String> args = opt.args();
 
         boolean login = opt.isSet("login");
+        boolean interactive = !opt.isSet("nointeractive");
 
         if (opt.isSet("help"))
         {
@@ -95,7 +97,7 @@ public class Shell
             newSession.put("echo", true);
         }
 
-        if (login)
+        if (login && interactive)
         {
             URI uri = baseURI.resolve("etc/gosh_profile");
             if (!new File(uri).exists())
@@ -117,11 +119,14 @@ public class Shell
             }
         }
 
-        Object result;
+        Object result = null;
 
         if (args.isEmpty())
         {
-            result = console(newSession);
+            if (interactive)
+            {
+                result = console(newSession);
+            }
         }
         else
         {
@@ -159,7 +164,7 @@ public class Shell
             result = newSession.execute(program);
         }
 
-        if (login && !opt.isSet("noshutdown"))
+        if (login && interactive && !opt.isSet("noshutdown"))
         {
             System.out.println("gosh: stopping framework");
             shutdown();
