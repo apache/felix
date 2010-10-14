@@ -29,8 +29,9 @@ import java.io.PrintWriter;
  * A configuration printer is currently used in three modes: displayed in
  * a tab of the configuration web console plugin, included in a downloadable
  * zip of the configuration or a downloadable txt file.
- * With the {@link #PROPERTY_MODES} property this service can specify when
- * it should be included. The default mode is {@link #MODE_ALWAYS}.
+ * With the {@link WebConsoleConstants#CONFIG_PRINTER_MODES} property this
+ * service can specify when it should be included.
+ * The default mode is {@link #MODE_ALWAYS}.
  */
 public interface ConfigurationPrinter
 {
@@ -64,6 +65,7 @@ public interface ConfigurationPrinter
      * The value of this property is either a single string or an
      * array of strings.
      * @since 3.0
+     * @deprecated Use {@link WebConsoleConstants#CONFIG_PRINTER_MODES}
      */
     String PROPERTY_MODES = "modes";
 
@@ -78,7 +80,7 @@ public interface ConfigurationPrinter
     /**
      * Prints the configuration report to the given <code>printWriter</code>.
      * Implementations are free to print whatever information they deem useful.
-     * 
+     *
      * @param printWriter where to write the configuration data. It might be flushed,
      * but must not be closed.
      */
