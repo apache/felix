@@ -33,10 +33,10 @@ import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
-import org.apache.felix.dm.Component;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -70,14 +70,15 @@ public class ResourceDependencyTest extends Base {
             .setImplementation(c)
             .add(m.createResourceDependency()
                 .setFilter("(&(path=/path/to/*.txt)(host=localhost))")
-                .setCallbacks("add", "remove"));
+                .setCallbacks("add", "change", "remove"));
         Component dynamicProxyConsumer = m.createComponent()
             .setFactory(new ResourceConsumerFactory(e), "create")
             .add(m.createResourceDependency()
                     .setFilter("(path=*.doc)")
                     .setCallbacks("add", null)); 
+        ResourceProvider provider = new ResourceProvider(e);
         Component resourceProvider = m.createComponent()
-            .setImplementation(new ResourceProvider(e))
+            .setImplementation(provider)
             .add(m.createServiceDependency()
                 .setService(ResourceHandler.class)
                 .setCallbacks("add", "remove"));
@@ -96,6 +97,13 @@ public class ResourceDependencyTest extends Base {
         m.add(dynamicProxyConsumer);
         // ensure the resource was injected properly
         e.waitForStep(4, 5000);
+        
+        // now change a resource and see if it gets propagated to the consumer
+        provider.changeResource();
+        
+        // wait for change callback
+        e.waitForStep(5, 5000);
+        e.step(6);
         
         // cleanup
         m.remove(dynamicProxyConsumer);
@@ -118,6 +126,9 @@ public class ResourceDependencyTest extends Base {
             m_counter++;
             m_ensure.step();
         }
+        public void change(URL resource) {
+            m_ensure.step();
+        }
         public void remove(URL resource) {
             m_counter--;
         }
@@ -129,7 +140,7 @@ public class ResourceDependencyTest extends Base {
     static class ResourceProvider {
         private volatile BundleContext m_context;
         private final Ensure m_ensure;
-        private final Map m_handlers = new HashMap();
+        private final Map<ResourceHandler, Filter> m_handlers = new HashMap<ResourceHandler, Filter>();
         private URL[] m_resources;
         
         public ResourceProvider(Ensure ensure) {
@@ -159,13 +170,26 @@ public class ResourceDependencyTest extends Base {
             synchronized (m_handlers) {
                 m_handlers.put(handler, filter);
             }
+            for (int i = 0; i < m_resources.length; i++) {
+                if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                    handler.added(m_resources[i]);
+                }
+            }
+        }
+
+        public void changeResource() {
+            Filter filter;
+            for (Entry<ResourceHandler, Filter> entry : m_handlers.entrySet()) {
                 for (int i = 0; i < m_resources.length; i++) {
-                    if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                        handler.added(m_resources[i]);
+                    if (i == 0) {
+                        if (entry.getValue().match(ResourceUtil.createProperties(m_resources[i]))) {
+                            entry.getKey().changed(m_resources[i]); 
+                        }
                     }
                 }
             }
-
+        }
+        
         public void remove(ServiceReference ref, ResourceHandler handler) {
             Filter filter;
             synchronized (m_handlers) {
@@ -175,12 +199,12 @@ public class ResourceDependencyTest extends Base {
         }
 
         private void removeResources(ResourceHandler handler, Filter filter) {
-                for (int i = 0; i < m_resources.length; i++) {
-                    if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
-                        handler.removed(m_resources[i]);
-                    }
+            for (int i = 0; i < m_resources.length; i++) {
+                if (filter.match(ResourceUtil.createProperties(m_resources[i]))) {
+                    handler.removed(m_resources[i]);
                 }
             }
+        }
 
         public void destroy() {
             Entry[] handlers;
@@ -190,8 +214,6 @@ public class ResourceDependencyTest extends Base {
             for (int i = 0; i < handlers.length; i++) {
                 removeResources((ResourceHandler) handlers[i].getKey(), (Filter) handlers[i].getValue());
             }
-            
-            System.out.println("DESTROY..." + m_handlers.size());
         }
     }
     
@@ -201,7 +223,6 @@ public class ResourceDependencyTest extends Base {
             m_ensure = ensure;
         }
         public Object create() {
-            System.out.println("create");
             ResourceConsumer resourceConsumer = new ResourceConsumer(m_ensure);
             // create a dynamic proxy for the ResourceProvider
             return Proxy.newProxyInstance(resourceConsumer.getClass().getClassLoader(), resourceConsumer.getClass().getInterfaces(), new DynamicProxyHandler(resourceConsumer, m_ensure));
@@ -219,7 +240,6 @@ public class ResourceDependencyTest extends Base {
 
         public void add(URL resource) {
             m_ensure.step(4);
-            System.out.println("Add resource: " + resource);
         }
 
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
