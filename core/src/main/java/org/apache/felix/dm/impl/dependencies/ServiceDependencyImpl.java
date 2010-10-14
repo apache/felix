@@ -422,6 +422,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         for (int i = 0; i < services.length; i++) {
             DependencyService ds = (DependencyService) services[i];
             if (makeAvailable) {
+                if (ds.isInstantiated() && isInstanceBound() && isRequired()) {
+                    invokeAdded(ds, ref, service);
+                }
                 // The dependency callback will be defered until all required dependency are available.
                 ds.dependencyAvailable(this);
                 if (!isRequired()) {
@@ -469,7 +472,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             DependencyService ds = (DependencyService) services[i];
             if (makeUnavailable) {
                 ds.dependencyUnavailable(this);
-                if (!isRequired()) {
+                if (!isRequired() || (ds.isInstantiated() && isInstanceBound())) {
                     invokeRemoved(ds, ref, service);
                 }
             }
