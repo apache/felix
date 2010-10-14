@@ -35,6 +35,7 @@ public class ConfigurationPrinterAdapter
     public String title;
     public String label;
     private final String[] modes;
+    private final boolean escapeHtml;
     private Method modeAwarePrintMethod;
     private Method printMethod;
     private Method attachmentMethod;
@@ -95,12 +96,27 @@ public class ConfigurationPrinterAdapter
         if ( cfgPrinter != null )
         {
             Object label =  ref.getProperty( WebConsoleConstants.PLUGIN_LABEL);
+            boolean webUnescaped;
+            Object ehObj = ref.getProperty( WebConsoleConstants.CONFIG_PRINTER_WEB_UNESCAPED );
+            if ( ehObj instanceof Boolean )
+            {
+                webUnescaped = ( ( Boolean ) ehObj ).booleanValue();
+            }
+            else if ( ehObj instanceof String )
+            {
+                webUnescaped = Boolean.valueOf( ( String ) ehObj ).booleanValue();
+            }
+            else
+            {
+                webUnescaped = false;
+            }
             return new ConfigurationPrinterAdapter(
                     cfgPrinter,
                     printMethod,
                     title,
                     (label instanceof String ? (String)label : null),
-                    modes);
+                    modes,
+                    !webUnescaped);
         }
         return null;
     }
@@ -109,11 +125,13 @@ public class ConfigurationPrinterAdapter
             final Method printMethod,
             final String title,
             final String label,
-            final Object modes )
+            final Object modes,
+            final boolean escapeHtml )
     {
         this.printer = printer;
         this.title = title;
         this.label = label;
+        this.escapeHtml = escapeHtml;
         if ( printMethod != null )
         {
             if ( printMethod.getParameterTypes().length > 1 )
@@ -180,6 +198,11 @@ public class ConfigurationPrinterAdapter
             }
         }
         return false;
+    }
+
+    public boolean escapeHtml()
+    {
+        return escapeHtml;
     }
 
     public final void printConfiguration( final PrintWriter pw,

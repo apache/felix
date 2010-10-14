@@ -42,20 +42,36 @@ public interface ConfigurationPrinter
      */
     String SERVICE = ConfigurationPrinter.class.getName();
 
-    /** The default mode - this printer is used in the web console and the zip.
-     * @since 3.0 */
+    /**
+     * The default mode - this printer is used in the web console and the zip.
+     *
+     * @since 3.0
+     */
     String MODE_ALWAYS = "always";
 
-    /** The web mode - this printer is used in the web console.
-     * since 3.0 */
+    /**
+     * The web mode - this printer is used in the web console.
+     * <p>
+     * Output of the configuration printer is HTML-escaped unless the
+     * {@link WebConsoleConstants#CONFIG_PRINTER_WEB_UNESCAPED} service
+     * registration property is set to <code>true</code>.
+     *
+     * @since 3.0
+     */
     String MODE_WEB = "web";
 
-    /** The zip mode - this printer is used in the zip.
-     * @since 3.0 */
+    /**
+     * The zip mode - this printer is used in the zip.
+     *
+     * @since 3.0
+     */
     String MODE_ZIP = "zip";
 
-    /** The txt mode - this printer is used in the txt.
-     * @since 3.0 */
+    /**
+     * The txt mode - this printer is used in the txt.
+     *
+     * @since 3.0
+     */
     String MODE_TXT = "txt";
 
     /**
@@ -64,6 +80,7 @@ public interface ConfigurationPrinter
      * {@link #MODE_ALWAYS} is used.
      * The value of this property is either a single string or an
      * array of strings.
+     *
      * @since 3.0
      * @deprecated Use {@link WebConsoleConstants#CONFIG_PRINTER_MODES}
      */

@@ -18,9 +18,6 @@
  */
 package org.apache.felix.webconsole;
 
-import java.util.Locale;
-import java.util.Map;
-
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
@@ -73,9 +70,21 @@ public interface WebConsoleConstants
      * If a service has a {@link #PLUGIN_LABEL}, {@link #PLUGIN_TITLE} and
      * this property, it is treated as a configuration printer servce.
      *
-     * @since 3.1.4
+     * @since 3.1.2; Web Console Bundle 3.1.4
      */
     public static final String CONFIG_PRINTER_MODES = "felix.webconsole.configprinter.modes";
+
+    /**
+     * Name of the optional service registration property indicating that a
+     * {@link ConfigurationPrinter} service will provide HTML output when used
+     * in {@link ConfigurationPrinter#MODE_WEB web} mode. If this property is
+     * set to <code>true</code> the configuration printer is expected to
+     * generate HTML output which will not be escaped. Otheriwse output in web
+     * mode is escaped for plain text use.
+     *
+     * @since 3.1.2; Web Console Bundle 3.1.4
+     */
+    public static final String CONFIG_PRINTER_WEB_UNESCAPED = "felix.webconsole.configprinter.web.unescaped";
 
     /**
      * The name of the service registration properties providing references
