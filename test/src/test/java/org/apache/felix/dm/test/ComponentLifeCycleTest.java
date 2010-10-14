@@ -22,8 +22,8 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -49,7 +49,8 @@ public class ComponentLifeCycleTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a simple service component
-        Component s = m.createComponent().setImplementation(new ComponentInstance(e));
+        Component s = m.createComponent()
+            .setImplementation(new ComponentInstance(e));
         // add it, and since it has no dependencies, it should be activated immediately
         m.add(s);
         // remove it so it gets destroyed
@@ -64,7 +65,9 @@ public class ComponentLifeCycleTest extends Base {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a simple service component
-        Component s = m.createComponent().setImplementation(new CustomComponentInstance(e)).setCallbacks("a", "b", "c", "d");
+        Component s = m.createComponent()
+            .setImplementation(new CustomComponentInstance(e))
+            .setCallbacks("a", "b", "c", "d");
         // add it, and since it has no dependencies, it should be activated immediately
         m.add(s);
         // remove it so it gets destroyed
