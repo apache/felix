@@ -1088,7 +1088,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
         // when refreshing packages).
         if (startBundles)
         {
-            bundle.stop(Bundle.STOP_TRANSIENT);
+            if (!isFragment(bundle)) 
+            {
+                bundle.stop(Bundle.STOP_TRANSIENT);
+            }
         }
     }
 
