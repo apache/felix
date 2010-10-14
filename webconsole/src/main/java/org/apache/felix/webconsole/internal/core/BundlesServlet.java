@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -150,7 +151,10 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             bootPkgs[i] = bootDelegation;
         }
 
-        configurationPrinter = bundleContext.registerService( ConfigurationPrinter.SERVICE, this, null );
+        Hashtable props = new Hashtable();
+        props.put( WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] { ConfigurationPrinter.MODE_TXT,
+            ConfigurationPrinter.MODE_ZIP } );
+        configurationPrinter = bundleContext.registerService( ConfigurationPrinter.SERVICE, this, props );
     }
 
 
@@ -581,7 +585,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
             jw.key( "status" );
             jw.value( statusLine );
-            
+
             // add raw status
             jw.key( "s" );
             jw.array();
