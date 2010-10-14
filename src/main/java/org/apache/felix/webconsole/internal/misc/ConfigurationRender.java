@@ -288,9 +288,10 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         {
             return obj.getClass().getDeclaredMethod(mName, params);
         }
-        catch (NoSuchMethodException nsme)
+        catch (Throwable nsme)
         {
-            // ignore
+            // ignore, we catch Throwable above to not only catch NoSuchMethodException
+            // but also other ones like ClassDefNotFoundError etc.
         }
         return null;
     }
