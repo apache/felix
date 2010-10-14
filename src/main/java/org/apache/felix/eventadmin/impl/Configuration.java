@@ -107,6 +107,7 @@ public class Configuration
     static final String PROP_TIMEOUT = "org.apache.felix.eventadmin.Timeout";
     static final String PROP_REQUIRE_TOPIC = "org.apache.felix.eventadmin.RequireTopic";
     static final String PROP_IGNORE_TIMEOUT = "org.apache.felix.eventadmin.IgnoreTimeout";
+    static final String PROP_LOG_LEVEL = "org.apache.felix.eventadmin.LogLevel";
 
     /** The bundle context. */
     private final BundleContext m_bundleContext;
@@ -120,6 +121,8 @@ public class Configuration
     private boolean m_requireTopic;
 
     private String[] m_ignoreTimeout;
+
+    private int m_logLevel;
 
     // The thread pool used - this is a member because we need to close it on stop
     private volatile DefaultThreadPool m_sync_pool;
@@ -250,6 +253,10 @@ public class Configuration
                     m_ignoreTimeout[i] = st.nextToken();
                 }
             }
+            m_logLevel = getIntProperty(PROP_LOG_LEVEL,
+                    m_bundleContext.getProperty(PROP_LOG_LEVEL),
+                    LogWrapper.LOG_WARNING, // default log level is WARNING
+                    LogWrapper.LOG_ERROR);
         }
         else
         {
@@ -272,6 +279,10 @@ public class Configuration
                 LogWrapper.getLogger().log(LogWrapper.LOG_WARNING,
                         "Value for property: " + PROP_IGNORE_TIMEOUT + " is neither a string nor a string array - Using default");
             }
+            m_logLevel = getIntProperty(PROP_LOG_LEVEL,
+                    config.get(PROP_LOG_LEVEL),
+                    LogWrapper.LOG_WARNING, // default log level is WARNING
+                    LogWrapper.LOG_ERROR);
         }
         // a timeout less or equals to 100 means : disable timeout
         if ( m_timeout <= 100 )
@@ -282,6 +293,9 @@ public class Configuration
 
     private void startOrUpdate()
     {
+        LogWrapper.getLogger().setLogLevel(m_logLevel);
+        LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
+                PROP_LOG_LEVEL + "=" + m_logLevel);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
                 PROP_CACHE_SIZE + "=" + m_cacheSize);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,

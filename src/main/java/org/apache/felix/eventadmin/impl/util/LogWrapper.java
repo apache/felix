@@ -43,6 +43,10 @@ import org.osgi.framework.ServiceReference;
  * use it if present. Additionally, all log methods prefix the log message with
  * <tt>EventAdmin: </tt>.
  *
+ * There is one difference in behavior from the standard OSGi LogService.
+ * This logger has a {@link #m_logLevel} property which decides what messages
+ * get logged.
+ *
  * @see org.osgi.service.log.LogService
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
@@ -88,6 +92,15 @@ public class LogWrapper
     private BundleContext m_context;
 
     private ServiceListener m_logServiceListener;
+
+    /**
+     * Current log level. Message with log level less than or equal to
+     * current log level will be logged.
+     * The default value is {@link #LOG_WARNING}
+     *
+     * @see #setLogLevel(int)
+     */
+    private int m_logLevel = LOG_WARNING;
     /*
      * A thread save variant of the double checked locking singleton.
      */
@@ -230,6 +243,11 @@ public class LogWrapper
         // The method will remove any unregistered service reference as well.
         synchronized(m_loggerRefs)
         {
+            if (level > m_logLevel)
+            {
+                return; // don't log
+            }
+
             final String logMsg = "EventAdmin: " + msg;
 
             if (!m_loggerRefs.isEmpty())
@@ -277,6 +295,11 @@ public class LogWrapper
         // The method will remove any unregistered service reference as well.
         synchronized(m_loggerRefs)
         {
+            if (level > m_logLevel)
+            {
+                return; // don't log
+            }
+
             final String logMsg = "EventAdmin: " + msg;
 
             if (!m_loggerRefs.isEmpty())
@@ -324,6 +347,11 @@ public class LogWrapper
         // The method will remove any unregistered service reference as well.
         synchronized(m_loggerRefs)
         {
+            if (level > m_logLevel)
+            {
+                return; // don't log
+            }
+
             final String logMsg = "EventAdmin: " + msg;
 
             if (!m_loggerRefs.isEmpty())
@@ -373,6 +401,11 @@ public class LogWrapper
         // The method will remove any unregistered service reference as well.
         synchronized(m_loggerRefs)
         {
+            if (level > m_logLevel)
+            {
+                return; // don't log
+            }
+            
             final String logMsg = "EventAdmin: " + msg;
 
             if (!m_loggerRefs.isEmpty())
@@ -444,6 +477,32 @@ public class LogWrapper
                 break;
             default:
                 System.out.println("UNKNOWN[" + level + "]: " + s);
+        }
+    }
+
+    /**
+     * Change the current log level. Log level decides what messages gets
+     * logged. Any message with a log level higher than the currently set
+     * log level is not logged.
+     *
+     * @param logLevel new log level
+     */
+    public void setLogLevel(int logLevel)
+    {
+        synchronized (m_loggerRefs)
+        {
+            m_logLevel = logLevel;
+        }
+    }
+
+    /**
+     * @return current log level.
+     */
+    public int getLogLevel()
+    {
+        synchronized (m_loggerRefs)
+        {
+            return m_logLevel;
         }
     }
 }
