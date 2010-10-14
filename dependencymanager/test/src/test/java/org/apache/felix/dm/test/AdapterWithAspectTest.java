@@ -75,7 +75,7 @@ public class AdapterWithAspectTest extends Base {
         
         m.add(provider);
 
-        int stepsInLoop = 12;
+        int stepsInLoop = 10;
         int loops = 10;
         for (int loop = 0; loop < loops; loop++) {
             int offset = stepsInLoop * loop;
@@ -95,20 +95,19 @@ public class AdapterWithAspectTest extends Base {
             // the aspect adapter will disappear
             // the original adapter will (briefly) appear
             // the original adapter will disappear
-            e.waitForStep(10 + offset, 5000);
+            e.waitForStep(8 + offset, 5000);
             m.remove(consumer);
             // nothing should happen, all consumed services were already gone
-            e.step(11 + offset);
+            e.step(9 + offset);
             m.add(provider);
             // still nothing should happen
-            e.step(12 + offset);
+            e.step(10 + offset);
             m.remove(adapter);
             m.remove(adapter2);
             m.remove(aspect);
         }
         m.remove(provider);
         e.waitForStep(stepsInLoop * loops, 5000);
-        System.out.println("EOT");
     }
     
     static interface OriginalService {
