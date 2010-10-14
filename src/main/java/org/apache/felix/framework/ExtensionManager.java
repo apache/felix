@@ -610,7 +610,6 @@ class ExtensionManager extends URLStreamHandler implements Content
         return null;
     }
 
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     public URL getEntryAsURL(String name)
     {
         return null;
@@ -764,7 +763,6 @@ class ExtensionManager extends URLStreamHandler implements Content
             return getClass().getClassLoader().getResourceAsStream(urlPath);
         }
 
-        // TODO: REMOVE - Remove when class path scanning is implemented.
         public URL getLocalURL(int index, String urlPath)
         {
             return getClass().getClassLoader().getResource(urlPath);

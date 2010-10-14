@@ -201,7 +201,6 @@ class URLHandlersBundleURLConnection extends URLConnection
      *
      * @return the local URL
      */
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     URL getLocalURL()
     {
         if ((m_targetModule == null) || (m_classPathIdx < 0))

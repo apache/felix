@@ -53,6 +53,7 @@ public interface FelixConstants extends org.osgi.framework.Constants
     public static final String SERVICE_URLHANDLERS_PROP = "felix.service.urlhandlers";
     public static final String IMPLICIT_BOOT_DELEGATION_PROP = "felix.bootdelegation.implicit";
     public static final String BOOT_CLASSLOADERS_PROP = "felix.bootdelegation.classloaders";
+    public static final String USE_LOCALURLS_PROP = "felix.jarurls";
 
     // Start level-related constants.
     public static final int FRAMEWORK_INACTIVE_STARTLEVEL = 0;

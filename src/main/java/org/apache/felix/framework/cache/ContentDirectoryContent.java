@@ -82,7 +82,6 @@ public class ContentDirectoryContent implements Content
         return m_content.getEntryAsStream(m_rootPath + name);
     }
 
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     public URL getEntryAsURL(String name)
     {
         return m_content.getEntryAsURL(m_rootPath + name);

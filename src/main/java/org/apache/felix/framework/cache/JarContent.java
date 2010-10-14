@@ -192,7 +192,6 @@ public class JarContent implements Content
         return is;
     }
 
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     public URL getEntryAsURL(String name)
     {
         try
