@@ -61,7 +61,7 @@ public class Shell
                 "  args are available as session variables $1..$9 and $args.",
                 "Usage: gosh [OPTIONS] [script-file [args..]]",
                 "  -c --command             pass all remaining args to sub-shell",
-                "  -i --nointeractive       don't start interactive session",
+                "     --nointeractive       don't start interactive session",
                 "     --login               login shell (same session, reads etc/gosh_profile)",
                 "  -s --noshutdown          don't shutdown framework when script completes",
                 "  -x --xtrace              echo commands before execution",
