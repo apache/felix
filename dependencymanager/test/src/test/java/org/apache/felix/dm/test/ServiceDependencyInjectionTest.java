@@ -23,8 +23,8 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -47,8 +47,9 @@ public class ServiceDependencyInjectionTest {
     @Test
     public void testServiceInjection(BundleContext context) {
         DependencyManager m = new DependencyManager(context);
+        Ensure e = new Ensure();
         // create a service provider and consumer
-        ServiceProvider provider = new ServiceProvider();
+        ServiceProvider provider = new ServiceProvider(e);
         Component sp = m.createComponent().setImplementation(provider).setInterface(ServiceInterface2.class.getName(), null);
         Component sc = m.createComponent().setImplementation(new ServiceConsumer()).add(m.createServiceDependency().setService(ServiceInterface2.class).setRequired(true));
         Component sc2 = m.createComponent()
@@ -63,7 +64,7 @@ public class ServiceDependencyInjectionTest {
         m.add(sc2);
         m.remove(sc2);
         m.remove(sp);
-        provider.validate(2, 3);
+        e.waitForStep(5, 5000);
     }
     
     static interface ServiceInterface {
@@ -75,20 +76,22 @@ public class ServiceDependencyInjectionTest {
     }
 
     static class ServiceProvider implements ServiceInterface2 {
-        private int m_counter1 = 0;
-        private int m_counter2 = 0;
+        private final Ensure m_ensure;
+        private Ensure.Steps m_invokeSteps = new Ensure.Steps(4, 5);
+        private Ensure.Steps m_invoke2Steps = new Ensure.Steps(1, 2, 3);
         
+        public ServiceProvider(Ensure e) {
+            m_ensure = e;
+        }
+
         public void invoke() {
-            m_counter1++;
+            System.out.println("invoke");
+            m_ensure.steps(m_invokeSteps);
         }
         
         public void invoke2() {
-            m_counter2++;
-        }
-        
-        public void validate(int c1, int c2) {
-            Assert.assertEquals("invoke() should have been called this many times", c1, m_counter1);
-            Assert.assertEquals("invoke2() should have been called this many times", c2, m_counter2);
+            System.out.println("invoke2");
+            m_ensure.steps(m_invoke2Steps);
         }
     }
 
