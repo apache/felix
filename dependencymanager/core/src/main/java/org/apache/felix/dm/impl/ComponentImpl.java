@@ -269,6 +269,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         }
 
         synchronized (m_dependencies) {
+            oldState = m_state;
             // starting the dependency above might have triggered another state change, so
             // we have to fetch the current state again
             newState = new State((List) m_dependencies.clone(), !oldState.isInactive(), m_isInstantiated, m_isBound);
@@ -323,7 +324,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         	oldState = m_state;
             m_dependencies.remove(dependency);
         }
-        if (oldState.isAllRequiredAvailable() || (oldState.isWaitingForRequired() && dependency.isRequired())) {
+        if (oldState.isAllRequiredAvailable() || ((oldState.isWaitingForRequired() || oldState.isWaitingForRequiredInstantiated()) && dependency.isRequired())) {
         	((DependencyActivation) dependency).stop(this);
         }
         synchronized (m_dependencies) {
@@ -599,21 +600,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         // then we invoke the init callback so the service can further initialize
         // itself
         invoke(init);
-//        // start extra/required dependencies which might have been added from the init() method.
-//        startExtraRequiredDependencies();
         // see if any of this caused further state changes
         calculateStateChanges();
-    }
-
-    private void startExtraRequiredDependencies() {
-        Iterator i = m_dependencies.iterator();
-        while (i.hasNext()) {
-            Dependency dependency = (Dependency) i.next();
-            if (dependency.isInstanceBound() && dependency.isRequired()) {
-                // Optional extra dependencies will be started later, once our service is started. 
-                ((DependencyActivation) dependency).start(this);
-            }
-        } 
     }
 
     private void bindService(State state) {
@@ -622,7 +610,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
             start = m_callbackStart;
         }
         
-//        // configure service with extra-dependencies which might have been added from init() method.
+        // configure service with extra-dependencies which might have been added from init() method.
         configureServiceWithExtraDependencies(state);
         // inform the state listeners we're starting
         stateListenersStarting();
@@ -636,16 +624,12 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         stateListenersStarted();
     }
     
-    private void configureServiceWithExtraDependencies(State state)
-    {
+    private void configureServiceWithExtraDependencies(State state) {
         Iterator i = state.getDependencies().iterator();
         while (i.hasNext()) {
             Dependency dependency = (Dependency) i.next();
             if (dependency.isAutoConfig() && dependency.isInstanceBound()) {
                 configureImplementation(dependency.getAutoConfigType(), dependency.getAutoConfigInstance(), dependency.getAutoConfigName());
-            }
-            if (dependency.isRequired() && dependency.isInstanceBound()) {
-                dependency.invokeAdded(this);
             }
         }
     }
@@ -1054,6 +1038,14 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     		state = m_state;
     	}
         return (state.isAllRequiredAvailable());
+    }
+    
+    public boolean isInstantiated() {
+        State state;
+        synchronized (m_dependencies) {
+            state = m_state;
+        }
+        return (state.isTrackingOptional() || state.isBound() || state.isWaitingForRequiredInstantiated());
     }
     
     // ServiceComponent interface
