@@ -56,7 +56,6 @@ import org.apache.felix.framework.resolver.WireImpl;
 import org.apache.felix.framework.resolver.WireModuleImpl;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.IteratorToEnumeration;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
@@ -1036,7 +1035,7 @@ public class ModuleImpl implements Module
             }
         }
 
-        return new IteratorToEnumeration(l.iterator());
+        return Collections.enumeration(l);
     }
 
     // TODO: API: Investigate how to handle this better, perhaps we need
@@ -1730,7 +1729,7 @@ public class ModuleImpl implements Module
                     }
                     localURLs.add(url);
                 }
-                urls = new IteratorToEnumeration(localURLs.iterator());
+                urls = Collections.enumeration(localURLs);
             }
             return urls;
         }
@@ -2284,7 +2283,7 @@ public class ModuleImpl implements Module
                 wire = null;
             }
 
-            String exporter = (exporters.size() == 0)
+            String exporter = (exporters.isEmpty())
                 ? null : exporters.iterator().next().getModule().getBundle().toString();
 
             StringBuffer sb = new StringBuffer("*** Class '");

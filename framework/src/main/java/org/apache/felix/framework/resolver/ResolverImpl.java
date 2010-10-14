@@ -43,9 +43,6 @@ public class ResolverImpl implements Resolver
 {
     private final Logger m_logger;
 
-    // Reusable empty array.
-    private static final List<Wire> m_emptyWires = Util.m_emptyList;
-
     // Holds candidate permutations based on permutating "uses" chains.
     // These permutations are given higher priority.
     private final List<Map<Requirement, Set<Capability>>> m_usesPermutations =
@@ -1263,7 +1260,7 @@ public class ResolverImpl implements Resolver
             return sources;
         }
 
-        return Util.m_emptyList;
+        return Collections.EMPTY_LIST;
     }
 
     private static List<Capability> getPackageSourcesInternal(
@@ -1328,7 +1325,7 @@ public class ResolverImpl implements Resolver
     {
         if (!module.isResolved() && !wireMap.containsKey(module))
         {
-            wireMap.put(module, m_emptyWires);
+            wireMap.put(module, (List<Wire>) Collections.EMPTY_LIST);
 
             List<Wire> packageWires = new ArrayList<Wire>();
             List<Wire> moduleWires = new ArrayList<Wire>();
@@ -1379,7 +1376,7 @@ public class ResolverImpl implements Resolver
         Module module, String pkgName, Map<Module, Packages> modulePkgMap,
         Map<Module, List<Wire>> wireMap, Map<Requirement, Set<Capability>> candidateMap)
     {
-        wireMap.put(module, m_emptyWires);
+        wireMap.put(module, (List<Wire>) Collections.EMPTY_LIST);
 
         List<Wire> packageWires = new ArrayList<Wire>();
 

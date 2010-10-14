@@ -23,7 +23,6 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +40,6 @@ import org.osgi.framework.ServiceReference;
 
 public class Util
 {
-    public static final List m_emptyList = Collections.unmodifiableList(new ArrayList());
-
     /**
      * The default name used for the default configuration properties file.
     **/
