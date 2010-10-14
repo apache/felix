@@ -415,7 +415,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
         public List<Directive> getDirectives()
         {
-            return Util.m_emptyList;
+            return Collections.EMPTY_LIST;
         }
 
         public Attribute getAttribute(String name)
@@ -426,12 +426,12 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
         public List<Attribute> getAttributes()
         {
-            return Util.m_emptyList;
+            return Collections.EMPTY_LIST;
         }
 
         public List<String> getUses()
         {
-            return Util.m_emptyList;
+            return Collections.EMPTY_LIST;
         }
 
         public Object getProperty(String s)

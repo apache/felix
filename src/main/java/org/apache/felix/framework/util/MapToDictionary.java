@@ -43,7 +43,7 @@ public class MapToDictionary extends Dictionary
 
     public Enumeration elements()
     {
-        return new IteratorToEnumeration(m_map.values().iterator());
+        return Collections.enumeration(m_map.values());
     }
 
     public Object get(Object key)
@@ -58,7 +58,7 @@ public class MapToDictionary extends Dictionary
 
     public Enumeration keys()
     {
-        return new IteratorToEnumeration(m_map.keySet().iterator());
+        return Collections.enumeration(m_map.keySet());
     }
 
     public Object put(Object key, Object value)
