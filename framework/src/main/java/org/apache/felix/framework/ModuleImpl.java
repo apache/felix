@@ -145,6 +145,8 @@ public class ModuleImpl implements Module
 
     // Boolean flag to enable/disable implicit boot delegation.
     private final boolean m_implicitBootDelegation;
+    // Boolean flag to enable/disable local URLs.
+    private final boolean m_useLocalURLs;
 
     // Re-usable security manager for accessing class context.
     private static SecurityManagerEx m_sm = new SecurityManagerEx();
@@ -157,13 +159,6 @@ public class ModuleImpl implements Module
 
     // Flag indicating whether we are on an old JVM or not.
     private volatile static boolean m_isPreJava5 = false;
-
-    static ThreadLocal<Boolean> m_jarUrl = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return false;
-        }
-    };
 
     /**
      * This constructor is used by the extension manager, since it needs
@@ -201,6 +196,9 @@ public class ModuleImpl implements Module
         m_activationExcludes = null;
         m_activationIncludes = null;
         m_implicitBootDelegation = false;
+        m_useLocalURLs =
+            (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
+                ? false : true;
         m_bootClassLoader = m_defBootClassLoader;
     }
 
@@ -227,6 +225,10 @@ public class ModuleImpl implements Module
             || Boolean.valueOf(
                 (String) m_configMap.get(
                     FelixConstants.IMPLICIT_BOOT_DELEGATION_PROP)).booleanValue();
+
+        m_useLocalURLs =
+            (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
+                ? false : true;
 
         ClassLoader bootLoader = m_defBootClassLoader;
         Object map = m_configMap.get(FelixConstants.BOOT_CLASSLOADERS_PROP);
@@ -1113,39 +1115,28 @@ public class ModuleImpl implements Module
 
     private URL createURL(int port, String path)
     {
-         if (useJarUrl())
-         {
-             return getLocalURL(port, path);
-         }
-         // Add a slash if there is one already, otherwise
-         // the is no slash separating the host from the file
-         // in the resulting URL.
-         if (!path.startsWith("/"))
-         {
-             path = "/" + path;
-         }
+        // Add a slash if there is one already, otherwise
+        // the is no slash separating the host from the file
+        // in the resulting URL.
+        if (!path.startsWith("/"))
+        {
+            path = "/" + path;
+        }
 
-         try
-         {
-             return m_secureAction.createURL(null,
-                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
-                 m_id + ":" + port + path, m_streamHandler);
-         }
-         catch (MalformedURLException ex)
-         {
-             m_logger.log(m_bundle,
-                 Logger.LOG_ERROR,
-                 "Unable to create resource URL.",
-                 ex);
-         }
-         return null;
-    }
-
-    private boolean useJarUrl()
-    {
-        String val = (String) ((BundleImpl) getBundle()).getFramework()
-                        .getConfig().get("org.apache.felix.jarurls");
-        return m_jarUrl.get() && Boolean.parseBoolean(val);
+        try
+        {
+            return m_secureAction.createURL(null,
+                FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
+                m_id + ":" + port + path, m_streamHandler);
+        }
+        catch (MalformedURLException ex)
+        {
+            m_logger.log(m_bundle,
+                Logger.LOG_ERROR,
+                "Unable to create resource URL.",
+                ex);
+        }
+        return null;
     }
 
     //
@@ -1718,16 +1709,30 @@ public class ModuleImpl implements Module
 
         public Enumeration getResources(String name)
         {
-            boolean jarUrl = m_jarUrl.get();
-            try
+            Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
+            if (m_useLocalURLs)
             {
-                m_jarUrl.set(true);
-                return ModuleImpl.this.getResourcesByDelegation(name);
+                List<URL> localURLs = new ArrayList();
+                while (urls.hasMoreElements())
+                {
+                    URL url = (URL) urls.nextElement();
+                    if (url.getProtocol().equals("bundle"))
+                    {
+                        try
+                        {
+                            url = ((URLHandlersBundleURLConnection)
+                                url.openConnection()).getLocalURL();
+                        }
+                        catch (IOException ex)
+                        {
+                            // Ignore and add original url.
+                        }
+                    }
+                    localURLs.add(url);
+                }
+                urls = new IteratorToEnumeration(localURLs.iterator());
             }
-            finally
-            {
-                m_jarUrl.set(jarUrl);
-            }
+            return urls;
         }
 
         protected Enumeration findResources(String name)
@@ -2028,16 +2033,23 @@ public class ModuleImpl implements Module
 
         public URL getResource(String name)
         {
-            boolean jarUrl = m_jarUrl.get();
-            try
+            URL url = ModuleImpl.this.getResourceByDelegation(name);
+            if (m_useLocalURLs)
             {
-                m_jarUrl.set(true);
-                return ModuleImpl.this.getResourceByDelegation(name);
+                if (url.getProtocol().equals("bundle"))
+                {
+                    try
+                    {
+                        url = ((URLHandlersBundleURLConnection)
+                            url.openConnection()).getLocalURL();
+                    }
+                    catch (IOException ex)
+                    {
+                        // Ignore and return original url.
+                    }
+                }
             }
-            finally
-            {
-                m_jarUrl.set(jarUrl);
-            }
+            return url;
         }
 
         protected URL findResource(String name)
@@ -2052,16 +2064,30 @@ public class ModuleImpl implements Module
         // can't. As a workaround, we make findResources() delegate instead.
         protected Enumeration findResources(String name)
         {
-            boolean jarUrl = m_jarUrl.get();
-            try
+            Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
+            if (m_useLocalURLs)
             {
-                m_jarUrl.set(true);
-                return getResourcesByDelegation(name);
+                List<URL> localURLs = new ArrayList();
+                while (urls.hasMoreElements())
+                {
+                    URL url = (URL) urls.nextElement();
+                    if (url.getProtocol().equals("bundle"))
+                    {
+                        try
+                        {
+                            url = ((URLHandlersBundleURLConnection)
+                                url.openConnection()).getLocalURL();
+                        }
+                        catch (IOException ex)
+                        {
+                            // Ignore and add original url.
+                        }
+                    }
+                    localURLs.add(url);
+                }
+                urls = Collections.enumeration(localURLs);
             }
-            finally
-            {
-                m_jarUrl.set(jarUrl);
-            }
+            return urls;
         }
 
         protected String findLibrary(String name)

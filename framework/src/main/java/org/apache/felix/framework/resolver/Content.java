@@ -113,13 +113,12 @@ public interface Content
 
     /**
      * <p>
-     *  This method allows retrieving an entry as a plain standard URL.
+     *  This method allows retrieving an entry as a local URL.
      * </p>
      *
      * @param name The name of the entry to retrieve as a URL
-     * @return A URL using a standard protocol such as file, jar
+     * @return A URL using a local protocol such as file, jar
      *           or null if not possible.
      */
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     URL getEntryAsURL(String name);
 }

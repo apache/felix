@@ -133,7 +133,6 @@ public class DirectoryContent implements Content
         return new FileInputStream(new File(m_dir, name));
     }
 
-    // TODO: REMOVE - Remove when class path scanning is implemented.
     public URL getEntryAsURL(String name)
     {
         if ((name.length() > 0) && (name.charAt(0) == '/'))
