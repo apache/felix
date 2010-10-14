@@ -330,10 +330,15 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
                     {
                         if ( service instanceof ConfigurationPrinter )
                         {
+                            Object modes = ref.getProperty(WebConsoleConstants.CONFIG_PRINTER_MODES);
+                            if ( modes == null )
+                            {
+                                modes = ref.getProperty( ConfigurationPrinter.PROPERTY_MODES );
+                            }
                             final ConfigurationPrinter cfgPrinter = (ConfigurationPrinter) service;
                             addConfigurationPrinter( cp, cfgPrinter, refs[i].getBundle(),
                                     ref.getProperty( WebConsoleConstants.PLUGIN_LABEL ),
-                                    ref.getProperty( ConfigurationPrinter.PROPERTY_MODES ) );
+                                    modes );
                         }
                         else
                         {
