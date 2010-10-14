@@ -46,6 +46,8 @@ public interface DependencyService {
     public boolean isRegistered(); // impl method
     public Object[] getCompositionInstances(); // impl method
     
+    public boolean isInstantiated();
+    
     /**
      * Can be called by the dependency whenever it wants to invoke callback methods.
      */
