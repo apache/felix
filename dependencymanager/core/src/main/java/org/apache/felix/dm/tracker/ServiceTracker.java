@@ -1008,7 +1008,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 				            }
 				            higher = sr;
 				        }
-				        else {
+				        else if (ranking < trackedRanking) { ////////////////
 				            // found lower ranked one!
                             if (DEBUG) {
                                 System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
