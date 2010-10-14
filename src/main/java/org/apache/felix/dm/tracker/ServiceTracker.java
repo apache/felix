@@ -810,7 +810,10 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	 * @ThreadSafe
 	 */
 	class Tracked extends AbstractTracked implements ServiceListener {
-	    /** A list of services that are currently hidden because there is an aspect available with a higher ranking. */
+	    /**
+	     * A list of services that are currently hidden because there is an aspect available with a higher ranking.
+	     * @GuardedBy this
+	     */
 	    private final List m_hidden = new ArrayList();
 	    
 	    /**
@@ -822,7 +825,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	    private ServiceReference highestHidden(long serviceId) {
 	        ServiceReference result = null;
 	        int max = Integer.MIN_VALUE;
-	        synchronized (m_hidden) {
+	        synchronized (this) {
     	        for (int i = 0; i < m_hidden.size(); i++) {
     	            ServiceReference ref = (ServiceReference) m_hidden.get(i);
     	            Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
@@ -853,25 +856,32 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         private ServiceReference highestTracked(long serviceId) {
             ServiceReference result = null;
             int max = Integer.MIN_VALUE;
-            Object[] trackedServices = getTracked(new Object[] {});
-            for (int i = 0; i < trackedServices.length; i++) {
-                ServiceReference ref = (ServiceReference) trackedServices[i];
-                Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
-                Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
-                if ((aid != null && aid.longValue() == serviceId) 
-                    || (aid == null && sid != null && sid.longValue() == serviceId)) {
-                    Integer ranking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
-                    int r = 0;
-                    if (ranking != null) {
-                        r = ranking.intValue();
-                    }
-                    if (r > max) {
-                        max = r;
-                        result = ref;
+            
+            synchronized (this) {
+                int length = size();
+                if (length == 0) {
+                    return null;
+                }
+                Object[] trackedServices = getTracked(new ServiceReference[length]);
+                for (int i = 0; i < trackedServices.length; i++) {
+                    ServiceReference ref = (ServiceReference) trackedServices[i];
+                    Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
+                    Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
+                    if ((aid != null && aid.longValue() == serviceId) 
+                        || (aid == null && sid != null && sid.longValue() == serviceId)) {
+                        Integer ranking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
+                        int r = 0;
+                        if (ranking != null) {
+                            r = ranking.intValue();
+                        }
+                        if (r > max) {
+                            max = r;
+                            result = ref;
+                        }
                     }
                 }
+                return result;
             }
-            return result;
         }
 
         /**
@@ -881,7 +891,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          */
         private void hide(ServiceReference ref) {
             if (DEBUG) { System.out.println("ServiceTracker.Tracked.hide " + ServiceUtil.toString(ref)); }
-            synchronized (m_hidden) {
+            synchronized (this) {
                 if (DEBUG) { if (m_hidden.contains(ref)) { System.out.println("ServiceTracker.Tracked.hide ERROR: " + ServiceUtil.toString(ref)); }};
                 m_hidden.add(ref);
             }
@@ -894,7 +904,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          */
         private void unhide(ServiceReference ref) {
             if (DEBUG) { System.out.println("ServiceTracker.Tracked.unhide " + ServiceUtil.toString(ref)); }
-            synchronized (m_hidden) {
+            synchronized (this) {
                 if (DEBUG) { if (!m_hidden.contains(ref)) { System.out.println("ServiceTracker.Tracked.unhide ERROR: " + ServiceUtil.toString(ref)); }};
                 m_hidden.remove(ref);
             }
