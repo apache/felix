@@ -16,62 +16,252 @@
  */
 package org.apache.felix.webconsole.internal.misc;
 
-
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
-
+import org.apache.felix.webconsole.*;
+import org.osgi.framework.ServiceReference;
 
 /**
- * Adapter for a service acting as configuration printer.
+ * Helper class for a configuration printer.
  */
-public class ConfigurationPrinterAdapter implements ConfigurationPrinter
+public class ConfigurationPrinterAdapter
 {
 
-    private final Object service;
+    private final Object printer;
+    public String title;
+    public String label;
+    private final String[] modes;
+    private Method modeAwarePrintMethod;
+    private Method printMethod;
+    private Method attachmentMethod;
+    private boolean checkedAttachmentMethod = false;
 
-    private final String title;
+    private static final List CUSTOM_MODES = new ArrayList();
+    static
+    {
+        CUSTOM_MODES.add( ConfigurationPrinter.MODE_TXT );
+        CUSTOM_MODES.add( ConfigurationPrinter.MODE_WEB );
+        CUSTOM_MODES.add( ConfigurationPrinter.MODE_ZIP );
+    }
 
-    private final Method printMethod;
+    public static ConfigurationPrinterAdapter createAdapter(
+            final Object service,
+            final ServiceReference ref)
+    {
+        String title;
+        Object cfgPrinter = null;
+        Object modes = null;
+        Method printMethod = null;
+        if ( service instanceof ConfigurationPrinter )
+        {
+            modes = ref.getProperty(WebConsoleConstants.CONFIG_PRINTER_MODES);
+            if ( modes == null )
+            {
+                modes = ref.getProperty( ConfigurationPrinter.PROPERTY_MODES );
+            }
+            cfgPrinter = service;
+            title = ((ConfigurationPrinter) service).getTitle();
+        }
+        else
+        {
+            modes = ref.getProperty( WebConsoleConstants.CONFIG_PRINTER_MODES );
+            title = (String)ref.getProperty(  WebConsoleConstants.PLUGIN_TITLE );
 
-    public ConfigurationPrinterAdapter(final Object service,
+            // first: printConfiguration(PrintWriter, String)
+            final Method method2Params = searchMethod(service, "printConfiguration",
+                    new Class[] {PrintWriter.class, String.class});
+            if ( method2Params != null )
+            {
+                cfgPrinter = service;
+                printMethod = method2Params;
+            }
+
+            if ( cfgPrinter == null )
+            {
+                // second: printConfiguration(PrintWriter)
+                final Method method1Params = searchMethod(service, "printConfiguration",
+                        new Class[] {PrintWriter.class});
+                if ( method1Params != null )
+                {
+                    cfgPrinter = service;
+                    printMethod = method1Params;
+                }
+            }
+        }
+        if ( cfgPrinter != null )
+        {
+            Object label =  ref.getProperty( WebConsoleConstants.PLUGIN_LABEL);
+            return new ConfigurationPrinterAdapter(
+                    cfgPrinter,
+                    printMethod,
+                    title,
+                    (label instanceof String ? (String)label : null),
+                    modes);
+        }
+        return null;
+    }
+
+    private ConfigurationPrinterAdapter( final Object printer,
+            final Method printMethod,
             final String title,
-            final Method printMethod)
+            final String label,
+            final Object modes )
     {
+        this.printer = printer;
         this.title = title;
-        this.service = service;
-        this.printMethod = printMethod;
+        this.label = label;
+        if ( printMethod != null )
+        {
+            if ( printMethod.getParameterTypes().length > 1 )
+            {
+                this.modeAwarePrintMethod = printMethod;
+            }
+            else
+            {
+                this.printMethod = printMethod;
+            }
+        }
+        if ( modes == null || !( modes instanceof String || modes instanceof String[] ) )
+        {
+            this.modes = null;
+        }
+        else
+        {
+            if ( modes instanceof String )
+            {
+                if ( CUSTOM_MODES.contains(modes) )
+                {
+                    this.modes = new String[] {modes.toString()};
+                }
+                else
+                {
+                    this.modes = null;
+                }
+            }
+            else
+            {
+                final String[] values = (String[])modes;
+                boolean valid = values.length > 0;
+                for(int i=0; i<values.length; i++)
+                {
+                    if ( !CUSTOM_MODES.contains(values[i]) )
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                if ( valid)
+                {
+                    this.modes = values;
+                }
+                else
+                {
+                    this.modes = null;
+                }
+            }
+        }
     }
 
-    public String getTitle()
+    public boolean match(final String mode)
     {
-        return this.title;
+        if ( this.modes == null)
+        {
+            return true;
+        }
+        for(int i=0; i<this.modes.length; i++)
+        {
+            if ( this.modes[i].equals(mode) )
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
-    protected void invoke(final Object[] args)
+    public final void printConfiguration( final PrintWriter pw,
+            final String mode )
+    {
+        if ( printer instanceof ModeAwareConfigurationPrinter )
+        {
+            ( ( ModeAwareConfigurationPrinter ) printer ).printConfiguration( pw, mode );
+        }
+        else if ( printer instanceof ConfigurationPrinter )
+        {
+            ( ( ConfigurationPrinter ) printer ).printConfiguration( pw );
+        }
+        else if ( this.modeAwarePrintMethod != null )
+        {
+            this.invoke(this.modeAwarePrintMethod, new Object[] {pw, mode});
+        } else if ( this.printMethod != null )
+        {
+            this.invoke(this.printMethod, new Object[] {pw});
+        }
+    }
+
+    public URL[] getAttachments( final String mode )
+    {
+        // check if printer implements binary configuration printer
+        URL[] attachments = null;
+        if ( printer instanceof AttachmentProvider )
+        {
+            attachments = ((AttachmentProvider)printer).getAttachments(mode);
+        }
+        else
+        {
+            if ( !checkedAttachmentMethod )
+            {
+                attachmentMethod = searchMethod(printer, "getAttachments", new Class[] {String.class});
+                checkedAttachmentMethod = true;
+            }
+            if ( attachmentMethod != null )
+            {
+                attachments = (URL[])invoke(attachmentMethod, new Object[] {mode});
+            }
+        }
+        return attachments;
+    }
+
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return title + " (" + printer.getClass() + ")";
+    }
+
+    /**
+     * Search a method with the given name and signature
+     */
+    private static Method searchMethod(final Object obj, final String mName, final Class[] params)
     {
         try
         {
-            printMethod.invoke(service, args);
+            return obj.getClass().getDeclaredMethod(mName, params);
         }
-        catch (IllegalArgumentException e)
+        catch (Throwable nsme)
         {
-            // ignore
+            // ignore, we catch Throwable above to not only catch NoSuchMethodException
+            // but also other ones like ClassDefNotFoundError etc.
         }
-        catch (IllegalAccessException e)
-        {
-            // ignore
-        }
-        catch (InvocationTargetException e)
-        {
-            // ignore
-        }
+        return null;
     }
 
-    public void printConfiguration(final PrintWriter printWriter)
+    /**
+     * Invoke the method on the printer with the arguments.
+     */
+    protected Object invoke(final Method m, final Object[] args)
     {
-        invoke(new Object[] {printWriter});
+        try
+        {
+            return m.invoke(printer, args);
+        }
+        catch (Throwable e)
+        {
+            // ignore
+        }
+        return null;
     }
 }
