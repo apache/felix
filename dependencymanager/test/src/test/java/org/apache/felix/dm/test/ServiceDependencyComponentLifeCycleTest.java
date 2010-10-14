@@ -63,7 +63,7 @@ public class ServiceDependencyComponentLifeCycleTest extends Base {
         ServiceDependency dependency2 = m.createServiceDependency().setService(MyService.class).setRequired(true);
         ServiceTracker st = new ServiceTracker(context, MyService2.class.getName(), null);
         st.open();
-        Component component2 = m.createComponent().setInterface(MyService.class.getName(), null).setImplementation(MyImpl.class);
+        Component component2 = m.createComponent().setInterface(MyService.class.getName(), null).setImplementation(new MyImpl(e));
         
         // add the component: it has no dependencies so it should be activated immediately
         m.add(component);
@@ -90,6 +90,8 @@ public class ServiceDependencyComponentLifeCycleTest extends Base {
         
         // activate the service we depend on
         m.add(component2);
+        // init and start should be invoked here, so wait for them to complete
+        e.waitForStep(10, 5000);
         
         component.add(dependency);
         Assert.assertNotNull("service should be available", st.getService());
@@ -98,23 +100,23 @@ public class ServiceDependencyComponentLifeCycleTest extends Base {
         component.remove(dependency);
         Assert.assertNotNull("service should be available", st.getService());
         
-        e.step(9);
+        e.step(11);
         
         // remove the service again
         m.remove(component2);
-        e.step(11);
+        e.step(15);
         Assert.assertNull("service should no longer be available", st.getService());
         component.remove(dependency2);
         Assert.assertNotNull("service should be available", st.getService());
         m.remove(component);
-        e.step(15);
+        e.step(19);
     }
     
     public static class MyComponent implements MyService2 {
         private final Ensure m_ensure;
         private final Ensure.Steps m_initSteps = new Ensure.Steps(1, 5);
-        private final Ensure.Steps m_startSteps = new Ensure.Steps(2, 6, 8, 12);
-        private final Ensure.Steps m_stopSteps = new Ensure.Steps(3, 7, 10, 13);
+        private final Ensure.Steps m_startSteps = new Ensure.Steps(2, 6, 8, 16);
+        private final Ensure.Steps m_stopSteps = new Ensure.Steps(3, 7, 17, 18);
         private final Ensure.Steps m_destroySteps = new Ensure.Steps(4, 14);
 
         public MyComponent(Ensure e) {
@@ -149,5 +151,23 @@ public class ServiceDependencyComponentLifeCycleTest extends Base {
     }
     
     public static class MyImpl implements MyService {
+        private final Ensure m_ensure;
+
+        public MyImpl(Ensure e) {
+            m_ensure = e;
+        }
+        
+        public void init() {
+            m_ensure.step(9);
+        }
+        public void start() {
+            m_ensure.step(10);
+        }
+        public void stop() {
+            m_ensure.step(13);
+        }
+        public void destroy() {
+            m_ensure.step(14);
+        }
     }
 }
