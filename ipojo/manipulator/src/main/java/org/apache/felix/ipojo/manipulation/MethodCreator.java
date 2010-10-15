@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * Instance Manager Field.
      */
     public static final  String IM_FIELD = "__IM";
-    
+
     /**
      * All POJO method will be renamed by using this prefix.
      */
@@ -73,7 +73,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     private static final  String ENTRY = "onEntry";
 
     /**
-     * onExit method name. 
+     * onExit method name.
      */
     private static final  String EXIT = "onExit";
 
@@ -83,7 +83,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     private static final  String ERROR = "onError";
 
     /**
-     * onGet method name. 
+     * onGet method name.
      */
     private static final  String GET = "onGet";
 
@@ -93,7 +93,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     private static final  String SET = "onSet";
 
     /**
-     * Name of the current manipulated class. 
+     * Name of the current manipulated class.
      */
     private String m_owner;
 
@@ -108,20 +108,20 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * This set contains method id.
      */
     private List m_methods = new ArrayList(); // Contains method id.
-    
+
     /**
      * List of fields injected as method flag in the class.
      * This set contains field name generate from method id.
      */
-    private List m_methodFlags = new ArrayList(); 
-    
+    private List m_methodFlags = new ArrayList();
+
     /**
      * The list of methods visited during the previous analysis.
      * This list allows getting annotations to move to generated
      * method.
      */
     private List m_visitedMethods = new ArrayList();
-    
+
     /**
      * Set to <code>true</code> when a suitable constructor
      * is found. If not set to <code>true</code> at the end
@@ -169,7 +169,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * A method is visited.
      * This method does not manipulate clinit and class$ methods.
-     * In the case of a constructor, this method will generate a constructor with the instance manager 
+     * In the case of a constructor, this method will generate a constructor with the instance manager
      * and will adapt the current constructor to call this constructor.
      * For standard method, this method will create method header, rename the current method and adapt it.
      * @param access : access flag.
@@ -206,13 +206,17 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
             MethodVisitor mv = super.visitMethod(ACC_PRIVATE, "<init>", newDesc, signature, exceptions);
             return new ConstructorCodeAdapter(mv, m_owner, m_fields, ACC_PRIVATE, name, newDesc, m_superclass);
         }
-        
-        if ((access & ACC_SYNTHETIC) == ACC_SYNTHETIC && name.startsWith("access$")) { 
+
+        if ((access & ACC_SYNTHETIC) == ACC_SYNTHETIC && name.startsWith("access$")) {
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-            return new MethodCodeAdapter(mv, m_owner, access, name, desc, m_fields); 
+            return new MethodCodeAdapter(mv, m_owner, access, name, desc, m_fields);
         }
 
+        // Do nothing on static methods
         if ((access & ACC_STATIC) == ACC_STATIC) { return super.visitMethod(access, name, desc, signature, exceptions); }
+
+        // Do nothing on native methods
+        if ((access & ACC_NATIVE) == ACC_NATIVE) { return super.visitMethod(access, name, desc, signature, exceptions); }
 
         MethodDescriptor md = getMethodDescriptor(name, desc);
         if (md == null) {
@@ -220,7 +224,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         } else {
             generateMethodHeader(access, name, desc, signature, exceptions, md.getAnnotations(), md.getParameterAnnotations());
         }
-        
+
         String id = generateMethodFlag(name, desc);
         if (! m_methodFlags.contains(id)) {
             FieldVisitor flagField = cv.visitField(Opcodes.ACC_PRIVATE, id, "Z", null, null);
@@ -231,10 +235,10 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         MethodVisitor mv = super.visitMethod(ACC_PRIVATE, PREFIX + name, desc, signature, exceptions);
         return new MethodCodeAdapter(mv, m_owner, ACC_PRIVATE, PREFIX + name, desc, m_fields);
     }
-    
+
     /**
      * Gets the method descriptor for the specified name and descriptor.
-     * The method descriptor is looked inside the 
+     * The method descriptor is looked inside the
      * {@link MethodCreator#m_visitedMethods}
      * @param name the name of the method
      * @param desc the descriptor of the method
@@ -249,7 +253,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         }
         return null;
     }
-    
+
     /**
      * Visit a Field.
      * This field access is replaced by an invocation to the getter method or to the setter method.
@@ -308,7 +312,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitInsn(ACONST_NULL);
         mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", "(Lorg/apache/felix/ipojo/InstanceManager;)V");
         mv.visitInsn(RETURN);
-   
+
         // Move annotations
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
@@ -316,7 +320,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 ad.visitAnnotation(mv);
             }
         }
-        
+
         mv.visitMaxs(0, 0);
         mv.visitEnd();
     }
@@ -340,7 +344,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitVarInsn(ALOAD, 1);
         mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", "(Lorg/apache/felix/ipojo/InstanceManager;Lorg/osgi/framework/BundleContext;)V");
         mv.visitInsn(RETURN);
-        
+
         // Move annotations
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
@@ -366,20 +370,20 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param paramAnnotations : the parameter annotations to move to this method.
      */
     private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions, List annotations, Map paramAnnotations) {
-        GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc); 
-        
+        GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc);
+
         mv.visitCode();
-        
+
         Type returnType = Type.getReturnType(desc);
 
         // Compute result and exception stack location
         int result = -1;
         int exception = -1;
-        
+
         //int arguments = mv.newLocal(Type.getType((new Object[0]).getClass()));
 
         if (returnType.getSort() != Type.VOID) {
-            // The method returns something 
+            // The method returns something
             result = mv.newLocal(returnType);
             exception = mv.newLocal(Type.getType(Throwable.class));
         } else {
@@ -402,18 +406,18 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitInsn(returnType.getOpcode(IRETURN));
 
         // end of the non intercepted method invocation.
-        
+
         mv.visitLabel(l0);
-        
+
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(generateMethodId(name, desc));
         mv.loadArgArray();
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ENTRY, "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V");
-        
+
         mv.visitVarInsn(ALOAD, 0);
-            
+
         // Do not allow argument modification : just reload arguments.
         mv.loadArgs();
         mv.visitMethodInsn(INVOKESPECIAL, m_owner, PREFIX + name, desc);
@@ -433,7 +437,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
             mv.visitInsn(ACONST_NULL);
         }
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
-        
+
         mv.visitLabel(l1);
         Label l7 = new Label();
         mv.visitJumpInsn(GOTO, l7);
@@ -454,7 +458,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
             mv.visitVarInsn(returnType.getOpcode(ILOAD), result);
         }
         mv.visitInsn(returnType.getOpcode(IRETURN));
-        
+
         // Move annotations
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
@@ -462,7 +466,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 ad.visitAnnotation(mv);
             }
         }
-        
+
         // Move parameter annotations
         if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
             Iterator ids = paramAnnotations.keySet().iterator();
@@ -568,7 +572,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         // Add the getComponentInstance
         createGetComponentInstanceMethod();
-        
+
         // Need to inject a constructor?
         if (! m_foundSuitableConstructor) { // No adequate constructor, create one.
             createSimpleConstructor();
