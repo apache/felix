@@ -1653,6 +1653,44 @@ public class ModuleImpl implements Module
         return (parent == null) ? m_bootClassLoader : parent;
     }
 
+    static Enumeration convertToLocalUrls(Enumeration urls) {
+        return new ToLocalUrlEnumeration(urls);
+    }
+
+    static URL convertToLocalUrl(URL url) {
+        if (url.getProtocol().equals("bundle"))
+        {
+            try
+            {
+                url = ((URLHandlersBundleURLConnection)
+                    url.openConnection()).getLocalURL();
+            }
+            catch (IOException ex)
+            {
+                // Ignore and add original url.
+            }
+        }
+        return url;
+    }
+
+    static class ToLocalUrlEnumeration implements Enumeration
+    {
+        final Enumeration enumeration;
+
+        ToLocalUrlEnumeration(Enumeration enumeration) {
+            this.enumeration = enumeration;
+        }
+
+        public boolean hasMoreElements() {
+            return enumeration.hasMoreElements();
+        }
+
+        public Object nextElement() {
+            URL url = (URL) enumeration.nextElement();
+            return convertToLocalUrl(url);
+        }
+    }
+
     private static final Constructor m_dexFileClassConstructor;
     private static final Method m_dexFileClassLoadDex;
     private static final Method m_dexFileClassLoadClass;
@@ -1711,32 +1749,14 @@ public class ModuleImpl implements Module
             Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
             if (m_useLocalURLs)
             {
-                List<URL> localURLs = new ArrayList();
-                while (urls.hasMoreElements())
-                {
-                    URL url = (URL) urls.nextElement();
-                    if (url.getProtocol().equals("bundle"))
-                    {
-                        try
-                        {
-                            url = ((URLHandlersBundleURLConnection)
-                                url.openConnection()).getLocalURL();
-                        }
-                        catch (IOException ex)
-                        {
-                            // Ignore and add original url.
-                        }
-                    }
-                    localURLs.add(url);
-                }
-                urls = Collections.enumeration(localURLs);
+                urls = convertToLocalUrls(urls);
             }
             return urls;
         }
 
         protected Enumeration findResources(String name)
         {
-            return getResourcesLocal(name);
+            return ModuleImpl.this.getResourcesLocal(name);
         }
     }
 
@@ -2035,25 +2055,24 @@ public class ModuleImpl implements Module
             URL url = ModuleImpl.this.getResourceByDelegation(name);
             if (m_useLocalURLs)
             {
-                if (url.getProtocol().equals("bundle"))
-                {
-                    try
-                    {
-                        url = ((URLHandlersBundleURLConnection)
-                            url.openConnection()).getLocalURL();
-                    }
-                    catch (IOException ex)
-                    {
-                        // Ignore and return original url.
-                    }
-                }
+                url = convertToLocalUrl(url);
             }
             return url;
         }
 
+        public Enumeration getResources(String name) throws IOException
+        {
+            Enumeration urls = super.getResources(name);
+            if (m_useLocalURLs)
+            {
+                urls = convertToLocalUrls(urls);
+            }
+            return urls;
+        }
+
         protected URL findResource(String name)
         {
-            return getResourceLocal(name);
+            return ModuleImpl.this.getResourceLocal(name);
         }
 
         // The findResources() method should only look at the module itself, but
@@ -2063,30 +2082,7 @@ public class ModuleImpl implements Module
         // can't. As a workaround, we make findResources() delegate instead.
         protected Enumeration findResources(String name)
         {
-            Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
-            if (m_useLocalURLs)
-            {
-                List<URL> localURLs = new ArrayList();
-                while (urls.hasMoreElements())
-                {
-                    URL url = (URL) urls.nextElement();
-                    if (url.getProtocol().equals("bundle"))
-                    {
-                        try
-                        {
-                            url = ((URLHandlersBundleURLConnection)
-                                url.openConnection()).getLocalURL();
-                        }
-                        catch (IOException ex)
-                        {
-                            // Ignore and add original url.
-                        }
-                    }
-                    localURLs.add(url);
-                }
-                urls = Collections.enumeration(localURLs);
-            }
-            return urls;
+            return ModuleImpl.this.getResourcesByDelegation(name);
         }
 
         protected String findLibrary(String name)
