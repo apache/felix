@@ -49,10 +49,6 @@ public class ServiceImpl implements Service
 
     public Service add(Dependency dependency)
     {
-        synchronized (this)
-        {
-            m_dependencies.add(dependency);
-        }
         if (dependency instanceof ServiceDependencyImpl)
         {
             m_delegate.add(((org.apache.felix.dependencymanager.impl.ServiceDependencyImpl) dependency).getDelegate());
@@ -66,11 +62,20 @@ public class ServiceImpl implements Service
         {
             throw new IllegalArgumentException("dependency type not supported: " + dependency);
         }
+        
+        synchronized (this)
+        {
+            m_dependencies.add(dependency);
+        }
         return this;
     }
 
     public Service remove(Dependency dependency)
     {
+        synchronized (this)
+        {
+            m_dependencies.remove(dependency);
+        }
         if (dependency instanceof ServiceDependencyImpl)
         {
             m_delegate.remove(((org.apache.felix.dependencymanager.impl.ServiceDependencyImpl) dependency).getDelegate());
