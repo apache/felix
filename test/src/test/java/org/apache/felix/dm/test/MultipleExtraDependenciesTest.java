@@ -50,63 +50,60 @@ public class MultipleExtraDependenciesTest extends Base {
     /**
      * Check that list of extra dependencies (defined from init method) are handled properly.
      * The extra dependencies are added using a List object (Component.add(List)).
-     * A component c1 will define two extra dependencies over available c4/c5 services.
+     * A component c1 will define two extra dependencies over *available* c4/c5 services.
      */
-    @Test
-    public void testWithTwoAvailableExtraDependencies(BundleContext context) {  
-        DependencyManager m = new DependencyManager(context);
-        // Helper class that ensures certain steps get executed in sequence
-        Ensure e = new Ensure();
-        Component c1 = m.createComponent()
-                        .setInterface(Service1.class.getName(), null)
-                        .setImplementation(new MyComponent1(e))
-                        .add(m.createServiceDependency()
-                             .setService(Service2.class)
-                             .setRequired(true)
-                             .setAutoConfig("m_service2"));
-        
-        Component c2 = m.createComponent()
-                        .setImplementation(new MyComponent2(e))
-                        .add(m.createServiceDependency()
-                             .setService(Service1.class)
-                             .setRequired(false)
-                             .setAutoConfig(false)
-                             .setCallbacks("added", null, null));
-             
-        Component c3 = m.createComponent()
-                        .setInterface(Service2.class.getName(), null)
-                        .setImplementation(Service2Impl.class);
-        
-        Hashtable h = new Hashtable();
-        h.put("type", "xx");
-        Component c4 = m.createComponent()
-                        .setInterface(Service3.class.getName(), h)
-                        .setImplementation(Service3Impl1.class);
+     @Test
+     public void testWithTwoAvailableExtraDependency(BundleContext context) {   
+         DependencyManager m = new DependencyManager(context);
+         // Helper class that ensures certain steps get executed in sequence
+         Ensure e = new Ensure();
+         Component c1 = m.createComponent()
+                         .setInterface(Service1.class.getName(), null)
+                         .setImplementation(new MyComponent1(e))
+                         .add(m.createServiceDependency()
+                              .setService(Service2.class)
+                              .setRequired(true)
+                              .setAutoConfig("m_service2"));
+         
+         Component c2 = m.createComponent()
+                         .setImplementation(new MyComponent2(e))
+                         .add(m.createServiceDependency()
+                              .setService(Service1.class)
+                              .setRequired(false)
+                              .setAutoConfig(false)
+                              .setCallbacks("added", null, null));
+              
+         Component c3 = m.createComponent()
+                         .setInterface(Service2.class.getName(), null)
+                         .setImplementation(Service2Impl.class);
+         
+         Hashtable h = new Hashtable();
+         h.put("type", "xx");
+         Component c4 = m.createComponent()
+                         .setInterface(Service3.class.getName(), h)
+                         .setImplementation(Service3Impl1.class);
 
-        h = new Hashtable();
-        h.put("type", "yy");
-        Component c5 = m.createComponent()
-                        .setInterface(Service3.class.getName(), h)
-                        .setImplementation(Service3Impl2.class);
+         h = new Hashtable();
+         h.put("type", "yy");
+         Component c5 = m.createComponent()
+                         .setInterface(Service3.class.getName(), h)
+                         .setImplementation(Service3Impl2.class);
 
 
-        System.out.println("\n+++ Adding c2 / MyComponent2");
-        m.add(c2);
-        System.out.println("\n+++ Adding c3 / Service2");
-        m.add(c3);
-        System.out.println("\n+++ Adding c4 / Service3(xx)");
-        m.add(c4);
-        
-        System.out.println("\n+++ Adding c1 / MyComponent1");
-        m.add(c1);
-
-        // c1 have declared two extra dependency on Service3 (xx/yy).
-        // So, because we have not yet added c5 (yy), c1 should not be started currently.
-        // But, now, we'll add c5 (Service3/yy) and c1 should then be started ...
-        System.out.println("\n+++ Adding c5 / Service3(yy)");
-        m.add(c5);
-        e.waitForStep(3, 3000);
-    }
+         System.out.println("\n+++ Adding c2 / MyComponent2");
+         m.add(c2);
+         System.out.println("\n+++ Adding c3 / Service2");
+         m.add(c3);
+         System.out.println("\n+++ Adding c4 / Service3(xx)");
+         m.add(c4);
+         System.out.println("\n+++ Adding c5 / Service3(yy)");
+         m.add(c5);
+         System.out.println("\n+++ Adding c1 / MyComponent1");
+         // c1 have declared two extra dependency on Service3 (xx/yy).
+         // both extra dependencies are available, so the c1 component should be started immediately.
+         m.add(c1);
+         e.waitForStep(3, 3000);
+     }
 
     /**
      * Check that list of extra dependencies (defined from init method) are handled properly.
@@ -116,7 +113,7 @@ public class MultipleExtraDependenciesTest extends Base {
      * So, c1 is not yet activated.
      * Then c5 is added, and it triggers the c1 activation ...
      */
-    @Test
+   @Test
     public void testWithOneAvailableExtraDependency(BundleContext context) {  
         DependencyManager m = new DependencyManager(context);
         // Helper class that ensures certain steps get executed in sequence
@@ -160,14 +157,17 @@ public class MultipleExtraDependenciesTest extends Base {
         m.add(c3);
         System.out.println("\n+++ Adding c4 / Service3(xx)");
         m.add(c4);
+        System.out.println("\n+++ Adding c1 / MyComponent1");
+        m.add(c1);
+
+        // c1 have declared two extra dependency on Service3 (xx/yy).
+        // So, because we have not yet added c5 (yy), c1 should not be started currently.
+        // But, now, we'll add c5 (Service3/yy) and c1 should then be started ...
         System.out.println("\n+++ Adding c5 / Service3(yy)");
         m.add(c5);
-        System.out.println("\n+++ Adding c1 / MyComponent1");
-        // c1 have declared two extra dependency on Service3 (xx/yy).
-        // both extra dependencies are available, so the c1 component should be started immediately.
-        m.add(c1);
         e.waitForStep(3, 3000);
     }
+
 
     public interface Service1 {}
     public interface Service2 {}
