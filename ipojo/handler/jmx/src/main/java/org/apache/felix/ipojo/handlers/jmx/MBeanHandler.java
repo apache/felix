@@ -76,6 +76,11 @@ public class MBeanHandler extends PrimitiveHandler {
     private static final String JMX_CONFIG_ELT = "config";
 
     /**
+     * The name of the global configuration element.
+     */
+    private static final String JMX_CONFIG_ALT_ELT = "JmxBean";
+
+    /**
      * The name of the component object full name attribute.
      */
     private static final String JMX_OBJ_NAME_ELT = "objectName";
@@ -103,7 +108,7 @@ public class MBeanHandler extends PrimitiveHandler {
     /**
      * The alternative name of a method element.
      */
-    private static final String JMX_METHOD_ELT_ALT = "method";
+    private static final String JMX_METHOD_ELT_ALT = "JmxMethod";
 
     /**
      * The name of the property or method name attribute.
@@ -123,7 +128,7 @@ public class MBeanHandler extends PrimitiveHandler {
     /**
      * The alternative name of a property element.
      */
-    private static final String JMX_PROPERTY_ELT_ALT = "property";
+    private static final String JMX_PROPERTY_ELT_ALT = "JmxProperty";
 
     /**
      * The name of the field attribute.
@@ -222,9 +227,12 @@ public class MBeanHandler extends PrimitiveHandler {
 
         // Build the hashmap
         Element[] mbeans = metadata.getElements(JMX_CONFIG_ELT, m_namespace);
+        if (mbeans == null || mbeans.length == 0) {
+            mbeans = metadata.getElements(JMX_CONFIG_ALT_ELT, m_namespace);
+        }
 
         if (mbeans.length != 1) {
-            error("A component must have at most one " + JMX_CONFIG_ELT + ".");
+            error("A component must have exactly one " + JMX_CONFIG_ELT + " or " + JMX_CONFIG_ALT_ELT + " element.");
             error("The JMX handler configuration is ignored.");
             return;
         }
@@ -532,6 +540,21 @@ public class MBeanHandler extends PrimitiveHandler {
         PropertyField propertyField = (PropertyField) m_jmxConfigFieldMap
             .getPropertyFromField(fieldName);
         if (propertyField != null) {
+        	// Do we have a value to inject ?
+        	Object v = propertyField.getValue();
+        	if (v == null) {
+        		String type = propertyField.getType();
+    	        if ("boolean".equals(type)) { v = Boolean.FALSE; }
+    	        else if ("byte".equals(type)) { v = new Byte((byte) 0); }
+    	        else if ("short".equals(type)) { v = new Short((short) 0); }
+    	        else if ("int".equals(type)) { v = new Integer(0); }
+    	        else if ("long".equals(type)) { v = new Long(0); }
+    	        else if ("float".equals(type)) { v = new Float(0); }
+    	        else if ("double".equals(type)) { v =new Double(0); }
+    	        else if ("char".equals(type)) { v = new Character((char) 0); }
+
+    	        return v;
+    	    }
             m_instanceManager.onSet(pojo, fieldName, propertyField.getValue());
             return propertyField.getValue();
         }

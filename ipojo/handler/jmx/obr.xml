@@ -22,4 +22,9 @@
 		<p n="namespace" v="org.apache.felix.ipojo.handlers.jmx"/>
 		<p n="type" v="primitive"/>
 	</capability>
+    <capability name="ipojo.handler">
+        <p n="name" v="JMXBean"/>
+        <p n="namespace" v="org.apache.felix.ipojo.handlers.jmx"/>
+        <p n="type" v="primitive"/>
+    </capability>
 </obr>
