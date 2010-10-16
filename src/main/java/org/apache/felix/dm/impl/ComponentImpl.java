@@ -309,6 +309,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         }
 
         synchronized (m_dependencies) {
+            oldState = m_state;
             // starting the dependency above might have triggered another state change, so
             // we have to fetch the current state again
             newState = new State((List) m_dependencies.clone(), !oldState.isInactive(), m_isInstantiated, m_isBound);
