@@ -156,13 +156,9 @@
         <jdk>1.5</jdk>
       </activation>
       <modules>
-        <!--
-        Remove bundleAsiPOJO - Deprecated
-        <module>bundleAsiPOJO</module>
-        -->
         <module>core/annotations</module>
-        <module>manipulator/manipulator-java5
-        </module>
+        <module>manipulator/manipulator-java5</module>
+        <module>handler/jmx</module>
         <module>handler/transaction</module>
       </modules>
     </profile>
@@ -172,13 +168,9 @@
         <jdk>1.6</jdk>
       </activation>
       <modules>
-        <!--
-        Remove bundleAsiPOJO - Deprecated
-        <module>bundleAsiPOJO</module>
-        -->
         <module>core/annotations</module>
-        <module>manipulator/manipulator-java5
-        </module>
+        <module>manipulator/manipulator-java5</module>
+        <module>handler/jmx</module>
         <module>handler/transaction</module>
       </modules>
     </profile>
