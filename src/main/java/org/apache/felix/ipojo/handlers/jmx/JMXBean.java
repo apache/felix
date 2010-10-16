@@ -27,10 +27,9 @@ import java.lang.annotation.Target;
  * Be aware that despite is it provided in the annotations jar,
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- * @deprecated replaced by {@link JMXBean}
  */
 @Target(ElementType.TYPE)
-public @interface Config {
+public @interface JMXBean {
 
     /**
      * Enables or Disables MOSGi usage.
