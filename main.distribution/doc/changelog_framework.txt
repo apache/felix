@@ -1,3 +1,13 @@
+Changes from 3.0.4 to 3.0.5
+---------------------------
+
+** Bug
+    * [FELIX-2653] - LinkageError caused by duplicate class definition during implicit boot delegation
+
+** Improvement
+    * [FELIX-2645] - Add a (hidden) way to retrieve a local URL for a given bundle URL
+    * [FELIX-2654] - [Framework] Modify bundle cache to use a single file per bundle state
+
 Changes from 3.0.3 to 3.0.4
 ---------------------------
 
