@@ -81,6 +81,7 @@
     </plugins>
   </build>
 
+
   <scm>
     <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-3.0.5</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-3.0.5</developerConnection>
