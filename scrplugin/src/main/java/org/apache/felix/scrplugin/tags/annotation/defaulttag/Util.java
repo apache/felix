@@ -304,8 +304,7 @@ public abstract class Util {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends Enum> T getEnumValue(Annotation annotation,
+    public static <T extends Enum<T>> T getEnumValue(Annotation annotation,
                                                   String name,
                                                   final Class<T> enumClass,
                                                   final Class<?> clazz,
@@ -330,15 +329,13 @@ public abstract class Util {
                 if (dotPos >= 0) {
                     enumName = enumName.substring(dotPos+1);
                 }
-                Object o = Enum.valueOf(enumClass, enumName);
-                return (T)o;
+                return Enum.valueOf(enumClass, enumName);
             }
         }
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends Enum> T getEnumValue(Annotation annotation,
+    public static <T extends Enum<T>> T getEnumValue(Annotation annotation,
             String name,
             final Class<T> enumClass,
             final Class<?> clazz) {
