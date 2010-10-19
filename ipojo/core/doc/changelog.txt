@@ -1,3 +1,15 @@
+Changes from the 1.6.4 to 1.6.6
+-------------------------------
+** Improvement
+ * [FELIX-2594] - Have a way to create new custom iPojo handler without having to specify a handler usage
+ * [FELIX-2623] - @Update annotated methods should not require a Dictionary parameter
+
+** Bug
+ * [FELIX-2580] - iPOJO failed to create proxies on service which are not interface
+ * [FELIX-2596] - DependencyHandler.onObjectCreation throws NPE when bundle is refreshed
+ * [FELIX-2603] - wrong behavior of InstanceManager.onSet(..) method
+ * [FELIX-2636] - Cannot control the validity of an iPOJO instance using a configuration property
+ 
 Changes from the 1.6.2 to 1.6.4
 -------------------------------
 ** Improvement
