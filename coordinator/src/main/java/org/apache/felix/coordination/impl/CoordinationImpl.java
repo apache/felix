@@ -113,19 +113,7 @@ public class CoordinationImpl implements Coordination {
         // If a timeout happens, the coordination thread is set to always fail
         this.mustFail = TIMEOUT;
 
-        // and interrupted and a small delay happens to allow the initiator to
-        // clean up by reacting on the interrupt. If the initiator can do this
-        // clean up normally, the end() method will return TIMEOUT.
-        try {
-            initiatorThread.interrupt();
-            Thread.sleep(500); // half a second for now
-        } catch (SecurityException se) {
-            // thrown by interrupt -- no need to wait if interrupt fails
-        } catch (InterruptedException ie) {
-            // someone interrupted us while delaying, just continue
-        }
-
-        // After this delay the coordination is forcefully failed.
+        // Faile the Coordination upon timeout
         CoordinationImpl.this.fail(null);
     }
 
