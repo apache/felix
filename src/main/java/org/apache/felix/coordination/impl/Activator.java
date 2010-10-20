@@ -91,7 +91,7 @@ public class Activator implements BundleActivator {
 
         public void ungetService(Bundle bundle,
                 ServiceRegistration registration, Object service) {
-            // nothing to do
+            // TODO: FELIX-2671/OSGi Bug 104: Ensure all coordinations of this Coordinator service are terminated
         }
 
     }
