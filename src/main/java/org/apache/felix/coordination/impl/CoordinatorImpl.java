@@ -78,9 +78,4 @@ public class CoordinatorImpl implements Coordinator {
         return mgr.participate(participant);
     }
 
-    public Coordination participateOrBegin(Participant ifActive) {
-        // TODO: check permission
-        return mgr.participateOrBegin(ifActive);
-    }
-
 }
