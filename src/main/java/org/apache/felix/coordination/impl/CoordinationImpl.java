@@ -180,6 +180,16 @@ public class CoordinationImpl implements Coordination {
         return state == State.FAILED;
     }
 
+    /**
+     * Returns whether the coordination has ended.
+     * <p>
+     * The return value of <code>false</code> may be a transient situation if
+     * the coordination is in the process of terminating.
+     */
+    public boolean isTerminated() {
+        return state == State.TERMINATED;
+    }
+
     public void addTimeout(long timeOutInMs) {
         if (this.timeOutInMs > 0) {
             // already set, ignore
