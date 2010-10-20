@@ -21,7 +21,6 @@ package org.apache.felix.scrplugin.tags.annotation.sling;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.servlet.Filter;
 
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
@@ -35,7 +34,7 @@ import com.thoughtworks.qdox.model.Annotation;
 public class SlingFilterServiceTag extends AbstractTag {
 
     private static final Map<String, String> INTERFACE_MAP =
-        Collections.singletonMap(Constants.SERVICE_INTERFACE, Filter.class.getName());
+        Collections.singletonMap(Constants.SERVICE_INTERFACE, "javax.servlet.Filter");
 
     /**
      * @param desc Description

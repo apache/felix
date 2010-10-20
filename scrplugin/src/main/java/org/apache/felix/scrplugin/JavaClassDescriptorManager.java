@@ -1,26 +1,27 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 package org.apache.felix.scrplugin;
 
 
+import java.io.File;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
@@ -30,7 +31,7 @@ import org.apache.felix.scrplugin.tags.annotation.AnnotationTagProviderManager;
 import org.apache.felix.scrplugin.tags.cl.ClassLoaderJavaClassDescription;
 import org.apache.felix.scrplugin.tags.qdox.QDoxJavaClassDescription;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
-
+import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
 import com.thoughtworks.qdox.model.JavaSource;
 
@@ -55,7 +56,8 @@ public abstract class JavaClassDescriptorManager
     private final Map<String, JavaClassDescription> javaClassDescriptions = new HashMap<String, JavaClassDescription>();
 
     /**
-     * Supports mapping of built-in and custom java anntoations to {@link JavaTag} implementations.
+     * Supports mapping of built-in and custom java anntoations to
+     * {@link JavaTag} implementations.
      */
     private final AnnotationTagProviderManager annotationTagProviderManager;
 
@@ -65,13 +67,16 @@ public abstract class JavaClassDescriptorManager
     /** Process Annotations? */
     private final boolean processAnnotations;
 
+    /** The Java sources gathered by {@link #getSourceDescriptions()} */
+    private JavaSource[] sources;
+
+    /** The component definitions from other bundles hashed by classname. */
+    private Map<String, Component> componentDescriptions;
+
 
     /**
      * Construct a new manager.
-     * @param log
-     * @param annotationTagProviders List of annotation tag providers
-     * @param parseJavadocs Should the javadocs be parsed?
-     * @param processAnnotations Should the annotations be processed?
+     *
      * @throws SCRDescriptorFailureException
      */
     public JavaClassDescriptorManager( final Log log, final ClassLoader classLoader,
@@ -83,29 +88,200 @@ public abstract class JavaClassDescriptorManager
         this.log = log;
         this.annotationTagProviderManager = new AnnotationTagProviderManager( annotationTagProviders );
         this.classloader = classLoader;
+
         ClassUtil.classLoader = this.classloader;
     }
 
 
     /**
-     * Returns the QDox JavaSource instances representing the source files
-     * for which the Declarative Services and Metatype descriptors have to be
+     * Returns the QDox JavaSource instances representing the source files for
+     * which the Declarative Services and Metatype descriptors have to be
      * generated.
      *
-     * @throws SCRDescriptorException May be thrown if an error occurrs gathering
-     *      the java sources.
+     * @throws SCRDescriptorException May be thrown if an error occurrs
+     *             gathering the java sources.
      */
-    protected abstract JavaSource[] getSources() throws SCRDescriptorException;
+    protected JavaSource[] getSources() throws SCRDescriptorException
+    {
+        if ( this.sources == null )
+        {
+            this.log.debug( "Setting up QDox" );
+
+            JavaDocBuilder builder = new JavaDocBuilder();
+            builder.getClassLibrary().addClassLoader( this.getClassLoader() );
+
+            final Iterator<File> i = getSourceFiles();
+            while ( i.hasNext() )
+            {
+                File file = i.next();
+                this.log.debug( "Adding source file " + file );
+                try
+                {
+                    builder.addSource( file );
+                }
+                catch ( IOException e )
+                {
+                    // also FileNotFoundException
+                    throw new SCRDescriptorException( "Unable to add source file", file.toString(), 0, e );
+                }
+            }
+            this.sources = builder.getSources();
+        }
+
+        return this.sources;
+    }
+
+
+    /**
+     * Returns an iterator of paths to directories providing Java source files
+     * to be parsed.
+     * <p>
+     * This method is called by the default {@link #getSources()} implementation
+     * to return the root directories for the Java files to be parsed. This
+     * default implementation returns an empty iterator. Implementations of this
+     * class not overwriting the {@link #getSources()} method should overwrite
+     * this method by providing the concrete source locations.
+     *
+     * @return An iterator of Java source locations.
+     */
+    protected Iterator<File> getSourceFiles()
+    {
+        return Collections.<File> emptyList().iterator();
+    }
 
 
     /**
      * Returns a map of component descriptors which may be extended by the java
      * sources returned by the {@link #getSources()} method.
+     * <p>
+     * This method calls the {@link #getDependencies()} method and checks for
+     * any Service-Component descriptors in the returned files.
+     * <p>
+     * This method may be overwritten by extensions of this class.
      *
-     * @throws SCRDescriptorException May be thrown if an error occurrs gethering
-     *      the component descriptors.
+     * @throws SCRDescriptorException May be thrown if an error occurrs
+     *             gethering the component descriptors.
      */
-    protected abstract Map<String, Component> getComponentDescriptors() throws SCRDescriptorException;
+    protected Map<String, Component> getComponentDescriptors() throws SCRDescriptorException
+    {
+        if ( this.componentDescriptions == null )
+        {
+            final List<Component> components = new ArrayList<Component>();
+            final List<File> dependencies = getDependencies();
+            for ( File artifact : dependencies )
+            {
+                this.log.debug( "Trying to get manifest from artifact " + artifact );
+                try
+                {
+                    final Manifest manifest = this.getManifest( artifact );
+                    if ( manifest != null )
+                    {
+                        // read Service-Component entry
+                        if ( manifest.getMainAttributes().getValue( Constants.SERVICE_COMPONENT ) != null )
+                        {
+                            final String serviceComponent = manifest.getMainAttributes().getValue(
+                                Constants.SERVICE_COMPONENT );
+                            this.log
+                                .debug( "Found Service-Component: " + serviceComponent + " in artifact " + artifact );
+                            final StringTokenizer st = new StringTokenizer( serviceComponent, "," );
+                            while ( st.hasMoreTokens() )
+                            {
+                                final String entry = st.nextToken().trim();
+                                if ( entry.length() > 0 )
+                                {
+                                    final Components c = this.readServiceComponentDescriptor( artifact, entry );
+                                    if ( c != null )
+                                    {
+                                        components.addAll( c.getComponents() );
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            this.log.debug( "Artifact has no service component entry in manifest " + artifact );
+                        }
+                    }
+                    else
+                    {
+                        this.log.debug( "Unable to get manifest from artifact " + artifact );
+                    }
+                }
+                catch ( IOException ioe )
+                {
+                    throw new SCRDescriptorException( "Unable to get manifest from artifact", artifact.toString(), 0,
+                        ioe );
+                }
+                this.log.debug( "Trying to get scrinfo from artifact " + artifact );
+                // now read the scr private file - components stored there
+                // overwrite components already
+                // read from the service component section.
+                InputStream scrInfoFile = null;
+                try
+                {
+                    scrInfoFile = this.getFile( artifact, Constants.ABSTRACT_DESCRIPTOR_ARCHIV_PATH );
+                    if ( scrInfoFile != null )
+                    {
+                        components.addAll( this.parseServiceComponentDescriptor( scrInfoFile ).getComponents() );
+                    }
+                    else
+                    {
+                        this.log.debug( "Artifact has no scrinfo file (it's optional): " + artifact );
+                    }
+                }
+                catch ( IOException ioe )
+                {
+                    throw new SCRDescriptorException( "Unable to get scrinfo from artifact", artifact.toString(), 0,
+                        ioe );
+                }
+                finally
+                {
+                    if ( scrInfoFile != null )
+                    {
+                        try
+                        {
+                            scrInfoFile.close();
+                        }
+                        catch ( IOException ignore )
+                        {
+                        }
+                    }
+                }
+
+                // now create map with component descriptions
+                this.componentDescriptions = new HashMap<String, Component>();
+                for ( final Component component : components )
+                {
+                    this.componentDescriptions.put( component.getImplementation().getClassame(), component );
+                }
+            }
+        }
+
+        return this.componentDescriptions;
+    }
+
+
+    /**
+     * Returns a list of files denoting dependencies of the module for which
+     * descriptors are to be generated. The returned dependencies are expected
+     * to be bundles which may (or may not) contain Service Component
+     * descriptors (or internal descriptors in the case of abstract components
+     * not listed in the "official" descriptors).
+     * <p>
+     * This method is called by the {@link #getComponentDescriptors()} method in
+     * this class to get the list of bundles from where base component
+     * descriptors are to be extracted.
+     * <p>
+     * Extensions of this class not overwriting the
+     * {@link #getComponentDescriptors()} method should overwrite this method if
+     * they wish to provide such base component descriptors.
+     *
+     * @return
+     */
+    protected List<File> getDependencies()
+    {
+        return Collections.<File> emptyList();
+    }
 
 
     /**
@@ -167,12 +343,12 @@ public abstract class JavaClassDescriptorManager
 
 
     /**
-     * Parses the descriptors read from the given input stream. This method
-     * may be called by the {@link #getComponentDescriptors()} method to parse
-     * the descriptors gathered in an implementation dependent way.
+     * Parses the descriptors read from the given input stream. This method may
+     * be called by the {@link #getComponentDescriptors()} method to parse the
+     * descriptors gathered in an implementation dependent way.
      *
-     * @throws SCRDescriptorException If an error occurrs reading the descriptors
-     *      from the stream.
+     * @throws SCRDescriptorException If an error occurrs reading the
+     *             descriptors from the stream.
      */
     protected Components parseServiceComponentDescriptor( InputStream file ) throws SCRDescriptorException
     {
@@ -182,6 +358,7 @@ public abstract class JavaClassDescriptorManager
 
     /**
      * Return all source descriptions of this project.
+     *
      * @return All contained java class descriptions.
      */
     public JavaClassDescription[] getSourceDescriptions() throws SCRDescriptorException
@@ -198,6 +375,7 @@ public abstract class JavaClassDescriptorManager
 
     /**
      * Get a java class description for the class.
+     *
      * @param className
      * @return The java class description.
      * @throws SCRDescriptorException
@@ -217,7 +395,8 @@ public abstract class JavaClassDescriptorManager
                 {
                     try
                     {
-                        // check for java annotation descriptions - fallback to QDox if none found
+                        // check for java annotation descriptions - fallback to
+                        // QDox if none found
                         Class<?> clazz = this.classloader.loadClass( className );
                         if ( this.processAnnotations
                             && getAnnotationTagProviderManager().hasScrPluginAnnotation( javaClass ) )
@@ -251,7 +430,7 @@ public abstract class JavaClassDescriptorManager
                 }
                 catch ( ClassNotFoundException e )
                 {
-                    throw new SCRDescriptorException( "Unable to load class", className, 0);
+                    throw new SCRDescriptorException( "Unable to load class", className, 0 );
                 }
             }
             this.javaClassDescriptions.put( className, result );
@@ -261,7 +440,9 @@ public abstract class JavaClassDescriptorManager
 
 
     /**
-     * Get a list of all {@link JavaClass} definitions four all source files (including nested/inner classes)
+     * Get a list of all {@link JavaClass} definitions four all source files
+     * (including nested/inner classes)
+     *
      * @return List of {@link JavaClass} definitions
      */
     private JavaClass[] getJavaClassesFromSources() throws SCRDescriptorException
@@ -270,7 +451,7 @@ public abstract class JavaClassDescriptorManager
         final List<JavaClass> classes = new ArrayList<JavaClass>();
         for ( int i = 0; i < sources.length; i++ )
         {
-            if (sources[i].getClasses() == null || sources[i].getClasses().length == 0)
+            if ( sources[i].getClasses() == null || sources[i].getClasses().length == 0 )
             {
                 continue;
             }
@@ -286,6 +467,150 @@ public abstract class JavaClassDescriptorManager
             }
         }
         return classes.toArray( new JavaClass[classes.size()] );
+    }
+
+
+    /**
+     * Read the service component description.
+     *
+     * @param artifact
+     * @param entry
+     * @throws IOException
+     * @throws SCRDescriptorException
+     */
+    private Components readServiceComponentDescriptor( File jarFile, String entry )
+    {
+        this.log.debug( "Reading " + entry + " from " + jarFile );
+        InputStream xml = null;
+        try
+        {
+            xml = this.getFile( jarFile, entry );
+            if ( xml == null )
+            {
+                throw new SCRDescriptorException( "Entry " + entry + " not contained in JAR File ", jarFile.toString(),
+                    0 );
+            }
+            return this.parseServiceComponentDescriptor( xml );
+        }
+        catch ( IOException mee )
+        {
+            this.log.warn( "Unable to read SCR descriptor file from JAR File " + jarFile + " at " + entry );
+            this.log.debug( "Exception occurred during reading: " + mee.getMessage(), mee );
+        }
+        catch ( SCRDescriptorException mee )
+        {
+            this.log.warn( "Unable to read SCR descriptor file from JAR File " + jarFile + " at " + entry );
+            this.log.debug( "Exception occurred during reading: " + mee.getMessage(), mee );
+        }
+        finally
+        {
+            if ( xml != null )
+            {
+                try
+                {
+                    xml.close();
+                }
+                catch ( IOException ignore )
+                {
+                }
+            }
+        }
+        return null;
+    }
+
+
+    private Manifest getManifest( File artifact ) throws IOException
+    {
+        JarFile file = null;
+        try
+        {
+            file = new JarFile( artifact );
+            return file.getManifest();
+        }
+        finally
+        {
+            if ( file != null )
+            {
+                try
+                {
+                    file.close();
+                }
+                catch ( IOException ignore )
+                {
+                }
+            }
+        }
+    }
+
+
+    private InputStream getFile( File jarFile, String path ) throws IOException
+    {
+        JarFile file = null;
+        try
+        {
+            file = new JarFile( jarFile );
+            final JarEntry entry = file.getJarEntry( path );
+            if ( entry != null )
+            {
+                final InputStream stream = new ArtifactFileInputStream( file, entry );
+                file = null; // prevent file from being closed now
+                return stream;
+            }
+            return null;
+        }
+        finally
+        {
+            if ( file != null )
+            {
+                try
+                {
+                    file.close();
+                }
+                catch ( IOException ignore )
+                {
+                }
+            }
+        }
+    }
+
+    private static class ArtifactFileInputStream extends FilterInputStream
+    {
+        final JarFile jarFile;
+
+
+        ArtifactFileInputStream( JarFile jarFile, JarEntry jarEntry ) throws IOException
+        {
+            super( jarFile.getInputStream( jarEntry ) );
+            this.jarFile = jarFile;
+        }
+
+
+        @Override
+        public void close() throws IOException
+        {
+            try
+            {
+                super.close();
+            }
+            catch ( IOException ioe )
+            {
+            }
+            jarFile.close();
+        }
+
+
+        @Override
+        protected void finalize() throws Throwable
+        {
+            try
+            {
+                close();
+            }
+            finally
+            {
+                super.finalize();
+            }
+        }
     }
 
 }

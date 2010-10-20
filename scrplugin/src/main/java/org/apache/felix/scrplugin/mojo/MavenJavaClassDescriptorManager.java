@@ -21,19 +21,14 @@ package org.apache.felix.scrplugin.mojo;
 
 import java.io.*;
 import java.util.*;
-import java.util.jar.*;
 
 import org.apache.felix.scrplugin.*;
 import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.om.Components;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
-
-import com.thoughtworks.qdox.JavaDocBuilder;
-import com.thoughtworks.qdox.model.JavaSource;
 
 
 public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
@@ -42,8 +37,6 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
     private final MavenProject project;
 
     private final String excludeString;
-
-    private JavaSource[] sources;
 
     /** The component definitions from other bundles hashed by classname. */
     private Map<String, Component> componentDescriptions;
@@ -66,210 +59,96 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
     }
 
 
-    protected JavaSource[] getSources() throws SCRDescriptorException
+    @Override
+    protected Iterator<File> getSourceFiles()
     {
-        if ( this.sources == null )
+        ArrayList<File> files = new ArrayList<File>();
+
+        @SuppressWarnings("unchecked")
+        final Iterator<String> i = project.getCompileSourceRoots().iterator();
+
+        // FELIX-509: check for excludes
+        final String[] includes = new String[] { "**/*.java" };
+        final String[] excludes;
+        if ( excludeString != null )
         {
-
-            this.log.debug( "Setting up QDox" );
-
-            JavaDocBuilder builder = new JavaDocBuilder();
-            builder.getClassLibrary().addClassLoader( this.getClassLoader() );
-
-            @SuppressWarnings("unchecked")
-            final Iterator<String> i = project.getCompileSourceRoots().iterator();
-            // FELIX-509: check for excludes
-            if ( excludeString != null )
-            {
-                final String[] excludes = StringUtils.split( excludeString, "," );
-                final String[] includes = new String[]
-                    { "**/*.java" };
-
-                while ( i.hasNext() )
-                {
-                    final String tree = i.next();
-                    this.log.debug( "Scanning source tree " + tree );
-                    final File directory = new File( tree );
-                    final DirectoryScanner scanner = new DirectoryScanner();
-                    scanner.setBasedir( directory );
-
-                    if ( excludes != null && excludes.length > 0 )
-                    {
-                        scanner.setExcludes( excludes );
-                    }
-                    scanner.addDefaultExcludes();
-                    scanner.setIncludes( includes );
-
-                    scanner.scan();
-
-                    final String[] files = scanner.getIncludedFiles();
-                    if ( files != null )
-                    {
-                        for ( int m = 0; m < files.length; m++ )
-                        {
-                            this.log.debug( "Adding source file " + files[m] );
-                            try
-                            {
-                                builder.addSource( new File( directory, files[m] ) );
-                            }
-                            catch ( FileNotFoundException e )
-                            {
-                                throw new SCRDescriptorException( "Unable to scan directory.", files[m], 0, e );
-                            }
-                            catch ( IOException e )
-                            {
-                                throw new SCRDescriptorException( "Unable to scan directory.", files[m], 0, e );
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                while ( i.hasNext() )
-                {
-                    final String tree = i.next();
-                    this.log.debug( "Adding source tree " + tree );
-                    final File directory = new File( tree );
-                    builder.addSourceTree( directory );
-                }
-            }
-            this.sources = builder.getSources();
+            excludes = StringUtils.split( excludeString, "," );
+        }
+        else
+        {
+            excludes = null;
         }
 
-        return this.sources;
+        while ( i.hasNext() )
+        {
+            final String tree = i.next();
+            this.log.debug( "Scanning source tree " + tree );
+            final File directory = new File( tree );
+            final DirectoryScanner scanner = new DirectoryScanner();
+            scanner.setBasedir( directory );
+
+            if ( excludes != null && excludes.length > 0 )
+            {
+                scanner.setExcludes( excludes );
+            }
+            scanner.addDefaultExcludes();
+            scanner.setIncludes( includes );
+
+            scanner.scan();
+
+            for ( String fileName : scanner.getIncludedFiles() )
+            {
+                files.add( new File( directory, fileName ) );
+
+            }
+        }
+
+        return files.iterator();
     }
 
 
-    protected Map<String, Component> getComponentDescriptors() throws SCRDescriptorException
+    @Override
+    protected List<File> getDependencies()
     {
-        if ( this.componentDescriptions == null )
-        {
-            this.componentDescriptions = new HashMap<String, Component>();
+        ArrayList<File> dependencies = new ArrayList<File>();
 
-            // and now scan artifacts
-            final List<Component> components = new ArrayList<Component>();
-            @SuppressWarnings("unchecked")
-            final Map<String, Artifact> resolved = project.getArtifactMap();
-            final Iterator<Artifact> it = resolved.values().iterator();
-            while ( it.hasNext() )
+        @SuppressWarnings("unchecked")
+        final Map<String, Artifact> resolved = project.getArtifactMap();
+        final Iterator<Artifact> it = resolved.values().iterator();
+        while ( it.hasNext() )
+        {
+            final Artifact declared = it.next();
+            this.log.debug( "Checking artifact " + declared );
+            if ( this.isJavaArtifact( declared ) )
             {
-                final Artifact declared = it.next();
-                this.log.debug( "Checking artifact " + declared );
-                if ( this.isJavaArtifact( declared ) )
+                if ( Artifact.SCOPE_COMPILE.equals( declared.getScope() )
+                    || Artifact.SCOPE_RUNTIME.equals( declared.getScope() )
+                    || Artifact.SCOPE_PROVIDED.equals( declared.getScope() ) )
                 {
-                    if ( Artifact.SCOPE_COMPILE.equals( declared.getScope() )
-                        || Artifact.SCOPE_RUNTIME.equals( declared.getScope() )
-                        || Artifact.SCOPE_PROVIDED.equals( declared.getScope() ) )
+                    this.log.debug( "Resolving artifact " + declared );
+                    final Artifact artifact = resolved.get( ArtifactUtils.versionlessKey( declared ) );
+                    if ( artifact != null )
                     {
-                        this.log.debug( "Resolving artifact " + declared );
-                        final Artifact artifact = resolved.get( ArtifactUtils.versionlessKey( declared ) );
-                        if ( artifact != null )
-                        {
-                            this.log.debug( "Trying to get manifest from artifact " + artifact );
-                            try
-                            {
-                                final Manifest manifest = this.getManifest( artifact );
-                                if ( manifest != null )
-                                {
-                                    // read Service-Component entry
-                                    if ( manifest.getMainAttributes().getValue( Constants.SERVICE_COMPONENT ) != null )
-                                    {
-                                        final String serviceComponent = manifest.getMainAttributes().getValue(
-                                            Constants.SERVICE_COMPONENT );
-                                        this.log.debug( "Found Service-Component: " + serviceComponent
-                                            + " in artifact " + artifact );
-                                        final StringTokenizer st = new StringTokenizer( serviceComponent, "," );
-                                        while ( st.hasMoreTokens() )
-                                        {
-                                            final String entry = st.nextToken().trim();
-                                            if ( entry.length() > 0 )
-                                            {
-                                                final Components c = this.readServiceComponentDescriptor( artifact,
-                                                    entry );
-                                                if ( c != null )
-                                                {
-                                                    components.addAll( c.getComponents() );
-                                                }
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        this.log.debug( "Artifact has no service component entry in manifest "
-                                            + artifact );
-                                    }
-                                }
-                                else
-                                {
-                                    this.log.debug( "Unable to get manifest from artifact " + artifact );
-                                }
-                            }
-                            catch ( IOException ioe )
-                            {
-                                throw new SCRDescriptorException( "Unable to get manifest from artifact", artifact
-                                    .toString(), 0, ioe );
-                            }
-                            this.log.debug( "Trying to get scrinfo from artifact " + artifact );
-                            // now read the scr private file - components stored there overwrite components already
-                            // read from the service component section.
-                            InputStream scrInfoFile = null;
-                            try
-                            {
-                                scrInfoFile = this.getFile( artifact, Constants.ABSTRACT_DESCRIPTOR_ARCHIV_PATH );
-                                if ( scrInfoFile != null )
-                                {
-                                    components.addAll( this.parseServiceComponentDescriptor( scrInfoFile )
-                                        .getComponents() );
-                                }
-                                else
-                                {
-                                    this.log.debug( "Artifact has no scrinfo file (it's optional): " + artifact );
-                                }
-                            }
-                            catch ( IOException ioe )
-                            {
-                                throw new SCRDescriptorException( "Unable to get scrinfo from artifact", artifact
-                                    .toString(), 0, ioe );
-                            }
-                            finally
-                            {
-                                if ( scrInfoFile != null )
-                                {
-                                    try
-                                    {
-                                        scrInfoFile.close();
-                                    }
-                                    catch ( IOException ignore )
-                                    {
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            this.log.debug( "Unable to resolve artifact " + declared );
-                        }
+                        dependencies.add( artifact.getFile() );
                     }
                     else
                     {
-                        this.log.debug( "Artifact " + declared + " has not scope compile or runtime, but "
-                            + declared.getScope() );
+                        this.log.debug( "Unable to resolve artifact " + declared );
                     }
                 }
                 else
                 {
-                    this.log.debug( "Artifact " + declared + " is not a java artifact, type is " + declared.getType() );
+                    this.log.debug( "Artifact " + declared + " has not scope compile or runtime, but "
+                        + declared.getScope() );
                 }
             }
-            // now create map with component descriptions
-            for ( final Component component : components )
+            else
             {
-                this.componentDescriptions.put( component.getImplementation().getClassame(), component );
+                this.log.debug( "Artifact " + declared + " is not a java artifact, type is " + declared.getType() );
             }
         }
 
-        return this.componentDescriptions;
+        return dependencies;
     }
 
 
@@ -289,119 +168,4 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
         return false;
     }
 
-    /**
-     * Read the service component description.
-     * @param artifact
-     * @param entry
-     * @throws IOException
-     * @throws SCRDescriptorException
-     */
-    protected Components readServiceComponentDescriptor(Artifact artifact, String entry) {
-        this.log.debug("Reading " + entry + " from " + artifact);
-        InputStream xml = null;
-        try {
-            xml = this.getFile(artifact, entry);
-            if ( xml == null ) {
-                throw new SCRDescriptorException( "Entry " + entry + " not contained in artifact", artifact.toString(),
-                    0 );
-            }
-            return this.parseServiceComponentDescriptor(xml);
-        } catch (IOException mee) {
-            this.log.warn("Unable to read SCR descriptor file from artifact " + artifact + " at " + entry);
-            this.log.debug("Exception occurred during reading: " + mee.getMessage(), mee);
-        } catch (SCRDescriptorException mee) {
-            this.log.warn("Unable to read SCR descriptor file from artifact " + artifact + " at " + entry);
-            this.log.debug("Exception occurred during reading: " + mee.getMessage(), mee);
-        }
-        finally
-        {
-            if ( xml != null )
-            {
-                try
-                {
-                    xml.close();
-                }
-                catch ( IOException ignore )
-                {
-                }
-            }
-        }
-       return null;
-    }
-
-    protected Manifest getManifest(Artifact artifact) throws IOException {
-        JarFile file = null;
-        try {
-            file = new JarFile(artifact.getFile());
-            return file.getManifest();
-        } finally {
-            if (file != null) {
-                try {
-                    file.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-    }
-
-    protected InputStream getFile(Artifact artifact, String path) throws IOException {
-        JarFile file = null;
-        try {
-            file = new JarFile(artifact.getFile());
-            final JarEntry entry = file.getJarEntry(path);
-            if ( entry != null ) {
-                final InputStream stream = new ArtifactFileInputStream( file, entry);
-                file = null; // prevent file from being closed now
-                return stream;
-            }
-            return null;
-        } finally {
-            if (file != null) {
-                try {
-                    file.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-    }
-
-    private static class ArtifactFileInputStream extends FilterInputStream
-    {
-        final JarFile jarFile;
-
-
-        ArtifactFileInputStream( JarFile jarFile, JarEntry jarEntry ) throws IOException
-        {
-            super( jarFile.getInputStream( jarEntry ) );
-            this.jarFile = jarFile;
-        }
-
-
-        @Override
-        public void close() throws IOException
-        {
-            try
-            {
-                super.close();
-            }
-            catch ( IOException ioe )
-            {
-            }
-            jarFile.close();
-        }
-
-
-        @Override
-        protected void finalize() throws Throwable
-        {
-            try
-            {
-                close();
-            }
-            finally
-            {
-                super.finalize();
-            }
-        }
-    }
 }
