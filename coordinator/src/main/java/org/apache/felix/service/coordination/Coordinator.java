@@ -149,26 +149,6 @@ public interface Coordinator {
     boolean participate(Participant participant) throws CoordinationException;
 
     /**
-     * Participate if there is an active Coordination otherwise initiate a new
-     * Coordination. This method is a short cut that atomically checks if there
-     * is a current Coordination. It either returns a new current Coordination
-     * object if no current Coordination exists or it adds the participant to
-     * the current Coordination. Notice that this method can block until the
-     * participant is free to participate on the current or new Coordination.
-     * This method makes it simple to start a new Coordination or to participate
-     * in an existing Coordination. See begin(String) and
-     * participate(Participant) for the details of those methods.
-     *
-     * @param ifActive The participant
-     * @return null if there is a current Coordination otherwise a newly
-     *         initiated Coordination.
-     * @throws SecurityException This method requires the action for the current
-     *             Coordination, if any. Otherwise it requires to create a new
-     *             coordination.
-     */
-    Coordination participateOrBegin(Participant ifActive);
-
-    /**
      * Always fail the current Coordination, if exists. Must fail the current
      * Coordination and return true or return false if there is no current
      * Coordination.
