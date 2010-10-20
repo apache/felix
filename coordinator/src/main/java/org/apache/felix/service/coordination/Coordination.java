@@ -145,6 +145,11 @@ public interface Coordination {
     boolean isFailed();
 
     /**
+     * @return true if this Coordination has terminated, false otherwise.
+     */
+    boolean isTerminated();
+
+    /**
      * Add a minimum timeout for this Coordination. If this timeout expires,
      * then the Coordination will fail and the initiating thread will be
      * interrupted. This method must only be called on an active Coordination,
