@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scrplugin.tags.annotation;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,11 +29,13 @@ import org.apache.felix.scrplugin.tags.JavaTag;
 import com.thoughtworks.qdox.model.Annotation;
 import com.thoughtworks.qdox.model.JavaClass;
 
+
 /**
  * Supports mapping of built-in and custom java anntoations to {@link JavaTag}
  * implementations.
  */
-public class AnnotationTagProviderManager {
+public class AnnotationTagProviderManager
+{
 
     /**
      * Allows to define additional implementations of the interface
@@ -42,40 +45,70 @@ public class AnnotationTagProviderManager {
      */
     private final List<AnnotationTagProvider> annotationTagProviders = new ArrayList<AnnotationTagProvider>();
 
+
     /**
      * @param annotationTagProviderClasses List of classes that implements
      *            {@link AnnotationTagProvider} interface.
      * @throws SCRDescriptorFailureException
      */
-    public AnnotationTagProviderManager(String[] annotationTagProviderClasses) throws SCRDescriptorFailureException {
+    public AnnotationTagProviderManager( String[] annotationTagProviderClasses ) throws SCRDescriptorFailureException
+    {
+
+        // the classloader used to load the provider classes
+        final ClassLoader classLoader = getClass().getClassLoader();
 
         // always add provider supporting built-in SCR default properties
-// TODO:        annotationTagProviders.add(new DefaultAnnotationTagProvider());
-// TODO:        annotationTagProviders.add(new SlingAnnotationTagProvider());
+        loadProvider( annotationTagProviders, classLoader,
+            "org.apache.felix.scrplugin.tags.annotation.defaulttag.DefaultAnnotationTagProvider", true );
+        loadProvider( annotationTagProviders, classLoader,
+            "org.apache.felix.scrplugin.tags.annotation.sling.SlingAnnotationTagProvider", true );
 
         // add custom providers defined in pom
-        for (int i = 0; i < annotationTagProviderClasses.length; i++) {
-            try {
-                Class<?> clazz = Class.forName(annotationTagProviderClasses[i]);
-                try {
-                    annotationTagProviders.add((AnnotationTagProvider) clazz.newInstance());
-                } catch (ClassCastException e) {
-                    throw new SCRDescriptorFailureException("Class '" + clazz.getName() + "' "
-                            + "does not implement interface '" + AnnotationTagProvider.class.getName() + "'.");
-                } catch (InstantiationException e) {
-                    throw new SCRDescriptorFailureException("Unable to instantiate class '" + clazz.getName() + "': "
-                            + e.getMessage());
-                } catch (IllegalAccessException e) {
-                    throw new SCRDescriptorFailureException("Illegal access to class '" + clazz.getName() + "': "
-                            + e.getMessage());
-                }
-            } catch (ClassNotFoundException ex) {
-                throw new SCRDescriptorFailureException("Annotation provider class '" + annotationTagProviderClasses[i]
-                        + "' not found.");
+        for ( int i = 0; i < annotationTagProviderClasses.length; i++ )
+        {
+            loadProvider( annotationTagProviders, classLoader, annotationTagProviderClasses[i], false );
+        }
+    }
+
+
+    private static void loadProvider( final List<AnnotationTagProvider> annotationTagProviders,
+        final ClassLoader classLoader, final String className, final boolean silent )
+        throws SCRDescriptorFailureException
+    {
+        String failureMessage = null;
+        try
+        {
+            Class<?> clazz = classLoader.loadClass( className );
+            try
+            {
+                annotationTagProviders.add( ( AnnotationTagProvider ) clazz.newInstance() );
+            }
+            catch ( ClassCastException e )
+            {
+                failureMessage = "Class '" + clazz.getName() + "' " + "does not implement interface '"
+                    + AnnotationTagProvider.class.getName() + "'.";
+            }
+            catch ( InstantiationException e )
+            {
+                failureMessage = "Unable to instantiate class '" + clazz.getName() + "': " + e.getMessage();
+            }
+            catch ( IllegalAccessException e )
+            {
+                failureMessage = "Illegal access to class '" + clazz.getName() + "': " + e.getMessage();
             }
         }
+        catch ( ClassNotFoundException e )
+        {
+            failureMessage = "Annotation provider class '" + className + "' not found.";
+        }
 
+        // throw an optional exception if not required to remaing silent
+        if ( failureMessage != null && !silent )
+        {
+            throw new SCRDescriptorFailureException( failureMessage );
+        }
     }
+
 
     /**
      * Converts a java annotation to {@link JavaTag} if a mapping can be found.
@@ -84,9 +117,11 @@ public class AnnotationTagProviderManager {
      * @param description Description
      * @return Tag declaration or null if no mapping found
      */
-    public List<JavaTag> getTags(Annotation annotation, AnnotationJavaClassDescription description) {
-        return getTags(annotation, description, null);
+    public List<JavaTag> getTags( Annotation annotation, AnnotationJavaClassDescription description )
+    {
+        return getTags( annotation, description, null );
     }
+
 
     /**
      * Converts a java annotation to {@link JavaTag} if a mapping can be found.
@@ -96,24 +131,31 @@ public class AnnotationTagProviderManager {
      * @param field Field
      * @return Tag declaration or null if no mapping found
      */
-    public List<JavaTag> getTags(Annotation annotation, AnnotationJavaClassDescription description, JavaField field) {
+    public List<JavaTag> getTags( Annotation annotation, AnnotationJavaClassDescription description, JavaField field )
+    {
         List<JavaTag> tags = new ArrayList<JavaTag>();
 
-        for (AnnotationTagProvider provider : this.annotationTagProviders) {
-            tags.addAll(provider.getTags(annotation, description, field));
+        for ( AnnotationTagProvider provider : this.annotationTagProviders )
+        {
+            tags.addAll( provider.getTags( annotation, description, field ) );
         }
 
         return tags;
     }
 
+
     /**
      * Checks if the given class has any SCR plugin java annotations defined.
+     *
      * @param pClass Class
      * @return true if SCR plugin java annotation found
      */
-    public boolean hasScrPluginAnnotation(JavaClass pClass) {
-        for (com.thoughtworks.qdox.model.Annotation annotation : pClass.getAnnotations()) {
-            if (getTags(annotation, null).size() > 0) {
+    public boolean hasScrPluginAnnotation( JavaClass pClass )
+    {
+        for ( com.thoughtworks.qdox.model.Annotation annotation : pClass.getAnnotations() )
+        {
+            if ( getTags( annotation, null ).size() > 0 )
+            {
                 return true;
             }
         }
