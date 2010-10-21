@@ -18,12 +18,20 @@
  */
 package org.apache.felix.scrplugin.tags.annotation.defaulttag;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.scrplugin.tags.JavaField;
+import org.apache.felix.scrplugin.tags.annotation.AbstractTag;
+import org.apache.felix.scrplugin.tags.annotation.Util;
 
 import com.thoughtworks.qdox.model.Annotation;
 

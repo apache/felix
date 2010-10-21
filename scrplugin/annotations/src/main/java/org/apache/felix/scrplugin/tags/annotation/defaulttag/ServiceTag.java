@@ -25,6 +25,8 @@ import org.apache.felix.scr.annotations.AutoDetect;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
+import org.apache.felix.scrplugin.tags.annotation.AbstractTag;
+import org.apache.felix.scrplugin.tags.annotation.Util;
 
 import com.thoughtworks.qdox.model.Annotation;
 
