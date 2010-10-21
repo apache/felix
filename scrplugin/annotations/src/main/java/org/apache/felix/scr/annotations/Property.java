@@ -153,13 +153,17 @@ public @interface Property {
     /**
      * Boolean flag defining whether a metatype descriptor entry should be
      * generated for this property or not. By default a metatype descriptor
-     * entry, i.e. an AD element, is generated except for the properties
+     * entry, i.e. an <code>AD</code> element, is generated. If a property
+     * should not be available for display in a configuration user interface,
+     * this parameter should be set to <code>true</code>. For properties names
+     * <code>service.ranking</code> the <code>AD</code> element is not created
+     * by default, which can be overwritten by stating
+     * <code>propertyPrivate=false</code>. For the predefined properties
      * <code>service.pid</code>, <code>service.description</code>,
-     * <code>service.id</code>, <code>service.ranking</code>,
-     * <code>service.vendor</code>, <code>service.bundlelocation</code> and
-     * <code>service.factoryPid</code>. If a property should not be available
-     * for display in a configuration user interface, this parameter should be
-     * set to true.
+     * <code>service.id</code>, <code>service.vendor</code>,
+     * <code>service.bundlelocation</code> and <code>service.factoryPid</code>
+     * an <code>AD</code> element will never be created and the
+     * <code>propertyPrivate</code> attribute has no effect.
      */
     boolean propertyPrivate() default false;
 
