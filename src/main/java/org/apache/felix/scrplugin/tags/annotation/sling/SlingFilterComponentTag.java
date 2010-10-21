@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.annotation.defaulttag.AbstractTag;
+import org.apache.felix.scrplugin.tags.annotation.AbstractTag;
 
 import com.thoughtworks.qdox.model.Annotation;
 

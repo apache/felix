@@ -21,12 +21,14 @@ package org.apache.felix.scrplugin.tags.annotation.sling;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.sling.*;
+import org.apache.felix.scr.annotations.sling.SlingFilter;
+import org.apache.felix.scr.annotations.sling.SlingFilterScope;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaTag;
 import org.apache.felix.scrplugin.tags.annotation.AnnotationJavaClassDescription;
 import org.apache.felix.scrplugin.tags.annotation.AnnotationTagProvider;
-import org.apache.felix.scrplugin.tags.annotation.defaulttag.Util;
+import org.apache.felix.scrplugin.tags.annotation.Util;
 
 /**
  * Annotation tag provider for sling-specific SCR annotations.
