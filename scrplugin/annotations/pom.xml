@@ -53,6 +53,20 @@
     </dependencies>
 
 	<build>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+            </resource>
+            <resource>
+                <targetPath>META-INF</targetPath>
+                <directory>${basedir}</directory>
+                <includes>
+                    <include>LICENSE</include>
+                    <include>NOTICE</include>
+                    <include>DEPENDENCIES</include>
+                </includes>
+            </resource>
+        </resources>
 		<plugins>
 
 		  <!-- JDK 1.5 needed for annotation support -->
