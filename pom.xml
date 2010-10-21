@@ -48,7 +48,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.generator</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
