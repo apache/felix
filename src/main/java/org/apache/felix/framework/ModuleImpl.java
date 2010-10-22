@@ -1518,44 +1518,28 @@ public class ModuleImpl implements Module
             }
             // Break if the current class came from a bundle, since we should
             // not implicitly boot delegate in that case.
-            else if (ModuleClassLoader.class.isInstance(classes[i].getClassLoader()))
+            else if (isClassLoadedFromModule(classes[i]))
             {
                 break;
             }
-            else if (isClassNotLoadedFromBundle(classes[i]))
+            // Break if this goes through BundleImpl because it must be a call
+            // to Bundle.loadClass() which should not implicitly boot delegate.
+            else if (BundleImpl.class.equals(classes[i]))
             {
-                // Check if the current class was loaded from a class loader that
-                // came from a bundle and if so then enforce strict OSGi rules
-                // and do not implicitly boot delegate.
-                boolean delegate = true;
-                ClassLoader last = null;
-                for (ClassLoader cl = classes[i].getClassLoader(); 
-                    (cl != null) && (last != cl);
-                    cl = cl.getClass().getClassLoader())
+                break;
+            }
+            else if (isClassExternal(classes[i]))
+            {
+                try
                 {
-                    last = cl;
-                    if (ModuleClassLoader.class.isInstance(cl))
-                    {
-                        delegate = false;
-                        break;
-                    }
+                    // Return the class or resource from the parent class loader.
+                    return (isClass)
+                        ? (Object) this.getClass().getClassLoader().loadClass(name)
+                            : (Object) this.getClass().getClassLoader().getResource(name);
                 }
-                // Delegate to the parent class loader unless this call
-                // is due to outside code calling a method on the bundle
-                // interface (e.g., Bundle.loadClass()).
-                if (delegate && !Bundle.class.isAssignableFrom(classes[i - 1]))
+                catch (NoClassDefFoundError ex)
                 {
-                    try
-                    {
-                        // Return the class or resource from the parent class loader.
-                        return (isClass)
-                            ? (Object) this.getClass().getClassLoader().loadClass(name)
-                                : (Object) this.getClass().getClassLoader().getResource(name);
-                    }
-                    catch (NoClassDefFoundError ex)
-                    {
-                        // Ignore, will return null
-                    }
+                    // Ignore, will return null
                 }
                 break;
             }
@@ -1564,48 +1548,55 @@ public class ModuleImpl implements Module
         return null;
     }
 
-    private boolean isClassNotLoadedFromBundle(Class clazz)
+    private boolean isClassLoadedFromModule(Class clazz)
     {
-        // If this is an inner class, try to get the enclosing class
-        // because we can assume that inner classes of class loaders
-        // are really just the class loader and we should ignore them.
-        Class enclosing = getEnclosingClass(clazz);
-        return (this.getClass().getClassLoader() != enclosing.getClassLoader())
-            // Do the test on the enclosing class
-            && !ClassLoader.class.isAssignableFrom(enclosing)
-            && !Class.class.equals(enclosing)
-            && !Proxy.class.equals(enclosing)
-            // Do the test on the class itself
-            && !ClassLoader.class.isAssignableFrom(clazz)
-            && !Class.class.equals(clazz)
-            && !Proxy.class.equals(clazz);
-    }
-
-    private static Class getEnclosingClass(Class clazz)
-    {
-        // This code determines if the class is an inner class and if so
-        // returns the enclosing class. At one point in time this code used
-        // Class.getEnclosingClass() for JDKs > 1.5, but due to a bug in the
-        // JDK which caused  invalid ClassCircularityErrors we had to remove it.
-        int idx = clazz.getName().lastIndexOf('$');
-        if (idx > 0)
+        // The target class is loaded by a module class loader,
+        // then return true.
+        if (ModuleClassLoader.class.isInstance(clazz.getClassLoader()))
         {
-            ClassLoader cl = (clazz.getClassLoader() != null)
-                ? clazz.getClassLoader() : ClassLoader.getSystemClassLoader();
-            try
+            return true;
+        }
+
+        // If the target class was loaded from a class loader that
+        // came from a module, then return true.
+        ClassLoader last = null;
+        for (ClassLoader cl = clazz.getClassLoader();
+            (cl != null) && (last != cl);
+            cl = cl.getClass().getClassLoader())
+        {
+            last = cl;
+            if (ModuleClassLoader.class.isInstance(cl))
             {
-                Class enclosing = cl.loadClass(clazz.getName().substring(0, idx));
-                clazz = (enclosing != null) ? enclosing : clazz;
-            }
-            catch (Throwable t)
-            {
-                // Ignore all problems since we are trying to load a class
-                // inside the class loader and this can lead to
-                // ClassCircularityError, for example.
+                return true;
             }
         }
 
-        return clazz;
+        return false;
+    }
+
+    private boolean isClassExternal(Class clazz)
+    {
+        if (clazz.getName().startsWith("org.apache.felix.framework."))
+        {
+            return false;
+        }
+        else if(clazz.getName().startsWith("org.osgi.framework."))
+        {
+            return false;
+        }
+        else if (ClassLoader.class.equals(clazz))
+        {
+            return false;
+        }
+        else if (Class.class.equals(clazz))
+        {
+            return false;
+        }
+//        else if (Proxy.class.equals(clazz))
+//        {
+//            return false;
+//        }
+        return true;
     }
 
     boolean shouldBootDelegate(String pkgName)
