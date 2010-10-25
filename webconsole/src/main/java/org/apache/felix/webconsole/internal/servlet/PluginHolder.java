@@ -728,6 +728,7 @@ class PluginHolder implements ServiceListener
         final String pluginClassName;
         final OsgiManager osgiManager;
         AbstractWebConsolePlugin plugin;
+        boolean doLog = true;
 
         protected InternalPlugin(PluginHolder holder, OsgiManager osgiManager, String pluginClassName, String label)
         {
@@ -746,7 +747,11 @@ class PluginHolder implements ServiceListener
             if (null == plugin) {
                 if (!isEnabled()) 
                 {
-                    osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
+                    if (doLog)
+                    {
+                        osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
+                        doLog = false;
+                    }
                     return null;
                 }
 
@@ -759,11 +764,16 @@ class PluginHolder implements ServiceListener
                     {
                         ((OsgiManagerPlugin) plugin).activate(getBundle().getBundleContext());
                     }
-
+                    doLog = true; // reset logging if it succeeded
                 }
                 catch (Throwable t)
                 {
-                    osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
+                    plugin = null; // in case only activate has faled!
+                    if (doLog)
+                    {
+                        osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
+                        doLog = false;
+                    }
                 }
             }
 
