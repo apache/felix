@@ -45,7 +45,13 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.configadmin</artifactId>
-      <version>1.2.4</version>
+      <version>1.2.8</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.utils</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -54,7 +60,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.0.0</version>
+        <version>2.1.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -62,20 +68,27 @@
                 org.apache.felix.fileinstall;version=${project.version}
             </Export-Package>
             <Private-Package>
-                org.apache.felix.fileinstall.internal
+                org.apache.felix.fileinstall.internal,
+                org.apache.felix.utils.properties,
             </Private-Package>
             <Import-Package>
                 org.osgi.service.log;resolution:=optional,
                 org.osgi.service.cm;resolution:=optional,
                 *
             </Import-Package>
-            <Include-Resource>src/main/resources,META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+            <Include-Resource>
+                src/main/resources,
+                META-INF/LICENSE=LICENSE,
+                META-INF/NOTICE=NOTICE,
+                META-INF/DEPENDENCIES=DEPENDENCIES
+            </Include-Resource>
             <Bundle-Activator>org.apache.felix.fileinstall.internal.FileInstall</Bundle-Activator>
             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Embed-Dependency>
-                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*"
+                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
+                org.apache.felix.utils;inline="org/apache/felix/utils/collections/DictionaryAsMap*.*"
             </Embed-Dependency>
           </instructions>
         </configuration>

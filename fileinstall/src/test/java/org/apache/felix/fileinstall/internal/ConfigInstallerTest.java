@@ -94,7 +94,7 @@ public class ConfigInstallerTest extends TestCase {
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
 
-        assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid", "factoryPid" ) );
+        assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid-factoryPid.cfg", "pid", "factoryPid" ) );
 
         mockConfigurationAdminControl.verify();
         mockConfigurationControl.verify();
@@ -115,7 +115,7 @@ public class ConfigInstallerTest extends TestCase {
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
 
-        assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid", "factoryPid" ) );
+        assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid-factoryPid.cfg","pid", "factoryPid" ) );
 
         mockConfigurationAdminControl.verify();
         mockConfigurationControl.verify();
@@ -136,7 +136,7 @@ public class ConfigInstallerTest extends TestCase {
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
 
-        assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid", null ) );
+        assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid.cfg", "pid", null ) );
 
         mockConfigurationAdminControl.verify();
         mockConfigurationControl.verify();
