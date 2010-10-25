@@ -100,14 +100,14 @@ public class ManifestPlugin extends BundlePlugin
 
 
     public Manifest getManifest( MavenProject project, Jar[] classpath ) throws IOException, MojoFailureException,
-        MojoExecutionException
+        MojoExecutionException, Exception
     {
         return getManifest( project, new Properties(), new Properties(), classpath );
     }
 
 
     public Manifest getManifest( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
-        throws IOException, MojoFailureException, MojoExecutionException
+        throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
         Analyzer analyzer = getAnalyzer( project, instructions, properties, classpath );
 
@@ -143,14 +143,15 @@ public class ManifestPlugin extends BundlePlugin
     }
 
 
-    protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath ) throws IOException, MojoExecutionException
+    protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath )
+        throws IOException, MojoExecutionException, Exception
     {
         return getAnalyzer( project, new LinkedHashMap(), new Properties(), classpath );
     }
 
 
     protected Analyzer getAnalyzer( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
-        throws IOException, MojoExecutionException
+        throws IOException, MojoExecutionException, Exception
     {
         File file = project.getArtifact().getFile();
         if ( file == null )
