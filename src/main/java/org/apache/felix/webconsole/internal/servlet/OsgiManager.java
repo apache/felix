@@ -53,6 +53,7 @@ import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
+import org.apache.felix.webconsole.internal.servlet.PluginHolder.InternalPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -147,23 +148,27 @@ public class OsgiManager extends GenericServlet
 
     static final String[] PLUGIN_CLASSES =
         { "org.apache.felix.webconsole.internal.compendium.ComponentConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.compendium.ComponentsServlet",
-            "org.apache.felix.webconsole.internal.compendium.ConfigManager",
             "org.apache.felix.webconsole.internal.compendium.ConfigurationAdminConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.compendium.LogServlet",
             "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter",
             "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.core.BundlesServlet",
             "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter",
             "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.core.ServicesServlet",
-            "org.apache.felix.webconsole.internal.deppack.DepPackServlet",
-            "org.apache.felix.webconsole.internal.misc.LicenseServlet",
-            "org.apache.felix.webconsole.internal.misc.ShellServlet",
             "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter",
             "org.apache.felix.webconsole.internal.misc.ThreadPrinter",
-            "org.apache.felix.webconsole.internal.obr.BundleRepositoryRender",
-            "org.apache.felix.webconsole.internal.system.VMStatPlugin" };
+        };
+
+    static final String[] PLUGIN_MAP = {
+        "org.apache.felix.webconsole.internal.compendium.ComponentsServlet", "components", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.compendium.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.deppack.DepPackServlet", "deppack", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.misc.ShellServlet", "shell", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.obr.BundleRepositoryRender", "obr", //$NON-NLS-1$ //$NON-NLS-2$
+        "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat",  //$NON-NLS-1$ //$NON-NLS-2$
+    };
 
     private BundleContext bundleContext;
 
@@ -208,6 +213,14 @@ public class OsgiManager extends GenericServlet
         this.bundleContext = bundleContext;
         this.holder = new PluginHolder( bundleContext );
 
+        // new plugins setup
+        for (int i = 0; i < PLUGIN_MAP.length; i++ )
+        {
+            final String pluginClassName = PLUGIN_MAP[i++];
+            final String label = PLUGIN_MAP[i];
+            holder.addInternalPlugin(this, pluginClassName, label);
+        }
+
         // setup the included plugins
         ClassLoader classLoader = getClass().getClassLoader();
         for ( int i = 0; i < PLUGIN_CLASSES.length; i++ )
@@ -219,23 +232,12 @@ public class OsgiManager extends GenericServlet
                 Class pluginClass = classLoader.loadClass( pluginClassName );
                 Object plugin = pluginClass.newInstance();
 
-                // check whether enabled by configuration
-                if ( isPluginDisabled( pluginClassName, plugin ) )
-                {
-                    log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
-                    continue;
-                }
-
                 if ( plugin instanceof OsgiManagerPlugin )
                 {
                     ( ( OsgiManagerPlugin ) plugin ).activate( bundleContext );
                     osgiManagerPlugins.add( plugin );
                 }
-                if ( plugin instanceof AbstractWebConsolePlugin )
-                {
-                    holder.addOsgiManagerPlugin( ( AbstractWebConsolePlugin ) plugin );
-                }
-                else if ( plugin instanceof BrandingPlugin )
+                if ( plugin instanceof BrandingPlugin )
                 {
                     AbstractWebConsolePlugin.setBrandingPlugin( ( BrandingPlugin ) plugin );
                 }
@@ -529,7 +531,7 @@ public class OsgiManager extends GenericServlet
      * @param level The log level at which to log the message
      * @param message The message to log
      */
-    private void log( int level, String message )
+    void log( int level, String message )
     {
         if ( logLevel >= level )
         {
@@ -552,7 +554,7 @@ public class OsgiManager extends GenericServlet
      * @param message The message to log
      * @param t The <code>Throwable</code> to log with the message
      */
-    private void log( int level, String message, Throwable t )
+    void log( int level, String message, Throwable t )
     {
         if ( logLevel >= level )
         {
@@ -664,7 +666,7 @@ public class OsgiManager extends GenericServlet
 
     private static class BrandingServiceTracker extends ServiceTracker
     {
-        private final OsgiManager osgiManager;
+        private final OsgiManager osgiManager; // FIXME: never read locally
 
 
         BrandingServiceTracker( OsgiManager osgiManager )
@@ -933,18 +935,14 @@ public class OsgiManager extends GenericServlet
 
 
     /**
-     * Returns <code>true</code> if the plugin is an
-     * {@link AbstractWebConsolePlugin} and a list of enabled plugins is
+     * Returns <code>true</code> if the list of enabled plugins is
      * configured but the plugin is not contained in that list.
      * <p>
-     * This method is intended to be used only for plugins contained in the
-     * web console bundle itself, namely plugins listed in the
-     * {@value #PLUGIN_CLASSES} list.
+     * This method is intended to be used only for {@link InternalPlugin#isEnabled()} 
      */
-    private boolean isPluginDisabled( String pluginClass, Object plugin )
+    boolean isPluginDisabled( String pluginClass )
     {
-        return enabledPlugins != null && !enabledPlugins.contains( pluginClass )
-            && ( plugin instanceof AbstractWebConsolePlugin );
+        return enabledPlugins != null && !enabledPlugins.contains( pluginClass );
     }
 
 

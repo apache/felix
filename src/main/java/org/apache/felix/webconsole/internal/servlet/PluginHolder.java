@@ -33,6 +33,7 @@ import javax.servlet.ServletException;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.WebConsolePluginAdapter;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.osgi.framework.Bundle;
@@ -42,6 +43,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -149,6 +151,11 @@ class PluginHolder implements ServiceListener
         this.defaultPluginLabel = defaultPluginLabel;
     }
 
+    void addInternalPlugin( final OsgiManager osgiManager, final String pluginClassName, final String label)
+    {
+        final Plugin plugin = new InternalPlugin(this, osgiManager, pluginClassName, label);
+        addPlugin( label, plugin );
+    }
 
     /**
      * Adds an internal Web Console plugin
@@ -232,6 +239,8 @@ class PluginHolder implements ServiceListener
         for ( int i = 0; i < plugins.length; i++ )
         {
             final Plugin plugin = plugins[i];
+            if (!plugin.isEnabled() || null == plugin.getConsolePlugin()) continue;
+
             final String label = plugin.getLabel();
             String title = plugin.getTitle();
             if ( title.startsWith( "%" ) )
@@ -316,6 +325,8 @@ class PluginHolder implements ServiceListener
     /**
      * Called when plugin services are registered or unregistered (or modified,
      * which is currently ignored)
+     *
+     * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
      */
     public void serviceChanged( ServiceEvent event )
     {
@@ -538,6 +549,9 @@ class PluginHolder implements ServiceListener
             return consolePlugin;
         }
 
+        protected boolean isEnabled() {
+            return true;
+        }
 
         protected AbstractWebConsolePlugin doGetConsolePlugin()
         {
@@ -637,6 +651,7 @@ class PluginHolder implements ServiceListener
          */
         final void ungetService()
         {
+            // FIXME: this method is used by nobody!?!?
             dispose();
         }
 
@@ -704,6 +719,65 @@ class PluginHolder implements ServiceListener
                 }
 
             };
+        }
+
+    }
+
+    static class InternalPlugin extends Plugin
+    {
+        final String pluginClassName;
+        final OsgiManager osgiManager;
+        AbstractWebConsolePlugin plugin;
+
+        protected InternalPlugin(PluginHolder holder, OsgiManager osgiManager, String pluginClassName, String label)
+        {
+            super(holder, label);
+            this.osgiManager = osgiManager;
+            this.pluginClassName = pluginClassName;
+        }
+
+        protected final boolean isEnabled() {
+            // check if the plugin is enabled
+            return !osgiManager.isPluginDisabled(pluginClassName);
+        }
+
+        protected AbstractWebConsolePlugin doGetConsolePlugin()
+        {
+            if (null == plugin) {
+                if (!isEnabled()) 
+                {
+                    osgiManager.log( LogService.LOG_INFO, "Ignoring plugin " + pluginClassName + ": Disabled by configuration" );
+                    return null;
+                }
+
+                try
+                {
+                    Class pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
+                    plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
+    
+                    if (plugin instanceof OsgiManagerPlugin)
+                    {
+                        ((OsgiManagerPlugin) plugin).activate(getBundle().getBundleContext());
+                    }
+
+                }
+                catch (Throwable t)
+                {
+                    osgiManager.log( LogService.LOG_WARNING, "Failed to instantiate plugin " + pluginClassName, t );
+                }
+            }
+
+            return plugin;
+        }
+
+        protected void doUngetConsolePlugin(AbstractWebConsolePlugin consolePlugin)
+        {
+            if (consolePlugin == plugin) plugin = null;
+            if (consolePlugin instanceof OsgiManagerPlugin)
+            {
+                ((OsgiManagerPlugin) consolePlugin).deactivate();
+            }
+            super.doUngetConsolePlugin(consolePlugin);
         }
 
     }
