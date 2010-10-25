@@ -18,29 +18,62 @@
  */
 package org.apache.felix.fileinstall.internal;
 
-import java.io.*;
-import java.util.*;
-
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.internal.Util.Logger;
+import org.apache.felix.utils.properties.InterpolationHelper;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * ArtifactInstaller for configurations.
  * TODO: This service lifecycle should be bound to the ConfigurationAdmin service lifecycle.
  */
-public class ConfigInstaller implements ArtifactInstaller
+public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 {
     private final BundleContext context;
     private final ConfigurationAdmin configAdmin;
+    private ServiceRegistration registration;
 
     ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin)
     {
         this.context = context;
         this.configAdmin = configAdmin;
+    }
+
+    public void init()
+    {
+        if (registration == null)
+        {
+            Properties props = new Properties();
+            registration = this.context.registerService(ConfigurationListener.class.getName(), this, props);
+        }
+    }
+
+    public void destroy()
+    {
+        if (registration != null)
+        {
+            registration.unregister();
+            registration = null;
+        }
     }
 
     public boolean canHandle(File artifact)
@@ -64,6 +97,54 @@ public class ConfigInstaller implements ArtifactInstaller
         deleteConfig(artifact);
     }
 
+    public void configurationEvent(ConfigurationEvent configurationEvent)
+    {
+        if (configurationEvent.getType() == ConfigurationEvent.CM_UPDATED)
+        {
+            try
+            {
+                Configuration config = getConfigurationAdmin().getConfiguration(
+                                            configurationEvent.getPid(),
+                                            configurationEvent.getFactoryPid());
+                Dictionary dict = config.getProperties();
+                String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
+                File file = fileName != null ? new File(fileName) : null;
+                if( file != null && file.isFile()   ) {
+                    if( fileName.endsWith( ".cfg" ) )
+                    {
+                        org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file );
+                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
+                        {
+                            String key = e.nextElement().toString();
+                            if( !Constants.SERVICE_PID.equals(key) && !DirectoryWatcher.FILENAME.equals(key) )
+                            {
+                                String val = dict.get( key ).toString();
+                                props.put( key, val );
+                            }
+                        }
+                        props.save();
+                    }
+                    else if( fileName.endsWith( ".config" ) )
+                    {
+                        OutputStream fos = new FileOutputStream( file );
+                        try
+                        {
+                            ConfigurationHandler.write( fos, dict );
+                        }
+                        finally
+                        {
+                            fos.close();
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.log( context, Util.getGlobalLogLevel(context), Logger.LOG_INFO, "Unable to save configuration", e );
+            }
+        }
+    }
+
     ConfigurationAdmin getConfigurationAdmin()
     {
         return configAdmin;
@@ -83,7 +164,7 @@ public class ConfigInstaller implements ArtifactInstaller
         final InputStream in = new BufferedInputStream(new FileInputStream(f));
         try
         {
-            if ( f.getName().endsWith(".cfg") )
+            if ( f.getName().endsWith( ".cfg" ) )
             {
                 final Properties p = new Properties();
                 in.mark(1);
@@ -94,10 +175,10 @@ public class ConfigInstaller implements ArtifactInstaller
                 } else {
                     p.load(in);
                 }
-                Util.performSubstitution(p);
+                InterpolationHelper.performSubstitution((Map) p);
                 ht.putAll(p);
             }
-            else
+            else if ( f.getName().endsWith( ".config" ) )
             {
                 final Dictionary config = ConfigurationHandler.read(in);
                 final Enumeration i = config.keys();
@@ -114,8 +195,8 @@ public class ConfigInstaller implements ArtifactInstaller
         }
 
         String pid[] = parsePid(f.getName());
-        ht.put(DirectoryWatcher.FILENAME, f.getName());
-        Configuration config = getConfiguration(pid[0], pid[1]);
+        ht.put(DirectoryWatcher.FILENAME, f.getAbsolutePath());
+        Configuration config = getConfiguration(f.getAbsolutePath(), pid[0], pid[1]);
         if (config.getBundleLocation() != null)
         {
             config.setBundleLocation(null);
@@ -135,7 +216,7 @@ public class ConfigInstaller implements ArtifactInstaller
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
-        Configuration config = getConfiguration(pid[0], pid[1]);
+        Configuration config = getConfiguration(f.getAbsolutePath(), pid[0], pid[1]);
         config.delete();
         return true;
     }
@@ -162,10 +243,10 @@ public class ConfigInstaller implements ArtifactInstaller
         }
     }
 
-    Configuration getConfiguration(String pid, String factoryPid)
+    Configuration getConfiguration(String fileName, String pid, String factoryPid)
         throws Exception
     {
-        Configuration oldConfiguration = findExistingConfiguration(pid, factoryPid);
+        Configuration oldConfiguration = findExistingConfiguration(fileName);
         if (oldConfiguration != null)
         {
             Util.log(context, Util.getGlobalLogLevel(context),
@@ -188,11 +269,9 @@ public class ConfigInstaller implements ArtifactInstaller
         }
     }
 
-    Configuration findExistingConfiguration(String pid, String factoryPid) throws Exception
+    Configuration findExistingConfiguration(String fileName) throws Exception
     {
-        String suffix = factoryPid == null ? ".cfg" : "-" + factoryPid + ".cfg";
-
-        String filter = "(" + DirectoryWatcher.FILENAME + "=" + pid + suffix + ")";
+        String filter = "(" + DirectoryWatcher.FILENAME + "=" + fileName + ")";
         Configuration[] configurations = getConfigurationAdmin().listConfigurations(filter);
         if (configurations != null && configurations.length > 0)
         {

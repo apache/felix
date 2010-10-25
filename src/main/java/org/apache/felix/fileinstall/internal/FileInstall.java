@@ -22,6 +22,8 @@ import java.util.*;
 
 import org.apache.felix.fileinstall.*;
 import org.apache.felix.fileinstall.internal.Util.Logger;
+import org.apache.felix.utils.collections.DictionaryAsMap;
+import org.apache.felix.utils.properties.InterpolationHelper;
 import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -185,7 +187,7 @@ public class FileInstall implements BundleActivator
 
     public void updated(String pid, Dictionary properties)
     {
-        Util.performSubstitution(properties);
+        InterpolationHelper.performSubstitution(new DictionaryAsMap(properties));
         DirectoryWatcher watcher = null;
         synchronized (watchers)
         {
@@ -334,14 +336,19 @@ public class FileInstall implements BundleActivator
             {
                 ConfigurationAdmin cm = (ConfigurationAdmin) super.addingService(serviceReference);
                 configInstaller = new ConfigInstaller(context, cm);
+                configInstaller.init();
                 fileInstall.addListener(configInstaller);
                 return cm;
             }
 
             public void removedService(ServiceReference serviceReference, Object o)
             {
-                configInstaller = null;
-                fileInstall.removeListener(configInstaller);
+                if (configInstaller != null)
+                {
+                    configInstaller.destroy();
+                    fileInstall.removeListener(configInstaller);
+                    configInstaller = null;
+                }
                 super.removedService(serviceReference, o);
             }
         }
