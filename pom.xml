@@ -45,8 +45,8 @@
         <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
             <configuration>
-                <source>1.4</source>
-                <target>1.4</target>
+                <source>1.5</source>
+                <target>jsr14</target>
             </configuration>
         </plugin>
        <plugin>
