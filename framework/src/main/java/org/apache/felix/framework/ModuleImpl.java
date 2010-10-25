@@ -1574,6 +1574,23 @@ public class ModuleImpl implements Module
         return false;
     }
 
+    /**
+     * Tries to determine whether the given class is part of the framework or not.
+     * Framework classes include everything in org.apache.felix.framework.* and
+     * org.osgi.framework.*. We also consider ClassLoader and Class to be internal
+     * classes, because they are inserted into the stack trace as a result of
+     * method overloading. Typically, ClassLoader or Class will be mixed in
+     * between framework classes or will be at the point where the class loading
+     * request enters the framework class loading mechanism, which will then be
+     * followed by either bundle or external code, which will then exit our
+     * attempt to determine if we should boot delegate or not. Other standard
+     * class loaders, like URLClassLoader, are considered external classes and
+     * should trigger boot delegation. This means that bundles can create standard
+     * class loaders to get access to boot packages, but this is the standard
+     * behavior of class loaders.
+     * @param clazz the class to determine if it is external or not.
+     * @return <tt>true</tt> if the class is external, otherwise <tt>false</tt>.
+     */
     private boolean isClassExternal(Class clazz)
     {
         if (clazz.getName().startsWith("org.apache.felix.framework."))
@@ -1592,10 +1609,6 @@ public class ModuleImpl implements Module
         {
             return false;
         }
-//        else if (Proxy.class.equals(clazz))
-//        {
-//            return false;
-//        }
         return true;
     }
 
