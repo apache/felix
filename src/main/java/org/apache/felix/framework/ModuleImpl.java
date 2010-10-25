@@ -1535,7 +1535,7 @@ public class ModuleImpl implements Module
                     // Return the class or resource from the parent class loader.
                     return (isClass)
                         ? (Object) this.getClass().getClassLoader().loadClass(name)
-                            : (Object) this.getClass().getClassLoader().getResource(name);
+                        : (Object) this.getClass().getClassLoader().getResource(name);
                 }
                 catch (NoClassDefFoundError ex)
                 {
@@ -1580,7 +1580,7 @@ public class ModuleImpl implements Module
         {
             return false;
         }
-        else if(clazz.getName().startsWith("org.osgi.framework."))
+        else if (clazz.getName().startsWith("org.osgi.framework."))
         {
             return false;
         }
