@@ -25,7 +25,6 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -118,29 +117,24 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
 
             final TreeMap namesByClassName = new TreeMap();
             final ClassLoader loader = getClass().getClassLoader();
-            final String[] defaultPluginsClasses = OsgiManager.PLUGIN_CLASSES;
+            final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
             for ( int i = 0; i < defaultPluginsClasses.length; i++ )
             {
+                final String clazz = defaultPluginsClasses[i++];
+                final String label = defaultPluginsClasses[i];
+                String name = null;
                 try
                 {
-                    final Object plugin = loader.loadClass( defaultPluginsClasses[i] ).newInstance();
-                    if ( plugin instanceof AbstractWebConsolePlugin )
-                    {
-                        String name = ( ( AbstractWebConsolePlugin ) plugin ).getTitle();
-                        if (name.startsWith("%"))
-                        {
-                            final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(
-                                ((AbstractWebConsolePlugin) plugin).getBundle(),
-                                Locale.ENGLISH);
-                            name = rb.getString(name.substring(1));
-                        }
-                        namesByClassName.put( defaultPluginsClasses[i], name );
-                    }
+                    name = label + ".pluginTitle";
+                    final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), Locale.ENGLISH);
+                    name = rb.getString(name);
                 }
                 catch ( Throwable t )
                 {
+                    name = label;
                     // ignore
                 }
+                namesByClassName.put(clazz, name);
             }
             final String[] classes = ( String[] ) namesByClassName.keySet().toArray(
                 new String[namesByClassName.size()] );

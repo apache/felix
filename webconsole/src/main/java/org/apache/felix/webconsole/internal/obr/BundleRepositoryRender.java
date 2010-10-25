@@ -39,7 +39,7 @@ import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 public class BundleRepositoryRender extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     private static final String LABEL = "obr";
-    private static final String TITLE = "OSGi Repository";
+    private static final String TITLE = "%obr.pluginTitle";
     private static final String[] CSS =
         { "/res/ui/obr.css" };
 

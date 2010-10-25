@@ -58,7 +58,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
         { "README", "DISCLAIMER", "LICENSE", "NOTICE", "DEPENDENCIES" };
 
     static final String LABEL = "licenses";
-    static final String TITLE = "%license.pluginTitle";
+    static final String TITLE = "%licenses.pluginTitle";
     static final String CSS[] = { "/res/ui/license.css" };
 
     // templates
