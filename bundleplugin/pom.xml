@@ -56,7 +56,7 @@
   <dependency>
     <groupId>biz.aQute</groupId>
     <artifactId>bndlib</artifactId>
-    <version>0.0.357</version>
+    <version>1.10.0</version>
   </dependency>
   <dependency>
     <groupId>net.sf.kxml</groupId>

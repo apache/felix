@@ -63,6 +63,7 @@ import org.codehaus.plexus.util.StringUtils;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
+import aQute.lib.osgi.Constants;
 import aQute.lib.osgi.EmbeddedResource;
 import aQute.lib.osgi.FileResource;
 import aQute.lib.osgi.Jar;
@@ -395,7 +396,7 @@ public class BundlePlugin extends AbstractMojo
 
         dumpManifest( "BND Manifest:", jar.getManifest(), getLog() );
 
-        String[] removeHeaders = builder.getProperty( Analyzer.REMOVE_HEADERS, "" ).split( "," );
+        String[] removeHeaders = builder.getProperty( Constants.REMOVEHEADERS, "" ).split( "," );
 
         mergeMavenManifest( currentProject, jar, removeHeaders, getLog() );
         builder.setJar( jar );
@@ -852,7 +853,7 @@ public class BundlePlugin extends AbstractMojo
         properties.put( Analyzer.BUNDLE_VERSION, getMaven2OsgiConverter().getVersion(currentProject.getVersion()) );
 
         // remove the extraneous Include-Resource and Private-Package entries from generated manifest
-        properties.put( Analyzer.REMOVE_HEADERS, Analyzer.INCLUDE_RESOURCE + ',' + Analyzer.PRIVATE_PACKAGE );
+        properties.put( Constants.REMOVEHEADERS, Analyzer.INCLUDE_RESOURCE + ',' + Analyzer.PRIVATE_PACKAGE );
 
         header( properties, Analyzer.BUNDLE_DESCRIPTION, currentProject.getDescription() );
         StringBuffer licenseText = printLicenses( currentProject.getLicenses() );
