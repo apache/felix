@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -203,6 +204,7 @@ public class Util
     {
         // create a ZipOutputStream to zip the data to
         JarOutputStream zos = new JarOutputStream(os);
+        zos.setLevel(Deflater.NO_COMPRESSION);
         String path = "";
         File manFile = new File(directory, JarFile.MANIFEST_NAME);
         if (manFile.exists())
