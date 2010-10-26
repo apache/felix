@@ -921,6 +921,11 @@ public class DirectoryWatcher extends Thread implements BundleListener
         is.mark(256 * 1024);
         JarInputStream jar = new JarInputStream(is);
         Manifest m = jar.getManifest();
+        if( m == null ) {
+            throw new BundleException(
+                "The bundle " + bundleLocation + " does not have a META-INF/MANIFEST.MF! "+
+                    "Make sure, META-INF and MANIFEST.MF are the first 2 entries in your JAR!");
+        }
         String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
         String vStr = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
         Version v = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
