@@ -1,3 +1,20 @@
+Version 3.1.0
+-------------
+** Bug
+    * [FELIX-2318] - Possible NPE for jars with null Manifest
+    * [FELIX-2531] - Missing documentation for 'felix.fileinstall.noInitialDelay' configuration property
+    * [FELIX-2556] - FileInstall fails to update fragments as it tries to stop them
+
+** Improvement
+    * [FELIX-2021] - Enable FileInstall to set Bundle Start Level
+    * [FELIX-2571] - Have fileinstall listen for configuration changes and write them back to the config files
+    * [FELIX-2643] - When using the jardir url handler, fileinstall should not compress the zip stream
+    * [FELIX-2663] - Allow ConfigInstaller to perform placeholder substitution from framework properties
+
+** New Feature
+    * [FELIX-2513] - Support richer format for configurations
+    * [FELIX-2514] - felix.fileinstall.dir should support more than one directory
+
 Version 3.0.2
 -------------
 ** Bug
