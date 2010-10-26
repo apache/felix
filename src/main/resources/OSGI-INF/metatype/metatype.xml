@@ -24,11 +24,14 @@
        id="org.apache.felix.fileinstall">
        
     <AD name="Poll directory"  id="felix.fileinstall.dir" required="true" type="String" default="load"/>   
-    <AD name="Poll interval"  id="felix.fileinstall.poll" required="false" type="String" default="5000"/>
-    <AD name="Debug"  id="felix.fileinstall.debug" required="false" type="String" default="-1"/>
+    <AD name="Poll interval"  id="felix.fileinstall.poll" required="false" type="String" default="2000"/>
+    <AD name="Log level"  id="felix.fileinstall.log.level" required="false" type="String" default="0"/>
     <AD name="Start new bundles?"  id="felix.fileinstall.bundles.new.start" required="false" type="String" default="true"/>
     <AD name="File name filter"  id="felix.fileinstall.filter" required="false" type="String" default=""/>
     <AD name="Temp directory"  id="felix.fileinstall.tmpdir" required="false" type="String" default="tmp"/>
+    <AD name="No initial delay"  id="felix.fileinstall.noInitialDelay" required="false" type="String" default="false"/>
+    <AD name="Start bundles transiently"  id="felix.fileinstall.bundles.startTransient" required="false" type="String" default="false"/>
+    <AD name="Bundles start level"  id="felix.fileinstall.start.level" required="false" type="String" default="0"/>
   </OCD>
   
     <Designate pid="org.apache.felix.fileinstall">
