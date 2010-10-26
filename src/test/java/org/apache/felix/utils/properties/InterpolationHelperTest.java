@@ -23,6 +23,12 @@ import java.util.Hashtable;
 
 public class InterpolationHelperTest extends TestCase {
 
+    private MockBundleContext context;
+
+    protected void setUp() throws Exception {
+        context = new MockBundleContext();
+    }
+
     public void testBasicSubstitution()
     {
         System.setProperty("value1", "sub_value1");
@@ -34,7 +40,7 @@ public class InterpolationHelperTest extends TestCase {
         for (Enumeration e = props.keys(); e.hasMoreElements();)
         {
             String name = (String) e.nextElement();
-            props.put(name, InterpolationHelper.substVars((String) props.get(name), name, null, props));
+            props.put(name, InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
         }
 
         assertEquals("value0", props.get("key0"));
@@ -43,26 +49,53 @@ public class InterpolationHelperTest extends TestCase {
 
     }
 
+    public void testBasicSubstitutionWithContext()
+    {
+        System.setProperty("value1", "sub_value1");
+        System.setProperty("value2", "sub_value2");
+        context.setProperty("value3", "context_value1");
+        context.setProperty("value2", "context_value2");
+
+        Hashtable props = new Hashtable();
+        props.put("key0", "value0");
+        props.put("key1", "${value1}");
+        props.put("key2", "${value2}");
+        props.put("key3", "${value3}");
+
+        for (Enumeration e = props.keys(); e.hasMoreElements();)
+        {
+            String name = (String) e.nextElement();
+            props.put(name,
+                    InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
+        }
+
+        assertEquals("value0", props.get("key0"));
+        assertEquals("sub_value1", props.get("key1"));
+        assertEquals("context_value2", props.get("key2"));
+        assertEquals("context_value1", props.get("key3"));
+
+    }
+
     public void testSubstitutionFailures()
     {
-        assertEquals("a}", InterpolationHelper.substVars("a}", "b", null, new Hashtable()));
-        assertEquals("${a", InterpolationHelper.substVars("${a", "b", null, new Hashtable()));
+        assertEquals("a}", InterpolationHelper.substVars("a}", "b", null, new Hashtable(), context));
+        assertEquals("${a", InterpolationHelper.substVars("${a", "b", null, new Hashtable(), context));
     }
 
     public void testEmptyVariable() {
-        assertEquals("", InterpolationHelper.substVars("${}", "b", null, new Hashtable()));
+        assertEquals("", InterpolationHelper.substVars("${}", "b", null, new Hashtable(), context));
     }
 
     public void testInnerSubst() {
         Hashtable props = new Hashtable();
         props.put("a", "b");
         props.put("b", "c");
-        assertEquals("c", InterpolationHelper.substVars("${${a}}", "z", null, props));
+        assertEquals("c", InterpolationHelper.substVars("${${a}}", "z", null, props, context));
     }
 
     public void testSubstLoop() {
         try {
-            InterpolationHelper.substVars("${a}", "a", null, new Hashtable());
+            InterpolationHelper.substVars("${a}", "a", null, new Hashtable(), context);
             fail("Should have thrown an exception");
         } catch (IllegalArgumentException e) {
             // expected
@@ -71,9 +104,9 @@ public class InterpolationHelperTest extends TestCase {
 
     public void testSubstitutionEscape()
     {
-        assertEquals("${a}", InterpolationHelper.substVars("$\\{a${#}\\}", "b", null, new Hashtable()));
-        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}${#}", "b", null, new Hashtable()));
-        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}", "b", null, new Hashtable()));
+        assertEquals("${a}", InterpolationHelper.substVars("$\\{a${#}\\}", "b", null, new Hashtable(), context));
+        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}${#}", "b", null, new Hashtable(), context));
+        assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}", "b", null, new Hashtable(), context));
     }
 
 }
