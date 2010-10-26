@@ -98,6 +98,7 @@ public class FileInstall implements BundleActivator
         set(ht, DirectoryWatcher.START_NEW_BUNDLES);
         set(ht, DirectoryWatcher.USE_START_TRANSIENT);
         set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
+        set(ht, DirectoryWatcher.START_LEVEL);
 
         // check if dir is an array of dirs
         String dirs = (String)ht.get(DirectoryWatcher.DIR);
