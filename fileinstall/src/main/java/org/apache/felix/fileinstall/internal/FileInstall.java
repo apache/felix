@@ -187,7 +187,7 @@ public class FileInstall implements BundleActivator
 
     public void updated(String pid, Dictionary properties)
     {
-        InterpolationHelper.performSubstitution(new DictionaryAsMap(properties));
+        InterpolationHelper.performSubstitution(new DictionaryAsMap(properties), context);
         DirectoryWatcher watcher = null;
         synchronized (watchers)
         {

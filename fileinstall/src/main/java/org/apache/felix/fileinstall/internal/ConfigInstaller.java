@@ -175,7 +175,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 } else {
                     p.load(in);
                 }
-                InterpolationHelper.performSubstitution((Map) p);
+                InterpolationHelper.performSubstitution((Map) p, context);
                 ht.putAll(p);
             }
             else if ( f.getName().endsWith( ".config" ) )

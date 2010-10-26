@@ -16,6 +16,8 @@
  */
 package org.apache.felix.utils.properties;
 
+import org.osgi.framework.BundleContext;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -55,10 +57,20 @@ public class InterpolationHelper {
      */
     public static void performSubstitution(Map<String,String> properties)
     {
+        performSubstitution(properties, null);
+    }
+
+    /**
+     * Perform substitution on a property set
+     *
+     * @param properties the property set to perform substitution on
+     */
+    public static void performSubstitution(Map<String,String> properties, BundleContext context)
+    {
         for (String name : properties.keySet())
         {
             String value = properties.get(name);
-            properties.put(name, substVars(value, name, null, properties));
+            properties.put(name, substVars(value, name, null, properties, context));
         }
     }
 
@@ -79,11 +91,16 @@ public class InterpolationHelper {
      *        detect cycles.
      * @param cycleMap Map of variable references used to detect nested cycles.
      * @param configProps Set of configuration properties.
+     * @param context the bundle context to retrieve properties from
      * @return The value of the specified string after system property substitution.
      * @throws IllegalArgumentException If there was a syntax error in the
      *         property placeholder syntax or a recursive variable reference.
      **/
-    public static String substVars(String val, String currentKey, Map<String,String> cycleMap, Map<String,String> configProps)
+    public static String substVars(String val,
+                                   String currentKey,
+                                   Map<String,String> cycleMap,
+                                   Map<String,String> configProps,
+                                   BundleContext context)
         throws IllegalArgumentException
     {
         if (cycleMap == null)
@@ -147,8 +164,22 @@ public class InterpolationHelper {
         String substValue = (String) ((configProps != null) ? configProps.get(variable) : null);
         if (substValue == null)
         {
-            // Ignore unknown property values.
-            substValue = variable.length() > 0 ? System.getProperty(variable, "") : "";
+            if (variable.length() <= 0)
+            {
+                substValue = "";
+            }
+            else if (context != null)
+            {
+                substValue = context.getProperty(variable);
+                if (substValue == null)
+                {
+                    substValue = "";
+                }
+            }
+            else
+            {
+                substValue = System.getProperty(variable, "");
+            }
         }
 
         // Remove the found variable from the cycle map, since
@@ -163,7 +194,7 @@ public class InterpolationHelper {
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
-        val = substVars(val, currentKey, cycleMap, configProps);
+        val = substVars(val, currentKey, cycleMap, configProps, context);
 
         // Remove escape characters preceding {, } and \
         val = unescape(val);
