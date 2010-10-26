@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 
+import org.apache.felix.webconsole.internal.Util;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -37,8 +38,22 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
 
     final String pid; // reduces visibility because access to this was made though synthetic accessor method
 
+    private final Object ocdLock = new Object();
+    private String ocdLocale;
     private ObjectClassDefinition ocd;
     private final OsgiManager osgiManager;
+    
+    private static final String[] CONF_PROPS = new String[] {
+        OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT, //
+        OsgiManager.PROP_HTTP_SERVICE_SELECTOR, OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR, //
+        OsgiManager.PROP_DEFAULT_RENDER, OsgiManager.DEFAULT_PAGE, //
+        OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM, //
+        OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME, //
+        OsgiManager.PROP_PASSWORD, OsgiManager.DEFAULT_PASSWORD, //
+        OsgiManager.PROP_LOCALE, "", //$NON-NLS-1$
+    };
+
+
 
 
     static ServiceRegistration create( OsgiManager osgiManager )
@@ -64,7 +79,18 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         // there is no locale support here
         return null;
     }
-
+    
+    static final String getString(ResourceBundle rb, String key, String def)
+    {
+        try
+        {
+            return rb.getString(key);
+        }
+        catch (Throwable t)
+        {
+            return def;
+        }
+    }
 
     public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
     {
@@ -73,112 +99,106 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             return null;
         }
 
-        if ( ocd == null )
+        if (locale == null) locale = Locale.ENGLISH.getLanguage();
+        
+        // check if OCD is already initialized and it's locale is the same as the requested one
+        synchronized (ocdLock)
+        {
+            if ( ocd != null && ocdLocale != null && ocdLocale.equals(locale) )
+            {
+                return ocd;
+            }
+        }
+
+        ObjectClassDefinition xocd = null;
+        final Locale localeObj = Util.parseLocaleString(locale);
+        final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), localeObj);
+
+        // simple configuration properties
+        final ArrayList adList = new ArrayList();
+        for (int i = 0; i < CONF_PROPS.length; i++)
+        {
+            final String key = CONF_PROPS[i++];
+            final String defaultValue = CONF_PROPS[i];
+            final String name = getString(rb, "metadata." + key + ".name", key); //$NON-NLS-1$ //$NON-NLS-2$
+            final String descr = getString(rb, "metadata." + key + ".description", key); //$NON-NLS-1$ //$NON-NLS-2$
+            adList.add( new AttributeDefinitionImpl(key, name, descr, defaultValue) );
+        }
+        
+        // log level is select - so no simple default value; requires localized option labels
+        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, 
+            getString(rb, "metadata.loglevel.name", OsgiManager.PROP_LOG_LEVEL), //$NON-NLS-1$
+            getString(rb, "metadata.loglevel.description", OsgiManager.PROP_LOG_LEVEL), //$NON-NLS-1$
+            AttributeDefinition.INTEGER, // type 
+            new String[] { String.valueOf( OsgiManager.DEFAULT_LOG_LEVEL ) }, // default values 
+            0, // cardinality 
+            new String[] { // option labels 
+                getString(rb, "log.level.debug", "Debug"), //$NON-NLS-1$ //$NON-NLS-2$
+                getString(rb, "log.level.info", "Information"), //$NON-NLS-1$ //$NON-NLS-2$
+                getString(rb, "log.level.warn", "Warn"), //$NON-NLS-1$ //$NON-NLS-2$
+                getString(rb, "log.level.error", "Error"), //$NON-NLS-1$ //$NON-NLS-2$
+            },
+            new String[] { "4", "3", "2", "1" } ) ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+
+        // list plugins - requires localized plugin titles
+        final TreeMap namesByClassName = new TreeMap();
+        final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
+        for ( int i = 0; i < defaultPluginsClasses.length; i++ )
+        {
+            final String clazz = defaultPluginsClasses[i++];
+            final String label = defaultPluginsClasses[i];
+            final String name = getString(rb, label + ".pluginTitle", label); //$NON-NLS-1$
+            namesByClassName.put(clazz, name);
+        }
+        final String[] classes = ( String[] ) namesByClassName.keySet().toArray(
+            new String[namesByClassName.size()] );
+        final String[] names = ( String[] ) namesByClassName.values().toArray( new String[namesByClassName.size()] );
+
+        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_ENABLED_PLUGINS, 
+            getString(rb, "metadata.plugins.name", OsgiManager.PROP_ENABLED_PLUGINS), //$NON-NLS-1$
+            getString(rb, "metadata.plugins.description", OsgiManager.PROP_ENABLED_PLUGINS), //$NON-NLS-1$
+            AttributeDefinition.STRING, classes, Integer.MIN_VALUE, names, classes ) );
+
+        xocd = new ObjectClassDefinition()
         {
 
-            final ArrayList adList = new ArrayList();
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_MANAGER_ROOT, "Root URI",
-                "The root path to the OSGi Management Console.", OsgiManager.DEFAULT_MANAGER_ROOT ) );
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_HTTP_SERVICE_SELECTOR, "Http Service Selector",
-                "The Http Service Selector is an OSGi filter used to select the Http Service to "
-                    + "which the Web Console binds. The value of this property (if not empty) is "
-                    + "combined the object class selection term to get the actual service selection "
-                    + "filter like (&(objectClass=org.osgi.service.http.HttpService)(selector)). This "
-                    + "property must not have leading an trailing parentheses. For example, to bind "
-                    + "to the service with service ID 15 set the selector to 'service.id=15' (without "
-                    + "the quotes). By default (if this property is not set or set to an empty "
-                    + "string) the Web Console binds with an Http Service available.",
-                OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR ) );
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_DEFAULT_RENDER, "Default Page",
-                "The name of the default configuration page when invoking the OSGi Management console.",
-                OsgiManager.DEFAULT_PAGE ) );
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_REALM, "Realm",
-                "The name of the HTTP Authentication Realm.", OsgiManager.DEFAULT_REALM ) );
-            adList
-                .add( new AttributeDefinitionImpl(
-                    OsgiManager.PROP_USER_NAME,
-                    "User Name",
-                    "The name of the user allowed to access the OSGi Management Console. To disable authentication clear this value.",
-                    OsgiManager.DEFAULT_USER_NAME ) );
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_PASSWORD, "Password",
-                "The password for the user allowed to access the OSGi Management Console.",
-                OsgiManager.DEFAULT_PASSWORD ) );
-            adList
-                .add( new AttributeDefinitionImpl(
-                    OsgiManager.PROP_LOCALE,
-                    "Locale",
-                    "If set, this locale forces the localization to use this locale instead of the one, requested by the web browser",
-                    "" ) );
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, "Log Level", "Logging Level",
-                AttributeDefinition.INTEGER, new String[]
-                    { String.valueOf( OsgiManager.DEFAULT_LOG_LEVEL ) }, 0, new String[]
-                    { "Debug", "Information", "Warn", "Error" }, new String[]
-                    { "4", "3", "2", "1" } ) );
+            private final AttributeDefinition[] attrs = ( AttributeDefinition[] ) adList
+                .toArray( new AttributeDefinition[adList.size()] );
 
-            final TreeMap namesByClassName = new TreeMap();
-            final ClassLoader loader = getClass().getClassLoader();
-            final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
-            for ( int i = 0; i < defaultPluginsClasses.length; i++ )
+
+            public String getName()
             {
-                final String clazz = defaultPluginsClasses[i++];
-                final String label = defaultPluginsClasses[i];
-                String name = null;
-                try
-                {
-                    name = label + ".pluginTitle";
-                    final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), Locale.ENGLISH);
-                    name = rb.getString(name);
-                }
-                catch ( Throwable t )
-                {
-                    name = label;
-                    // ignore
-                }
-                namesByClassName.put(clazz, name);
+                return getString(rb, "metadata.name", "Apache Felix OSGi Management Console"); //$NON-NLS-1$ //$NON-NLS-2$
             }
-            final String[] classes = ( String[] ) namesByClassName.keySet().toArray(
-                new String[namesByClassName.size()] );
-            final String[] names = ( String[] ) namesByClassName.values().toArray( new String[namesByClassName.size()] );
 
-            adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_ENABLED_PLUGINS, "Plugins",
-                "Select active plugins", AttributeDefinition.STRING, classes, Integer.MIN_VALUE, names, classes ) );
 
-            ocd = new ObjectClassDefinition()
+            public InputStream getIcon( int arg0 )
             {
-
-                private final AttributeDefinition[] attrs = ( AttributeDefinition[] ) adList
-                    .toArray( new AttributeDefinition[adList.size()] );
-
-
-                public String getName()
-                {
-                    return "Apache Felix OSGi Management Console";
-                }
+                return null;
+            }
 
 
-                public InputStream getIcon( int arg0 )
-                {
-                    return null;
-                }
+            public String getID()
+            {
+                return pid;
+            }
 
 
-                public String getID()
-                {
-                    return pid;
-                }
+            public String getDescription()
+            {
+                return getString(rb, "metadata.description", "Configuration of the Apache Felix OSGi Management Console."); //$NON-NLS-1$ //$NON-NLS-2$
+            }
 
 
-                public String getDescription()
-                {
-                    return "Configuration of the Apache Felix OSGi Management Console.";
-                }
+            public AttributeDefinition[] getAttributeDefinitions( int filter )
+            {
+                return ( filter == OPTIONAL ) ? null : attrs;
+            }
+        };
 
-
-                public AttributeDefinition[] getAttributeDefinitions( int filter )
-                {
-                    return ( filter == OPTIONAL ) ? null : attrs;
-                }
-            };
+        synchronized(ocdLock) {
+            this.ocd = xocd;
+            this.ocdLocale = locale;
         }
 
         return ocd;
