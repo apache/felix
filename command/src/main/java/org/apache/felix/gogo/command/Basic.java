@@ -134,7 +134,7 @@ public class Basic
         // Set the bundle start level.
         else if (set)
         {
-            if ((bundles != null) && (bundles.length == 0))
+            if ((bundles != null) && (bundles.length != 0))
             {
                 for (Bundle bundle: bundles)
                 {
