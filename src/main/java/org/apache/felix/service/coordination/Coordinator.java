@@ -1,12 +1,12 @@
 /*
  * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,52 +38,63 @@ import java.util.Collection;
  * unless overridden with configuration. This time can be set on a per
  * Coordination basis with the Coordination.addTimeout(long) method. The typical
  * usage of the Coordinator service is as follows:
- *
+ * 
  * <pre>
  * Coordination coordination = coordinator.begin(&quot;mycoordination&quot;);
- * try {
+ * try
+ * {
  *     doWork();
- *     if (coordination.end() != Coordination.OK) log(&quot;failed&quot;);
- * } finally {
+ *     if (coordination.end() != Coordination.OK)
+ *         log(&quot;failed&quot;);
+ * }
+ * finally
+ * {
  *     coordination.terminate();
  * }
  * </pre>
  * <p>
  * In the doWork() method, code can be called that requires a callback at the
  * end of the Coordination. This code is for a Participant.
- *
+ * 
  * <pre>
- * void doWork() {
- *     if (coordinator.participate(this)) {
+ * void doWork()
+ * {
+ *     if (coordinator.participate(this))
+ *     {
  *         beginWork();
- *     } else {
+ *     }
+ *     else
+ *     {
  *         beginWork();
  *         finishWork();
  *     }
  * }
- *
- * void ended() {
+ * 
+ * void ended()
+ * {
  *     finishWork();
  * }
- *
- * void failed() {
+ * 
+ * void failed()
+ * {
  *     undoWork();
  * }
  * </pre>
  * <p>
  * Life cycle. All Coordinations that are begun through this service must
  * automatically fail before this service is ungotten.
- *
+ * 
  * @ThreadSafe
  * @Provisional
  */
 @Deprecated
-public interface Coordinator {
+public interface Coordinator
+{
 
     /**
      * Create a new Coordination that is not associated with the current thread.
      * Parameters:
-     *
+     * 
      * @param name The name of this coordination, a name does not have to be
      *            unique.
      * @return The new Coordination object or null
@@ -95,7 +106,7 @@ public interface Coordinator {
     /**
      * Begin a new Coordination and push it on the thread local stack with
      * push(Coordination). Parameters:
-     *
+     * 
      * @param name The name of this coordination, a name does not have to be
      *            unique.
      * @return A new Coordination object
@@ -109,7 +120,7 @@ public interface Coordinator {
      * top of the thread local stack is returned with the
      * getCurrentCoordination() method. To remove the Coordination from the top
      * call pop().
-     *
+     * 
      * @param c The Coordination to push
      * @return c (for the builder pattern purpose)
      */
@@ -118,7 +129,7 @@ public interface Coordinator {
     /**
      * Pop the top of the thread local stack of Coordinations. If no current
      * Coordination is present, return null.
-     *
+     * 
      * @return The top of the stack or null
      */
     Coordination pop();
@@ -128,7 +139,7 @@ public interface Coordinator {
      * This method calls getCurrentCoordination(), if it is null, it will return
      * false. Otherwise it will call Coordination.participate(Participant) and
      * return the result of that method.
-     *
+     * 
      * @param participant The participant of the Coordination
      * @return true if there was a current Coordination that could be
      *         successfully used to participate, otherwise false.
@@ -152,7 +163,7 @@ public interface Coordinator {
      * Always fail the current Coordination, if exists. Must fail the current
      * Coordination and return true or return false if there is no current
      * Coordination.
-     *
+     * 
      * @param reason Throwable describing why the collaboration must always fail
      *            for debugging or null.
      * @return true if there was a current Coordination and false if not.
@@ -163,7 +174,7 @@ public interface Coordinator {
      * Return the current Coordination. The current Coordination is the top of
      * the thread local stack of Coordinations. If the stack is empty, there is
      * no current Coordination.
-     *
+     * 
      * @return null when the thread local stack is empty, otherwise the top of
      *         the thread local stack of Coordinations.
      */
@@ -176,7 +187,7 @@ public interface Coordinator {
      * objects are capabilities and designed to be used only on the Coordination
      * thread. The returned list must only contain the Coordinations for which
      * the caller has , without this permission an empty list must be returned.
-     *
+     * 
      * @return a list of Coordination objects
      */
     Collection<Coordination> getCoordinations();
