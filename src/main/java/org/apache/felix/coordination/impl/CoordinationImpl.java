@@ -43,7 +43,7 @@ public class CoordinationImpl implements Coordination {
     /** Coordination failed */
     private static final int FAILED = 4;
 
-    private final CoordinationMgr mgr;
+    private final CoordinatorImpl owner;
 
     private final long id;
 
@@ -72,9 +72,9 @@ public class CoordinationImpl implements Coordination {
 
     private Thread initiatorThread;
 
-    public CoordinationImpl(final CoordinationMgr mgr, final long id,
+    public CoordinationImpl(final CoordinatorImpl owner, final long id,
             final String name, final long defaultTimeOutInMs) {
-        this.mgr = mgr;
+        this.owner = owner;
         this.id = id;
         this.name = name;
         this.mustFail = 0;
@@ -202,7 +202,7 @@ public class CoordinationImpl implements Coordination {
         // ensure participant only pariticipates on a single coordination
         // this blocks until the participant can participate or until
         // a timeout occurrs (or a deadlock is detected)
-        mgr.lockParticipant(p, this);
+        owner.lockParticipant(p, this);
 
         // synchronize access to the state to prevent it from being changed
         // while adding the participant
@@ -248,7 +248,7 @@ public class CoordinationImpl implements Coordination {
     private synchronized boolean startTermination() {
         if (state == ACTIVE) {
             state = TERMINATING;
-            mgr.unregister(this);
+            owner.unregister(this);
             scheduleTimeout(-1);
             return true;
         }
@@ -278,7 +278,7 @@ public class CoordinationImpl implements Coordination {
             }
 
             // release the participant for other coordinations
-            mgr.releaseParticipant(part);
+            owner.releaseParticipant(part);
         }
         state = TERMINATED;
         return reason;
@@ -301,7 +301,7 @@ public class CoordinationImpl implements Coordination {
             }
 
             // release the participant for other coordinations
-            mgr.releaseParticipant(part);
+            owner.releaseParticipant(part);
         }
         state = FAILED;
     }
@@ -315,7 +315,7 @@ public class CoordinationImpl implements Coordination {
      */
     private void scheduleTimeout(final long timeout) {
         if (timeoutTask != null) {
-            mgr.schedule(timeoutTask, -1);
+            owner.schedule(timeoutTask, -1);
             timeoutTask = null;
         }
 
@@ -327,7 +327,7 @@ public class CoordinationImpl implements Coordination {
                 }
             };
 
-            mgr.schedule(timeoutTask, timeout);
+            owner.schedule(timeoutTask, timeout);
         }
     }
 }

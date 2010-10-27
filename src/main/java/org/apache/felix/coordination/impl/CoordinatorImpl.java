@@ -19,6 +19,9 @@
 package org.apache.felix.coordination.impl;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.TimerTask;
+
 import org.apache.felix.service.coordination.Coordination;
 import org.apache.felix.service.coordination.CoordinationException;
 import org.apache.felix.service.coordination.Coordinator;
@@ -32,19 +35,54 @@ public class CoordinatorImpl implements Coordinator {
 
     private final CoordinationMgr mgr;
 
+    private final HashSet<Coordination> coordinations;
+
     CoordinatorImpl(final Bundle owner, final CoordinationMgr mgr) {
         this.owner = owner;
         this.mgr = mgr;
+        this.coordinations = new HashSet<Coordination>();
+    }
+
+    /**
+     * Ensure all active Coordinations started by this CoordinatorImpl instance
+     * are terminated before the service is ungotten by the bundle.
+     * <p>
+     * Called by the Coordinator ServiceFactory when this CoordinatorImpl
+     * instance is not used any longer by the owner bundle.
+     *
+     * @see FELIX-2671/OSGi Bug 104
+     */
+    void dispose() {
+        final Coordination[] active;
+        synchronized (coordinations) {
+            if (coordinations.isEmpty()) {
+                active = null;
+            } else {
+                active = coordinations.toArray(new CoordinationImpl[coordinations.size()]);
+                coordinations.clear();
+            }
+        }
+
+        if (active != null) {
+            Throwable reason = new Exception("Coordinator service released");
+            for (int i = 0; i < active.length; i++) {
+                active[i].fail(reason);
+            }
+        }
     }
 
     public Coordination create(String name) {
         // TODO: check permission
-        return mgr.create(name);
+        Coordination c = mgr.create(this, name);
+        synchronized (coordinations) {
+            coordinations.add(c);
+        }
+        return c;
     }
 
     public Coordination begin(String name) {
         // TODO: check permission
-        return mgr.begin(name);
+        return push(create(name));
     }
 
     public Coordination push(Coordination c) {
@@ -64,7 +102,12 @@ public class CoordinatorImpl implements Coordinator {
 
     public boolean alwaysFail(Throwable reason) {
         // TODO: check permission
-        return mgr.alwaysFail(reason);
+        CoordinationImpl current = (CoordinationImpl) getCurrentCoordination();
+        if (current != null) {
+            current.mustFail(reason);
+            return true;
+        }
+        return false;
     }
 
     public Collection<Coordination> getCoordinations() {
@@ -75,7 +118,30 @@ public class CoordinatorImpl implements Coordinator {
     public boolean participate(Participant participant)
             throws CoordinationException {
         // TODO: check permission
-        return mgr.participate(participant);
+        Coordination current = getCurrentCoordination();
+        if (current != null) {
+            current.participate(participant);
+            return true;
+        }
+        return false;
     }
 
+    void unregister(final CoordinationImpl c) {
+        mgr.unregister(c);
+        synchronized (coordinations) {
+            coordinations.remove(c);
+        }
+    }
+
+    void schedule(final TimerTask task, final long delay) {
+        mgr.schedule(task, delay);
+    }
+
+    void lockParticipant(final Participant p, final CoordinationImpl c) {
+        mgr.lockParticipant(p, c);
+    }
+
+    void releaseParticipant(final Participant p) {
+        mgr.releaseParticipant(p);
+    }
 }
