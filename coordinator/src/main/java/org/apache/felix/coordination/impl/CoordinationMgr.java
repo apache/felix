@@ -87,14 +87,6 @@ public class CoordinationMgr implements CoordinatorMBean {
         coordinationTimer = new Timer("Coordination Timer", true);
     }
 
-    void unregister(final CoordinationImpl c) {
-        coordinations.remove(c.getId());
-        Stack<Coordination> stack = threadStacks.get();
-        if (stack != null) {
-            stack.remove(c);
-        }
-    }
-
     void cleanUp() {
         // terminate coordination timeout timer
         coordinationTimer.purge();
@@ -158,16 +150,20 @@ public class CoordinationMgr implements CoordinatorMBean {
 
     // ---------- Coordinator back end implementation
 
-    Coordination create(String name) {
+    Coordination create(final CoordinatorImpl owner, final String name) {
         long id = ctr.incrementAndGet();
-        CoordinationImpl c = new CoordinationImpl(this, id, name,
+        CoordinationImpl c = new CoordinationImpl(owner, id, name,
             defaultTimeOut);
         coordinations.put(id, c);
         return c;
     }
 
-    Coordination begin(String name) {
-        return push(create(name));
+    void unregister(final CoordinationImpl c) {
+        coordinations.remove(c.getId());
+        Stack<Coordination> stack = threadStacks.get();
+        if (stack != null) {
+            stack.remove(c);
+        }
     }
 
     Coordination push(Coordination c) {
@@ -195,15 +191,6 @@ public class CoordinationMgr implements CoordinatorMBean {
         return null;
     }
 
-    boolean alwaysFail(Throwable reason) {
-        CoordinationImpl current = (CoordinationImpl) getCurrentCoordination();
-        if (current != null) {
-            current.mustFail(reason);
-            return true;
-        }
-        return false;
-    }
-
     Collection<Coordination> getCoordinations() {
         ArrayList<Coordination> result = new ArrayList<Coordination>();
         Stack<Coordination> stack = threadStacks.get();
@@ -211,24 +198,6 @@ public class CoordinationMgr implements CoordinatorMBean {
             result.addAll(stack);
         }
         return result;
-    }
-
-    boolean participate(Participant participant) throws CoordinationException {
-        Coordination current = getCurrentCoordination();
-        if (current != null) {
-            current.participate(participant);
-            return true;
-        }
-        return false;
-    }
-
-    Coordination participateOrBegin(Participant ifActive) {
-        Coordination current = getCurrentCoordination();
-        if (current == null) {
-            current = begin("implicit");
-        }
-        current.participate(ifActive);
-        return current;
     }
 
     // ---------- CoordinatorMBean interface
