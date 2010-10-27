@@ -2491,10 +2491,7 @@ public class Felix extends BundleImpl implements Framework
                 // due to an error or system crash.
                 try
                 {
-                    if (ba.getRevisionCount() > 1)
-                    {
-                        ba.purge();
-                    }
+                    ba.purge();
                 }
                 catch (Exception ex)
                 {

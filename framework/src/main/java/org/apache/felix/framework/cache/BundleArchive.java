@@ -21,6 +21,8 @@ package org.apache.felix.framework.cache;
 import java.io.*;
 
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
 
@@ -97,23 +99,9 @@ public class BundleArchive
     **/
     private long m_refreshCount = -1;
 
-    private BundleRevision[] m_revisions = null;
-
-    /**
-     * <p>
-     * This constructor is only used by the system bundle archive implementation
-     * because it is special an is not really an archive.
-     * </p>
-    **/
-    public BundleArchive()
-    {
-        m_logger = null;
-        m_configMap = null;
-        m_archiveRootDir = null;
-
-        String s = (String) m_configMap.get(BundleCache.CACHE_SINGLEBUNDLEFILE_PROP);
-        m_isSingleBundleFile = (s == null) || (!s.equalsIgnoreCase("true")) ? false : true;
-    }
+    // Maps a Long revision number to a BundleRevision.
+    private final SortedMap<Long, BundleRevision> m_revisions
+        = new TreeMap<Long, BundleRevision>();
 
     /**
      * <p>
@@ -157,7 +145,7 @@ public class BundleArchive
         initialize();
 
         // Add a revision for the content.
-        revise(false, m_originalLocation, is);
+        reviseInternal(false, new Long(0), m_originalLocation, is);
     }
 
     /**
@@ -187,44 +175,48 @@ public class BundleArchive
             readBundleInfo();
         }
 
-        // Add a revision for each one that already exists in the file
-        // system. The file system might contain more than one revision
-        // if the bundle was updated in a previous session, but the
-        // framework was not refreshed; this might happen if the framework
-        // did not exit cleanly. We must create the existing revisions so
-        // that they can be properly purged.
-        int revisionCount = 0;
-        while (true)
+        // Add a revision number for each revision that exists in the file
+        // system. The file system might contain more than one revision if
+        // the bundle was updated in a previous session, but the framework
+        // was not refreshed; this might happen if the framework did not
+        // exit cleanly. We must add the existing revisions so that
+        // they can be properly purged.
+
+        // Find the existing revision directories, which will be named like:
+        //     "${REVISION_DIRECTORY)${refresh-count}.${revision-number}"
+        File[] children = m_archiveRootDir.listFiles();
+        for (File child : children)
         {
-            // Count the number of existing revision directories, which
-            // will be in a directory named like:
-            //     "${REVISION_DIRECTORY)${refresh-count}.${revision-count}"
-            File revisionRootDir = new File(m_archiveRootDir,
-                REVISION_DIRECTORY + getRefreshCount() + "." + revisionCount);
-            if (!BundleCache.getSecureAction().fileExists(revisionRootDir))
+            if (child.getName().startsWith(REVISION_DIRECTORY)
+                && child.isDirectory())
             {
-                break;
+                // Determine the revision number and add it to the revision map.
+                int idx = child.getName().lastIndexOf('.');
+                if (idx > 0)
+                {
+                    Long revNum = Long.decode(child.getName().substring(idx + 1));
+                    m_revisions.put(revNum, null);
+                }
             }
-
-            // Increment the revision count.
-            revisionCount++;
         }
 
-        // If there are multiple revisions in the file system, then create
-        // an array that is big enough to hold all revisions minus one; the
-        // call below to revise() will add the most recent revision. NOTE: We
-        // do not actually need to add a real revision object for the older
-        // revisions since they will be purged immediately on framework startup.
-        if (revisionCount > 1)
+        if (m_revisions.isEmpty())
         {
-            m_revisions = new BundleRevision[revisionCount - 1];
+            throw new Exception(
+                "No valid revisions in bundle archive directory: "
+                + archiveRootDir);
         }
 
-        // Add the revision object for the most recent revision. We first try
-        // to read the location from the current revision - if that fails we
-        // likely have an old bundle cache and read the location the old way.
-        // The next revision will update the bundle cache.
-        revise(true, getRevisionLocation(revisionCount - 1), null);
+        // Remove the last revision number since the call to reviseInternal()
+        // will properly add the most recent bundle revision.
+        // NOTE: We do not actually need to add a real revision object for the
+        // older revisions since they will be purged immediately on framework
+        // startup.
+        Long currentRevNum = m_revisions.lastKey();
+        m_revisions.remove(currentRevNum);
+
+        // Add the revision object for the most recent revision.
+        reviseInternal(true, currentRevNum, getRevisionLocation(currentRevNum), null);
     }
 
     /**
@@ -478,13 +470,24 @@ public class BundleArchive
 
     /**
      * <p>
-     * Returns the number of revisions available for this archive.
+     * Returns the current revision object for the archive.
      * </p>
-     * @return tthe number of revisions available for this archive.
+     * @return the current revision object for the archive.
     **/
-    public synchronized int getRevisionCount()
+    public synchronized Long getCurrentRevisionNumber()
     {
-        return (m_revisions == null) ? 0 : m_revisions.length;
+        return (m_revisions.isEmpty()) ? null : m_revisions.lastKey();
+    }
+
+    /**
+     * <p>
+     * Returns the current revision object for the archive.
+     * </p>
+     * @return the current revision object for the archive.
+    **/
+    public synchronized BundleRevision getCurrentRevision()
+    {
+        return (m_revisions.isEmpty()) ? null : m_revisions.get(m_revisions.lastKey());
     }
 
     /**
@@ -493,24 +496,44 @@ public class BundleArchive
      * </p>
      * @return the revision object for the specified revision.
     **/
-    public synchronized BundleRevision getRevision(int i)
+    public synchronized BundleRevision getRevision(Long l)
     {
-        if ((i >= 0) && (i < getRevisionCount()))
-        {
-            return m_revisions[i];
-        }
-        return null;
+        return m_revisions.get(l);
     }
 
     /**
      * <p>
-     * This method adds a revision to the archive. The revision is created
-     * based on the specified location and/or input stream.
+     * This method adds a revision to the archive using the associated
+     * location and input stream. If the input stream is null, then the
+     * location is used a URL to obtain an input stream.
      * </p>
      * @param location the location string associated with the revision.
+     * @param is the input stream from which to read the revision.
      * @throws Exception if any error occurs.
     **/
-    public synchronized void revise(boolean isReload, String location, InputStream is)
+    public synchronized void revise(String location, InputStream is)
+        throws Exception
+    {
+        Long revNum = (m_revisions.isEmpty())
+            ? new Long(0)
+            : new Long(m_revisions.lastKey().longValue() + 1);
+
+        reviseInternal(false, revNum, location, is);
+    }
+
+    /**
+     * Actually adds a revision to the bundle archive. This method is also
+     * used to reload cached bundles too. The revision is given the specified
+     * revision number and is read from the input stream if supplied or from
+     * the location URL if not.
+     * @param isReload if the bundle is being reloaded or not.
+     * @param revNum the revision number of the revision.
+     * @param location the location associated with the revision.
+     * @param is the input stream from which to read the revision.
+     * @throws Exception if any error occurs.
+     */
+    private void reviseInternal(
+        boolean isReload, Long revNum, String location, InputStream is)
         throws Exception
     {
         // If we have an input stream, then we have to use it
@@ -521,7 +544,9 @@ public class BundleArchive
         {
             location = "inputstream:";
         }
-        BundleRevision revision = createRevisionFromLocation(location, is);
+
+        // Create a bundle revision for revision number.
+        BundleRevision revision = createRevisionFromLocation(location, is, revNum);
         if (revision == null)
         {
             throw new Exception("Unable to revise archive.");
@@ -529,21 +554,11 @@ public class BundleArchive
 
         if (!isReload)
         {
-            setRevisionLocation(location, (m_revisions == null) ? 0 : m_revisions.length);
+            setRevisionLocation(location, revNum);
         }
 
-        // Add new revision to revision array.
-        if (m_revisions == null)
-        {
-            m_revisions = new BundleRevision[] { revision };
-        }
-        else
-        {
-            BundleRevision[] tmp = new BundleRevision[m_revisions.length + 1];
-            System.arraycopy(m_revisions, 0, tmp, 0, m_revisions.length);
-            tmp[m_revisions.length] = revision;
-            m_revisions = tmp;
-        }
+        // Add new revision to revision map.
+        m_revisions.put(revNum, revision);
     }
 
     /**
@@ -561,14 +576,17 @@ public class BundleArchive
     public synchronized boolean rollbackRevise() throws Exception
     {
         // Can only undo the revision if there is more than one.
-        if (getRevisionCount() <= 1)
+        if (m_revisions.size() <= 1)
         {
             return false;
         }
 
+        Long revNum = m_revisions.lastKey();
+        BundleRevision revision = m_revisions.remove(revNum);
+
         try
         {
-            m_revisions[m_revisions.length - 1].close();
+            revision.close();
         }
         catch(Exception ex)
         {
@@ -577,21 +595,17 @@ public class BundleArchive
         }
 
         File revisionDir = new File(m_archiveRootDir, REVISION_DIRECTORY +
-            getRefreshCount() + "." + (m_revisions.length - 1));
+            getRefreshCount() + "." + revNum.toString());
 
         if (BundleCache.getSecureAction().fileExists(revisionDir))
         {
             BundleCache.deleteDirectoryTree(revisionDir);
         }
 
-        BundleRevision[] tmp = new BundleRevision[m_revisions.length - 1];
-        System.arraycopy(m_revisions, 0, tmp, 0, m_revisions.length - 1);
-        m_revisions = tmp;
-
         return true;
     }
 
-    private synchronized String getRevisionLocation(int revision) throws Exception
+    private synchronized String getRevisionLocation(Long revNum) throws Exception
     {
         InputStream is = null;
         BufferedReader br = null;
@@ -599,7 +613,7 @@ public class BundleArchive
         {
             is = BundleCache.getSecureAction().getFileInputStream(new File(
                 new File(m_archiveRootDir, REVISION_DIRECTORY +
-                getRefreshCount() + "." + revision), REVISION_LOCATION_FILE));
+                getRefreshCount() + "." + revNum.toString()), REVISION_LOCATION_FILE));
 
             br = new BufferedReader(new InputStreamReader(is));
             return br.readLine();
@@ -611,7 +625,8 @@ public class BundleArchive
         }
     }
 
-    private synchronized void setRevisionLocation(String location, int revision) throws Exception
+    private synchronized void setRevisionLocation(String location, Long revNum)
+        throws Exception
     {
         // Save current revision location.
         OutputStream os = null;
@@ -621,7 +636,7 @@ public class BundleArchive
             os = BundleCache.getSecureAction()
                 .getFileOutputStream(new File(
                     new File(m_archiveRootDir, REVISION_DIRECTORY +
-                    getRefreshCount() + "." + revision), REVISION_LOCATION_FILE));
+                    getRefreshCount() + "." + revNum.toString()), REVISION_LOCATION_FILE));
             bw = new BufferedWriter(new OutputStreamWriter(os));
             bw.write(location, 0, location.length());
         }
@@ -635,25 +650,24 @@ public class BundleArchive
     public synchronized void close()
     {
         // Get the current revision count.
-        int count = getRevisionCount();
-        for (int i = 0; i < count; i++)
+        for (BundleRevision revision : m_revisions.values())
         {
             // Dispose of the revision, but this might be null in certain
             // circumstances, such as if this bundle archive was created
             // for an existing bundle that was updated, but not refreshed
             // due to a system crash; see the constructor code for details.
-            if (m_revisions[i] != null)
+            if (revision != null)
             {
                 try
                 {
-                    m_revisions[i].close();
+                    revision.close();
                 }
                 catch (Exception ex)
                 {
                     m_logger.log(
                         Logger.LOG_ERROR,
                             "Unable to close revision - "
-                            + m_revisions[i].getRevisionRootDir(), ex);
+                            + revision.getRevisionRootDir(), ex);
                 }
             }
         }
@@ -686,41 +700,50 @@ public class BundleArchive
     **/
     public synchronized void purge() throws Exception
     {
-        // Close the revisions and then delete all but the current revision.
-        // We don't delete it the current revision, because we want to rename it
-        // to the new refresh level.
-        close();
-        long refreshCount = getRefreshCount();
-        int count = getRevisionCount();
-        File revisionDir = null;
-        for (int i = 0; i < count - 1; i++)
+        if (m_revisions.size() > 1)
         {
-            revisionDir = new File(m_archiveRootDir, REVISION_DIRECTORY + refreshCount + "." + i);
-            if (BundleCache.getSecureAction().fileExists(revisionDir))
+            // Close the revisions and then delete all but the current revision.
+            // We don't delete it the current revision, because we want to rename it
+            // to the new refresh level.
+            close();
+
+            // Remove the current revision from the revision map so it doesn't
+            // get deleted.
+            Long currentRevNum = m_revisions.lastKey();
+            m_revisions.remove(currentRevNum);
+
+            // Delete all old revisions.
+            long refreshCount = getRefreshCount();
+            for (Long revNum : m_revisions.keySet())
             {
-                BundleCache.deleteDirectoryTree(revisionDir);
+                File revisionDir = new File(
+                    m_archiveRootDir,
+                    REVISION_DIRECTORY + refreshCount + "." + revNum.toString());
+                if (BundleCache.getSecureAction().fileExists(revisionDir))
+                {
+                    BundleCache.deleteDirectoryTree(revisionDir);
+                }
             }
+
+            // Increment the refresh count.
+            setRefreshCount(refreshCount + 1);
+
+            // Rename the current revision directory to the new refresh level.
+            File currentDir = new File(m_archiveRootDir,
+                REVISION_DIRECTORY + (refreshCount + 1) + "." + currentRevNum.toString());
+            File revisionDir = new File(m_archiveRootDir,
+                REVISION_DIRECTORY + refreshCount + "." + currentRevNum.toString());
+            BundleCache.getSecureAction().renameFile(revisionDir, currentDir);
+
+            // Clear the revision map since they are all invalid now.
+            m_revisions.clear();
+
+            // Recreate the revision for the current location.
+            BundleRevision revision = createRevisionFromLocation(
+                getRevisionLocation(currentRevNum), null, currentRevNum);
+            // Add new revision to the revision map.
+            m_revisions.put(currentRevNum, revision);
         }
-
-        // Save the current revision location for use later when
-        // we recreate the revision.
-        String location = getRevisionLocation(count -1);
-
-        // Increment the refresh count.
-        setRefreshCount(refreshCount + 1);
-
-        // Rename the current revision directory to be the zero revision
-        // of the new refresh level.
-        File currentDir = new File(m_archiveRootDir, REVISION_DIRECTORY + (refreshCount + 1) + ".0");
-        revisionDir = new File(m_archiveRootDir, REVISION_DIRECTORY + refreshCount + "." + (count - 1));
-        BundleCache.getSecureAction().renameFile(revisionDir, currentDir);
-
-        // Null the revision array since they are all invalid now.
-        m_revisions = null;
-        // Finally, recreate the revision for the current location.
-        BundleRevision revision = createRevisionFromLocation(location, null);
-        // Create new revision array.
-        m_revisions = new BundleRevision[] { revision };
     }
 
     /**
@@ -778,19 +801,21 @@ public class BundleArchive
      * </p>
      * @return the location string associated with this archive.
     **/
-    private BundleRevision createRevisionFromLocation(String location, InputStream is)
+    private BundleRevision createRevisionFromLocation(
+        String location, InputStream is, Long revNum)
         throws Exception
     {
         // The revision directory is named using the refresh count and
-        // the revision count. The revision count is obvious, but the
-        // refresh count is less obvious. This is necessary due to how
-        // native libraries are handled in Java; needless to say, every
-        // time a bundle is refreshed we must change the name of its
-        // native libraries so that we can reload them. Thus, we use the
-        // refresh counter as a way to change the name of the revision
-        // directory to give native libraries new absolute names.
+        // the revision number. The revision number is an increasing
+        // counter of the number of times the bundle was revised.
+        // The refresh count is necessary due to how native libraries
+        // are handled in Java; needless to say, every time a bundle is
+        // refreshed we must change the name of its native libraries so
+        // that we can reload them. Thus, we use the refresh counter as
+        // a way to change the name of the revision directory to give
+        // native libraries new absolute names.
         File revisionRootDir = new File(m_archiveRootDir,
-            REVISION_DIRECTORY + getRefreshCount() + "." + getRevisionCount());
+            REVISION_DIRECTORY + getRefreshCount() + "." + revNum.toString());
 
         BundleRevision result = null;
 
