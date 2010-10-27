@@ -1,12 +1,12 @@
 /*
  * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,12 +24,13 @@ import java.util.Map;
  * Participant objects. When the Coordination is ended, the participants are
  * called back. A Coordination can also fail for various reasons, in that case
  * the participants are informed of this failure.
- *
+ * 
  * @ThreadSafe
  * @Provisional
  */
 @Deprecated
-public interface Coordination {
+public interface Coordination
+{
     /**
      * Return value of end(). The Coordination ended normally, no participant
      * threw an exception.
@@ -56,7 +57,7 @@ public interface Coordination {
     /**
      * Return the name of this Coordination. The name is given in the
      * Coordinator.begin(String) or Coordinator.create(String) method.
-     *
+     * 
      * @return the name of this Coordination
      */
     String getName();
@@ -71,7 +72,7 @@ public interface Coordination {
      * methods must be running outside the current coordination, no participants
      * can be added during the termination phase. A fail method must return
      * silently when the Coordination has already finished.
-     *
+     * 
      * @param reasonThrowable describing the reason of the failure for
      *            documentation
      * @return true if the Coordination was still active, otherwise false
@@ -82,7 +83,7 @@ public interface Coordination {
      * If the Coordination is terminated then return, otherwise set the
      * Coordination to fail. This method enables the following fail-safe pattern
      * to ensure Coordinations are properly terminated.
-     *
+     * 
      * <pre>
      * Coordination c = coordinator.begin("show_fail");
      *     try {
@@ -99,7 +100,7 @@ public interface Coordination {
      * <p>
      * With this pattern, it is easy to ensure that the coordination is always
      * terminated.
-     *
+     * 
      * @return true if this method actually terminated the coordination (that
      *         is, it was not properly ended). false if the Coordination was
      *         already properly terminate by an end() or fail(Throwable) method.
@@ -120,7 +121,7 @@ public interface Coordination {
      * <li>PARTIALLY_ENDED - One of the participants threw an exception</li>
      * <li>FAILED - The Coordination was set to always fail</li>
      * </ol>
-     *
+     * 
      * @return OK, PARTIALLY_ENDED, FAILED
      * @throws IllegalStateException when the Coordination is already
      *             terminated.
@@ -132,7 +133,7 @@ public interface Coordination {
      * This list is only valid as long as the Coordination has not been
      * terminated. That is, after end() or fail(Throwable) is called this method
      * will return an empty list.
-     *
+     * 
      * @return list of participants.
      * @throws SecurityException This method requires the action for the
      *             CoordinationPermission.
@@ -156,7 +157,7 @@ public interface Coordination {
      * that is, before end() or fail(Throwable) is called. If the current
      * deadline is arriving later than the given timeout then the timeout is
      * ignored.
-     *
+     * 
      * @param timeOutInMsNumber of ms to wait, zero means forever.
      * @throws SecurityException This method requires the or action for the
      *             CoordinationPermission. participate
@@ -178,7 +179,7 @@ public interface Coordination {
      * happen before this method returns. The ordering of the call-backs must
      * follow the order of participation. If participant is participating
      * multiple times the first time it participates defines this order.
-     *
+     * 
      * @return true if the Coordination was active, otherwise false.
      * @throws CoordinationException - This exception should normally not be
      *             caught by the caller but allowed to bubble up to the
@@ -202,7 +203,7 @@ public interface Coordination {
      * participants. To namespace of the map is a class, allowing for private
      * date to be stored in the map by using implementation classes or shared
      * data by interfaces.
-     *
+     * 
      * @return The map
      */
     Map<Class<?>, ?> getVariables();

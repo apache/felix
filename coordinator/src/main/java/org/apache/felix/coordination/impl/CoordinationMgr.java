@@ -1,18 +1,18 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
+ * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
+ * regarding copyright ownership. The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
+ * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
@@ -53,7 +53,8 @@ import org.apache.felix.service.coordination.Participant;
  * </ul>
  */
 @SuppressWarnings("deprecation")
-public class CoordinationMgr implements CoordinatorMBean {
+public class CoordinationMgr implements CoordinatorMBean
+{
 
     private ThreadLocal<Stack<Coordination>> threadStacks;
 
@@ -75,26 +76,29 @@ public class CoordinationMgr implements CoordinatorMBean {
     /**
      * Wait at most 60 seconds for participant to be eligible for participation
      * in a coordination.
-     *
+     * 
      * @see #singularizeParticipant(Participant, CoordinationImpl)
      */
     private long participationTimeOut = 60 * 1000L;
 
-    CoordinationMgr() {
+    CoordinationMgr()
+    {
         ctr = new AtomicLong(-1);
         coordinations = new HashMap<Long, CoordinationImpl>();
         participants = new HashMap<Participant, CoordinationImpl>();
         coordinationTimer = new Timer("Coordination Timer", true);
     }
 
-    void cleanUp() {
+    void cleanUp()
+    {
         // terminate coordination timeout timer
         coordinationTimer.purge();
         coordinationTimer.cancel();
 
         // terminate all active coordinations
         final Exception reason = new Exception();
-        for (Coordination c : coordinations.values()) {
+        for (Coordination c : coordinations.values())
+        {
             c.fail(reason);
         }
         coordinations.clear();
@@ -103,35 +107,45 @@ public class CoordinationMgr implements CoordinatorMBean {
         participants.clear();
     }
 
-    void configure(final long coordinationTimeout,
-            final long participationTimeout) {
+    void configure(final long coordinationTimeout, final long participationTimeout)
+    {
         this.defaultTimeOut = coordinationTimeout;
         this.participationTimeOut = participationTimeout;
     }
 
-    void schedule(final TimerTask task, final long delay) {
-        if (delay < 0) {
+    void schedule(final TimerTask task, final long delay)
+    {
+        if (delay < 0)
+        {
             task.cancel();
-        } else {
+        }
+        else
+        {
             coordinationTimer.schedule(task, delay);
         }
     }
 
-    void lockParticipant(final Participant p, final CoordinationImpl c) {
-        synchronized (participants) {
+    void lockParticipant(final Participant p, final CoordinationImpl c)
+    {
+        synchronized (participants)
+        {
             // wait for participant to be released
             long cutOff = System.currentTimeMillis() + participationTimeOut;
-            while (participants.containsKey(p)) {
-                try {
+            while (participants.containsKey(p))
+            {
+                try
+                {
                     participants.wait(participationTimeOut / 500);
-                } catch (InterruptedException ie) {
+                }
+                catch (InterruptedException ie)
+                {
                     // don't worry, just keep on waiting
                 }
 
                 // timeout waiting for participation
-                if (System.currentTimeMillis() > cutOff) {
-                    throw new CoordinationException(
-                        "Timed out waiting to join coordinaton", c.getName(),
+                if (System.currentTimeMillis() > cutOff)
+                {
+                    throw new CoordinationException("Timed out waiting to join coordinaton", c.getName(),
                         CoordinationException.TIMEOUT);
                 }
             }
@@ -141,8 +155,10 @@ public class CoordinationMgr implements CoordinatorMBean {
         }
     }
 
-    void releaseParticipant(final Participant p) {
-        synchronized (participants) {
+    void releaseParticipant(final Participant p)
+    {
+        synchronized (participants)
+        {
             participants.remove(p);
             participants.notifyAll();
         }
@@ -150,51 +166,61 @@ public class CoordinationMgr implements CoordinatorMBean {
 
     // ---------- Coordinator back end implementation
 
-    Coordination create(final CoordinatorImpl owner, final String name) {
+    Coordination create(final CoordinatorImpl owner, final String name)
+    {
         long id = ctr.incrementAndGet();
-        CoordinationImpl c = new CoordinationImpl(owner, id, name,
-            defaultTimeOut);
+        CoordinationImpl c = new CoordinationImpl(owner, id, name, defaultTimeOut);
         coordinations.put(id, c);
         return c;
     }
 
-    void unregister(final CoordinationImpl c) {
+    void unregister(final CoordinationImpl c)
+    {
         coordinations.remove(c.getId());
         Stack<Coordination> stack = threadStacks.get();
-        if (stack != null) {
+        if (stack != null)
+        {
             stack.remove(c);
         }
     }
 
-    Coordination push(Coordination c) {
+    Coordination push(Coordination c)
+    {
         Stack<Coordination> stack = threadStacks.get();
-        if (stack == null) {
+        if (stack == null)
+        {
             stack = new Stack<Coordination>();
             threadStacks.set(stack);
         }
         return stack.push(c);
     }
 
-    Coordination pop() {
+    Coordination pop()
+    {
         Stack<Coordination> stack = threadStacks.get();
-        if (stack != null && !stack.isEmpty()) {
+        if (stack != null && !stack.isEmpty())
+        {
             return stack.pop();
         }
         return null;
     }
 
-    Coordination getCurrentCoordination() {
+    Coordination getCurrentCoordination()
+    {
         Stack<Coordination> stack = threadStacks.get();
-        if (stack != null && !stack.isEmpty()) {
+        if (stack != null && !stack.isEmpty())
+        {
             return stack.peek();
         }
         return null;
     }
 
-    Collection<Coordination> getCoordinations() {
+    Collection<Coordination> getCoordinations()
+    {
         ArrayList<Coordination> result = new ArrayList<Coordination>();
         Stack<Coordination> stack = threadStacks.get();
-        if (stack != null) {
+        if (stack != null)
+        {
             result.addAll(stack);
         }
         return result;
@@ -202,14 +228,20 @@ public class CoordinationMgr implements CoordinatorMBean {
 
     // ---------- CoordinatorMBean interface
 
-    public TabularData listCoordinations(String regexFilter) {
+    public TabularData listCoordinations(String regexFilter)
+    {
         Pattern p = Pattern.compile(regexFilter);
         TabularData td = new TabularDataSupport(COORDINATIONS_TYPE);
-        for (CoordinationImpl c : coordinations.values()) {
-            if (p.matcher(c.getName()).matches()) {
-                try {
+        for (CoordinationImpl c : coordinations.values())
+        {
+            if (p.matcher(c.getName()).matches())
+            {
+                try
+                {
                     td.put(fromCoordination(c));
-                } catch (OpenDataException e) {
+                }
+                catch (OpenDataException e)
+                {
                     // TODO: log
                 }
             }
@@ -217,37 +249,46 @@ public class CoordinationMgr implements CoordinatorMBean {
         return td;
     }
 
-    public CompositeData getCoordination(long id) throws IOException {
+    public CompositeData getCoordination(long id) throws IOException
+    {
         CoordinationImpl c = coordinations.get(id);
-        if (c != null) {
-            try {
+        if (c != null)
+        {
+            try
+            {
                 return fromCoordination(c);
-            } catch (OpenDataException e) {
+            }
+            catch (OpenDataException e)
+            {
                 throw new IOException(e.toString());
             }
         }
         throw new IOException("No such Coordination " + id);
     }
 
-    public boolean fail(long id, String reason) {
+    public boolean fail(long id, String reason)
+    {
         Coordination c = coordinations.get(id);
-        if (c != null) {
+        if (c != null)
+        {
             return c.fail(new Exception(reason));
         }
         return false;
     }
 
-    public void addTimeout(long id, long timeout) {
+    public void addTimeout(long id, long timeout)
+    {
         Coordination c = coordinations.get(id);
-        if (c != null) {
+        if (c != null)
+        {
             c.addTimeout(timeout);
         }
     }
 
-    private CompositeData fromCoordination(final CoordinationImpl c)
-            throws OpenDataException {
-        return new CompositeDataSupport(COORDINATION_TYPE, new String[] { ID,
-            NAME, TIMEOUT }, new Object[] { c.getId(), c.getName(),
-            c.getTimeOut() });
+    private CompositeData fromCoordination(final CoordinationImpl c) throws OpenDataException
+    {
+        return new CompositeDataSupport(COORDINATION_TYPE, new String[]
+            { ID, NAME, TIMEOUT }, new Object[]
+            { c.getId(), c.getName(), c.getTimeOut() });
     }
 }

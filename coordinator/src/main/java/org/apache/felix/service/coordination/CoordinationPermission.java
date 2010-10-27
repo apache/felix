@@ -1,12 +1,12 @@
 /*
  * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,11 +82,12 @@ import java.security.BasicPermission;
  * </table>
  * </li>
  * </ol>
- *
+ * 
  * @Provisional
  */
 @Deprecated
-public class CoordinationPermission extends BasicPermission {
+public class CoordinationPermission extends BasicPermission
+{
 
     private static final long serialVersionUID = 1566605398519619478L;
 
@@ -110,27 +111,28 @@ public class CoordinationPermission extends BasicPermission {
      * The name parameter specifies a filter condition. The filter asserts the
      * bundle that initiated the Coordination. An implicit grant is made for a
      * bundle's own coordinations. Parameters:
-     *
+     * 
      * @param filterExpression A filter expression asserting the bundle
      *            associated with the coordination.
      * @param actions A comma separated combination of INITIATE, ADMIN,
      *            PARTICIPATE.
      */
-    public CoordinationPermission(String filterExpression, String actions) {
+    public CoordinationPermission(String filterExpression, String actions)
+    {
         super(filterExpression, actions);
     }
 
     /**
      * The verification permission
-     *
+     * 
      * @param bundle The bundle that will be the target of the filter
      *            expression.
      * @param coordinationName The name of the coordination or null
      * @param actions The set of actions required, which is a combination of
      *            INITIATE, ADMIN, PARTICIPATE.
      */
-    public CoordinationPermission(org.osgi.framework.Bundle bundle,
-            String coordinationName, String actions) {
+    public CoordinationPermission(org.osgi.framework.Bundle bundle, String coordinationName, String actions)
+    {
         super(coordinationName, actions);
     }
 }

@@ -1,12 +1,12 @@
 /*
  * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,18 +28,19 @@ package org.apache.felix.service.coordination;
  * ended(Coordination) method and the failed(Coordination) method. Both methods
  * can be called on another thread. A Coordinator service must block a
  * Participant when it tries to participate in multiple Coordinations.
- *
+ * 
  * @ThreadSafe
  * @Provisional
  */
 @Deprecated
-public interface Participant {
+public interface Participant
+{
 
     /**
      * The Coordination has failed and the participant is informed. A
      * participant should properly discard any work it has done during the
      * active coordination.
-     *
+     * 
      * @param c The Coordination that does the callback
      * @throws Exception Any exception thrown should be logged but is further
      *             ignored and does not influence the outcome of the
@@ -49,7 +50,7 @@ public interface Participant {
 
     /**
      * The Coordination is being ended.
-     *
+     * 
      * @param c The Coordination that does the callback
      * @throws Exception If an exception is thrown it should be logged and the
      *             return of the Coordination.end() method must be
