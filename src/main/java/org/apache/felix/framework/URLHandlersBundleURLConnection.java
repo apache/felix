@@ -77,17 +77,27 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
         m_contentTime = bundle.getLastModified();
 
-        int revision = Util.getModuleRevisionFromModuleId(url.getHost());
+        // Get the bundle's modules to find the target module.
         List<Module> modules = bundle.getModules();
-        if ((modules == null) || (revision >= modules.size()))
+        if ((modules == null) || modules.isEmpty())
         {
             throw new IOException("Resource does not exist: " + url);
         }
 
-        // If the revision is not specified, check the latest
-        if (revision < 0)
+        // Search for matching module name.
+        for (Module m : modules)
         {
-            revision = modules.size() - 1;
+            if (m.getId().equals(url.getHost()))
+            {
+                m_targetModule = m;
+                break;
+            }
+        }
+
+        // If not found, assume the current module.
+        if (m_targetModule == null)
+        {
+            m_targetModule = modules.get(modules.size() - 1);
         }
 
         // If the resource cannot be found at the current class path index,
@@ -97,15 +107,14 @@ class URLHandlersBundleURLConnection extends URLConnection
         // Of course, this approach won't work in cases where there are multiple
         // resources with the same path, since it will always find the first
         // one on the class path.
-        m_targetModule = modules.get(revision);
         m_classPathIdx = url.getPort();
         if (m_classPathIdx < 0)
         {
             m_classPathIdx = 0;
         }
-        if (!modules.get(revision).hasInputStream(m_classPathIdx, url.getPath()))
+        if (!m_targetModule.hasInputStream(m_classPathIdx, url.getPath()))
         {
-            URL newurl = modules.get(revision).getResourceByDelegation(url.getPath());
+            URL newurl = m_targetModule.getResourceByDelegation(url.getPath());
             if (newurl == null)
             {
                 throw new IOException("Resource does not exist: " + url);

@@ -1075,7 +1075,7 @@ class BundleImpl implements Bundle
         throws Exception
     {
         // This operation will increase the revision count for the bundle.
-        m_archive.revise(false, location, is);
+        m_archive.revise(location, is);
         try
         {
             Module module = createModule();
@@ -1135,19 +1135,18 @@ class BundleImpl implements Bundle
     {
         // Get and parse the manifest from the most recent revision to
         // create an associated module for it.
-        Map headerMap = m_archive.getRevision(
-            m_archive.getRevisionCount() - 1).getManifestHeader();
+        Map headerMap = m_archive.getCurrentRevision().getManifestHeader();
 
         // Create the module instance.
-        final int revision = m_archive.getRevisionCount() - 1;
         ModuleImpl module = new ModuleImpl(
             getFramework().getLogger(),
             getFramework().getConfig(),
             getFramework().getResolver(),
             this,
-            Long.toString(getBundleId()) + "." + Integer.toString(revision),
+            Long.toString(getBundleId())
+                + "." + m_archive.getCurrentRevisionNumber().toString(),
             headerMap,
-            m_archive.getRevision(revision).getContent(),
+            m_archive.getCurrentRevision().getContent(),
             getFramework().getBundleStreamHandler(),
             getFramework().getBootPackages(),
             getFramework().getBootPackageWildcards());
