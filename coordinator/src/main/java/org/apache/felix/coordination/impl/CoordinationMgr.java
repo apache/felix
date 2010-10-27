@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -76,13 +76,14 @@ public class CoordinationMgr implements CoordinatorMBean
     /**
      * Wait at most 60 seconds for participant to be eligible for participation
      * in a coordination.
-     * 
+     *
      * @see #singularizeParticipant(Participant, CoordinationImpl)
      */
     private long participationTimeOut = 60 * 1000L;
 
     CoordinationMgr()
     {
+        threadStacks = new ThreadLocal<Stack<Coordination>>();
         ctr = new AtomicLong(-1);
         coordinations = new HashMap<Long, CoordinationImpl>();
         participants = new HashMap<Participant, CoordinationImpl>();
@@ -105,6 +106,9 @@ public class CoordinationMgr implements CoordinatorMBean
 
         // release all participants
         participants.clear();
+
+        // cannot really clear out the thread local but we can let it go
+        threadStacks = null;
     }
 
     void configure(final long coordinationTimeout, final long participationTimeout)
@@ -131,11 +135,13 @@ public class CoordinationMgr implements CoordinatorMBean
         {
             // wait for participant to be released
             long cutOff = System.currentTimeMillis() + participationTimeOut;
-            while (participants.containsKey(p))
+            long waitTime = (participationTimeOut > 500) ? participationTimeOut / 500 : participationTimeOut;
+            CoordinationImpl current = participants.get(p);
+            while (current != null && current != c)
             {
                 try
                 {
-                    participants.wait(participationTimeOut / 500);
+                    participants.wait(waitTime);
                 }
                 catch (InterruptedException ie)
                 {
@@ -148,6 +154,9 @@ public class CoordinationMgr implements CoordinatorMBean
                     throw new CoordinationException("Timed out waiting to join coordinaton", c.getName(),
                         CoordinationException.TIMEOUT);
                 }
+
+                // check again
+                current = participants.get(p);
             }
 
             // lock participant into coordination

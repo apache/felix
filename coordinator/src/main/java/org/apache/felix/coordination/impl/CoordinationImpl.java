@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -115,8 +115,8 @@ public class CoordinationImpl implements Coordination
         // If a timeout happens, the coordination thread is set to always fail
         this.mustFail = TIMEOUT;
 
-        // Faile the Coordination upon timeout
-        CoordinationImpl.this.fail(null);
+        // Fail the Coordination upon timeout
+        fail(null);
     }
 
     long getTimeOut()
@@ -190,7 +190,7 @@ public class CoordinationImpl implements Coordination
      */
     public boolean isTerminated()
     {
-        return state == TERMINATED;
+        return state == TERMINATED || state == FAILED;
     }
 
     public void addTimeout(long timeOutInMs)
@@ -212,7 +212,7 @@ public class CoordinationImpl implements Coordination
      * another coordination.
      * <p>
      * Participants can only be added to a coordination if it is active.
-     * 
+     *
      * @throws org.apache.felix.service.coordination.CoordinationException if
      *             the participant cannot currently participate in this
      *             coordination
@@ -267,7 +267,7 @@ public class CoordinationImpl implements Coordination
      * {@value State#TERMINATING}, unregistering from the
      * {@link CoordinationMgr} and ensuring there is no timeout task active any
      * longer to timeout this coordination.
-     * 
+     *
      * @return <code>true</code> If the coordination was active and termination
      *         can continue. If <code>false</code> is returned, the coordination
      *         must be considered terminated (or terminating) in the current
@@ -293,7 +293,7 @@ public class CoordinationImpl implements Coordination
      * This method must only be called after the {@link #state} field has been
      * set to {@link State#TERMINATING} and only be the method successfully
      * setting this state.
-     * 
+     *
      * @return OK or PARTIALLY_ENDED depending on whether all participants
      *         succeeded or some of them failed ending the coordination.
      */
@@ -350,7 +350,7 @@ public class CoordinationImpl implements Coordination
      * Helper method for timeout scheduling. If a timer is currently scheduled
      * it is canceled. If the new timeout value is a positive value a new timer
      * is scheduled to fire of so many milliseconds from now.
-     * 
+     *
      * @param timeout The new timeout value
      */
     private void scheduleTimeout(final long timeout)
