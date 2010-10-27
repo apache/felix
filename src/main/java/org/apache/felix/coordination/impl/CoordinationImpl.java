@@ -31,19 +31,17 @@ import org.apache.felix.service.coordination.Participant;
 @SuppressWarnings("deprecation")
 public class CoordinationImpl implements Coordination {
 
-    private enum State {
-        /** Active */
-        ACTIVE,
+    /** Active */
+    private static final int ACTIVE = 1;
 
-        /** Coordination termination started */
-        TERMINATING,
+    /** Coordination termination started */
+    private static final int TERMINATING = 2;
 
-        /** Coordination completed */
-        TERMINATED,
+    /** Coordination completed */
+    private static final int TERMINATED = 3;
 
-        /** Coordination failed */
-        FAILED;
-    }
+    /** Coordination failed */
+    private static final int FAILED = 4;
 
     private final CoordinationMgr mgr;
 
@@ -56,12 +54,11 @@ public class CoordinationImpl implements Coordination {
 
     /**
      * Access to this field must be synchronized as long as the expected state
-     * is {@link State#ACTIVE}. Once the state has changed, further updates to
-     * this instance will not take place any more and the state will only be
-     * modified by the thread successfully setting the state to
-     * {@link State#TERMINATING}.
+     * is {@link #ACTIVE}. Once the state has changed, further updates to this
+     * instance will not take place any more and the state will only be modified
+     * by the thread successfully setting the state to {@link #TERMINATING}.
      */
-    private volatile State state;
+    private volatile int state;
 
     private int mustFail;
 
@@ -81,7 +78,7 @@ public class CoordinationImpl implements Coordination {
         this.id = id;
         this.name = name;
         this.mustFail = 0;
-        this.state = State.ACTIVE;
+        this.state = ACTIVE;
         this.participants = new ArrayList<Participant>();
         this.variables = new HashMap<Class<?>, Object>();
         this.timeOutInMs = -defaultTimeOutInMs;
@@ -144,7 +141,7 @@ public class CoordinationImpl implements Coordination {
     }
 
     public boolean terminate() {
-        if (state == State.ACTIVE) {
+        if (state == ACTIVE) {
             try {
                 end();
                 return true;
@@ -165,7 +162,7 @@ public class CoordinationImpl implements Coordination {
      * the coordination is in the process of terminating due to a failure.
      */
     public boolean isFailed() {
-        return state == State.FAILED;
+        return state == FAILED;
     }
 
     /**
@@ -175,7 +172,7 @@ public class CoordinationImpl implements Coordination {
      * the coordination is in the process of terminating.
      */
     public boolean isTerminated() {
-        return state == State.TERMINATED;
+        return state == TERMINATED;
     }
 
     public void addTimeout(long timeOutInMs) {
@@ -210,7 +207,7 @@ public class CoordinationImpl implements Coordination {
         // synchronize access to the state to prevent it from being changed
         // while adding the participant
         synchronized (this) {
-            if (state == State.ACTIVE) {
+            if (state == ACTIVE) {
                 if (!participants.contains(p)) {
                     participants.add(p);
                 }
@@ -224,7 +221,7 @@ public class CoordinationImpl implements Coordination {
         // synchronize access to the state to prevent it from being changed
         // while we create a copy of the participant list
         synchronized (this) {
-            if (state == State.ACTIVE) {
+            if (state == ACTIVE) {
                 return new ArrayList<Participant>(participants);
             }
         }
@@ -249,8 +246,8 @@ public class CoordinationImpl implements Coordination {
      *         thread and no further termination processing must take place.
      */
     private synchronized boolean startTermination() {
-        if (state == State.ACTIVE) {
-            state = State.TERMINATING;
+        if (state == ACTIVE) {
+            state = TERMINATING;
             mgr.unregister(this);
             scheduleTimeout(-1);
             return true;
@@ -283,7 +280,7 @@ public class CoordinationImpl implements Coordination {
             // release the participant for other coordinations
             mgr.releaseParticipant(part);
         }
-        state = State.TERMINATED;
+        state = TERMINATED;
         return reason;
     }
 
@@ -306,7 +303,7 @@ public class CoordinationImpl implements Coordination {
             // release the participant for other coordinations
             mgr.releaseParticipant(part);
         }
-        state = State.FAILED;
+        state = FAILED;
     }
 
     /**

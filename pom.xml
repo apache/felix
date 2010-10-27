@@ -42,7 +42,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>5</source>
-                    <target>5</target>
+                    <target>jsr14</target>
                 </configuration>
             </plugin>
             <plugin>
