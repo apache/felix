@@ -82,7 +82,7 @@ public abstract class JavaClassDescriptorManager
         this.processAnnotations = processAnnotations;
         this.parseJavadocs = parseJavadocs;
         this.log = log;
-        this.annotationTagProviderManager = new AnnotationTagProviderManager( log, annotationTagProviders, classLoader );
+        this.annotationTagProviderManager = new AnnotationTagProviderManager( annotationTagProviders, classLoader );
         this.classloader = classLoader;
 
         ClassUtil.classLoader = this.classloader;
