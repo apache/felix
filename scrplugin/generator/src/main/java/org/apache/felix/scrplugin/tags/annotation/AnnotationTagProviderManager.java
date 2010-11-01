@@ -19,9 +19,13 @@
 package org.apache.felix.scrplugin.tags.annotation;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
+import java.util.*;
 
+import javax.imageio.spi.ServiceRegistry;
+
+import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaTag;
@@ -43,36 +47,97 @@ public class AnnotationTagProviderManager
      * that provide mappings from custom annotations to
      * {@link org.apache.felix.scrplugin.tags.JavaTag} implementations.
      */
-    private final List<AnnotationTagProvider> annotationTagProviders = new ArrayList<AnnotationTagProvider>();
+    private final Map<String, AnnotationTagProvider> annotationTagProviders = new LinkedHashMap<String, AnnotationTagProvider>();
 
+    private final Log log;
 
     /**
      * @param annotationTagProviderClasses List of classes that implements
      *            {@link AnnotationTagProvider} interface.
      * @throws SCRDescriptorFailureException
      */
-    public AnnotationTagProviderManager( String[] annotationTagProviderClasses ) throws SCRDescriptorFailureException
+    public AnnotationTagProviderManager( final Log log,
+            final String[] annotationTagProviderClasses,
+            final ClassLoader classLoader )
+    throws SCRDescriptorFailureException
     {
+        this.log = log;
 
-        // the classloader used to load the provider classes
-        final ClassLoader classLoader = getClass().getClassLoader();
-
-        // always add provider supporting built-in SCR default properties
-        loadProvider( annotationTagProviders, classLoader,
-            "org.apache.felix.scrplugin.tags.annotation.defaulttag.DefaultAnnotationTagProvider", true );
-        loadProvider( annotationTagProviders, classLoader,
-            "org.apache.felix.scrplugin.tags.annotation.sling.SlingAnnotationTagProvider", true );
+        // search for providers
+        final Iterator<AnnotationTagProvider> serviceIter = ServiceRegistry.lookupProviders(AnnotationTagProvider.class, classLoader);
+        while ( serviceIter.hasNext() )
+        {
+            final AnnotationTagProvider provider = serviceIter.next();
+            this.addProvider(provider, false);
+        }
 
         // add custom providers defined in pom
         for ( int i = 0; i < annotationTagProviderClasses.length; i++ )
         {
-            loadProvider( annotationTagProviders, classLoader, annotationTagProviderClasses[i], false );
+            loadProvider( classLoader, annotationTagProviderClasses[i], false );
+        }
+
+        // always add provider supporting built-in SCR default properties (for compatibility with older
+        // annotation versions)
+        loadProvider( classLoader,
+            "org.apache.felix.scrplugin.tags.annotation.defaulttag.DefaultAnnotationTagProvider", true );
+        loadProvider( classLoader,
+            "org.apache.felix.scrplugin.tags.annotation.sling.SlingAnnotationTagProvider", true );
+    }
+
+    /**
+     * Try to get the location (class loader) from the object.
+     */
+    private String getLocation(final Object obj)
+    {
+        try {
+            final ProtectionDomain pd = obj.getClass().getProtectionDomain();
+            if ( pd != null && pd.getCodeSource() != null )
+            {
+                final CodeSource cs = pd.getCodeSource();
+                if ( cs.getLocation() != null )
+                {
+                    return cs.getLocation().toExternalForm();
+                }
+            }
+        }
+        catch (final SecurityException se)
+        {
+            // ignore this
+        }
+        // by default return the class laoder
+        return obj.getClass().getClassLoader().toString();
+    }
+
+    /**
+     * Add a provider (if not already available)
+     */
+    private void addProvider(final AnnotationTagProvider provider, final boolean silent)
+    {
+        // check if this provider is already loaded
+        final String key = provider.getClass().getName();
+        if ( !this.annotationTagProviders.containsKey(key) )
+        {
+            this.annotationTagProviders.put(key, provider);
+        }
+        else
+        {
+            if ( !silent )
+            {
+                // now check if the location of the providers (classloader) is different
+                // and log a warning
+                final AnnotationTagProvider usedProvider = this.annotationTagProviders.get(key);
+                if ( !usedProvider.equals(provider) )
+                {
+                    this.log.warn("Ignoring provider " + provider + " from location " + getLocation(provider) +
+                            ". Using previously found version from " + getLocation(usedProvider));
+                }
+
+            }
         }
     }
 
-
-    private static void loadProvider( final List<AnnotationTagProvider> annotationTagProviders,
-        final ClassLoader classLoader, final String className, final boolean silent )
+    private void loadProvider( final ClassLoader classLoader, final String className, final boolean silent )
         throws SCRDescriptorFailureException
     {
         String failureMessage = null;
@@ -81,7 +146,7 @@ public class AnnotationTagProviderManager
             Class<?> clazz = classLoader.loadClass( className );
             try
             {
-                annotationTagProviders.add( ( AnnotationTagProvider ) clazz.newInstance() );
+                addProvider( ( AnnotationTagProvider ) clazz.newInstance(), silent );
             }
             catch ( ClassCastException e )
             {
@@ -135,7 +200,7 @@ public class AnnotationTagProviderManager
     {
         List<JavaTag> tags = new ArrayList<JavaTag>();
 
-        for ( AnnotationTagProvider provider : this.annotationTagProviders )
+        for ( AnnotationTagProvider provider : this.annotationTagProviders.values() )
         {
             tags.addAll( provider.getTags( annotation, description, field ) );
         }

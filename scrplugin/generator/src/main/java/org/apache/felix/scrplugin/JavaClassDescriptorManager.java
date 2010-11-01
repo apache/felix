@@ -14,14 +14,9 @@
 package org.apache.felix.scrplugin;
 
 
-import java.io.File;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
+import java.util.jar.*;
 
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
@@ -31,6 +26,7 @@ import org.apache.felix.scrplugin.tags.annotation.AnnotationTagProviderManager;
 import org.apache.felix.scrplugin.tags.cl.ClassLoaderJavaClassDescription;
 import org.apache.felix.scrplugin.tags.qdox.QDoxJavaClassDescription;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
+
 import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
 import com.thoughtworks.qdox.model.JavaSource;
@@ -86,7 +82,7 @@ public abstract class JavaClassDescriptorManager
         this.processAnnotations = processAnnotations;
         this.parseJavadocs = parseJavadocs;
         this.log = log;
-        this.annotationTagProviderManager = new AnnotationTagProviderManager( annotationTagProviders );
+        this.annotationTagProviderManager = new AnnotationTagProviderManager( log, annotationTagProviders, classLoader );
         this.classloader = classLoader;
 
         ClassUtil.classLoader = this.classloader;
