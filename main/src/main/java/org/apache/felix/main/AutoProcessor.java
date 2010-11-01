@@ -38,6 +38,10 @@ public class AutoProcessor
     **/
     public static final String AUTO_DEPLOY_ACTION_PROPERY = "felix.auto.deploy.action";
     /**
+     * The property name used to specify auto-deploy start level.
+    **/
+    public static final String AUTO_DEPLOY_STARTLEVEL_PROPERY = "felix.auto.deploy.startlevel";
+    /**
      * The name used for the auto-deploy install action.
     **/
     public static final String AUTO_DEPLOY_INSTALL_VALUE = "install";
@@ -77,8 +81,8 @@ public class AutoProcessor
 
     /**
      * <p>
-     * Processes bundles in the auto-deploy directory, installing and then
-     * starting each one.
+     * Processes bundles in the auto-deploy directory, performing the
+     * specified deploy actions.
      * </p>
      */
     private static void processAutoDeploy(Map configMap, BundleContext context)
@@ -103,6 +107,26 @@ public class AutoProcessor
         // Perform auto-deploy actions.
         if (actionList.size() > 0)
         {
+            // Retrieve the Start Level service, since it will be needed
+            // to set the start level of the installed bundles.
+            StartLevel sl = (StartLevel) context.getService(
+                context.getServiceReference(org.osgi.service.startlevel.StartLevel.class.getName()));
+
+            // Get start level for auto-deploy bundles.
+            int startLevel = sl.getInitialBundleStartLevel();
+            if (configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERY) != null)
+            {
+                try
+                {
+                    startLevel = Integer.parseInt(
+                        configMap.get(AUTO_DEPLOY_STARTLEVEL_PROPERY).toString());
+                }
+                catch (NumberFormatException ex)
+                {
+                    // Ignore and keep default level.
+                }
+            }
+
             // Get list of already installed bundles as a map.
             Map installedBundleMap = new HashMap();
             Bundle[] bundles = context.getBundles();
@@ -139,6 +163,7 @@ public class AutoProcessor
                 // indicate which bundles may need to be uninstalled.
                 Bundle b = (Bundle) installedBundleMap.remove(
                     ((File) jarList.get(i)).toURI().toString());
+
                 try
                 {
                     // If the bundle is not already installed, then install it
@@ -156,10 +181,12 @@ public class AutoProcessor
                     }
 
                     // If we have found and/or successfully installed a bundle,
-                    // then add it to the list of bundles to potentially start.
-                    if (b != null)
+                    // then add it to the list of bundles to potentially start
+                    // and also set its start level accordingly.
+                    if ((b != null) && !isFragment(b))
                     {
                         startBundleList.add(b);
+                        sl.setBundleStartLevel(b, startLevel);
                     }
                 }
                 catch (BundleException ex)
@@ -200,10 +227,7 @@ public class AutoProcessor
                 {
                     try
                     {
-                        if (!isFragment((Bundle) startBundleList.get(i)))
-                        {
-                            ((Bundle) startBundleList.get(i)).start();
-                        }
+                        ((Bundle) startBundleList.get(i)).start();
                     }
                     catch (BundleException ex)
                     {
