@@ -19,8 +19,6 @@
 package org.apache.felix.scrplugin.tags.annotation;
 
 
-import java.security.CodeSource;
-import java.security.ProtectionDomain;
 import java.util.*;
 
 import javax.imageio.spi.ServiceRegistry;
@@ -68,7 +66,7 @@ public class AnnotationTagProviderManager
         while ( serviceIter.hasNext() )
         {
             final AnnotationTagProvider provider = serviceIter.next();
-            this.addProvider(provider, false);
+            this.addProvider(provider);
         }
 
         // add custom providers defined in pom
@@ -86,54 +84,15 @@ public class AnnotationTagProviderManager
     }
 
     /**
-     * Try to get the location (class loader) from the object.
-     */
-    private String getLocation(final Object obj)
-    {
-        try {
-            final ProtectionDomain pd = obj.getClass().getProtectionDomain();
-            if ( pd != null && pd.getCodeSource() != null )
-            {
-                final CodeSource cs = pd.getCodeSource();
-                if ( cs.getLocation() != null )
-                {
-                    return cs.getLocation().toExternalForm();
-                }
-            }
-        }
-        catch (final SecurityException se)
-        {
-            // ignore this
-        }
-        // by default return the class laoder
-        return obj.getClass().getClassLoader().toString();
-    }
-
-    /**
      * Add a provider (if not already available)
      */
-    private void addProvider(final AnnotationTagProvider provider, final boolean silent)
+    private void addProvider(final AnnotationTagProvider provider)
     {
         // check if this provider is already loaded
         final String key = provider.getClass().getName();
         if ( !this.annotationTagProviders.containsKey(key) )
         {
             this.annotationTagProviders.put(key, provider);
-        }
-        else
-        {
-            if ( !silent )
-            {
-                // now check if the location of the providers (classloader) is different
-                // and log a warning
-                final AnnotationTagProvider usedProvider = this.annotationTagProviders.get(key);
-                if ( !usedProvider.equals(provider) )
-                {
-                    this.log.warn("Ignoring provider " + provider + " from location " + getLocation(provider) +
-                            ". Using previously found version from " + getLocation(usedProvider));
-                }
-
-            }
         }
     }
 
@@ -146,7 +105,7 @@ public class AnnotationTagProviderManager
             Class<?> clazz = classLoader.loadClass( className );
             try
             {
-                addProvider( ( AnnotationTagProvider ) clazz.newInstance(), silent );
+                addProvider( ( AnnotationTagProvider ) clazz.newInstance() );
             }
             catch ( ClassCastException e )
             {
