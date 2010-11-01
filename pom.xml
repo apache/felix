@@ -90,6 +90,9 @@
                             <outputDirectory>
                                 ${project.build.outputDirectory}
                             </outputDirectory>
+                            <excludes>
+                                **/DEPENDENCIES,**/NOTICE,**/LICENSE,**/MANIFEST.MF
+                            </excludes>
                         </configuration>
                     </execution>
                 </executions>
