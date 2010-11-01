@@ -23,7 +23,6 @@ import java.util.*;
 
 import javax.imageio.spi.ServiceRegistry;
 
-import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaTag;
@@ -47,20 +46,16 @@ public class AnnotationTagProviderManager
      */
     private final Map<String, AnnotationTagProvider> annotationTagProviders = new LinkedHashMap<String, AnnotationTagProvider>();
 
-    private final Log log;
-
     /**
      * @param annotationTagProviderClasses List of classes that implements
      *            {@link AnnotationTagProvider} interface.
      * @throws SCRDescriptorFailureException
      */
-    public AnnotationTagProviderManager( final Log log,
+    public AnnotationTagProviderManager(
             final String[] annotationTagProviderClasses,
             final ClassLoader classLoader )
     throws SCRDescriptorFailureException
     {
-        this.log = log;
-
         // search for providers
         final Iterator<AnnotationTagProvider> serviceIter = ServiceRegistry.lookupProviders(AnnotationTagProvider.class, classLoader);
         while ( serviceIter.hasNext() )
