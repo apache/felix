@@ -28,7 +28,6 @@ import org.apache.felix.scrplugin.*;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.*;
 import org.apache.maven.project.MavenProject;
@@ -243,24 +242,14 @@ public class SCRDescriptorMojo extends AbstractMojo {
     {
         if (SCR_ANN_ARTIFACTID.equals(a.getArtifactId()) && SCR_ANN_GROUPID.equals(a.getGroupId()))
         {
-            // compare version number
-            try
+            // assert minimal version number
+            ArtifactVersion aVersion = new DefaultArtifactVersion(a.getBaseVersion());
+            if (SCR_ANN_MIN_VERSION.compareTo(aVersion) > 0)
             {
-                ArtifactVersion aVersion = a.getSelectedVersion();
-                if (SCR_ANN_MIN_VERSION.compareTo(aVersion) > 0)
-                {
-                    getLog().error("Project depends on " + a);
-                    getLog().error("Minimum required version is " + SCR_ANN_MIN_VERSION);
-                    throw new MojoFailureException(
-                        "Please use org.apache.felix:org.apache.felix.scr.annotations version " + SCR_ANN_MIN_VERSION
-                            + " or newer.");
-                }
-            }
-            catch (OverConstrainedVersionException oe)
-            {
-                getLog().error(oe.toString());
-                getLog().debug(oe);
-                throw new MojoFailureException(oe.getMessage());
+                getLog().error("Project depends on " + a);
+                getLog().error("Minimum required version is " + SCR_ANN_MIN_VERSION);
+                throw new MojoFailureException("Please use org.apache.felix:org.apache.felix.scr.annotations version "
+                    + SCR_ANN_MIN_VERSION + " or newer.");
             }
         }
     }
