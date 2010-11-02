@@ -26,6 +26,9 @@ import java.util.*;
 
 import org.apache.felix.scrplugin.*;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.*;
 import org.apache.maven.project.MavenProject;
@@ -41,6 +44,30 @@ import org.codehaus.plexus.util.StringUtils;
  * @requiresDependencyResolution compile
  */
 public class SCRDescriptorMojo extends AbstractMojo {
+
+    /**
+     * The groupID of the SCR Annotation library
+     *
+     * @see #SCR_ANN_MIN_VERSION
+     * @see #checkAnnotationArtifact(Artifact)
+     */
+    private static final String SCR_ANN_GROUPID = "org.apache.felix";
+
+    /**
+     * The artifactID of the SCR Annotation library.
+     *
+     * @see #SCR_ANN_MIN_VERSION
+     * @see #checkAnnotationArtifact(Artifact)
+     */
+    private static final String SCR_ANN_ARTIFACTID = "org.apache.felix.scr.annotations";
+
+    /**
+     * The minimum SCR Annotation library version supported by this plugin. See
+     * FELIX-2680 for full details.
+     *
+     * @see #checkAnnotationArtifact(Artifact)
+     */
+    private static final ArtifactVersion SCR_ANN_MIN_VERSION = new DefaultArtifactVersion("1.3.1-SNAPSHOT");
 
     /**
      * @parameter expression="${project.build.directory}/scr-plugin-generated"
@@ -186,6 +213,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         for (Iterator<Artifact> ai=artifacts.iterator(); ai.hasNext(); ) {
             Artifact a = ai.next();
+            assertMinScrAnnotationArtifactVersion(a);
             try {
                 path.add(a.getFile().toURI().toURL());
             } catch (IOException ioe) {
@@ -196,6 +224,46 @@ public class SCRDescriptorMojo extends AbstractMojo {
         return path.toArray( new URL[path.size()] );
     }
 
+    /**
+     * Asserts that the artifact is at least version
+     * {@link #SCR_ANN_MIN_VERSION} if it is
+     * org.apache.felix:org.apache.felix.scr.annotations. If the version is
+     * lower then the build fails because as of Maven SCR Plugin 1.6.0 the old
+     * SCR Annotation libraries do not produce descriptors any more. If the
+     * artifact is not this method silently returns.
+     *
+     * @param a The artifact to check and assert
+     * @see #SCR_ANN_ARTIFACTID
+     * @see #SCR_ANN_GROUPID
+     * @see #SCR_ANN_MIN_VERSION
+     * @throws MojoFailureException If the artifact refers to the SCR Annotation
+     *             library with a version less than {@link #SCR_ANN_MIN_VERSION}
+     */
+    private void assertMinScrAnnotationArtifactVersion(Artifact a) throws MojoFailureException
+    {
+        if (SCR_ANN_ARTIFACTID.equals(a.getArtifactId()) && SCR_ANN_GROUPID.equals(a.getGroupId()))
+        {
+            // compare version number
+            try
+            {
+                ArtifactVersion aVersion = a.getSelectedVersion();
+                if (SCR_ANN_MIN_VERSION.compareTo(aVersion) > 0)
+                {
+                    getLog().error("Project depends on " + a);
+                    getLog().error("Minimum required version is " + SCR_ANN_MIN_VERSION);
+                    throw new MojoFailureException(
+                        "Please use org.apache.felix:org.apache.felix.scr.annotations version " + SCR_ANN_MIN_VERSION
+                            + " or newer.");
+                }
+            }
+            catch (OverConstrainedVersionException oe)
+            {
+                getLog().error(oe.toString());
+                getLog().debug(oe);
+                throw new MojoFailureException(oe.getMessage());
+            }
+        }
+    }
 
     private void setServiceComponentHeader()
     {
