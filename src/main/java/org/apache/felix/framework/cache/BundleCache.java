@@ -105,7 +105,6 @@ public class BundleCache
         File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
         FileChannel fc = null;
         FileOutputStream fos = null;
-        FileInputStream fis = null;
         try
         {
             if (!getSecureAction().fileExists(lockFile))
@@ -115,8 +114,8 @@ public class BundleCache
             }
             else
             {
-                fis = getSecureAction().getFileInputStream(lockFile);
-                fc = fis.getChannel();
+                fos = getSecureAction().getFileOutputStream(lockFile);
+                fc = fos.getChannel();
             }
         }
         catch (Exception ex)
@@ -124,7 +123,6 @@ public class BundleCache
             try
             {
                 if (fos != null) fos.close();
-                if (fis != null) fis.close();
                 if (fc != null) fc.close();
             }
             catch (Exception ex2)
