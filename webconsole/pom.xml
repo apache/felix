@@ -80,7 +80,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -139,7 +138,6 @@
                             commons-io
                         </Embed-Dependency>
                         
-                        <_donotcopy>NOTICE.bare</_donotcopy>
                         <_removeheaders>
                             Embed-Dependency,Private-Package,Include-Resource
                         </_removeheaders>
@@ -181,19 +179,20 @@
                                             ${artifactId}.bare
                                         </Bundle-SymbolicName>
                                         <Include-Resource>
-                                            {maven-resources},META-INF/NOTICE=src/main/bare-resources/NOTICE
+                                            {maven-resources},META-INF=src/main/bare-resources
                                         </Include-Resource>
-                                        <_donotcopy>LICENSE.json</_donotcopy>
-                                        <!-- <_donotcopy>(LICENSE.json|NOTICE.bare)</_donotcopy> -->
                                         <Embed-Dependency>
                                             org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
                                             org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**
                                         </Embed-Dependency>
+                                        <_removeheaders>
+                                            Embed-Dependency,Private-Package,Include-Resource
+                                        </_removeheaders>
                                     </instructions>
                                 </configuration>
                             </execution>
                         </executions>
-                </plugin>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
