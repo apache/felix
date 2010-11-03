@@ -1,3 +1,16 @@
+Changes from 3.0.5 to 3.0.6
+---------------------------
+
+** Bug
+    * [FELIX-2670] - [Framework] Implicit boot delegation doesn't delegate for external code in all cases
+    * [FELIX-2683] - [Framework] Bundle last modified time is not persisted on deployment
+
+** Improvement
+    * [FELIX-2560] - Bundle URLs do not survive refreshes
+
+** New Feature
+    * [FELIX-2646] - [Framework] Locking could be used to prevent concurrent access to a single bundle cache
+
 Changes from 3.0.4 to 3.0.5
 ---------------------------
 
