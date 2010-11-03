@@ -1,3 +1,12 @@
+Changes from 3.0.5 to 3.0.6
+---------------------------
+
+** Improvement
+    * Update to latest framework version 3.0.6
+
+** New Feature
+    * [FELIX-2678] - Startlevel for bundles in auto.deploy.dir
+
 Changes from 3.0.4 to 3.0.5
 ---------------------------
 
