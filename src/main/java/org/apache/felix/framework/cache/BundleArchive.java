@@ -786,6 +786,7 @@ public class BundleArchive
                 writeLocation();
                 writePersistentState();
                 writeStartLevel();
+                writeLastModified();
             }
         }
         finally
