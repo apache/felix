@@ -56,6 +56,7 @@
                     <include>LICENSE</include>
                     <include>NOTICE</include>
                     <include>DEPENDENCIES</include>
+                    <include>changelog.txt</include>
                 </includes>
             </resource>
             <!-- CSS and images for backwards compatibility -->

@@ -1,0 +1,369 @@
+Changes from 3.1.2 to 3.1.6
+---------------------------
+
+** Bug
+    * [FELIX-2570] - HTML is escaped in ModeAwareConfigurationPrinter when in &quot;web&quot; mode
+    * [FELIX-2573] - switching the console language bugs the jqueryUI datepicker component
+    * [FELIX-2609] - WebConsole doesn't work with JDK 1.3.1_06 because of Locale
+    * [FELIX-2610] -  WebConsole doesn't work with JDK 1.3.1_06 because of problem in MessageFormat
+    * [FELIX-2617] - webconsole has option to change the language but doesn't show the currently selected one
+    * [FELIX-2627] - can't install war files via webconsole
+    * [FELIX-2635] - PluginHolder.setServletContext() must nullify servlet context after plugins destroying 
+    * [FELIX-2644] - cannot disable plugin
+    * [FELIX-2650] - ConfigurationPrinter with other modes than web should be excluded from web
+    * [FELIX-2658] - Deprecate ConfigurationPrinter.PROPERTY_MODES constant
+    * [FELIX-2659] - ConfigurationRender.searchMethod must catch problems more broadly
+
+** Improvement
+    * [FELIX-2541] - [Licenses Page] Add support for DEPENDENCIES files
+    * [FELIX-2614] - Mark unresolved packages
+    * [FELIX-2616] - Russian l10n files for Web Console
+    * [FELIX-2639] - Improve Security Provider support
+    * [FELIX-2652] - Allow attachment providers which do not implement the interface
+    * [FELIX-2660] - Prevent Bundle ConfigurationPrinter from being used in the web output
+    * [FELIX-2668] - Add localization for the meta-type
+    * [FELIX-2674] - Too much error logging after fixing FELIX-2644
+
+** New Feature
+    * [FELIX-2638] - Make a single configuration printer output available via http
+    * [FELIX-2649] - Support for configuration printers without requiring them to implement the interface
+
+** Task
+    * [FELIX-2540] - Ensure inclusion of the DEPENDENCIES file in the build artifacts
+    * [FELIX-2684] - Fix legal files and add a changelog.txt
+
+
+Changes from 3.1.0 to 3.1.2
+---------------------------
+
+** Sub-task
+    * [FELIX-2412] - Update Web Console legal files
+
+** Bug
+    * [FELIX-2287] - Webcosole: showing all resources from a repository doesn't work
+    * [FELIX-2288] - Felix SCR API problem/misunderstanding
+    * [FELIX-2299] - OBR web console plugin doesn't show some bundles as installed
+    * [FELIX-2424] - Internal Server Error requesting /system/console or /system/console/
+    * [FELIX-2447] - Clicking on a service link does not display the service details
+    * [FELIX-2448] - PermissionAdmin and WireAdmin plugins cause internal server error if service API is missing
+    * [FELIX-2470] - No class def found error - Wire Admin (see screenshot)
+    * [FELIX-2471] - No class def found error - Permissions Admin (see screenshot)
+    * [FELIX-2508] - Web Console does not show all components
+    * [FELIX-2535] - Cyrillic characters are not displayed properly.
+
+** Improvement
+    * [FELIX-2240] - Web Console should allow user to select http service to bind to
+    * [FELIX-2277] - Allow the user to select display language
+    * [FELIX-2282] - Optimize Services Printer
+    * [FELIX-2391] - Potential dead locking issue in OsgiManager.init
+    * [FELIX-2509] - Render more data for component details
+
+
+Changes from 3.0.0 to 3.1.0
+---------------------------
+
+** Bug
+    * [FELIX-2243] - Bundle Plugin 'Find All&quot; button generates error with Opera
+    * [FELIX-2244] - Bundles Printer fails when imports contains range.
+    * [FELIX-2256] - Some small visual defects in the WebConsole
+    * [FELIX-2257] - Bundle sort order is not stored in a cookie anymore
+    * [FELIX-2260] - Potential NullPointerException in ServicesServlet.writeJSON()
+    * [FELIX-2261] - On the Servlets page the list of using bundles is not displayed
+    * [FELIX-2263] - OsgiManager servlet should commit response
+    * [FELIX-2272] - SCR plugin shows misleading message
+    * [FELIX-2274] - 404 when plugin is missing
+    * [FELIX-2285] - Bundles Plugin doesn't render the bundles name in IE
+    * [FELIX-2286] - Various rendering issues with IE
+    * [FELIX-2338] - Problem in the Configuration Render
+    * [FELIX-2390] - WebConsole Config Manager problem
+
+** Improvement
+    * [FELIX-1141] - Provide feedback for operations
+    * [FELIX-2207] - License plugin should support Bundle-License manifest header
+    * [FELIX-2245] - Log Plugin - level sorting should be by level
+    * [FELIX-2246] - Lazy initialization of plugins
+    * [FELIX-2250] - Security Policy configuration printer
+    * [FELIX-2251] - Wire Admin configuration printer
+    * [FELIX-2253] - Display progress indiciator on configuration status page
+    * [FELIX-2259] - ServicesServlet should use BundleContext.getAllServiceReferences instead of getServiceReferences
+    * [FELIX-2267] - Improved locale detection
+    * [FELIX-2284] - Add common utility method for converting object (array) to string
+    * [FELIX-2291] - Show available number of processors on the System Information page
+
+** New Feature
+    * [FELIX-1764] - Add support for pluggable access control
+
+
+Changes from 2.0.6 to 3.0.0
+---------------------------
+
+** Bug
+    * [FELIX-1992] - Change the use of the &#xA7; character as a separator in the BundleRepositoryRender class
+    * [FELIX-2005] - Configuration done using &quot;org.apache.felix.webconsole.internal.servlet.OsgiManager&quot; PID is not used by WebConsole
+    * [FELIX-2007] - JavaScript error on bundle page
+    * [FELIX-2009] - Reconfiguring the web console location fails
+    * [FELIX-2022] - [Branding] webconsole.product.image not treated correctly when referencing http resource
+    * [FELIX-2023] - [Branding] webconsole.product.name is not used in HTML page title and header tags
+    * [FELIX-2029] - Support for &quot;default&quot; locale does not work
+    * [FELIX-2034] - WebConsole fails to register if Http Service is registered after Web Console start
+    * [FELIX-2086] - Use a different symbolic name for the bare web console bundle
+    * [FELIX-2105] - Make Web Console compatible with OSGi/Minimum-1.1 EE
+    * [FELIX-2118] - IE7 does not properly load license files into &lt;pre&gt; element
+    * [FELIX-2119] - Bundle update fails, if OBR is not installed
+    * [FELIX-2120] - OBR plugin should hide the repository table, if OBR service is not available
+    * [FELIX-2122] - Possible NullPointerException reporting failure to instantiate a plugin
+    * [FELIX-2123] - Latest commit to ConfigurationRender is not OSGi/Minumum-1.0 compatible
+    * [FELIX-2124] - remove internal usage of deprecated Action interface
+    * [FELIX-2142] - The Config Manager doesn't show configurations which values are pritive arrays
+    * [FELIX-2147] - ConfigurationPrinter services not unregistered on destroy
+    * [FELIX-2149] - Configuration Status tabs are not properly left aligned
+    * [FELIX-2157] - Login dialog delay
+    * [FELIX-2183] - Global AJAX error handler can be improved
+    * [FELIX-2188] - Layout problems with old pluggins
+    * [FELIX-2198] - ConfigManager plugin logs NullPointerException if ConfigurationAdmin Service is not availble
+    * [FELIX-2204] - Localization causes a problem in WebConsole configuration
+    * [FELIX-2206] - Localization causes a problem in Configuration Printers
+    * [FELIX-2214] - Event plugin - template &amp; localization files must be UTF-8.
+    * [FELIX-2216] - Web console needs to be able to use service bundles like obr installed after it
+    * [FELIX-2219] - Showing bundle details of an uninstalled bundles reports &quot;Internal Server Error&quot;
+    * [FELIX-2235] - Deployment plugin fails with internal server error
+
+** Improvement
+    * [FELIX-567] - Search for exported/imported packages
+    * [FELIX-569] - Improve Configuration Page
+    * [FELIX-957] - Migrate Bundle Repository Page to JQuery
+    * [FELIX-1051] - Localize the web console
+    * [FELIX-1910] - Normal URLs instead of Javascript links in Licenses screen
+    * [FELIX-1956] - Collect duplicate &amp; reusable code in WebConsoleUtil
+    * [FELIX-1958] - Branding L&amp;F issues 
+    * [FELIX-1993] - Enhance configuration printer support
+    * [FELIX-1996] - Console should warn when config is bound to a different bundle
+    * [FELIX-2017] - Potential NullPointerException when running Web Console in Equinox
+    * [FELIX-2099] - Cleanup logging
+    * [FELIX-2125] - Localization of the bundle headers &amp; bundle name
+    * [FELIX-2146] - Tab sorting and access of Configuration Status page is unstable
+    * [FELIX-2148] - Support selection of default ConfigurationPrinter to display by URL
+    * [FELIX-2158] - Localization of plugin titles
+    * [FELIX-2162] - The bundle repository page can't scale
+    * [FELIX-2167] - Simplify UpdateHelper.updateFromBundleLocation method
+    * [FELIX-2171] - The OBR page should be able to display detailed information about a bundle
+    * [FELIX-2189] - Shell Plugin Should Only be Available if shell is available
+    * [FELIX-2199] - Extract Configuration Printers as top-level classes.
+    * [FELIX-2203] - provide localization of plugin titles
+    * [FELIX-2218] - webconsole dialog font size
+    * [FELIX-2226] - Support direct details view of a resource by symbolic name and version
+    * [FELIX-2227] - Request to OBR plugin should just act as if list=a parameter is set
+    * [FELIX-2228] - Encoding issues with search queries in the OBR plugin
+    * [FELIX-2229] - Provide German Translation for the Web Console
+    * [FELIX-2238] - Bring back icons for backwards compatibility
+
+** New Feature
+    * [FELIX-1441] - Search manifest entries of bundles
+    * [FELIX-1959] - Move towards unified L&amp;F and extended branding support
+
+** Task
+    * [FELIX-1988] - Integrate jQuery UI integration into the Web Console Trunk
+    * [FELIX-2098] - Removed unused AssemblyListRender
+    * [FELIX-2165] - Remove deprecated Action interface
+    * [FELIX-2217] - Web Console OBR plugin should work with old OBR and new bundlerepository API
+    * [FELIX-2220] - Use Manifest Header parser from new utils bundle
+
+
+Changes from 2.0.4 to 2.0.6
+---------------------------
+
+** Bug
+    * [FELIX-1961] - NPE when invoking install/update panel
+    * [FELIX-1983] - WebConsole HttpContext should flush response after setting response status
+
+** Improvement
+    * [FELIX-1976] - Define Web Console build without embedded libraries
+    * [FELIX-1977] - Improve message if a plugin cannot be installed
+
+** New Feature
+    * [FELIX-1957] - Make Web Console compatible with OSGi/Minimum-1.0 EE
+
+
+Changes from 2.0.2 to 2.0.4
+---------------------------
+
+** Bug
+    * [FELIX-1800] - Bound configurations for which there exists no bundle cannot be edited
+    * [FELIX-1912] - Bundles without categories are never displayed in the bundle repository list
+    * [FELIX-1930] - Clicking action on bundles detail page shows full bundle list while URL stays on bundles/&lt;id&gt;
+
+** Improvement
+    * [FELIX-1894] - Show more fragment information in bundle details
+    * [FELIX-1895] - Show configuration property names in configuration forms
+    * [FELIX-1916] - Rename &quot;Location&quot; label to &quot;Bundle Location&quot; in the bundle details display
+    * [FELIX-1931] - Keep sort order of bundle list across page reloads (eg. in a cookie)
+
+** New Feature
+    * [FELIX-1808] - Support unbinding configurations through the Web Console
+    * [FELIX-1884] - WebConsole should have a Services plugin
+
+
+Changes from 2.0.0 to 2.0.2
+---------------------------
+
+** Bug
+    * [FELIX-1370] - Sometimes the configuration for org.apache.felix.webconsole.internal.servlet.OsgiManager is ignored
+    * [FELIX-1674] - typo in scr and webconsole - &quot;unsatisifed&quot;
+
+
+Changes from 1.2.10 to 2.0.0
+----------------------------
+
+** Sub-task
+    * [FELIX-1014] - Hardcoded list of webconsole plugins in OSGiManager
+    * [FELIX-1015] - Hardcoded HTML Header/Footer in AbstractWebConsolePlugin
+    * [FELIX-1043] - Support WebConsole plugins without requiring extending the AbstractWebConsolePlugin
+    * [FELIX-1211] - How to provide resources like CSS or JavaScript files for plugins
+    * [FELIX-1281] - Provide official constants of web console request attributes
+    * [FELIX-1599] - Validate TabWorld license
+
+
+** Bug
+    * [FELIX-1020] - Footer redered before content in bundle plugin
+    * [FELIX-1160] - WebConsole Manifest.MF should specify required version for Servlet API (2.4)
+    * [FELIX-1164] - Updating a configuration containing a property configured with unbound array size
+    * [FELIX-1224] - Component display depends on ManagedService[Factory] instances to be registered for components
+    * [FELIX-1230] - Configuration Page depends on ManagedService[Factory] instances to be registered for components
+    * [FELIX-1270] - Displaying the bundle detail view resolves a bundle
+    * [FELIX-1275] - On the Bundles page, when bundle details are displayed inline, the links to imported and importing bundles are invalid.
+    * [FELIX-1389] - Main div is not closed
+    * [FELIX-1415] - &quot;Reload&quot; button in webconsole bundles list doesn't work
+    * [FELIX-1460] - Can't view installed but unresolved bundle details page
+    * [FELIX-1622] - NullPointerException
+    * [FELIX-1623] - Configuration status tabs not correctly rendered in FireFox 3.5
+    * [FELIX-1630] - Make WebConsole more independent
+    * [FELIX-1632] - Remove reference to KXml from NOTICE and LICENSE and update OSGi copyright years
+    * [FELIX-1636] - Html footer and header are always added to the response for a servlet plugin
+
+** Improvement
+    * [FELIX-1171] - Enhance Configuration Status Page
+    * [FELIX-1191] - Add logging to OBR support plugin
+    * [FELIX-1215] - Provide hyperlinks when referring to bundles
+    * [FELIX-1217] - Move install/update to separate page
+    * [FELIX-1221] - Display the alias ID created by Karaf Features when showing service details
+    * [FELIX-1282] - Cleanup bundle: do not export SCR API, only embedd header parser
+    * [FELIX-1283] - Order page titles in top navigation ignoring case
+    * [FELIX-1569] - Remove deprecated Render interface
+    * [FELIX-1637] - Support additional CSS references provided by plugins
+
+** New Feature
+    * [FELIX-1644] - Reintroduce button to update a single bundle
+
+** Task
+    * [FELIX-1013] - Improve console extensibility
+    * [FELIX-1607] - Enhance the Web Console Event Plugin
+
+
+Changes from 1.2.8 to 1.2.10
+----------------------------
+
+** Bug
+    * [FELIX-1003] - Saving Apache Felix OSGI Management Console on Safari cause Error 404
+    * [FELIX-1028] - NPE in configuration view when running webconsole with Equinox
+    * [FELIX-1048] - Handle fragment bundles differently than &quot;normal&quot; bundles
+    * [FELIX-1061] - [PATCH] webconsole silently ignores bundles which have no Bundle-SymbolicName header
+
+** Improvement
+    * [FELIX-1042] - [PATCH] Add log service to web console
+    * [FELIX-1049] - Display symbolic name and version in bundle list
+    * [FELIX-1050] - Display complete manifest entry
+    * [FELIX-1139] - Remove fixed width of layout
+    * [FELIX-1143] - Upgrade to Felix Parent POM 1.2.0
+
+
+Changes from 1.2.2 to 1.2.8
+---------------------------
+
+** Bug
+    * [FELIX-871] - Bundle Repository page displays NullPointerException if no RepositoryAdmin service is available
+    * [FELIX-873] - Server Stop should be Framework stop and does not work correctly
+    * [FELIX-874] - Bundle startlevel of new bundle cannot be set from the bundle installation form
+    * [FELIX-885] - Saving a factory configuraiton instance creates a new instance instead of updating the old instance
+    * [FELIX-913] - IllegalStateException thrown on startup due to OsgiManager trying to unregister a not yet registered resource
+    * [FELIX-916] - Web Console does not start if the org.osgi.service.log package is missing
+    * [FELIX-918] - Relative redirect on config page does not work in WebSphere
+    * [FELIX-975] - Several UI Problems with IE
+
+** Improvement
+    * [FELIX-564] - Allow changing the sort order in the bundle list
+    * [FELIX-858] - Use new layout from event plugin in bundle plugin
+    * [FELIX-863] - Merge license and NOTICE information of OBR bundle embedded in web console with the main license and NOTICE files
+    * [FELIX-875] - Support updating the system bundle
+    * [FELIX-882] - Use Logger to log messages in the OsgiManager instead of the servlet context log
+    * [FELIX-888] - JSON information and actions for a bundle should be possible with symbolic name
+    * [FELIX-904] - Dependencies should be included as jars and not as classes
+    * [FELIX-919] - Use new table layout for the components list
+    * [FELIX-933] - Config Manager Plugin should support displaying a form even if no configuration is stored
+    * [FELIX-955] - Cleanup Bundle Repository Page
+    * [FELIX-956] - Enhance log output in case of failed resource resolution
+
+** New Feature
+    * [FELIX-878] - Allow to get configurations directly in json format
+
+
+Changes from 1.2.0 to 1.2.2
+---------------------------
+
+** Bug
+    * [FELIX-738] - First access to &quot;Bundles&quot; web console tab takes a long time if the server has no internet access 
+    * [FELIX-752] - webconsole 1.2.0 seems to depend on SCR
+    * [FELIX-767] - NOTICE file should list OSGi under &quot;includes&quot; and &quot;uses&quot;
+    * [FELIX-774] - Checkboxes do not work in configuration admin
+    * [FELIX-780] - ArrayIndexOutOfBoundsException in webconsole
+    * [FELIX-802] - Bundle and other displays incomplete and show JavaScript error(s)
+    * [FELIX-856] - Web Console fails to start if HttpService is only available after the WebConsole bundle start
+    * [FELIX-859] - Event display shows double lines between event properties for some events
+
+** Improvement
+    * [FELIX-757] - Add status message about bundle
+    * [FELIX-793] - Improve update and install through web console
+    * [FELIX-857] - Do not rely on Declarative Services for plugins of the Web Console itself
+
+** New Feature
+    * [FELIX-781] - Add basic thread dump to Configuration Status page
+    * [FELIX-790] - Add console plugin to display OSGi events
+
+
+Changes from 1.0.0 to 1.2.0
+---------------------------
+
+** Bug
+    * [FELIX-563] - Add support to access the Felix ShellService
+    * [FELIX-583] - org.apache.felix.webconsole.internal.compendium.ConfigManager.listConfigurations(): ManagedServiceFactory instances are listed twice: with pid and factoryPid
+    * [FELIX-584] - org.apache.felix.webconsole.internal.compendium.AjaxConfigManagerAction.applyConfiguration(): &quot;create&quot; action is not handled properly
+    * [FELIX-585] - org.apache.felix.webconsole.internal.compendium.ConfigManager.listConfigurations(): Configuration instances for ManagedServiceFactoy instances cause IllegalArgumentException
+    * [FELIX-586] - org.apache.felix.webconsole.internal.compendium.BaseConfigManager.getAttributeDefinitionMap(): implementation does not properly handle Configuration instances of a ManagedServiceFactory
+    * [FELIX-587] - org.apache.felix.webconsole.internal.compendium.AjaxConfigManagerAction.configForm(): Configuration instance for a ManagedServiceFactory will cause Exception
+    * [FELIX-592] - Console does not work properly in Internet Explorer
+    * [FELIX-600] - Insert Delay before refreshing packages after install/update
+    * [FELIX-662] - ConfigManager should check for empty value before converting into a specific type
+
+** Improvement
+    * [FELIX-566] - More RESTful management console URLs
+    * [FELIX-574] - Replace Action and Render service interfaces by the Servlet interface
+    * [FELIX-614] - Change behaviour of little arrow on single bundle/component display
+    * [FELIX-671] - Web Console OBR description
+    * [FELIX-742] - Order configurations alphabetically
+    * [FELIX-743] - Support configuration filtering
+    * [FELIX-744] - Support configuration creation from the GET request
+    * [FELIX-745] - Mark optional imports as such
+    * [FELIX-746] - Display Bundle Doc URL as a link
+    * [FELIX-747] - Enable bundle installation through OBR again
+
+** New Feature
+    * [FELIX-604] - Add License/Notice page
+    * [FELIX-691] - Add support for the deployment admin
+
+
+Initial Release 1.0.0
+---------------------
+** Improvement
+    * [FELIX-570] - Add flag to InstallAction asking for PackageAdmin.refreshPackages after package update
+
+** Task
+    * [FELIX-562] - Move OSGi Console to Apache Felix
