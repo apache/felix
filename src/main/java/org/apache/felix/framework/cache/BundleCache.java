@@ -19,6 +19,8 @@
 package org.apache.felix.framework.cache;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.*;
 
 import org.apache.felix.framework.Logger;
@@ -72,17 +74,93 @@ public class BundleCache
     protected static transient int BUFSIZE = 4096;
     protected static transient final String CACHE_DIR_NAME = "felix-cache";
     protected static transient final String CACHE_ROOTDIR_DEFAULT = ".";
+    protected static transient final String CACHE_LOCK_NAME = "cache.lock";
     protected static transient final String BUNDLE_DIR_PREFIX = "bundle";
 
     private static final SecureAction m_secureAction = new SecureAction();
 
     private final Logger m_logger;
     private final Map m_configMap;
+    private final FileLock m_lock;
 
     public BundleCache(Logger logger, Map configMap)
+        throws Exception
     {
         m_logger = logger;
         m_configMap = configMap;
+
+        // Create the cache directory, if it does not exist.
+        File cacheDir = determineCacheDir(m_configMap);
+        if (!getSecureAction().fileExists(cacheDir))
+        {
+            if (!getSecureAction().mkdirs(cacheDir))
+            {
+                m_logger.log(
+                    Logger.LOG_ERROR,
+                    "Unable to create cache directory: " + cacheDir);
+                throw new RuntimeException("Unable to create cache directory.");
+            }
+        }
+
+        File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
+        FileChannel fc = null;
+        FileOutputStream fos = null;
+        FileInputStream fis = null;
+        try
+        {
+            if (!getSecureAction().fileExists(lockFile))
+            {
+                fos = getSecureAction().getFileOutputStream(lockFile);
+                fc = fos.getChannel();
+            }
+            else
+            {
+                fis = getSecureAction().getFileInputStream(lockFile);
+                fc = fis.getChannel();
+            }
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                if (fos != null) fos.close();
+                if (fis != null) fis.close();
+                if (fc != null) fc.close();
+            }
+            catch (Exception ex2)
+            {
+                // Ignore.
+            }
+            throw new Exception("Unable to create bundle cache lock file: " + ex);
+        }
+        try
+        {
+            m_lock = fc.tryLock();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Unable to lock bundle cache: " + ex);
+        }
+
+    }
+
+    public synchronized void release()
+    {
+        if (m_lock != null)
+        {
+            try
+            {
+                m_lock.release();
+                m_lock.channel().close();
+            }
+            catch (Exception ex)
+            {
+                // Not much we can do here, just log it.
+                m_logger.log(
+                    Logger.LOG_WARNING,
+                    "Exception releasing bundle cache.", ex);
+            }
+        }
     }
 
     /* package */ static SecureAction getSecureAction()
@@ -114,20 +192,8 @@ public class BundleCache
             // Use the default value.
         }
 
-        // Create the cache directory, if it does not exist.
-        File cacheDir = determineCacheDir(m_configMap);
-        if (!getSecureAction().fileExists(cacheDir))
-        {
-            if (!getSecureAction().mkdirs(cacheDir))
-            {
-                m_logger.log(
-                    Logger.LOG_ERROR,
-                    "Unable to create cache directory: " + cacheDir);
-                throw new RuntimeException("Unable to create cache directory.");
-            }
-        }
-
         // Create the existing bundle archives in the directory, if any exist.
+        File cacheDir = determineCacheDir(m_configMap);
         List archiveList = new ArrayList();
         File[] children = getSecureAction().listDirectory(cacheDir);
         for (int i = 0; (children != null) && (i < children.length); i++)

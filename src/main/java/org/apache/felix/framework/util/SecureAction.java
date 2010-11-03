@@ -412,7 +412,7 @@ public class SecureAction
         }
     }
 
-    public InputStream getFileInputStream(File file) throws IOException
+    public FileInputStream getFileInputStream(File file) throws IOException
     {
         if (System.getSecurityManager() != null)
         {
@@ -420,7 +420,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.GET_FILE_INPUT_ACTION, file);
-                return (InputStream) AccessController.doPrivileged(actions, m_acc);
+                return (FileInputStream) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
             {
@@ -437,7 +437,7 @@ public class SecureAction
         }
     }
 
-    public OutputStream getFileOutputStream(File file) throws IOException
+    public FileOutputStream getFileOutputStream(File file) throws IOException
     {
         if (System.getSecurityManager() != null)
         {
@@ -445,7 +445,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.GET_FILE_OUTPUT_ACTION, file);
-                return (OutputStream) AccessController.doPrivileged(actions, m_acc);
+                return (FileOutputStream) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
             {
