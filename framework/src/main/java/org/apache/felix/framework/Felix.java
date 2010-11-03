@@ -579,8 +579,8 @@ public class Felix extends BundleImpl implements Framework
 
                 // Create the bundle cache, if necessary, so that we can reload any
                 // installed bundles.
-                m_cache = (BundleCache) m_configMutableMap.get(
-                    FelixConstants.FRAMEWORK_BUNDLECACHE_IMPL);
+                m_cache = (BundleCache)
+                    m_configMutableMap.get(FelixConstants.FRAMEWORK_BUNDLECACHE_IMPL);
                 if (m_cache == null)
                 {
                        try
@@ -4386,6 +4386,10 @@ public class Felix extends BundleImpl implements Framework
             {
                 m_extensionManager.removeExtensions(Felix.this);
             }
+
+            // Dispose of the bundle cache.
+            m_cache.release();
+            m_cache = null;
 
             // Set the framework state to resolved.
             acquireBundleLock(Felix.this, Bundle.STOPPING);
