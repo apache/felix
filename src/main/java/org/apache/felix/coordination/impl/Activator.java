@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -45,6 +45,8 @@ public class Activator implements BundleActivator
 
     private ServiceRegistration coordinatorService;
 
+    private ServiceRegistration coordinatorCommand;
+
     public void start(BundleContext context)
     {
         mgr = new CoordinationMgr();
@@ -64,10 +66,25 @@ public class Activator implements BundleActivator
         props.put(Constants.SERVICE_DESCRIPTION, "Coordinator Service Implementation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         coordinatorService = context.registerService(Coordinator.class.getName(), factory, props);
+
+        try
+        {
+            coordinatorCommand = CrdCommand.create(context, mgr);
+        }
+        catch (Throwable t)
+        {
+            // most probably missing resolved packages, ignore
+        }
     }
 
     public void stop(BundleContext context)
     {
+        if (coordinatorCommand != null)
+        {
+            coordinatorCommand.unregister();
+            coordinatorCommand = null;
+        }
+
         if (coordinatorService != null)
         {
             coordinatorService.unregister();
