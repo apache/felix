@@ -1,0 +1,11 @@
+Changes 1.0.0 to 1.1.0
+----------------------
+
+** New Feature
+    * New org.apache.felix.utils.collections.DictionaryAsMap class 
+      to wrap a Dictionary as a Map
+    * New org.apache.felix.utils.properties.InterpolationHelper to
+      interpolate a Map of properties using ${xx} replacements
+    * New org.apache.felix.utils.properties.Properties class to
+      load/save properties and allow editing them without loosing
+      the user formatting
