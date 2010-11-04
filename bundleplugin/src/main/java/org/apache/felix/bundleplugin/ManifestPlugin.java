@@ -167,7 +167,8 @@ public class ManifestPlugin extends BundlePlugin
         properties.putAll( getDefaultProperties( project ) );
         properties.putAll( transformDirectives( instructions ) );
 
-        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
+//        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
+        Builder analyzer = new Builder();
 
         if ( project.getBasedir() != null )
             analyzer.setBase( project.getBasedir() );

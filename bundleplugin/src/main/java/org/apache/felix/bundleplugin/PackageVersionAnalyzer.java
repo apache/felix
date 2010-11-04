@@ -37,6 +37,7 @@ public final class PackageVersionAnalyzer extends Builder
     /*
      * Remove META-INF subfolders from exports and set package versions to bundle version.
      */
+/*
     public Map analyzeBundleClasspath( Jar dot, Map bundleClasspath, Map contained, Map referred, Map uses )
         throws IOException
     {
@@ -46,14 +47,14 @@ public final class PackageVersionAnalyzer extends Builder
         {
             Map.Entry entry = ( Map.Entry ) it.next();
 
-            /* remove packages under META-INF */
+            // remove packages under META-INF
             String packageName = ( String ) entry.getKey();
             if ( packageName.startsWith( "META-INF." ) )
             {
                 it.remove();
             }
 
-            /* set package versions to bundle version values */
+            // set package versions to bundle version values
             if ( bundleVersion != null )
             {
                 Map values = ( Map ) entry.getValue();
@@ -65,4 +66,5 @@ public final class PackageVersionAnalyzer extends Builder
         }
         return classSpace;
     }
+*/
 }
