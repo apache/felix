@@ -113,7 +113,8 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         project.setArtifactId( "artifact" );
         project.setVersion( "1.1.0.0" );
 
-        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
+//        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
+        Builder analyzer = new Builder();
         Jar jar = new Jar( "name", osgiBundleFile );
         analyzer.setJar( jar );
         analyzer.setClasspath( new Jar[]
