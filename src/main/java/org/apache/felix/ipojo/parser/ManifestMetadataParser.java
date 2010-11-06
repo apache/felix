@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -469,7 +469,6 @@ public class ManifestMetadataParser {
 
         for (int i = 0; i < string.length; i++) {
             char current = string[i];
-
             switch (current) { //NOPMD
                 // Beginning of an attribute.
                 case '$':
@@ -524,20 +523,12 @@ public class ManifestMetadataParser {
 
                 // Default case
                 default:
-                    StringBuffer name = new StringBuffer();
-                    StringBuffer namespace = null;
+                    StringBuffer qname = new StringBuffer();
                     current = string[i];
                     while (current != ' ') {
-                        if (current == ':') {
-                            namespace = name;
-                            name = new StringBuffer();
-                            i++;
-                            current = string[i];
-                        } else {
-                            name.append(current);
-                            i++;
-                            current = string[i]; // Increment and get the new current char.
-                        }
+                        qname.append(current);
+                        i++;
+                        current = string[i]; // Increment and get the new current char.
                     }
                     // Skip spaces
                     while (string[i] == ' ') {
@@ -546,11 +537,19 @@ public class ManifestMetadataParser {
                     i = i + 1; // skip {
 
                     Element elem = null;
-                    if (namespace == null) {
-                        elem = new Element(name.toString(), null);
+                    // Parse the qname
+                    String n = qname.toString();
+                    if (n.indexOf(':') == -1) {
+                    	// No namespace
+                    	elem = new Element(n, null);
                     } else {
-                        elem = new Element(name.toString(), namespace.toString());
+                    	// The namespace ends on the first ':'
+                    	int index = n.indexOf(':');
+                    	String ns = n.substring(0, index);
+                    	String name = n.substring(index + 1);
+                    	elem = new Element(name.toString(), ns.toString());
                     }
+
                     addElement(elem);
 
                     break;
