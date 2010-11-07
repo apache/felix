@@ -86,8 +86,7 @@
    					<![CDATA[
    					<ipojo
     					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-						xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd
-	 					org.apache.felix.ipojo.whiteboard http://felix.apache.org/ipojo/schemas/SNAPSHOT/whiteboard-pattern.xsd"
+						xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
 						xmlns="org.apache.felix.ipojo"
 						xmlns:wbp="org.apache.felix.ipojo.whiteboard">
 						<component classname="org.apache.felix.ipojo.test.FooProvider" name="fooprovider">
@@ -108,6 +107,16 @@
 								<wbp:wbp filter="(foo=foo)" onArrival="onArrival" onDeparture="onDeparture"
 									onModification="onModification"
 								/>
+								<provides/>
+						</component>
+
+						<component classname="org.apache.felix.ipojo.test.FooWhiteBoardPattern" name="under-providers-2">
+								<wbp:whiteboards>
+									<wbp:wbp
+										filter="(objectclass=org.apache.felix.ipojo.test.FooService)"
+										onArrival="onArrival" onDeparture="onDeparture" onModification="onModification"
+									/>
+								</wbp:whiteboards>
 								<provides/>
 						</component>
 

@@ -53,7 +53,27 @@ public class WhiteBoardPatternHandler extends PrimitiveHandler {
      * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element elem, Dictionary dict) throws ConfigurationException {
+
+    	// There is two way to configure the handler :
+    	// - the wbp elements
+    	// - the whiteboards elements
         Element[] elems = elem.getElements("wbp", NAMESPACE);
+
+        if (elems == null  || elems.length == 0) {
+        	// Alternative way
+        	Element[] whiteboards = elem.getElements("whiteboards", NAMESPACE);
+        	if (whiteboards == null) {
+        		throw new ConfigurationException("Cannot configure the whiteboard pattern handler - no suitable configuration found");
+        	} else {
+        		elems = whiteboards[0].getElements("wbp", NAMESPACE);
+        	}
+        }
+
+        // Last check.
+        if (elems == null) {
+        	throw new ConfigurationException("Cannot configure the whiteboard pattern handler - no suitable configuration found");
+        }
+
         for (int i = 0; i < elems.length; i++) {
             String filter = elems[i].getAttribute("filter");
             String onArrival = elems[i].getAttribute("onArrival");

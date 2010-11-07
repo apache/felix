@@ -16,13 +16,14 @@ import org.osgi.framework.ServiceReference;
 public class WbpTests extends OSGiTestCase {
 
     Factory provFactory;
-    Factory factory, factory2, factory3;
+    Factory factory, factory2, factory3, factory4;
 
     public void setUp() {
         provFactory = Utils.getFactoryByName(context, "fooprovider");
         factory = Utils.getFactoryByName(context, "under-providers");
         factory2 = Utils.getFactoryByName(context, "under-properties");
         factory3 = Utils.getFactoryByName(context, "under-providers-lifecycle");
+        factory4 = Utils.getFactoryByName(context, "under-providers-2");
     }
 
     public void tearDown() {
@@ -218,5 +219,63 @@ public class WbpTests extends OSGiTestCase {
         prov1.dispose();
         ci.dispose();
 
+    }
+
+    public void testServiceProvidersWhiteWhiteboards() throws UnacceptableConfiguration, MissingHandlerException, ConfigurationException {
+        ComponentInstance ci = factory4.createComponentInstance(new Properties());
+
+        ServiceReference ref = Utils.getServiceReferenceByName(context, Observable.class.getName(), ci.getInstanceName());
+        assertNotNull("Check Observable availability", ref);
+        Observable obs = (Observable) context.getService(ref);
+
+        Map map = obs.getObservations();
+        assertEquals("Check empty list" , ((List) map.get("list")).size(), 0);
+
+        Properties p1 = new Properties();
+        p1.put("foo", "foo");
+        ComponentInstance prov1 = provFactory.createComponentInstance(p1);
+
+        map = obs.getObservations();
+        assertEquals("Check list #1" , ((List) map.get("list")).size(), 1);
+
+        Properties p2 = new Properties();
+        p2.put("foo", "foo");
+        ComponentInstance prov2 = provFactory.createComponentInstance(p2);
+
+        map = obs.getObservations();
+        assertEquals("Check list #2" , ((List) map.get("list")).size(), 2);
+
+        prov1.stop();
+
+        map = obs.getObservations();
+        assertEquals("(1) Check list #1" , ((List) map.get("list")).size(), 1);
+
+        prov2.stop();
+
+        map = obs.getObservations();
+        assertEquals("(2) Check list #0" , ((List) map.get("list")).size(), 0);
+
+        prov2.start();
+
+        map = obs.getObservations();
+        assertEquals("(3) Check list #1" , ((List) map.get("list")).size(), 1);
+
+        prov1.start();
+
+        map = obs.getObservations();
+        assertEquals("(4) Check list #2" , ((List) map.get("list")).size(), 2);
+
+        prov1.dispose();
+
+        map = obs.getObservations();
+        assertEquals("(5) Check list #1" , ((List) map.get("list")).size(), 1);
+
+        prov2.dispose();
+
+        map = obs.getObservations();
+        assertEquals("(6) Check list #0" , ((List) map.get("list")).size(), 0);
+
+        context.ungetService(ref);
+        ci.dispose();
     }
 }
