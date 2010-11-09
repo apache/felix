@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.handlers.dependency;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -369,7 +370,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         Element[] deps = componentMetadata.getElements("Requires");
 
         // Get instance filters.
-        Dictionary filtersConfiguration = (Dictionary) configuration.get("requires.filters");
+        Dictionary filtersConfiguration = getRequiresFilters(configuration.get("requires.filters"));
         Dictionary fromConfiguration = (Dictionary) configuration.get("requires.from");
 
         for (int i = 0; deps != null && i < deps.length; i++) {
@@ -522,6 +523,38 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
         m_description = new DependencyHandlerDescription(this, m_dependencies); // Initialize the description.
     }
+
+	/**
+	 * Gets the requires filter configuration from the given object.
+	 * The given object must come from the instance configuration.
+	 * This method was made to fix FELIX-2688. It supports filter configuration using
+	 * an array:
+	 * <code>{"myFirstDep", "(property1=value1)", "mySecondDep", "(property2=value2)"});</code>
+	 * @param requiresFiltersValue the value contained in the instance
+	 * configuration.
+	 * @return the dictionary. If the object in already a dictionary, just returns it,
+	 * if it's an array, builds the dictionary.
+	 * @throws ConfigurationException the dictionary cannot be built
+	 */
+	private Dictionary getRequiresFilters(Object requiresFiltersValue)
+			throws ConfigurationException {
+		if (requiresFiltersValue != null
+				&& requiresFiltersValue.getClass().isArray()) {
+			String[] filtersArray = (String[]) requiresFiltersValue;
+			if (filtersArray.length % 2 != 0) {
+				throw new ConfigurationException(
+						"A requirement filter is invalid : "
+								+ requiresFiltersValue);
+			}
+			Dictionary requiresFilters = new Hashtable();
+			for (int i = 0; i < filtersArray.length; i += 2) {
+				requiresFilters.put(filtersArray[i], filtersArray[i + 1]);
+			}
+			return requiresFilters;
+		}
+
+		return (Dictionary) requiresFiltersValue;
+	}
 
     /**
      * Handler start method.
