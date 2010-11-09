@@ -38,11 +38,11 @@ public class ManifestMetadataParserTest extends TestCase {
 	 */
 	public void testNameWithColumn() throws ParseException {
 		// Create a test element
-		String header = "mynamespace://jasmine.ow2.org/rules/1.0.0:configuration {}";
+		String header = "http://jasmine.ow2.org/rules/1.0.0:configuration {}";
 		Element elem = ManifestMetadataParser.parse(header);
 
-		Assert.assertEquals("mynamespace", elem.getNameSpace());
-		Assert.assertEquals("//jasmine.ow2.org/rules/1.0.0:configuration", elem.getName());
+		Assert.assertEquals("http://jasmine.ow2.org/rules/1.0.0", elem.getNameSpace());
+		Assert.assertEquals("configuration", elem.getName());
 	}
 
 	/**

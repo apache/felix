@@ -544,9 +544,9 @@ public class ManifestMetadataParser {
                     	elem = new Element(n, null);
                     } else {
                     	// The namespace ends on the first ':'
-                    	int index = n.indexOf(':');
-                    	String ns = n.substring(0, index);
-                    	String name = n.substring(index + 1);
+                    	int last = n.lastIndexOf(':');
+                    	String ns = n.substring(0, last);
+                    	String name = n.substring(last + 1);
                     	elem = new Element(name.toString(), ns.toString());
                     }
 
