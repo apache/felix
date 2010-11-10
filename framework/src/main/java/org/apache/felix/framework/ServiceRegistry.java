@@ -246,8 +246,10 @@ public class ServiceRegistry
                 // We don't allow cycles when we call out to the service factory.
                 if (o.equals(Thread.currentThread()))
                 {
-                    throw new IllegalStateException(
-                        "ServiceFactory.getService() resulted in a cycle.");
+                    throw new ServiceException(
+                        "ServiceFactory.getService() resulted in a cycle.",
+                        ServiceException.FACTORY_ERROR,
+                        null);
                 }
 
                 // Otherwise, wait for it to be freed.
