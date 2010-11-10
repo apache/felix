@@ -1,5 +1,5 @@
 <ipojo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="org.apache.felix.ipojo hhttp://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd" 
+	xsi:schemaLocation="org.apache.felix.ipojo hhttp://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
 	xmlns="org.apache.felix.ipojo">
 	<!-- Simple provider  -->
 	<component
@@ -7,14 +7,14 @@
 		name="Factories-FooProviderType-1" architecture="true">
 		<provides />
 	</component>
-	
+
 	<!-- Provider providing 2 services -->
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooBarProviderType1"
 		name="Factories-FooBarProviderType-1" architecture="true">
 		<provides />
 	</component>
-	
+
 	<!-- Provider with dynamic property -->
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderTypeDyn"
@@ -28,7 +28,7 @@
 			<property name="intAProp" field="intAProp" value="{ 1,2,3}" mandatory="true"/>
 		</provides>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderTypeDyn"
 		name="Factories-FooProviderType-Dynopt" architecture="true">
@@ -41,7 +41,7 @@
 			<property name="intAProp" field="intAProp" value="{ 1,2,3}"/>
 		</provides>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType1"
 		name="Factories-FooProviderType-2" architecture="true">
@@ -54,7 +54,7 @@
 			<property name="intAProp" type="int[]" value="{1,2,3}" mandatory="true"/>
 		</provides>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType1"
 		name="Factories-FooProviderType-2opt" architecture="true">
@@ -67,7 +67,7 @@
 			<property name="intAProp" type="int[]" value="{1,2,3}"/>
 		</provides>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderTypeDyn2"
 		name="Factories-FooProviderType-Dyn2" architecture="true">
@@ -80,7 +80,7 @@
 				value="{1, 2,3 }" mandatory="true"/>
 		</provides>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderTypeDyn2"
 		name="Factories-FooProviderType-Dyn2opt" architecture="true">
@@ -93,7 +93,7 @@
 				value="{1, 2,3 }"/>
 		</provides>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType1"
 		name="Factories-FooProviderType-3" architecture="true">
@@ -107,7 +107,7 @@
 			<property name="bar" field="m_bar" mandatory="true"/>
 		</properties>
 	</component>
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderType1"
 		name="Factories-FooProviderType-3opt" architecture="true">
@@ -121,11 +121,18 @@
 			<property name="bar" field="m_bar"/>
 		</properties>
 	</component>
-	
+
 	<!-- type & instance used to check instance lifecycle against factory validation & invalidation -->
 	<component classname="org.apache.felix.ipojo.test.scenarios.component.SimpleType" architecture="true">
 		<controller field="m_controller"/>
 	</component>
 	<instance component="org.apache.felix.ipojo.test.scenarios.component.SimpleType" name="SimpleInstance"/>
-	
+
+	<!-- check that instance state is recomputed after reconfiguration -->
+	<component classname="org.apache.felix.ipojo.test.scenarios.component.ReconfigurableSimpleType" architecture="true">
+		<properties>
+			<property name="prop" field="prop"/>
+		</properties>
+		<callback transition="validate" method="start"/>
+	</component>
 </ipojo>
