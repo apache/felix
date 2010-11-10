@@ -1158,12 +1158,17 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @see org.apache.felix.ipojo.ComponentInstance#reconfigure(java.util.Dictionary)
      */
     public void reconfigure(Dictionary configuration) {
+    	 m_factory.getLogger().log(Logger.INFO, "Reconfiguring " + getInstanceName());
         for (int i = 0; i < m_handlers.length; i++) {
             m_handlers[i].getHandler().reconfigure(configuration);
         }
         // We synchronized the state computation.
         synchronized (this) {
-            if (m_state == INVALID) {
+        	if (m_state == STOPPED) {
+        		m_factory.getLogger().log(Logger.INFO, "Instance stopped during reconfiguration - Try to restart");
+        		start();
+        	} else if (m_state == INVALID) {
+        		m_factory.getLogger().log(Logger.INFO, "Instance invalid during reconfiguration - Recompute state");
                 // Try to revalidate the instance after reconfiguration
                 for (int i = 0; i < m_handlers.length; i++) {
                     if (m_handlers[i].getState() != VALID) {
