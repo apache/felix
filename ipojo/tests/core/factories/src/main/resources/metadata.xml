@@ -143,4 +143,12 @@
 		</properties>
 		<controller field="controller"/>
 	</component>
+	<component classname="org.apache.felix.ipojo.test.scenarios.component.ReconfigurableSimpleType"
+		name="org.apache.felix.ipojo.test.scenarios.component.ReconfigurableSimpleType3"
+		architecture="true" immediate="true">
+		<properties>
+			<property name="controller" method="setController" field="controller"/>
+		</properties>
+		<controller field="controller"/>
+	</component>
 </ipojo>

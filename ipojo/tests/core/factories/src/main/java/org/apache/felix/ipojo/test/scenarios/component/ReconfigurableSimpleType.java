@@ -25,4 +25,10 @@ public class ReconfigurableSimpleType {
 		}
 	}
 
+	public void setController(boolean p) {
+		if (p) {
+			System.out.println("OK !!!!");
+		}
+	}
+
 }
