@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -158,7 +158,7 @@ public class Utils {
             return refs[0];
         }
     }
-    
+
     public static ServiceReference getServiceReferenceByPID(BundleContext bc, String itf, String pid) {
         ServiceReference[] refs = null;
         String filter = "(" + "service.pid" + "=" + pid + ")";
@@ -307,7 +307,7 @@ public class Utils {
             return new Object[0];
         }
     }
-    
+
     public static boolean contains(String string, String[] array) {
         for (int i = 0; array != null && i < array.length; i++) {
             if (array[i] != null  && array[i].equals(string)) {
@@ -316,7 +316,7 @@ public class Utils {
         }
         return false;
     }
-    
+
     public static boolean contains(int value, int[] array) {
         for (int i = 0; array != null && i < array.length; i++) {
             if (array[i] == value) {
@@ -324,6 +324,27 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    public static void waitForService(BundleContext context, String itf, String filter) {
+        ServiceReference[] refs = getServiceReferences(context, itf, filter);
+        int count = 0;
+        if (refs.length != 0) {
+            return;
+        } else {
+            while(refs.length == 0) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    // Interrupted
+                }
+                count++;
+                if (count == 100) {
+                    throw new RuntimeException("Timeout ... no services match with " + filter);
+                }
+                refs = getServiceReferences(context, itf, filter);
+            }
+        }
     }
 
 }

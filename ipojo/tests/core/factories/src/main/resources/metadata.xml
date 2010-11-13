@@ -135,4 +135,12 @@
 		</properties>
 		<callback transition="validate" method="start"/>
 	</component>
+	<component classname="org.apache.felix.ipojo.test.scenarios.component.ReconfigurableSimpleType"
+		name="org.apache.felix.ipojo.test.scenarios.component.ReconfigurableSimpleType2"
+		architecture="true" immediate="true">
+		<properties>
+			<property name="prop" method="setProp"/>
+		</properties>
+		<controller field="controller"/>
+	</component>
 </ipojo>
