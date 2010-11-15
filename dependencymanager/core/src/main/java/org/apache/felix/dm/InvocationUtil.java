@@ -1,4 +1,4 @@
-package org.apache.felix.dm.impl;
+package org.apache.felix.dm;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

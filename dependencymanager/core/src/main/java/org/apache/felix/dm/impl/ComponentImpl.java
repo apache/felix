@@ -40,6 +40,7 @@ import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.DependencyService;
+import org.apache.felix.dm.InvocationUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -484,7 +485,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 	}
 
 	public String toString() {
-	    return "ServiceImpl[" + m_serviceName + " " + m_implementation + "]";
+	    return this.getClass().getSimpleName() + "[" + m_serviceName + " " + m_implementation + "]";
 	}
 
 	public synchronized Dictionary getServiceProperties() {
@@ -1007,10 +1008,12 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     private void unconfigureServices(State state) {
+        System.err.println("unconfigureServices " + state);
         Iterator i = state.getDependencies().iterator();
         while (i.hasNext()) {
             Dependency dependency = (Dependency) i.next();
             if (dependency.isRequired()) {
+                System.err.println("unconfigureServices invokeremoved " + dependency);
                 dependency.invokeRemoved(this);
             }
 //            if (dependency instanceof ServiceDependencyImpl) {
