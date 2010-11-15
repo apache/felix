@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyService;
+import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.ComponentDependencyDeclaration;
-import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
@@ -321,7 +321,9 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
     }
 
     public void invokeRemoved(DependencyService service) {
-        // TODO Auto-generated method stub
+        synchronized (m_updateInvokedCache) {
+            m_updateInvokedCache.remove(service);
+        }
     }
 
     public boolean isAutoConfig() {
