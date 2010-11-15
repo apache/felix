@@ -255,6 +255,8 @@ public interface Component {
 	 */
 	public Object[] getCompositionInstances();
 	
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
+	
 	/**
 	 * Returns the dependency manager associated with this component.
 	 */

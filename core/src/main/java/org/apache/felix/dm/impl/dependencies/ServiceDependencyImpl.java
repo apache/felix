@@ -31,12 +31,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyService;
+import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.ServiceDependency;
+import org.apache.felix.dm.ServiceUtil;
 import org.apache.felix.dm.impl.DefaultNullObject;
-import org.apache.felix.dm.impl.InvocationUtil;
 import org.apache.felix.dm.impl.Logger;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
@@ -463,6 +465,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     public void removedService(ServiceReference ref, Object service) {
         boolean makeUnavailable = makeUnavailable();
         
+        System.out.println("removedService: " + makeUnavailable + " for " + ServiceUtil.toString(ref));
+        
         Object[] services;
         synchronized (this) {
             services = m_services.toArray();
@@ -488,6 +492,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     public void invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
         invoke(dependencyService, reference, service, m_callbackAdded);
+        //marrs
+        m_refs.add(reference);
     }
     
     public void invokeChanged(DependencyService dependencyService, ServiceReference reference, Object service) {
@@ -496,13 +502,21 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     public void invokeRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
         invoke(dependencyService, reference, service, m_callbackRemoved);
+        //marrs
+        m_refs.remove(reference);
     }
 
     public void invoke(DependencyService dependencyService, ServiceReference reference, Object service, String name) {
         if (name != null) {
             dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name, 
-                new Class[][] {{ServiceReference.class, m_trackedServiceName}, {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {}, {Map.class, m_trackedServiceName}},
-                new Object[][] {{reference, service}, {reference, service}, {reference}, {service}, {service}, {}, {new ServicePropertiesMap(reference), service}}    
+                new Class[][] {
+                    {Component.class, ServiceReference.class, m_trackedServiceName}, {Component.class, ServiceReference.class, Object.class}, {Component.class, ServiceReference.class}, {Component.class, m_trackedServiceName}, {Component.class, Object.class}, {Component.class}, {Component.class, Map.class, m_trackedServiceName},
+                    {ServiceReference.class, m_trackedServiceName}, {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {}, {Map.class, m_trackedServiceName}
+                },
+                new Object[][] {
+                    {dependencyService, reference, service}, {dependencyService, reference, service}, {dependencyService, reference}, {dependencyService, service}, {dependencyService, service}, {dependencyService}, {dependencyService, new ServicePropertiesMap(reference), service},
+                    {reference, service}, {reference, service}, {reference}, {service}, {service}, {}, {new ServicePropertiesMap(reference), service}
+                }    
             );
         }
     }
@@ -795,28 +809,48 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         return "service";
     }
 
+    private List m_refs = new ArrayList();
+    
     public void invokeAdded(DependencyService service) {
         ServiceReference[] refs = m_tracker.getServiceReferences();
         if (refs != null) {
             for (int i = 0; i < refs.length; i++) {
                 ServiceReference sr = refs[i];
                 Object svc = m_context.getService(sr);
+                System.out.println("invokeAdded " + i + " " + ServiceUtil.toString(sr));
                 invokeAdded(service, sr, svc);
+                
+                //marrs
+                m_refs.add(sr);
             }
         }
         m_references = refs;
+        
     }
     
     public void invokeRemoved(DependencyService service) {
         ServiceReference[] refs = m_references;
+        
+        
         if (refs != null) {
+            //marrs
+            refs = (ServiceReference[]) m_refs.toArray(refs);
+            
             for (int i = 0; i < refs.length; i++) {
                 ServiceReference sr = refs[i];
                 Object svc = m_context.getService(sr);
+                System.out.println("invokeRemoved " + i + " " + ServiceUtil.toString(sr));
+                if (sr.getBundle() == null) {
+                    System.out.println("invokeRemoved OLD SHIT .. SKIPPING .. not");
+//                    break;
+                }
                 invokeRemoved(service, sr, svc);
             }
         }
         m_references = null;
+        
+        //marrs
+        m_refs.clear();
     }
 
     public Dictionary getProperties() {
@@ -867,4 +901,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         m_propagateCallbackMethod = method;
         return this;
     }
+    
+    // TODO add equals and hashCode methods, so you can compare dependencies
 }
