@@ -26,6 +26,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.PropertyMetaData;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;

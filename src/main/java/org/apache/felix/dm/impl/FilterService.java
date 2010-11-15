@@ -23,10 +23,10 @@ import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -251,6 +251,10 @@ public class FilterService implements Component
     public void stop()
     {
         m_service.stop();
+    }
+    
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters) {
+        m_service.invokeCallbackMethod(instances, methodName, signatures, parameters);
     }
     
     public Object[] getCompositionInstances() {
