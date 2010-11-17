@@ -132,6 +132,7 @@
 	<component classname="org.apache.felix.ipojo.test.scenarios.component.ReconfigurableSimpleType" architecture="true">
 		<properties>
 			<property name="prop" field="prop"/>
+			<property name="x" method="setX" value="x"/>
 		</properties>
 		<callback transition="validate" method="start"/>
 	</component>
@@ -140,6 +141,7 @@
 		architecture="true" immediate="true">
 		<properties>
 			<property name="prop" method="setProp"/>
+			<property name="x" method="setX" value="x"/>
 		</properties>
 		<controller field="controller"/>
 	</component>
@@ -148,6 +150,7 @@
 		architecture="true" immediate="true">
 		<properties>
 			<property name="controller" method="setController" field="controller"/>
+			<property name="x" method="setX" value="x"/>
 		</properties>
 		<controller field="controller"/>
 	</component>

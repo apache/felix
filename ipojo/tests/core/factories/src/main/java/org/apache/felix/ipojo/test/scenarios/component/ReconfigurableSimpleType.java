@@ -5,6 +5,7 @@ public class ReconfigurableSimpleType {
 
 	private String prop; // Property.
 
+	private String x; // Property.
 
 	boolean controller;
 
@@ -12,7 +13,16 @@ public class ReconfigurableSimpleType {
 		if (prop == null || prop.equals("KO")) {
 			throw new IllegalStateException("Bad Configuration : " + prop);
 		}
+
+		if (x == null) {
+			throw new IllegalStateException("x is null");
+		}
+
 		System.out.println("OK !!!!");
+	}
+
+	public void setX(String v) {
+		x = v;
 	}
 
 	public void setProp(String p) {
