@@ -186,6 +186,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
+    private static final String LOCAL_PACKAGES = "{local-packages}";
 
     private static final String[] EMPTY_STRING_ARRAY =
         {};
@@ -378,11 +379,7 @@ public class BundlePlugin extends AbstractMojo
         includeMavenResources( currentProject, builder, getLog() );
 
         // calculate default export/private settings based on sources
-        if ( builder.getProperty( Analyzer.PRIVATE_PACKAGE ) == null
-            || builder.getProperty( Analyzer.EXPORT_PACKAGE ) == null )
-        {
-            addLocalPackages( currentProject.getCompileSourceRoots(), builder );
-        }
+        addLocalPackages( currentProject.getCompileSourceRoots(), builder );
 
         // update BND instructions to embed selected Maven dependencies
         Collection embeddableArtifacts = getEmbeddableArtifacts( currentProject, builder );
@@ -955,7 +952,11 @@ public class BundlePlugin extends AbstractMojo
             // we can't export the default package (".") and we shouldn't export internal packages 
             if ( !( ".".equals( pkg ) || pkg.contains( ".internal" ) || pkg.contains( ".impl" ) ) )
             {
-                exportedPkgs.append( pkg ).append( ',' );
+                if( exportedPkgs.length() > 0 )
+                {
+                    exportedPkgs.append( ';' );
+                }
+                exportedPkgs.append( pkg );
             }
         }
 
@@ -970,6 +971,16 @@ public class BundlePlugin extends AbstractMojo
             {
                 // leave Export-Package empty (but non-null) as we have -exportcontents
                 analyzer.setProperty( Analyzer.EXPORT_PACKAGE, "" );
+            }
+        }
+        else
+        {
+            String exported = analyzer.getProperty( Analyzer.EXPORT_PACKAGE );
+            if( exported.indexOf( LOCAL_PACKAGES ) >= 0 )
+            {
+                String newExported = StringUtils.replace( exported, LOCAL_PACKAGES, exportedPkgs.toString() );
+                analyzer.setProperty( Analyzer.EXPORT_PACKAGE, newExported );
+
             }
         }
 
