@@ -304,9 +304,10 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         }
 
 
-        // Give initial values
+        // Give initial values and reset the 'invoked' flag.
         for (int i = 0; i < m_configurableProperties.size(); i++) {
         	Property prop = (Property) m_configurableProperties.get(i);
+        	prop.reset(); // Clear the invoked flag.
         	if (prop.hasField() && prop.getValue() != Property.NO_VALUE && prop.getValue() != null) {
         		getInstanceManager().onSet(null, prop.getField(), prop.getValue());
         	}

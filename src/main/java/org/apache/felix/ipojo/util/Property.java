@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,7 @@ import org.osgi.framework.BundleContext;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Property implements FieldInterceptor {
-    
+
     /**
      * Object used for an unvalued property.
      */
@@ -65,9 +65,9 @@ public class Property implements FieldInterceptor {
      * The value of the property.
      */
     private Object m_value = NO_VALUE;
-    
+
     /**
-     * Flag tracking is the method was 
+     * Flag tracking is the method was
      * already called for the current value.
      */
     private boolean m_invoked;
@@ -81,14 +81,14 @@ public class Property implements FieldInterceptor {
      * The handler object to get the logger.
      */
     private final Handler m_handler;
-    
+
     /**
      * The instance manager.
      */
     private final InstanceManager m_manager;
 
     /**
-     * Creates a property. 
+     * Creates a property.
      * At least the method or the field need
      * to be specified.
      * @param name the name of the property (optional)
@@ -114,7 +114,7 @@ public class Property implements FieldInterceptor {
         } else {
             m_name = name;
         }
-        
+
         m_type = computeType(type, manager.getGlobalContext());
         if (value != null) {
             m_value = create(m_type, value);
@@ -234,13 +234,13 @@ public class Property implements FieldInterceptor {
     public String getField() {
         return m_field;
     }
-    
+
     public String getType() {
         return m_type.getName();
     }
 
     /**
-     * Gets the method name, 
+     * Gets the method name,
      * <code>null</code> if no method.
      * @return the method name.
      */
@@ -264,12 +264,12 @@ public class Property implements FieldInterceptor {
     public boolean hasField() {
         return m_field != null;
     }
-    
+
     public synchronized Object getValue() {
         return m_value;
     }
 
-    
+
     /**
      * Gets the NO VALUE Object.
      * This method returns the object to inject when the property
@@ -289,7 +289,7 @@ public class Property implements FieldInterceptor {
         // If all other case, return null.
         return null;
     }
-    
+
     /**
      * Sets the value of the property.
      * @param value the new value.
@@ -309,7 +309,7 @@ public class Property implements FieldInterceptor {
                     }
                 } else {
                     // Error, the given property cannot be injected.
-                    throw new ClassCastException("Incompatible type for the property " + m_name + " " + m_type.getName() + " expected, " 
+                    throw new ClassCastException("Incompatible type for the property " + m_name + " " + m_type.getName() + " expected, "
                                                  + value.getClass() + " found");
                 }
             }
@@ -364,9 +364,9 @@ public class Property implements FieldInterceptor {
 
         // Array :
         if (type.isArray()) {
-            return createArrayObject(type.getComponentType(), ParseUtils.parseArrays(strValue)); 
+            return createArrayObject(type.getComponentType(), ParseUtils.parseArrays(strValue));
         }
-        
+
         // Enum :
         if (type.getSuperclass() != null  && type.getSuperclass().getName().equals("java.lang.Enum")) {
             try {
@@ -377,14 +377,14 @@ public class Property implements FieldInterceptor {
                  // Invoke the static method
                 return valueOf.invoke(null, new String[] {strValue});
             } catch (InvocationTargetException e) {
-                throw new ConfigurationException("Cannot create an enumerated value for " + type 
+                throw new ConfigurationException("Cannot create an enumerated value for " + type
                         + " with " + strValue + " : " + e.getTargetException());
             } catch (Exception e) {
-                throw new ConfigurationException("Cannot create an enumerated value for " + type 
+                throw new ConfigurationException("Cannot create an enumerated value for " + type
                         + " with " + strValue + " : " + e.getMessage());
             }
         }
-        
+
         // Else it is a neither a primitive type neither a String -> create
         // the object by calling a constructor with a string in argument.
         try {
@@ -407,7 +407,7 @@ public class Property implements FieldInterceptor {
     }
 
     /**
-     * Creates an array object containing the type component type from 
+     * Creates an array object containing the type component type from
      * the String array 'values'.
      * @param interntype the internal type of the array.
      * @param values the String array
@@ -495,7 +495,16 @@ public class Property implements FieldInterceptor {
     }
 
     /**
-     * Invokes the setter method on the given pojo object. 
+     * Clears the invoked flag.
+     * Then, despite the setter was already called,
+     * it will be invoked another times.
+     */
+    public synchronized void reset() {
+    	m_invoked = false;
+    }
+
+    /**
+     * Invokes the setter method on the given pojo object.
      * If no specified pojo object, it calls on each created pojo object.
      * @param instance the created object (could be <code>null</code>)
      * @see org.apache.felix.ipojo.Handler#onCreation(java.lang.Object)
@@ -504,12 +513,12 @@ public class Property implements FieldInterceptor {
         if (m_invoked) {
             return; // Already called.
         }
-        
+
         if (m_value == NO_VALUE) {
             // Don't call method if no value
             return;
         }
-        
+
         try {
             if (instance == null) {
                 m_method.call(new Object[] { m_value });
@@ -556,7 +565,7 @@ public class Property implements FieldInterceptor {
             setValue(value);
         }
     }
-    
+
     /**
      * Gets the handler managing the property.
      * @return the configuration handler.
