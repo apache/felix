@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -341,6 +341,7 @@ public class InstanceCreator implements FactoryStateListener {
             try {
                 m_factory = factory;
                 m_instance = m_factory.createComponentInstance(m_configuration);
+                m_logger.log(Logger.INFO, "Instance created");
             } catch (UnacceptableConfiguration e) {
                 m_logger.log(Logger.ERROR, "A matching factory was found for " + m_configuration + ", but the instantiation failed : "
                         + e.getMessage());

@@ -98,7 +98,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     protected List m_listeners = new ArrayList(1);
 
     /**
-     * The logger for the factory (and all component instances).
+     * The logger for the factory.
      */
     protected final Logger m_logger;
 

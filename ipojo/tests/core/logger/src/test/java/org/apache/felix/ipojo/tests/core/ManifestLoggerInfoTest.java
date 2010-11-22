@@ -1,5 +1,6 @@
 package org.apache.felix.ipojo.tests.core;
 
+import static org.ops4j.pax.exam.CoreOptions.equinox;
 import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -9,6 +10,7 @@ import static org.ops4j.pax.swissbox.tinybundles.core.TinyBundles.newBundle;
 import static org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOBuilder.withiPOJO;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -20,13 +22,14 @@ import org.apache.felix.ipojo.tests.core.service.MyService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Customizer;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -78,7 +81,7 @@ public class ManifestLoggerInfoTest {
 
         Option[] opt =  options(
                 felix(),
-//                equinox(),
+                equinox(),
                 provision(
                         // Runtime.
                         mavenBundle().groupId( "org.apache.felix" ).artifactId( "org.apache.felix.log" ).version(asInProject()),
@@ -98,15 +101,22 @@ public class ManifestLoggerInfoTest {
                             .add(MyComponent.class)
                             .set(Constants.BUNDLE_SYMBOLICNAME,"MyComponent")
                             .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.tests.core.service")
-                            .set("ipojo-log-level", "info")
+                            .set("Ipojo-log-level", "info")
                             .build( withiPOJO(new File(tmp, "provider-with-level-in-manifest.jar"), new File("component.xml")))
-                            )
-                );
+                            ),
+                new Customizer() {
+                    @Override
+                    public InputStream customizeTestProbe( InputStream testProbe )
+                    {
+                       return TinyBundles.modifyBundle(testProbe)
+                           .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.tests.core.service")
+                           .build();
+                    }
+                });
         return opt;
     }
 
     @Test
-    @Ignore //TODO Why we have a classloading issue here ?
     public void testMessages() throws InterruptedException, InvalidSyntaxException {
         Bundle bundle = osgi.getBundle("MyComponent");
         Assert.assertNotNull(bundle);
@@ -123,9 +133,9 @@ public class ManifestLoggerInfoTest {
 
 
 
-   //     Assert.assertNotNull(osgi.getServiceObject(MyService.class.getName(), null));
+        Assert.assertNotNull(osgi.getServiceObject(MyService.class.getName(), null));
 
-//        osgi.waitForService("org.apache.felix.ipojo.tests.core.service.MyService", null, 5000);
+        osgi.waitForService("org.apache.felix.ipojo.tests.core.service.MyService", null, 5000);
         List<String> messages = getMessages(log.getLog());
         System.out.println(messages);
         Assert.assertTrue(messages.contains("Ready"));

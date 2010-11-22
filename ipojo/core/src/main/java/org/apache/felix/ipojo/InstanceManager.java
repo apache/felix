@@ -84,6 +84,11 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     private final ComponentFactory m_factory;
 
     /**
+     * The instance logger.
+     */
+    private final Logger m_logger;
+
+    /**
      * The instance description.
      */
     private final PrimitiveInstanceDescription m_description;
@@ -153,6 +158,15 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         m_context = context;
         m_handlers = handlers;
         m_description = new PrimitiveInstanceDescription(m_factory.getComponentDescription(), this);
+        m_logger = new Logger(m_context, this);
+    }
+
+    /**
+     * The instance logger.
+     * @return the logger
+     */
+    public Logger getLogger() {
+    	return m_logger;
     }
 
     /**
@@ -263,13 +277,13 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 }
                 return field.get(pojo);
             } catch (SecurityException e) {
-                m_factory.getLogger().log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
+                m_logger.log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
             } catch (NoSuchFieldException e) {
-                m_factory.getLogger().log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
+                m_logger.log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
             } catch (IllegalArgumentException e) {
-                m_factory.getLogger().log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
+                m_logger.log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
             } catch (IllegalAccessException e) {
-                m_factory.getLogger().log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
+                m_logger.log(Logger.ERROR, "Cannot reflect on field " + fieldName + " to obtain the value : " + e.getMessage());
             }
             return null;
         } else {
@@ -302,7 +316,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             try {
                 m_handlers[i].start();
             } catch (IllegalStateException e) {
-                m_factory.getLogger().log(Logger.ERROR, e.getMessage());
+                m_logger.log(Logger.ERROR, e.getMessage());
                 stop();
                 throw e;
             }
@@ -443,6 +457,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 } catch (IllegalStateException e) {
                     // When an illegal state exception happens, the instance manager must be stopped immediately.
                     stop();
+                    m_logger.log(Logger.ERROR, e.getMessage(), e);
                     return;
                 }
             } else {
@@ -454,6 +469,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 } catch (IllegalStateException e) {
                     // When an illegal state exception happens, the instance manager must be stopped immediately.
                     stop();
+                    m_logger.log(Logger.ERROR, e.getMessage());
                     return;
                 }
             }
@@ -541,7 +557,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         try {
             m_clazz = m_factory.loadClass(m_className);
         } catch (ClassNotFoundException e) {
-            m_factory.getLogger().log(Logger.ERROR, "[" + m_name + "] Class not found during the loading phase : " + e.getMessage());
+            m_logger.log(Logger.ERROR, "[" + m_name + "] Class not found during the loading phase : " + e.getMessage(), e);
             stop();
             return;
         }
@@ -603,40 +619,39 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     }
                 }
             } catch (IllegalAccessException e) {
-                m_factory.getLogger().log(Logger.ERROR,
-                                          "[" + m_name + "] createInstance -> The POJO constructor is not accessible : " + e.getMessage());
+                m_logger.log(Logger.ERROR,
+                                          "[" + m_name + "] createInstance -> The POJO constructor is not accessible : " + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor is not accessible : " + e.getMessage());
             } catch (SecurityException e) {
-                m_factory.getLogger().log(
+                m_logger.log(
                                           Logger.ERROR,
                                           "["
                                                   + m_name
                                                   + "] createInstance -> The POJO constructor is not accessible (security reason) : "
-                                                  + e.getMessage());
+                                                  + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor is not accessible : " + e.getMessage());
             } catch (InvocationTargetException e) {
-                m_factory.getLogger().log(
+                m_logger.log(
                                           Logger.ERROR,
                                           "["
                                                   + m_name
                                                   + "] createInstance -> Cannot invoke the constructor method - the constructor throws an exception : "
-                                                  + e.getTargetException().getMessage());
+                                                  + e.getTargetException().getMessage(), e.getTargetException());
                 onError(null, m_className, e.getTargetException());
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor has thrown an exception: " + e.getTargetException().getMessage());
             } catch (NoSuchMethodException e) {
-                m_factory.getLogger().log(Logger.ERROR,
-                                          "[" + m_name + "] createInstance -> Cannot invoke the constructor (method not found) : " + e.getMessage());
+                m_logger.log(Logger.ERROR,
+                                          "[" + m_name + "] createInstance -> Cannot invoke the constructor (method not found) : " + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor cannot be found : " + e.getMessage());
             } catch (Throwable e) {
                 // Catch every other possible error and runtime exception.
-                m_factory.getLogger().log(Logger.ERROR,
-                        "[" + m_name + "] createInstance -> The POJO constructor invocation failed : " + e.getMessage());
+                m_logger.log(Logger.ERROR,
+                        "[" + m_name + "] createInstance -> The POJO constructor invocation failed : " + e.getMessage(), e);
                 stop();
-                e.printStackTrace();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor invocation has thrown an exception : " + e.getMessage());
             }
         } else {
@@ -664,12 +679,12 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                         instance = factory.invoke(null, args);
                     } catch (NoSuchMethodException e2) {
                         // Error : factory-method not found
-                        m_factory.getLogger().log(
+                        m_logger.log(
                                                   Logger.ERROR,
                                                   "["
                                                           + m_name
                                                           + "] createInstance -> Cannot invoke the factory-method (method not found) : "
-                                                          + e2.getMessage());
+                                                          + e2.getMessage(), e2);
                         stop();
                         throw new RuntimeException("Cannot create a POJO instance, the factory-method cannot be found : " + e2.getMessage());
                     }
@@ -685,26 +700,26 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
             } catch (InvocationTargetException e) {
                 // Error : invocation failed
-                m_factory.getLogger().log(Logger.ERROR,
-                                          "[" + m_name + "] createInstance -> The factory-method throws an exception : " + e.getTargetException());
+                m_logger.log(Logger.ERROR,
+                                          "[" + m_name + "] createInstance -> The factory-method throws an exception : " + e.getTargetException(), e.getTargetException());
                 onError(null, m_className, e.getTargetException());
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the factory-method has thrown an exception: " + e.getTargetException().getMessage());
             } catch (NoSuchMethodException e) {
                 // Error : _setInstanceManager method is missing
-                m_factory.getLogger()
+                m_logger
                         .log(
                              Logger.ERROR,
                              "["
                                      + m_name
                                      + "] createInstance -> Cannot invoke the factory-method (the _setInstanceManager method does not exist) : "
-                                     + e.getMessage());
+                                     + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the factory-method cannot be found : " + e.getMessage());
             } catch (Throwable e) {
                 // Catch every other possible error and runtime exception.
-                m_factory.getLogger().log(Logger.ERROR,
-                        "[" + m_name + "] createInstance -> The factory-method invocation failed : " + e.getMessage());
+                m_logger.log(Logger.ERROR,
+                        "[" + m_name + "] createInstance -> The factory-method invocation failed : " + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the factory-method invocation has thrown an exception : " + e.getMessage());
             }
@@ -949,7 +964,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 if (result != initialValue) {
                     //TODO analyze impact of removing conflict detection
                     if ((handlerResult != null && !handlerResult.equals(result)) || (result != null && handlerResult == null)) {
-                        m_factory.getLogger().log(
+                        m_logger.log(
                                                   Logger.WARNING,
                                                   "A conflict was detected on the injection of "
                                                           + fieldName);
@@ -1069,7 +1084,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 return null;
             }
             // Cannot happen
-            m_factory.getLogger().log(Logger.ERROR, "A methodID cannot be associated with a method from the POJO class: " + methodId);
+            m_logger.log(Logger.ERROR, "A methodID cannot be associated with a method from the POJO class: " + methodId);
             return null;
         } else {
             return method;
@@ -1158,17 +1173,17 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @see org.apache.felix.ipojo.ComponentInstance#reconfigure(java.util.Dictionary)
      */
     public void reconfigure(Dictionary configuration) {
-    	 m_factory.getLogger().log(Logger.INFO, "Reconfiguring " + getInstanceName());
+    	 m_logger.log(Logger.INFO, "Reconfiguring " + getInstanceName());
         for (int i = 0; i < m_handlers.length; i++) {
             m_handlers[i].getHandler().reconfigure(configuration);
         }
         // We synchronized the state computation.
         synchronized (this) {
         	if (m_state == STOPPED) {
-        		m_factory.getLogger().log(Logger.INFO, "Instance stopped during reconfiguration - Try to restart");
+        		m_logger.log(Logger.INFO, "Instance stopped during reconfiguration - Try to restart");
         		start();
         	} else if (m_state == INVALID) {
-        		m_factory.getLogger().log(Logger.INFO, "Instance invalid during reconfiguration - Recompute state");
+        		m_logger.log(Logger.INFO, "Instance invalid during reconfiguration - Recompute state");
                 // Try to revalidate the instance after reconfiguration
                 for (int i = 0; i < m_handlers.length; i++) {
                     if (m_handlers[i].getState() != VALID) {

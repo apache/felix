@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,8 @@
  */
 package org.apache.felix.ipojo.util;
 
+import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.ErrorHandler;
 import org.apache.felix.ipojo.Extender;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -25,23 +27,25 @@ import org.osgi.service.log.LogService;
 
 /**
  * iPOJO Logger.
- * This class is an helper class implementing a simple log system. 
+ * This class is an helper class implementing a simple log system.
  * This logger sends log messages to a log service if available.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Logger {
-    
+
     /**
      * The iPOJO default log level property.
      */
     public static final String IPOJO_LOG_LEVEL_PROP = "ipojo.log.level";
-    
+
     /**
      * iPOJO log level manifest header.
+     * The uppercase 'I' is important as BND removes all headers that do not
+     * start with an uppercase are not added to the bundle.
      * Use an upper case to support bnd.
      */
-    public static final String IPOJO_LOG_LEVEL_HEADER = "IPOJO-log-level";
+    public static final String IPOJO_LOG_LEVEL_HEADER = "Ipojo-log-level";
 
     /**
      * The Log Level ERROR.
@@ -75,6 +79,11 @@ public class Logger {
     private String m_name;
 
     /**
+     * The instance associated to the logger if any.
+     */
+    private ComponentInstance m_instance;
+
+    /**
      * The trace level of this logger.
      */
     private int m_level;
@@ -90,7 +99,20 @@ public class Logger {
         m_level = level;
         m_context = context;
     }
-    
+
+    /**
+     * Creates a logger.
+     * @param context the bundle context
+     * @param instance the instance
+     * @param level the trace level
+     */
+    public Logger(BundleContext context, ComponentInstance instance, int level) {
+        m_instance = instance;
+    	m_name = m_instance.getInstanceName();
+        m_level = level;
+        m_context = context;
+    }
+
     /**
      * Create a logger.
      * Uses the default logger level.
@@ -102,6 +124,16 @@ public class Logger {
     }
 
     /**
+     * Create a logger.
+     * Uses the default logger level.
+     * @param context the bundle context
+     * @param instance the instance
+     */
+    public Logger(BundleContext context, ComponentInstance instance) {
+        this(context, instance, getDefaultLevel(context));
+    }
+
+    /**
      * Logs a message.
      * @param level the level of the message
      * @param msg the the message to log
@@ -110,6 +142,7 @@ public class Logger {
         if (m_level >= level) {
             dispatch(level, msg);
         }
+        invokeErrorHandler(level, msg, null);
     }
 
     /**
@@ -122,10 +155,11 @@ public class Logger {
         if (m_level >= level) {
             dispatch(level, msg, exception);
         }
+        invokeErrorHandler(level, msg, exception);
     }
-    
+
     /**
-     * Internal log method. 
+     * Internal log method.
      * @param level the level of the message.
      * @param msg the message to log
      */
@@ -139,7 +173,7 @@ public class Logger {
             } else {
                 Extender.getIPOJOBundleContext().getServiceReference(LogService.class.getName());
             }
-            
+
             if (ref != null) {
                 log = (LogService) m_context.getService(ref);
             }
@@ -186,7 +220,7 @@ public class Logger {
                 System.err.println(message);
                 break;
         }
-        
+
         if (log != null) {
             m_context.ungetService(ref);
         }
@@ -208,14 +242,14 @@ public class Logger {
             } else {
                 Extender.getIPOJOBundleContext().getServiceReference(LogService.class.getName());
             }
-            
+
             if (ref != null) {
                 log = (LogService) m_context.getService(ref);
             }
         } catch (IllegalStateException e) {
             // Handle the case where the iPOJO bundle is stopping
         }
-        
+
         String message = null;
         switch (level) {
             case DEBUG:
@@ -260,35 +294,65 @@ public class Logger {
                 exception.printStackTrace();
                 break;
         }
-        
+
         if (log != null) {
             m_context.ungetService(ref);
         }
     }
-    
+
+    /**
+     * Invokes the error handler service is present.
+     * @param level the log level
+     * @param msg the message
+     * @param error the error
+     */
+    private void invokeErrorHandler(int level, String msg, Throwable error) {
+    	// First check the level
+    	if (level > WARNING) {
+    		return; // Others levels are not supported.
+    	}
+    	// Try to get the error handler service
+    	try {
+	    	ServiceReference ref = m_context.getServiceReference(ErrorHandler.class.getName());
+	    	if (ref != null) {
+	    		ErrorHandler handler = (ErrorHandler) m_context.getService(ref);
+	    		if (level == ERROR) {
+	        		handler.onError(m_instance, msg, error);
+	        	} else if (level == WARNING) {
+	        		handler.onWarning(m_instance, msg, error);
+	        	} // The others case are not supported
+	    		m_context.ungetService(ref);
+	    		return;
+	    	} // Else do nothing...
+    	} catch (IllegalStateException e) {
+    		// Ignore
+    		// The iPOJO bundle is stopping.
+    	}
+    }
+
     /**
      * Gets the default logger level.
-     * The property is searched inside the framework properties, 
-     * the system properties, and in the manifest from the given 
-     * bundle context. By default, set the level to {@link Logger#WARNING}. 
+     * The property is searched inside the framework properties,
+     * the system properties, and in the manifest from the given
+     * bundle context. By default, set the level to {@link Logger#WARNING}.
      * @param context the bundle context.
      * @return the default log level.
      */
     private static int getDefaultLevel(BundleContext context) {
         // First check in the framework and in the system properties
         String level = context.getProperty(IPOJO_LOG_LEVEL_PROP);
-        
+
         // If null, look in the bundle manifest
         if (level == null) {
             String key = IPOJO_LOG_LEVEL_PROP.replace('.', '-');
             level = (String) context.getBundle().getHeaders().get(key);
         }
-        
+
         // if still null try the second header
         if (level == null) {
             level = (String) context.getBundle().getHeaders().get(IPOJO_LOG_LEVEL_HEADER);
         }
-                
+
         if (level != null) {
             if (level.equalsIgnoreCase("info")) {
                 return INFO;
@@ -300,10 +364,10 @@ public class Logger {
                 return ERROR;
             }
         }
-        
+
         // Either l is null, either the specified log level was unknown
         // Set the default to WARNING
         return WARNING;
-        
+
     }
 }

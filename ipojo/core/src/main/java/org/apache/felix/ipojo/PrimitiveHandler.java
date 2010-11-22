@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,23 +34,28 @@ import org.apache.felix.ipojo.util.Logger;
 * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
 */
 public abstract class PrimitiveHandler extends Handler implements FieldInterceptor, MethodInterceptor {
-    
+
     /**
      * The "Primitive" Handler type (value).
      */
     public static final String HANDLER_TYPE = "primitive";
-    
+
     /**
      * The reference on the instance manager.
      */
     private InstanceManager m_manager;
-    
-    
+
+
     /**
-     * The factory of the instance manager. 
+     * The factory of the instance manager.
      */
     private ComponentFactory m_factory;
-    
+
+	/**
+	 * Instance Logger used by the handler.
+	 */
+	private Logger m_instanceLogger;
+
     /**
      * Attaches the current handler to the given instance.
      * @param manager the instance on which the current handler will be attached.
@@ -58,26 +63,31 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      */
     protected final void attach(ComponentInstance manager) {
         m_manager = (InstanceManager) manager;
+        m_instanceLogger = m_manager.getLogger();
     }
-    
+
     /**
      * Sets the factory of the managed instance.
-     * @param factory the factory 
+     * @param factory the factory
      * @see org.apache.felix.ipojo.Handler#setFactory(org.apache.felix.ipojo.Factory)
      */
     public final void setFactory(Factory factory) {
         m_factory = (ComponentFactory) factory;
     }
-    
+
     /**
-     * gets the logger of the managed instance.
+     * Gets the logger of the managed instance.
+     * IF no instance attached yet, use the factory logger.
      * @return the logger to use to log messages.
      * @see org.apache.felix.ipojo.Handler#getLogger()
      */
     public Logger getLogger() {
-        return m_factory.getLogger();
+    	if (m_instanceLogger == null) {
+    		return m_factory.getLogger();
+    	}
+        return m_instanceLogger;
     }
-    
+
     /**
      * Gets the instance manager managing the instance.
      * @return the instance manager
@@ -85,7 +95,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
     public InstanceManager getInstanceManager() {
         return m_manager;
     }
-    
+
     /**
      * Gets the factory which creates the managed instance.
      * @return the factory which creates the managed instance.
@@ -93,7 +103,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
     public ComponentFactory getFactory() {
         return m_factory;
     }
-    
+
     /**
      * Gets the PojoMetadata of the content of the managed
      * instance. This method allows getting manipulation
@@ -104,25 +114,25 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
     public PojoMetadata getPojoMetadata() {
         return m_factory.getPojoMetadata();
     }
-    
+
     /**
      * Gets a plugged handler of the same container.
-     * This method must be called only in the start method (or after). 
+     * This method must be called only in the start method (or after).
      * In the configure method, this method can be inconsistent
-     * as all handlers are not initialized. 
+     * as all handlers are not initialized.
      * @param name the name of the handler to find (class name or qualified
-     * handler name (<code>ns:name</code>)). 
+     * handler name (<code>ns:name</code>)).
      * @return the handler object or <code>null</code> if the handler is not found.
      */
     public final Handler getHandler(String name) {
         return m_manager.getHandler(name);
     }
-    
+
     /**
-     * Callback method called when a managed field 
+     * Callback method called when a managed field
      * receives a new value. The given pojo can be
      * null if the new value is set by another handler.
-     * This default implementation does nothing. 
+     * This default implementation does nothing.
      * @param pojo the pojo object setting the value
      * @param fieldName the field name
      * @param value the value received by the field
@@ -147,23 +157,23 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
     public Object onGet(Object pojo, String fieldName, Object value) {
         return value;
     }
-    
+
     /**
      * Callback method called when a method will be invoked.
-     * This default implementation does nothing. 
+     * This default implementation does nothing.
      * @param pojo the pojo on which the method is called.
      * @param method the method invoked.
      * @param args the arguments array.
      * @see MethodInterceptor#onEntry(Object, Method, Object[])
      */
-    public void onEntry(Object pojo, Method method, Object[] args) { 
+    public void onEntry(Object pojo, Method method, Object[] args) {
         // Nothing to do in the default implementation
     }
 
     /**
      * Callback method called when a method ends.
      * This method is called when a thread exits a method (before a return or a throw).
-     * If the given returned object is <code>null</code>, either the method is 
+     * If the given returned object is <code>null</code>, either the method is
      * <code>void</code>, or it returns <code>null</code>.
      * You must not modified the returned object.
      * The default implementation does nothing.
@@ -172,13 +182,13 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param returnedObj the returned object (boxed for primitive type)
      * @see MethodInterceptor#onExit(Object, Method, Object)
      */
-    public void onExit(Object pojo, Method method, Object returnedObj) { 
+    public void onExit(Object pojo, Method method, Object returnedObj) {
         // Nothing to do in the default implementation
     }
-    
+
     /**
      * Callback method called when an error occurs.
-     * This method is called when the execution throws an exception 
+     * This method is called when the execution throws an exception
      * in the given method.
      * The default implementation does nothing.
      * @param pojo the pojo on which the method was accessed.
@@ -189,12 +199,12 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
     public void onError(Object pojo, Method method, Throwable throwable) {
         // Nothing to do in the default implementation
     }
-    
+
     /**
-     * Callback method called when the execution of a method will terminate : 
+     * Callback method called when the execution of a method will terminate :
      * just before to throw an exception or before to return.
      * {@link MethodInterceptor#onExit(Object, Method, Object)} or
-     * {@link MethodInterceptor#onError(Object, Method, Throwable)} 
+     * {@link MethodInterceptor#onError(Object, Method, Throwable)}
      * were already called.
      * This default implementation does nothing.
      * @param pojo the pojo on which the method was accessed.
@@ -203,17 +213,17 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
     public void onFinally(Object pojo, Method method) {
         // Nothing to do in the default implementation
     }
-    
+
     /**
      * Callback method called when an instance of the component is created, but
      * before someone can use it.
      * The default implementation does nothing.
      * @param instance the created instance
      */
-    public void onCreation(Object instance) { 
+    public void onCreation(Object instance) {
         // Nothing to do in the default implementation
     }
-    
-    
+
+
 
 }
