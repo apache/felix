@@ -179,7 +179,7 @@ public class ProvidedService implements ServiceFactory {
                         + m_handler.getInstanceManager().getInstanceName()
                         + "] The customized service object creation policy "
                         + "(" + creationStrategyClass.getName() + ") is not accessible: "
-                        + e.getMessage());
+                        + e.getMessage(), e);
                 getInstanceManager().stop();
                 return;
             } catch (InstantiationException e) {
@@ -187,7 +187,7 @@ public class ProvidedService implements ServiceFactory {
                         + m_handler.getInstanceManager().getInstanceName()
                         + "] The customized service object creation policy "
                         + "(" + creationStrategyClass.getName() + ") cannot be instantiated: "
-                        + e.getMessage());
+                        + e.getMessage(), e);
                 getInstanceManager().stop();
                 return;
             }
@@ -332,7 +332,7 @@ public class ProvidedService implements ServiceFactory {
         if (m_serviceRegistration != null) {
             unregisterService();
         }
-        
+
         if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
                 && m_serviceRegistration == null  && isAtLeastAServiceControllerValid()) {
             // Build the service properties list
@@ -372,7 +372,7 @@ public class ProvidedService implements ServiceFactory {
     protected synchronized void unregisterService() {
     	// Create a copy of the service reference in the case we need
     	// to inject it to the post-unregistration callback.
-        
+
     	ServiceReference ref = null;
         if (m_serviceRegistration != null) {
     		ref = m_serviceRegistration.getReference();
@@ -526,11 +526,11 @@ public class ProvidedService implements ServiceFactory {
         }
         return null;
     }
-    
+
     public ServiceController getControllerBySpecification(String spec) {
         return (ServiceController) m_controllers.get(spec);
     }
-    
+
     /**
      * Checks if at least one service controller is valid.
      * @return <code>true</code> if one service controller at least
@@ -538,12 +538,12 @@ public class ProvidedService implements ServiceFactory {
      */
     private boolean isAtLeastAServiceControllerValid() {
         Collection controllers = m_controllers.values();
-        
+
         // No controller
         if (controllers.isEmpty()) {
             return true;
         }
-        
+
         Iterator iterator = controllers.iterator();
         while (iterator.hasNext()) {
             ServiceController controller = (ServiceController) iterator.next();
@@ -553,12 +553,12 @@ public class ProvidedService implements ServiceFactory {
         }
         return false;
     }
-    
+
     private String[] getServiceSpecificationsToRegister() {
         if (m_controllers.isEmpty()) {
             return m_serviceSpecifications;
         }
-        
+
         ArrayList l = new ArrayList();
         if (m_controllers.containsKey("ALL")) {
             ServiceController ctrl = (ServiceController) m_controllers.get("ALL");
@@ -566,7 +566,7 @@ public class ProvidedService implements ServiceFactory {
                 l.addAll(Arrays.asList(m_serviceSpecifications));
             }
         }
-        
+
         Iterator iterator = m_controllers.keySet().iterator();
         while (iterator.hasNext()) {
             String spec = (String) iterator.next();
@@ -581,9 +581,9 @@ public class ProvidedService implements ServiceFactory {
                 l.remove(spec);
             }
         }
-                
+
         return (String[]) l.toArray(new String[l.size()]);
-        
+
     }
 
     public void setPostRegistrationCallback(Callback cb) {

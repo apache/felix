@@ -527,10 +527,10 @@ public class Property implements FieldInterceptor {
             }
             m_invoked = true;
         } catch (NoSuchMethodException e) {
-            m_handler.error("The method " + m_method + " does not exist in the implementation class " + m_manager.getClassName());
+            m_handler.error("The method " + m_method + " does not exist in the implementation class " + m_manager.getClassName(), e);
             m_manager.stop();
         } catch (IllegalAccessException e) {
-            m_handler.error("The method " + m_method + " is not accessible in the implementation class " + m_manager.getClassName());
+            m_handler.error("The method " + m_method + " is not accessible in the implementation class " + m_manager.getClassName(), e);
             m_manager.stop();
         } catch (InvocationTargetException e) {
             m_handler.error("The method " + m_method + " in the implementation class " + m_manager.getClassName() + "throws an exception : " + e.getTargetException().getMessage(), e.getTargetException());
