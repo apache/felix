@@ -1008,21 +1008,12 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     private void unconfigureServices(State state) {
-        System.err.println("unconfigureServices " + state);
         Iterator i = state.getDependencies().iterator();
         while (i.hasNext()) {
             Dependency dependency = (Dependency) i.next();
             if (dependency.isRequired()) {
-                System.err.println("unconfigureServices invokeremoved " + dependency);
                 dependency.invokeRemoved(this);
             }
-//            if (dependency instanceof ServiceDependencyImpl) {
-//                ServiceDependencyImpl sd = (ServiceDependencyImpl) dependency;
-//                // for required dependencies, we invoke any callbacks here
-//                if (sd.isRequired()) {
-//                    sd.invokeRemoved(this, sd.lookupServiceReference(), sd.lookupService());
-//                }
-//            }
         }
     }
 
