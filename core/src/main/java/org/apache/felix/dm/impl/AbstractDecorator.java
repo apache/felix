@@ -25,10 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -184,8 +184,7 @@ public abstract class AbstractDecorator  {
     public void removed(URL resource) {
         Component newService = (Component) m_services.remove(resource);
         if (newService == null) {
-            System.out.println("Service should not be null here, dumping stack.");
-            Thread.dumpStack();
+            throw new IllegalStateException("Service should not be null here.");
         }
         else {
             m_manager.remove(newService);
@@ -202,8 +201,7 @@ public abstract class AbstractDecorator  {
     public void removed(ServiceReference ref, Object service) {
         Component newService = (Component) m_services.remove(ref);
         if (newService == null) {
-            System.out.println("Service should not be null here, dumping stack.");
-            Thread.dumpStack();
+            throw new IllegalStateException("Service should not be null here.");
         }
         else {
             m_manager.remove(newService);
@@ -220,8 +218,7 @@ public abstract class AbstractDecorator  {
     public void removed(Bundle bundle) {
         Component newService = (Component) m_services.remove(bundle);
         if (newService == null) {
-            System.out.println("Service should not be null here, dumping stack.");
-            Thread.dumpStack();
+            throw new IllegalStateException("Service should not be null here.");
         }
         else {
             m_manager.remove(newService);
