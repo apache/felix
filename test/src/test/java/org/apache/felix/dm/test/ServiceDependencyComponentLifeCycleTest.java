@@ -102,7 +102,9 @@ public class ServiceDependencyComponentLifeCycleTest extends Base {
         
         e.step(11);
         
-        // remove the service again
+        // remove the service again, the component still has an instance bound
+        // dependency on it, so stop() should be invoked, but the component
+        // should not be destroyed
         m.remove(component2);
         e.step(15);
         Assert.assertNull("service should no longer be available", st.getService());
@@ -116,8 +118,8 @@ public class ServiceDependencyComponentLifeCycleTest extends Base {
         private final Ensure m_ensure;
         private final Ensure.Steps m_initSteps = new Ensure.Steps(1, 5);
         private final Ensure.Steps m_startSteps = new Ensure.Steps(2, 6, 8, 16);
-        private final Ensure.Steps m_stopSteps = new Ensure.Steps(3, 7, 17, 18);
-        private final Ensure.Steps m_destroySteps = new Ensure.Steps(4, 14);
+        private final Ensure.Steps m_stopSteps = new Ensure.Steps(3, 7, 12, 17);
+        private final Ensure.Steps m_destroySteps = new Ensure.Steps(4, 18);
 
         public MyComponent(Ensure e) {
             m_ensure = e;

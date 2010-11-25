@@ -23,8 +23,8 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -50,8 +50,17 @@ public class AbstractServiceDependencyTest extends Base {
        // helper class that ensures certain steps get executed in sequence
        Ensure e = new Ensure();
        // create a service provider and consumer
-       Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceAbstract.class.getName(), null);
-       Component sc = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency().setService(ServiceAbstract.class).setRequired(true).setCallbacks("bind", "unbind"));
+       Component sp = m.createComponent()
+           .setInterface(ServiceAbstract.class.getName(), null)
+           .setImplementation(new ServiceProvider(e))
+           ;
+       Component sc = m.createComponent()
+           .setImplementation(new ServiceConsumer(e))
+           .add(m.createServiceDependency()
+               .setService(ServiceAbstract.class)
+               .setRequired(true)
+               .setCallbacks("bind", "unbind")
+               );
        m.add(sp);
        m.add(sc);
        m.remove(sp);
@@ -105,6 +114,7 @@ public class AbstractServiceDependencyTest extends Base {
        }
 
        public void unbind(ServiceAbstract service) {
+           System.out.println("UNBINDDDDDDDDDDDDDDDDDDDDDDDDDDD");
            Assert.assertEquals(m_service, service);
            m_ensure.step(6);
        }

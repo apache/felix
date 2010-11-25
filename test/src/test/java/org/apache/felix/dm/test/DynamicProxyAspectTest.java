@@ -28,8 +28,8 @@ import java.lang.reflect.Proxy;
 
 import junit.framework.Assert;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -92,6 +92,14 @@ public class DynamicProxyAspectTest extends Base {
         
         // make sure the proxy has been called twice
         Assert.assertEquals("Proxy should have been invoked this many times.", 2, DynamicProxyHandler.getCounter());
+        
+        try {
+            Thread.sleep(2000);
+        }
+        catch (InterruptedException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
     }
     
     static interface ServiceInterface {
@@ -158,6 +166,7 @@ public class DynamicProxyAspectTest extends Base {
         }
 
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            System.out.println("IIIIIIINVOKE--------------------------" + method.getName());
             if (m_service == null) {
                 Assert.fail("No service was injected into dynamic proxy handler " + m_label);
             }
@@ -165,7 +174,12 @@ public class DynamicProxyAspectTest extends Base {
             if (m == null) {
                 Assert.fail("No method " + method.getName() + " was found in instance " + m_service + " in dynamic proxy handler " + m_label);
             }
-            m_counter++;
+            if (method.getName().equals("invoke")) {
+                // only count methods called 'invoke' because those are actually the ones
+                // both interfaces implement (and the dynamic proxy might be invoked for
+                // other methods, such as toString() as well)
+                m_counter++;
+            }
             return m.invoke(m_service, args);
         }
         
