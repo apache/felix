@@ -55,7 +55,7 @@
 						<Private-Package>org.apache.felix.dm.impl,org.apache.felix.dm.impl.dependencies,org.apache.felix.dm.impl.tracker,org.apache.felix.dm.impl.metatype</Private-Package>
 						<!-- Uncomment this line to include source code in the bundle.
 						<Include-Resource>src/main/java</Include-Resource>
-						-->
+                        -->
 					</instructions>
 				</configuration>
 			</plugin>
