@@ -83,7 +83,6 @@ public class ServiceDependencyThroughCallbackInstanceTest {
 		Assert.assertEquals(numberOfServices, instance.getCount());
     }
     
-    
     public static interface Service {
     }
     
