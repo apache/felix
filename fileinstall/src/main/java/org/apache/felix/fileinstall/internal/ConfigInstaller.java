@@ -100,6 +100,18 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     public void configurationEvent(ConfigurationEvent configurationEvent)
     {
+        // Check if writing back configurations has been disabled.
+        {
+            Object obj = this.context.getProperty( DirectoryWatcher.DISABLE_CONFIG_SAVE );
+            if (obj instanceof String) {
+                obj = new Boolean((String) obj );
+            }
+            if( Boolean.FALSE.equals( obj ) )
+            {
+                return;
+            }
+        }
+
         if (configurationEvent.getType() == ConfigurationEvent.CM_UPDATED)
         {
             try
