@@ -29,7 +29,7 @@
     <description>
 	    This bundle provides an implementation of the OSGi R4 EventAdmin service.
     </description>
-    <version>1.2.9-SNAPSHOT</version>
+    <version>1.2.7-SNAPSHOT</version>
     <artifactId>org.apache.felix.eventadmin</artifactId>
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/eventadmin/impl</connection>
