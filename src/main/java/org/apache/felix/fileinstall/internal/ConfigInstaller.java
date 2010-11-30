@@ -21,6 +21,7 @@ package org.apache.felix.fileinstall.internal;
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.internal.Util.Logger;
+import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -116,7 +117,9 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                         for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
                         {
                             String key = e.nextElement().toString();
-                            if( !Constants.SERVICE_PID.equals(key) && !DirectoryWatcher.FILENAME.equals(key) )
+                            if( !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) )
                             {
                                 String val = dict.get( key ).toString();
                                 props.put( key, val );
@@ -195,14 +198,27 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         }
 
         String pid[] = parsePid(f.getName());
-        ht.put(DirectoryWatcher.FILENAME, f.getAbsolutePath());
         Configuration config = getConfiguration(f.getAbsolutePath(), pid[0], pid[1]);
-        if (config.getBundleLocation() != null)
+
+        Hashtable old = new Hashtable(new DictionaryAsMap(config.getProperties()));
+        old.remove( DirectoryWatcher.FILENAME );
+        old.remove( Constants.SERVICE_PID );
+        old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+
+        if( !ht.equals( old ) )
         {
-            config.setBundleLocation(null);
+            ht.put(DirectoryWatcher.FILENAME, f.getAbsolutePath());
+            if (config.getBundleLocation() != null)
+            {
+                config.setBundleLocation(null);
+            }
+            config.update(ht);
+            return true;
         }
-        config.update(ht);
-        return true;
+        else
+        {
+            return false;
+        }
     }
 
     /**

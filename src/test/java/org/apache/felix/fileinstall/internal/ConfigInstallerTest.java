@@ -170,6 +170,8 @@ public class ConfigInstallerTest extends TestCase {
     {
         mockConfiguration.getBundleLocation();
         mockConfigurationControl.setReturnValue( null );
+        mockConfiguration.getProperties();
+        mockConfigurationControl.setReturnValue( new Hashtable() );
         mockConfiguration.update( new Hashtable() );
         mockConfigurationControl.setMatcher( new ArgumentsMatcher()
         {
