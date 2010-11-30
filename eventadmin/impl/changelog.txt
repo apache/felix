@@ -1,3 +1,10 @@
+Changes from 1.2.6 to 1.2.8
+---------------------------
+
+** Improvement
+    * [FELIX-2655] - allow event admin log level to be configurable
+
+
 Changes from 1.2.4 to 1.2.6
 ---------------------------
 
