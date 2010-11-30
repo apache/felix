@@ -89,6 +89,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String START_NEW_BUNDLES = "felix.fileinstall.bundles.new.start";
     public final static String USE_START_TRANSIENT = "felix.fileinstall.bundles.startTransient";
     public final static String NO_INITIAL_DELAY = "felix.fileinstall.noInitialDelay";
+    public final static String DISABLE_CONFIG_SAVE = "felix.fileinstall.disableConfigSave";
     public final static String START_LEVEL = "felix.fileinstall.start.level";
 
     static final SecureRandom random = new SecureRandom();
