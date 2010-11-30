@@ -88,6 +88,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String FILTER = "felix.fileinstall.filter";
     public final static String START_NEW_BUNDLES = "felix.fileinstall.bundles.new.start";
     public final static String USE_START_TRANSIENT = "felix.fileinstall.bundles.startTransient";
+    public final static String USE_START_ACTIVATION_POLICY = "felix.fileinstall.bundles.startActivationPolicy";
     public final static String NO_INITIAL_DELAY = "felix.fileinstall.noInitialDelay";
     public final static String DISABLE_CONFIG_SAVE = "felix.fileinstall.disableConfigSave";
     public final static String START_LEVEL = "felix.fileinstall.start.level";
@@ -103,6 +104,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     int logLevel;
     boolean startBundles;
     boolean useStartTransient;
+    boolean useStartActivationPolicy;
     String filter;
     BundleContext context;
     String originatingFileName;
@@ -135,6 +137,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         prepareTempDir();
         startBundles = getBoolean(properties, START_NEW_BUNDLES, true);  // by default, we start bundles.
         useStartTransient = getBoolean(properties, USE_START_TRANSIENT, false);  // by default, we start bundles persistently.
+        useStartActivationPolicy = getBoolean(properties, USE_START_ACTIVATION_POLICY, true);  // by default, we start bundles using activation policy.
         filter = (String) properties.get(FILTER);
         noInitialDelay = getBoolean(properties, NO_INITIAL_DELAY, false);
         startLevel = getInt(properties, START_LEVEL, 0);    // by default, do not touch start level
@@ -1149,7 +1152,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             try
             {
-                bundle.start(useStartTransient ? Bundle.START_TRANSIENT : 0);
+                int options = useStartTransient ? Bundle.START_TRANSIENT : 0;
+                options |= useStartActivationPolicy ? Bundle.START_ACTIVATION_POLICY : 0;
+                bundle.start(options);
                 log(Logger.LOG_INFO, "Started bundle: " + bundle.getLocation(), null);
             }
             catch (BundleException e)
