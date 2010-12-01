@@ -76,14 +76,11 @@ public class ResolverImpl implements Resolver
 
                 ResolveException rethrow = null;
 
-                Map<Capability, Set<Requirement>> capDepSet = new HashMap();
-
                 do
                 {
                     rethrow = null;
 
                     modulePkgMap.clear();
-                    capDepSet.clear();
                     m_packageSourcesCache.clear();
 
                     candidateMap = (m_usesPermutations.size() > 0)
@@ -93,7 +90,7 @@ public class ResolverImpl implements Resolver
 
                     calculatePackageSpaces(
                         module, candidateMap, modulePkgMap,
-                        capDepSet, new HashMap(), new HashSet());
+                        new HashMap(), new HashSet());
 //System.out.println("+++ PACKAGE SPACES START +++");
 //dumpModulePkgMap(modulePkgMap);
 //System.out.println("+++ PACKAGE SPACES END +++");
@@ -101,7 +98,7 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            module, candidateMap, modulePkgMap, capDepSet, new HashMap());
+                            module, candidateMap, modulePkgMap, new HashMap());
                     }
                     catch (ResolveException ex)
                     {
@@ -161,14 +158,11 @@ public class ResolverImpl implements Resolver
 
                 ResolveException rethrow = null;
 
-                Map<Capability, Set<Requirement>> capDepSet = new HashMap();
-
                 do
                 {
                     rethrow = null;
 
                     modulePkgMap.clear();
-                    capDepSet.clear();
 
                     candidateMap = (m_usesPermutations.size() > 0)
                         ? m_usesPermutations.remove(0)
@@ -176,13 +170,12 @@ public class ResolverImpl implements Resolver
 
                     calculatePackageSpaces(
                         module, candidateMap, modulePkgMap,
-                        capDepSet, new HashMap(), new HashSet());
+                        new HashMap(), new HashSet());
 
                     try
                     {
                         checkPackageSpaceConsistency(
-                            module, candidateMap, modulePkgMap,
-                            capDepSet, new HashMap());
+                            module, candidateMap, modulePkgMap, new HashMap());
                     }
                     catch (ResolveException ex)
                     {
@@ -537,7 +530,6 @@ public class ResolverImpl implements Resolver
         Module module,
         Map<Requirement, Set<Capability>> candidateMap,
         Map<Module, Packages> modulePkgMap,
-        Map<Capability, Set<Requirement>> capDepSet,
         Map<Capability, List<Module>> usesCycleMap,
         Set<Module> cycle)
     {
@@ -610,7 +602,6 @@ public class ResolverImpl implements Resolver
             Capability cap = caps.get(i);
             calculateExportedPackages(cap.getModule(), modulePkgMap);
             mergeCandidatePackages(module, req, cap, modulePkgMap, candidateMap);
-            addCapabilityDependency(cap, req, capDepSet);
         }
 
         // Third, ask our candidates to calculate their package spaces.
@@ -618,7 +609,7 @@ public class ResolverImpl implements Resolver
         {
             calculatePackageSpaces(
                 caps.get(i).getModule(), candidateMap, modulePkgMap,
-                capDepSet, usesCycleMap, cycle);
+                usesCycleMap, cycle);
         }
 
         // Fourth, add all of the uses constraints implied by our imported
@@ -767,18 +758,6 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private static void addCapabilityDependency(
-        Capability cap, Requirement req, Map<Capability, Set<Requirement>> capDepSet)
-    {
-        Set<Requirement> reqs = capDepSet.get(cap);
-        if (reqs == null)
-        {
-            reqs = new HashSet();
-            capDepSet.put(cap, reqs);
-        }
-        reqs.add(req);
-    }
-
     private void mergeUses(
         Module current, Packages currentPkgs,
         Capability mergeCap, List<Requirement> blameReqs, Map<Module, Packages> modulePkgMap,
@@ -858,8 +837,7 @@ public class ResolverImpl implements Resolver
 
     private void checkPackageSpaceConsistency(
         Module module, Map<Requirement, Set<Capability>> candidateMap,
-        Map<Module, Packages> modulePkgMap, Map<Capability, Set<Requirement>> capDepSet,
-        Map<Module, Object> resultCache)
+        Map<Module, Packages> modulePkgMap, Map<Module, Object> resultCache)
     {
         if (module.isResolved())
         {
@@ -1106,7 +1084,7 @@ public class ResolverImpl implements Resolver
                     {
                         checkPackageSpaceConsistency(
                             importBlame.m_cap.getModule(), candidateMap, modulePkgMap,
-                            capDepSet, resultCache);
+                            resultCache);
                     }
                     catch (ResolveException ex)
                     {
