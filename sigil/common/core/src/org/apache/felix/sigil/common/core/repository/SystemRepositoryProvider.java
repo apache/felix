@@ -86,12 +86,10 @@ public class SystemRepositoryProvider implements IRepositoryProvider
         if (name == null)
         {
             String version = System.getProperty("java.specification.version");
-            String[] split = version.split("\\.");
-            String prefix = ("6".compareTo(split[1]) <= 0) ? "JavaSE-" : "J2SE-";
-            name = prefix + version;
+            name = "jre-" + version;
         }
         
-        return name + ".system";
+        return name;
     }
 
 }

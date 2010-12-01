@@ -22,6 +22,8 @@ package org.apache.felix.sigil.common.core.repository;
 import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.felix.sigil.common.core.BldCore;
 import org.apache.felix.sigil.common.model.ModelElementFactory;
@@ -29,9 +31,11 @@ import org.apache.felix.sigil.common.model.ModelElementFactoryException;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.model.osgi.IBundleModelElement;
 import org.apache.felix.sigil.common.model.osgi.IPackageExport;
+import org.apache.felix.sigil.common.osgi.VersionTable;
 import org.apache.felix.sigil.common.repository.AbstractBundleRepository;
 import org.apache.felix.sigil.common.repository.IRepositoryVisitor;
 import org.apache.felix.sigil.common.util.ManifestUtil;
+import org.osgi.framework.Version;
 
 public class SystemRepository extends AbstractBundleRepository
 {
@@ -120,16 +124,34 @@ public class SystemRepository extends AbstractBundleRepository
         return systemBundle;
     }
 
+    private static final Pattern attrPattern = Pattern.compile("(.*?)=\"?(.*?)\"?$");
+    
     private void applyProfile(IBundleModelElement info)
     {
         if (packages != null)
         {
-            for (String name : packages.split(",\\s*"))
+            String version = null;
+            for (String name : packages.split(";\\s*"))
             {
-                IPackageExport pe = ModelElementFactory.getInstance().newModelElement(
-                    IPackageExport.class);
-                pe.setPackageName(name);
-                info.addExport(pe);
+                Matcher m = attrPattern.matcher(name);
+                if ( m.matches() ) {                    
+                    if ("version".equals(m.group(1))) {
+                        version = m.group(2);
+                    }
+                }
+                else {
+                    IPackageExport pe = ModelElementFactory.getInstance().newModelElement(
+                        IPackageExport.class);
+                    pe.setPackageName(name);
+                    info.addExport(pe);
+                }
+            }
+            
+            if ( version != null ) {
+                Version v = VersionTable.getVersion(version);
+                for(IPackageExport pe : info.getExports()) {
+                    pe.setVersion(v);
+                }
             }
         }
     }
