@@ -866,7 +866,7 @@ public class ResolverImpl implements Resolver
                     {
                         sourceBlame = blame;
                     }
-                    else if (!sourceBlame.m_cap.equals(blame.m_cap))
+                    else if (!sourceBlame.m_cap.getModule().equals(blame.m_cap.getModule()))
                     {
                         // Try to permutate the conflicting requirement.
                         permutate(candidateMap, blame.m_reqs.get(0), m_importPermutations);
