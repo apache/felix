@@ -1068,7 +1068,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     private Method getMethodById(String methodId) {
         // Not necessary synchronized as recomputing the methodID will give the same Method twice.
         Method method = (Method) m_methods.get(methodId);
-        if (method == null) {
+        if (method == null  && m_clazz != null) {
             Method[] mets = m_clazz.getDeclaredMethods();
             for (int i = 0; i < mets.length; i++) {
                 // Check if the method was not already computed. If not, compute the Id and check.

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,26 +34,26 @@ import org.objectweb.asm.Type;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ProxyGenerator implements Opcodes {
-    
+
     /**
-     * The dependency name. 
+     * The dependency name.
      */
     private static final String DEPENDENCY = "m_dependency";
-    
+
     /**
      * The dependency descriptor.
      */
     private static final String DEPENDENCY_DESC = Type.getDescriptor(Dependency.class);
-    
+
     /**
-     * Dependency internal class name. 
+     * Dependency internal class name.
      */
     private static final String DEPENDENCY_INTERNAL_NAME = "org/apache/felix/ipojo/handlers/dependency/Dependency";
-    
+
     /**
-     * Gets the internal names of the given class objects. 
+     * Gets the internal names of the given class objects.
      * @param classes the classes
-     * @return the array containing internal names of the given class array. 
+     * @return the array containing internal names of the given class array.
      */
     private static String[] getInternalClassNames(Class[] classes) {
         final String[] names = new String[classes.length];
@@ -62,7 +62,7 @@ public class ProxyGenerator implements Opcodes {
         }
         return names;
     }
-    
+
     /**
      * Generates a proxy class.
      * @param spec the proxied service specification
@@ -71,25 +71,39 @@ public class ProxyGenerator implements Opcodes {
     public static byte[] dumpProxy(Class spec) {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         String internalClassName = Type.getInternalName(spec); // Specification class internal name.
-        String[] itfs = new String[] {internalClassName};  // Implemented interface.
+        String[] itfs = new String[0];
+        String parent = "java/lang/Object";
+        if (spec.isInterface()) {
+        	itfs = new String[] {internalClassName};  // Implemented interface.
+        } else {
+        	parent = internalClassName;
+        }
         String className = internalClassName + "$$Proxy"; // Unique name.
+
+        // Turn around the VM changes (FELIX-2716) about java.* classes.
+        if (className.startsWith("java/")) {
+        	className = "$" + className;
+        }
+
         Method[] methods = spec.getMethods(); // Method to delegate
-        
-        cw.visit(Opcodes.V1_3, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, className, null, "java/lang/Object", itfs);
+
+        cw.visit(Opcodes.V1_3, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, className, null, parent, itfs);
         addDependencyField(cw);
-        generateConstructor(cw, className);
-        
+
+        // We try to call super() on the parent, however this should not be used as proxing does work only for interface.
+        generateConstructor(cw, className, parent);
+
         // For each method, create the delegator code.
         for (int i = 0; i < methods.length; i++) {
             if ((methods[i].getModifiers() & (Modifier.STATIC | Modifier.FINAL)) == 0) {
                 generateDelegator(cw, methods[i], className, internalClassName);
             }
-        }        
-        
+        }
+
         cw.visitEnd();
-        
+
         return cw.toByteArray();
-        
+
     }
 
     /**
@@ -121,10 +135,10 @@ public class ProxyGenerator implements Opcodes {
         mv.visitFieldInsn(GETFIELD, className, DEPENDENCY, DEPENDENCY_DESC);  // The dependency is on the stack.
         mv.visitMethodInsn(INVOKEVIRTUAL, DEPENDENCY_INTERNAL_NAME, "getService", // Call getService
                 "()Ljava/lang/Object;"); // The service object is on the stack.
-        int varSvc = freeRoom; 
+        int varSvc = freeRoom;
         freeRoom = freeRoom + 1; // Object Reference.
         mv.visitVarInsn(ASTORE, varSvc); // Store the service object.
-        
+
         Label notNull = new Label();
         Label isNull = new Label();
         mv.visitVarInsn(ALOAD, varSvc); // Load the service
@@ -137,16 +151,16 @@ public class ProxyGenerator implements Opcodes {
         mv.visitMethodInsn(INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/String;)V");
         mv.visitInsn(ATHROW);
         // End of the null branch
-        
+
         // Not null, go one the execution
         mv.visitLabel(notNull);
-                
+
         // Invoke the method on the service object.
         mv.visitVarInsn(ALOAD, varSvc);
         // Push argument on the stack.
         int i = 1; // Arguments. (non static method)
         for (int t = 0; t < types.length; t++) {
-            mv.visitVarInsn(types[t].getOpcode(ILOAD), i); 
+            mv.visitVarInsn(types[t].getOpcode(ILOAD), i);
             i = i + types[t].getSize();
         }
         // Invocation
@@ -171,13 +185,13 @@ public class ProxyGenerator implements Opcodes {
      * @param cw the class writer
      * @param className the generated class name.
      */
-    private static void generateConstructor(ClassWriter cw, String className) {
+    private static void generateConstructor(ClassWriter cw, String className, String parent) {
         MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", '(' + DEPENDENCY_DESC + ")V", null, null);
         mv.visitCode();
 
         mv.visitVarInsn(ALOAD, 0); // Load this
         mv.visitInsn(DUP); // Dup
-        mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V"); // Call  super
+        mv.visitMethodInsn(INVOKESPECIAL, parent, "<init>", "()V"); // Call  super
         mv.visitVarInsn(ALOAD, 1); // Load the argument
         mv.visitFieldInsn(PUTFIELD, className, DEPENDENCY, DEPENDENCY_DESC); // Assign the dependency field
         mv.visitInsn(RETURN); // Return void

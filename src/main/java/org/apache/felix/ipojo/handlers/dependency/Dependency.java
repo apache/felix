@@ -397,14 +397,20 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             if (isAggregate()) {
                 m_proxyObject = new ServiceCollection(this);
             } else {
-                String type = getHandler().getInstanceManager().getContext().getProperty(DependencyHandler.PROXY_TYPE_PROPERTY);
-                if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
-                    SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
-                    m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
-                } else {
-                    DynamicProxyFactory proxyFactory = new DynamicProxyFactory();
-                    m_proxyObject = proxyFactory.getProxy(getSpecification());
-                }
+            	// Can we really proxy ? We can proxy only interfaces.
+            	if (getSpecification().isInterface()) {
+	                String type = getHandler().getInstanceManager().getContext().getProperty(DependencyHandler.PROXY_TYPE_PROPERTY);
+	                if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
+	                    SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
+	                    m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
+	                } else {
+	                    DynamicProxyFactory proxyFactory = new DynamicProxyFactory();
+	                    m_proxyObject = proxyFactory.getProxy(getSpecification());
+	                }
+            	} else {
+            		m_handler.warn("Cannot create a proxy for a service dependency which is not an interface " +
+            				"- disabling proxy for " + getId());
+            	}
             }
         }
 
@@ -868,7 +874,12 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
          */
         protected Class getProxyClass(Class clazz) {
             byte[] clz = ProxyGenerator.dumpProxy(clazz); // Generate the proxy.
-            return defineClass(clazz.getName() + "$$Proxy", clz, 0, clz.length);
+        	// Turn around the VM changes (FELIX-2716) about java.* classes.
+            String cn = clazz.getName();
+            if (cn.startsWith("java.")) {
+            	cn = "$" + cn;
+            }
+            return defineClass(cn + "$$Proxy", clz, 0, clz.length);
         }
 
         /**
