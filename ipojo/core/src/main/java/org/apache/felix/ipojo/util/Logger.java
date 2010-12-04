@@ -182,9 +182,14 @@ public class Logger {
         }
 
         String message = null;
+        String name = m_name;
+        if (name == null) {
+        	name = "";
+        }
+
         switch (level) {
             case DEBUG:
-                message = "[DEBUG] " + m_name + " : " + msg;
+                message = "[DEBUG] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_DEBUG, message);
                 } else {
@@ -192,7 +197,7 @@ public class Logger {
                 }
                 break;
             case ERROR:
-                message = "[ERROR] " + m_name + " : " + msg;
+                message = "[ERROR] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_ERROR, message);
                 } else {
@@ -200,7 +205,7 @@ public class Logger {
                 }
                 break;
             case INFO:
-                message = "[INFO] " + m_name + " : " + msg;
+                message = "[INFO] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_INFO, message);
                 } else {
@@ -208,7 +213,7 @@ public class Logger {
                 }
                 break;
             case WARNING:
-                message = "[WARNING] " + m_name + " : " + msg;
+                message = "[WARNING] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_WARNING, message);
                 } else {
@@ -216,7 +221,7 @@ public class Logger {
                 }
                 break;
             default:
-                message = "[UNKNOWN] " + m_name + " : " + msg;
+                message = "[UNKNOWN] " + name + " : " + msg;
                 System.err.println(message);
                 break;
         }
@@ -251,9 +256,14 @@ public class Logger {
         }
 
         String message = null;
+        String name = m_name;
+        if (name == null) {
+        	name = "";
+        }
+
         switch (level) {
             case DEBUG:
-                message = "[DEBUG] " + m_name + " : " + msg;
+                message = "[DEBUG] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_DEBUG, message, exception);
                 } else {
@@ -262,7 +272,7 @@ public class Logger {
                 }
                 break;
             case ERROR:
-                message = "[ERROR] " + m_name + " : " + msg;
+                message = "[ERROR] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_ERROR, message, exception);
                 } else {
@@ -271,7 +281,7 @@ public class Logger {
                 }
                 break;
             case INFO:
-                message = "[INFO] " + m_name + " : " + msg;
+                message = "[INFO] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_INFO, message, exception);
                 } else {
@@ -280,7 +290,7 @@ public class Logger {
                 }
                 break;
             case WARNING:
-                message = "[WARNING] " + m_name + " : " + msg;
+                message = "[WARNING] " + name + " : " + msg;
                 if (log != null) {
                     log.log(LogService.LOG_WARNING, message, exception);
                 } else {
@@ -289,7 +299,7 @@ public class Logger {
                 }
                 break;
             default:
-                message = "[UNKNOWN] " + m_name + " : " + msg;
+                message = "[UNKNOWN] " + name + " : " + msg;
                 System.err.println(message);
                 exception.printStackTrace();
                 break;
