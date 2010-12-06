@@ -66,6 +66,40 @@ public class MetaDataReaderTest extends TestCase
         assertNull( mti.getObjectClassDefinitions() );
     }
 
+    public void testWithNamespace() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" " + 
+        	"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read( empty );
+        
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
+    }
+
+    public void testWithInvalidNamespaceUri() throws IOException, XmlPullParserException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/datatype/v1.0.0\" " + 
+        	"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        
+        Exception exc = null;
+        try {
+        	MetaData mti = read( empty );
+        } catch (Exception e) {
+        	exc = e;
+		}
+        assertNotNull(exc);
+    }
+
+    public void testWithInvalidNamespaceName() throws IOException, XmlPullParserException
+    {
+        String empty = "<datatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" " + 
+        	"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></datatype:MetaData>";
+        
+        MetaData mti = read( empty );
+        
+        assertNull( mti );
+    }
 
     public void testEmptyLocalization() throws IOException, XmlPullParserException
     {
