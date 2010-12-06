@@ -55,7 +55,8 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>org.apache.felix.metatype</artifactId>
-      <version>1.0.4</version>
+      <!-- version>1.0.4</version-->
+      <version>1.0.5-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <build>
@@ -75,6 +76,7 @@
             <Private-Package>org.apache.felix.deployment.rp.autoconf, org.apache.felix.metatype, org.apache.felix.metatype.internal.l10n, org.apache.felix.metatype.internal, org.kxml2.io;-split-package:=merge-first, org.xmlpull.v1;-split-package:=merge-first, org.osgi.service.metatype;-split-package:=merge-first</Private-Package>
             <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0"</Export-Package>
             <DeploymentPackage-Customizer>true</DeploymentPackage-Customizer>
+            <Deployment-ProvidesResourceProcessor>org.osgi.deployment.rp.autoconf</Deployment-ProvidesResourceProcessor>
           </instructions>
         </configuration>
       </plugin>
