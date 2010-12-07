@@ -209,7 +209,6 @@ public class RepositoryAdminImpl implements RepositoryAdmin
         initialize();
 
         Resource[] resources = null;
-        MapToDictionary dict = new MapToDictionary(null);
         Repository[] repos = listRepositories();
         List matchList = new ArrayList();
         for (int repoIdx = 0; (repos != null) && (repoIdx < repos.length); repoIdx++)
@@ -217,7 +216,6 @@ public class RepositoryAdminImpl implements RepositoryAdmin
             resources = repos[repoIdx].getResources();
             for (int resIdx = 0; (resources != null) && (resIdx < resources.length); resIdx++)
             {
-                dict.setSourceMap(resources[resIdx].getProperties());
                 boolean match = true;
                 for (int reqIdx = 0; (requirements != null) && (reqIdx < requirements.length); reqIdx++)
                 {
