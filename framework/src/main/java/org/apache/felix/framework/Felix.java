@@ -3672,8 +3672,17 @@ public class Felix extends BundleImpl implements Framework
 
         try
         {
-            // Reset the bundle object and fire UNRESOLVED event.
+            // See if we need to fire UNRESOLVED event.
+            boolean fire = (bundle.getState() != Bundle.INSTALLED);
+            // Reset the bundle object.
             ((BundleImpl) bundle).refresh();
+            // Fire UNRESOLVED event if necessary
+            // and notify state change..
+            if (fire)
+            {
+                setBundleStateAndNotify(bundle, Bundle.INSTALLED);
+                fireBundleEvent(BundleEvent.UNRESOLVED, bundle);
+            }
         }
         catch (Exception ex)
         {
