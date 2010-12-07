@@ -309,10 +309,10 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
     }
 
-    /**
-     * Call bind method with the service reference in parameter (if accepted).
-     * @param ref : the service reference of the new service
-     */
+   /**
+    * Call 'modify' method with the service reference in parameter (if accepted).
+    * @param ref : the service reference of the modified service
+    */
     private void callModifyMethod(ServiceReference ref) {
         if (m_handler.getInstanceManager().getState() > InstanceManager.STOPPED && m_handler.getInstanceManager().getPojoObjects() != null) {
             for (int i = 0; m_callbacks != null && i < m_callbacks.length; i++) {
@@ -325,8 +325,8 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
 
     /**
-     * Call 'modify' method with the service reference in parameter (if accepted).
-     * @param ref : the service reference of the modified service
+     * Call  method with the service reference in parameter (if accepted).
+     * @param ref : the service reference of the new service
      */
     private void callBindMethod(ServiceReference ref) {
         // call bind method :
