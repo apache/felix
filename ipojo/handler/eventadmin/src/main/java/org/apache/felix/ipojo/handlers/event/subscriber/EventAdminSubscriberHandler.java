@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
  */
 package org.apache.felix.ipojo.handlers.event.subscriber;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -45,7 +46,7 @@ import org.osgi.service.event.EventHandler;
 
 /**
  * Event Subscriber Handler.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class EventAdminSubscriberHandler extends PrimitiveHandler implements
@@ -81,15 +82,16 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
     /**
      * The list of subscriber accessible by name.
      */
-    private Map m_subscribersByName = new HashMap();
+    private final Map m_subscribersByName = new HashMap();
 
     /**
      * The list of callbacks accessible by subscribers' names.
      */
-    private Map m_callbacksByName = new Hashtable();
+    private final Map m_callbacksByName = new Hashtable();
 
     /**
      * The iPOJO properties representing all the topics.
+     * Immutable.
      */
     private String[] m_topics;
 
@@ -100,7 +102,7 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
 
     /**
      * Initializes the component type.
-     * 
+     *
      * @param cd component type description to populate.
      * @param metadata component type metadata.
      * @throws ConfigurationException if the metadata are incorrect.
@@ -182,7 +184,7 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
 
     /**
      * Constructor.
-     * 
+     *
      * @param metadata the omponent type metadata
      * @param conf the instance configuration
      * @throws ConfigurationException if one event subscription is not correct
@@ -218,17 +220,13 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
                 info(LOG_PREFIX + "Configuring subscriber " + name);
 
                 // Get the topics instance configuration if redefined
-                String topicsString = (instanceTopics != null) ? (String) instanceTopics
-                        .get(name)
-                        : null;
+                String topicsString = (instanceTopics != null) ? (String) instanceTopics.get(name) : null;
                 if (topicsString != null) {
                     subscriberMetadata.setTopics(topicsString);
                 }
 
                 // Get the filter instance configuration if redefined
-                String filterString = (instanceFilter != null) ? (String) instanceFilter
-                        .get(name)
-                        : null;
+                String filterString = (instanceFilter != null) ? (String) instanceFilter.get(name) : null;
                 if (filterString != null) {
                     subscriberMetadata.setFilter(filterString);
                 }
@@ -277,7 +275,7 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
 
     /**
      * Handler start method.
-     * 
+     *
      * @see org.apache.felix.ipojo.Handler#start()
      */
     // @Override
@@ -287,7 +285,7 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
 
     /**
      * Handler stop method.
-     * 
+     *
      * @see org.apache.felix.ipojo.Handler#stop()
      */
     // @Override
@@ -301,102 +299,117 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
 
     /**
      * Receives an event. The event is dispatch to attached subscribers.
-     * 
+     *
      * @param event the received event.
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
-    public void handleEvent(Event event) {
-
+    public void handleEvent(final Event event) {
+    	EventAdminSubscriberMetadata subscriberMetadata = null;
         // Retrieve the event's topic
         String topic = event.getTopic();
 
         // For each subscribers
         Collection subscribers = m_subscribersByName.values();
         for (Iterator i = subscribers.iterator(); i.hasNext();) {
-            EventAdminSubscriberMetadata subscriberMetadata = (EventAdminSubscriberMetadata) i
-                    .next();
+            subscriberMetadata = (EventAdminSubscriberMetadata) i.next();
+
+            // Stack confinement
+            boolean isListening = false;
+
+            Object callbackParam = null;
+            Callback callback = null;
 
             synchronized (this) {
-                // Check if the subscriber's topic and filter match
-                Filter filter = subscriberMetadata.getFilter();
+            	isListening = m_isListening;
+			}
 
-                if (EventUtil.matches(topic, subscriberMetadata.getTopics())
-                        && (filter == null || event.matches(filter))) {
+            // Check if the subscriber's topic and filter match
+            Filter filter = subscriberMetadata.getFilter();
 
-                    String name = subscriberMetadata.getName();
-                    String dataKey = subscriberMetadata.getDataKey();
-                    Callback callback = (Callback) m_callbacksByName.get(name);
-                    Object callbackParam;
+            if (EventUtil.matches(topic, subscriberMetadata.getTopics())
+                    && (filter == null || event.matches(filter))) {
 
-                    try {
-                        // Depending on the subscriber type...
-                        if (dataKey == null) {
+                String name = subscriberMetadata.getName();
+                callback = (Callback) m_callbacksByName.get(name);
 
-                            // Generic event subscriber : pass the event to the
-                            // registered
-                            // callback
-                            callbackParam = event;
-
-                        } else {
-
-                            // Check for a data key in the event
-                            boolean dataKeyPresent = false;
-                            String[] properties = event.getPropertyNames();
-                            for (int j = 0; j < properties.length
-                                    && !dataKeyPresent; j++) {
-                                if (dataKey.equals(properties[j])) {
-                                    dataKeyPresent = true;
-                                }
-                            }
-
-                            if (dataKeyPresent) {
-                                // Data event : check type compatibility and
-                                // pass the given object to the registered
-                                // callback
-                                Object data = event.getProperty(dataKey);
-                                Class dataType = subscriberMetadata
-                                        .getDataType();
-                                Class dataClazz = data.getClass();
-                                if (dataType.isAssignableFrom(dataClazz)) {
-                                    callbackParam = data;
-                                } else {
-                                    throw new ClassCastException(
-                                            "Cannot convert "
-                                                    + dataClazz.getName()
-                                                    + " to "
-                                                    + dataType.getName());
-                                }
-
-                            } else {
-                                throw new java.lang.NoSuchFieldException(
-                                        dataKey);
-                            }
-                        }
-
-                        // Run the callback (final check to avoid
-                        // NullPointerExceptions)
-                        if (m_isListening) {
-                            callback.call(new Object[] { callbackParam });
-                        }
-
-                    } catch (ClassCastException e) {
-                        // Ignore the data event if type doesn't match
-                        warn(
-                                LOG_PREFIX
-                                        + "Ignoring data event : Bad data type",
-                                e);
-                    } catch (NoSuchFieldException e) {
-                        // Ignore events without data field for data events
-                        // subscriber
-                        warn(LOG_PREFIX + "Ignoring data event : No data", e);
-                    } catch (Exception e) {
-                        // Unexpected exception
-                        error(LOG_PREFIX
-                                + "Unexpected exception when calling callback",
-                                e);
-                    }
+                try {
+                    // Depending on the subscriber type...
+                    callbackParam = getCallbackParameter(event,
+							subscriberMetadata);
+                } catch (ClassCastException e) {
+                    // Ignore the data event if type doesn't match
+                    warn(LOG_PREFIX + "Ignoring data event : Bad data type", e);
+                } catch (NoSuchFieldException e) {
+                    // Ignore events without data field for data events
+                    // subscriber
+                    warn(LOG_PREFIX + "Ignoring data event : No data", e);
                 }
             }
+
+
+            // Run the callback (final check to avoid
+            // NullPointerExceptions)
+            if (isListening  && callback != null  && callbackParam != null) {
+                try {
+					callback.call(new Object[] { callbackParam });
+				} catch (InvocationTargetException e) {
+					error(LOG_PREFIX
+                            + "The callback has thrown an exception",
+                            e.getTargetException());
+				} catch (Exception e) {
+					error(LOG_PREFIX
+                            + "Unexpected exception when calling callback",
+                            e);
+				}
+            }
+
         }
     }
+
+	/**
+	 * Computes the callback parameter.
+	 * @param event the event
+	 * @param subscriberMetadata the subscribe metadata
+	 * @param dataKey the data key
+	 * @return the parameter of the callback
+	 * @throws ClassCastException the data class does not match the found value.
+	 * @throws NoSuchFieldException the datakey is not present in the event.
+	 */
+	private Object getCallbackParameter(final Event event,
+			final EventAdminSubscriberMetadata subscriberMetadata
+			) throws ClassCastException,NoSuchFieldException {
+		String dataKey = subscriberMetadata.getDataKey();
+		if (dataKey == null) {
+		    // Generic event subscriber : pass the event to the
+		    // registered callback
+		    return event;
+		} else {
+		    // Check for a data key in the event
+		    boolean dataKeyPresent = false;
+		    String[] properties = event.getPropertyNames();
+		    for (int j = 0; j < properties.length && !dataKeyPresent; j++) {
+		        if (dataKey.equals(properties[j])) {
+		            dataKeyPresent = true;
+		        }
+		    }
+
+		    if (dataKeyPresent) {
+		        // Data event : check type compatibility and
+		        // pass the given object to the registered
+		        // callback
+		        Object data = event.getProperty(dataKey);
+		        Class dataType = subscriberMetadata.getDataType();
+		        Class dataClazz = data.getClass();
+		        if (dataType.isAssignableFrom(dataClazz)) {
+		            return data;
+		        } else {
+		            throw new ClassCastException("Cannot convert " + dataClazz.getName() + " to "
+		                            + dataType.getName());
+		        }
+		    } else {
+		        throw new java.lang.NoSuchFieldException(dataKey);
+		    }
+
+		}
+	}
 }
