@@ -188,9 +188,20 @@ public class Closure implements Function, Evaluate
                 {
                     pipe.start();
                 }
-                for (Pipe pipe : pipes)
+                try
                 {
-                    pipe.join();
+                    for (Pipe pipe : pipes)
+                    {
+                        pipe.join();
+                    }
+                }
+                catch (InterruptedException e)
+                {
+                    for (Pipe pipe : pipes)
+                    {
+                        pipe.interrupt();
+                    }
+                    throw e;
                 }
             }
 
