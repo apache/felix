@@ -29,6 +29,7 @@ import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
+import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.FieldMetadata;
@@ -72,6 +73,11 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
     private Map m_publishersByField = new Hashtable();
 
     /**
+     * The handler description
+     */
+    private EventAdminPublisherHandlerDescription m_description;
+
+    /**
      * Initializes the component type.
      *
      * @param cd the component type description to populate
@@ -80,7 +86,6 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
      * @see org.apache.felix.ipojo.Handler#initializeComponentFactory(org.apache.felix.ipojo.architecture.ComponentDescription,
      *      org.apache.felix.ipojo.metadata.Element)
      */
-    // @Override
     public void initializeComponentFactory(ComponentTypeDescription cd,
             Element metadata)
         throws ConfigurationException {
@@ -96,7 +101,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
         // if publisher is null, look for 'publishes' elements
         if (publishers == null  || publishers.length == 0) {
-        	publishers = metadata.getElements("publishes", NAMESPACE);
+            publishers = metadata.getElements("publishes", NAMESPACE);
         }
 
         if (publishers != null) {
@@ -152,7 +157,6 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
      * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager,
      *      org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
-    // @Override
     public void configure(Element metadata, Dictionary conf)
         throws ConfigurationException {
 
@@ -167,7 +171,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
 
         // if publisher is null, look for 'publishes' elements
         if (publishers == null  || publishers.length == 0) {
-        	publishers = metadata.getElements("publishes", NAMESPACE);
+            publishers = metadata.getElements("publishes", NAMESPACE);
         }
 
         if (publishers != null) {
@@ -208,10 +212,17 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
                         .getField(publisherMetadata.getField(),
                                 Publisher.class.getName());
                 m_manager.register(fieldMetadata, this);
+
             }
         } else {
             info(LOG_PREFIX + "No publisher to configure");
         }
+
+        setValidity(true);
+
+        debug(LOG_PREFIX+ "Setup description....");
+        m_description = new EventAdminPublisherHandlerDescription(this, m_publishersByField.values()); // Initialize the description.
+
     }
 
     /**
@@ -219,7 +230,6 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
      *
      * This method does nothing.
      */
-    // @Override
     public void start() {
     }
 
@@ -228,7 +238,6 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
      *
      * This method does nothing.
      */
-    // @Override
     public void stop() {
     }
 
@@ -242,7 +251,6 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
      *
      * @return the Publisher associated with the accessed field's name
      */
-    // @Override
     public Object onGet(Object pojo, String fieldName, Object value) {
         // Retrieve the publisher associated to the given field name
         Publisher pub = (Publisher) m_publishersByField.get(fieldName);
@@ -262,4 +270,14 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
     public EventAdmin getEventAdminService() {
         return m_ea;
     }
+
+    /**
+     * Gets the handler description
+     * @see org.apache.felix.ipojo.Handler#getDescription()
+     */
+    public HandlerDescription getDescription() {
+        return m_description;
+    }
+
+
 }

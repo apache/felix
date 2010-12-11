@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ import org.osgi.service.event.Event;
 /**
  * The PublisherImpl class is the implementation of the Publisher object used by
  * components to send events.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PublisherImpl implements Publisher {
@@ -63,7 +63,7 @@ public class PublisherImpl implements Publisher {
 
     /**
      * Constructs an Publisher with given parameters.
-     * 
+     *
      * @param handler the handler that will manage this publisher
      * @param topics the topics on which events are sent
      * @param synchronous the sending mode of events
@@ -84,7 +84,7 @@ public class PublisherImpl implements Publisher {
 
     /**
      * Sends an event with the specified content.
-     * 
+     *
      * @param content the content of the event
      */
     public void send(Dictionary content) {
@@ -105,7 +105,7 @@ public class PublisherImpl implements Publisher {
 
     /**
      * Sends a data event.
-     * 
+     *
      * @param object the data to send
      */
     public void sendData(Object object) {
@@ -113,5 +113,33 @@ public class PublisherImpl implements Publisher {
         Dictionary content = new Hashtable();
         content.put(m_dataKey, object);
         send(content);
+    }
+
+    /**
+     * @see org.apache.felix.ipojo.handlers.event.publisher.Publisher#getTopics()
+     */
+    public String[] getTopics() {
+        return m_topics;
+    }
+
+    /**
+     * @see org.apache.felix.ipojo.handlers.event.publisher.Publisher#isSynchronous()
+     */
+    public boolean isSynchronous() {
+        return m_synchronous;
+    }
+
+    /**
+     * @see org.apache.felix.ipojo.handlers.event.publisher.Publisher#getDataKey()
+     */
+    public String getDataKey() {
+        return m_dataKey;
+    }
+
+    /**
+     * @see org.apache.felix.ipojo.handlers.event.publisher.Publisher#getName()
+     */
+    public String getName() {
+        return m_instanceName;
     }
 }
