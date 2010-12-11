@@ -18,53 +18,59 @@
  */
 package org.apache.felix.ipojo.handlers.event.publisher;
 
-import java.util.Dictionary;
-
 /**
- * An Publisher is the interface between the EventAdminPublisherHandler and a
- * component instance. The POJO can send event through the handler by calling a
- * {@code send} method.
+ * Publisher Description.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface Publisher {
+public class PublisherDescription {
 
     /**
-     * Sends an event with the specified content.
-     *
-     * @param content the content of the event
+     * The described publisher
      */
-    void send(Dictionary content);
+    private Publisher m_publisher;
 
     /**
-     * Sends a data event.
-     *
-     * @param o the data to send
+     * Creates a {@link PublisherDescription} based
+     * on the given {@link Publisher}
+     * @param p the publisher
      */
-    void sendData(Object o);
+    public PublisherDescription(Publisher p) {
+        m_publisher = p;
+    }
+
 
     /**
-     * Gets the published topics.
-     * @return the list of topics.
+     * Gets the topic list.
+     * @return the list of published topics
      */
-    String[] getTopics();
+    public String[] getTopics() {
+        return m_publisher.getTopics();
+    }
 
     /**
-     * Checks is the publisher send data synchronously.
-     * @return <code>true</code> if the publisher is synchronous.
+     * Checks if the publisher is synchronous.
+     * @return <code>true</code> if the publisher is synchronous
      */
-    boolean isSynchronous();
+    public boolean isSynchronous() {
+        return m_publisher.isSynchronous();
+    }
 
     /**
      * Gets the data key if used.
-     * @return the data key or <code>null</code>
+     * @return the data key
      */
-    String  getDataKey();
+    public String getDataKey() {
+        return m_publisher.getDataKey();
+    }
 
     /**
      * Gets the publisher name if any.
      * @return the publisher name
      */
-    String  getName();
+    public String getName() {
+        return m_publisher.getName();
+    }
+
 
 }
