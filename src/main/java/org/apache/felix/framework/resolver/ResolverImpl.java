@@ -34,7 +34,6 @@ import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
-import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.RequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -592,7 +591,7 @@ public class ResolverImpl implements Resolver
         }
 
         // First, add all exported packages to our package space.
-        calculateExportedPackages(module, modulePkgMap);
+        calculateExportedPackages(module, candidateMap, modulePkgMap);
         Packages modulePkgs = modulePkgMap.get(module);
 
         // Second, add all imported packages to our candidate space.
@@ -600,7 +599,7 @@ public class ResolverImpl implements Resolver
         {
             Requirement req = reqs.get(i);
             Capability cap = caps.get(i);
-            calculateExportedPackages(cap.getModule(), modulePkgMap);
+            calculateExportedPackages(cap.getModule(), candidateMap, modulePkgMap);
             mergeCandidatePackages(module, req, cap, modulePkgMap, candidateMap);
         }
 
@@ -666,7 +665,8 @@ public class ResolverImpl implements Resolver
         else if (candCap.getNamespace().equals(Capability.MODULE_NAMESPACE))
         {
 // TODO: FELIX3 - THIS NEXT LINE IS A HACK. IMPROVE HOW/WHEN WE CALCULATE EXPORTS.
-            calculateExportedPackages(candCap.getModule(), modulePkgMap);
+            calculateExportedPackages(
+                candCap.getModule(), candidateMap, modulePkgMap);
 
             // Get the candidate's package space to determine which packages
             // will be visible to the current module.
@@ -674,8 +674,6 @@ public class ResolverImpl implements Resolver
 
             // We have to merge all exported packages from the candidate,
             // since the current module requires it.
-// TODO: FELIX3 - If a module imports its exports, then imported exports should
-//       be reexported to requiring bundles.
             for (Entry<String, Blame> entry : candPkgs.m_exportedPkgs.entrySet())
             {
                 mergeCandidatePackage(
@@ -1152,7 +1150,9 @@ public class ResolverImpl implements Resolver
     }
 
     private static void calculateExportedPackages(
-        Module module, Map<Module, Packages> modulePkgMap)
+        Module module,
+        Map<Requirement, Set<Capability>> candidateMap,
+        Map<Module, Packages> modulePkgMap)
     {
         Packages packages = modulePkgMap.get(module);
         if (packages != null)
@@ -1161,40 +1161,58 @@ public class ResolverImpl implements Resolver
         }
         packages = new Packages(module);
 
-        List<Capability> caps = module.getCapabilities();
-
-        if (caps.size() > 0)
+        // Get all exported packages.
+        Map<String, Capability> exports =
+            new HashMap<String, Capability>(module.getCapabilities().size());
+        for (Capability cap : module.getCapabilities())
         {
-            // Grab all exported packages that are not also imported.
-            for (int i = 0; i < caps.size(); i++)
+            if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
             {
-// TODO: FELIX3 - Assume if a module imports the same package it
-//       exports that the import will overlap the export.
-                if (caps.get(i).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                    && !hasOverlappingImport(module, caps.get(i)))
+                exports.put(
+                    (String) cap.getAttribute(Capability.PACKAGE_ATTR).getValue(),
+                    cap);
+            }
+        }
+        // Remove substitutable exports that were imported.
+        // For resolved modules look at the wires, for resolving
+        // modules look in the candidate map to determine which
+        // exports are substitutable.
+        if (module.isResolved())
+        {
+            for (Wire wire : module.getWires())
+            {
+                if (wire.getRequirement().getNamespace().equals(Capability.PACKAGE_NAMESPACE))
                 {
-                    packages.m_exportedPkgs.put(
-                        (String) caps.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue(),
-                        new Blame(caps.get(i), null));
+                    String pkgName = (String) wire.getCapability()
+                        .getAttribute(Capability.PACKAGE_ATTR).getValue();
+                    exports.remove(pkgName);
                 }
             }
         }
-
-        modulePkgMap.put(module, packages);
-    }
-
-    private static boolean hasOverlappingImport(Module module, Capability cap)
-    {
-        List<Requirement> reqs = module.getRequirements();
-        for (int i = 0; i < reqs.size(); i++)
+        else
         {
-            if (reqs.get(i).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                && CapabilitySet.matches(cap, reqs.get(i).getFilter()))
+            for (Requirement req : module.getRequirements())
             {
-                return true;
+                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                {
+                    Set<Capability> cands = candidateMap.get(req);
+                    if ((cands != null) && !cands.isEmpty())
+                    {
+                        String pkgName = (String) cands.iterator().next()
+                            .getAttribute(Capability.PACKAGE_ATTR).getValue();
+                        exports.remove(pkgName);
+                    }
+                }
             }
         }
-        return false;
+        // Add all non-substituted exports to the module's package space.
+        for (Entry<String, Capability> entry : exports.entrySet())
+        {
+            packages.m_exportedPkgs.put(
+                entry.getKey(), new Blame(entry.getValue(), null));
+        }
+
+        modulePkgMap.put(module, packages);
     }
 
     private boolean isCompatible(
