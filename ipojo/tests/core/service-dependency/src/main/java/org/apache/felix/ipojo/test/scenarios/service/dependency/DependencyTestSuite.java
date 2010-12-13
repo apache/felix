@@ -22,6 +22,7 @@ import junit.framework.Test;
 
 import org.apache.felix.ipojo.junit4osgi.OSGiTestSuite;
 import org.apache.felix.ipojo.test.scenarios.service.dependency.di.DefaultImplementationTestSuite;
+import org.apache.felix.ipojo.test.scenarios.service.dependency.inner.InnerProxyMixTest;
 import org.osgi.framework.BundleContext;
 
 public class DependencyTestSuite {
@@ -63,6 +64,7 @@ public class DependencyTestSuite {
         ots.addTestSuite(ModifyDependencies.class);
         ots.addTestSuite(ProxyTest.class);
         ots.addTestSuite(NonProxiedNotInterfaceDependencies.class);
+        ots.addTestSuite(InnerProxyMixTest.class);
         return ots;
     }
 

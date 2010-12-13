@@ -1045,4 +1045,20 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     <requires field="map"/>
   </component>
 
+	<!-- Inner + Proxy mix -->
+  <component
+  	classname="org.apache.felix.ipojo.test.scenarios.component.inner.C1">
+  		<provides/>
+  </component>
+  <component
+  	classname="org.apache.felix.ipojo.test.scenarios.component.inner.C2">
+  		<provides specifications="org.apache.felix.ipojo.test.scenarios.component.inner.C2"/>
+		<requires field="c1"/>
+  </component>
+  <component
+  	classname="org.apache.felix.ipojo.test.scenarios.component.inner.C3">
+  		<provides specifications="org.apache.felix.ipojo.test.scenarios.component.inner.C3"/>
+		<requires field="c2"/>
+  </component>
+
 </ipojo>
