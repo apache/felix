@@ -71,7 +71,10 @@ public class QDoxJavaTag implements JavaTag {
      * @see org.apache.felix.scrplugin.tags.JavaTag#getSourceLocation()
      */
     public String getSourceLocation() {
-        return String.valueOf(this.docletTag.getContext().getParent().getParentSource().getURL());
+        if ( this.docletTag.getContext().getParent() != null ) {
+            return String.valueOf(this.docletTag.getContext().getParent().getParentSource().getURL());
+        }
+        return String.valueOf(this.docletTag.getContext().getParentClass().getSource().getURL());
     }
 
     /**
