@@ -78,7 +78,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     private boolean m_propagate;
     private Object m_propagateCallbackInstance;
     private String m_propagateCallbackMethod;
-    private Map m_sr = new HashMap(); /* <DependencyService, Set<ServiceReference>> */
+    private final Map m_sr = new HashMap(); /* <DependencyService, Set<ServiceReference>> */
     
     private static final Comparator COMPARATOR = new Comparator() {
         public int getRank(ServiceReference ref) {
@@ -193,19 +193,21 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     /** Copying constructor that clones an existing instance. */
     public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
         super(prototype);
-        m_context = prototype.m_context;
-        m_autoConfig = prototype.m_autoConfig;
-        m_trackedServiceName = prototype.m_trackedServiceName;
-        m_nullObject = prototype.m_nullObject;
-        m_trackedServiceFilter = prototype.m_trackedServiceFilter;
-        m_trackedServiceFilterUnmodified = prototype.m_trackedServiceFilterUnmodified;
-        m_trackedServiceReference = prototype.m_trackedServiceReference;
-        m_callbackInstance = prototype.m_callbackInstance;
-        m_callbackAdded = prototype.m_callbackAdded;
-        m_callbackChanged = prototype.m_callbackChanged;
-        m_callbackRemoved = prototype.m_callbackRemoved;
-        m_autoConfigInstance = prototype.m_autoConfigInstance;
-        m_defaultImplementation = prototype.m_defaultImplementation;
+        synchronized (prototype) {
+            m_context = prototype.m_context;
+            m_autoConfig = prototype.m_autoConfig;
+            m_trackedServiceName = prototype.m_trackedServiceName;
+            m_nullObject = prototype.m_nullObject;
+            m_trackedServiceFilter = prototype.m_trackedServiceFilter;
+            m_trackedServiceFilterUnmodified = prototype.m_trackedServiceFilterUnmodified;
+            m_trackedServiceReference = prototype.m_trackedServiceReference;
+            m_callbackInstance = prototype.m_callbackInstance;
+            m_callbackAdded = prototype.m_callbackAdded;
+            m_callbackChanged = prototype.m_callbackChanged;
+            m_callbackRemoved = prototype.m_callbackRemoved;
+            m_autoConfigInstance = prototype.m_autoConfigInstance;
+            m_defaultImplementation = prototype.m_defaultImplementation;
+        }
     }
     
     public Dependency createCopy() {
@@ -491,15 +493,18 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         m_context.ungetService(ref);
 
     }
-
     
     public void invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
-        Set set = (Set) m_sr.get(dependencyService);
-        if (set == null) {
-            set = new HashSet();
-            m_sr.put(dependencyService, set);
+        boolean added = false;
+        synchronized (m_sr) {
+            Set set = (Set) m_sr.get(dependencyService);
+            if (set == null) {
+                set = new HashSet();
+                m_sr.put(dependencyService, set);
+            }
+            added = set.add(reference);
         }
-        if (set.add(reference)) {
+        if (added) {
             invoke(dependencyService, reference, service, m_callbackAdded);
         }
     }
@@ -509,8 +514,12 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
 
     public void invokeRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
-        Set set = (Set) m_sr.get(dependencyService);
-        if (set != null && set.remove(reference)) {
+        boolean removed = false;
+        synchronized (m_sr) {
+            Set set = (Set) m_sr.get(dependencyService);
+            removed = (set != null && set.remove(reference));
+        }
+        if (removed) {
             invoke(dependencyService, reference, service, m_callbackRemoved);
         }
     }
@@ -830,7 +839,10 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
     
     public void invokeRemoved(DependencyService service) {
-        Set references = (Set) m_sr.get(service);
+        Set references = null;
+        synchronized (m_sr) {
+            references = (Set) m_sr.get(service);
+        }
         ServiceReference[] refs = (ServiceReference[]) (references != null ? references.toArray(new ServiceReference[references.size()]) : new ServiceReference[0]);
     
         for (int i = 0; i < refs.length; i++) {
