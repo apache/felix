@@ -583,10 +583,14 @@ public class Pojoization {
             }
             JarEntry je = m_inputJar.getJarEntry(classname);
             if (je == null) {
-                throw new IOException("The class " + classname + " connot be found in the input Jar file");
-            } else {
-                return m_inputJar.getInputStream(je);
+            	// Try in WEB-INF/classes (WAR files)
+            	je = m_inputJar.getJarEntry("WEB-INF/classes/" + classname);
+            	if (je == null) {
+            		// If still null, throw an exception.
+            		throw new IOException("The class " + classname + " connot be found in the input Jar file");
+            	}
             }
+            return m_inputJar.getInputStream(je);
         } else {
             // Directory
             File file = new File(m_dir, classname);
