@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,14 +62,6 @@ public class ManipulatorMojo extends AbstractMojo {
     private File m_outputDirectory;
 
     /**
-     * The name of the generated JAR file.
-     *
-     * @parameter alias="jarName" expression="${project.build.finalName}"
-     * @required
-     */
-    private String m_jarName;
-
-    /**
      * Location of the metadata file or iPOJO metadata configuration.
      * @parameter alias="metadata" default-value="metadata.xml"
      */
@@ -102,7 +94,7 @@ public class ManipulatorMojo extends AbstractMojo {
      * Project types which this plugin supports.
      * @parameter
      */
-    private List m_supportedProjectTypes = Arrays.asList(new String[]{"bundle"});
+    private List m_supportedProjectTypes = Arrays.asList(new String[]{"bundle", "jar", "war"});
 
     /**
      * Ignore annotations parameter.
@@ -179,8 +171,8 @@ public class ManipulatorMojo extends AbstractMojo {
             }
         }
 
-        // Get input bundle
-        File in = new File(m_buildDirectory + File.separator + m_jarName + ".jar");
+        // Get input bundle, we use the already create artifact.
+        File in = m_project.getArtifact().getFile();
         getLog().info("Input Bundle File : " + in.getAbsolutePath());
         if (!in.exists()) {
             throw new MojoExecutionException("the specified bundle file does not exist");
