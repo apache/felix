@@ -314,8 +314,10 @@ public class MethodCollector extends EmptyVisitor {
                     m_id = m_name.substring("bind".length());
                 } else if (m_name.startsWith("unbind")) {
                     m_id = m_name.substring("unbind".length());
+                } else if (m_name.startsWith("modified")) {
+                	m_id = m_name.substring("modified".length());
                 } else {
-                    System.err.println("Cannot determine the id of the bind method : " + m_name);
+                    System.err.println("Cannot determine the id of the " + m_type + " method : " + m_name);
                     return;
                 }
             }
