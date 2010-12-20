@@ -31,6 +31,7 @@
     <AD name="Temp directory"  id="felix.fileinstall.tmpdir" required="false" type="String" default="tmp"/>
     <AD name="No initial delay"  id="felix.fileinstall.noInitialDelay" required="false" type="String" default="false"/>
     <AD name="Start bundles transiently"  id="felix.fileinstall.bundles.startTransient" required="false" type="String" default="false"/>
+    <AD name="Use the bundle activation policy when starting" id="felix.fileinstall.bundles.startActivationPolicy" required="false" type="String" default="true"/>
     <AD name="Bundles start level"  id="felix.fileinstall.start.level" required="false" type="String" default="0"/>
   </OCD>
   
