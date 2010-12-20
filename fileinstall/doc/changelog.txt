@@ -1,3 +1,10 @@
+Version 3.1.2
+-------------
+** Bug
+    * [FELIX-2699] - Disable writing configuration back to .cfg files
+    * [FELIX-2698] - File Install Circular Configuration Update Loop
+    * [FELIX-2675] - ileinstall always starts bundle eagerly
+
 Version 3.1.0
 -------------
 ** Bug
