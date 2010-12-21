@@ -21,6 +21,7 @@ package org.apache.felix.framework.cache;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
@@ -143,31 +144,46 @@ class JarRevision extends BundleRevision
 
                 if (!byReference)
                 {
-                    if (is == null)
+                    URLConnection conn = null;
+                    try
                     {
-                        // Do it the manual way to have a chance to
-                        // set request properties such as proxy auth.
-                        URL url = BundleCache.getSecureAction().createURL(null, getLocation(), null);
-                        URLConnection conn = url.openConnection();
-
-                        // Support for http proxy authentication.
-                        String auth = BundleCache.getSecureAction()
-                            .getSystemProperty("http.proxyAuth", null);
-                        if ((auth != null) && (auth.length() > 0))
+                        if (is == null)
                         {
-                            if ("http".equals(url.getProtocol()) ||
-                                "https".equals(url.getProtocol()))
-                            {
-                                String base64 = Util.base64Encode(auth);
-                                conn.setRequestProperty(
-                                    "Proxy-Authorization", "Basic " + base64);
-                            }
-                        }
-                        is = BundleCache.getSecureAction().getURLConnectionInputStream(conn);
-                    }
+                            // Do it the manual way to have a chance to
+                            // set request properties such as proxy auth.
+                            URL url = BundleCache.getSecureAction().createURL(
+                                null, getLocation(), null);
+                            conn = url.openConnection();
 
-                    // Save the bundle jar file.
-                    BundleCache.copyStreamToFile(is, m_bundleFile);
+                            // Support for http proxy authentication.
+                            String auth = BundleCache.getSecureAction()
+                                .getSystemProperty("http.proxyAuth", null);
+                            if ((auth != null) && (auth.length() > 0))
+                            {
+                                if ("http".equals(url.getProtocol()) ||
+                                    "https".equals(url.getProtocol()))
+                                {
+                                    String base64 = Util.base64Encode(auth);
+                                    conn.setRequestProperty(
+                                        "Proxy-Authorization", "Basic " + base64);
+                                }
+                            }
+                            is = BundleCache.getSecureAction()
+                                .getURLConnectionInputStream(conn);
+                        }
+
+                        // Save the bundle jar file.
+                        BundleCache.copyStreamToFile(is, m_bundleFile);
+                    }
+                    finally
+                    {
+                        // This is a hack to fix an issue on Android, where
+                        // HttpURLConnections are not properly closed. (FELIX-2728)
+                        if ((conn != null) && (conn instanceof HttpURLConnection))
+                        {
+                            ((HttpURLConnection) conn).disconnect();
+                        }
+                    }
                 }
             }
         }
