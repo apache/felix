@@ -75,7 +75,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
 
             if (paSvc != null)
             {
-                final PermissionAdmin pa = (PermissionAdmin) paRef;
+                final PermissionAdmin pa = (PermissionAdmin) paSvc;
                 pw.println();
                 pw.println("Permission Admin");
 
