@@ -512,92 +512,48 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
         {
             if ( doFilter )
             {
-                oldch = '_';
                 this.write('\n'); // write <br/>
             }
             else
             {
                 super.println();
             }
-            oldch = '\n';
         }
 
-        private int oldch = '_';
+        // some VM implementation directly write in underlying stream, instead of
+        // delegation to the write() method. So we need to override this, to make
+        // sure, that everything is escaped correctly
+        public void print(String str)
+        {
+            final char[] chars = str.toCharArray();
+            write(chars, 0, chars.length);
+        }
 
-        // write the character unmodified unless filtering is enabled and
-        // the character is a "<" in which case &lt; is written
+        
+        private final char[] oneChar = new char[1];
+
+        // always delegate to write(char[], int, int) otherwise in some VM
+        // it cause endless cycle and StackOverflowError
         public void write(final int character)
         {
-            if (doFilter)
+            synchronized (oneChar)
             {
-                switch (character)
-                {
-                    case '<':
-                        super.write('&');
-                        super.write('l');
-                        super.write('t');
-                        super.write(';');
-                        break;
-                    case '>':
-                        super.write('&');
-                        super.write('g');
-                        super.write('t');
-                        super.write(';');
-                        break;
-                    case '&':
-                        super.write('&');
-                        super.write('a');
-                        super.write('m');
-                        super.write('p');
-                        super.write(';');
-                        break;
-                    case ' ':
-                        super.write('&');
-                        super.write('n');
-                        super.write('b');
-                        super.write('s');
-                        super.write('p');
-                        super.write(';');
-                        break;
-                    case '\r':
-                    case '\n':
-                        if (oldch != '\r' && oldch != '\n')
-                        {// don't add twice <br>
-                            super.write('<');
-                            super.write('b');
-                            super.write('r');
-                            super.write('/');
-                            super.write('>');
-                            super.write('\n');
-                        }
-                        break;
-                    default:
-                        super.write(character);
-                }
+                oneChar[0] = (char) character;
+                write(oneChar, 0, 1);
             }
-            else
-            {
-                super.write(character);
-            }
-            oldch = character;
         }
-
 
         // write the characters unmodified unless filtering is enabled in
         // which case the writeFiltered(String) method is called for filtering
-        public void write( final char[] chars, final int off, final int len )
+        public void write(char[] chars, int off, int len)
         {
-            if ( doFilter )
+            if (doFilter)
             {
-                for (int i = off; i < len; i++)
-                {
-                    this.write(chars[i]);
-                }
+                chars = WebConsoleUtil.escapeHtml(new String(chars, off, len)).toCharArray();
+                off = 0;
+                len = chars.length;
             }
-            else
-            {
-                super.write( chars, off, len );
-            }
+            super.write(chars, off, len);
         }
 
 
