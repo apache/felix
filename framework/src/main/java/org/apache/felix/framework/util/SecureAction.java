@@ -583,15 +583,15 @@ public class SecureAction
         }
     }
 
-    public JarFileX openJAR(File file) throws IOException
+    public ZipFileX openZipFile(File file) throws IOException
     {
         if (System.getSecurityManager() != null)
         {
             try
             {
                 Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.OPEN_JARX_ACTION, file);
-                return (JarFileX) AccessController.doPrivileged(actions, m_acc);
+                actions.set(Actions.OPEN_ZIPFILE_ACTION, file);
+                return (ZipFileX) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
             {
@@ -604,32 +604,7 @@ public class SecureAction
         }
         else
         {
-            return new JarFileX(file);
-        }
-    }
-
-    public JarFileX openJAR(File file, boolean verify) throws IOException
-    {
-        if (System.getSecurityManager() != null)
-        {
-            try
-            {
-                Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.OPEN_JARX_VERIFY_ACTION, file, (verify ? Boolean.TRUE : Boolean.FALSE));
-                return (JarFileX) AccessController.doPrivileged(actions, m_acc);
-            }
-            catch (PrivilegedActionException ex)
-            {
-                if (ex.getException() instanceof IOException)
-                {
-                    throw (IOException) ex.getException();
-                }
-                throw (RuntimeException) ex.getException();
-            }
-        }
-        else
-        {
-            return new JarFileX(file, verify);
+            return new ZipFileX(file);
         }
     }
 
@@ -1097,17 +1072,16 @@ public class SecureAction
         public static final int LIST_DIRECTORY_ACTION = 27;
         public static final int MAKE_DIRECTORIES_ACTION = 28;
         public static final int MAKE_DIRECTORY_ACTION = 29;
-        public static final int OPEN_JARX_ACTION = 30;
-        public static final int OPEN_JARX_VERIFY_ACTION = 31;
-        public static final int OPEN_URLCONNECTION_ACTION = 32;
-        public static final int RENAME_FILE_ACTION = 33;
-        public static final int SET_ACCESSIBLE_ACTION = 34;
-        public static final int START_ACTIVATOR_ACTION = 35;
-        public static final int STOP_ACTIVATOR_ACTION = 36;
-        public static final int SWAP_FIELD_ACTION = 37;
-        public static final int SYSTEM_EXIT_ACTION = 38;
-        public static final int FLUSH_FIELD_ACTION = 39;
-        public static final int GET_CLASS_LOADER_ACTION = 40;
+        public static final int OPEN_ZIPFILE_ACTION = 30;
+        public static final int OPEN_URLCONNECTION_ACTION = 31;
+        public static final int RENAME_FILE_ACTION = 32;
+        public static final int SET_ACCESSIBLE_ACTION = 33;
+        public static final int START_ACTIVATOR_ACTION = 34;
+        public static final int STOP_ACTIVATOR_ACTION = 35;
+        public static final int SWAP_FIELD_ACTION = 36;
+        public static final int SYSTEM_EXIT_ACTION = 37;
+        public static final int FLUSH_FIELD_ACTION = 38;
+        public static final int GET_CLASS_LOADER_ACTION = 39;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1256,10 +1230,8 @@ public class SecureAction
                     return ((File) arg1).mkdirs() ? Boolean.TRUE : Boolean.FALSE;
                 case MAKE_DIRECTORY_ACTION:
                     return ((File) arg1).mkdir() ? Boolean.TRUE : Boolean.FALSE;
-                case OPEN_JARX_ACTION:
-                    return new JarFileX((File) arg1);
-                case OPEN_JARX_VERIFY_ACTION:
-                    return new JarFileX((File) arg1, ((Boolean) arg2).booleanValue());
+                case OPEN_ZIPFILE_ACTION:
+                    return new ZipFileX((File) arg1);
                 case OPEN_URLCONNECTION_ACTION:
                     return ((URL) arg1).openConnection();
                 case RENAME_FILE_ACTION:
