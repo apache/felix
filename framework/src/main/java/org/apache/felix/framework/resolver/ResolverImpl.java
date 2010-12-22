@@ -542,6 +542,7 @@ public class ResolverImpl implements Resolver
         // the module is resolved or not.
         List<Requirement> reqs = new ArrayList();
         List<Capability> caps = new ArrayList();
+        boolean isDynamicImport = false;
         if (module.isResolved())
         {
             // Use wires to get actual requirements and satisfying capabilities.
@@ -567,6 +568,7 @@ public class ResolverImpl implements Resolver
                 Capability cap = candCaps.iterator().next();
                 reqs.add(req);
                 caps.add(cap);
+                isDynamicImport = true;
                 // Can only dynamically import one at a time, so break
                 // out of the loop after the first.
                 break;
@@ -614,12 +616,38 @@ public class ResolverImpl implements Resolver
         // Fourth, if the target module is unresolved or is dynamically importing,
         // then add all the uses constraints implied by its imported and required
         // packages to its package space.
-        for (Entry<String, List<Blame>> entry : modulePkgs.m_importedPkgs.entrySet())
+        // NOTE: We do not need to do this for resolved modules because their
+        // package space is consistent by definition and these uses constraints
+        // are only needed to verify the consistency of a resolving module. The
+        // only exception is if a resolve module is dynamically importing, then
+        // we need to calculate its uses constraints again to make sure the new
+        // import is consistent with the existing package space.
+        if (!module.isResolved() || isDynamicImport)
         {
-            for (Blame blame : entry.getValue())
+            for (Entry<String, List<Blame>> entry : modulePkgs.m_importedPkgs.entrySet())
             {
-                // Ignore modules that import from themselves.
-                if (!blame.m_cap.getModule().equals(module))
+                for (Blame blame : entry.getValue())
+                {
+                    // Ignore modules that import from themselves.
+                    if (!blame.m_cap.getModule().equals(module))
+                    {
+                        List<Requirement> blameReqs = new ArrayList();
+                        blameReqs.add(blame.m_reqs.get(0));
+
+                        mergeUses(
+                            module,
+                            modulePkgs,
+                            blame.m_cap,
+                            blameReqs,
+                            modulePkgMap,
+                            candidateMap,
+                            usesCycleMap);
+                    }
+                }
+            }
+            for (Entry<String, List<Blame>> entry : modulePkgs.m_requiredPkgs.entrySet())
+            {
+                for (Blame blame : entry.getValue())
                 {
                     List<Requirement> blameReqs = new ArrayList();
                     blameReqs.add(blame.m_reqs.get(0));
@@ -633,23 +661,6 @@ public class ResolverImpl implements Resolver
                         candidateMap,
                         usesCycleMap);
                 }
-            }
-        }
-        for (Entry<String, List<Blame>> entry : modulePkgs.m_requiredPkgs.entrySet())
-        {
-            for (Blame blame : entry.getValue())
-            {
-                List<Requirement> blameReqs = new ArrayList();
-                blameReqs.add(blame.m_reqs.get(0));
-
-                mergeUses(
-                    module,
-                    modulePkgs,
-                    blame.m_cap,
-                    blameReqs,
-                    modulePkgMap,
-                    candidateMap,
-                    usesCycleMap);
             }
         }
     }
