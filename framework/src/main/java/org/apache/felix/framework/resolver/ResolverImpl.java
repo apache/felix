@@ -97,7 +97,7 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            module, candidateMap, modulePkgMap, new HashMap());
+                            false, module, candidateMap, modulePkgMap, new HashMap());
                     }
                     catch (ResolveException ex)
                     {
@@ -174,7 +174,7 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            module, candidateMap, modulePkgMap, new HashMap());
+                            true, module, candidateMap, modulePkgMap, new HashMap());
                     }
                     catch (ResolveException ex)
                     {
@@ -590,11 +590,11 @@ public class ResolverImpl implements Resolver
             }
         }
 
-        // First, add all exported packages to our package space.
+        // First, add all exported packages to the target module's package space.
         calculateExportedPackages(module, candidateMap, modulePkgMap);
         Packages modulePkgs = modulePkgMap.get(module);
 
-        // Second, add all imported packages to our candidate space.
+        // Second, add all imported packages to the target module's package space.
         for (int i = 0; i < reqs.size(); i++)
         {
             Requirement req = reqs.get(i);
@@ -603,7 +603,7 @@ public class ResolverImpl implements Resolver
             mergeCandidatePackages(module, req, cap, modulePkgMap, candidateMap);
         }
 
-        // Third, ask our candidates to calculate their package spaces.
+        // Third, have all candidates to calculate their package spaces.
         for (int i = 0; i < caps.size(); i++)
         {
             calculatePackageSpaces(
@@ -611,8 +611,9 @@ public class ResolverImpl implements Resolver
                 usesCycleMap, cycle);
         }
 
-        // Fourth, add all of the uses constraints implied by our imported
-        // and required packages.
+        // Fourth, if the target module is unresolved or is dynamically importing,
+        // then add all the uses constraints implied by its imported and required
+        // packages to its package space.
         for (Entry<String, List<Blame>> entry : modulePkgs.m_importedPkgs.entrySet())
         {
             for (Blame blame : entry.getValue())
@@ -834,14 +835,16 @@ public class ResolverImpl implements Resolver
     }
 
     private void checkPackageSpaceConsistency(
-        Module module, Map<Requirement, Set<Capability>> candidateMap,
-        Map<Module, Packages> modulePkgMap, Map<Module, Object> resultCache)
+        boolean isDynamicImport, Module module,
+        Map<Requirement, Set<Capability>> candidateMap,
+        Map<Module, Packages> modulePkgMap,
+        Map<Module, Object> resultCache)
     {
-        if (module.isResolved())
+        if (module.isResolved() && !isDynamicImport)
         {
             return;
         }
-        else if (resultCache.containsKey(module))
+        else if(resultCache.containsKey(module))
         {
             return;
         }
@@ -1081,8 +1084,8 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            importBlame.m_cap.getModule(), candidateMap, modulePkgMap,
-                            resultCache);
+                            false, importBlame.m_cap.getModule(), candidateMap,
+                            modulePkgMap, resultCache);
                     }
                     catch (ResolveException ex)
                     {
