@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Collections;
+import java.util.WeakHashMap;
 
 import org.apache.felix.framework.util.SecureAction;
 import org.osgi.framework.AdminPermission;
@@ -72,6 +74,8 @@ public final class Permissions
 
     private static final PermissionInfo[] IMPLICIT = new PermissionInfo[] { new PermissionInfo(
         FilePermission.class.getName(), "-", "read,write,delete") };
+		
+	private static volatile Map m_implicit = new WeakHashMap();
 
     Permissions(PermissionInfo[] permissionInfos, BundleContext context,
         SecureAction action)
@@ -105,14 +109,22 @@ public final class Permissions
 
     public PermissionInfo[] getImplicit(Bundle bundle)
     {
-        return new PermissionInfo[] {
-            IMPLICIT[0],
-            new PermissionInfo(AdminPermission.class.getName(), "(id="
-                + bundle.getBundleId() + ")", AdminPermission.METADATA),
-            new PermissionInfo(AdminPermission.class.getName(), "(id="
-                + bundle.getBundleId() + ")", AdminPermission.RESOURCE),
-            new PermissionInfo(AdminPermission.class.getName(), "(id="
-                + bundle.getBundleId() + ")", AdminPermission.CONTEXT) };
+	    PermissionInfo[] result = (PermissionInfo[]) m_implicit.get(bundle);
+		if (result == null)
+		{
+		    result = new PermissionInfo[] {
+                IMPLICIT[0],
+                new PermissionInfo(AdminPermission.class.getName(), "(id="
+                    + bundle.getBundleId() + ")", AdminPermission.METADATA),
+                new PermissionInfo(AdminPermission.class.getName(), "(id="
+                    + bundle.getBundleId() + ")", AdminPermission.RESOURCE),
+                new PermissionInfo(AdminPermission.class.getName(), "(id="
+                    + bundle.getBundleId() + ")", AdminPermission.CONTEXT) };
+			Map implicit = new WeakHashMap(m_implicit);
+		    implicit.put(bundle, result);
+			m_implicit = implicit;
+		}
+        return result;
     }
 
     public Permissions getPermissions(PermissionInfo[] permissionInfos)
@@ -230,31 +242,32 @@ public final class Permissions
 
         public boolean implies(Permission perm)
         {
-            Map perms = null;
+            Permission permission = null;
 
             synchronized (m_perms)
             {
-                perms = m_perms;
+                permission = (Permission) m_perms.get(perm);
             }
-
-            Permission permission = (Permission) perms.get(perm);
 
             if ((permission != null) && permission.implies(perm))
             {
                 return true;
             }
-
-            for (Iterator iter = perms.values().iterator(); iter.hasNext();)
-            {
-                Permission current = (Permission) iter.next();
-                if ((current != null) && (current != permission)
-                    && current.implies(perm))
+			
+			synchronized (m_perms) 
+			{
+                for (Iterator iter = m_perms.values().iterator(); iter.hasNext();)
                 {
-                    return true;
+                    Permission current = (Permission) iter.next();
+                    if ((current != null) && (current != permission)
+                        && current.implies(perm))
+                    {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
-        }
+		}
     }
 
     private void cleanUp(ReferenceQueue queue, Map cache)

@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
-import org.apache.felix.framework.util.IteratorToEnumeration;
 //import org.apache.felix.moduleloader.IContent;
 import org.apache.felix.framework.resolver.Content;
 
@@ -77,7 +77,7 @@ public final class BundleInputStream extends InputStream
         {
             manifest = "META-INF/MANIFEST.MF";
         }
-        m_content = new IteratorToEnumeration(entries.iterator());
+        m_content = Collections.enumeration(entries);
 
         try
         {
