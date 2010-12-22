@@ -63,13 +63,7 @@ public class DirectoryContent implements Content
             name = name.substring(1);
         }
 
-        // Return true if the file associated with the entry exists,
-        // unless the entry name ends with "/", in which case only
-        // return true if the file is really a directory.
-        File file = new File(m_dir, name);
-        return BundleCache.getSecureAction().fileExists(file)
-            && (name.endsWith("/")
-                ? BundleCache.getSecureAction().isFileDirectory(file) : true);
+        return new File(m_dir, name).exists();
     }
 
     public Enumeration getEntries()
