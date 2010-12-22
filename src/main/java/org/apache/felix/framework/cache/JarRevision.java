@@ -195,7 +195,7 @@ class JarRevision extends BundleRevision
         }
     }
 
-    public static int readLine(InputStream is, byte[] buf) throws IOException
+    private static int readLine(InputStream is, byte[] buf) throws IOException
     {
         for (int i = 0; i < buf.length; i++)
         {
