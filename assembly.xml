@@ -22,40 +22,32 @@
     <format>zip</format>
     <format>tar.gz</format>
   </formats>
-    <fileSets>
-  <fileSet>
+  <fileSets>
+    <fileSet>
       <directory>${project.basedir}/bin</directory>
       <outputDirectory>bin</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
       <includes>
         <include>*.jar</include>
       </includes>
-  </fileSet>
-   <fileSet>
+    </fileSet>
+    <fileSet>
       <directory>${project.basedir}/bundle</directory>
       <outputDirectory>bundle</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
       <includes>
         <include>*.jar</include>
       </includes>
-  </fileSet>
-  <fileSet>
-      <directory>${project.basedir}/conf</directory>
-      <outputDirectory>conf</outputDirectory>
-      <useDefaultExcludes>true</useDefaultExcludes>
-      <includes>
-        <include>*.properties</include>
-      </includes>
-  </fileSet>
-  <fileSet>
+    </fileSet>
+    <fileSet>
       <directory>${project.basedir}/doc</directory>
       <outputDirectory>doc</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
       <includes>
         <include>**</include>
       </includes>                                                                                    
-  </fileSet>
-  <fileSet>
+    </fileSet>
+    <fileSet>
       <directory>${project.basedir}</directory>
       <includes>
         <include>README*</include>
@@ -65,6 +57,13 @@
       </includes>
       <outputDirectory>.</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
-  </fileSet>
+    </fileSet>
   </fileSets>
+  <files>
+    <file>
+      <source>${project.basedir}/conf/config.properties</source>
+      <outputDirectory>conf</outputDirectory>
+      <filtered>true</filtered>
+    </file>
+  </files>
 </assembly>
