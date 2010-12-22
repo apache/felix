@@ -54,7 +54,6 @@ import org.apache.felix.framework.security.util.Conditions;
 import org.apache.felix.framework.security.util.LocalPermissions;
 import org.apache.felix.framework.security.util.Permissions;
 import org.apache.felix.framework.security.util.PropertiesCache;
-import org.apache.felix.framework.util.IteratorToEnumeration;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 
 /*
@@ -777,6 +776,12 @@ public final class ConditionalPermissionAdminImpl implements
                     public void setSecurityContext(Object arg0)
                     {
                     }
+
+                    public URL getLocalURL(int arg0, String arg1)
+                    {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
                 }, permission, m_pai))
                 {
                     if (!posts.isEmpty())
@@ -818,8 +823,8 @@ public final class ConditionalPermissionAdminImpl implements
     {
         synchronized (m_condPermInfos)
         {
-            return new IteratorToEnumeration((new ArrayList(m_condPermInfos
-                .values())).iterator());
+            return Collections.enumeration(new ArrayList(m_condPermInfos
+                .values()));
         }
     }
 
