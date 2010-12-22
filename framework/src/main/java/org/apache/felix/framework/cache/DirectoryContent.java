@@ -94,7 +94,8 @@ public class DirectoryContent implements Content
 
         try
         {
-            is = new BufferedInputStream(new FileInputStream(new File(m_dir, name)));
+            is = new BufferedInputStream(
+                BundleCache.getSecureAction().getFileInputStream(new File(m_dir, name)));
             baos = new ByteArrayOutputStream(BUFSIZE);
             byte[] buf = new byte[BUFSIZE];
             int n = 0;
@@ -136,7 +137,7 @@ public class DirectoryContent implements Content
             name = name.substring(1);
         }
 
-        return new FileInputStream(new File(m_dir, name));
+        return BundleCache.getSecureAction().getFileInputStream(new File(m_dir, name));
     }
 
     public URL getEntryAsURL(String name)
@@ -148,7 +149,7 @@ public class DirectoryContent implements Content
 
         try
         {
-            return new File(m_dir, name).toURI().toURL();
+            return BundleCache.getSecureAction().toURI(new File(m_dir, name)).toURL();
         }
         catch (MalformedURLException e)
         {
@@ -162,7 +163,8 @@ public class DirectoryContent implements Content
         // just return it immediately.
         if (entryName.equals(FelixConstants.CLASS_PATH_DOT))
         {
-            return new DirectoryContent(m_logger, m_configMap, m_revisionLock, m_rootDir, m_dir);
+            return new DirectoryContent(
+                m_logger, m_configMap, m_revisionLock, m_rootDir, m_dir);
         }
 
         // Remove any leading slash, since all bundle class path
@@ -178,7 +180,8 @@ public class DirectoryContent implements Content
         File file = new File(m_dir, entryName);
         if (BundleCache.getSecureAction().isFileDirectory(file))
         {
-            return new DirectoryContent(m_logger, m_configMap, m_revisionLock, m_rootDir, file);
+            return new DirectoryContent(
+                m_logger, m_configMap, m_revisionLock, m_rootDir, file);
         }
         else if (BundleCache.getSecureAction().fileExists(file)
             && entryName.endsWith(".jar"))
@@ -199,7 +202,8 @@ public class DirectoryContent implements Content
                     }
                 }
             }
-            return new JarContent(m_logger, m_configMap, m_revisionLock, extractDir, file, null);
+            return new JarContent(
+                m_logger, m_configMap, m_revisionLock, extractDir, file, null);
         }
 
         // The entry could not be found, so return null.
@@ -261,7 +265,7 @@ public class DirectoryContent implements Content
                         try
                         {
                             is = new BufferedInputStream(
-                                new FileInputStream(entryFile),
+                                BundleCache.getSecureAction().getFileInputStream(entryFile),
                                 BundleCache.BUFSIZE);
                             if (is == null)
                             {
@@ -347,15 +351,15 @@ public class DirectoryContent implements Content
             }
 
             // Convert the file separator character to slashes.
-            String abs = m_children[m_counter].getAbsolutePath()
-                .replace(File.separatorChar, '/');
+            String abs = BundleCache.getSecureAction()
+                .getAbsolutePath(m_children[m_counter]).replace(File.separatorChar, '/');
 
             // Remove the leading path of the reference directory, since the
             // entry paths are supposed to be relative to the root.
             StringBuffer sb = new StringBuffer(abs);
-            sb.delete(0, m_dir.getAbsolutePath().length() + 1);
+            sb.delete(0, BundleCache.getSecureAction().getAbsolutePath(m_dir).length() + 1);
             // Add a '/' to the end of directory entries.
-            if (m_children[m_counter].isDirectory())
+            if (BundleCache.getSecureAction().isFileDirectory(m_children[m_counter]))
             {
                 sb.append('/');
             }
@@ -365,18 +369,19 @@ public class DirectoryContent implements Content
 
         private File[] listFilesRecursive(File dir)
         {
-            File[] children = dir.listFiles();
+            File[] children = BundleCache.getSecureAction().listDirectory(dir);
             File[] combined = children;
             for (int i = 0; i < children.length; i++)
             {
-                if (children[i].isDirectory())
+                if (BundleCache.getSecureAction().isFileDirectory(children[i]))
                 {
                     File[] grandchildren = listFilesRecursive(children[i]);
                     if (grandchildren.length > 0)
                     {
                         File[] tmp = new File[combined.length + grandchildren.length];
                         System.arraycopy(combined, 0, tmp, 0, combined.length);
-                        System.arraycopy(grandchildren, 0, tmp, combined.length, grandchildren.length);
+                        System.arraycopy(
+                            grandchildren, 0, tmp, combined.length, grandchildren.length);
                         combined = tmp;
                     }
                 }
