@@ -32,7 +32,7 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.JarFileX;
+import org.apache.felix.framework.util.ZipFileX;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.resolver.Content;
 import org.osgi.framework.Constants;
@@ -48,20 +48,20 @@ public class JarContent implements Content
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_file;
-    private final JarFileX m_jarFile;
-    private final boolean m_isJarFileOwner;
+    private final ZipFileX m_zipFile;
+    private final boolean m_isZipFileOwner;
     private Map m_nativeLibMap;
 
     public JarContent(Logger logger, Map configMap, Object revisionLock, File rootDir,
-        File file, JarFileX jarFile)
+        File file, ZipFileX zipFile)
     {
         m_logger = logger;
         m_configMap = configMap;
         m_revisionLock = revisionLock;
         m_rootDir = rootDir;
         m_file = file;
-        m_jarFile = (jarFile == null) ? openJarFile(m_file) : jarFile;
-        m_isJarFileOwner = (jarFile == null);
+        m_zipFile = (zipFile == null) ? openZipFile(m_file) : zipFile;
+        m_isZipFileOwner = (zipFile == null);
     }
 
     protected void finalize()
@@ -73,9 +73,9 @@ public class JarContent implements Content
     {
         try
         {
-            if (m_isJarFileOwner)
+            if (m_isZipFileOwner)
             {
-                m_jarFile.close();
+                m_zipFile.close();
             }
         }
         catch (Exception ex)
@@ -90,7 +90,7 @@ public class JarContent implements Content
     {
         try
         {
-            ZipEntry ze = m_jarFile.getEntry(name);
+            ZipEntry ze = m_zipFile.getEntry(name);
             return ze != null;
         }
         catch (Exception ex)
@@ -105,7 +105,7 @@ public class JarContent implements Content
     public Enumeration getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
-        Enumeration e = new EntriesEnumeration(m_jarFile.entries());
+        Enumeration e = new EntriesEnumeration(m_zipFile.entries());
 
         // Spec says to return null if there are no entries.
         return (e.hasMoreElements()) ? e : null;
@@ -119,12 +119,12 @@ public class JarContent implements Content
 
         try
         {
-            ZipEntry ze = m_jarFile.getEntry(name);
+            ZipEntry ze = m_zipFile.getEntry(name);
             if (ze == null)
             {
                 return null;
             }
-            is = m_jarFile.getInputStream(ze);
+            is = m_zipFile.getInputStream(ze);
             if (is == null)
             {
                 return null;
@@ -173,12 +173,12 @@ public class JarContent implements Content
 
         try
         {
-            ZipEntry ze = m_jarFile.getEntry(name);
+            ZipEntry ze = m_zipFile.getEntry(name);
             if (ze == null)
             {
                 return null;
             }
-            is = m_jarFile.getInputStream(ze);
+            is = m_zipFile.getInputStream(ze);
             if (is == null)
             {
                 return null;
@@ -211,7 +211,7 @@ public class JarContent implements Content
         if (entryName.equals(FelixConstants.CLASS_PATH_DOT))
         {
             return new JarContent(m_logger, m_configMap, m_revisionLock,
-                m_rootDir, m_file, m_jarFile);
+                m_rootDir, m_file, m_zipFile);
         }
 
         // Remove any leading slash.
@@ -228,7 +228,7 @@ public class JarContent implements Content
         // Determine if the entry is an emdedded JAR file or
         // directory in the bundle JAR file. Ignore any entries
         // that do not exist per the spec.
-        ZipEntry ze = m_jarFile.getEntry(entryName);
+        ZipEntry ze = m_zipFile.getEntry(entryName);
         if ((ze != null) && ze.isDirectory())
         {
             File extractDir = new File(embedDir, entryName);
@@ -297,7 +297,7 @@ public class JarContent implements Content
 
         // The entry name must refer to a file type, since it is
         // a native library, not a directory.
-        ZipEntry ze = m_jarFile.getEntry(entryName);
+        ZipEntry ze = m_zipFile.getEntry(entryName);
         if ((ze != null) && !ze.isDirectory())
         {
             // Extracting the embedded native library file impacts all other
@@ -336,7 +336,7 @@ public class JarContent implements Content
                         try
                         {
                             is = new BufferedInputStream(
-                                m_jarFile.getInputStream(ze),
+                                m_zipFile.getInputStream(ze),
                                 BundleCache.BUFSIZE);
                             if (is == null)
                             {
@@ -440,7 +440,7 @@ public class JarContent implements Content
             try
             {
                 // Make sure class path entry is a JAR file.
-                ZipEntry ze = m_jarFile.getEntry(jarPath);
+                ZipEntry ze = m_zipFile.getEntry(jarPath);
                 if (ze == null)
                 {
                     return;
@@ -462,7 +462,7 @@ public class JarContent implements Content
                     }
 
                     // Extract embedded JAR into its directory.
-                    is = new BufferedInputStream(m_jarFile.getInputStream(ze), BundleCache.BUFSIZE);
+                    is = new BufferedInputStream(m_zipFile.getInputStream(ze), BundleCache.BUFSIZE);
                     if (is == null)
                     {
                         throw new IOException("No input stream: " + jarPath);
@@ -478,11 +478,11 @@ public class JarContent implements Content
         }
     }
 
-    private static JarFileX openJarFile(File file) throws RuntimeException
+    private static ZipFileX openZipFile(File file) throws RuntimeException
     {
         try
         {
-            return BundleCache.getSecureAction().openJAR(file, false);
+            return BundleCache.getSecureAction().openZipFile(file);
         }
         catch (IOException ex)
         {

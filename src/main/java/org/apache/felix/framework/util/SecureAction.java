@@ -61,7 +61,7 @@ public class SecureAction
             try
             {
                 Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.INITIALIZE_CONTEXT, null);
+                actions.set(Actions.INITIALIZE_CONTEXT_ACTION, null);
                 m_acc = (AccessControlContext) AccessController.doPrivileged(actions);
             }
             catch (PrivilegedActionException ex)
@@ -462,6 +462,27 @@ public class SecureAction
         }
     }
 
+    public URI toURI(File file)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            try
+            {
+                Actions actions = (Actions) m_actions.get();
+                actions.set(Actions.TO_URI_ACTION, file);
+                return (URI) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException ex)
+            {
+                throw (RuntimeException) ex.getException();
+            }
+        }
+        else
+        {
+            return file.toURI();
+        }
+    }
+
     public InputStream getURLConnectionInputStream(URLConnection conn)
         throws IOException
     {
@@ -562,15 +583,15 @@ public class SecureAction
         }
     }
 
-    public JarFileX openJAR(File file) throws IOException
+    public ZipFileX openZipFile(File file) throws IOException
     {
         if (System.getSecurityManager() != null)
         {
             try
             {
                 Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.OPEN_JARX_ACTION, file);
-                return (JarFileX) AccessController.doPrivileged(actions, m_acc);
+                actions.set(Actions.OPEN_ZIPFILE_ACTION, file);
+                return (ZipFileX) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
             {
@@ -583,32 +604,7 @@ public class SecureAction
         }
         else
         {
-            return new JarFileX(file);
-        }
-    }
-
-    public JarFileX openJAR(File file, boolean verify) throws IOException
-    {
-        if (System.getSecurityManager() != null)
-        {
-            try
-            {
-                Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.OPEN_JARX_VERIFY_ACTION, file, (verify ? Boolean.TRUE : Boolean.FALSE));
-                return (JarFileX) AccessController.doPrivileged(actions, m_acc);
-            }
-            catch (PrivilegedActionException ex)
-            {
-                if (ex.getException() instanceof IOException)
-                {
-                    throw (IOException) ex.getException();
-                }
-                throw (RuntimeException) ex.getException();
-            }
-        }
-        else
-        {
-            return new JarFileX(file, verify);
+            return new ZipFileX(file);
         }
     }
 
@@ -682,7 +678,7 @@ public class SecureAction
         if (System.getSecurityManager() != null)
         {
             Actions actions = (Actions) m_actions.get();
-            actions.set(Actions.ADD_EXTENSION_URL, extension, loader);
+            actions.set(Actions.ADD_EXTENSION_URL_ACTION, extension, loader);
             try
             {
                 AccessController.doPrivileged(actions, m_acc);
@@ -1046,8 +1042,8 @@ public class SecureAction
 
     private static class Actions implements PrivilegedExceptionAction
     {
-        public static final int INITIALIZE_CONTEXT = 0;
-        public static final int ADD_EXTENSION_URL = 1;
+        public static final int INITIALIZE_CONTEXT_ACTION = 0;
+        public static final int ADD_EXTENSION_URL_ACTION = 1;
         public static final int CREATE_TMPFILE_ACTION = 2;
         public static final int CREATE_URL_ACTION = 3;
         public static final int CREATE_URL_WITH_CONTEXT_ACTION = 4;
@@ -1063,20 +1059,20 @@ public class SecureAction
         public static final int GET_FIELD_ACTION = 14;
         public static final int GET_FILE_INPUT_ACTION = 15;
         public static final int GET_FILE_OUTPUT_ACTION = 16;
-        public static final int GET_METHOD_ACTION = 17;
-        public static final int GET_POLICY_ACTION = 18;
-        public static final int GET_PROPERTY_ACTION = 19;
-        public static final int GET_PARENT_CLASS_LOADER_ACTION = 20;
-        public static final int GET_SYSTEM_CLASS_LOADER_ACTION = 21;
-        public static final int GET_URL_INPUT_ACTION = 22;
-        public static final int INVOKE_CONSTRUCTOR_ACTION = 23;
-        public static final int INVOKE_DIRECTMETHOD_ACTION = 24;
-        public static final int INVOKE_METHOD_ACTION = 25;
-        public static final int LIST_DIRECTORY_ACTION = 26;
-        public static final int MAKE_DIRECTORIES_ACTION = 27;
-        public static final int MAKE_DIRECTORY_ACTION = 28;
-        public static final int OPEN_JARX_ACTION = 29;
-        public static final int OPEN_JARX_VERIFY_ACTION = 30;
+        public static final int TO_URI_ACTION = 17;
+        public static final int GET_METHOD_ACTION = 18;
+        public static final int GET_POLICY_ACTION = 19;
+        public static final int GET_PROPERTY_ACTION = 20;
+        public static final int GET_PARENT_CLASS_LOADER_ACTION = 21;
+        public static final int GET_SYSTEM_CLASS_LOADER_ACTION = 22;
+        public static final int GET_URL_INPUT_ACTION = 23;
+        public static final int INVOKE_CONSTRUCTOR_ACTION = 24;
+        public static final int INVOKE_DIRECTMETHOD_ACTION = 25;
+        public static final int INVOKE_METHOD_ACTION = 26;
+        public static final int LIST_DIRECTORY_ACTION = 27;
+        public static final int MAKE_DIRECTORIES_ACTION = 28;
+        public static final int MAKE_DIRECTORY_ACTION = 29;
+        public static final int OPEN_ZIPFILE_ACTION = 30;
         public static final int OPEN_URLCONNECTION_ACTION = 31;
         public static final int RENAME_FILE_ACTION = 32;
         public static final int SET_ACCESSIBLE_ACTION = 33;
@@ -1162,179 +1158,103 @@ public class SecureAction
 
             unset();
 
-            if (action == INITIALIZE_CONTEXT)
+            switch (action)
             {
-                return AccessController.getContext();
-            }
-            else if (action == GET_PROPERTY_ACTION)
-            {
-                return System.getProperty((String) arg1, (String) arg2);
-            }
-            else if (action == GET_PARENT_CLASS_LOADER_ACTION)
-            {
-                return ((ClassLoader) arg1).getParent();
-            }
-            else if (action == GET_SYSTEM_CLASS_LOADER_ACTION)
-            {
-                return ClassLoader.getSystemClassLoader();
-            }
-            else if (action == FOR_NAME_ACTION)
-            {
-                return Class.forName((String) arg1);
-            }
-            else if (action == CREATE_URL_ACTION)
-            {
-                return new URL((String) arg1, (String) arg2,
-                    ((Integer) arg3).intValue(), (String) arg4,
-                    (URLStreamHandler) arg5);
-            }
-            else if (action == CREATE_URL_WITH_CONTEXT_ACTION)
-            {
-                return new URL((URL) arg1, (String) arg2,
-                    (URLStreamHandler) arg3);
-            }
-            else if (action == EXEC_ACTION)
-            {
-                return Runtime.getRuntime().exec((String) arg1);
-            }
-            else if (action == GET_ABSOLUTE_PATH_ACTION)
-            {
-                return ((File) arg1).getAbsolutePath();
-            }
-            else if (action == FILE_EXISTS_ACTION)
-            {
-                return ((File) arg1).exists() ? Boolean.TRUE : Boolean.FALSE;
-            }
-            else if (action == FILE_IS_DIRECTORY_ACTION)
-            {
-                return ((File) arg1).isDirectory() ? Boolean.TRUE : Boolean.FALSE;
-            }
-            else if (action == MAKE_DIRECTORY_ACTION)
-            {
-                return ((File) arg1).mkdir() ? Boolean.TRUE : Boolean.FALSE;
-            }
-            else if (action == MAKE_DIRECTORIES_ACTION)
-            {
-                return ((File) arg1).mkdirs() ? Boolean.TRUE : Boolean.FALSE;
-            }
-            else if (action == LIST_DIRECTORY_ACTION)
-            {
-                return ((File) arg1).listFiles();
-            }
-            else if (action == RENAME_FILE_ACTION)
-            {
-                return ((File) arg1).renameTo((File) arg2) ? Boolean.TRUE : Boolean.FALSE;
-            }
-            else if (action == GET_FILE_INPUT_ACTION)
-            {
-                return new FileInputStream((File) arg1);
-            }
-            else if (action == GET_FILE_OUTPUT_ACTION)
-            {
-                return new FileOutputStream((File) arg1);
-            }
-            else if (action == DELETE_FILE_ACTION)
-            {
-                return ((File) arg1).delete() ? Boolean.TRUE : Boolean.FALSE;
-            }
-            else if (action == OPEN_JARX_ACTION)
-            {
-                return new JarFileX((File) arg1);
-            }
-            else if (action == OPEN_JARX_VERIFY_ACTION)
-            {
-                return new JarFileX((File) arg1, ((Boolean) arg2).booleanValue());
-            }
-            else if (action == GET_URL_INPUT_ACTION)
-            {
-                return ((URLConnection) arg1).getInputStream();
-            }
-            else if (action == START_ACTIVATOR_ACTION)
-            {
-                ((BundleActivator) arg1).start((BundleContext) arg2);
-                return null;
-            }
-            else if (action == STOP_ACTIVATOR_ACTION)
-            {
-                ((BundleActivator) arg1).stop((BundleContext) arg2);
-                return null;
-            }
-            else if (action == SYSTEM_EXIT_ACTION)
-            {
-                System.exit(((Integer) arg1).intValue());
-            }
-            else if (action == GET_POLICY_ACTION)
-            {
-                return Policy.getPolicy();
-            }
-            else if (action == CREATE_TMPFILE_ACTION)
-            {
-                return File.createTempFile((String) arg1, (String) arg2,
-                    (File) arg3);
-            }
-            else if (action == OPEN_URLCONNECTION_ACTION)
-            {
-                return ((URL) arg1).openConnection();
-            }
-            else if (action == ADD_EXTENSION_URL)
-            {
-                Method addURL =
-                    URLClassLoader.class.getDeclaredMethod("addURL",
-                    new Class[] {URL.class});
-                addURL.setAccessible(true);
-                addURL.invoke(arg2, new Object[]{arg1});
-            }
-            else if (action == GET_CONSTRUCTOR_ACTION)
-            {
-                return ((Class) arg1).getConstructor((Class[]) arg2);
-            }
-            else if (action == GET_DECLARED_CONSTRUCTOR_ACTION)
-            {
-                return ((Class) arg1).getDeclaredConstructor((Class[]) arg2);
-            }
-            else if (action == GET_METHOD_ACTION)
-            {
-                return ((Class) arg1).getMethod((String) arg2, (Class[]) arg3);
-            }
-            else if (action == INVOKE_METHOD_ACTION)
-            {
-                ((Method) arg1).setAccessible(true);
-                return ((Method) arg1).invoke(arg2, (Object[]) arg3);
-            }
-            else if (action == INVOKE_DIRECTMETHOD_ACTION)
-            {
-                return ((Method) arg1).invoke(arg2, (Object[]) arg3);
-            }
-            else if (action == INVOKE_CONSTRUCTOR_ACTION)
-            {
-                return ((Constructor) arg1).newInstance((Object[]) arg2);
-            }
-            else if (action == SWAP_FIELD_ACTION)
-            {
-                return _swapStaticFieldIfNotClass((Class) arg1,
-                    (Class) arg2, (Class) arg3, (String) arg4);
-            }
-            else if (action == GET_FIELD_ACTION)
-            {
-                Field field = ((Class) arg1).getDeclaredField((String) arg2);
-                field.setAccessible(true);
-                return field.get(arg3);
-            }
-            else if (action == GET_DECLARED_METHOD_ACTION)
-            {
-                return ((Class) arg1).getDeclaredMethod((String) arg2, (Class[]) arg3);
-            }
-            else if (action == SET_ACCESSIBLE_ACTION)
-            {
-                ((AccessibleObject) arg1).setAccessible(true);
-            }
-            else if (action == FLUSH_FIELD_ACTION)
-            {
-                _flush(((Class) arg1), arg2);
-            }
-            else if (action == GET_CLASS_LOADER_ACTION)
-            {
-                return ((Class) arg1).getClassLoader();
+                case INITIALIZE_CONTEXT_ACTION:
+                    return AccessController.getContext();
+                case ADD_EXTENSION_URL_ACTION:
+                    Method addURL =
+                        URLClassLoader.class.getDeclaredMethod("addURL",
+                        new Class[] {URL.class});
+                    addURL.setAccessible(true);
+                    addURL.invoke(arg2, new Object[]{arg1});
+                    return null;
+                case CREATE_TMPFILE_ACTION:
+                    return File.createTempFile((String) arg1, (String) arg2, (File) arg3);
+                case CREATE_URL_ACTION:
+                    return new URL((String) arg1, (String) arg2,
+                        ((Integer) arg3).intValue(), (String) arg4,
+                        (URLStreamHandler) arg5);
+                case CREATE_URL_WITH_CONTEXT_ACTION:
+                    return new URL((URL) arg1, (String) arg2, (URLStreamHandler) arg3);
+                case DELETE_FILE_ACTION:
+                    return ((File) arg1).delete() ? Boolean.TRUE : Boolean.FALSE;
+                case EXEC_ACTION:
+                    return Runtime.getRuntime().exec((String) arg1);
+                case FILE_EXISTS_ACTION:
+                    return ((File) arg1).exists() ? Boolean.TRUE : Boolean.FALSE;
+                case FILE_IS_DIRECTORY_ACTION:
+                    return ((File) arg1).isDirectory() ? Boolean.TRUE : Boolean.FALSE;
+                case FOR_NAME_ACTION:
+                    return Class.forName((String) arg1);
+                case GET_ABSOLUTE_PATH_ACTION:
+                    return ((File) arg1).getAbsolutePath();
+                case GET_CONSTRUCTOR_ACTION:
+                    return ((Class) arg1).getConstructor((Class[]) arg2);
+                case GET_DECLARED_CONSTRUCTOR_ACTION:
+                    return ((Class) arg1).getDeclaredConstructor((Class[]) arg2);
+                case GET_DECLARED_METHOD_ACTION:
+                    return ((Class) arg1).getDeclaredMethod((String) arg2, (Class[]) arg3);
+                case GET_FIELD_ACTION:
+                    Field field = ((Class) arg1).getDeclaredField((String) arg2);
+                    field.setAccessible(true);
+                    return field.get(arg3);
+                case GET_FILE_INPUT_ACTION:
+                    return new FileInputStream((File) arg1);
+                case GET_FILE_OUTPUT_ACTION:
+                    return new FileOutputStream((File) arg1);
+                case TO_URI_ACTION:
+                    return ((File) arg1).toURI();
+                case GET_METHOD_ACTION:
+                    return ((Class) arg1).getMethod((String) arg2, (Class[]) arg3);
+                case GET_POLICY_ACTION:
+                    return Policy.getPolicy();
+                case GET_PROPERTY_ACTION:
+                    return System.getProperty((String) arg1, (String) arg2);
+                case GET_PARENT_CLASS_LOADER_ACTION:
+                    return ((ClassLoader) arg1).getParent();
+                case GET_SYSTEM_CLASS_LOADER_ACTION:
+                    return ClassLoader.getSystemClassLoader();
+                case GET_URL_INPUT_ACTION:
+                    return ((URLConnection) arg1).getInputStream();
+                case INVOKE_CONSTRUCTOR_ACTION:
+                    return ((Constructor) arg1).newInstance((Object[]) arg2);
+                case INVOKE_DIRECTMETHOD_ACTION:
+                    return ((Method) arg1).invoke(arg2, (Object[]) arg3);
+                case INVOKE_METHOD_ACTION:
+                    ((Method) arg1).setAccessible(true);
+                    return ((Method) arg1).invoke(arg2, (Object[]) arg3);
+                case LIST_DIRECTORY_ACTION:
+                    return ((File) arg1).listFiles();
+                case MAKE_DIRECTORIES_ACTION:
+                    return ((File) arg1).mkdirs() ? Boolean.TRUE : Boolean.FALSE;
+                case MAKE_DIRECTORY_ACTION:
+                    return ((File) arg1).mkdir() ? Boolean.TRUE : Boolean.FALSE;
+                case OPEN_ZIPFILE_ACTION:
+                    return new ZipFileX((File) arg1);
+                case OPEN_URLCONNECTION_ACTION:
+                    return ((URL) arg1).openConnection();
+                case RENAME_FILE_ACTION:
+                    return ((File) arg1).renameTo((File) arg2) ? Boolean.TRUE : Boolean.FALSE;
+                case SET_ACCESSIBLE_ACTION:
+                    ((AccessibleObject) arg1).setAccessible(true);
+                    return null;
+                case START_ACTIVATOR_ACTION:
+                    ((BundleActivator) arg1).start((BundleContext) arg2);
+                    return null;
+                case STOP_ACTIVATOR_ACTION:
+                    ((BundleActivator) arg1).stop((BundleContext) arg2);
+                    return null;
+                case SWAP_FIELD_ACTION:
+                    return _swapStaticFieldIfNotClass((Class) arg1,
+                        (Class) arg2, (Class) arg3, (String) arg4);
+                case SYSTEM_EXIT_ACTION:
+                    System.exit(((Integer) arg1).intValue());
+                case FLUSH_FIELD_ACTION:
+                    _flush(((Class) arg1), arg2);
+                    return null;
+                case GET_CLASS_LOADER_ACTION:
+                    return ((Class) arg1).getClassLoader();
             }
 
             return null;

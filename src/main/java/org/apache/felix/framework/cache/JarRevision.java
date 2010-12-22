@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework.cache;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +27,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.Manifest;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
 
 import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.util.JarFileX;
+import org.apache.felix.framework.util.ZipFileX;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.resolver.Content;
@@ -50,7 +52,7 @@ class JarRevision extends BundleRevision
     private static final transient String BUNDLE_JAR_FILE = "bundle.jar";
 
     private File m_bundleFile = null;
-    private final JarFileX m_jarFile;
+    private final ZipFileX m_zipFile;
 
     public JarRevision(
         Logger logger, Map configMap, File revisionRootDir,
@@ -82,21 +84,21 @@ class JarRevision extends BundleRevision
         initialize(byReference, is);
 
         // Open shared copy of the JAR file.
-        JarFileX jarFile = null;
+        ZipFileX zipFile = null;
         try
         {
             // Open bundle JAR file.
-            jarFile = BundleCache.getSecureAction().openJAR(m_bundleFile, false);
+            zipFile = BundleCache.getSecureAction().openZipFile(m_bundleFile);
             // Error if no jar file.
-            if (jarFile == null)
+            if (zipFile == null)
             {
                 throw new IOException("No JAR file found.");
             }
-            m_jarFile = jarFile;
+            m_zipFile = zipFile;
         }
         catch (Exception ex)
         {
-            if (jarFile != null) jarFile.close();
+            if (zipFile != null) zipFile.close();
             throw ex;
         }
     }
@@ -104,9 +106,9 @@ class JarRevision extends BundleRevision
     public Map getManifestHeader() throws Exception
     {
         // Get the embedded resource.
-        Manifest mf = m_jarFile.getManifest();
+        Map headers = getMainAttributes(m_zipFile);
         // Use an empty map if there is no manifest.
-        Map headers = (mf == null) ? new HashMap() : mf.getMainAttributes();
+        headers = (headers == null) ? new HashMap() : headers;
         // Create a case insensitive map of manifest attributes.
         return new StringMap(headers, false);
     }
@@ -114,12 +116,12 @@ class JarRevision extends BundleRevision
     public synchronized Content getContent() throws Exception
     {
         return new JarContent(getLogger(), getConfig(), this, getRevisionRootDir(),
-            m_bundleFile, m_jarFile);
+            m_bundleFile, m_zipFile);
     }
 
     protected void close() throws Exception
     {
-        m_jarFile.close();
+        m_zipFile.close();
     }
 
     //
@@ -191,5 +193,135 @@ class JarRevision extends BundleRevision
         {
             if (is != null) is.close();
         }
+    }
+
+    public static int readLine(InputStream is, byte[] buf) throws IOException
+    {
+        for (int i = 0; i < buf.length; i++)
+        {
+            int b = is.read();
+            if (b < 0)
+            {
+                return (i == 0) ? -1 : i;
+            }
+            else
+            {
+                buf[i] = (byte) b;
+                if (buf[i] == '\n')
+                {
+                    return i + 1;
+                }
+            }
+        }
+        return 0;
+    }
+
+    private static Map<String, String> getMainAttributes(ZipFileX zipFile) throws IOException
+    {
+        Map<String, String> mainAttrs = new HashMap<String, String>();
+        Map<String, byte[]> tmpMap = new HashMap<String, byte[]>();
+
+        byte[] buf = new byte[512];
+        ZipEntry ze = zipFile.getEntry("META-INF/MANIFEST.MF");
+        InputStream is = new BufferedInputStream(zipFile.getInputStream(ze));
+        String lastName = null;
+        try
+        {
+            for (int len = readLine(is, buf); len != -1; len = readLine(is, buf))
+            {
+                // Make sure line ends with a line feed.
+                if (buf[len - 1] != '\n')
+                {
+                    throw new IOException(
+                        "Manifest error: Line either too long or no line feed - "
+                        + new String(buf, 0, 0, len));
+                }
+
+                // Ignore line feed.
+                len--;
+
+                // If line ends with carriage return, ignore it.
+                if ((len > 0) && (buf[len - 1] == '\r'))
+                {
+                    len--;
+                }
+
+                // If line is empty, then we've reached the end
+                // of the main attributes group.
+                if (len == 0)
+                {
+                    break;
+                }
+
+                // Check if this is a continuation line. If so, read the
+                // entire line and add it to the previous line value.
+                if (buf[0] == ' ')
+                {
+                    if (lastName == null)
+                    {
+                        throw new IOException(
+                            "Manifest syntax: Invalid line continuation - "
+                            + new String(buf, 0, 0, len));
+                    }
+                    byte[] lastValue = tmpMap.get(lastName);
+                    byte[] tmp = new byte[lastValue.length + len - 1];
+                    System.arraycopy(lastValue, 0, tmp, 0, lastValue.length);
+                    System.arraycopy(buf, 1, tmp, lastValue.length, len - 1);
+                    tmpMap.put(lastName, tmp);
+                }
+                // Otherwise, try to find the attribute name and its value.
+                else
+                {
+                    for (int i = 0; i < len; i++)
+                    {
+                        // If we are at the end, then this must be an error.
+                        if (i == (len - 1))
+                        {
+                            throw new IOException(
+                                "Manifest syntax: Invalid attribute name - "
+                                + new String(buf, 0, 0, len));
+                        }
+                        // We found the end of the attribute name
+                        else if (buf[i] == ':')
+                        {
+                            // Make sure the header has a space separator.
+                            if (buf[i + 1] != ' ')
+                            {
+                                throw new IOException(
+                                    "Manifest syntax: Header space separator missing - "
+                                    + new String(buf, 0, 0, len));
+                            }
+                            // Convert attribute name to a string.
+                            lastName = new String(buf, 0, 0, i);
+                            byte[] tmp = new byte[len - i - 2];
+                            System.arraycopy(buf, i + 2, tmp, 0, len - i - 2);
+                            byte[] old = tmpMap.put(lastName, tmp);
+                            if (old != null)
+                            {
+                                throw new IllegalArgumentException(
+                                    "Manifest syntax: Duplicate header - "
+                                    + new String(buf, 0, 0, len));
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for (Entry<String, byte[]> entry : tmpMap.entrySet())
+            {
+                byte[] value = entry.getValue();
+                mainAttrs.put(
+                    entry.getKey(),
+                    new String(value, 0, value.length, "UTF8"));
+            }
+
+        }
+        finally
+        {
+            is.close();
+        }
+
+        return mainAttrs;
     }
 }
