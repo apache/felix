@@ -68,6 +68,7 @@ public class BundleCache
 {
     public static final String CACHE_BUFSIZE_PROP = "felix.cache.bufsize";
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
+    public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
     // TODO: CACHE - Remove this once we migrate the cache format.
     public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
 
@@ -102,44 +103,52 @@ public class BundleCache
             }
         }
 
-        File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
-        FileChannel fc = null;
-        FileOutputStream fos = null;
-        try
+        Object locking = m_configMap.get(CACHE_LOCKING_PROP);
+        locking = (locking == null) ? "true" : locking.toString();
+        if (Boolean.parseBoolean((String) locking))
         {
-            if (!getSecureAction().fileExists(lockFile))
-            {
-                fos = getSecureAction().getFileOutputStream(lockFile);
-                fc = fos.getChannel();
-            }
-            else
-            {
-                fos = getSecureAction().getFileOutputStream(lockFile);
-                fc = fos.getChannel();
-            }
-        }
-        catch (Exception ex)
-        {
+            File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
+            FileChannel fc = null;
+            FileOutputStream fos = null;
             try
             {
-                if (fos != null) fos.close();
-                if (fc != null) fc.close();
+                if (!getSecureAction().fileExists(lockFile))
+                {
+                    fos = getSecureAction().getFileOutputStream(lockFile);
+                    fc = fos.getChannel();
+                }
+                else
+                {
+                    fos = getSecureAction().getFileOutputStream(lockFile);
+                    fc = fos.getChannel();
+                }
             }
-            catch (Exception ex2)
+            catch (Exception ex)
             {
-                // Ignore.
+                try
+                {
+                    if (fos != null) fos.close();
+                    if (fc != null) fc.close();
+                }
+                catch (Exception ex2)
+                {
+                    // Ignore.
+                }
+                throw new Exception("Unable to create bundle cache lock file: " + ex);
             }
-            throw new Exception("Unable to create bundle cache lock file: " + ex);
+            try
+            {
+                m_lock = fc.tryLock();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unable to lock bundle cache: " + ex);
+            }
         }
-        try
+        else
         {
-            m_lock = fc.tryLock();
+            m_lock = null;
         }
-        catch (Exception ex)
-        {
-            throw new Exception("Unable to lock bundle cache: " + ex);
-        }
-
     }
 
     public synchronized void release()
