@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
  */
 package org.apache.felix.ipojo.parser;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 import org.apache.felix.ipojo.metadata.Element;
@@ -28,7 +29,7 @@ import org.apache.felix.ipojo.metadata.Element;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MethodMetadata {
-    
+
     /**
      * Empty Constructor Method Id.
      */
@@ -38,7 +39,7 @@ public class MethodMetadata {
      * Bundle Context Constructor Method Id.
      */
     public static final String BC_CONSTRUCTOR_ID = "$init$org_osgi_framework_BundleContext";
-    
+
     /**
      * Constructor Prefix.
      */
@@ -50,12 +51,12 @@ public class MethodMetadata {
     private String m_name;
 
     /**
-     * The argument type array. 
+     * The argument type array.
      */
     private String[] m_arguments = new String[0];
 
     /**
-     * The returned type. 
+     * The returned type.
      */
     private String m_return = "void";
 
@@ -110,12 +111,44 @@ public class MethodMetadata {
     }
 
     /**
-     * Computes the method id for the given Method object. 
+     * Computes the method id for the given Method object.
      * @param method the Method object.
      * @return the method id.
      */
     public static String computeMethodId(Method method) {
         StringBuffer identifier = new StringBuffer(method.getName());
+        Class[] args = method.getParameterTypes();
+        for (int i = 0; i < args.length; i++) {
+            identifier.append('$'); // Argument separator.
+            if (args[i].isArray()) {
+                if (args[i].getComponentType().isPrimitive()) {
+                    // Primitive array
+                    identifier.append(FieldMetadata.getPrimitiveTypeByClass(args[i].getComponentType()));
+                } else {
+                    // Object array
+                    identifier.append(args[i].getComponentType().getName().replace('.', '_')); // Replace '.' by '_'
+                }
+                identifier.append("__"); // Add __ (array)
+            } else {
+                if (args[i].isPrimitive()) {
+                    // Primitive type
+                    identifier.append(FieldMetadata.getPrimitiveTypeByClass(args[i]));
+                } else {
+                    // Object type
+                    identifier.append(args[i].getName().replace('.', '_')); // Replace '.' by '_'
+                }
+            }
+        }
+        return identifier.toString();
+    }
+
+    /**
+     * Computes the method id for the given Constructor object.
+     * @param method the Method object.
+     * @return the method id.
+     */
+    public static String computeMethodId(Constructor method) {
+        StringBuffer identifier = new StringBuffer("$init");
         Class[] args = method.getParameterTypes();
         for (int i = 0; i < args.length; i++) {
             identifier.append('$'); // Argument separator.

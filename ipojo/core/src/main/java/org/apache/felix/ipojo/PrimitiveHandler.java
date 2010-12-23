@@ -33,7 +33,8 @@ import org.apache.felix.ipojo.util.Logger;
 * Classes overriding this class can change the behavior of those methods.
 * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
 */
-public abstract class PrimitiveHandler extends Handler implements FieldInterceptor, MethodInterceptor {
+public abstract class PrimitiveHandler extends Handler implements FieldInterceptor, MethodInterceptor,
+	ConstructorInjector {
 
     /**
      * The "Primitive" Handler type (value).
@@ -156,6 +157,32 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      */
     public Object onGet(Object pojo, String fieldName, Object value) {
         return value;
+    }
+
+    /**
+     * Gets the object to inject as a constructor parameter
+     * @param index the index of the parameter
+     * @return the object to inject, or <code>null</code> if no
+     * objects are injected. This implementation returns <code>null</code>
+     * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
+     */
+    public Object getConstructorParameter(int index) {
+    	return null;
+    }
+
+    /**
+     * Gets the type of the object to inject in the constructor parameter.
+     * This is the type looked into the Pojo class, so it must match.
+     * Returning <code>null</code> will try to get the class from the
+     * injected object, however this can be wrong (implementation instead of interface,
+     * boxed objects...) and error-prone.
+     * @param index the parameter index
+     * @return the Class object (must fit for primitive type), this implementation
+     * just returns <code>null</code>
+     * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
+     */
+    public Class getConstructorParameterType(int index) {
+    	return null;
     }
 
     /**

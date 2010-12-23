@@ -18,6 +18,8 @@
  */
 package org.apache.felix.ipojo.manipulation.annotations;
 
+import java.awt.image.renderable.ParameterBlock;
+
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
@@ -41,16 +43,47 @@ public class MethodCollector extends EmptyVisitor {
     private String m_name;
 
     /**
+     * Method Descriptor.
+     */
+    private String m_descriptor;
+
+    /**
      * Constructor.
      * @param name : name of the method.
      * @param collector : parent collector.
      */
-    public MethodCollector(String name, MetadataCollector collector) {
+    public MethodCollector(String name, String descriptor, MetadataCollector collector) {
         m_collector = collector;
         m_name = name;
+        m_descriptor = descriptor;
     }
 
     /**
+     * Visit a parameter annotation.
+     * @see org.objectweb.asm.commons.EmptyVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
+     */
+    public AnnotationVisitor visitParameterAnnotation(int index, String annotation,
+			boolean visible) {
+    	if (m_name.equals("<init>")) {
+    		if (annotation.equals("Lorg/apache/felix/ipojo/annotations/Property;")) {
+                return processProperty(true, index);
+            }
+            if (annotation.equals("Lorg/apache/felix/ipojo/annotations/Requires;")) {
+                return new BindAnnotationParser(index);
+            }
+
+            if (CustomAnnotationVisitor.isCustomAnnotation(annotation)) {
+                Element elem = CustomAnnotationVisitor.buildElement(annotation);
+                elem.addAttribute(new Attribute("index", "" + index));
+                return new CustomAnnotationVisitor(elem, m_collector, true, false, index, m_descriptor);
+            }
+    	}
+    	return super.visitParameterAnnotation(index, annotation, visible);
+	}
+
+
+
+	/**
      * Visit method annotations.
      * @param arg0 : annotation name.
      * @param arg1 : is the annotation visible at runtime.
@@ -59,7 +92,7 @@ public class MethodCollector extends EmptyVisitor {
      */
     public AnnotationVisitor visitAnnotation(String arg0, boolean arg1) {
         if (arg0.equals("Lorg/apache/felix/ipojo/annotations/Property;")) {
-            return processProperty();
+            return processProperty(false, -1);
         }
         if (arg0.equals("Lorg/apache/felix/ipojo/annotations/Validate;")) {
             return processValidate();
@@ -181,9 +214,11 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Process @property annotation.
+     * @param parameter true if we're processing a parameter
+     * @param index the index, meaningful only if parameter is true
      * @return the visitor parsing the visited annotation.
      */
-    private AnnotationVisitor processProperty() {
+    private AnnotationVisitor processProperty(boolean parameter, int index) {
         Element prop = null;
         if (! m_collector.getIds().containsKey("properties")) {
             prop = new Element("Properties", "");
@@ -192,7 +227,7 @@ public class MethodCollector extends EmptyVisitor {
         } else {
             prop = (Element) m_collector.getIds().get("properties");
         }
-        return new PropertyAnnotationParser(prop, m_name);
+        return new PropertyAnnotationParser(prop, m_name, parameter, index);
     }
 
     /**
@@ -251,6 +286,12 @@ public class MethodCollector extends EmptyVisitor {
         private String m_from;
 
         /**
+         * For annotation parameter,
+         * the parameter index.
+         */
+        private int m_index = -1;
+
+        /**
          * Constructor.
          * @param bind : method name.
          * @param type : is the callback a bind or an unbind method.
@@ -258,6 +299,10 @@ public class MethodCollector extends EmptyVisitor {
         private BindAnnotationParser(String bind, String type) {
             m_name = bind;
             m_type = type;
+        }
+
+        private BindAnnotationParser(int index) {
+        	m_index = index;
         }
 
         /**
@@ -310,17 +355,20 @@ public class MethodCollector extends EmptyVisitor {
          */
         public void visitEnd() {
             if (m_id == null) {
-                if (m_name.startsWith("bind")) {
+                if (m_name != null  && m_name.startsWith("bind")) {
                     m_id = m_name.substring("bind".length());
-                } else if (m_name.startsWith("unbind")) {
+                } else if (m_name != null  && m_name.startsWith("unbind")) {
                     m_id = m_name.substring("unbind".length());
-                } else if (m_name.startsWith("modified")) {
+                } else if (m_name != null  && m_name.startsWith("modified")) {
                 	m_id = m_name.substring("modified".length());
-                } else {
+                } else if (m_index != -1) {
+                	m_id = "" + m_index;
+            	} else {
                     System.err.println("Cannot determine the id of the " + m_type + " method : " + m_name);
                     return;
                 }
             }
+
             // Check if it is a full-determined requirement
             Element req = (Element) m_collector.getIds().get(m_id);
             if (req == null) {
@@ -422,17 +470,22 @@ public class MethodCollector extends EmptyVisitor {
                 }
 
             }
-            Element method = new Element("callback", "");
-            method.addAttribute(new Attribute("method", m_name));
-            method.addAttribute(new Attribute("type", m_type));
-            req.addElement(method);
+            if (m_name != null) {
+	            Element method = new Element("callback", "");
+	            method.addAttribute(new Attribute("method", m_name));
+	            method.addAttribute(new Attribute("type", m_type));
+	            req.addElement(method);
+            } else {
+            	req.addAttribute(new Attribute("constructor-parameter", Integer.toString(m_index)));
+            }
+
             m_collector.getIds().put(m_id, req);
             m_collector.getElements().put(req, null);
             return;
         }
     }
 
-    private static final class PropertyAnnotationParser extends EmptyVisitor implements AnnotationVisitor {
+    private final class PropertyAnnotationParser extends EmptyVisitor implements AnnotationVisitor {
 
         /**
          * Parent element.
@@ -450,6 +503,11 @@ public class MethodCollector extends EmptyVisitor {
         private String m_name;
 
         /**
+         * Property id.
+         */
+        private String m_id;
+
+        /**
          * Property value.
          */
         private String m_value;
@@ -460,13 +518,27 @@ public class MethodCollector extends EmptyVisitor {
         private String m_mandatory;
 
         /**
+         * Flag set to true if we're processing an annotation parameter.
+         */
+        private boolean m_isParameterAnnotation = false;
+
+        /**
+         * If this is a parameter annotation, the index of the parameter.
+         */
+        private int m_index = -1;
+
+        /**
          * Constructor.
          * @param parent : parent element.
          * @param method : attached method.
+         * @param param : we're processing a parameter
+         * @param index : the parameter index
          */
-        private PropertyAnnotationParser(Element parent, String method) {
+        private PropertyAnnotationParser(Element parent, String method, boolean param, int index) {
             m_parent = parent;
             m_method = method;
+            m_isParameterAnnotation = param;
+            m_index = index;
         }
 
         /**
@@ -488,6 +560,10 @@ public class MethodCollector extends EmptyVisitor {
                 m_mandatory = arg1.toString();
                 return;
             }
+            if (arg0.equals("id")) {
+                m_id = arg1.toString();
+                return;
+            }
         }
 
         /**
@@ -496,9 +572,17 @@ public class MethodCollector extends EmptyVisitor {
          * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
          */
         public void visitEnd() {
-            if (m_name == null && m_method.startsWith("set")) {
+        	// If neither name not id, try to extract the name
+            if (m_name == null && m_id == null  && m_method.startsWith("set")) {
                 m_name = m_method.substring("set".length());
+                m_id = m_name;
+            // Else align the two values
+            } else if (m_name != null  && m_id == null) {
+            	m_id = m_name;
+            } else if (m_id != null  && m_name == null) {
+            	m_name = m_id;
             }
+
             Element[] props = m_parent.getElements("Property");
             Element prop = null;
             for (int i = 0; props != null && prop == null && i < props.length; i++) {
@@ -516,12 +600,19 @@ public class MethodCollector extends EmptyVisitor {
                 }
             }
 
-            prop.addAttribute(new Attribute("method", m_method));
             if (m_value != null) {
                 prop.addAttribute(new Attribute("value", m_value));
             }
             if (m_mandatory != null) {
                 prop.addAttribute(new Attribute("mandatory", m_mandatory));
+            }
+
+            if (m_isParameterAnnotation) {
+            	String t = Type.getArgumentTypes(m_descriptor)[m_index].getClassName();
+            	prop.addAttribute(new Attribute("type", t));
+                prop.addAttribute(new Attribute("constructor-parameter", Integer.toString(m_index)));
+            } else {
+                prop.addAttribute(new Attribute("method", m_method));
             }
 
         }

@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.ConstructorInjector;
 import org.apache.felix.ipojo.FieldInterceptor;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.MethodInterceptor;
@@ -47,7 +49,8 @@ import org.osgi.framework.ServiceReference;
  * Represent a service dependency of the component instance.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Dependency extends DependencyModel implements FieldInterceptor, MethodInterceptor {
+public class Dependency extends DependencyModel implements FieldInterceptor, MethodInterceptor,
+	ConstructorInjector {
 
     /**
      * Reference on the Dependency Handler.
@@ -84,7 +87,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     /**
      * Thread Local.
      */
-    private final ServiceUsage m_usage;
+    private ServiceUsage m_usage;
 
     /**
      * Type of the object to inject.
@@ -125,6 +128,12 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     private Object m_proxyObject;
 
     /**
+     * Constructor paramter index.
+     * -1 if not used.
+     */
+    private int m_index = -1;
+
+    /**
      * Dependency constructor. After the creation the dependency is not started.
      *
      * @param handler : the dependency handler managing this dependency
@@ -163,6 +172,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         } else {
             m_id = identity;
         }
+
         // Else wait the setSpecification call.
     }
 
@@ -199,6 +209,13 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             newCallbacks[m_callbacks.length] = callback;
             m_callbacks = newCallbacks;
         }
+    }
+
+
+    protected void addConstructorInjection(int index) throws ConfigurationException {
+    	m_index = index;
+    	m_usage = new ServiceUsage();
+    	m_handler.getInstanceManager().register(index, this);
     }
 
     /**
@@ -997,6 +1014,53 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         }
 
     }
+
+	/**
+	 * Gets the constructor parameter.
+	 * @return the index of the constructor parameter,
+	 * or <code>-1</code> if not set.
+	 */
+	public int getConstructorParameterIndex() {
+		return m_index;
+	}
+
+	/**
+	 * Gets the object to inject in the constructor parameter.
+	 * @param index the index of the parameter
+	 * @return the created proxy object
+	 * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
+	 */
+	public Object getConstructorParameter(int index) {
+		if (m_index == index  && m_proxyObject != null) {
+			return m_proxyObject;
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the type of the constructor parameter.
+	 * @param index the parameter index
+	 * @return the class of the object. For scalar dependency, it's the
+	 * specification, for aggregate it depends of the container object:
+	 * {@link List} or {@link Set}.
+	 * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
+	 */
+	public Class getConstructorParameterType(int index) {
+		if (m_index == index  && m_proxyObject != null) {
+			if (isAggregate()) {
+				switch (m_type) {
+				case DependencyHandler.LIST: return List.class;
+				case DependencyHandler.SET : return Set.class;
+				//TODO We should also manage the Collection type.
+				default: return null; // Should never happen, it was checked before.
+				}
+			} else {
+				return getSpecification();
+			}
+		} else {
+			return null;
+		}
+	}
 
 
 

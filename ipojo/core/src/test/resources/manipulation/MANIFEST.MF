@@ -1,0 +1,142 @@
+Manifest-Version: 1.0
+Export-Package: org.apache.felix.ipojo.test.scenarios.manipulation.ser
+ vice
+iPOJO-Components: component { $name="ManipulationMetadata-FooProviderT
+ ype-1" $classname="org.apache.felix.ipojo.test.scenarios.component.Fo
+ oProviderType1" $architecture="true" provides { }manipulation { field
+  { $name="m_context" $type="org.osgi.framework.BundleContext" }field 
+ { $name="m_foo" $type="java.lang.String" }field { $name="m_bar" $type
+ ="int" }method { $arguments="{org.osgi.framework.BundleContext}" $nam
+ e="singleton" $return="org.apache.felix.ipojo.test.scenarios.componen
+ t.FooProviderType1" }method { $arguments="{org.osgi.framework.BundleC
+ ontext}" $name="several" $return="org.apache.felix.ipojo.test.scenari
+ os.component.FooProviderType1" }method { $arguments="{org.osgi.framew
+ ork.BundleContext}" $name="$init" }method { $name="foo" $return="bool
+ ean" }method { $name="fooProps" $return="java.util.Properties" }metho
+ d { $name="testException" }method { $name="testTry" }method { $argume
+ nts="{java.lang.String}" $name="testTry2" }method { $arguments="{java
+ .lang.String}" $name="nexttry" }method { $name="getBoolean" $return="
+ boolean" }method { $name="getDouble" $return="double" }method { $name
+ ="getInt" $return="int" }method { $name="getLong" $return="long" }met
+ hod { $name="getObject" $return="java.lang.Boolean" }method { $argume
+ nts="{int,java.lang.String,org.osgi.framework.BundleContext}" $name="
+ $init" }interface { $name="org.apache.felix.ipojo.test.scenarios.mani
+ pulation.service.FooService" }}}component { $name="ManipulationMetada
+ ta-FooBarProviderType-1" $classname="org.apache.felix.ipojo.test.scen
+ arios.component.FooBarProviderType1" $architecture="true" provides { 
+ }manipulation { method { $name="$init" }method { $name="foo" $return=
+ "boolean" }method { $name="fooProps" $return="java.util.Properties" }
+ method { $name="bar" $return="boolean" }method { $name="getProps" $re
+ turn="java.util.Properties" }method { $name="getBoolean" $return="boo
+ lean" }method { $name="getDouble" $return="double" }method { $name="g
+ etInt" $return="int" }method { $name="getLong" $return="long" }method
+  { $name="getObject" $return="java.lang.Boolean" }interface { $name="
+ org.apache.felix.ipojo.test.scenarios.manipulation.service.FooService
+ " }interface { $name="org.apache.felix.ipojo.test.scenarios.manipulat
+ ion.service.BarService" }}}component { $name="ManipulationMetadata-Fo
+ oProviderType-Dyn" $classname="org.apache.felix.ipojo.test.scenarios.
+ component.FooProviderTypeDyn" $architecture="true" provides { propert
+ y { $field="intProp" $mandatory="false" $name="int" $value="2" }prope
+ rty { $field="boolProp" $mandatory="false" $name="boolean" $value="fa
+ lse" }property { $field="strProp" $mandatory="false" $name="string" $
+ value="foo" }property { $field="strAProp" $mandatory="false" $name="s
+ trAProp" $value="[foo, bar]" }property { $field="intAProp" $mandatory
+ ="false" $name="intAProp" $value="[ 1,2,3]" }}manipulation { field { 
+ $name="boolProp" $type="boolean" }field { $name="strProp" $type="java
+ .lang.String" }field { $name="strAProp" $type="java.lang.String[]" }f
+ ield { $name="intProp" $type="int" }field { $name="intAProp" $type="i
+ nt[]" }method { $name="$init" }method { $name="foo" $return="boolean"
+  }method { $name="fooProps" $return="java.util.Properties" }method { 
+ $name="getBoolean" $return="boolean" }method { $name="getDouble" $ret
+ urn="double" }method { $name="getInt" $return="int" }method { $name="
+ getLong" $return="long" }method { $name="getObject" $return="java.lan
+ g.Boolean" }interface { $name="org.apache.felix.ipojo.test.scenarios.
+ manipulation.service.FooService" }}}component { $name="ManipulationMe
+ tadata-PrimitiveManipulationTester" $classname="org.apache.felix.ipoj
+ o.test.scenarios.component.Manipulation23Tester" $architecture="true"
+  provides { }manipulation { field { $name="f" $type="float" }field { 
+ $name="d" $type="double" }field { $name="is" $type="int[]" }field { $
+ name="bools" $type="boolean[]" }field { $name="b" $type="byte" }field
+  { $name="ls" $type="long[]" }field { $name="c" $type="char" }field {
+  $name="l" $type="long" }field { $name="bs" $type="byte[]" }field { $
+ name="cs" $type="char[]" }field { $name="i" $type="int" }field { $nam
+ e="s" $type="short" }field { $name="fs" $type="float[]" }field { $nam
+ e="ss" $type="short[]" }field { $name="bool" $type="boolean" }field {
+  $name="ds" $type="double[]" }method { $name="$init" }method { $name=
+ "getBoolean" $return="boolean" }method { $name="getBooleans" $return=
+ "boolean[]" }method { $name="getByte" $return="byte" }method { $name=
+ "getBytes" $return="byte[]" }method { $name="getChar" $return="char" 
+ }method { $name="getChars" $return="char[]" }method { $name="getDoubl
+ e" $return="double" }method { $name="getDoubles" $return="double[]" }
+ method { $name="getFloat" $return="float" }method { $name="getFloats"
+  $return="float[]" }method { $name="getInt" $return="int" }method { $
+ name="getInts" $return="int[]" }method { $name="getLong" $return="lon
+ g" }method { $name="getLongs" $return="long[]" }method { $name="getSh
+ ort" $return="short" }method { $name="getShorts" $return="short[]" }m
+ ethod { $arguments="{boolean}" $name="setBoolean" }method { $argument
+ s="{boolean[]}" $name="setBooleans" }method { $arguments="{byte}" $na
+ me="setByte" }method { $arguments="{byte[]}" $name="setBytes" }method
+  { $arguments="{char}" $name="setChar" }method { $arguments="{char[]}
+ " $name="setChars" }method { $arguments="{double}" $name="setDouble" 
+ }method { $arguments="{double[]}" $name="setDoubles" }method { $argum
+ ents="{float}" $name="setFloat" }method { $arguments="{float[]}" $nam
+ e="setFloats" }method { $arguments="{int}" $name="setInt" }method { $
+ arguments="{int[]}" $name="setInts" }method { $arguments="{long}" $na
+ me="setLong" }method { $arguments="{long[]}" $name="setLongs" }method
+  { $arguments="{short}" $name="setShort" }method { $arguments="{short
+ []}" $name="setShorts" }method { $arguments="{long,java.lang.String}"
+  $name="setLong" }interface { $name="org.apache.felix.ipojo.test.scen
+ arios.manipulation.service.PrimitiveManipulationTestService" }}}compo
+ nent { $name="ManipulationMetadata-SimpleMultipleCheckServiceProvider
+ " $classname="org.apache.felix.ipojo.test.scenarios.component.Multipl
+ eCheckService" $architecture="true" provides { }manipulation { field 
+ { $name="refU" $type="int" }field { $name="objectU" $type="int" }fiel
+ d { $name="bothB" $type="int" }field { $name="objectB" $type="int" }f
+ ield { $name="bothU" $type="int" }field { $name="fs" $type="org.apach
+ e.felix.ipojo.test.scenarios.manipulation.service.FooService[]" }fiel
+ d { $name="simpleU" $type="int" }field { $name="simpleB" $type="int" 
+ }field { $name="refB" $type="int" }method { $name="$init" }method { $
+ name="check" $return="boolean" }method { $name="getBoolean" $return="
+ boolean" }method { $name="getInt" $return="int" }method { $name="getL
+ ong" $return="long" }method { $name="getDouble" $return="double" }met
+ hod { $arguments="{java.lang.Object,java.lang.String}" $name="doNothi
+ ng" $return="java.lang.Object" }method { $name="getProps" $return="ja
+ va.util.Properties" }method { $name="voidBind" }method { $name="voidU
+ nbind" }method { $arguments="{org.apache.felix.ipojo.test.scenarios.m
+ anipulation.service.FooService}" $name="objectBind" }method { $argume
+ nts="{org.apache.felix.ipojo.test.scenarios.manipulation.service.FooS
+ ervice}" $name="objectUnbind" }method { $arguments="{org.osgi.framewo
+ rk.ServiceReference}" $name="refBind" }method { $arguments="{org.osgi
+ .framework.ServiceReference}" $name="refUnbind" }method { $arguments=
+ "{org.apache.felix.ipojo.test.scenarios.manipulation.service.FooServi
+ ce,org.osgi.framework.ServiceReference}" $name="bothBind" }method { $
+ arguments="{org.apache.felix.ipojo.test.scenarios.manipulation.servic
+ e.FooService,org.osgi.framework.ServiceReference}" $name="bothUnbind"
+  }interface { $name="org.apache.felix.ipojo.test.scenarios.manipulati
+ on.service.CheckService" }}requires { $field="fs" }}component { $clas
+ sname="org.apache.felix.ipojo.test.scenarios.component.Child" manipul
+ ation { $super="org.apache.felix.ipojo.test.scenarios.component.Paren
+ t" method { $arguments="{java.lang.String}" $name="$init" }}}componen
+ t { $classname="org.apache.felix.ipojo.test.scenarios.component.Multi
+ constructor" manipulation { method { $arguments="{java.lang.String,ja
+ va.lang.String}" $name="$init" }method { $arguments="{java.lang.Strin
+ g,int}" $name="$init" }method { $arguments="{java.lang.String,java.la
+ ng.String,int}" $name="$init" }}}
+Test-Suite: org.apache.felix.ipojo.test.scenarios.manipulation.Manipul
+ ationTestSuite
+Built-By: clement
+Tool: Bnd-0.0.357
+Bundle-Name: iPOJO Manipulation Metadata Test Suite
+Created-By: Apache Maven Bundle Plugin & iPOJO  1.6.0
+Build-Jdk: 1.6.0_22
+Bundle-Version: 1.5.0.SNAPSHOT
+Bnd-LastModified: 1292762858403
+Bundle-ManifestVersion: 2
+Import-Package: org.osgi.service.log;version=1.3, org.apache.felix.ipo
+ jo.test.scenarios.manipulation.service, org.apache.felix.ipojo.junit4
+ osgi, junit.framework, org.apache.felix.ipojo.architecture;version=1.
+ 6, org.apache.felix.ipojo;version=1.6, org.osgi.framework;version=1.5
+ , org.osgi.service.cm;version=1.2, org.apache.felix.ipojo.metadata, o
+ rg.apache.felix.ipojo.parser;version=1.6
+Bundle-SymbolicName: tests.manipulation.metadata
+

@@ -191,15 +191,14 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
             newDesc = "(Lorg/apache/felix/ipojo/InstanceManager;" + newDesc;
 
             Type[] args = Type.getArgumentTypes(desc);
+
+            // TODO HERE ! => All constructor matches, no distinction between the different constructors.
+            generateConstructor(access, desc, signature, exceptions, md.getAnnotations(), md.getParameterAnnotations());
+
             if (args.length == 0) {
-                generateEmptyConstructor(access, signature, exceptions, md.getAnnotations()); // No parameters, so no annotations parameters
                 m_foundSuitableConstructor = true;
             } else if (args.length == 1 && args[0].getClassName().equals("org.osgi.framework.BundleContext")) {
-                generateBCConstructor(access, signature, exceptions, md.getAnnotations()); // One parameter, so no annotations parameters
                 m_foundSuitableConstructor = true;
-            } else {
-                // Do nothing, the constructor does not match.
-                return cv.visitMethod(access, name, desc, signature, exceptions);
             }
 
             // Insert the new constructor
@@ -297,64 +296,56 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     }
 
     /**
-     * Create a constructor to call the manipulated constructor.
-     * This constructor does not have any argument. It will call the manipulated
-     * constructor with a null instance manager.
+     * Modify the given constructor to be something like:
+     * <code>
+     * this(null, params...);
+     * return;
+     * </code>
+     * The actual constructor is modified to support the instance manager argument.
      * @param access : access flag
+     * @param descriptor : the original constructor descriptor
      * @param signature : method signature
      * @param exceptions : declared exception
      * @param annotations : the annotations to move to this constructor.
      */
-    private void generateEmptyConstructor(int access, String signature, String[] exceptions, List annotations) {
-        MethodVisitor mv = cv.visitMethod(access, "<init>", "()V", signature, exceptions);
-        mv.visitCode();
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitInsn(ACONST_NULL);
-        mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", "(Lorg/apache/felix/ipojo/InstanceManager;)V");
-        mv.visitInsn(RETURN);
+    private void generateConstructor(int access, String descriptor, String signature, String[] exceptions, List annotations, Map paramAnnotations) {
+         GeneratorAdapter mv = new GeneratorAdapter(
+        		 cv.visitMethod(access, "<init>", descriptor, signature, exceptions),
+        		 access, "<init>", descriptor);
+    	 // Compute the new signature
+    	 String newDesc = descriptor.substring(1); // Remove the first (
+         newDesc = "(Lorg/apache/felix/ipojo/InstanceManager;" + newDesc;
 
-        // Move annotations
-        if (annotations != null) {
-            for (int i = 0; i < annotations.size(); i++) {
-                AnnotationDescriptor ad = (AnnotationDescriptor) annotations.get(i);
-                ad.visitAnnotation(mv);
-            }
-        }
+         mv.visitCode();
+         mv.visitVarInsn(ALOAD, 0);
+         mv.visitInsn(ACONST_NULL);
+         mv.loadArgs();
+         mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", newDesc);
+         mv.visitInsn(RETURN);
 
-        mv.visitMaxs(0, 0);
-        mv.visitEnd();
-    }
+         // Move annotations
+         if (annotations != null) {
+             for (int i = 0; i < annotations.size(); i++) {
+                 AnnotationDescriptor ad = (AnnotationDescriptor) annotations.get(i);
+                 ad.visitAnnotation(mv);
+             }
+         }
 
-    /**
-     * Create a constructor to call the manipulated constructor.
-     * This constructor has one argument (the bundle context). It will call the manipulated
-     * constructor with a null instance manager.
-     * @param access : access flag
-     * @param signature : method signature
-     * @param exceptions : declared exception
-     * @param annotations : the annotations to move to this constructor.
-     */
-    private void generateBCConstructor(int access, String signature, String[] exceptions, List annotations) {
-        MethodVisitor mv = cv.visitMethod(access, "<init>", "(Lorg/osgi/framework/BundleContext;)V", signature, exceptions);
-        mv.visitCode();
-        Label l0 = new Label();
-        mv.visitLabel(l0);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitInsn(ACONST_NULL);
-        mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", "(Lorg/apache/felix/ipojo/InstanceManager;Lorg/osgi/framework/BundleContext;)V");
-        mv.visitInsn(RETURN);
+         // Move parameter annotations if any
+         if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
+             Iterator ids = paramAnnotations.keySet().iterator();
+             while(ids.hasNext()) {
+                 Integer id = (Integer) ids.next();
+                 List ads = (List) paramAnnotations.get(id);
+                 for (int i = 0; i < ads.size(); i++) {
+                     AnnotationDescriptor ad = (AnnotationDescriptor) ads.get(i);
+                     ad.visitParameterAnnotation(id.intValue(), mv);
+                 }
+             }
+         }
 
-        // Move annotations
-        if (annotations != null) {
-            for (int i = 0; i < annotations.size(); i++) {
-                AnnotationDescriptor ad = (AnnotationDescriptor) annotations.get(i);
-                ad.visitAnnotation(mv);
-            }
-        }
-
-        mv.visitMaxs(0, 0);
-        mv.visitEnd();
+         mv.visitMaxs(0, 0);
+         mv.visitEnd();
     }
 
     /**

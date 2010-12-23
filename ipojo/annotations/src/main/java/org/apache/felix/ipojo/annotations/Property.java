@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,25 +26,25 @@ import java.lang.annotation.Target;
  * It can target both fields and methods.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 public @interface Property {
-    
+
     /**
      * Set property name.
      * Default : empty
      */
     String name() default "";
-    
+
     /**
      * Set property value.
      * Default : empty
      */
     String value() default "";
-    
+
     /**
      * Is the property mandatory?
      * Default: false
      */
     boolean mandatory() default false;
-    
+
 }

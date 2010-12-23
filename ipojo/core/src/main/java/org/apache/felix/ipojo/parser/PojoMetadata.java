@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,25 +24,25 @@ import org.apache.felix.ipojo.metadata.Element;
 /**
  * Manipulation Metadata allows getting information about the implementation class
  * without using reflection such as implemented interfaces, super class,
- * methods and fields. 
+ * methods and fields.
  * This method allows getting object to register {@link org.apache.felix.ipojo.FieldInterceptor} and
  * {@link org.apache.felix.ipojo.MethodInterceptor}.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PojoMetadata {
-    
+
     /**
      * The list of implemented interfaces.
      */
     private String[] m_interfaces = new String[0];
-    
+
     /**
      * The list of fields.
      */
     private FieldMetadata[] m_fields = new FieldMetadata[0];
-    
+
     /**
-     * The list of methods. 
+     * The list of methods.
      */
     private MethodMetadata[] m_methods = new MethodMetadata[0];
 
@@ -50,8 +50,8 @@ public class PojoMetadata {
      * The Super class (if <code>null</code> for {@link Object}).
      */
     private String m_super;
-    
-    
+
+
     /**
      * Creates Pojo metadata.
      * Manipulation Metadata object are created from component type metadata by
@@ -62,7 +62,7 @@ public class PojoMetadata {
     public PojoMetadata(Element metadata) throws ConfigurationException {
         Element[] elems = metadata.getElements("manipulation", "");
         if (elems == null) {
-            throw new ConfigurationException("The component " + metadata.getAttribute("classname") + " has no manipulation metadata"); 
+            throw new ConfigurationException("The component " + metadata.getAttribute("classname") + " has no manipulation metadata");
         }
         Element manip = elems[0];
         m_super = manip.getAttribute("super");
@@ -81,38 +81,38 @@ public class PojoMetadata {
             addInterface(itfs[i].getAttribute("name"));
         }
     }
-    
+
     public MethodMetadata[] getMethods() { return m_methods; }
-    
+
     public FieldMetadata[] getFields() { return m_fields; }
-    
+
     public String[] getInterfaces() { return m_interfaces; }
-    
+
     /**
-     * Gets the field metadata for the given name. 
+     * Gets the field metadata for the given name.
      * @param name : the name of the field
      * @return the corresponding field metadata or <code>null</code> if not found
      */
-    public FieldMetadata getField(String name) { 
+    public FieldMetadata getField(String name) {
         for (int i = 0; i < m_fields.length; i++) {
             if (m_fields[i].getFieldName().equalsIgnoreCase(name)) { return m_fields[i]; }
         }
         return null;
     }
-    
+
     /**
-     * Gets the field metadata for the given name and type. 
+     * Gets the field metadata for the given name and type.
      * @param name : the name of the field
      * @param type : the type of the field
      * @return the corresponding field metadata or <code>null</code> if not found
      */
-    public FieldMetadata getField(String name, String type) { 
+    public FieldMetadata getField(String name, String type) {
         for (int i = 0; i < m_fields.length; i++) {
             if (m_fields[i].getFieldName().equalsIgnoreCase(name) && m_fields[i].getFieldType().equalsIgnoreCase(type)) { return m_fields[i]; }
         }
         return null;
     }
-    
+
     /**
      * Checks if the given interface name is implemented.
      * This methods checks on interface directly implemented
@@ -127,7 +127,7 @@ public class PojoMetadata {
         }
         return false;
     }
-    
+
     /**
      * Gets the MethodMetadata corresponding to the method
      * (contained in the implementation class) with
@@ -142,11 +142,11 @@ public class PojoMetadata {
         }
         return null;
     }
-    
+
     /**
      * Gets the MethodMetadata list corresponding to the method
      * (contained in the implementation class) to given name.
-     * All methods contained in the implementation class matching 
+     * All methods contained in the implementation class matching
      * with the name are in the returned list.
      * @param name the name of the method to look for.
      * @return the Method Metadata array or an empty array if not found
@@ -154,7 +154,7 @@ public class PojoMetadata {
     public MethodMetadata[] getMethods(String name) {
         MethodMetadata[] mms = new MethodMetadata[0];
         for (int i = 0; i < m_methods.length; i++) {
-            if (m_methods[i].getMethodName().equalsIgnoreCase(name)) { 
+            if (m_methods[i].getMethodName().equalsIgnoreCase(name)) {
                 if (mms.length > 0) {
                     MethodMetadata[] newInstances = new MethodMetadata[mms.length + 1];
                     System.arraycopy(mms, 0, newInstances, 0, mms.length);
@@ -167,13 +167,22 @@ public class PojoMetadata {
         }
         return mms;
     }
-    
+
+    /**
+     * Gets the MethodMetadata list corresponding to the constructors
+     * (contained in the implementation class).
+     * @return the Method Metadata array or an empty array if not found
+     */
+    public MethodMetadata[] getConstructors() {
+        return getMethods("$init");
+    }
+
     /**
      * Gets the MethodMetadata corresponding to the method
-     * (contained in the implementation class) to given name 
+     * (contained in the implementation class) to given name
      * and argument types.
      * @param name the name of the method to look for.
-     * @param types the array of the argument types of the method 
+     * @param types the array of the argument types of the method
      * @return the Method Metadata or <code>null</code> if not found
      */
     public MethodMetadata getMethod(String name, String[] types) {
@@ -190,7 +199,16 @@ public class PojoMetadata {
         }
         return null;
     }
-        
+
+    /**
+     * Gets the constructor corresponding to the given argument types.
+     * @param types the argument types
+     * @return the matching constructor or <code>null</code> if not found.
+     */
+    public MethodMetadata getConstructor(String[] types) {
+    	return getMethod("$init", types); // Constructors are named $init in the manipulation metadata
+    }
+
      /**
      * Adds a method to the list.
      * This method is used during the creation of the {@link PojoMetadata}
@@ -207,7 +225,7 @@ public class PojoMetadata {
             m_methods = new MethodMetadata[] { method };
         }
     }
-        
+
      /**
      * Adds a field to the list.
      * This method is used during the creation of the {@link PojoMetadata}
@@ -224,7 +242,7 @@ public class PojoMetadata {
             m_fields = new FieldMetadata[] { field };
         }
     }
-        
+
     /**
      * Adds the interface to the list.
      * This method is used during the creation of the {@link PojoMetadata}

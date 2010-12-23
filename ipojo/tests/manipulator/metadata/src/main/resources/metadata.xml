@@ -9,14 +9,14 @@
 		name="ManipulationMetadata-FooProviderType-1" architecture="true">
 		<provides />
 	</component>
-	
+
 	<!-- Provider providing 2 services -->
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooBarProviderType1"
 		name="ManipulationMetadata-FooBarProviderType-1" architecture="true">
 		<provides />
 	</component>
-	
+
 	<!-- Provider with dynamic property -->
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.FooProviderTypeDyn"
@@ -30,7 +30,7 @@
 			<property name="intAProp" field="intAProp" value="[ 1,2,3]" />
 		</provides>
 	</component>
-	
+
 	<!-- Manipulation -->
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.Manipulation23Tester"
@@ -38,11 +38,20 @@
 		<provides />
 	</component>
 
-	
+
 	<component
 		classname="org.apache.felix.ipojo.test.scenarios.component.MultipleCheckService"
 		name="ManipulationMetadata-SimpleMultipleCheckServiceProvider" architecture="true">
 		<requires field="fs" />
 		<provides />
 	</component>
+
+
+	<component
+		classname="org.apache.felix.ipojo.test.scenarios.component.Child">
+	</component>
+
+	<component
+		classname="org.apache.felix.ipojo.test.scenarios.component.Multiconstructor">
+    </component>
 </ipojo>
