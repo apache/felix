@@ -210,7 +210,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        return new MethodCollector(name, this);
+        return new MethodCollector(name, desc, this);
     }
 
     /**

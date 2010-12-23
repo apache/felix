@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,6 +23,7 @@ import java.lang.reflect.Array;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
@@ -31,8 +32,6 @@ import org.objectweb.asm.commons.EmptyVisitor;
  */
 public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationVisitor {
 
-    //TODO manage enum annotations.
-    
     /**
      * Parent element.
      */
@@ -54,7 +53,7 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
      * Is the custom annotation a first-order annotation.
      */
     private boolean m_root;
-    
+
     /**
      * Is the visit annotation a class annotation?
      */
@@ -64,7 +63,22 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
      * Metadata collector.
      */
     private MetadataCollector m_collector;
-    
+
+    /**
+     * Flag sets to true for parameter annotation.
+     */
+    private boolean m_isParameterAnnotation = false;
+
+    /**
+     * For parameter annotations, the index of the parameter.
+     */
+    private int m_index = -1;
+
+    /**
+     * For parameter annotation, the descriptor of the method.
+     */
+    private String m_desc;
+
     /**
      * Constructor.
      * @param elem the parent element
@@ -78,7 +92,26 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
         m_collector = collector;
         m_classAnnotation = clazz;
     }
-    
+
+    /**
+     * Constructor used for parameter annotations
+     * @param elem the parent element
+     * @param collector the metadata collector
+     * @param root is the annotation a root
+     * @param clazz the annotation is a class annotation.
+     * @param index the index of the argument
+     * @param the descriptor of the method
+     */
+    public CustomAnnotationVisitor(Element elem, MetadataCollector collector, boolean root, boolean clazz, int index, String descriptor) {
+        m_elem = elem;
+        m_root = root;
+        m_collector = collector;
+        m_classAnnotation = clazz;
+        m_isParameterAnnotation = true;
+        m_index = index;
+        m_desc = descriptor;
+    }
+
     /**
      * Check if the given annotation descriptor is an iPOJO custom annotation.
      * A valid iPOJO custom annotation must contains 'ipojo' or 'handler' in its qualified name.
@@ -92,7 +125,7 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
         }
         return false;
     }
-    
+
     /**
      * Build the element object from the given descriptor.
      * @param desc : annotation descriptor
@@ -109,7 +142,7 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
 
     /**
      * Visit a 'simple' annotation attribute.
-     * This method is used for primitive arrays too. 
+     * This method is used for primitive arrays too.
      * @param arg0 : attribute name
      * @param arg1 : attribute value
      * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
@@ -164,7 +197,7 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
     public AnnotationVisitor visitArray(String arg0) {
         return new SubArrayVisitor(m_elem, arg0);
     }
-    
+
     /**
      * Visits an enumeration attribute.
      * @param arg0 the attribute name
@@ -186,6 +219,7 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
             if (m_id != null) {
                 m_collector.getIds().put(m_id, m_elem);
             } else {
+            	m_id = m_elem.getNameSpace();
                 if (! m_collector.getIds().containsKey(m_elem.getNameSpace()) && m_classAnnotation) {
                     // If the namespace is not already used, add the annotation as the
                     // root element of this namespace.
@@ -197,8 +231,15 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
                     }
                 }
             }
-            
+
             m_collector.getElements().put(m_elem, m_parent);
+
+            if (m_isParameterAnnotation) {
+            	String t = Type.getArgumentTypes(m_desc)[m_index].getClassName();
+            	m_elem.addAttribute(new Attribute("type", t));
+            	m_elem.addAttribute(
+            			new Attribute("constructor-parameter", Integer.toString(m_index)));
+            }
         }
     }
 
