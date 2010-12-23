@@ -50,7 +50,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * All POJO method will be renamed by using this prefix.
      */
-    private static final String PREFIX = "__";
+    public static final String PREFIX = "__";
 
     /**
      * POJO class.
