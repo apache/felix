@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,34 +27,34 @@ import java.util.Comparator;
  * This annotation declares a service requirement.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.FIELD)
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Inherited
 public @interface Requires {
-    
+
     /**
      * Set the LDAP filter of the dependency.
      * Default : no filter
      */
     String filter() default "";
-    
+
     /**
      * Set if the dependency is optional.
      * Default : false
      */
     boolean optional() default false;
-    
+
     /**
      * Set the dependency id.
      * Default : empty
      */
     String id() default "";
-    
+
     /**
      * Enable / Disable nullable pattern.
      * Default : true
      */
     boolean nullable() default true;
-    
+
     /**
      * Set the default-implementation to use if the dependency is optional,
      * and no providers are available.
@@ -62,31 +62,31 @@ public @interface Requires {
      * Default : no default-implementation
      */
     Class defaultimplementation() default Class.class;
-    
+
     /**
      * Set the binding policy.
      * Acceptable policy are dynamic, static and dynamic-priority.
      * Default: dynamic.
      */
     String policy() default "dynamic";
-    
+
     /**
      * Set the comparator.
      * The indicated class must implement {@link Comparator}
      */
     Class comparator() default Comparator.class;
-    
+
     /**
      * Set the from attribute.
      */
     String from() default "";
-    
+
     /**
      * Set the required service specification.
      * This attribute is required for Collection field.
      */
     String specification() default "";
-    
+
     /**
      * Set to true if the service dependency is injected
      * as a proxy.
