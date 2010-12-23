@@ -45,6 +45,7 @@ import java.util.jar.Manifest;
 
 import org.apache.felix.ipojo.manipulation.InnerClassManipulator;
 import org.apache.felix.ipojo.manipulation.Manipulator;
+import org.apache.felix.ipojo.manipulation.MethodCreator;
 import org.apache.felix.ipojo.manipulation.annotations.MetadataCollector;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
@@ -128,10 +129,15 @@ public class Pojoization {
     private File m_manifest;
 
     /**
+     * Manifest attribute filter, with default iPOJO filters
+     */
+    private List/*IManifestAttributeFilter*/ m_manifestAttributeFilters = new ArrayList/*IManifestAttributeFilter*/();
+
+    /**
      * Add an error in the error list.
      * @param mes : error message.
      */
-    private void error(String mes) {
+    protected void error(String mes) {
         System.err.println(mes);
         m_errors.add(mes);
     }
@@ -247,7 +253,7 @@ public class Pojoization {
      * @param manifestFile the manifest file. <code>null</code> to use directory/META-INF/MANIFEST.mf
      */
     public void directoryPojoization(File directory, File metadataFile, File manifestFile) {
-     // Get the metadata.xml location if not null
+    	// Get the metadata.xml location if not null
         if (metadataFile != null) {
             parseXMLMetadata(metadataFile);
         }
@@ -300,7 +306,7 @@ public class Pojoization {
             for (int i = 0; !toskip && i < m_metadata.size(); i++) {
                 Element meta = (Element)  m_metadata.get(i);
                 if (! meta.getName().equals("instance") // Only if its a component type definition,
-                                                                 // so skip instance declaration
+                                                        // so skip instance declaration
                         && meta.containsAttribute("name")
                         && meta.getAttribute("name").equalsIgnoreCase(collector.getComponentTypeDeclaration().getAttribute("name"))) {
                     toskip = true;
@@ -439,9 +445,7 @@ public class Pojoization {
             // The class name is already a path
             File classFile = new File(m_dir, classname);
             try {
-                OutputStream os = new FileOutputStream(classFile);
-                os.write(clazz);
-                os.close();
+                setBytecode(classFile, clazz);
             } catch (IOException e) {
                 error("Cannot manipulate the file : the output file " +  classname + " is not found");
                 return;
@@ -449,20 +453,8 @@ public class Pojoization {
         }
 
         // Write manifest
-        if (m_manifest == null) {
-            m_manifest = new File(m_dir, "META-INF/MANIFEST.MF");
-            if (! m_manifest.exists()) {
-                error("Cannot find the manifest file : " + m_manifest.getAbsolutePath());
-                return;
-            }
-        } else {
-            if (! m_manifest.exists()) {
-                error("Cannot find the manifest file : " + m_manifest.getAbsolutePath());
-                return;
-            }
-        }
         try {
-            mf.write(new FileOutputStream(m_manifest));
+            writeManifest(mf);
         } catch (IOException e) {
             error("Cannot write the manifest file : " + e.getMessage());
         }
@@ -488,7 +480,14 @@ public class Pojoization {
 
                     // This method adds the class to the component list
                     // if that bytecode is annotated with @Component.
-                    computeAnnotations(in);
+
+                    // We check the array size to avoid manipulating empty files
+                    // produced by incremental compilers (like Eclipse Compiler)
+                    if(in != null || in.length > 0) {
+                        computeAnnotations(in);
+                    } else {
+                        error("Cannot compute annotations from " + curName + " : Empty file");
+                    }
                 } catch (IOException e) {
                     error("Cannot read the class : " + curName);
                     return;
@@ -533,12 +532,13 @@ public class Pojoization {
     }
 
     /**
-     * Return a byte array that contains the bytecode of the given classname.
+     * Gets a byte array that contains the bytecode of the given classname.
+     * This method can be overridden by sub-classes.
      * @param classname name of a class to be read
      * @return a byte array
      * @throws IOException if the classname cannot be read
      */
-    private byte[] getBytecode(final String classname) throws IOException {
+    protected byte[] getBytecode(final String classname) throws IOException {
 
         InputStream currIn = null;
         byte[] in = new byte[0];
@@ -571,11 +571,13 @@ public class Pojoization {
     /**
      * Gets an input stream on the given class.
      * This methods manages Jar files and directories.
+     * If also looks into WEB-INF/classes to support WAR files.
+     * This method may be overridden.
      * @param classname the class name
      * @return the input stream
      * @throws IOException if the file cannot be read
      */
-    private InputStream getInputStream(String classname) throws IOException {
+    protected InputStream getInputStream(String classname) throws IOException {
         if (m_inputJar != null) {
             // Fix entry name if needed
             if (! classname.endsWith(".class")) {
@@ -601,7 +603,7 @@ public class Pojoization {
     /**
      * Gets the list of class files.
      * The content of the returned enumeration contains file names.
-     * It is possible to get input stream on those file by using the
+     * It is possible to get input stream on those file by using
      * {@link Pojoization#getInputStream(String)} method.
      * @return the list of class files.
      */
@@ -623,10 +625,12 @@ public class Pojoization {
 
     /**
      * Navigates across directories to find class files.
+     * Sub-classes can override this method to customize the searched
+     * files.
      * @param dir the directory to analyze
      * @param classes discovered classes
      */
-    private void searchClassFiles(File dir, List classes) {
+    protected void searchClassFiles(File dir, List classes) {
         File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
             if (files[i].isDirectory()) {
@@ -708,20 +712,7 @@ public class Pojoization {
         if (m_inputJar != null) {
             return m_inputJar.getManifest();
         } else {
-            if (m_manifest == null) {
-                File manFile = new File(m_dir, "META-INF/MANIFEST.MF");
-                if (manFile.exists()) {
-                    return new Manifest(new FileInputStream(manFile));
-                } else {
-                    throw new IOException("Cannot find the manifest file : " + manFile.getAbsolutePath());
-                }
-            } else {
-                if (m_manifest.exists()) {
-                    return  new Manifest(new FileInputStream(m_manifest));
-                } else {
-                    throw new IOException("Cannot find the manifest file : " + m_manifest.getAbsolutePath());
-                }
-            }
+            return new Manifest(getManifestInputStream());
         }
     }
 
@@ -1121,6 +1112,11 @@ public class Pojoization {
      * @return : given manipulation metadata + manipulation metadata of the given element.
      */
     private StringBuffer buildManifestMetadata(Element element, StringBuffer actual) {
+    	// If the element is already here, do not re-add the element.
+        if(isInjectedElement(element)) {
+            return actual;
+        }
+
         StringBuffer result = new StringBuffer();
         if (element.getNameSpace() == null) {
             result.append(actual + element.getName() + " { ");
@@ -1131,6 +1127,7 @@ public class Pojoization {
         Attribute[] atts = element.getAttributes();
         for (int i = 0; i < atts.length; i++) {
             Attribute current = (Attribute) atts[i];
+
             if (current.getNameSpace() == null) {
                 result.append("$" + current.getName() + "=\"" + current.getValue() + "\" ");
             } else {
@@ -1145,6 +1142,102 @@ public class Pojoization {
 
         result.append("}");
         return result;
+    }
+
+    /**
+     * Checks if the given element is an iPOJO generated element from a prior treatment
+     * @return <code>true</code> if the given element was already injected by iPOJO
+     */
+    private boolean isInjectedElement(final Element element) {
+        Attribute[] atts = element.getAttributes();
+
+        if (m_manifestAttributeFilters == null) {
+            return false;
+        }
+
+        for (int i = 0; i < atts.length; i++) {
+
+            // First test : iPOJO injected elements filter
+            String value = atts[i].getValue();
+            if (value.startsWith(MethodCreator.PREFIX)
+                || value.contains("org.apache.felix.ipojo.InstanceManager")
+                || value.contains("_setInstanceManager")) {
+                    return true;
+            }
+
+            // Second test : customized filters
+            Iterator iterator = m_manifestAttributeFilters.iterator();
+            while (iterator.hasNext()) {
+                ManifestAttributeFilter filter = (ManifestAttributeFilter) iterator.next();
+                if (filter.accept(atts[i])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Adds a Manifest attribute filter to the list
+     * @param filter The new Manifest attribute filter
+     */
+    public void addManifestAttributeFilters(final ManifestAttributeFilter filter) {
+        if (filter != null) {
+            m_manifestAttributeFilters.add(filter);
+        }
+    }
+
+    /**
+     * Retrieves an OutputStream to write in the Manifest.
+     * @return A valid output stream
+     */
+    protected void writeManifest(Manifest mf) throws IOException {
+        if (m_manifest == null) {
+            m_manifest = new File(m_dir, "META-INF/MANIFEST.MF");
+            if (! m_manifest.exists()) {
+                throw new IOException("Cannot find the manifest file : " + m_manifest.getAbsolutePath());
+            }
+        } else {
+            if (! m_manifest.exists()) {
+                throw new IOException("Cannot find the manifest file : " + m_manifest.getAbsolutePath());
+            }
+        }
+
+        mf.write(new FileOutputStream(m_manifest));
+    }
+
+    /**
+     * Retrieves an InputStream to read the Manifest.
+     * @return A valid input stream
+     */
+    protected InputStream getManifestInputStream() throws IOException {
+        if (m_manifest == null) {
+            File manFile = new File(m_dir, "META-INF/MANIFEST.MF");
+            if (manFile.exists()) {
+                return new FileInputStream(manFile);
+            } else {
+                throw new IOException("Cannot find the manifest file : " + manFile.getAbsolutePath());
+            }
+        } else {
+            if (m_manifest.exists()) {
+                return new FileInputStream(m_manifest);
+            } else {
+                throw new IOException("Cannot find the manifest file : " + m_manifest.getAbsolutePath());
+            }
+        }
+    }
+
+    /**
+     * Writes the .class raw data to the storage support
+     * @param classFile - Output .class file
+     * @param rawClass - Raw class representation
+     * @throws IOException - Something wrong occurred while writing the file
+     */
+    protected void setBytecode(final File classFile, final byte[] rawClass) throws IOException {
+        OutputStream os = new FileOutputStream(classFile);
+        os.write(rawClass);
+        os.close();
     }
 
     public List getWarnings() {

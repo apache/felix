@@ -272,17 +272,17 @@ public class ManipulatorTest extends TestCase {
 
 	}
 
-	public void test() throws Exception {
-
-
-		byte[] clazz = getBytesFromFile(new File("target/test-classes/test/Constructor.class"));
-		ClassReader cr = new ClassReader(clazz);
-        MetadataCollector collector = new MetadataCollector();
-        cr.accept(collector, 0);
-
-        System.out.println(collector.getComponentTypeDeclaration());
-
-	}
+//	public void test() throws Exception {
+//
+//
+//		byte[] clazz = getBytesFromFile(new File("target/test-classes/test/Constructor.class"));
+//		ClassReader cr = new ClassReader(clazz);
+//        MetadataCollector collector = new MetadataCollector();
+//        cr.accept(collector, 0);
+//
+//        System.out.println(collector.getComponentTypeDeclaration());
+//
+//	}
 
 	public static byte[] getBytesFromFile(File file) throws IOException {
 	    InputStream is = new FileInputStream(file);
