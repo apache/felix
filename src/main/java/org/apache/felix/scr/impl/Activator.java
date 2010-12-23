@@ -119,20 +119,8 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         // 112.8.2 load all components of active bundles
         loadAllComponents( context );
 
-        // We dynamically import the impl service API, so it
-        // might not actually be available, so be ready to catch
-        // the exception when we try to register the command service.
-        try
-        {
-            // Register "scr" impl command service as a
-            // wrapper for the bundle repository service.
-            context.registerService( org.apache.felix.shell.Command.class.getName(), new ScrCommand( m_context,
-                m_componentRegistry, m_configuration ), null );
-        }
-        catch ( Throwable th )
-        {
-            // Ignore.
-        }
+        // register the Gogo and old Shell commands
+        ScrCommand.register(context, m_componentRegistry, m_configuration);
     }
 
 

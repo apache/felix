@@ -1,430 +1,360 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
+ * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
+ * regarding copyright ownership. The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * with the License. You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
+ * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
 package org.apache.felix.scr.impl;
 
-
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
-import org.apache.felix.shell.Command;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-
-public class ScrCommand implements Command
+/**
+ * The <code>ScrCommand</code> class provides the implementations for the
+ * Apache Felix Gogo and legacy Apache Felix Shell commands. The
+ * {@link #register(BundleContext, ScrService, ScrConfiguration)} method
+ * instantiates and registers the Gogo and Shell commands as possible.
+ */
+class ScrCommand
 {
-
-    private static final String HELP_CMD = "help";
-    private static final String LIST_CMD = "list";
-    private static final String INFO_CMD = "info";
-    private static final String ENABLE_CMD = "enable";
-    private static final String DISABLE_CMD = "disable";
-    private static final String CONFIG_CMD = "config";
 
     private final BundleContext bundleContext;
     private final ScrService scrService;
     private final ScrConfiguration scrConfiguration;
 
+    static void register(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
+    {
+        final ScrCommand cmd = new ScrCommand(bundleContext, scrService, scrConfiguration);
 
-    ScrCommand( BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration )
+        /*
+         * Register the Gogo Command as a service of its own class.
+         * Due to a race condition during project building (this class is
+         * compiled for Java 1.3 compatibility before the required
+         * ScrGogoCommand class compiled for Java 5 compatibility) this uses
+         * reflection to load and instantiate the class. Any failure during this
+         * process is just ignored.
+         */
+        try
+        {
+            final String scrGogoCommandClassName = "org.apache.felix.scr.impl.ScrGogoCommand";
+            final Class scrGogoCommandClass = scrService.getClass().getClassLoader().loadClass(scrGogoCommandClassName);
+            final Constructor c = scrGogoCommandClass.getConstructor(new Class[]
+                { ScrCommand.class });
+            final Object gogoCmd = c.newInstance(new Object[]
+                { cmd });
+            final Hashtable props = new Hashtable();
+            props.put("osgi.command.scope", "scr");
+            props.put("osgi.command.function", new String[]
+                { "config", "disable", "enable", "info", "list" });
+            bundleContext.registerService(scrGogoCommandClassName, gogoCmd, props);
+        }
+        catch (Throwable t)
+        {
+            // Might be thrown if running in a pre-Java 5 VM
+        }
+
+        // We dynamically import the impl service API, so it
+        // might not actually be available, so be ready to catch
+        // the exception when we try to register the command service.
+        try
+        {
+            // Register "scr" impl command service as a
+            // wrapper for the bundle repository service.
+            bundleContext.registerService(org.apache.felix.shell.Command.class.getName(), new ScrShellCommand(cmd),
+                null);
+        }
+        catch (Throwable th)
+        {
+            // Ignore.
+        }
+    }
+
+    private ScrCommand(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
     {
         this.bundleContext = bundleContext;
         this.scrService = scrService;
         this.scrConfiguration = scrConfiguration;
     }
 
+    // ---------- Actual implementation
 
-    public String getName()
+    void list(final String bundleIdentifier, final PrintStream out, final PrintStream err)
     {
-        return "scr";
-    }
+        Component[] components;
 
-
-    public String getUsage()
-    {
-        return "scr help";
-    }
-
-
-    public String getShortDescription()
-    {
-        return "Declarative Services Runtime";
-    }
-
-
-    public void execute( String commandLine, PrintStream out, PrintStream err )
-    {
-        // Parse the commandLine to get the OBR command.
-        StringTokenizer st = new StringTokenizer( commandLine );
-        // Ignore the invoking command.
-        st.nextToken();
-        // Try to get the OBR command, default is HELP command.
-        String command = HELP_CMD;
-        try
+        if (bundleIdentifier != null)
         {
-            command = st.nextToken();
-        }
-        catch ( Exception ex )
-        {
-            // Ignore.
-        }
+            Bundle bundle = null;
+            try
+            {
+                long bundleId = Long.parseLong(bundleIdentifier);
+                bundle = bundleContext.getBundle(bundleId);
+            }
+            catch (NumberFormatException nfe)
+            {
+                // might be a bundle symbolic name
+                Bundle[] bundles = bundleContext.getBundles();
+                for (int i = 0; i < bundles.length; i++)
+                {
+                    if (bundleIdentifier.equals(bundles[i].getSymbolicName()))
+                    {
+                        bundle = bundles[i];
+                        break;
+                    }
+                }
+            }
 
-        // Perform the specified command.
-        if ( ( command == null ) || ( command.equals( HELP_CMD ) ) )
-        {
-            help( out, st );
-        }
-        else
-        {
-            if ( command.equals( LIST_CMD ) )
+            if (bundle == null)
             {
-                list( st, out, err );
+                err.println("Missing bundle with ID " + bundleIdentifier);
+                return;
             }
-            else if ( command.equals( INFO_CMD ) )
+            if (ComponentRegistry.isBundleActive(bundle))
             {
-                info( st, out, err );
-            }
-            else if ( command.equals( ENABLE_CMD ) )
-            {
-                change( st, out, err, true );
-            }
-            else if ( command.equals( DISABLE_CMD ) )
-            {
-                change( st, out, err, false );
-            }
-            else if ( command.equals( CONFIG_CMD ) )
-            {
-                config( out );
+                components = scrService.getComponents(bundle);
+                if (components == null)
+                {
+                    out.println("Bundle " + bundleIdentifier + " declares no components");
+                    return;
+                }
             }
             else
             {
-                err.println( "Unknown command: " + command );
-            }
-        }
-    }
-
-
-    private void list( StringTokenizer st, PrintStream out, PrintStream err )
-    {
-        Component[] components;
-        if ( st.hasMoreTokens() )
-        {
-            String bid = st.nextToken();
-            try
-            {
-                long bundleId = Long.parseLong( bid );
-                Bundle bundle = bundleContext.getBundle( bundleId );
-                if ( bundle == null )
-                {
-                    err.println( "Missing bundle with ID " + bundleId );
-                    return;
-                }
-                if ( ComponentRegistry.isBundleActive( bundle ) )
-                {
-                    components = scrService.getComponents( bundle );
-                    if ( components == null )
-                    {
-                        out.println( "Bundle " + bundleId + " declares no components" );
-                        return;
-                    }
-                }
-                else
-                {
-                    out.println( "Bundle " + bundleId + " is not active" );
-                    return;
-                }
-            }
-            catch ( NumberFormatException nfe )
-            {
-                err.println( "Cannot parse " + bid + " to a bundleId" );
+                out.println("Bundle " + bundleIdentifier + " is not active");
                 return;
             }
         }
         else
         {
             components = scrService.getComponents();
-            if ( components == null )
+            if (components == null)
             {
-                out.println( "No components registered" );
+                out.println("No components registered");
                 return;
             }
         }
 
-        out.println( "   Id   State          Name" );
-        for ( int i = 0; i < components.length; i++ )
+        out.println("   Id   State          Name");
+        for (int i = 0; i < components.length; i++)
         {
-            out.print( '[' );
-            out.print( pad( String.valueOf( components[i].getId() ), -4 ) );
-            out.print( "] [" );
-            out.print( pad( toStateString( components[i].getState() ), 13 ) );
-            out.print( "] " );
-            out.print( components[i].getName() );
+            out.print('[');
+            out.print(pad(String.valueOf(components[i].getId()), -4));
+            out.print("] [");
+            out.print(pad(toStateString(components[i].getState()), 13));
+            out.print("] ");
+            out.print(components[i].getName());
             out.println();
         }
     }
 
-
-    private void info( StringTokenizer st, PrintStream out, PrintStream err )
+    void info(final String componentId, PrintStream out, PrintStream err)
     {
-        Component component = getComponentFromArg( st, err );
-        if ( component == null )
+        Component[] components = getComponentFromArg(componentId, err);
+        if (components == null)
         {
             return;
         }
 
-        out.print( "ID: " );
-        out.println( component.getId() );
-        out.print( "Name: " );
-        out.println( component.getName() );
-        out.print( "Bundle: " );
-        out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
-        out.print( "State: " );
-        out.println( toStateString( component.getState() ) );
-        out.print( "Default State: " );
-        out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
-        out.print( "Activation: " );
-        out.println( component.isImmediate() ? "immediate" : "delayed" );
+        for (int j = 0; j < components.length; j++)
+        {
+            Component component = components[j];
+            out.print("ID: ");
+            out.println(component.getId());
+            out.print("Name: ");
+            out.println(component.getName());
+            out.print("Bundle: ");
+            out.println(component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")");
+            out.print("State: ");
+            out.println(toStateString(component.getState()));
+            out.print("Default State: ");
+            out.println(component.isDefaultEnabled() ? "enabled" : "disabled");
+            out.print("Activation: ");
+            out.println(component.isImmediate() ? "immediate" : "delayed");
 
-        // DS 1.1 new features
-        out.print( "Configuration Policy: " );
-        out.println( component.getConfigurationPolicy() );
-        out.print( "Activate Method: " );
-        out.print( component.getActivate() );
-        if ( component.isActivateDeclared() )
-        {
-            out.print( " (declared in the descriptor)" );
-        }
-        out.println();
-        out.print( "Deactivate Method: " );
-        out.print( component.getDeactivate() );
-        if ( component.isDeactivateDeclared() )
-        {
-            out.print( " (declared in the descriptor)" );
-        }
-        out.println();
-        out.print( "Modified Method: " );
-        if ( component.getModified() != null )
-        {
-            out.print( component.getModified() );
-        }
-        else
-        {
-            out.print( "-" );
-        }
-        out.println();
-
-        if ( component.getFactory() != null )
-        {
-            out.print( "Factory: " );
-            out.println( component.getFactory() );
-        }
-
-        String[] services = component.getServices();
-        if ( services != null )
-        {
-            out.print( "Services: " );
-            out.println( services[0] );
-            for ( int i = 1; i < services.length; i++ )
+            // DS 1.1 new features
+            out.print("Configuration Policy: ");
+            out.println(component.getConfigurationPolicy());
+            out.print("Activate Method: ");
+            out.print(component.getActivate());
+            if (component.isActivateDeclared())
             {
-                out.print( "          " );
-                out.println( services[i] );
+                out.print(" (declared in the descriptor)");
             }
-            out.print( "Service Type: " );
-            out.println( component.isServiceFactory() ? "service factory" : "service" );
-        }
-
-        Reference[] refs = component.getReferences();
-        if ( refs != null )
-        {
-            for ( int i = 0; i < refs.length; i++ )
+            out.println();
+            out.print("Deactivate Method: ");
+            out.print(component.getDeactivate());
+            if (component.isDeactivateDeclared())
             {
-                out.print( "Reference: " );
-                out.println( refs[i].getName() );
-                out.print( "    Satisfied: " );
-                out.println( refs[i].isSatisfied() ? "satisfied" : "unsatisfied" );
-                out.print( "    Service Name: " );
-                out.println( refs[i].getServiceName() );
-                if ( refs[i].getTarget() != null )
-                {
-                    out.print( "    Target Filter: " );
-                    out.println( refs[i].getTarget() );
-                }
-                out.print( "    Multiple: " );
-                out.println( refs[i].isMultiple() ? "multiple" : "single" );
-                out.print( "    Optional: " );
-                out.println( refs[i].isOptional() ? "optional" : "mandatory" );
-                out.print( "    Policy: " );
-                out.println( refs[i].isStatic() ? "static" : "dynamic" );
+                out.print(" (declared in the descriptor)");
             }
-        }
-
-        Dictionary props = component.getProperties();
-        if ( props != null )
-        {
-            out.println( "Properties:" );
-            TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
-            for ( Iterator ki = keys.iterator(); ki.hasNext(); )
+            out.println();
+            out.print("Modified Method: ");
+            if (component.getModified() != null)
             {
-                Object key = ki.next();
-                out.print( "    " );
-                out.print( key );
-                out.print( " = " );
+                out.print(component.getModified());
+            }
+            else
+            {
+                out.print("-");
+            }
+            out.println();
 
-                Object prop = props.get( key );
-                if ( prop.getClass().isArray() )
+            if (component.getFactory() != null)
+            {
+                out.print("Factory: ");
+                out.println(component.getFactory());
+            }
+
+            String[] services = component.getServices();
+            if (services != null)
+            {
+                out.print("Services: ");
+                out.println(services[0]);
+                for (int i = 1; i < services.length; i++)
                 {
-                    prop = Arrays.asList( ( Object[] ) prop );
+                    out.print("          ");
+                    out.println(services[i]);
                 }
-                out.print( prop );
+                out.print("Service Type: ");
+                out.println(component.isServiceFactory() ? "service factory" : "service");
+            }
 
-                out.println();
+            Reference[] refs = component.getReferences();
+            if (refs != null)
+            {
+                for (int i = 0; i < refs.length; i++)
+                {
+                    out.print("Reference: ");
+                    out.println(refs[i].getName());
+                    out.print("    Satisfied: ");
+                    out.println(refs[i].isSatisfied() ? "satisfied" : "unsatisfied");
+                    out.print("    Service Name: ");
+                    out.println(refs[i].getServiceName());
+                    if (refs[i].getTarget() != null)
+                    {
+                        out.print("    Target Filter: ");
+                        out.println(refs[i].getTarget());
+                    }
+                    out.print("    Multiple: ");
+                    out.println(refs[i].isMultiple() ? "multiple" : "single");
+                    out.print("    Optional: ");
+                    out.println(refs[i].isOptional() ? "optional" : "mandatory");
+                    out.print("    Policy: ");
+                    out.println(refs[i].isStatic() ? "static" : "dynamic");
+                }
+            }
+
+            Dictionary props = component.getProperties();
+            if (props != null)
+            {
+                out.println("Properties:");
+                TreeSet keys = new TreeSet(Collections.list(props.keys()));
+                for (Iterator ki = keys.iterator(); ki.hasNext();)
+                {
+                    Object key = ki.next();
+                    out.print("    ");
+                    out.print(key);
+                    out.print(" = ");
+
+                    Object prop = props.get(key);
+                    if (prop.getClass().isArray())
+                    {
+                        prop = Arrays.asList((Object[]) prop);
+                    }
+                    out.print(prop);
+
+                    out.println();
+                }
             }
         }
     }
 
-
-    private void change( StringTokenizer st, PrintStream out, PrintStream err, boolean enable )
+    void change(final String componentIdentifier, PrintStream out, PrintStream err, boolean enable)
     {
-        Component component = getComponentFromArg( st, err );
-        if ( component == null )
+        Component[] components = getComponentFromArg(componentIdentifier, err);
+        if (components == null)
         {
             return;
         }
 
-        if ( component.getState() == Component.STATE_DISPOSED )
+        for (int i = 0; i < components.length; i++)
         {
-            err.println( "Component " + component.getName() + " already disposed, cannot change state" );
-        }
-        else if ( enable )
-        {
-            if ( component.getState() == Component.STATE_DISABLED )
+            Component component = components[i];
+            if (component.getState() == Component.STATE_DISPOSED)
             {
-                component.enable();
-                out.println( "Component " + component.getName() + " enabled" );
+                err.println("Component " + component.getName() + " already disposed, cannot change state");
+            }
+            else if (enable)
+            {
+                if (component.getState() == Component.STATE_DISABLED)
+                {
+                    component.enable();
+                    out.println("Component " + component.getName() + " enabled");
+                }
+                else
+                {
+                    out.println("Component " + component.getName() + " already enabled");
+                }
             }
             else
             {
-                out.println( "Component " + component.getName() + " already enabled" );
+                if (component.getState() != Component.STATE_DISABLED)
+                {
+                    component.disable();
+                    out.println("Component " + component.getName() + " disabled");
+                }
+                else
+                {
+                    out.println("Component " + component.getName() + " already disabled");
+                }
             }
         }
-        else
-        {
-            if ( component.getState() != Component.STATE_DISABLED )
-            {
-                component.disable();
-                out.println( "Component " + component.getName() + " disabled" );
-            }
-            else
-            {
-                out.println( "Component " + component.getName() + " already disabled" );
-            }
-        }
-
     }
 
-
-    private void config( PrintStream out )
+    void config(PrintStream out)
     {
-        out.print( "Log Level: " );
-        out.println( scrConfiguration.getLogLevel() );
-        out.print( "Component Factory with Factory Configuration: " );
-        out.println( scrConfiguration.isFactoryEnabled() ? "Supported" : "Unsupported" );
-        out.print( "Update bound Service Properties: " );
-    }
+        out.print("Log Level: ");
+        out.println(scrConfiguration.getLogLevel());
+        out.print("Component Factory with Factory Configuration: ");
+        out.println(scrConfiguration.isFactoryEnabled() ? "Supported" : "Unsupported");
 
-
-    private void help( PrintStream out, StringTokenizer st )
-    {
-        String command = HELP_CMD;
-        if ( st.hasMoreTokens() )
+        if (ScrConfiguration.hasCtWorkaround(bundleContext))
         {
-            command = st.nextToken();
-        }
-        if ( command.equals( LIST_CMD ) )
-        {
-            out.println( "" );
-            out.println( "scr " + LIST_CMD + " [ <bundleId> ]" );
-            out.println( "" );
-            out.println( "This command lists registered components. If a bundle ID is\n"
-                + "added, only the components of the selected bundles are listed." );
-            out.println( "" );
-        }
-        else if ( command.equals( INFO_CMD ) )
-        {
-            out.println( "" );
-            out.println( "scr " + INFO_CMD + " <componentId>" );
-            out.println( "" );
-            out.println( "This command dumps information of the component whose\n"
-                + "component ID is given as command argument." );
-            out.println( "" );
-        }
-        else if ( command.equals( ENABLE_CMD ) )
-        {
-            out.println( "" );
-            out.println( "scr " + ENABLE_CMD + " <componentId>" );
-            out.println( "" );
-            out.println( "This command enables the component whose component ID\n" + "is given as command argument." );
-            out.println( "" );
-        }
-        else if ( command.equals( DISABLE_CMD ) )
-        {
-            out.println( "" );
-            out.println( "scr " + DISABLE_CMD + " <componentId>" );
-            out.println( "" );
-            out.println( "This command disables the component whose component ID\n" + "is given as command argument." );
-            out.println( "" );
-        }
-        else if ( command.equals( CONFIG_CMD ) )
-        {
-            out.println( "" );
-            out.println( "scr " + CONFIG_CMD );
-            out.println( "" );
-            out.println( "This command lists the current SCR configuration." );
-            out.println( "" );
-        }
-        else
-        {
-            out.println( "scr " + HELP_CMD + " [" + LIST_CMD + "]" );
-            out.println( "scr " + LIST_CMD + " [ <bundleId> ]" );
-            out.println( "scr " + INFO_CMD + " <componentId>" );
-            out.println( "scr " + ENABLE_CMD + " <componentId>" );
-            out.println( "scr " + DISABLE_CMD + " <componentId>" );
-            out.println( "scr " + CONFIG_CMD );
+            out.println("CT Issue workaround enabled");
         }
     }
 
-
-    private String pad( String value, int size )
+    private String pad(String value, int size)
     {
         boolean right = size < 0;
         size = right ? -size : size;
 
-        if ( value.length() >= size )
+        if (value.length() >= size)
         {
             return value;
         }
@@ -434,16 +364,15 @@ public class ScrCommand implements Command
         int valOff = right ? padLen : 0;
         int padOff = right ? 0 : value.length();
 
-        value.getChars( 0, value.length(), buf, valOff );
-        Arrays.fill( buf, padOff, padOff + padLen, ' ' );
+        value.getChars(0, value.length(), buf, valOff);
+        Arrays.fill(buf, padOff, padOff + padLen, ' ');
 
-        return new String( buf );
+        return new String(buf);
     }
 
-
-    private String toStateString( int state )
+    private String toStateString(int state)
     {
-        switch ( state )
+        switch (state)
         {
             case Component.STATE_DISABLED:
                 return "disabled";
@@ -470,38 +399,46 @@ public class ScrCommand implements Command
             case Component.STATE_DISPOSED:
                 return "disposed";
             default:
-                return String.valueOf( state );
+                return String.valueOf(state);
         }
     }
 
-
-    private Component getComponentFromArg( StringTokenizer st, PrintStream err )
+    private Component[] getComponentFromArg(final String componentIdentifier, PrintStream err)
     {
-        Component component = null;
-
-        if ( st.hasMoreTokens() )
+        Component[] components = null;
+        if (componentIdentifier != null)
         {
-            String cid = st.nextToken();
             try
             {
-                long componentId = Long.parseLong( cid );
-                component = scrService.getComponent( componentId );
-                if ( component == null )
+                long componentId = Long.parseLong(componentIdentifier);
+                Component component = scrService.getComponent(componentId);
+                if (component == null)
                 {
-                    err.println( "Missing Component with ID " + componentId );
+                    err.println("Missing Component with ID " + componentId);
+                }
+                else
+                {
+                    components = new Component[]
+                        { component };
                 }
             }
-            catch ( NumberFormatException nfe )
+            catch (NumberFormatException nfe)
             {
-                err.println( "Cannot parse " + cid + " to a componentId" );
+                // check whether it is a component name
+                components = scrService.getComponents(componentIdentifier);
+                if (components == null)
+                {
+                    err.println("Missing Component with ID " + componentIdentifier);
+                }
             }
         }
         else
         {
 
-            err.println( "Component ID required" );
+            err.println("Component ID required");
         }
 
-        return component;
+        return components;
     }
+
 }
