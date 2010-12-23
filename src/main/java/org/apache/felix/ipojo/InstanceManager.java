@@ -105,10 +105,18 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     private Map m_fieldRegistration;
 
     /**
-     * the map [method identifier, {@link MethodInterceptor} list] storing handlers interested by the method.
-     * Once configure this map can't change.
+     * the map [method identifier, {@link MethodInterceptor} list] interested
+     * by the method.
+     * Once configured, this map can't change.
      */
     private Map m_methodRegistration;
+
+    /**
+     * the map (sorted by parameter index) or {@link ConstructorInjector} interested by
+     * injecting constructor parameter.
+     * Once configured, this list can't change.
+     */
+    private Map m_constructorRegistration;
 
     /**
      * The manipulated class.
@@ -196,6 +204,15 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         // Create the standard handlers and add these handlers to the list
         for (int i = 0; i < m_handlers.length; i++) {
             m_handlers[i].init(this, metadata, configuration);
+        }
+
+        // Check that the constructor parameter are continuous.
+        if (m_constructorRegistration != null) {
+        	for (int i = 0; i < m_constructorRegistration.size(); i++) {
+        		if (! m_constructorRegistration.containsKey(new Integer(i))) {
+        			throw new ConfigurationException("The constructor parameter " + i + " is not managed");
+        		}
+        	}
         }
     }
 
@@ -416,6 +433,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             m_fields.clear();
             m_fieldRegistration = new HashMap();
             m_methodRegistration = new HashMap();
+            m_constructorRegistration = new HashMap();
             m_clazz = null;
         }
     }
@@ -595,29 +613,65 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         if (m_factoryMethod == null) {
             // No factory-method, we use the constructor.
             try {
-                // Try to find if there is a constructor with a bundle context as parameter :
-                try {
-                    Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class, BundleContext.class });
-                    if (! cst.isAccessible()) {
+            	// Try to find the correct constructor.
+            	if (m_constructorRegistration != null) {
+            		// Initialize the injected values and types
+            		// We have the IM first.
+            		Object[] values = new Object[m_constructorRegistration.size() + 1];
+            		Class[] types = new Class[m_constructorRegistration.size() + 1];
+            		values[0] = this;
+            		types[0] = InstanceManager.class;
+
+            		// Iterate over the constructor injector
+            		for (int i = 0; i < m_constructorRegistration.size(); i++) {
+        				ConstructorInjector injector = (ConstructorInjector)
+        					m_constructorRegistration.get(new Integer(i));
+        				Object v = injector.getConstructorParameter(i);
+        				if (v != null) {
+        					values[i + 1] = v;
+        					Class t = injector.getConstructorParameterType(i);
+        					if (t == null) {
+        						t = v.getClass();
+        					}
+        					types[i + 1] = t;
+        				}
+            		}
+            		// Find the constructor.
+            		Constructor cst = m_clazz.getDeclaredConstructor(types);
+            		if (! cst.isAccessible()) {
                         cst.setAccessible(true);
                     }
-                    Object[] args = new Object[] { this, m_context };
-                    onEntry(null, MethodMetadata.BC_CONSTRUCTOR_ID,  new Object[] {m_context});
-                    instance = cst.newInstance(args);
-                    onExit(instance, MethodMetadata.BC_CONSTRUCTOR_ID, instance);
-                } catch (NoSuchMethodException e) {
-                    // Create an instance if no instance are already created with <init>()BundleContext
-                    if (instance == null) {
-                        Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class });
+            		String methodId = MethodMetadata.computeMethodId(cst);
+                    onEntry(null, methodId,  values);
+            		instance = cst.newInstance(values);
+            		onExit(instance, methodId, instance);
+            	} else {
+            		// Old semantic
+            		// Try to find if there is a constructor with a bundle context as parameter :
+                    try {
+                        Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class, BundleContext.class });
                         if (! cst.isAccessible()) {
                             cst.setAccessible(true);
                         }
-                        Object[] args = new Object[] {this};
-                        onEntry(null, MethodMetadata.EMPTY_CONSTRUCTOR_ID, new Object[0]);
+                        Object[] args = new Object[] { this, m_context };
+                        onEntry(null, MethodMetadata.BC_CONSTRUCTOR_ID,  new Object[] {m_context});
                         instance = cst.newInstance(args);
-                        onExit(instance, MethodMetadata.EMPTY_CONSTRUCTOR_ID, instance);
+                        onExit(instance, MethodMetadata.BC_CONSTRUCTOR_ID, instance);
+                    } catch (NoSuchMethodException e) {
+                        // Create an instance if no instance are already created with <init>()BundleContext
+                        if (instance == null) {
+                            Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class });
+                            if (! cst.isAccessible()) {
+                                cst.setAccessible(true);
+                            }
+                            Object[] args = new Object[] {this};
+                            onEntry(null, MethodMetadata.EMPTY_CONSTRUCTOR_ID, new Object[0]);
+                            instance = cst.newInstance(args);
+                            onExit(instance, MethodMetadata.EMPTY_CONSTRUCTOR_ID, instance);
+                        }
                     }
-                }
+            	}
+
             } catch (IllegalAccessException e) {
                 m_logger.log(Logger.ERROR,
                                           "[" + m_name + "] createInstance -> The POJO constructor is not accessible : " + e.getMessage(), e);
@@ -934,6 +988,29 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 m_methodRegistration.put(method.getMethodIdentifier(), newList);
             }
         }
+    }
+
+    /**
+     * Registers a constructor injector.
+     * The constructor injector will be called when a pojo object is going to be
+     * created.
+     * @param index the index of the parameter. Only one injector per index can
+     * be registered.
+     * @param injector the injector object.
+     * @throws ConfigurationException if the given index is already injected by another
+     * injector
+     */
+    public void register(int index, ConstructorInjector injector) throws ConfigurationException {
+    	Integer key = new Integer(index);
+    	if (m_constructorRegistration == null) {
+    		m_constructorRegistration = new HashMap();
+    	}
+    	if (! m_constructorRegistration.containsKey(key)) {
+    		m_constructorRegistration.put(key, injector);
+    	} else {
+    		throw new ConfigurationException("Another constructor injector " +
+    				"manages the parameter " + index);
+    	}
     }
 
     /**

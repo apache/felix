@@ -152,7 +152,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
         Element[] elems = m_componentMetadata.getElements();
         for (int i = 0; i < elems.length; i++) {
             Element current = elems[i];
-            if (!"manipulation".equals(current.getName())) {
+            if (!"manipulation".equals(current.getName())) { // Remove the manipulation element
                 RequiredHandler req = new RequiredHandler(current.getName(),
                         current.getNameSpace());
                 if (!list.contains(req)) {

@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.ConstructorInjector;
 import org.apache.felix.ipojo.FieldInterceptor;
 import org.apache.felix.ipojo.Handler;
 import org.apache.felix.ipojo.InstanceManager;
@@ -33,10 +34,11 @@ import org.osgi.framework.BundleContext;
 
 /**
  * Property class managing a managed value.
- * This class managed the method invocation as well as field injection.
+ * This class managed the method invocation, field injection
+ * and constructor injection.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Property implements FieldInterceptor {
+public class Property implements FieldInterceptor, ConstructorInjector {
 
     /**
      * Object used for an unvalued property.
@@ -60,6 +62,12 @@ public class Property implements FieldInterceptor {
      * Cannot change once set.
      */
     private final Callback m_method;
+
+    /**
+     * The index of the parameter in case of
+     * constructor injection.
+     */
+    private int m_index = -1;
 
     /**
      * The value of the property.
@@ -125,7 +133,12 @@ public class Property implements FieldInterceptor {
         } else {
             m_method = null;
         }
+    }
 
+    public Property(String name, String field, String method, int index,
+    		String value, String type, InstanceManager manager, Handler handler) throws ConfigurationException {
+    	this(name, field, method, value, type, manager, handler);
+    	m_index = index;
     }
 
     /**
@@ -255,6 +268,16 @@ public class Property implements FieldInterceptor {
      */
     public boolean hasMethod() {
         return m_method != null;
+    }
+
+    /**
+     * Gets the parameter index.
+     * @return the parameter index or <code>-1</code>
+     * if this property is not injected using constructor
+     * parameter.
+     */
+    public int getParameterIndex() {
+    	return m_index;
     }
 
     /**
@@ -567,6 +590,36 @@ public class Property implements FieldInterceptor {
     }
 
     /**
+     * Gets the object to inject as constructor parameter.
+     * @param index the constructor parameter index
+     * @return the object to inject, so the property value.
+     * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
+     */
+    public Object getConstructorParameter(int index) {
+    	if (m_index != index) {
+    		return null;
+    	}
+
+    	if (m_value  == NO_VALUE) {
+           return getNoValue(m_type);
+        }
+        return m_value;
+	}
+
+	/**
+	 * Gets the type of the constructor parameter to inject.
+	 * @param index the parameter index
+	 * @return the Class of the property.
+	 * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
+	 */
+	public Class getConstructorParameterType(int index) {
+		if (m_index != index) {
+    		return null;
+    	}
+		return m_type;
+	}
+
+	/**
      * Gets the handler managing the property.
      * @return the configuration handler.
      */

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -82,7 +82,7 @@ public class HandlerManager extends InstanceManager {
         if (m_handler != null) { return; }
         m_handler = (Handler) createPojoObject();
     }
-    
+
     /**
      * Creates an instance of the content.
      * This method needs to be called once only for singleton provided service.
@@ -103,9 +103,9 @@ public class HandlerManager extends InstanceManager {
             }
             m_pojoObjects.add(instance);
         }
-        
+
         //Do not call onCreation, this will be done in the start method.
-        
+
         return instance;
     }
 
@@ -114,9 +114,9 @@ public class HandlerManager extends InstanceManager {
      */
     public void start() {
         synchronized (this) {
-            if (m_state != STOPPED) { 
+            if (m_state != STOPPED) {
                 return; // Instance already started
-            } else { 
+            } else {
                 m_state = -2; // Temporary starting state, avoiding concurrent starts.
             }
         }
@@ -126,16 +126,16 @@ public class HandlerManager extends InstanceManager {
             m_handlers[i].addInstanceStateListener(this);
             m_handlers[i].start();
         }
-        
+
         // Call the onCreation method.
         for (int i = 0; i < m_handlers.length; i++) {
             ((PrimitiveHandler) m_handlers[i].getHandler()).onCreation(m_handler);
         }
 
-        
+
         m_handler.start(); // Call the handler start method, the instance might be invalid.
-        
-        
+
+
         for (int i = 0; i < m_handlers.length; i++) {
             if (!m_handlers[i].getHandler().isValid()) {
                 setState(INVALID);
@@ -147,7 +147,7 @@ public class HandlerManager extends InstanceManager {
         } else {
             setState(INVALID);
         }
-        
+
         // Now, the state is necessary different from the temporary state.
     }
 
@@ -156,10 +156,10 @@ public class HandlerManager extends InstanceManager {
      */
     public void stop() {
         synchronized (this) {
-            if (m_state == STOPPED) { 
+            if (m_state == STOPPED) {
                 return; // Instance already stopped
             } else {
-                m_state = -2; // Temporary state avoiding concurrent stopping. 
+                m_state = -2; // Temporary state avoiding concurrent stopping.
             }
         }
 
@@ -182,7 +182,7 @@ public class HandlerManager extends InstanceManager {
                 listeners = new ArrayList(m_listeners); // Stack confinement.
             }
         }
-        
+
         if (listeners != null) {
             for (int i = 0; i < listeners.size(); i++) {
                 ((InstanceStateListener) listeners.get(i)).stateChanged(this, STOPPED);
@@ -190,7 +190,7 @@ public class HandlerManager extends InstanceManager {
         }
     }
 
-    /** 
+    /**
      * Disposes the instance.
      * @see org.apache.felix.ipojo.ComponentInstance#dispose()
      */
@@ -211,14 +211,14 @@ public class HandlerManager extends InstanceManager {
     /**
      * State Change listener callback.
      * This method is notified at each time a plugged handler becomes invalid.
-     * @param instance the changing instance 
+     * @param instance the changing instance
      * @param newState the new state
      * @see org.apache.felix.ipojo.InstanceStateListener#stateChanged(org.apache.felix.ipojo.ComponentInstance, int)
      */
     public void stateChanged(ComponentInstance instance, int newState) {
         int state;
         synchronized (this) {
-            if (m_state <= STOPPED) { 
+            if (m_state <= STOPPED) {
                 return;
             } else {
                 state = m_state; // Stack confinement

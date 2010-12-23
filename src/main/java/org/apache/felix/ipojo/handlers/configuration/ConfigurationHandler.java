@@ -123,17 +123,21 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         for (int i = 0; configurables != null && i < configurables.length; i++) {
             String fieldName = configurables[i].getAttribute("field");
             String methodName = configurables[i].getAttribute("method");
+            String paramIndex = configurables[i].getAttribute("constructor-parameter");
 
-            if (fieldName == null && methodName == null) {
-                throw new ConfigurationException("Malformed property : The property needs to contain at least a field or a method");
+            if (fieldName == null && methodName == null  && paramIndex == null) {
+                throw new ConfigurationException("Malformed property : The property needs to contain" +
+                		" at least a field, a method or a constructor-parameter");
             }
 
             String name = configurables[i].getAttribute("name");
             if (name == null) {
-                if (fieldName == null) {
+                if (fieldName == null  && methodName != null) {
                     name = methodName;
+                } else if (fieldName == null  && paramIndex != null) {
+                	name = paramIndex;
                 } else {
-                    name = fieldName;
+                	name = fieldName;
                 }
                 configurables[i].addAttribute(new Attribute("name", name)); // Add the type to avoid configure checking
             }
@@ -143,7 +147,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             // Detect the type of the property
             PojoMetadata manipulation = getFactory().getPojoMetadata();
             String type = null;
-            if (fieldName == null) {
+            if (methodName != null) {
                 MethodMetadata[] method = manipulation.getMethods(methodName);
                 if (method.length == 0) {
                     type = configurables[i].getAttribute("type");
@@ -157,11 +161,24 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                     type = method[0].getMethodArguments()[0];
                     configurables[i].addAttribute(new Attribute("type", type)); // Add the type to avoid configure checking
                 }
-            } else {
+            } else if (fieldName != null) {
                 FieldMetadata field = manipulation.getField(fieldName);
                 if (field == null) { throw new ConfigurationException("Malformed property : The field " + fieldName + " does not exist in the implementation class"); }
                 type = field.getFieldType();
                 configurables[i].addAttribute(new Attribute("type", type)); // Add the type to avoid configure checking
+            } else if (paramIndex != null) {
+            	int index = Integer.parseInt(paramIndex);
+            	type = configurables[i].getAttribute("type");
+        		MethodMetadata[] cts = manipulation.getConstructors();
+        		// If we don't have a type, try to get the first constructor and get the type of the parameter
+        		// we the index 'index'.
+        		if (type == null && cts.length > 0  && cts[0].getMethodArguments().length > index) {
+            		type = cts[0].getMethodArguments()[index];
+            	} else if (type == null) { // Applied only if type was not determined.
+            		throw new ConfigurationException("Cannot determine the type of the property " + index +
+            				", please use the type attribute");
+            	}
+            	configurables[i].addAttribute(new Attribute("type", type));
             }
 
             // Is the property set to immutable
@@ -240,13 +257,22 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         for (int i = 0; configurables != null && i < configurables.length; i++) {
             String fieldName = configurables[i].getAttribute("field");
             String methodName = configurables[i].getAttribute("method");
+            String paramIndex = configurables[i].getAttribute("constructor-parameter");
+            int index = -1;
 
             String name = configurables[i].getAttribute("name"); // The initialize method has fixed the property name.
             String value = configurables[i].getAttribute("value");
 
             String type = configurables[i].getAttribute("type"); // The initialize method has fixed the property name.
 
-            Property prop = new Property(name, fieldName, methodName, value, type, getInstanceManager(), this);
+            Property prop = null;
+            if (paramIndex == null) {
+            	prop = new Property(name, fieldName, methodName, value, type, getInstanceManager(), this);
+            } else {
+            	index = Integer.parseInt(paramIndex);
+            	prop = new Property(name, fieldName, methodName, index,
+            			value, type, getInstanceManager(), this);
+            }
             addProperty(prop);
 
             // Check if the instance configuration contains value for the current property :
@@ -261,6 +287,10 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             if (fieldName != null) {
                 FieldMetadata field = new FieldMetadata(fieldName, type);
                 getInstanceManager().register(field, prop);
+            }
+
+            if (index != -1) {
+            	getInstanceManager().register(index, prop);
             }
         }
 

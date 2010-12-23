@@ -209,9 +209,11 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         // Check the internal type of dependency
         String field = dep.getField();
         DependencyCallback[] callbacks = dep.getCallbacks();
+        int index = dep.getConstructorParameterIndex();
 
-        if (callbacks == null && field == null) {
-            throw new ConfigurationException("A service requirement requires at least binding methods or a field");
+        if (callbacks == null && field == null  && index == -1) {
+            throw new ConfigurationException("A service requirement requires at least binding methods, " +
+            		"a field or a constructor parameter");
         }
 
         for (int i = 0; callbacks != null && i < callbacks.length; i++) {
@@ -286,6 +288,41 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
         }
 
+        // Constructor parameter
+        if (index != -1) {
+        	if (! dep.isProxy()) {
+        		throw new ConfigurationException("Services injected into constructor must be proxied");
+        	}
+
+    		MethodMetadata[] cts = manipulation.getConstructors();
+    		// If we don't have a type, try to get the first constructor and get the type of the parameter
+    		// we the index 'index'.
+    		if (cts.length > 0  && cts[0].getMethodArguments().length > index) {
+        		String type = cts[0].getMethodArguments()[index];
+        		if (type.endsWith("[]")) {
+                    throw new ConfigurationException("Services injected into constructor cannot be arrays");
+                } else if (type.equals(List.class.getName()) || type.equals(Collection.class.getName())) {
+                    dep.setType(LIST);
+                    type = null;
+                } else if (type.equals(Vector.class.getName())) {
+                	throw new ConfigurationException("Services injected into constructor cannot be Vectors");
+                } else if (type.equals(Set.class.getName())) {
+                    dep.setType(SET);
+                    type = null;
+                } else {
+                    if (dep.isAggregate()) {
+                        throw new ConfigurationException("A required service is not correct : the constructor parameter "
+                                + index
+                                + " must be an aggregate type to support aggregate injections");
+                    }
+                }
+                setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
+        	} else {
+        		throw new ConfigurationException("Cannot determine the specification of the dependency " + index +
+        				", please use the specification attribute");
+        	}
+        }
+
         // Disable proxy on scalar dependency targeting non-interface specification
         if (! dep.isAggregate()  && dep.isProxy()) {
         	if (! dep.getSpecification().isInterface()) {
@@ -317,7 +354,14 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             // No found type (list and vector)
             if (dep.getSpecification() == null) {
                 if (error) {
-                    throw new ConfigurationException("Cannot discover the required specification for " + dep.getField());
+                	String id = dep.getId();
+                	if (id == null) {
+                		id = dep.getField();
+                		if (id == null) {
+                			id = Integer.toString(dep.getConstructorParameterIndex());
+                		}
+                	}
+                    throw new ConfigurationException("Cannot discover the required specification for " + id);
                 } else {
                     // If the specification is different, warn that we will override it.
                     info("Cannot discover the required specification for " + dep.getField());
@@ -500,6 +544,13 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
                 DependencyCallback callback = new DependencyCallback(dep, method, methodType);
                 dep.addDependencyCallback(callback);
+            }
+
+            // Add the constructor parameter if needed
+            String paramIndex = deps[i].getAttribute("constructor-parameter");
+            if (paramIndex != null) {
+            	int index = Integer.parseInt(paramIndex);
+            	dep.addConstructorInjection(index);
             }
 
             // Check the dependency :
