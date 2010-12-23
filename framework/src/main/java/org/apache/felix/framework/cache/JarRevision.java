@@ -18,16 +18,14 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 
 import org.apache.felix.framework.Logger;
@@ -105,12 +103,11 @@ class JarRevision extends BundleRevision
 
     public Map getManifestHeader() throws Exception
     {
-        // Get the embedded resource.
-        Map headers = getMainAttributes(m_zipFile);
-        // Use an empty map if there is no manifest.
-        headers = (headers == null) ? new HashMap() : headers;
         // Create a case insensitive map of manifest attributes.
-        return new StringMap(headers, false);
+        Map headers = new StringMap(false);
+        // Read and parse headers.
+        getMainAttributes(headers, m_zipFile);
+        return headers;
     }
 
     public synchronized Content getContent() throws Exception
@@ -195,133 +192,101 @@ class JarRevision extends BundleRevision
         }
     }
 
-    private static int readLine(InputStream is, byte[] buf) throws IOException
+    private static final ThreadLocal m_defaultBuffer = new ThreadLocal();
+    private static final int DEFAULT_BUFFER = 1024 * 64;
+
+    private static void getMainAttributes(Map result, ZipFileX zipFile) throws Exception
     {
-        for (int i = 0; i < buf.length; i++)
+        ZipEntry entry = zipFile.getEntry("META-INF/MANIFEST.MF");
+        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        byte[] bytes = null;
+        if (ref != null)
         {
-            int b = is.read();
-            if (b < 0)
-            {
-                return (i == 0) ? -1 : i;
-            }
-            else
-            {
-                buf[i] = (byte) b;
-                if (buf[i] == '\n')
-                {
-                    return i + 1;
-                }
-            }
+            bytes = (byte[]) ref.get();
         }
-        return 0;
-    }
+        int size = (int) entry.getSize();
+        if (bytes == null)
+        {
+            bytes = new byte[size > DEFAULT_BUFFER ? size : DEFAULT_BUFFER];
+            m_defaultBuffer.set(new SoftReference(bytes));
+        }
+        else if (size > bytes.length)
+        {
+            bytes = new byte[size];
+            m_defaultBuffer.set(new SoftReference(bytes));
+        }
 
-    private static Map<String, String> getMainAttributes(ZipFileX zipFile) throws IOException
-    {
-        Map<String, String> mainAttrs = new HashMap<String, String>();
-        Map<String, byte[]> tmpMap = new HashMap<String, byte[]>();
-
-        byte[] buf = new byte[512];
-        ZipEntry ze = zipFile.getEntry("META-INF/MANIFEST.MF");
-        InputStream is = new BufferedInputStream(zipFile.getInputStream(ze));
-        String lastName = null;
+        InputStream is = null;
         try
         {
-            for (int len = readLine(is, buf); len != -1; len = readLine(is, buf))
+            is = zipFile.getInputStream(entry);
+            int i = is.read(bytes);
+            while (i < size)
             {
-                // Make sure line ends with a line feed.
-                if (buf[len - 1] != '\n')
-                {
-                    throw new IOException(
-                        "Manifest error: Line either too long or no line feed - "
-                        + new String(buf, 0, 0, len));
-                }
-
-                // Ignore line feed.
-                len--;
-
-                // If line ends with carriage return, ignore it.
-                if ((len > 0) && (buf[len - 1] == '\r'))
-                {
-                    len--;
-                }
-
-                // If line is empty, then we've reached the end
-                // of the main attributes group.
-                if (len == 0)
-                {
-                    break;
-                }
-
-                // Check if this is a continuation line. If so, read the
-                // entire line and add it to the previous line value.
-                if (buf[0] == ' ')
-                {
-                    if (lastName == null)
-                    {
-                        throw new IOException(
-                            "Manifest syntax: Invalid line continuation - "
-                            + new String(buf, 0, 0, len));
-                    }
-                    byte[] lastValue = tmpMap.get(lastName);
-                    byte[] tmp = new byte[lastValue.length + len - 1];
-                    System.arraycopy(lastValue, 0, tmp, 0, lastValue.length);
-                    System.arraycopy(buf, 1, tmp, lastValue.length, len - 1);
-                    tmpMap.put(lastName, tmp);
-                }
-                // Otherwise, try to find the attribute name and its value.
-                else
-                {
-                    for (int i = 0; i < len; i++)
-                    {
-                        // If we are at the end, then this must be an error.
-                        if (i == (len - 1))
-                        {
-                            throw new IOException(
-                                "Manifest syntax: Invalid attribute name - "
-                                + new String(buf, 0, 0, len));
-                        }
-                        // We found the end of the attribute name
-                        else if (buf[i] == ':')
-                        {
-                            // Make sure the header has a space separator.
-                            if (buf[i + 1] != ' ')
-                            {
-                                throw new IOException(
-                                    "Manifest syntax: Header space separator missing - "
-                                    + new String(buf, 0, 0, len));
-                            }
-                            // Convert attribute name to a string.
-                            lastName = new String(buf, 0, 0, i);
-                            byte[] tmp = new byte[len - i - 2];
-                            System.arraycopy(buf, i + 2, tmp, 0, len - i - 2);
-                            byte[] old = tmpMap.put(lastName, tmp);
-                            if (old != null)
-                            {
-                                throw new IllegalArgumentException(
-                                    "Manifest syntax: Duplicate header - "
-                                    + new String(buf, 0, 0, len));
-                            }
-                            break;
-                        }
-                    }
-                }
+                i += is.read(bytes, i, bytes.length - i);
             }
-
-            for (Entry<String, byte[]> entry : tmpMap.entrySet())
-            {
-                byte[] value = entry.getValue();
-                mainAttrs.put(
-                    entry.getKey(),
-                    new String(value, 0, value.length, "UTF8"));
-            }
-
         }
         finally
         {
             is.close();
         }
 
-        return mainAttrs;
+        String key = null;
+        int last = 0;
+        int current = 0;
+        for (int i = 0; i < size; i++)
+        {
+            if (bytes[i] == '\r')
+            {
+                if ((i + 1 < size) && (bytes[i + 1] == '\n'))
+                {
+                    continue;
+                }
+            }
+            if (bytes[i] == '\n')
+            {
+                if ((i + 1 < size) && (bytes[i + 1] == ' '))
+                {
+                    i++;
+                    continue;
+                }
+            }
+            if ((key == null) && (bytes[i] == ':'))
+            {
+                key = new String(bytes, last, (current - last), "UTF-8");
+                if ((i + 1 < size) && (bytes[i + 1] == ' '))
+                {
+                    last = current + 1;
+                    continue;
+                }
+                else
+                {
+                    throw new Exception(
+                        "Manifest error: Missing space separator - " + key);
+                }
+            }
+            if (bytes[i] == '\n')
+            {
+                if ((last == current) && (key == null))
+                {
+                    break;
+                }
+                String value = new String(bytes, last, (current - last), "UTF-8");
+                if (key == null) 
+                {
+                    throw new Exception("Manifst error: Missing attribute name - " + value);
+                }
+                else if (result.put(key, value) != null)
+                {
+                    throw new Exception("Manifst error: Duplicate attribute name - " + key);
+                }
+                last = current;
+                key = null;
+            }
+            else
+            {
+                bytes[current++] = bytes[i];
+            }
+        }
     }
 }
