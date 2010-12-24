@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,27 +24,25 @@ import java.lang.annotation.Target;
 /**
  * Temporal dependency annotation.
  * Allows specifying a temporal dependency.
- * Be aware that despite is it provided in the annotations jar,
+ * Be aware that despite is it provided in the annotations jar, 
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- * @deprecated replaced by {@link Temporal}
  */
 @Target(ElementType.FIELD)
-@Deprecated
-public @interface Requires {
-
+public @interface Temporal {
+    
     /**
      * Set the LDAP filter of the dependency.
      * Default : no filter
      */
     String filter() default "";
-
+   
     /**
      * Timeout of the dependency.
      * Default : true
      */
     long timeout() default 3000;
-
+    
     /**
      * Set the on timeout action.
      * Supports null, nullable, empty, and default-implementation.
@@ -53,13 +51,13 @@ public @interface Requires {
      * Default: no action (i.e throws a runtime exception)
      */
     String onTimeout() default "";
-
+    
     /**
      * Set the service specification (for Collection fields).
      * This attribute is mandatory for Collections.
      */
     String specification() default "";
-
+    
     /**
      * Inject a proxy instead of the real object.
      * This allows passing this reference to collaborators.
