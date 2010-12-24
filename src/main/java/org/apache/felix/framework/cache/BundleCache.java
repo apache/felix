@@ -53,6 +53,11 @@ import org.osgi.framework.Constants;
  *       property is set, then it will be calculated as being relative to
  *       the specified root directory.
  *   </li>
+ *   <li><tt>felix.cache.locking</tt> - Enables or disables bundle cache locking,
+ *       which is used to prevent concurrent access to the bundle cache. This is
+ *       enabled by default, but on older/smaller JVMs file channel locking is
+ *       not available; set this property to <tt>false</tt> to disable it.
+ *   </li>
  *   <li><tt>felix.cache.bufsize</tt> - Sets the buffer size to be used by
  *       the cache; the default value is 4096. The integer value of this
  *       string provides control over the size of the internal buffer of the
