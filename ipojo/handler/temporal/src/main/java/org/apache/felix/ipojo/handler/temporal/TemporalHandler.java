@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,12 +41,12 @@ import org.osgi.framework.InvalidSyntaxException;
 * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
 */
 public class TemporalHandler extends PrimitiveHandler implements DependencyStateListener {
-    
+
     /**
      * Default timeout if not specified.
      */
     public static final int DEFAULT_TIMEOUT = 3000;
-    
+
     /**
      * No policy.
      */
@@ -64,15 +64,15 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
      */
     public static final int EMPTY = 3;
     /**
-     * Uses {@code null}. 
+     * Uses {@code null}.
      */
     public static final int NULL = 4;
-    
+
     /**
      * The handler namespace.
      */
     public static final String NAMESPACE = "org.apache.felix.ipojo.handler.temporal";
-    
+
     /**
      * The list of managed dependencies.
      */
@@ -87,7 +87,7 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
             ((TemporalDependency) m_dependencies.get(i)).start();
         }
     }
-    
+
     /**
      * Stop method. Stops managed dependencies.
      * @see org.apache.felix.ipojo.Handler#stop()
@@ -109,6 +109,12 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
     public void configure(Element meta, Dictionary dictionary) throws ConfigurationException {
         PojoMetadata manipulation = getFactory().getPojoMetadata();
         Element[] deps = meta.getElements("requires", NAMESPACE);
+
+        // Also check with temporal is no requires.
+        if (deps == null || deps.length == 0) {
+        	deps = meta.getElements("temporal", NAMESPACE);
+        }
+
         for (int i = 0; i < deps.length; i++) {
             if (!deps[i].containsAttribute("field") || m_dependencies.contains(deps[i].getAttribute("field"))) {
                 error("One temporal dependency must be attached to a field or the field is already used");
@@ -120,10 +126,10 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
             if (fieldmeta == null) {
                 error("The field " + field + " does not exist in the class " + getInstanceManager().getClassName());
                 return;
-            }             
-                        
+            }
+
             String fil = deps[i].getAttribute("filter");
-            Filter filter = null; 
+            Filter filter = null;
             if (fil != null) {
                 try {
                     filter = getInstanceManager().getContext().createFilter(fil);
@@ -132,7 +138,7 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                     return;
                 }
             }
-            
+
             boolean agg = false;
             boolean collection = false;
             String spec = fieldmeta.getFieldType();
@@ -148,24 +154,24 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                     error("A dependency injected inside a Collection must contain the 'specification' attribute");
                 }
             }
-            
+
             String prox = deps[i].getAttribute("proxy");
             //boolean proxy = prox != null && prox.equals("true");
             // Use proxy by default except for array:
             boolean proxy = prox == null  || prox.equals("true");
-            
+
             if (prox == null  && proxy) { // Proxy set because of the default.
                 if (agg  && ! collection) { // Aggregate and array
                     proxy = false;
                 }
             }
-            
+
             if (proxy && agg) {
                 if (! collection) {
                     error("Proxied aggregate temporal dependencies cannot be an array. Only collections are supported");
                 }
             }
-            
+
             long timeout = DEFAULT_TIMEOUT;
             if (deps[i].containsAttribute("timeout")) {
                 String to = deps[i].getAttribute("timeout");
@@ -175,7 +181,7 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                     timeout = new Long(deps[i].getAttribute("timeout")).longValue();
                 }
             }
-            
+
             int policy = NO_POLICY;
             String di = null;
             String onTimeout = deps[i].getAttribute("onTimeout");
@@ -195,20 +201,20 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                     policy = DEFAULT_IMPLEMENTATION;
                 }
             }
-         
+
             Class specification = DependencyModel.loadSpecification(spec, getInstanceManager().getContext());
             TemporalDependency dep = new TemporalDependency(specification, agg, collection, proxy, filter, getInstanceManager().getContext(), timeout, policy, di, this);
             m_dependencies.add(dep);
-            
+
             if (! proxy) { // Register method interceptor only if are not a proxy
                 MethodMetadata[] methods = manipulation.getMethods();
                 for (int k = 0; k < methods.length; k++) {
                     getInstanceManager().register(methods[k], dep);
                 }
             }
-            
+
             getInstanceManager().register(fieldmeta, dep);
-        }        
+        }
     }
 
     /**
@@ -226,6 +232,6 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
      * @see org.apache.felix.ipojo.util.DependencyStateListener#validate(org.apache.felix.ipojo.util.DependencyModel)
      */
     public void validate(DependencyModel dependencymodel) {    }
-    
+
 
 }

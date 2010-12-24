@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,10 +30,11 @@ public class TemporalTestSuite extends TestSuite {
         OSGiTestSuite ots = new OSGiTestSuite("Temporal Dependency Test Suite", bc);
         ots.addTestSuite(NoDelayTest.class);
         ots.addTestSuite(DelayTest.class);
-        ots.addTestSuite(NullableTest.class); 
+        ots.addTestSuite(NullableTest.class);
         ots.addTestSuite(DefaultImplementationTest.class);
         ots.addTestSuite(NullTest.class);
         ots.addTestSuite(EmptyTest.class);
+        ots.addTestSuite(TemporalTest.class);
         return ots;
     }
 
