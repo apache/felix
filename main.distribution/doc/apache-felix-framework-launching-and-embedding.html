@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html><head>
 
@@ -151,60 +152,15 @@ is to have the framework implement the <tt>org.osgi.framework.launch.Framework</
 
 <p>You use the framework factory to construct and configure a framework
 instance (or by directly instantiating the Felix class). The
-configuration map may contain the following OSGi standard properties:</p>
+configuration map may contain any of the framework configuration
+properties listed in the <a href="http://felix.apache.org/site/apache-felix-framework-configuration-properties.html" title="Apache Felix Framework Configuration Properties">Apache Felix Framework Configuration Properties</a>
+document, not the launcher configuration properties. The configuration
+map is copied and the keys are treated as case insensitive. You are not
+able to change the framework's configuration after construction. If you
+need a different configuration, you must create a new framework
+instance.</p>
 
-<ul>
-	<li><tt>org.osgi.framework.system.packages</tt> - specifies a
-list of packages the system bundle should export from the environment;
-if this is not set, then the framework uses a reasonable default fault.</li>
-	<li><tt>org.osgi.framework.system.packages.extra</tt>
-- specifies a list of additional packages the system bundle should
-export from the environment that are appended to the packages specified
-in <tt>org.osgi.framework.system.packages</tt>; there is no default value for this property.</li>
-	<li><tt>org.osgi.framework.bootdelegation</tt>
-- specifies a list of packages that should be made implicitly available
-to all bundles from the environment (i.e., no need to import them);
-there is no default value for this property and its use should be
-avoided.</li>
-	<li><tt>org.osgi.framework.bundle.parent</tt> - Specifies which class loader is used for boot delegation. Possible values are: <tt>boot</tt> for the boot class loader, <tt>app</tt> for the application class loader, <tt>ext</tt> for the extension class loader, and <tt>framework</tt> for the framework's class loader. The default is <tt>boot</tt>.</li>
-	<li><tt>org.osgi.framework.storage</tt>
-- specifies the path to a directory, which will be created if it does
-not exist, to use for bundle cache storage; the default value for this
-property is "<tt>felix-cache</tt>" in the current working directory.</li>
-	<li><tt>org.osgi.framework.storage.clean</tt> - specifies whether the bundle cache should be flushed; the default value for this property is "<tt>none</tt>", but it can be changed to "<tt>onFirstInit</tt>" to flush the bundle cache when the framework is initialized.</li>
-	<li><tt>org.osgi.framework.startlevel.beginning</tt> - specifies the start level the framework enters upon startup; the default value for this property is 1.</li>
-</ul>
-
-
-<p>Felix also has the following, non-standard configuration properties:</p>
-
-<ul>
-	<li><tt>felix.cache.rootdir</tt> - specifies which directory should be used to calculate absolute paths when relative paths are used for the <tt>org.osgi.framework.storage</tt> property; the default value for this property is the current working directory.</li>
-	<li><tt>felix.systembundle.activators</tt> - specifies a <tt>List</tt> of <tt>BundleActivator</tt>
-instances that are started/stopped when the System Bundle is
-started/stopped; the specified instances will receive the System
-Bundle's <tt>BundleContext</tt> when invoked.</li>
-	<li><tt>felix.log.logger</tt> - specifies an instance of <tt>org.apache.felix.framework.util.Logger</tt> that the framework uses as its default logger.</li>
-	<li><tt>felix.log.level</tt> - specifies an integer <tt>String</tt>
-whose value indicates the degree of logging reported by the framework;
-the default value is "1" and "0" turns off logging completely,
-otherwise log levels match those specified in the OSGi Log Service
-(i.e., 1 = error, 2 = warning, 3 = information, and 4 = debug).</li>
-	<li><tt>felix.startlevel.bundle</tt> - specifies the start level for newly installed bundles; the default value is 1.</li>
-	<li><tt>felix.bootdelegation.implicit</tt>
-- specifies whether or not the framework should try to guess when to
-boot delegate when external code tries to load classes or resources;
-the default value is "<tt>true</tt>".</li>
-	<li><tt>framework.service.urlhandlers</tt> - specifies whether or not to activate the URL Handlers service for the framework instance; the default value is "<tt>true</tt>", which results in the <tt>URL.setURLStreamHandlerFactory()</tt> and <tt>URLConnection.setContentHandlerFactory()</tt> being called.</li>
-</ul>
-
-
-<p>The configuration map is copied and the keys are treated as case
-insensitive. You are not able to change the framework's configuration
-after construction. If you need a different configuration, you must
-create a new framework instance.</p>
-
-<div class="panelMacro"><table class="warningMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-framework-launching-and-embedding_files/forbidden.gif" alt="" align="absmiddle" border="0" height="16" width="16"></td><td><b>WARNING</b><br>Felix configuration properties have change considerably starting from <tt>1.4.0</tt>; if you are upgrading from an earlier version, the <a href="http://felix.apache.org/site/apache-felix-framework-usage-documentation.html#ApacheFelixFrameworkUsageDocumentation-migrating">usage document</a> describes the configuration property changes.</td></tr></tbody></table></div>
+<div class="panelMacro"><table class="warningMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-framework-launching-and-embedding_files/forbidden.gif" alt="" align="absmiddle" border="0" height="16" width="16"></td><td><b>WARNING</b><br>Felix configuration properties have change considerably starting from <tt>1.4.0</tt>; if you are upgrading from an earlier version, the <a href="http://felix.apache.org/site/apache-felix-framework-configuration-properties.html#ApacheFelixFrameworkConfigurationProperties-migrating">configuration property document</a> describes the configuration property changes.</td></tr></tbody></table></div>
 
 <p><a name="ApacheFelixFrameworkLaunchingandEmbedding-startinginstance"></a></p>
 
@@ -478,7 +434,7 @@ someone to tell it to do something. The <tt>src/example/</tt> directory contains
             m_fwk.init()
             AutoProcessor.process(<span class="code-keyword">null</span>, m_fwk.getBundleContext());
             m_fwk.start();
-            m_fwk.waitForStop();
+            m_fwk.waitForStop(0);
             <span class="code-object">System</span>.exit(0);
         }
         <span class="code-keyword">catch</span> (Exception ex)
@@ -553,7 +509,7 @@ bundles will be installed.</p>
 
 <div class="code panel" style="border-width: 1px;"><div class="codeContent panelContent">
 <pre class="code-java">            m_fwk.start();
-            m_fwk.waitForStop();
+            m_fwk.waitForStop(0);
             <span class="code-object">System</span>.exit(0);
 </pre>
 </div></div>
