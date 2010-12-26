@@ -1,3 +1,22 @@
+Changes from 3.0.6 to 3.0.7
+---------------------------
+
+** Bug
+    * [FELIX-2456] - Framework no longer fires UNRESOLVED event when a bundle is explicitly refreshed
+    * [FELIX-2693] - [Framework] Service registry should throw a ServiceException for factories resulting in a cycle
+    * [FELIX-2700] - Framework uses java.nio package which is not supported by CDC VM
+    * [FELIX-2710] - [Framework] For exploded bundles Bundle.getEntry("a/b.jar/")==Bundle.getEntry("a/b.jar")
+    * [FELIX-2717] - [Framework] Resolver treats multiple exports of same package as conflicting for fragment imports
+    * [FELIX-2725] - [Framework] Resolver is not correctly calculating exported packages for already resolved modules
+    * [FELIX-2728] - JarRevision does not close URLConnections which are instances of HttpURLConnection
+    * [FELIX-2736] - [Framework] Resolver is not correctly verifying package space consistency for dynamic imports
+    * [FELIX-2738] - [Framework] DirectoryContent does not handle security correctly
+
+** Improvement
+    * [FELIX-2703] - [Framework] Include OSGi/Minimum EEs in default properties
+    * [FELIX-2721] - [Framework] Implement custom manifest parser and avoid JarFile
+    * [FELIX-2737] - [Framework] Optimize resolver algorithm by not re-calculating uses constraints for resolved modules
+
 Changes from 3.0.5 to 3.0.6
 ---------------------------
 
