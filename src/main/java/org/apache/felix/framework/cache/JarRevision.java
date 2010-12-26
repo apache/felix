@@ -194,10 +194,18 @@ class JarRevision extends BundleRevision
 
     private static final ThreadLocal m_defaultBuffer = new ThreadLocal();
     private static final int DEFAULT_BUFFER = 1024 * 64;
-
+    
+    // Parse the main attributes of the manifest of the given jarfile. 
+    // The idea is to not open the jar file as a java.util.jarfile but 
+    // read the mainfest from the zipfile directly and parse it manually
+    // to use less memory and be faster.
     private static void getMainAttributes(Map result, ZipFileX zipFile) throws Exception
     {
         ZipEntry entry = zipFile.getEntry("META-INF/MANIFEST.MF");
+
+        // Get a buffer for this thread if there is one already otherwise,
+        // create one of size DEFAULT_BUFFER (64K) if the manifest is less
+        // than 64k or of the size of the manifest. 
         SoftReference ref = (SoftReference) m_defaultBuffer.get();
         byte[] bytes = null;
         if (ref != null)
@@ -216,6 +224,9 @@ class JarRevision extends BundleRevision
             m_defaultBuffer.set(new SoftReference(bytes));
         }
 
+        // Now read in the manifest in one go into the bytes array.
+        // The InputStream is already 
+        // buffered and can handle up to 64K buffers in one go. 
         InputStream is = null;
         try
         {
@@ -231,11 +242,20 @@ class JarRevision extends BundleRevision
             is.close();
         }
 
+        // Now parse the main attributes. The idea is to do that 
+        // without creating new byte arrays. Therefore, we read through
+        // the manifest bytes inside the bytes array and write them back into 
+        // the same array unless we don't need them (e.g., \r\n and \n are skipped).
+        // That allows us to create the strings from the bytes array without the skipped 
+        // chars. We stopp as soon as we see a blankline as that denotes that the main
+        //attributes part is finished.
         String key = null;
         int last = 0;
         int current = 0;
         for (int i = 0; i < size; i++)
         {
+            // skip \r and \n if it is follows by another \n 
+            // (we catch the blank line case in the next iteration)
             if (bytes[i] == '\r')
             {
                 if ((i + 1 < size) && (bytes[i + 1] == '\n'))
@@ -251,6 +271,8 @@ class JarRevision extends BundleRevision
                     continue;
                 }
             }
+            // If we don't have a key yet and see the first : we parse it as the key
+            // and skip the :<blank> that follows it.
             if ((key == null) && (bytes[i] == ':'))
             {
                 key = new String(bytes, last, (current - last), "UTF-8");
@@ -265,12 +287,16 @@ class JarRevision extends BundleRevision
                         "Manifest error: Missing space separator - " + key);
                 }
             }
+            // if we are at the end of a line 
             if (bytes[i] == '\n')
             {
+                // and it is a blank line stop parsing (main attributes are done)
                 if ((last == current) && (key == null))
                 {
                     break;
                 }
+                // Otherwise, parse the value and add it to the map (we throw an 
+                // exception if we don't have a key or the key already exist.
                 String value = new String(bytes, last, (current - last), "UTF-8");
                 if (key == null) 
                 {
@@ -285,6 +311,7 @@ class JarRevision extends BundleRevision
             }
             else
             {
+                // write back the byte if it needs to be included in the key or the value.
                 bytes[current++] = bytes[i];
             }
         }
