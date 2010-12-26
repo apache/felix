@@ -1,3 +1,9 @@
+Changes from 1.4.0 to 1.4.1
+---------------------------
+
+** Bug
+    * [FELIX-2739] - [Security] Recent framework changes have broken the security provider.
+
 Changes from 1.2.0 to 1.4.0
 ---------------------------
 
