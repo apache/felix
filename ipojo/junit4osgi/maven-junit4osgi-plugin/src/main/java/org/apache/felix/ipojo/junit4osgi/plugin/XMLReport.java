@@ -336,8 +336,8 @@ public class XMLReport extends Report {
                 default:
                     break;
             }
-            bundle.setAttribute("symbolic-name", sn);
-            bundle.setAttribute("state", state);
+            bundle.setAttribute("name", "bundle-" + sn);
+            bundle.setAttribute("value", state);
         }
 
     }
