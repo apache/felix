@@ -78,7 +78,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 
     // runtime state (changes because of state changes)
     private Object m_serviceInstance;
-    private ServiceRegistration m_registration;
+    private volatile ServiceRegistration m_registration;
     private boolean m_isBound;
     private boolean m_isInstantiated;
 
@@ -908,6 +908,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         if (m_serviceName != null) {
             m_registration.unregister();
             configureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
+            m_registration = null;
         }
     }
 
