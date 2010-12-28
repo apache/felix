@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.felix.ipojo.composite.instance;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
@@ -48,17 +49,17 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * Internal context.
      */
     private ServiceContext m_scope;
-    
+
     /**
      * Available factories.
      */
     private Factory[] m_factories;
-    
+
     /**
      * Handler description.
      */
     private InstanceHandlerDescription m_description;
-    
+
 
     /**
      * This structure aims to manage a configuration. It stores all necessary
@@ -79,7 +80,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
          * Created instance.
          */
         private ComponentInstance m_instance;
-        
+
         /**
          * Desired Factory (can be the classname).
          */
@@ -87,7 +88,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
         /**
          * Constructor.
-         * 
+         *
          * @param conf : the configuration to create.
          */
         ManagedConfiguration(Dictionary conf) {
@@ -110,7 +111,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         protected String getFactory() {
             return m_factoryName;
         }
-        
+
         protected String getNeededFactoryName() {
             return m_desiredFactory;
         }
@@ -125,7 +126,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
         /**
          * Set the factory name.
-         * 
+         *
          * @param name : the factory name.
          */
         protected void setFactory(String name) {
@@ -134,7 +135,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
         /**
          * Set the instance object.
-         * 
+         *
          * @param instance : the instance
          */
         protected void setInstance(ComponentInstance instance) {
@@ -149,7 +150,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
     /**
      * Create an instance using the given factory and the given configuration.
-     * 
+     *
      * @param fact : the factory name to used.
      * @param config : the configuration.
      */
@@ -167,7 +168,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             error("The instance creation has failed, an error during the configuration has occured", e);
         }
     }
-    
+
     /**
      * A new valid factory appears.
      * @param factory : factory.
@@ -177,7 +178,9 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         String factName = factory.getName();
         String className = factory.getComponentDescription().getClassName();
         for (int i = 0; i < m_configurations.length; i++) {
-            if (m_configurations[i].getInstance() == null && (m_configurations[i].getNeededFactoryName().equals(factName) || m_configurations[i].getNeededFactoryName().equals(className))) {
+            if (m_configurations[i].getInstance() == null
+            		&& (m_configurations[i].getNeededFactoryName().equals(factName)
+            				|| m_configurations[i].getNeededFactoryName().equals(className))) {
                 createInstance(factory, m_configurations[i]);
                 implicated = true;
             }
@@ -186,7 +189,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             checkValidity();
         }
     }
-    
+
     /**
      * An existing factory disappears or becomes invalid.
      * @param factory : factory
@@ -226,24 +229,40 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * Configure method.
      * @param metadata : component type metadata.
      * @param configuration : instance configuration.
-     * @throws ConfigurationException : occurs an instance cannot be parsed correctly. 
+     * @throws ConfigurationException : occurs an instance cannot be parsed correctly.
      * @see org.apache.felix.ipojo.CompositeHandler#configure(org.apache.felix.ipojo.CompositeManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         m_scope = getCompositeManager().getServiceContext();
+
+        // Prepare the configuration to append.
+        Properties toAppend = new Properties();
+        Enumeration keys = configuration.keys();
+        while(keys.hasMoreElements()) {
+        	String key = (String) keys.nextElement();
+        	if (! key.equals("instance.name")
+        			|| key.equals("component")) { // Remove instance.name and component
+        		toAppend.put(key, configuration.get(key));
+        	}
+        }
+
         Element[] instances = metadata.getElements("instance");
         m_configurations = new ManagedConfiguration[instances.length];
         for (int i = 0; i < instances.length; i++) {
-            Dictionary conf = null;
+            Properties conf = null;
             try {
                 conf = parseInstance(instances[i]);
             } catch (ParseException e) {
                 error("An instance cannot be parsed correctly", e);
                 throw new ConfigurationException("An instance cannot be parsed correctly : " + e.getMessage());
             }
-            m_configurations[i] = new ManagedConfiguration(conf);
+
+        	Properties instanceConfiguration = new Properties();
+         	instanceConfiguration.putAll(conf);
+            instanceConfiguration.putAll(toAppend);
+            m_configurations[i] = new ManagedConfiguration(instanceConfiguration);
         }
-        
+
         m_description = new InstanceHandlerDescription(this, m_configurations);
     }
 
@@ -253,16 +272,16 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * @return : the resulting dictionary
      * @throws ParseException : occurs when a configuration cannot be parse correctly.
      */
-    public static Dictionary parseInstance(Element instance) throws ParseException {
-        Dictionary dict = new Properties();
+    public static Properties parseInstance(Element instance) throws ParseException {
+    	Properties dict = new Properties();
         String name = instance.getAttribute("name");
         if (name != null) {
             dict.put("name", name);
         }
-        
+
         String comp = instance.getAttribute("component");
-        if (comp == null) { 
-            throw new ParseException("An instance does not have the 'component' attribute"); 
+        if (comp == null) {
+            throw new ParseException("An instance does not have the 'component' attribute");
         } else {
             dict.put("component", comp);
         }
@@ -306,10 +325,10 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * Start method.
      * @see org.apache.felix.ipojo.CompositeHandler#start()
      */
-    public void start() { 
+    public void start() {
         for (int j = 0; j < m_factories.length; j++) {
             String factName = m_factories[j].getName();
-            String className = m_factories[j].getClassName(); 
+            String className = m_factories[j].getClassName();
             for (int i = 0; i < m_configurations.length; i++) {
                 if (m_configurations[i].getInstance() == null && (m_configurations[i].getNeededFactoryName().equals(factName) || m_configurations[i].getNeededFactoryName().equals(className))) {
                     createInstance(m_factories[j], m_configurations[i]);
