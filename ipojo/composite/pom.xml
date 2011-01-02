@@ -117,7 +117,7 @@
               <goal>ipojo-bundle</goal>
             </goals>
             <configuration>
-              <metadata>metadata.xml</metadata>
+              <metadata>src/main/resources/metadata.xml</metadata>
               <ignoreAnnotations>true</ignoreAnnotations>
             </configuration>
           </execution>

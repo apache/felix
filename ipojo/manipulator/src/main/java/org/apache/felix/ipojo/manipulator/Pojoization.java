@@ -1018,27 +1018,36 @@ public class Pojoization {
      * @param metadataFile the metadata file
      */
     private void parseXMLMetadata(File metadataFile) {
-        try {
-            InputStream stream = null;
-            URL url = metadataFile.toURI().toURL();
-            if (url == null) {
-                warn("Cannot find the metadata file : " + metadataFile.getAbsolutePath());
-                m_metadata = new ArrayList/*Element*/();
-            } else {
-                stream = url.openStream();
-                parseXMLMetadata(stream); // m_metadata is set by the method.
-            }
-        } catch (MalformedURLException e) {
-            error("Cannot open the metadata input stream from " + metadataFile.getAbsolutePath() + ": " + e.getMessage());
-            m_metadata = null;
-        } catch (IOException e) {
-            error("Cannot open the metadata input stream: " + metadataFile.getAbsolutePath() + ": " + e.getMessage());
-            m_metadata = null;
-        }
+    	if (metadataFile.isDirectory()) {
+    		// Traverse the directory and parse all files.
+    		File[] files = metadataFile.listFiles();
+    		for (int i = 0; i< files.length; i++) {
+    			parseXMLMetadata(files[i]);
+    		}
+    	} else if (metadataFile.getName().endsWith(".xml")) { // Detect XML by extension,
+    														  // others are ignored.
+	        try {
+	            InputStream stream = null;
+	            URL url = metadataFile.toURI().toURL();
+	            if (url == null) {
+	                warn("Cannot find the metadata file : " + metadataFile.getAbsolutePath());
+	                m_metadata = new ArrayList/*Element*/();
+	            } else {
+	                stream = url.openStream();
+	                parseXMLMetadata(stream); // m_metadata is set by the method.
+	            }
+	        } catch (MalformedURLException e) {
+	            error("Cannot open the metadata input stream from " + metadataFile.getAbsolutePath() + ": " + e.getMessage());
+	            m_metadata = null;
+	        } catch (IOException e) {
+	            error("Cannot open the metadata input stream: " + metadataFile.getAbsolutePath() + ": " + e.getMessage());
+	            m_metadata = null;
+	        }
 
-        // m_metadata can be either an empty array or an Element
-        // array with component type description. It also can be null
-        // if no metadata file is given.
+	        // m_metadata can be either an empty array or an Element
+	        // array with component type description. It also can be null
+	        // if no metadata file is given.
+    	}
     }
 
     /**

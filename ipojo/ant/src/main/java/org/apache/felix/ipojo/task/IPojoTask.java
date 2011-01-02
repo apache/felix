@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -169,7 +169,11 @@ public class IPojoTask extends Task {
             if (!m_metadata.exists()) {
                 throw new BuildException("No metadata file found - the file " + m_metadata.getAbsolutePath() + " does not exist");
             } else {
-                log("Metadata file : " + m_metadata.getAbsolutePath());
+            	if (m_metadata.isDirectory()) {
+            		log("Metadata directory : " + m_metadata.getAbsolutePath());
+            	} else {
+            		log("Metadata file : " + m_metadata.getAbsolutePath());
+            	}
             }
         }
 
@@ -243,10 +247,7 @@ public class IPojoTask extends Task {
         if (version.startsWith("1.4")) {
             System.setProperty("org.xml.sax.driver", "org.apache.xerces.parsers.SAXParser");
         }
-
     }
-
-
 
 }
 
