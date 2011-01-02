@@ -20,8 +20,6 @@ package org.apache.felix.ipojo.plugin;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -63,7 +61,7 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Location of the metadata file or iPOJO metadata configuration.
-     * @parameter alias="metadata" default-value="metadata.xml"
+     * @parameter alias="metadata"
      */
     private String m_metadata;
 
@@ -134,39 +132,55 @@ public class ManipulatorMojo extends AbstractMojo {
 
         // Get metadata
         // Check if metadata are contained in the configuration
-        InputStream is = null;
+        File metadata = null; // Metadata File or directory containing the metadata files.
+        InputStream is = null; //Use if contained in the configuration
 
         if (isXML()) {
             is = new ByteArrayInputStream(m_metadata.getBytes());
         } else {
+        	// If the metadata is not set,
+        	// first check if ./src/main/ipojo exists, if so look into it.
             if (m_metadata == null) {
-                // Try with metadata.xml
-                m_metadata = "metadata.xml";
-            }
-            // Look for the metadata file in the output directory
-            File meta = new File(m_outputDirectory + File.separator + m_metadata);
-            // If not found look inside the pom directory
-            if (! meta.exists()) {
-                meta = new File(m_project.getBasedir() + File.separator + m_metadata);
+            	File m = new File(m_project.getBasedir(), "src/main/ipojo");
+            	if (m.isDirectory()) {
+            		metadata = m;
+            		getLog().info("Metadata directory : " + metadata.getAbsolutePath());
+            	} else {
+            		// Else check target/classes/metadata.xml
+            		File meta = new File(m_outputDirectory + File.separator + "metadata.xml");
+            		if (! meta.exists()) {
+            			// If it still does not exist, try ./metadata.xml
+                        meta = new File(m_project.getBasedir() + File.separator + m_metadata);
+                    }
+
+            		if (meta.exists()) {
+            			metadata = meta;
+            			getLog().info("Metadata file : " + metadata.getAbsolutePath());
+            		}
+
+            		// No metadata.
+            	}
+            } else {
+            	// metadata path set.
+            	File m = new File(m_project.getBasedir(), m_metadata);
+            	if (! m.exists()) {
+            		throw new MojoExecutionException("The metadata file does not exist : " + m.getAbsolutePath());
+            	}
+            	metadata = m;
+            	if (m.isDirectory()) {
+            		getLog().info("Metadata directory : " + metadata.getAbsolutePath());
+            	} else {
+            		getLog().info("Metadata file : " + metadata.getAbsolutePath());
+            	}
             }
 
-            getLog().info("Metadata file : " + meta.getAbsolutePath());
-            if (!meta.exists()) {
-                // Verify if annotations are ignored
+            if (metadata == null) {
+            	// Verify if annotations are ignored
                 if (m_ignoreAnnotations) {
                     getLog().info("No metadata file found - ignoring annotations");
                     return;
                 } else {
                     getLog().info("No metadata file found - trying to use only annotations");
-                    meta = null;
-                }
-            }
-
-            if (meta != null) {
-                try {
-                    is = new FileInputStream(meta);
-                } catch (FileNotFoundException e) {
-                    throw new MojoExecutionException("the specified metadata file does not exist: " + e.getMessage());
                 }
             }
         }
@@ -174,8 +188,8 @@ public class ManipulatorMojo extends AbstractMojo {
         // Get input bundle, we use the already create artifact.
         File in = m_project.getArtifact().getFile();
         getLog().info("Input Bundle File : " + in.getAbsolutePath());
-        if (!in.exists()) {
-            throw new MojoExecutionException("the specified bundle file does not exist");
+        if (! in.exists()) {
+            throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
         }
 
         File out = new File(m_buildDirectory + File.separator + "_out.jar");
@@ -186,8 +200,12 @@ public class ManipulatorMojo extends AbstractMojo {
 
         // Executes the pojoization.
         if (is == null) {
-            pojo.pojoization(in, out, (File) null); // Only annotations
-        } else  {
+        	if (metadata == null) { // No metadata.
+        		pojo.pojoization(in, out, (File) null); // Only annotations
+        	} else {
+        		pojo.pojoization(in, out, metadata); // Metadata set
+        	}
+        } else  { // In-Pom metadata.
             pojo.pojoization(in, out, is);
         }
 
