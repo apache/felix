@@ -150,7 +150,7 @@ public class ManipulatorMojo extends AbstractMojo {
             		File meta = new File(m_outputDirectory + File.separator + "metadata.xml");
             		if (! meta.exists()) {
             			// If it still does not exist, try ./metadata.xml
-                        meta = new File(m_project.getBasedir() + File.separator + m_metadata);
+                        meta = new File(m_project.getBasedir() + File.separator + "metadata.xml");
                     }
 
             		if (meta.exists()) {
