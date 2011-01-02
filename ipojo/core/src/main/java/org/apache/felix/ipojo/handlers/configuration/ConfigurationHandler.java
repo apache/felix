@@ -533,7 +533,6 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         }
 
         // Else we must compute the properties.
-
         Properties props = new Properties();
         for (int i = 0; i < m_configurableProperties.size(); i++) {
             String n = ((Property) m_configurableProperties.get(i)).getName();
