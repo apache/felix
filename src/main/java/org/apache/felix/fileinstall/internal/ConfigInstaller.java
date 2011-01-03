@@ -18,6 +18,18 @@
  */
 package org.apache.felix.fileinstall.internal;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.internal.Util.Logger;
@@ -30,18 +42,6 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * ArtifactInstaller for configurations.
@@ -212,7 +212,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(f.getAbsolutePath(), pid[0], pid[1]);
 
-        Hashtable old = new Hashtable(new DictionaryAsMap(config.getProperties()));
+        Dictionary props = config.getProperties();
+        Hashtable old = props != null ? new Hashtable(new DictionaryAsMap(props)) : new Hashtable();
         old.remove( DirectoryWatcher.FILENAME );
         old.remove( Constants.SERVICE_PID );
         old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
