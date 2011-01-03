@@ -1,3 +1,21 @@
+Changes from the 1.6.8 to 1.8.0
+-------------------------------
+** Bug
+    * [FELIX-2694] - Instance state not recomputed after reconfiguration when the instance is stopped
+    * [FELIX-2716] - [iPOJO] Failure when creating proxies for classes in java.* packages
+
+** Improvement
+    * [FELIX-1424] - Constructor Injection
+    * [FELIX-1428] - Constructor injection of Configuration properties
+    * [FELIX-2461] - Allow specifying the targeted service interface in the @ServiceController
+    * [FELIX-2620] - Change iPojo annotation parameters to follow java naming conventions
+    * [FELIX-2621] - Rename annotations to remove collisions
+    * [FELIX-2622] - Support static service properties that are not mirrored into fields
+    * [FELIX-2688] - iPojo "requires.filters" - Array object instead of Dictionary object
+    * [FELIX-2705] - Provide a way to extend the logger strategy
+    * [FELIX-2742] - Constructor injection of service dependencies
+    * [FELIX-2744] - Add annotations to the maven-ipojo-plugin archetype
+
 Changes from the 1.6.6 to 1.6.8
 -------------------------------
 ** Improvement
