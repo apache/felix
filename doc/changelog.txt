@@ -1,3 +1,20 @@
+Changes from the 1.6.4 to 1.8.0
+-------------------------------
+** Bug
+    * [FELIX-2664] - Native methods should not be manipulated
+
+** Improvement
+    * [FELIX-1424] - Constructor Injection
+    * [FELIX-1428] - Constructor injection of Configuration properties
+    * [FELIX-2620] - Change iPojo annotation parameters to follow java naming conventions
+    * [FELIX-2621] - Rename annotations to remove collisions
+    * [FELIX-2622] - Support static service properties that are not mirrored into fields
+    * [FELIX-2630] - Rename @Component attributes to follow the java naming conventions
+    * [FELIX-2732] - [iPOJO] Service modified callback should define a default method name
+    * [FELIX-2742] - Constructor injection of service dependencies
+    * [FELIX-2743] - Modify Pojoization to be more easily customizable
+    * [FELIX-2755] - Allow the manipulator and the different front end to use several metadata files
+
 Changes from the 1.6.2 to 1.6.4
 -------------------------------
 ** Bug
