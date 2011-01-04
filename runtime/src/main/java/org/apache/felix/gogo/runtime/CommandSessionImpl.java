@@ -21,16 +21,22 @@
 // DWB10: add SCOPE support: https://www.osgi.org/bugzilla/show_bug.cgi?id=51
 package org.apache.felix.gogo.runtime;
 
-import org.apache.felix.service.command.CommandSession;
-import org.apache.felix.service.command.Converter;
-import org.apache.felix.service.command.Function;
-import org.apache.felix.service.threadio.ThreadIO;
-
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
+import org.apache.felix.service.threadio.ThreadIO;
 
 public class CommandSessionImpl implements CommandSession, Converter
 {
@@ -75,9 +81,20 @@ public class CommandSessionImpl implements CommandSession, Converter
             throw new IllegalStateException(SESSION_CLOSED);
         }
 
-        Closure impl = new Closure(this, null, commandline);
-        Object result = impl.execute(this, null);
-        return result;
+        beforeExecute(commandline);
+
+        try
+        {
+            Closure impl = new Closure(this, null, commandline);
+            Object result = impl.execute(this, null);
+            afterExecute(commandline, result);
+            return result;
+        }
+        catch (Exception e)
+        {
+            afterExecute(commandline, e);
+            throw e;
+        }
     }
 
     public InputStream getKeyboard()
@@ -368,4 +385,20 @@ public class CommandSessionImpl implements CommandSession, Converter
             return "<can not format " + result + ":" + e;
         }
     }
+
+    protected void beforeExecute(CharSequence commandline)
+    {
+        // Centralized callback for derived implementation
+    }
+
+    protected void afterExecute(CharSequence commandline, Exception exception)
+    {
+        // Centralized callback for derived implementation
+    }
+
+    protected void afterExecute(CharSequence commandline, Object result)
+    {
+        // Centralized callback for derived implementation
+    }
+
 }
