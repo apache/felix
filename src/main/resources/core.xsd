@@ -263,6 +263,13 @@
           </xs:annotation>
         </xs:attribute>
 
+        <xs:attribute name="constructor-parameter" type="xs:int" use="optional">
+          <xs:annotation>
+            <xs:documentation>The index of the parameter if the dependency is injected
+            using the constructor.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+
         <xs:attribute name="nullable" type="xs:boolean" use="optional">
           <xs:annotation>
             <xs:documentation>Enable or disable the Nullable pattern on optional service
@@ -450,6 +457,12 @@
       <xs:annotation>
         <xs:documentation> Setter method of the property. This method is called to inject property
           value. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+	<xs:attribute name="constructor-parameter" type="xs:int" use="optional">
+      <xs:annotation>
+        <xs:documentation>The index of the parameter if the property is injected
+        using the constructor.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="name" type="xs:string" use="optional">
