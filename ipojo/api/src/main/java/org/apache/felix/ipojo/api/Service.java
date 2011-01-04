@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,57 +34,67 @@ import org.apache.felix.ipojo.metadata.Element;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Service implements HandlerConfiguration {
-    
+
     /**
      * Creation strategy : singleton (default).
      */
     public static final int SINGLETON_STRATEGY = ProvidedService.SINGLETON_STRATEGY;
-    
+
     /**
      * Creation strategy : delegate on the static factory method.
      */
     public static final int STATIC_STRATEGY = ProvidedService.STATIC_STRATEGY;
-    
+
     /**
      * Creation strategy : one service object per instance.
      */
     public static final int INSTANCE_STRATEGY = ProvidedService.INSTANCE_STRATEGY;
-    
+
     /**
      * Creation strategy : one service object per bundle (OSGi service factory).
      */
     public static final int  SERVICE_STRATEGY = ProvidedService.SERVICE_STRATEGY;
-    
+
     /**
-     * The provided service specification. 
+     * The provided service specification.
      */
-    private List m_specifications; // null be default computed. 
-    
+    private List m_specifications; // null be default computed.
+
     /**
-     * The provided service strategy. 
+     * The provided service strategy.
      */
     private int m_strategy = ProvidedService.SINGLETON_STRATEGY;
-    
+
     /**
-     * The provided service custom strategy. 
+     * The provided service custom strategy.
      */
     private String m_customStrategy;
-    
+
     /**
-     * The service properties. 
+     * The service properties.
      */
     private List m_properties = new ArrayList();
-    
+
     /**
      * Service controller.
      */
     private String m_controller;
-    
+
     /**
      * Service Controller value.
      */
     private boolean m_controllerValue;
-    
+
+    /**
+     * Post-Registration callback.
+     */
+    private String m_postRegistrationCallback;
+
+    /**
+     * Post-Unregistration callback.
+     */
+    private String m_postUnregistrationCallback;
+
     /**
      * Gets the provided service element.
      * @return the 'provides' element.
@@ -99,21 +109,28 @@ public class Service implements HandlerConfiguration {
         for (int i = 0; i < m_properties.size(); i++) {
             element.addElement(((ServiceProperty) m_properties.get(i)).getElement());
         }
-        
+
         if (m_controller != null) {
             Element ctrl = new Element("controller", "");
             ctrl.addAttribute(new Attribute("field", m_controller));
             ctrl.addAttribute(new Attribute("value", String.valueOf(m_controllerValue)));
             element.addElement(ctrl);
         }
-        
-        return element;   
+
+        if (m_postRegistrationCallback != null) {
+        	element.addAttribute(new Attribute("post-registration", m_postRegistrationCallback));
+        }
+        if (m_postUnregistrationCallback != null) {
+        	element.addAttribute(new Attribute("post-unregistration", m_postUnregistrationCallback));
+        }
+
+        return element;
     }
-    
+
     /**
      * Gets the provided service description associated with the current service.
      * @param instance the instance on which looking for the provided service description
-     * @return the provided service description or <code>null</code> if not found. 
+     * @return the provided service description or <code>null</code> if not found.
      */
     public ProvidedServiceDescription getProvidedServiceDescription(ComponentInstance instance) {
         PrimitiveInstanceDescription desc = (PrimitiveInstanceDescription) instance.getInstanceDescription();
@@ -121,11 +138,11 @@ public class Service implements HandlerConfiguration {
         if (pss.length == 0) {
             return null;
         }
-        
+
         if (pss.length == 1) {
             return pss[0];
         }
-        
+
         if (m_specifications == null) {
             return null;
         } else {
@@ -137,12 +154,12 @@ public class Service implements HandlerConfiguration {
                 }
             }
         }
-        
+
         return null;
     }
 
 
-    
+
     /**
      * Checks the validity of the configuration.
      */
@@ -170,7 +187,7 @@ public class Service implements HandlerConfiguration {
             return buffer.toString();
         }
     }
-    
+
     /**
      * Adds a service property.
      * @param ps the service property to add
@@ -180,7 +197,7 @@ public class Service implements HandlerConfiguration {
         m_properties.add(ps);
         return this;
     }
-    
+
     /**
      * Adds a service property.
      * @param key the property key
@@ -211,7 +228,7 @@ public class Service implements HandlerConfiguration {
         m_specifications.add(spec);
         return this;
     }
-    
+
     /**
      * Sets the provided service specifications.
      * @param specs the service specifications
@@ -221,7 +238,7 @@ public class Service implements HandlerConfiguration {
         m_specifications  = specs;
         return this;
     }
-    
+
     /**
      * Sets the creation strategy.
      * @param strategy the service strategy.
@@ -231,7 +248,7 @@ public class Service implements HandlerConfiguration {
         m_strategy = strategy;
         return this;
     }
-    
+
     /**
      * Sets the creation strategy.
      * This method allows using a customized
@@ -244,20 +261,40 @@ public class Service implements HandlerConfiguration {
         m_customStrategy = strategy;
         return this;
     }
-    
+
     /**
      * Sets the service controller.
      * @param field the controller field
      * @param initialValue the initial value
-     * @return the current servic object
+     * @return the current service object
      */
-    public Service setServiceController(String field, 
+    public Service setServiceController(String field,
             boolean initialValue) {
         m_controller = field;
         m_controllerValue = initialValue;
         return this;
     }
-    
+
+    /**
+     * Sets the post-registration callback.
+     * @param callback the callback name (method name)
+     * @return the current service object
+     */
+    public Service setPostRegistrationCallback(String callback) {
+    	m_postRegistrationCallback = callback;
+    	return this;
+    }
+
+    /**
+     * Sets the post-unregistration callback.
+     * @param callback the callback name (method name)
+     * @return the current service object
+     */
+    public Service setPostUnregistrationCallback(String callback) {
+    	m_postUnregistrationCallback = callback;
+    	return this;
+    }
+
     /**
      * Gets the string-form of the creation strategy.
      * @return the creation strategy string form

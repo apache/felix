@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,37 +29,42 @@ import org.apache.felix.ipojo.metadata.Element;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Property {
-    
+
     /**
      * The property name.
      */
     private String m_name;
-    
+
     /**
-     * The property field. 
+     * The property field.
      */
     private String m_field;
-    
+
     /**
-     * The property value. 
+     * The constructor parameter index.
+     */
+    private int m_parameterIndex = -1;
+
+    /**
+     * The property value.
      */
     private String m_value;
-    
+
     /**
-     * The property method. 
+     * The property method.
      */
     private String m_method;
-    
+
     /**
-     * Is the property mandatory. 
+     * Is the property mandatory.
      */
     private boolean m_mandatory;
-    
+
     /**
-     * Is the property immutable. 
+     * Is the property immutable.
      */
     private boolean m_immutable;
-    
+
     /**
      * Sets the property name.
      * @param name the property name
@@ -69,7 +74,7 @@ public class Property {
         m_name = name;
         return this;
     }
-    
+
     /**
      * Sets the property field.
      * @param name the property field
@@ -79,7 +84,17 @@ public class Property {
         m_field = name;
         return this;
     }
-    
+
+    /**
+     * Sets the constructor parameter index of the property.
+     * @param index the parameter index
+     * @return the current property object
+     */
+    public Property setConstructorParameter(int index) {
+        m_parameterIndex = index;
+        return this;
+    }
+
     /**
      * Sets the property method.
      * @param name the property method
@@ -89,7 +104,7 @@ public class Property {
         m_method = name;
         return this;
     }
-    
+
     /**
      * Sets the property value.
      * @param name the property value
@@ -99,7 +114,7 @@ public class Property {
         m_value = name;
         return this;
     }
-    
+
     /**
      * Sets if the property is mandatory.
      * @param mandatory <code>true</code> if the dependency is mandatory.
@@ -109,7 +124,7 @@ public class Property {
         m_mandatory = mandatory;
         return this;
     }
-    
+
     /**
      * Sets if the property is immutable.
      * @param immutable <code>true</code> if the dependency is immutable.
@@ -119,7 +134,7 @@ public class Property {
         m_immutable = immutable;
         return this;
     }
-    
+
     /**
      * Gets the property element.
      * @return the property element.
@@ -132,6 +147,10 @@ public class Property {
         }
         if (m_method != null) {
             element.addAttribute(new Attribute("method", m_method));
+        }
+        if (m_parameterIndex != -1) {
+        	element.addAttribute(new Attribute("constructor-parameter",
+        			Integer.toString(m_parameterIndex)));
         }
         if (m_value != null) {
             element.addAttribute(new Attribute("value", m_value));
@@ -154,32 +173,33 @@ public class Property {
     private void ensureValidity() {
         // Two cases
         // Field or Method
-        if (m_field == null && m_method == null) {
-            throw new IllegalStateException("A property must have either a field or a method");
+        if (m_field == null && m_method == null && m_parameterIndex == -1) {
+            throw new IllegalStateException("A property must have either a field or a method " +
+            		"or a constructor parameter");
         }
         if (m_immutable && m_value == null) {
             throw new IllegalStateException("A immutable service property must have a value");
         }
     }
-    
+
     /**
      * Gets the property description for the current property.
      * @param instance the component instance on which looking for the property.
-     * @return the property description associated with the current property 
+     * @return the property description associated with the current property
      * or <code>null</code> if not found.
      */
     public PropertyDescription getPropertyDescription(ComponentInstance instance) {
         PrimitiveInstanceDescription desc = (PrimitiveInstanceDescription) instance.getInstanceDescription();
         PropertyDescription[] props = desc.getProperties();
-        
+
         for (int i = 0; i < props.length; i++) {
-            if ((m_name != null && m_name.equals(props[i].getName())) 
+            if ((m_name != null && m_name.equals(props[i].getName()))
                     || (m_field != null && m_field.equals(props[i].getName()))) {
                 return props[i];
             }
         }
-           
+
         return null;
     }
-    
+
 }

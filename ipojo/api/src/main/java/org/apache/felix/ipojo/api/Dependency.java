@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,17 +29,17 @@ import org.apache.felix.ipojo.metadata.Element;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Dependency implements HandlerConfiguration {
-    
+
     /**
      * The dynamic binding policy.
      */
     public static final int DYNAMIC = org.apache.felix.ipojo.handlers.dependency.Dependency.DYNAMIC_BINDING_POLICY;
-    
+
     /**
-     * The static binding policy. 
+     * The static binding policy.
      */
     public static final int STATIC = org.apache.felix.ipojo.handlers.dependency.Dependency.STATIC_BINDING_POLICY;
-    
+
     /**
      * The dynamic-priority binding policy.
      */
@@ -49,76 +49,81 @@ public class Dependency implements HandlerConfiguration {
      * The required specification.
      */
     private String m_specification;
-    
+
     /**
-     * The LDAP filter of the dependency. 
+     * The LDAP filter of the dependency.
      */
     private String m_filter;
-    
+
     /**
      * The field of the implementation class attached to
-     * this dependency. 
+     * this dependency.
      */
     private String m_field;
-    
+
     /**
-     * Is the dependency optional? 
+     * The constructor parameter index.
+     */
+    private int m_parameterIndex = -1;
+
+    /**
+     * Is the dependency optional?
      */
     private boolean m_optional;
-    
+
     /**
-     * Is the dependency aggregate? 
+     * Is the dependency aggregate?
      */
     private boolean m_aggregate;
-    
+
     /**
-     * Bind method attached to the dependency. 
+     * Bind method attached to the dependency.
      */
     private String m_bind;
-    
+
     /**
-     * Unbind method attached to the dependency. 
+     * Unbind method attached to the dependency.
      */
     private String m_unbind;
-    
+
     /**
-     * Modified method attached to the dependency. 
+     * Modified method attached to the dependency.
      */
     private String m_modified;
-    
+
     /**
-     * The dependency binding policy. 
+     * The dependency binding policy.
      */
     private int m_policy;
-    
+
     /**
      * The dependency comparator.
-     * (used to compare service providers) 
+     * (used to compare service providers)
      */
     private String m_comparator;
-    
+
     /**
-     * The dependency default-implementation. 
+     * The dependency default-implementation.
      */
     private String m_di;
-    
+
     /**
-     * The dependency specific provider. 
+     * The dependency specific provider.
      */
     private String m_from;
-    
+
     /**
-     * The dependency id. 
+     * The dependency id.
      */
     private String m_id;
-    
+
     /**
-     * Does the dependency supports nullable? 
+     * Does the dependency supports nullable?
      */
     private boolean m_nullable = true;
-    
+
     /**
-     * Does the dependency enables proxy. 
+     * Does the dependency enables proxy.
      */
     private boolean m_proxy = true;
 
@@ -129,7 +134,7 @@ public class Dependency implements HandlerConfiguration {
      */
     public Element getElement() {
         ensureValidity();
-        
+
         Element dep = new Element("requires", "");
         if (m_specification != null) {
             dep.addAttribute(new Attribute("specification", m_specification));
@@ -139,6 +144,10 @@ public class Dependency implements HandlerConfiguration {
         }
         if (m_field != null) {
             dep.addAttribute(new Attribute("field", m_field));
+        }
+        if (m_parameterIndex != -1) {
+        	dep.addAttribute(new Attribute("constructor-parameter",
+        			Integer.toString(m_parameterIndex)));
         }
         if (m_bind != null) {
             Element cb = new Element("callback", "");
@@ -194,7 +203,7 @@ public class Dependency implements HandlerConfiguration {
         }
         return dep;
     }
-    
+
     /**
      * Sets the required service specification.
      * @param spec the specification
@@ -204,7 +213,7 @@ public class Dependency implements HandlerConfiguration {
         m_specification = spec;
         return this;
     }
-    
+
     /**
      * Sets the dependency filter.
      * @param filter the LDAP filter
@@ -214,7 +223,7 @@ public class Dependency implements HandlerConfiguration {
         m_filter = filter;
         return this;
     }
-    
+
     /**
      * Sets the field attached to the dependency.
      * @param field the implementation class field name.
@@ -224,10 +233,20 @@ public class Dependency implements HandlerConfiguration {
         m_field = field;
         return this;
     }
-    
+
+    /**
+     * Sets the constructor parameter index of the dependency.
+     * @param index the parameter index
+     * @return the current dependency object
+     */
+    public Dependency setConstructorParameter(int index) {
+        m_parameterIndex = index;
+        return this;
+    }
+
     /**
      * Sets the dependency optionality.
-     * @param opt <code>true</code> to set the 
+     * @param opt <code>true</code> to set the
      * dependency to optional.
      * @return the current dependency object.
      */
@@ -235,10 +254,10 @@ public class Dependency implements HandlerConfiguration {
         m_optional = opt;
         return this;
     }
-    
+
     /**
      * Sets the dependency cardinality.
-     * @param agg <code>true</code> to set the 
+     * @param agg <code>true</code> to set the
      * dependency to aggregate.
      * @return the current dependency object.
      */
@@ -246,7 +265,7 @@ public class Dependency implements HandlerConfiguration {
         m_aggregate = agg;
         return this;
     }
-    
+
     /**
      * Sets if the dependency supports nullable objects.
      * @param nullable <code>false</code> if the dependency does not
@@ -257,7 +276,7 @@ public class Dependency implements HandlerConfiguration {
         m_nullable = nullable;
         return this;
     }
-    
+
     /**
      * Sets if the dependency injects proxies.
      * @param proxy <code>false</code> if the dependency does not
@@ -268,7 +287,7 @@ public class Dependency implements HandlerConfiguration {
         m_proxy = proxy;
         return this;
     }
-    
+
     /**
      * Sets the dependency bind method.
      * @param bind the bind method name
@@ -278,7 +297,7 @@ public class Dependency implements HandlerConfiguration {
         m_bind = bind;
         return this;
     }
-    
+
     /**
      * Sets the dependency unbind method.
      * @param unbind the unbind method
@@ -288,7 +307,7 @@ public class Dependency implements HandlerConfiguration {
         m_unbind = unbind;
         return this;
     }
-    
+
     /**
      * Sets the dependency modified method.
      * @param modified the modified method
@@ -298,7 +317,7 @@ public class Dependency implements HandlerConfiguration {
         m_modified = modified;
         return this;
     }
-    
+
     /**
      * Sets the dependency binding policy.
      * @param policy the binding policy
@@ -308,7 +327,7 @@ public class Dependency implements HandlerConfiguration {
         m_policy = policy;
         return this;
     }
-    
+
     /**
      * Sets the dependency comparator.
      * @param cmp the comparator class name
@@ -318,7 +337,7 @@ public class Dependency implements HandlerConfiguration {
         m_comparator = cmp;
         return this;
     }
-    
+
     /**
      * Sets the dependency default-implementation.
      * @param di the default-implementation class name
@@ -328,7 +347,7 @@ public class Dependency implements HandlerConfiguration {
         m_di = di;
         return this;
     }
-    
+
     /**
      * Sets the dependency 'from' attribute.
      * @param from the name of the service provider.
@@ -338,7 +357,7 @@ public class Dependency implements HandlerConfiguration {
         m_from = from;
         return this;
     }
-    
+
     /**
      * Sets the dependency id.
      * @param id the dependency id.
@@ -348,14 +367,15 @@ public class Dependency implements HandlerConfiguration {
         m_id = id;
         return this;
     }
-    
+
     /**
      * Checks dependency configuration validity.
      */
     private void ensureValidity() {
         // At least a field or methods.
-        if (m_field == null && m_bind == null && m_unbind == null) {
-            throw new IllegalStateException("A dependency must have a field or bind/unbind methods");
+        if (m_field == null && m_bind == null && m_unbind == null  && m_parameterIndex == -1) {
+            throw new IllegalStateException("A dependency must have a field or bind/unbind methods " +
+            		"or a parameter index");
         }
         // Check binding policy.
         if (m_policy != -1) {
@@ -364,12 +384,12 @@ public class Dependency implements HandlerConfiguration {
             }
         }
     }
-    
+
     /**
      * Gets the dependency description object attached to
      * this dependency.
      * @param instance the instance on which searching the dependency
-     * @return the dependency description attached to this dependency or 
+     * @return the dependency description attached to this dependency or
      * <code>null</code> if the dependency cannot be found.
      */
     public DependencyDescription getDependencyDescription(ComponentInstance instance) {
@@ -384,9 +404,9 @@ public class Dependency implements HandlerConfiguration {
         if (deps.length == 1) {
             return deps[0];
         }
-        // Cannot determine the dependency. 
+        // Cannot determine the dependency.
         return null;
     }
-    
-    
+
+
 }
