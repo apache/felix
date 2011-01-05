@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.CommandProxy;
+import org.apache.felix.service.command.CommandSessionListener;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -42,6 +43,7 @@ public class Activator implements BundleActivator
     private ThreadIOImpl threadio;
     private ServiceTracker commandTracker;
     private ServiceTracker converterTracker;
+    private ServiceTracker listenerTracker;
     private ServiceRegistration processorRegistration;
     private ServiceRegistration threadioRegistration;
     
@@ -50,6 +52,14 @@ public class Activator implements BundleActivator
     protected ServiceRegistration newProcessor(ThreadIO tio, BundleContext context)
     {
         processor = new CommandProcessorImpl(tio);
+        try
+        {
+            processor.addListener(new EventAdminListener(context));
+        }
+        catch (NoClassDefFoundError error)
+        {
+            // Ignore the listener if EventAdmin package isn't present
+        }
 
         // Setup the variables and commands exposed in an OSGi environment.
         processor.addConstant(CONTEXT, context);
@@ -90,6 +100,23 @@ public class Activator implements BundleActivator
             }
         };
         converterTracker.open();
+
+        listenerTracker = new ServiceTracker(context, CommandSessionListener.class.getName(), null)
+        {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                CommandSessionListener listener = (CommandSessionListener) super.addingService(reference);
+                processor.addListener(listener);
+                return listener;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                processor.removeListener((CommandSessionListener) service);
+                super.removedService(reference, service);
+            }
+        };
+        listenerTracker.open();
     }
 
     public void stop(BundleContext context) throws Exception
@@ -98,6 +125,7 @@ public class Activator implements BundleActivator
         threadioRegistration.unregister();
         commandTracker.close();
         converterTracker.close();
+        listenerTracker.close();
         threadio.stop();
         processor.stop();
     }

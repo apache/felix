@@ -81,18 +81,18 @@ public class CommandSessionImpl implements CommandSession, Converter
             throw new IllegalStateException(SESSION_CLOSED);
         }
 
-        beforeExecute(commandline);
+        processor.beforeExecute(this, commandline);
 
         try
         {
             Closure impl = new Closure(this, null, commandline);
             Object result = impl.execute(this, null);
-            afterExecute(commandline, result);
+            processor.afterExecute(this, commandline, result);
             return result;
         }
         catch (Exception e)
         {
-            afterExecute(commandline, e);
+            processor.afterExecute(this, commandline, e);
             throw e;
         }
     }
@@ -384,21 +384,6 @@ public class CommandSessionImpl implements CommandSession, Converter
         {
             return "<can not format " + result + ":" + e;
         }
-    }
-
-    protected void beforeExecute(CharSequence commandline)
-    {
-        // Centralized callback for derived implementation
-    }
-
-    protected void afterExecute(CharSequence commandline, Exception exception)
-    {
-        // Centralized callback for derived implementation
-    }
-
-    protected void afterExecute(CharSequence commandline, Object result)
-    {
-        // Centralized callback for derived implementation
     }
 
 }
