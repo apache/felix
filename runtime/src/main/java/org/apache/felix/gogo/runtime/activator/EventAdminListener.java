@@ -20,8 +20,8 @@ package org.apache.felix.gogo.runtime.activator;
 
 import java.util.Properties;
 
+import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.service.command.CommandSession;
-import org.apache.felix.service.command.CommandSessionListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
