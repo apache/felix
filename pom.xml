@@ -57,7 +57,8 @@
                     <instructions>
                         <Export-Package>
                             org.apache.felix.service.command;
-                            org.apache.felix.service.threadio; version=${project.version}; status="provisional"; mandatory:="status"
+                            org.apache.felix.service.threadio; version=${project.version}; status="provisional"; mandatory:="status",
+                            org.apache.felix.gogo.api; version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.osgi.service.event*; resolution:=optional,

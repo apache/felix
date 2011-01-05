@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.felix.gogo.runtime.CommandProcessorImpl;
 import org.apache.felix.gogo.runtime.CommandProxy;
-import org.apache.felix.service.command.CommandSessionListener;
+import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
