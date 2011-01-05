@@ -32,7 +32,7 @@ import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.apache.felix.service.command.CommandSessionListener;
+import org.apache.felix.gogo.api.CommandSessionListener;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
