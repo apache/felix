@@ -21,10 +21,18 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.osgi.framework.BundleContext;
+import org.apache.felix.service.command.CommandSessionListener;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
@@ -34,6 +42,7 @@ import org.apache.felix.service.threadio.ThreadIO;
 public class CommandProcessorImpl implements CommandProcessor
 {
     protected final Set<Converter> converters = new HashSet<Converter>();
+    protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<CommandSessionListener>();
     protected final Map<String, Object> commands = new LinkedHashMap<String, Object>();
     protected final Map<String, Object> constants = new HashMap<String, Object>();
     protected final ThreadIO threadIO;
@@ -68,6 +77,17 @@ public class CommandProcessorImpl implements CommandProcessor
     {
         converters.remove(c);
     }
+
+    public void addListener(CommandSessionListener l)
+    {
+        listeners.add(l);
+    }
+
+    public void removeListener(CommandSessionListener l)
+    {
+        listeners.remove(l);
+    }
+
 
     public Set<String> getCommands()
     {
@@ -243,4 +263,50 @@ public class CommandProcessorImpl implements CommandProcessor
 
         return session.execute(buf);
     }
+
+    void beforeExecute(CommandSession session, CharSequence commandline)
+    {
+        for (CommandSessionListener l : listeners)
+        {
+            try
+            {
+                l.beforeExecute(session, commandline);
+            }
+            catch (Throwable t)
+            {
+                // Ignore
+            }
+        }
+    }
+
+    void afterExecute(CommandSession session, CharSequence commandline, Exception exception)
+    {
+        for (CommandSessionListener l : listeners)
+        {
+            try
+            {
+                l.afterExecute(session, commandline, exception);
+            }
+            catch (Throwable t)
+            {
+                // Ignore
+            }
+        }
+    }
+
+    void afterExecute(CommandSession session, CharSequence commandline, Object result)
+    {
+        for (CommandSessionListener l : listeners)
+        {
+            try
+            {
+                l.afterExecute(session, commandline, result);
+            }
+            catch (Throwable t)
+            {
+                // Ignore
+            }
+        }
+    }
+
 }
