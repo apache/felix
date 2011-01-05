@@ -60,6 +60,7 @@
                             org.apache.felix.service.threadio; version=${project.version}; status="provisional"; mandatory:="status"
                         </Export-Package>
                         <Import-Package>
+                            org.osgi.service.event*; resolution:=optional,
                             org.osgi.service.log*; resolution:=optional,
                             org.osgi.service.packageadmin*; resolution:=optional,
                             org.osgi.service.startlevel*; resolution:=optional,
