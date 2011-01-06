@@ -219,8 +219,13 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      */
     public void visitEnd() {
         // If m_elem (Component) is null, print a warning and ignore.
-        if (m_elem == null  && ! m_elements.isEmpty()) {
+        if (m_elem == null  &&  ! m_elements.isEmpty()) {
             m_ignoredBecauseOfMissingComponent = true;
+            return;
+        }
+
+        if (! m_containsComponentAnnotation) {
+        	m_ignoredBecauseOfMissingComponent = true;
             return;
         }
 
