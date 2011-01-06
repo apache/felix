@@ -28,7 +28,7 @@
   <artifactId>org.apache.felix.ipojo.webconsole</artifactId>
   <version>1.5.0-SNAPSHOT</version>
   <name>Apache Felix iPOJO WebConsole Plugins</name>
-  
+
   <description>
   iPOJO plugin for the Apache Felix Web Console. This plugin allows introspecting an iPOJO system with the Apache Felix
   Web Console.
@@ -61,7 +61,7 @@
               org.apache.felix.ipojo.webconsole
             </Private-Package>
             <Import-Package>*</Import-Package>
-            <Include-Resource> 
+            <Include-Resource>
               META-INF/LICENSE=LICENSE,
               META-INF/LICENSE.json=LICENSE.json,
               META-INF/NOTICE=NOTICE,
@@ -99,7 +99,8 @@
             <param>maven-eclipse.xml</param>
             <param>.checkstyle</param>
             <param>.externalToolBuilders/*</param>
-            <param>LICENSE.asm</param>
+            <param>LICENSE.*</param>
+			<param>DEPENDENCIES</param>
           </excludes>
         </configuration>
       </plugin>
@@ -118,17 +119,17 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>3.1.0</version>
+      <version>3.1.6</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>1.6.2</version>
+      <version>1.6.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-      <version>1.6.2</version>
+      <version>1.6.4</version>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
