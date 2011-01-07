@@ -4752,12 +4752,12 @@ public class Felix extends BundleImpl implements Framework
     }
 
     /**
-     * Promotes a bundle lock to the global lock. This is called by a thread
-     * wanting the global lock, but already holding a bundle lock (currently
-     * only when updating a bundle). Since it is possible to deadlock when
-     * trying to acquire the global lock while holding a bundle lock, this
-     * method may fail if a potential deadlock is detected.
-     * @param bundle The bundle already locked by the calling thread.
+     * Attempts to acquire the global lock. Will also promote a bundle lock
+     * to the global lock, if the calling thread already holds a bundle lock.
+     * Since it is possible to deadlock when trying to acquire the global lock
+     * while holding a bundle lock, this method may fail if a potential deadlock
+     * is detected. If the calling thread does not hold a bundle lock, then it
+     * will wait indefinitely to acquire the global.
      * @return <tt>true</tt> if the global lock was successfully acquired,
      *         <tt>false</tt> otherwise.
     **/
