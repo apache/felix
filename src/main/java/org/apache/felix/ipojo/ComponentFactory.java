@@ -335,7 +335,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         	String[] hs = ParseUtils.split(v, ",");
         	for (int i = 0; i < hs.length; i++) {
         		String h = hs[i].trim();
-        		String[] segments = h.split(":");
+        		String[] segments = ParseUtils.split(h, ":");
         		RequiredHandler rq = null;
         		if (segments.length == 2) { // External handler
         			rq = new RequiredHandler(segments[1], segments[0]);
