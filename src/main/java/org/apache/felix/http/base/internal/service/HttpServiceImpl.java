@@ -144,7 +144,7 @@ public final class HttpServiceImpl
             return false;
         }
 
-        if (name.endsWith( "/" )) {
+        if (!name.equals("/") && name.endsWith( "/" )) {
             return false;
         }
 
