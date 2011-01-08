@@ -23,11 +23,12 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.mortbay.jetty.security.HashUserRealm;
 import org.mortbay.jetty.security.SslSelectChannelConnector;
+import org.mortbay.jetty.security.SslSocketConnector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.servlet.*;
-import org.mortbay.log.Log;
 import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -58,7 +59,7 @@ public final class JettyService
         this.dispatcher = dispatcher;
         this.controller = controller;
     }
-    
+
     public void start()
         throws Exception
     {
@@ -150,7 +151,9 @@ public final class JettyService
     private void initializeHttp()
         throws Exception
     {
-        Connector connector = new SelectChannelConnector();
+        Connector connector = this.config.isUseHttpNio()
+                ? new SelectChannelConnector()
+                : new SocketConnector();
         connector.setPort(this.config.getHttpPort());
         connector.setMaxIdleTime(60000);
         this.server.addConnector(connector);
@@ -159,37 +162,97 @@ public final class JettyService
     private void initializeHttps()
         throws Exception
     {
-        SslSelectChannelConnector connector = new SslSelectChannelConnector();
+        // this massive code duplication is caused by the SslSelectChannelConnector
+        // and the SslSocketConnector not have a common API to setup security
+        // stuff
+        Connector connector;
+        if (this.config.isUseHttpsNio())
+        {
+            SslSelectChannelConnector sslConnector = new SslSelectChannelConnector();
+
+            if (this.config.getKeystore() != null)
+            {
+                sslConnector.setKeystore(this.config.getKeystore());
+            }
+
+            if (this.config.getPassword() != null)
+            {
+                System.setProperty(SslSelectChannelConnector.PASSWORD_PROPERTY, this.config.getPassword());
+                sslConnector.setPassword(this.config.getPassword());
+            }
+
+            if (this.config.getKeyPassword() != null)
+            {
+                System.setProperty(SslSelectChannelConnector.KEYPASSWORD_PROPERTY, this.config.getKeyPassword());
+                sslConnector.setKeyPassword(this.config.getKeyPassword());
+            }
+
+            if (this.config.getTruststore() != null)
+            {
+                sslConnector.setTruststore(this.config.getTruststore());
+            }
+
+            if (this.config.getTrustPassword() != null)
+            {
+                sslConnector.setTrustPassword(this.config.getTrustPassword());
+            }
+
+            if ("wants".equals(this.config.getClientcert()))
+            {
+                sslConnector.setWantClientAuth(true);
+            }
+            else if ("needs".equals(this.config.getClientcert()))
+            {
+                sslConnector.setNeedClientAuth(true);
+            }
+
+            connector = sslConnector;
+        }
+        else
+        {
+            SslSocketConnector sslConnector = new SslSocketConnector();
+
+            if (this.config.getKeystore() != null)
+            {
+                sslConnector.setKeystore(this.config.getKeystore());
+            }
+
+            if (this.config.getPassword() != null)
+            {
+                System.setProperty(SslSelectChannelConnector.PASSWORD_PROPERTY, this.config.getPassword());
+                sslConnector.setPassword(this.config.getPassword());
+            }
+
+            if (this.config.getKeyPassword() != null)
+            {
+                System.setProperty(SslSelectChannelConnector.KEYPASSWORD_PROPERTY, this.config.getKeyPassword());
+                sslConnector.setKeyPassword(this.config.getKeyPassword());
+            }
+
+            if (this.config.getTruststore() != null)
+            {
+                sslConnector.setTruststore(this.config.getTruststore());
+            }
+
+            if (this.config.getTrustPassword() != null)
+            {
+                sslConnector.setTrustPassword(this.config.getTrustPassword());
+            }
+
+            if ("wants".equals(this.config.getClientcert()))
+            {
+                sslConnector.setWantClientAuth(true);
+            }
+            else if ("needs".equals(this.config.getClientcert()))
+            {
+                sslConnector.setNeedClientAuth(true);
+            }
+
+            connector = sslConnector;
+        }
+
         connector.setPort(this.config.getHttpsPort());
         connector.setMaxIdleTime(60000);
-        
-        if (this.config.getKeystore() != null) {
-            connector.setKeystore(this.config.getKeystore());
-        }
-        
-        if (this.config.getPassword() != null) {
-            System.setProperty(SslSelectChannelConnector.PASSWORD_PROPERTY, this.config.getPassword());
-            connector.setPassword(this.config.getPassword());
-        }
-        
-        if (this.config.getKeyPassword() != null) {
-            System.setProperty(SslSelectChannelConnector.KEYPASSWORD_PROPERTY, this.config.getKeyPassword());
-            connector.setKeyPassword(this.config.getKeyPassword());
-        }
-        
-        if (this.config.getTruststore() != null) {
-            connector.setTruststore(this.config.getTruststore());
-        }
-        
-        if (this.config.getTrustPassword() != null) {
-            connector.setTrustPassword(this.config.getTrustPassword());
-        }
-        
-        if ("wants".equals(this.config.getClientcert())) {
-            connector.setWantClientAuth(true);
-        } else if ("needs".equals(this.config.getClientcert())) {
-            connector.setNeedClientAuth(true);
-        }
 
         this.server.addConnector(connector);
     }
