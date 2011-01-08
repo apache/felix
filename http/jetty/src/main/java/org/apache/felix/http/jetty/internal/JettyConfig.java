@@ -60,7 +60,13 @@ public final class JettyConfig
 
     /** Felix specific property to control whether to want or require HTTPS client certificates. Valid values are "none", "wants", "needs". Default is "none". */
     private static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
-    
+
+    /** Felix specific property to control whether Jetty uses NIO or not for HTTP. Valid values are "true", "false". Default is true */
+    public static final String  FELIX_HTTP_NIO = "org.apache.felix.http.nio";
+
+    /** Felix specific property to control whether Jetty uses NIO or not for HTTPS. Valid values are "true", "false". Default is the value of org.apache.felix.http.nio */
+    public static final String  FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
+
     private final BundleContext context;
     private boolean debug;
     private int httpPort;
@@ -73,6 +79,8 @@ public final class JettyConfig
     private String trustPassword;
     private boolean useHttp;
     private String clientcert;
+    private boolean useHttpNio;
+    private boolean useHttpsNio;
 
     public JettyConfig(BundleContext context)
     {
@@ -90,9 +98,19 @@ public final class JettyConfig
         return this.useHttp;
     }
 
+    public boolean isUseHttpNio()
+    {
+        return this.useHttpNio;
+    }
+
     public boolean isUseHttps()
     {
         return this.useHttps;
+    }
+
+    public boolean isUseHttpsNio()
+    {
+        return this.useHttpsNio;
     }
 
     public int getHttpPort()
@@ -157,6 +175,8 @@ public final class JettyConfig
         this.truststore = getProperty(props, FELIX_TRUSTSTORE, null);
         this.trustPassword = getProperty(props, FELIX_TRUSTSTORE_PASSWORD, null);
         this.clientcert = getProperty(props, FELIX_HTTPS_CLIENT_CERT, "none");
+        this.useHttpNio = getBooleanProperty(props, FELIX_HTTP_NIO, true);
+        this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
     }
 
     private String getProperty(Dictionary props, String name, String defValue)
@@ -172,6 +192,9 @@ public final class JettyConfig
     private boolean getBooleanProperty(Dictionary props, String name, boolean defValue)
     {
         String value = getProperty(props, name, null);
+        if (value == null) {
+            value = this.context.getProperty(name);
+        }
         if (value != null) {
             return (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"));
         }
