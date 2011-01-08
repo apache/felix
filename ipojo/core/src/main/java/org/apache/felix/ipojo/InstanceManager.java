@@ -430,11 +430,9 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
         synchronized (this) {
             m_factory.disposed(this);
-            m_fields.clear();
-            m_fieldRegistration = new HashMap();
-            m_methodRegistration = new HashMap();
-            m_constructorRegistration = new HashMap();
             m_clazz = null;
+            // Do not clean registration map, so injection still works
+            // after disposal for late callbacks.
         }
     }
 
@@ -1062,7 +1060,6 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 list[i].onSet(null, fieldName, result);
             }
         }
-
         return result;
     }
 
