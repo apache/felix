@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" localization="OSGI-INF/metatype/metatype">
+    <OCD id="org.apache.felix.http.jetty.internal.JettyConfig" name="%org.apache.felix.http.jetty.internal.JettyConfig.name" description="%org.apache.felix.http.jetty.internal.JettyConfig.description">
+        <AD id="org.apache.felix.http.enable" type="Boolean" default="true" name="%org.apache.felix.http.enable.name" description="%org.apache.felix.http.enable.description"/>
+        <AD id="org.osgi.service.http.port" type="Integer" default="8080" name="%org.osgi.service.http.port.name" description="%org.osgi.service.http.port.description"/>
+        <AD id="org.apache.felix.http.nio" type="Boolean" default="true" name="%org.apache.felix.http.nio.name" description="%org.apache.felix.http.nio.description"/>
+        <AD id="org.apache.felix.https.enable" type="Boolean" default="false" name="%org.apache.felix.https.enable.name" description="%org.apache.felix.https.enable.description"/>
+        <AD id="org.osgi.service.http.port.secure" type="Integer" default="433" name="%org.osgi.service.http.port.secure.name" description="%org.osgi.service.http.port.secure.description"/>
+        <AD id="org.apache.felix.https.nio" type="Boolean" default="true" name="%org.apache.felix.https.nio.name" description="%org.apache.felix.https.nio.description"/>
+        <AD id="org.apache.felix.https.keystore" type="String" name="%org.apache.felix.https.keystore.name" description="%org.apache.felix.https.keystore.description"/>
+        <AD id="org.apache.felix.https.keystore.password" type="String" name="%org.apache.felix.https.keystore.password.name" description="%org.apache.felix.https.keystore.password.description"/>
+        <AD id="org.apache.felix.https.keystore.key.password" type="String" name="%org.apache.felix.https.keystore.key.password.name" description="%org.apache.felix.https.keystore.key.password.description"/>
+        <AD id="org.apache.felix.https.truststore" type="String" name="%org.apache.felix.https.truststore.name" description="%org.apache.felix.https.truststore.description"/>
+        <AD id="org.apache.felix.https.truststore.password" type="String" name="%org.apache.felix.https.truststore.password.name" description="%org.apache.felix.https.truststore.password.description"/>
+        <AD id="org.apache.felix.https.clientcertificate" type="String" default="none" name="%org.apache.felix.https.clientcertificate.name" description="%org.apache.felix.https.clientcertificate.description">
+            <Option value="none" label="%clientcertificate.none"/>
+            <Option value="wants" label="%clientcertificate.wants"/>
+            <Option value="needs" label="%clientcertificate.needs"/>
+        </AD>
+        <AD id="org.apache.felix.http.debug" type="Boolean" default="false" name="%org.apache.felix.http.debug.name" description="%org.apache.felix.http.debug.description"/>
+    </OCD>
+    <Designate pid="org.apache.felix.http.jetty.internal.JettyConfig">
+        <Object ocdref="org.apache.felix.http.jetty.internal.JettyConfig"/>
+    </Designate>
+</metatype:MetaData>
