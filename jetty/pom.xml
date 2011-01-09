@@ -57,6 +57,9 @@
                             org.slf4j;resolution:=optional,
                             *;resolution:=optional
                         </Import-Package>
+                        <DynamicImport-Package>
+                            org.osgi.service.cm;version=1.2
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
