@@ -16,8 +16,6 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.osgi.service.cm.ManagedService;
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -38,7 +36,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 public final class JettyService
-    implements ManagedService, Runnable
+    implements Runnable
 {
     /** PID for configuration of the HTTP service. */
     private static final String PID = "org.apache.felix.http";
@@ -67,7 +65,8 @@ public final class JettyService
 
         Properties props = new Properties();
         props.put(Constants.SERVICE_PID, PID);
-        this.configServiceReg = this.context.registerService(ManagedService.class.getName(), this, props);
+        this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
+            new JettyManagedService(this), props);
 
         this.thread = new Thread(this, "Jetty HTTP Service");
         this.thread.start();
@@ -98,7 +97,6 @@ public final class JettyService
     }
 
     public void updated(Dictionary props)
-        throws ConfigurationException
     {
         this.config.update(props);
 
