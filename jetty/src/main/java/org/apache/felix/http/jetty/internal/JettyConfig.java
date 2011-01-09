@@ -181,21 +181,20 @@ public final class JettyConfig
 
     private String getProperty(Dictionary props, String name, String defValue)
     {
-        String value = (String)props.get(name);
-        if (value == null) {
+        Object value = props.get(name);
+        if (value == null)
+        {
             value = this.context.getProperty(name);
         }
 
-        return value != null ? value : defValue;
+        return value != null ? String.valueOf(value) : defValue;
     }
 
     private boolean getBooleanProperty(Dictionary props, String name, boolean defValue)
     {
         String value = getProperty(props, name, null);
-        if (value == null) {
-            value = this.context.getProperty(name);
-        }
-        if (value != null) {
+        if (value != null)
+        {
             return (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"));
         }
 
