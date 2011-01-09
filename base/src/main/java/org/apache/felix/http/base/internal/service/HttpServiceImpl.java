@@ -71,18 +71,12 @@ public final class HttpServiceImpl
 
     public void unregisterFilter(Filter filter)
     {
-        if (filter != null) {
-            this.handlerRegistry.removeFilter(filter);
-            this.localFilters.remove(filter);
-        }
+        unregisterFilter(filter, true);
     }
 
     public void unregisterServlet(Servlet servlet)
     {
-        if (servlet != null) {
-            this.handlerRegistry.removeServlet(servlet);
-            this.localServlets.remove(servlet);
-        }
+        unregisterServlet(servlet, true);
     }
 
     public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context)
@@ -129,12 +123,28 @@ public final class HttpServiceImpl
     {
         HashSet<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
         for (Servlet servlet : servlets) {
-            unregisterServlet(servlet);
+            unregisterServlet(servlet, false);
         }
 
         HashSet<Filter> filters = new HashSet<Filter>(this.localFilters);
         for (Filter fiter : filters) {
-            unregisterFilter(fiter);
+            unregisterFilter(fiter, false);
+        }
+    }
+
+    private void unregisterFilter(Filter filter, final boolean destroy)
+    {
+        if (filter != null) {
+            this.handlerRegistry.removeFilter(filter, destroy);
+            this.localFilters.remove(filter);
+        }
+    }
+
+    private void unregisterServlet(Servlet servlet, final boolean destroy)
+    {
+        if (servlet != null) {
+            this.handlerRegistry.removeServlet(servlet, destroy);
+            this.localServlets.remove(servlet);
         }
     }
 

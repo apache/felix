@@ -80,22 +80,28 @@ public final class HandlerRegistry
         updateFilterArray();
     }
 
-    public synchronized void removeServlet(Servlet servlet)
+    public synchronized void removeServlet(Servlet servlet, final boolean destroy)
     {
         ServletHandler handler = this.servletMap.remove(servlet);
         if (handler != null) {
             updateServletArray();
             this.aliasMap.remove(handler.getAlias());
-            handler.destroy();
+            if (destroy)
+            {
+                handler.destroy();
+            }
         }
     }
 
-    public synchronized void removeFilter(Filter filter)
+    public synchronized void removeFilter(Filter filter, final boolean destroy)
     {
         FilterHandler handler = this.filterMap.remove(filter);
         if (handler != null) {
             updateFilterArray();
-            handler.destroy();
+            if (destroy)
+            {
+                handler.destroy();
+            }
         }
     }
 
