@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" localization="OSGI-INF/metatype/metatype">
-    <OCD id="org.apache.felix.http.jetty.internal.JettyConfig" name="%org.apache.felix.http.jetty.internal.JettyConfig.name" description="%org.apache.felix.http.jetty.internal.JettyConfig.description">
+    <OCD id="org.apache.felix.http" name="%org.apache.felix.http.jetty.internal.JettyConfig.name" description="%org.apache.felix.http.jetty.internal.JettyConfig.description">
         <AD id="org.apache.felix.http.enable" type="Boolean" default="true" name="%org.apache.felix.http.enable.name" description="%org.apache.felix.http.enable.description"/>
         <AD id="org.osgi.service.http.port" type="Integer" default="8080" name="%org.osgi.service.http.port.name" description="%org.osgi.service.http.port.description"/>
         <AD id="org.apache.felix.http.nio" type="Boolean" default="true" name="%org.apache.felix.http.nio.name" description="%org.apache.felix.http.nio.description"/>
@@ -19,7 +19,7 @@
         </AD>
         <AD id="org.apache.felix.http.debug" type="Boolean" default="false" name="%org.apache.felix.http.debug.name" description="%org.apache.felix.http.debug.description"/>
     </OCD>
-    <Designate pid="org.apache.felix.http.jetty.internal.JettyConfig">
-        <Object ocdref="org.apache.felix.http.jetty.internal.JettyConfig"/>
+    <Designate pid="org.apache.felix.http">
+        <Object ocdref="org.apache.felix.http"/>
     </Designate>
 </metatype:MetaData>
