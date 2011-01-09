@@ -85,11 +85,14 @@ public final class ServletHandler
     private void doHandle(HttpServletRequest req, HttpServletResponse res)
         throws ServletException, IOException
     {
-        if (!getContext().handleSecurity(req, res)) {
-            if (!res.isCommitted()) {
-                res.sendError(HttpServletResponse.SC_FORBIDDEN);
-            }
-        } else {
+        // set a sensible status code in case handleSecurity returns false
+        // but fails to send a response
+        res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        if (getContext().handleSecurity(req, res))
+        {
+            // reset status to OK for further processing
+            res.setStatus(HttpServletResponse.SC_OK);
+
             this.servlet.service(new ServletHandlerRequest(req, this.alias), res);
         }
     }
