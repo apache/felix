@@ -93,9 +93,14 @@ public final class JettyConfig
         return this.debug;
     }
 
+    /**
+     * Returns <code>true</code> if HTTP is configured to be used (
+     * {@link #FELIX_HTTP_ENABLE}) and
+     * the configured HTTP port ({@link #HTTP_PORT}) is higher than zero.
+     */
     public boolean isUseHttp()
     {
-        return this.useHttp;
+        return this.useHttp && getHttpPort() > 0;
     }
 
     public boolean isUseHttpNio()
@@ -103,9 +108,14 @@ public final class JettyConfig
         return this.useHttpNio;
     }
 
+    /**
+     * Returns <code>true</code> if HTTPS is configured to be used (
+     * {@link #FELIX_HTTPS_ENABLE}) and
+     * the configured HTTP port ({@link #HTTPS_PORT}) is higher than zero.
+     */
     public boolean isUseHttps()
     {
-        return this.useHttps;
+        return this.useHttps && getHttpsPort() > 0;
     }
 
     public boolean isUseHttpsNio()
