@@ -118,34 +118,54 @@ public final class JettyService
 
     private void stopJetty()
     {
-        try {
-            this.server.stop();
-        } catch (Exception e) {
-            SystemLogger.error("Exception while stopping Jetty.", e);
+        if (this.server != null)
+        {
+            try
+            {
+                this.server.stop();
+                this.server = null;
+            }
+            catch (Exception e)
+            {
+                SystemLogger.error("Exception while stopping Jetty.", e);
+            }
         }
     }
 
     private void initializeJetty()
         throws Exception
     {
-        HashUserRealm realm = new HashUserRealm("OSGi HTTP Service Realm");
-        this.server = new Server();
-        this.server.addUserRealm(realm);
+        if (this.config.isUseHttp() || this.config.isUseHttps())
+        {
+            StringBuffer message = new StringBuffer("Started jetty ").append(Server.getVersion()).append(" at port(s)");
+            HashUserRealm realm = new HashUserRealm("OSGi HTTP Service Realm");
+            this.server = new Server();
+            this.server.addUserRealm(realm);
 
-        if (this.config.isUseHttp()) {
-            initializeHttp();
+            if (this.config.isUseHttp())
+            {
+                initializeHttp();
+                message.append(" HTTP:").append(this.config.getHttpPort());
+            }
+
+            if (this.config.isUseHttps())
+            {
+                initializeHttps();
+                message.append(" HTTPS:").append(this.config.getHttpsPort());
+            }
+
+            Context context = new Context(this.server, "/", Context.SESSIONS);
+            context.addServlet(new ServletHolder(this.dispatcher), "/*");
+
+            this.server.start();
+            SystemLogger.info(message.toString());
+        }
+        else
+        {
+            SystemLogger.info("Jetty not started (HTTP and HTTPS disabled)");
         }
 
-        if (this.config.isUseHttps()) {
-            initializeHttps();
-        }
-
-        Context context = new Context(this.server, "/", Context.SESSIONS);
-        context.addServlet(new ServletHolder(this.dispatcher), "/*");
-
-        this.server.start();
         publishServiceProperties();
-        SystemLogger.info("Started jetty " + Server.getVersion() + " at port " + this.config.getHttpPort());
     }
 
     private void initializeHttp()
