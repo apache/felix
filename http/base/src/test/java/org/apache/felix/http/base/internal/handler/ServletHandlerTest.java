@@ -133,7 +133,7 @@ public class ServletHandlerTest
 
         Assert.assertTrue(result);
         Mockito.verify(this.servlet, Mockito.never()).service(req, res);
-        Mockito.verify(res).sendError(HttpServletResponse.SC_FORBIDDEN);
+        Mockito.verify(res).setStatus(HttpServletResponse.SC_FORBIDDEN);
     }
 
     @Test
