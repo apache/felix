@@ -18,9 +18,16 @@ package org.apache.felix.http.base.internal;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletRequestAttributeEvent;
+import javax.servlet.ServletRequestEvent;
+
+import org.apache.felix.http.base.internal.listener.ServletRequestAttributeListenerManager;
+
 import java.io.IOException;
 
 public final class DispatcherServlet
@@ -52,6 +59,67 @@ public final class DispatcherServlet
     protected void service(HttpServletRequest req, HttpServletResponse res)
         throws ServletException, IOException
     {
-        this.controller.getDispatcher().dispatch(req, res);
+        final ServletRequestEvent sre = new ServletRequestEvent(getServletContext(), req);
+        this.controller.getRequestListener().requestInitialized(sre);
+        try
+        {
+            req = new AttributeEventRequest(getServletContext(), this.controller.getRequestAttributeListener(), req);
+            this.controller.getDispatcher().dispatch(req, res);
+        }
+        finally
+        {
+            this.controller.getRequestListener().requestDestroyed(sre);
+        }
+    }
+
+    private static class AttributeEventRequest extends HttpServletRequestWrapper
+    {
+
+        private final ServletContext servletContext;
+        private final ServletRequestAttributeListenerManager requestAttributeListener;
+
+        public AttributeEventRequest(ServletContext servletContext,
+            ServletRequestAttributeListenerManager requestAttributeListener, HttpServletRequest request)
+        {
+            super(request);
+            this.servletContext = servletContext;
+            this.requestAttributeListener = requestAttributeListener;
+        }
+
+        public void setAttribute(String name, Object value)
+        {
+            if (value == null)
+            {
+                this.removeAttribute(name);
+            }
+            else if (name != null)
+            {
+                Object oldValue = this.getAttribute(name);
+                super.setAttribute(name, value);
+
+                if (oldValue == null)
+                {
+                    requestAttributeListener.attributeAdded(new ServletRequestAttributeEvent(servletContext, this,
+                        name, value));
+                }
+                else
+                {
+                    requestAttributeListener.attributeReplaced(new ServletRequestAttributeEvent(servletContext, this,
+                        name, oldValue));
+                }
+            }
+        }
+
+        public void removeAttribute(String name)
+        {
+            Object oldValue = this.getAttribute(name);
+            super.removeAttribute(name);
+
+            if (oldValue != null)
+            {
+                requestAttributeListener.attributeRemoved(new ServletRequestAttributeEvent(servletContext, this, name,
+                    oldValue));
+            }
+        }
     }
 }
