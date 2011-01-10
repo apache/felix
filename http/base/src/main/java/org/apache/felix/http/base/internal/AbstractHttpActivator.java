@@ -20,11 +20,17 @@ public abstract class AbstractHttpActivator
     extends AbstractActivator
 {
     private DispatcherServlet dispatcher;
+    private EventDispatcher eventDispatcher;
     private HttpServiceController controller;
 
     protected final DispatcherServlet getDispatcherServlet()
     {
         return this.dispatcher;
+    }
+
+    protected final EventDispatcher getEventDispatcher()
+    {
+        return this.eventDispatcher;
     }
 
     protected final HttpServiceController getHttpServiceController()
@@ -37,6 +43,7 @@ public abstract class AbstractHttpActivator
     {
         this.controller = new HttpServiceController(getBundleContext());
         this.dispatcher = new DispatcherServlet(this.controller);
+        this.eventDispatcher = new EventDispatcher(this.controller);
     }
 
     protected void doStop()

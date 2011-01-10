@@ -16,27 +16,32 @@
  */
 package org.apache.felix.http.base.internal.service;
 
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceRegistration;
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeListener;
+
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 public final class HttpServiceFactory
     implements ServiceFactory
 {
     private final ServletContext context;
+    private final ServletContextAttributeListener attributeListener;
     private final HandlerRegistry handlerRegistry;
 
-    public HttpServiceFactory(ServletContext context, HandlerRegistry handlerRegistry)
+    public HttpServiceFactory(ServletContext context, HandlerRegistry handlerRegistry,
+        ServletContextAttributeListener attributeListener)
     {
         this.context = context;
+        this.attributeListener = attributeListener;
         this.handlerRegistry = handlerRegistry;
     }
 
     public Object getService(Bundle bundle, ServiceRegistration reg)
     {
-        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry);
+        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry, attributeListener);
     }
 
     public void ungetService(Bundle bundle, ServiceRegistration reg, Object service)

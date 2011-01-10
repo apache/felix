@@ -26,6 +26,9 @@ import org.osgi.service.http.HttpContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeEvent;
+import javax.servlet.ServletContextAttributeListener;
+
 import java.net.URL;
 import java.util.*;
 
@@ -33,6 +36,7 @@ public class ServletContextImplTest
 {
     private Bundle bundle;
     private HttpContext httpContext;
+    private AttributeListener listener;
     private ServletContextImpl context;
 
     @Before
@@ -41,7 +45,8 @@ public class ServletContextImplTest
         this.bundle = Mockito.mock(Bundle.class);
         ServletContext globalContext = Mockito.mock(ServletContext.class);
         this.httpContext = Mockito.mock(HttpContext.class);
-        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext);
+        this.listener = new AttributeListener();
+        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener);
     }
 
     @Test
@@ -50,7 +55,7 @@ public class ServletContextImplTest
     {
         URL url = getClass().getResource("resource.txt");
         Assert.assertNotNull(url);
-        
+
         Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
         Assert.assertNull(this.context.getResource("/notfound.txt"));
         Assert.assertEquals(url, this.context.getResource("/resource.txt"));
@@ -107,13 +112,24 @@ public class ServletContextImplTest
         Assert.assertNull(this.context.getAttribute("key1"));
 
         this.context.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
         Assert.assertEquals("value1", this.context.getAttribute("key1"));
 
         this.context.removeAttribute("key1");
+        this.listener.checkRemoved("key1", "value1");
         Assert.assertNull(this.context.getAttribute("key1"));
 
         this.context.setAttribute("key1", null);
+        this.listener.checkNull();
         Assert.assertNull(this.context.getAttribute("key1"));
+
+        this.context.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", this.context.getAttribute("key1"));
+
+        this.context.setAttribute("key1", "newValue");
+        this.listener.checkReplaced("key1", "value1");
+        Assert.assertEquals("newValue", this.context.getAttribute("key1"));
     }
 
     @Test
@@ -124,6 +140,7 @@ public class ServletContextImplTest
         Assert.assertFalse(e.hasMoreElements());
 
         this.context.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
         e = this.context.getAttributeNames();
         Assert.assertNotNull(e);
         Assert.assertTrue(e.hasMoreElements());
@@ -174,5 +191,73 @@ public class ServletContextImplTest
 
         Mockito.when(this.httpContext.handleSecurity(req, res)).thenReturn(false);
         Assert.assertFalse(this.context.handleSecurity(req, res));
+    }
+
+    private static class AttributeListener implements ServletContextAttributeListener
+    {
+
+        private int type;
+
+        private String name;
+
+        private Object value;
+
+        public void attributeAdded(ServletContextAttributeEvent scab)
+        {
+            setData(1, scab);
+        }
+
+        public void attributeRemoved(ServletContextAttributeEvent scab)
+        {
+            setData(2, scab);
+        }
+
+        public void attributeReplaced(ServletContextAttributeEvent scab)
+        {
+            setData(3, scab);
+        }
+
+        private void setData(int type, ServletContextAttributeEvent scab)
+        {
+            this.type = type;
+            this.name = scab.getName();
+            this.value = scab.getValue();
+        }
+
+        void checkAdded(String name, Object value)
+        {
+            check(1, name, value);
+        }
+
+        void checkRemoved(String name, Object value)
+        {
+            check(2, name, value);
+        }
+
+        void checkReplaced(String name, Object value)
+        {
+            check(3, name, value);
+        }
+
+        void checkNull()
+        {
+            check(0, null, null);
+        }
+
+        private void check(int type, String name, Object value)
+        {
+            try
+            {
+                Assert.assertEquals(type, this.type);
+                Assert.assertEquals(name, this.name);
+                Assert.assertEquals(value, this.value);
+            }
+            finally
+            {
+                this.type = 0;
+                this.name = null;
+                this.value = null;
+            }
+        }
     }
 }

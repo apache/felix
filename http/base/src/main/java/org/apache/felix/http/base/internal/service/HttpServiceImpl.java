@@ -39,13 +39,13 @@ public final class HttpServiceImpl
     private final HashSet<Filter> localFilters;
     private final ServletContextManager contextManager;
 
-    public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry)
+    public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener)
     {
         this.bundle = bundle;
         this.handlerRegistry = handlerRegistry;
         this.localServlets = new HashSet<Servlet>();
         this.localFilters = new HashSet<Filter>();
-        this.contextManager = new ServletContextManager(this.bundle, context);
+        this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener);
     }
 
     private ExtServletContext getServletContext(HttpContext context)

@@ -16,22 +16,29 @@
  */
 package org.apache.felix.http.base.internal.context;
 
-import org.osgi.service.http.HttpContext;
-import org.osgi.framework.Bundle;
-import org.apache.felix.http.base.internal.util.MimeTypes;
-import org.apache.felix.http.base.internal.logger.SystemLogger;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import javax.servlet.ServletContext;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeEvent;
+import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.net.URL;
-import java.io.InputStream;
-import java.io.IOException;
+
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.base.internal.util.MimeTypes;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpContext;
 
 public final class ServletContextImpl
     implements ExtServletContext
@@ -40,13 +47,16 @@ public final class ServletContextImpl
     private final ServletContext context;
     private final HttpContext httpContext;
     private final Map<String, Object> attributes;
+    private final ServletContextAttributeListener attributeListener;
 
-    public ServletContextImpl(Bundle bundle, ServletContext context, HttpContext httpContext)
+    public ServletContextImpl(Bundle bundle, ServletContext context, HttpContext httpContext,
+        ServletContextAttributeListener attributeListener)
     {
         this.bundle = bundle;
         this.context = context;
         this.httpContext = httpContext;
         this.attributes = new ConcurrentHashMap<String, Object>();
+        this.attributeListener = attributeListener;
     }
 
     public String getContextPath()
@@ -78,7 +88,7 @@ public final class ServletContextImpl
 
         Set<String> set = new HashSet<String>();
         while (paths.hasMoreElements()) {
-            set.add((String)paths.nextElement());
+            set.add((String) paths.nextElement());
         }
 
         return set;
@@ -149,14 +159,31 @@ public final class ServletContextImpl
 
     public void setAttribute(String name, Object value)
     {
-        if ((name != null) && (value != null)) {
-            this.attributes.put(name, value);
+        if (value == null)
+        {
+            this.removeAttribute(name);
+        }
+        else if (name != null)
+        {
+            Object oldValue = this.attributes.put(name, value);
+            if (oldValue == null)
+            {
+                attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
+            }
+            else
+            {
+                attributeListener.attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
+            }
         }
     }
 
     public void removeAttribute(String name)
     {
-        this.attributes.remove(name);
+        Object oldValue = this.attributes.remove(name);
+        if (oldValue != null)
+        {
+            attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
+        }
     }
 
     @SuppressWarnings("deprecation")
