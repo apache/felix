@@ -19,7 +19,7 @@ package org.apache.felix.http.jetty.internal;
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
 
 public final class JettyActivator
-    extends AbstractHttpActivator 
+    extends AbstractHttpActivator
 {
     private JettyService jetty;
 
@@ -27,7 +27,8 @@ public final class JettyActivator
         throws Exception
     {
         super.doStart();
-        this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getHttpServiceController());
+        this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(),
+            getHttpServiceController());
         this.jetty.start();
     }
 
