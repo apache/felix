@@ -28,6 +28,7 @@ import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.servlet.*;
 import org.apache.felix.http.base.internal.DispatcherServlet;
+import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 
@@ -48,13 +49,16 @@ public final class JettyService
     private ServiceRegistration configServiceReg;
     private Server server;
     private DispatcherServlet dispatcher;
+    private EventDispatcher eventDispatcher;
     private final HttpServiceController controller;
 
-    public JettyService(BundleContext context, DispatcherServlet dispatcher, HttpServiceController controller)
+    public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher,
+        HttpServiceController controller)
     {
         this.context = context;
         this.config = new JettyConfig(this.context);
         this.dispatcher = dispatcher;
+        this.eventDispatcher = eventDispatcher;
         this.controller = controller;
     }
 
@@ -153,6 +157,8 @@ public final class JettyService
             }
 
             Context context = new Context(this.server, "/", Context.SESSIONS);
+            context.addEventListener(eventDispatcher);
+            context.getSessionHandler().addEventListener(eventDispatcher);
             context.addServlet(new ServletHolder(this.dispatcher), "/*");
 
             this.server.start();
