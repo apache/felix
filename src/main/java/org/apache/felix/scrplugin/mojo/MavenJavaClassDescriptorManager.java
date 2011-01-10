@@ -19,7 +19,7 @@
 package org.apache.felix.scrplugin.mojo;
 
 
-import java.io.*;
+import java.io.File;
 import java.util.*;
 
 import org.apache.felix.scrplugin.*;
@@ -82,8 +82,13 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
         while ( i.hasNext() )
         {
             final String tree = i.next();
-            this.log.debug( "Scanning source tree " + tree );
             final File directory = new File( tree );
+            if ( !directory.exists() )
+            {
+                this.log.warn("Source tree does not exist. Ignoring " + tree);
+                continue;
+            }
+            this.log.debug( "Scanning source tree " + tree );
             final DirectoryScanner scanner = new DirectoryScanner();
             scanner.setBasedir( directory );
 
