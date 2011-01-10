@@ -7,6 +7,10 @@
         <listener-class>org.apache.felix.http.samples.bridge.StartupListener</listener-class>
     </listener>
 
+    <listener>
+        <listener-class>org.apache.felix.http.proxy.ProxyListener</listener-class>
+    </listener>
+
     <servlet>
         <servlet-name>proxy</servlet-name>
         <servlet-class>org.apache.felix.http.proxy.ProxyServlet</servlet-class>
