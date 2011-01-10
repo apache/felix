@@ -16,22 +16,28 @@
  */
 package org.apache.felix.http.base.internal.context;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeListener;
+
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
-import javax.servlet.ServletContext;
-import java.util.Map;
-import java.util.HashMap;
 
 public final class ServletContextManager
 {
     private final Bundle bundle;
     private final ServletContext context;
+    private final ServletContextAttributeListener attributeListener;
     private final Map<HttpContext, ExtServletContext> contextMap;
 
-    public ServletContextManager(Bundle bundle, ServletContext context)
+    public ServletContextManager(Bundle bundle, ServletContext context,
+        ServletContextAttributeListener attributeListener)
     {
         this.bundle = bundle;
         this.context = context;
+        this.attributeListener = attributeListener;
         this.contextMap = new HashMap<HttpContext, ExtServletContext>();
     }
 
@@ -49,7 +55,7 @@ public final class ServletContextManager
 
     private ExtServletContext addServletContext(HttpContext httpContext)
     {
-        ExtServletContext context = new ServletContextImpl(this.bundle, this.context, httpContext);
+        ExtServletContext context = new ServletContextImpl(this.bundle, this.context, httpContext, attributeListener);
         this.contextMap.put(httpContext, context);
         return context;
     }
