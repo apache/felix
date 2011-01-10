@@ -27,11 +27,11 @@ import javax.servlet.ServletConfig;
 public final class DispatcherTracker
     extends ServiceTracker
 {
-    private final static String DEFAULT_FILTER = "(http.felix.dispatcher=*)";
+    final static String DEFAULT_FILTER = "(http.felix.dispatcher=*)";
 
     private final ServletConfig config;
     private HttpServlet dispatcher;
-    
+
     public DispatcherTracker(BundleContext context, String filter, ServletConfig config)
         throws Exception
     {
