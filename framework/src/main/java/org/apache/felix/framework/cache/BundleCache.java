@@ -87,7 +87,7 @@ public class BundleCache
 
     private final Logger m_logger;
     private final Map m_configMap;
-    private final FileLock m_lock;
+    private final Object m_lock;
 
     public BundleCache(Logger logger, Map configMap)
         throws Exception
@@ -164,8 +164,8 @@ public class BundleCache
         {
             try
             {
-                m_lock.release();
-                m_lock.channel().close();
+                ((FileLock) m_lock).release();
+                ((FileLock) m_lock).channel().close();
             }
             catch (Exception ex)
             {
