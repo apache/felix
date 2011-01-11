@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.InetAddress;
 import java.util.List;
 
 import org.apache.felix.gogo.options.Option;
@@ -43,6 +44,7 @@ public class Telnet implements Runnable
     private Thread thread;
     private boolean quit;
     private int port;
+    private String ip;
 
     public Telnet(CommandProcessor procesor)
     {
@@ -52,7 +54,8 @@ public class Telnet implements Runnable
     public void telnetd(String[] argv) throws IOException
     {
         final String[] usage = { "telnetd - start simple telnet server",
-                "Usage: telnetd [-p port] start | stop | status",
+                "Usage: telnetd [-i ip] [-p port] start | stop | status",
+                "  -i --ip=INTERFACE        listen interface (default=127.0.0.1)",
                 "  -p --port=PORT           listen port (default=" + defaultPort + ")",
                 "  -? --help                show help" };
 
@@ -74,6 +77,7 @@ public class Telnet implements Runnable
                 throw new IllegalStateException("telnetd is already running on port "
                     + port);
             }
+            ip = opt.get("ip");
             port = opt.getNumber("port");
             start();
             status();
@@ -100,7 +104,7 @@ public class Telnet implements Runnable
     {
         if (server != null)
         {
-            System.out.println("telnetd is running on port " + port);
+            System.out.println("telnetd is running on " + ip + ":" + port);
         }
         else
         {
@@ -111,7 +115,7 @@ public class Telnet implements Runnable
     private void start() throws IOException
     {
         quit = false;
-        server = new ServerSocket(port);
+        server = new ServerSocket(port, 0, InetAddress.getByName(ip));
         thread = new Thread(this, "gogo telnet");
         thread.start();
     }
