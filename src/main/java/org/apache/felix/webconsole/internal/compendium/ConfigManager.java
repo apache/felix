@@ -413,6 +413,10 @@ public class ConfigManager extends ConfigManagerBase
                 {
                     optionsPlain.put(pid, ocd.getName());
                 }
+                else
+                {
+                	optionsPlain.put(pid, pid);
+                }
             }
 
             for (Iterator i = optionsPlain.keySet().iterator(); i.hasNext();)
