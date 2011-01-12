@@ -61,8 +61,8 @@ public abstract class Command {
      * Commits all changes the command may have defined when it was executed by calling the <code>execute()</code> method.
      */
     protected void commit() {
-        for (ListIterator i = m_commit.listIterator(m_commit.size()); i.hasPrevious();) {
-            Runnable runnable = (Runnable) i.previous();
+        for (ListIterator i = m_commit.listIterator(); i.hasNext();) {
+            Runnable runnable = (Runnable) i.next();
             runnable.run();
         }
         cleanUp();

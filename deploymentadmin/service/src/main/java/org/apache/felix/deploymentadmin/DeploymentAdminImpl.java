@@ -162,12 +162,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Thread interrupted");
         }
 
-        JarInputStream jarInput = null;
         File tempPackage = null;
-        File tempIndex = null;
-        File tempContents = null;
-
+        StreamDeploymentPackage source = null;
+        boolean succeeded = false;
         try {
+            JarInputStream jarInput = null;
+            File tempIndex = null;
+            File tempContents = null;
             try {
                 File tempDir = m_context.getDataFile(TEMP_DIR);
                 tempDir.mkdirs();
@@ -190,16 +191,9 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 m_log.log(LogService.LOG_ERROR, "Stream does not contain a valid Jar", e);
                 throw new DeploymentException(DeploymentException.CODE_NOT_A_JAR, "Stream does not contain a valid Jar", e);
             }
-        }
-        finally {
-            m_semaphore.release();
-        }
-
-        StreamDeploymentPackage source = new StreamDeploymentPackage(jarInput, m_context);
-        sendStartedEvent(source.getName());
-
-        boolean succeeded = false;
-        try {
+            source = new StreamDeploymentPackage(jarInput, m_context);
+            sendStartedEvent(source.getName());
+            
             AbstractDeploymentPackage target = (AbstractDeploymentPackage) getDeploymentPackage(source.getName());
             boolean newPackage = (target == null);
             if (newPackage) {
@@ -256,8 +250,12 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             return fileDeploymentPackage;
         }
         finally {
-        	delete(tempPackage);
-            sendCompleteEvent(source.getName(), succeeded);
+            if (tempPackage != null) {
+                delete(tempPackage);
+            }
+        	if (source != null) {
+        	    sendCompleteEvent(source.getName(), succeeded);
+        	}
             m_semaphore.release();
         }
     }
