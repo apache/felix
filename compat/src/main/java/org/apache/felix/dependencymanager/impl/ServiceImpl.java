@@ -21,6 +21,7 @@ package org.apache.felix.dependencymanager.impl;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -132,6 +133,21 @@ public class ServiceImpl implements Service
         if (wrappedListener != null)
         {
             m_delegate.removeStateListener(wrappedListener);
+        }
+    }
+    
+    public void removeStateListeners()
+    {
+        synchronized (m_stateListeners)
+        {
+        	Iterator it = m_stateListeners.values().iterator();
+        	while (it.hasNext())
+        	{
+        		org.apache.felix.dm.ComponentStateListener wrappedListener =
+        			(org.apache.felix.dm.ComponentStateListener) it.next();
+        		m_delegate.removeStateListener(wrappedListener);
+        	}
+        	m_stateListeners.clear();
         }
     }
 
