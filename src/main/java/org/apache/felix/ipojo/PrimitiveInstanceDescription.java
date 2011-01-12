@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,11 +34,11 @@ import org.apache.felix.ipojo.metadata.Element;
 
 /**
  * Primitive Instance Description.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PrimitiveInstanceDescription extends InstanceDescription {
-    
+
     /**
      * Creates a Primitive Instance Description.
      * @param type the component type description
@@ -64,7 +64,7 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
             return new String[0];
         }
     }
-    
+
     /**
      * Gets the instance service dependencies.
      * @return the set of dependency description or an empty array if
@@ -79,7 +79,7 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
                     .getDescription()).getDependencies();
         }
     }
-    
+
     /**
      * Gets the instance service dependency matching with the given service specification or id.
      * @param specification the service specification of the looked specification.
@@ -97,12 +97,12 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
                         || specification.equals(deps[i].getSpecification())) {
                     return deps[i];
                 }
-                        
+
             }
         }
         return null;
     }
-    
+
     /**
      * Gets the instance provided service matching with the given service specification.
      * @param specification the provided specification of the looked provided service.
@@ -120,12 +120,12 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
                     if (specification.equals(str[j])) {
                         return pss[i];
                     }
-                }        
+                }
             }
         }
         return null;
     }
-    
+
     /**
      * Gets the instance provided service.
      * @return the set of provided service description or an empty array if
@@ -140,7 +140,7 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
                     .getDescription()).getProvidedServices();
         }
     }
-    
+
     /**
      * Gets the instance properties.
      * @return the set of property descriptions or an empty array if
@@ -155,7 +155,7 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
                     .getDescription()).getProperties();
         }
     }
-    
+
     /**
      * Gets the instance description.
      * Overridden to add created objects.
@@ -165,14 +165,14 @@ public class PrimitiveInstanceDescription extends InstanceDescription {
         Element elem = super.getDescription();
         // Created Object (empty is composite)
         String[] objs = getCreatedObjects();
-        for (int i = 0; i < objs.length; i++) {
+        for (int i = 0; objs != null  && i < objs.length; i++) {
             Element obj = new Element("Object", "");
             obj.addAttribute(new Attribute("name", ((Object) objs[i]).toString()));
             elem.addElement(obj);
         }
         return elem;
     }
-    
-    
+
+
 
 }
