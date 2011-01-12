@@ -51,7 +51,7 @@
 					<instructions>
 						<Bundle-Name>Apache Felix Dependency Manager Annotation Sample</Bundle-Name>
 						<Bundle-SymbolicName>org.apache.felix.dependencymanager.samples.annotation</Bundle-SymbolicName>
-						<Import-Package>*</Import-Package>
+						<Import-Package>org.apache.felix.service.command;status=provisional,*</Import-Package>
 						<Private-Package>org.apache.felix.dm.samples.annotation</Private-Package>
 					</instructions>
 				</configuration>
