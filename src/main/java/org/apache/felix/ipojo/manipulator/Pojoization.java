@@ -300,7 +300,8 @@ public class Pojoization {
         cr.accept(collector, 0);
 
         if (collector.isIgnoredBecauseOfMissingComponent()) {
-            warn("Annotation processing ignored in " + collector.getClassName() + " - @Component missing");
+        	// No @Component, just skip.
+            //warn("Annotation processing ignored in " + collector.getClassName() + " - @Component missing");
         } else if (collector.isComponentType()) {
             boolean toskip = false;
             for (int i = 0; !toskip && i < m_metadata.size(); i++) {
@@ -329,7 +330,7 @@ public class Pojoization {
 
                 // Instantiate ?
                 if (collector.getInstanceDeclaration() != null) {
-                    warn("Declaring an empty instance of " + elem.getAttribute("classname"));
+                    //warn("Declaring an empty instance of " + elem.getAttribute("classname"));
                     m_metadata.add(collector.getInstanceDeclaration());
                 }
             }
