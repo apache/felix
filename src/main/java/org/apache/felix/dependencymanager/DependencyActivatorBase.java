@@ -20,6 +20,7 @@ package org.apache.felix.dependencymanager;
 
 import java.util.List;
 
+import org.apache.felix.dependencymanager.impl.ServiceImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -82,6 +83,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      */
     public void stop(BundleContext context) throws Exception {
         destroy(m_context, m_manager);
+        cleanup(m_manager);
         m_manager = null;
         m_context = null;
     }
@@ -111,5 +113,23 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      */
     public ConfigurationDependency createConfigurationDependency() {
     	return new org.apache.felix.dependencymanager.impl.ConfigurationDependencyImpl(m_manager);
+    }
+    
+    /**
+     * Cleans up all components and their dependencies.
+     * 
+     * @param manager the dependency manager
+     */
+    private void cleanup(DependencyManager manager) {
+        List services = manager.getServices();
+        for (int i = services.size() - 1; i >= 0; i--) {
+            Service service = (Service) services.get(i);
+            manager.remove(service);
+            // remove any state listeners that are still registered
+            if (service instanceof ServiceImpl) {
+                ServiceImpl si = (ServiceImpl) service;
+                si.removeStateListeners();
+            }
+        }
     }
 }
