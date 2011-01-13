@@ -163,8 +163,15 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
             m_elem.addAttribute(new Attribute(arg0, v));
             return;
         }
+        
         // Attributes are added as normal attributes
-        m_elem.addAttribute(new Attribute(arg0, arg1.toString()));
+        if (!(arg1 instanceof Type)) {
+            m_elem.addAttribute(new Attribute(arg0, arg1.toString()));            
+        } else {
+            // Attributes of type class need a special handling
+            m_elem.addAttribute(new Attribute(arg0, ((Type) arg1).getClassName()));        
+        }
+        
         if (m_root) {
             if (arg0.equals("id")) {
                 m_id = arg1.toString();
@@ -278,9 +285,19 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
          */
         public void visit(String arg0, Object arg1) {
             if (m_acc == null) {
-                m_acc = "{" + arg1.toString();
+                if (!(arg1 instanceof Type)) {
+                    m_acc = "{" + arg1.toString();            
+                } else {
+                    // Attributes of type class need a special handling
+                    m_acc = "{" + ((Type) arg1).getClassName();
+                }
             } else {
-                m_acc = m_acc + "," + arg1.toString();
+                if (!(arg1 instanceof Type)) {
+                    m_acc = m_acc + "," + arg1.toString();
+                } else {
+                    // Attributes of type class need a special handling
+                    m_acc = m_acc + "," + ((Type) arg1).getClassName();
+                }
             }
         }
 
