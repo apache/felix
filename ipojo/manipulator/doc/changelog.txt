@@ -1,6 +1,7 @@
 Changes from the 1.6.4 to 1.8.0
 -------------------------------
 ** Bug
+    * [FELIX-2779] - iPOJO manipulator badly supports custom annotation attributes of type Class
     * [FELIX-2664] - Native methods should not be manipulated
 
 ** Improvement
