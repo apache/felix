@@ -128,7 +128,8 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
             {
                 if ( Artifact.SCOPE_COMPILE.equals( declared.getScope() )
                     || Artifact.SCOPE_RUNTIME.equals( declared.getScope() )
-                    || Artifact.SCOPE_PROVIDED.equals( declared.getScope() ) )
+                    || Artifact.SCOPE_PROVIDED.equals( declared.getScope() )
+                    || Artifact.SCOPE_SYSTEM.equals( declared.getScope() ) )
                 {
                     this.log.debug( "Resolving artifact " + declared );
                     final Artifact artifact = resolved.get( ArtifactUtils.versionlessKey( declared ) );
