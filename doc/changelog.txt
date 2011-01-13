@@ -1,3 +1,9 @@
+Changes from 2.1.0 to 2.2.0
+---------------------------
+
+ * [2010-11-17] FELIX-2701: Add {local-packages} macro, expands to local packages in <Export-Package> instruction
+ * [2010-10-25] FELIX-2176: Update to latest bndlib (1.15.0)
+
 Changes from 2.0.0 to 2.0.1
 ---------------------------
 
