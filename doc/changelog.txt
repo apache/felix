@@ -5,6 +5,7 @@ Changes from the 1.6.8 to 1.8.0
     * [FELIX-2716] - [iPOJO] Failure when creating proxies for classes in java.* packages
 
 ** Improvement
+    * [FELIX-2781] - Expose the implementation class as service when no interfaces are found in the hierarchy
     * [FELIX-1424] - Constructor Injection
     * [FELIX-1428] - Constructor injection of Configuration properties
     * [FELIX-2461] - Allow specifying the targeted service interface in the @ServiceController
