@@ -25,4 +25,9 @@
         <provides specifications="[org.apache.felix.ipojo.test.scenarios.component.inherited.ProcessParentImplementation, org.apache.felix.ipojo.test.scenarios.ps.service.FooService]"/>
     </component>
 
+	<component
+	classname="org.apache.felix.ipojo.test.scenarios.component.SimpleClass">
+		<provides/>
+	</component>
+
 </ipojo>

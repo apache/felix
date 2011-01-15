@@ -596,7 +596,8 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             }
 
             if (all.isEmpty()) {
-                throw new ConfigurationException("Service Providing: Cannot instantiate a provided service : no specifications found (no interfaces implemented by the pojo)");
+            	warn("No service interface found in the class hierarchy, use the implementation class");
+                all.add(desc.getFactory().getClassName());
             }
 
             StringBuffer specs = null;
