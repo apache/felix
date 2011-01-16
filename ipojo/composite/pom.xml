@@ -31,9 +31,9 @@
   <version>1.7.0-SNAPSHOT</version>
 
   <properties>
-    <ipojo.package.version>1.6.0</ipojo.package.version>
+    <ipojo.package.version>1.8.0</ipojo.package.version>
   </properties>
-  
+
   <description>
   iPOJO Composition Model. This is an iPOJO extension to execute service composition.
   </description>
@@ -94,9 +94,9 @@
               org.objectweb.asm*;version=3.0;-split-package:=merge-first ,
               org.apache.felix.ipojo.manipulation
             </Export-Package>
-            <Include-Resource> 
+            <Include-Resource>
               META-INF/LICENSE=LICENSE,
-              META-INF/NOTICE=NOTICE, 
+              META-INF/NOTICE=NOTICE,
               META-INF/LICENSE.asm=LICENSE.asm,
               META-INF/DEPENDENCIES=DEPENDENCIES
             </Include-Resource>
