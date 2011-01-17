@@ -128,14 +128,13 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-ipojo-plugin</artifactId>
-        <version>1.6.0</version>
+        <version>1.8.0</version>
         <executions>
           <execution>
             <goals>
               <goal>ipojo-bundle</goal>
             </goals>
             <configuration>
-              <metadata>metadata.xml</metadata>
               <ignoreAnnotations>true</ignoreAnnotations>
             </configuration>
           </execution>
