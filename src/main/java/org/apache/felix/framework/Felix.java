@@ -4713,7 +4713,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (InterruptedException ex)
                 {
-                    // Ignore and just keep waiting.
+                    throw new IllegalStateException("Unable to acquire bundle lock, thread interrupted.");
                 }
             }
 
