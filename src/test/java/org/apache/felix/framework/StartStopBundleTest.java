@@ -38,10 +38,9 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 
-public class StartStopBundleTest extends TestCase {
-
+public class StartStopBundleTest extends TestCase
+{
     public static final int DELAY = 1000;
-
     private File cacheDir;
 
     public void testStartStopBundle() throws Exception
@@ -74,11 +73,16 @@ public class StartStopBundleTest extends TestCase {
         final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
         final CountDownLatch latch = new CountDownLatch(1);
 
-        new Thread() {
-            public void run() {
-                try {
+        new Thread()
+        {
+            public void run()
+            {
+                try
+                {
                     bundle.start();
-                } catch (BundleException e) {
+                }
+                catch (BundleException e)
+                {
                     e.printStackTrace();
                 }
             }
@@ -89,15 +93,20 @@ public class StartStopBundleTest extends TestCase {
         long t1 = System.currentTimeMillis();
 
         assertEquals(Bundle.RESOLVED, bundle.getState());
-        assertTrue((t1 -t0) > DELAY / 2);
+        assertTrue((t1 - t0) > DELAY / 2);
 
         bundle.start();
 
-        new Thread() {
-            public void run() {
-                try {
+        new Thread()
+        {
+            public void run()
+            {
+                try
+                {
                     bundle.stop();
-                } catch (BundleException e) {
+                }
+                catch (BundleException e)
+                {
                     e.printStackTrace();
                 }
             }
@@ -108,7 +117,7 @@ public class StartStopBundleTest extends TestCase {
         t1 = System.currentTimeMillis();
 
         assertEquals(Bundle.ACTIVE, bundle.getState());
-        assertTrue((t1 -t0) > DELAY / 2);
+        assertTrue((t1 - t0) > DELAY / 2);
     }
 
     private static File createBundle(String manifest) throws IOException
@@ -134,13 +143,16 @@ public class StartStopBundleTest extends TestCase {
         return f;
     }
 
-    public static class TestBundleActivator implements BundleActivator {
-        public void start(BundleContext context) throws Exception {
+    public static class TestBundleActivator implements BundleActivator
+    {
+        public void start(BundleContext context) throws Exception
+        {
             Thread.sleep(DELAY);
         }
-        public void stop(BundleContext context) throws Exception {
+
+        public void stop(BundleContext context) throws Exception
+        {
             Thread.sleep(DELAY);
         }
     }
-
 }
