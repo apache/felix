@@ -1622,7 +1622,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             acquireBundleLock(bundle,
-                Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE);
+                Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
@@ -2119,7 +2119,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             acquireBundleLock(bundle,
-                Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE);
+                Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
@@ -2273,7 +2273,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             acquireBundleLock(bundle,
-                Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE);
+                Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
