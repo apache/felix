@@ -45,6 +45,8 @@ public class FileInstall implements BundleActivator
     BundleContext context;
     Map watchers = new HashMap();
     ServiceTracker listenersTracker;
+    static boolean initialized;
+    static final Object barrier = new Object();
 
     public void start(BundleContext context) throws Exception
     {
@@ -122,6 +124,12 @@ public class FileInstall implements BundleActivator
         {
             updated("initial", ht);
         }
+        // now notify all the directory watchers to proceed
+        // We need this to avoid race conditions observed in FELIX-2791
+        synchronized (barrier) {
+            initialized = true;
+            barrier.notifyAll();
+        }
     }
 
     // Adapted for FELIX-524
@@ -141,6 +149,9 @@ public class FileInstall implements BundleActivator
 
     public void stop(BundleContext context) throws Exception
     {
+        synchronized (barrier) {
+            initialized = false;
+        }
         List /*<DirectoryWatcher>*/ toClose = new ArrayList /*<DirectoryWatcher>*/();
         synchronized (watchers)
         {
