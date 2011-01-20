@@ -184,7 +184,13 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
     protected boolean isHtmlRequest( final HttpServletRequest request )
     {
         final String requestUri = request.getRequestURI();
-        return requestUri.endsWith( ".html" ) || requestUri.lastIndexOf( '.' ) < 0;
+        if ( requestUri.endsWith( ".html" ) ) {
+            return true;
+        }
+        // check if there is an extension
+        final int lastSlash = requestUri.lastIndexOf('/');
+        final int lastDot = requestUri.indexOf('.', lastSlash + 1);
+        return lastDot < 0;
     }
 
 
