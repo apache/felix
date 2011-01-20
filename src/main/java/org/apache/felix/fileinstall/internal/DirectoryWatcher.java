@@ -215,6 +215,24 @@ public class DirectoryWatcher extends Thread implements BundleListener
      */
     public void run()
     {
+        // We must wait for FileInstall to complete initialisation
+        // to avoid race conditions observed in FELIX-2791
+        synchronized (FileInstall.barrier)
+        {
+            while (!FileInstall.initialized)
+            {
+                try
+                {
+                    FileInstall.barrier.wait(0);
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                    log(Logger.LOG_INFO, "Watcher for " + watchedDirectory + " exiting because of interruption.", e);
+                    return;
+                }
+            }
+        }
         log(Logger.LOG_DEBUG,
             "{" + POLL + " (ms) = " + poll + ", "
                 + DIR + " = " + watchedDirectory.getAbsolutePath() + ", "
