@@ -100,6 +100,11 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
 
 	   // process resources
 	   Map designates = data.getDesignates();
+	   if (designates == null) {
+	       // if there are no designates, there's nothing to process
+	       m_log.log(LogService.LOG_INFO, "No designates found in the resource, so there's nothing to process.");
+	       return;
+	   }
 	   Map localOcds = data.getObjectClassDefinitions();
 	   Iterator i = designates.keySet().iterator();
 	   while (i.hasNext()) {
