@@ -397,9 +397,9 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     public synchronized void start() {
     	if (m_serviceRegistration == null) {
 	        m_serviceRegistration = m_context.registerService(ComponentDeclaration.class.getName(), this, null);
-	    	State oldState, newState;
+	        State oldState, newState;
 	        synchronized (m_dependencies) {
-	        	oldState = m_state;
+	            oldState = m_state;
 	            newState = new State((List) m_dependencies.clone(), true, m_isInstantiated, m_isBound);
 	            m_state = newState;
 	        }
@@ -409,15 +409,15 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 
     public synchronized void stop() {
     	if (m_serviceRegistration != null) {
-	    	State oldState, newState;
+	        m_serviceRegistration.unregister();
+	        m_serviceRegistration = null;
+	        State oldState, newState;
 	        synchronized (m_dependencies) {
-	        	oldState = m_state;
+	            oldState = m_state;
 	            newState = new State((List) m_dependencies.clone(), false, m_isInstantiated, m_isBound);
 	            m_state = newState;
 	        }
 	        calculateStateChanges(oldState, newState);
-	        m_serviceRegistration.unregister();
-	        m_serviceRegistration = null;
     	}
     }
 
