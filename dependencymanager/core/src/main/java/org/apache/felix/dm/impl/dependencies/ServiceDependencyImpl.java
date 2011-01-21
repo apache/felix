@@ -78,7 +78,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     private boolean m_propagate;
     private Object m_propagateCallbackInstance;
     private String m_propagateCallbackMethod;
-    private final Map m_sr = new HashMap(); /* <DependencyService, Set<ServiceReference>> */
+    private final Map m_sr = new HashMap(); /* <DependencyService, Set<Tuple<ServiceReference, Object>> */
     
     private static final Comparator COMPARATOR = new Comparator() {
         public int getRank(ServiceReference ref) {
@@ -103,10 +103,36 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     };
     
+    private static final class Tuple /* <ServiceReference, Object> */ {
+        private final ServiceReference m_serviceReference;
+        private final Object m_service;
+        
+        public Tuple(ServiceReference first, Object last) {
+            m_serviceReference = first;
+            m_service = last;
+        }
+        
+        public ServiceReference getServiceReference() {
+            return m_serviceReference;
+        }
+        
+        public Object getService() {
+            return m_service;
+        }
+        
+        public boolean equals(Object obj) {
+            return ((Tuple) obj).getServiceReference().equals(getServiceReference());
+        }
+        
+        public int hashCode() {
+            return m_serviceReference.hashCode();
+        }
+    }
+    
     /**
      * Entry to wrap service properties behind a Map.
      */
-    private final static class ServicePropertiesMapEntry implements Map.Entry {
+    private static final class ServicePropertiesMapEntry implements Map.Entry {
         private final String m_key;
         private Object m_value;
 
@@ -502,7 +528,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 set = new HashSet();
                 m_sr.put(dependencyService, set);
             }
-            added = set.add(reference);
+            added = set.add(new Tuple(reference, service));
         }
         if (added) {
             invoke(dependencyService, reference, service, m_callbackAdded);
@@ -517,7 +543,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         boolean removed = false;
         synchronized (m_sr) {
             Set set = (Set) m_sr.get(dependencyService);
-            removed = (set != null && set.remove(reference));
+            removed = (set != null && set.remove(new Tuple(reference, service)));
         }
         if (removed) {
             invoke(dependencyService, reference, service, m_callbackRemoved);
@@ -843,11 +869,11 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         synchronized (m_sr) {
             references = (Set) m_sr.get(service);
         }
-        ServiceReference[] refs = (ServiceReference[]) (references != null ? references.toArray(new ServiceReference[references.size()]) : new ServiceReference[0]);
+        Tuple[] refs = (Tuple[]) (references != null ? references.toArray(new Tuple[references.size()]) : new Tuple[0]);
     
         for (int i = 0; i < refs.length; i++) {
-            ServiceReference sr = refs[i];
-            Object svc = m_context.getService(sr);
+            ServiceReference sr = refs[i].getServiceReference();
+            Object svc = refs[i].getService();
             invokeRemoved(service, sr, svc);
         }
         if (references != null) {
