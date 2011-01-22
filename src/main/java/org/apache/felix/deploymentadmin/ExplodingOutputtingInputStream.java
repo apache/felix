@@ -42,7 +42,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * This class will write all entries encountered in an inputstream to disk. An index of files written to disk is kept in an index file in the
+ * This class will write all entries encountered in an input stream to disk. An index of files written to disk is kept in an index file in the
  * order they were encountered. Each file is compressed using GZIP. All the work is done on a separate thread.
  */
 class ExplodingOutputtingInputStream extends OutputtingInputStream implements Runnable {
@@ -74,7 +74,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         m_contentDir = root;
         m_indexFile = index;
         m_input = new PipedInputStream(output);
-        m_task = new Thread(this, "LiQ - ExplodingIncomingThread");
+        m_task = new Thread(this, "Apache Felix DeploymentAdmin - ExplodingOutputtingInputStream");
         m_task.start();
     }
 
