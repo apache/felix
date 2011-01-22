@@ -17,26 +17,9 @@
 package org.apache.felix.webconsole.internal.core;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
@@ -48,27 +31,11 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.DefaultVariableResolver;
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.WebConsoleUtil;
+import org.apache.felix.webconsole.*;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONWriter;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.Version;
+import org.json.*;
+import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
@@ -1614,7 +1581,16 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             Manifest m = jar.getManifest();
             if ( m != null )
             {
-                return m.getMainAttributes().getValue( Constants.BUNDLE_SYMBOLICNAME );
+                String sn = m.getMainAttributes().getValue( Constants.BUNDLE_SYMBOLICNAME );
+                if ( sn != null )
+                {
+                    final int paramPos = sn.indexOf(';');
+                    if ( paramPos != -1 )
+                    {
+                        sn = sn.substring(0, paramPos);
+                    }
+                }
+                return sn;
             }
         }
         catch ( IOException ioe )
