@@ -57,16 +57,6 @@ public class FileInstall implements BundleActivator
         props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
         context.registerService(org.osgi.service.url.URLStreamHandlerService.class.getName(), new JarDirUrlHandler(), props);
 
-        try
-        {
-            cmSupport = new ConfigAdminSupport(context, this);
-        }
-        catch (NoClassDefFoundError e)
-        {
-            Util.log(context, Util.getGlobalLogLevel(context), Logger.LOG_DEBUG,
-                "ConfigAdmin is not available, some features will be disabled", e);
-        }
-
         padmin = new ServiceTracker(context, PackageAdmin.class.getName(), null);
         padmin.open();
         startLevel = new ServiceTracker(context, StartLevel.class.getName(), null);
@@ -88,6 +78,16 @@ public class FileInstall implements BundleActivator
             }
         };
         listenersTracker.open();
+
+        try
+        {
+            cmSupport = new ConfigAdminSupport(context, this);
+        }
+        catch (NoClassDefFoundError e)
+        {
+            Util.log(context, Util.getGlobalLogLevel(context), Logger.LOG_DEBUG,
+                "ConfigAdmin is not available, some features will be disabled", e);
+        }
 
         // Created the initial configuration
         Hashtable ht = new Hashtable();
