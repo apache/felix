@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -121,7 +122,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                                             configurationEvent.getFactoryPid());
                 Dictionary dict = config.getProperties();
                 String fileName = (String) dict.get( DirectoryWatcher.FILENAME );
-                File file = fileName != null ? new File(fileName) : null;
+                File file = fileName != null ? fromConfigKey(fileName) : null;
                 if( file != null && file.isFile()   ) {
                     if( fileName.endsWith( ".cfg" ) )
                     {
@@ -210,7 +211,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         }
 
         String pid[] = parsePid(f.getName());
-        Configuration config = getConfiguration(f.getAbsolutePath(), pid[0], pid[1]);
+        Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
         Dictionary props = config.getProperties();
         Hashtable old = props != null ? new Hashtable(new DictionaryAsMap(props)) : new Hashtable();
@@ -220,7 +221,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
         if( !ht.equals( old ) )
         {
-            ht.put(DirectoryWatcher.FILENAME, f.getAbsolutePath());
+            ht.put(DirectoryWatcher.FILENAME, toConfigKey(f));
             if (config.getBundleLocation() != null)
             {
                 config.setBundleLocation(null);
@@ -245,9 +246,17 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
-        Configuration config = getConfiguration(f.getAbsolutePath(), pid[0], pid[1]);
+        Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
         config.delete();
         return true;
+    }
+
+    String toConfigKey(File f) {
+        return f.getAbsoluteFile().toURI().toString();
+    }
+
+    File fromConfigKey(String key) {
+        return new File(URI.create(key));
     }
 
     String[] parsePid(String path)
