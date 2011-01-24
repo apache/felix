@@ -50,13 +50,13 @@ public final class ServletContextImpl
     private final ServletContextAttributeListener attributeListener;
 
     public ServletContextImpl(Bundle bundle, ServletContext context, HttpContext httpContext,
-        ServletContextAttributeListener attributeListener)
+        ServletContextAttributeListener attributeListener, boolean sharedAttributes)
     {
         this.bundle = bundle;
         this.context = context;
         this.httpContext = httpContext;
-        this.attributes = new ConcurrentHashMap<String, Object>();
         this.attributeListener = attributeListener;
+        this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
     }
 
     public String getContextPath()
@@ -149,12 +149,13 @@ public final class ServletContextImpl
 
     public Object getAttribute(String name)
     {
-        return this.attributes.get(name);
+        return (this.attributes != null) ? this.attributes.get(name) : this.context.getAttribute(name);
     }
 
     public Enumeration getAttributeNames()
     {
-        return Collections.enumeration(this.attributes.keySet());
+        return (this.attributes != null) ? Collections.enumeration(this.attributes.keySet()) : this.context
+            .getAttributeNames();
     }
 
     public void setAttribute(String name, Object value)
@@ -165,7 +166,17 @@ public final class ServletContextImpl
         }
         else if (name != null)
         {
-            Object oldValue = this.attributes.put(name, value);
+            Object oldValue;
+            if (this.attributes != null)
+            {
+                oldValue = this.attributes.put(name, value);
+            }
+            else
+            {
+                oldValue = this.context.getAttribute(name);
+                this.context.setAttribute(name, value);
+            }
+
             if (oldValue == null)
             {
                 attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
@@ -179,7 +190,17 @@ public final class ServletContextImpl
 
     public void removeAttribute(String name)
     {
-        Object oldValue = this.attributes.remove(name);
+        Object oldValue;
+        if (this.attributes != null)
+        {
+            oldValue = this.attributes.remove(name);
+        }
+        else
+        {
+            oldValue = this.context.getAttribute(name);
+            this.context.removeAttribute(name);
+        }
+
         if (oldValue != null)
         {
             attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));

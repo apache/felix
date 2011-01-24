@@ -31,14 +31,16 @@ public final class ServletContextManager
     private final ServletContext context;
     private final ServletContextAttributeListener attributeListener;
     private final Map<HttpContext, ExtServletContext> contextMap;
+    private final boolean sharedAttributes;
 
     public ServletContextManager(Bundle bundle, ServletContext context,
-        ServletContextAttributeListener attributeListener)
+        ServletContextAttributeListener attributeListener, boolean sharedAttributes)
     {
         this.bundle = bundle;
         this.context = context;
         this.attributeListener = attributeListener;
         this.contextMap = new HashMap<HttpContext, ExtServletContext>();
+        this.sharedAttributes = sharedAttributes;
     }
 
     public ExtServletContext getServletContext(HttpContext httpContext)
@@ -55,7 +57,8 @@ public final class ServletContextManager
 
     private ExtServletContext addServletContext(HttpContext httpContext)
     {
-        ExtServletContext context = new ServletContextImpl(this.bundle, this.context, httpContext, attributeListener);
+        ExtServletContext context = new ServletContextImpl(this.bundle, this.context, httpContext, attributeListener,
+            sharedAttributes);
         this.contextMap.put(httpContext, context);
         return context;
     }

@@ -34,7 +34,7 @@ public class ServletContextManagerTest
     {
         Bundle bundle = Mockito.mock(Bundle.class);
         ServletContext globalContext = Mockito.mock(ServletContext.class);
-        this.manager = new ServletContextManager(bundle, globalContext, null);
+        this.manager = new ServletContextManager(bundle, globalContext, null, false);
     }
 
     @Test
