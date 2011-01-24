@@ -25,10 +25,12 @@ import org.osgi.service.http.HttpContext;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
-
+import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
@@ -46,7 +48,7 @@ public class ServletContextImplTest
         ServletContext globalContext = Mockito.mock(ServletContext.class);
         this.httpContext = Mockito.mock(HttpContext.class);
         this.listener = new AttributeListener();
-        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener);
+        this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener, false);
     }
 
     @Test
@@ -145,6 +147,230 @@ public class ServletContextImplTest
         Assert.assertNotNull(e);
         Assert.assertTrue(e.hasMoreElements());
         Assert.assertEquals("key1", e.nextElement());
+        Assert.assertFalse(e.hasMoreElements());
+    }
+
+    @Test
+    public void testGetSharedAttribute()
+    {
+        ServletContext globalContext = new MockServletContext();
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
+
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        // Operations on ctx1 and check results
+
+        ctx1.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("value1", ctx2.getAttribute("key1"));
+        Assert.assertEquals("value1", globalContext.getAttribute("key1"));
+
+        ctx1.removeAttribute("key1");
+        this.listener.checkRemoved("key1", "value1");
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        ctx1.setAttribute("key1", null);
+        this.listener.checkNull();
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        ctx1.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("value1", ctx2.getAttribute("key1"));
+        Assert.assertEquals("value1", globalContext.getAttribute("key1"));
+
+        ctx1.setAttribute("key1", "newValue");
+        this.listener.checkReplaced("key1", "value1");
+        Assert.assertEquals("newValue", ctx1.getAttribute("key1"));
+        Assert.assertEquals("newValue", ctx2.getAttribute("key1"));
+        Assert.assertEquals("newValue", globalContext.getAttribute("key1"));
+
+        ctx1.removeAttribute("key1");
+
+        // Operations on ctx2 and check results
+
+        ctx2.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("value1", ctx2.getAttribute("key1"));
+        Assert.assertEquals("value1", globalContext.getAttribute("key1"));
+
+        ctx2.removeAttribute("key1");
+        this.listener.checkRemoved("key1", "value1");
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        ctx2.setAttribute("key1", null);
+        this.listener.checkNull();
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        ctx2.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("value1", ctx2.getAttribute("key1"));
+        Assert.assertEquals("value1", globalContext.getAttribute("key1"));
+
+        ctx2.setAttribute("key1", "newValue");
+        this.listener.checkReplaced("key1", "value1");
+        Assert.assertEquals("newValue", ctx1.getAttribute("key1"));
+        Assert.assertEquals("newValue", ctx2.getAttribute("key1"));
+        Assert.assertEquals("newValue", globalContext.getAttribute("key1"));
+
+        ctx2.removeAttribute("key1");
+
+        // Operations on globalContext and check results
+
+        globalContext.setAttribute("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("value1", ctx2.getAttribute("key1"));
+        Assert.assertEquals("value1", globalContext.getAttribute("key1"));
+
+        globalContext.removeAttribute("key1");
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        globalContext.setAttribute("key1", null);
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        globalContext.setAttribute("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("value1", ctx2.getAttribute("key1"));
+        Assert.assertEquals("value1", globalContext.getAttribute("key1"));
+
+        globalContext.setAttribute("key1", "newValue");
+        Assert.assertEquals("newValue", ctx1.getAttribute("key1"));
+        Assert.assertEquals("newValue", ctx2.getAttribute("key1"));
+        Assert.assertEquals("newValue", globalContext.getAttribute("key1"));
+
+        globalContext.removeAttribute("key1");
+    }
+
+    @Test
+    public void testGetSharedAttributeNames()
+    {
+        ServletContext globalContext = new MockServletContext();
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, true);
+
+        Enumeration e = ctx1.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+        e = ctx2.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+        e = globalContext.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+
+        ctx1.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        e = ctx1.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertTrue(e.hasMoreElements());
+        Assert.assertEquals("key1", e.nextElement());
+        Assert.assertFalse(e.hasMoreElements());
+        e = ctx2.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertTrue(e.hasMoreElements());
+        Assert.assertEquals("key1", e.nextElement());
+        Assert.assertFalse(e.hasMoreElements());
+        e = globalContext.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertTrue(e.hasMoreElements());
+        Assert.assertEquals("key1", e.nextElement());
+        Assert.assertFalse(e.hasMoreElements());
+    }
+
+
+    @Test
+    public void testGetUnsharedAttribute()
+    {
+        ServletContext globalContext = new MockServletContext();
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
+
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertNull(ctx2.getAttribute("key1"));
+        Assert.assertNull(globalContext.getAttribute("key1"));
+
+        // Operations on ctx1 and check results
+
+        ctx2.setAttribute("key1", "ctx2_private_value");
+        globalContext.setAttribute("key1", "globalContext_private_value");
+        ctx1.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("ctx2_private_value", ctx2.getAttribute("key1"));
+        Assert.assertEquals("globalContext_private_value", globalContext.getAttribute("key1"));
+
+        ctx1.removeAttribute("key1");
+        this.listener.checkRemoved("key1", "value1");
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertEquals("ctx2_private_value", ctx2.getAttribute("key1"));
+        Assert.assertEquals("globalContext_private_value", globalContext.getAttribute("key1"));
+
+        ctx1.setAttribute("key1", null);
+        this.listener.checkNull();
+        Assert.assertNull(ctx1.getAttribute("key1"));
+        Assert.assertEquals("ctx2_private_value", ctx2.getAttribute("key1"));
+        Assert.assertEquals("globalContext_private_value", globalContext.getAttribute("key1"));
+
+        ctx1.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        Assert.assertEquals("value1", ctx1.getAttribute("key1"));
+        Assert.assertEquals("ctx2_private_value", ctx2.getAttribute("key1"));
+        Assert.assertEquals("globalContext_private_value", globalContext.getAttribute("key1"));
+
+        ctx1.setAttribute("key1", "newValue");
+        this.listener.checkReplaced("key1", "value1");
+        Assert.assertEquals("newValue", ctx1.getAttribute("key1"));
+        Assert.assertEquals("ctx2_private_value", ctx2.getAttribute("key1"));
+        Assert.assertEquals("globalContext_private_value", globalContext.getAttribute("key1"));
+    }
+
+    @Test
+    public void testGetUnsharedAttributeNames()
+    {
+        ServletContext globalContext = new MockServletContext();
+        ServletContext ctx1 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
+        ServletContext ctx2 = new ServletContextImpl(bundle, globalContext, httpContext, listener, false);
+
+        Enumeration e = ctx1.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+        e = ctx2.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+        e = globalContext.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+
+        ctx1.setAttribute("key1", "value1");
+        this.listener.checkAdded("key1", "value1");
+        e = ctx1.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertTrue(e.hasMoreElements());
+        Assert.assertEquals("key1", e.nextElement());
+        Assert.assertFalse(e.hasMoreElements());
+        e = ctx2.getAttributeNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+        e = globalContext.getAttributeNames();
+        Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
     }
 
@@ -258,6 +484,140 @@ public class ServletContextImplTest
                 this.name = null;
                 this.value = null;
             }
+        }
+    }
+
+    private class MockServletContext implements ServletContext {
+
+        private Dictionary attributes = new Hashtable();
+
+        public Object getAttribute(String name)
+        {
+            return attributes.get(name);
+        }
+
+        public Enumeration getAttributeNames()
+        {
+            return attributes.keys();
+        }
+
+        public void setAttribute(String name, Object object)
+        {
+            if (object != null)
+            {
+                attributes.put(name, object);
+            }
+            else
+            {
+                removeAttribute(name);
+            }
+        }
+
+        public void removeAttribute(String name)
+        {
+            attributes.remove(name);
+        }
+
+        public String getContextPath()
+        {
+            return null;
+        }
+
+        public ServletContext getContext(String uripath)
+        {
+            return null;
+        }
+
+        public int getMajorVersion()
+        {
+            return 0;
+        }
+
+        public int getMinorVersion()
+        {
+            return 0;
+        }
+
+        public String getMimeType(String file)
+        {
+            return null;
+        }
+
+        public Set getResourcePaths(String path)
+        {
+            return null;
+        }
+
+        public URL getResource(String path)
+        {
+            return null;
+        }
+
+        public InputStream getResourceAsStream(String path)
+        {
+            return null;
+        }
+
+        public RequestDispatcher getRequestDispatcher(String path)
+        {
+            return null;
+        }
+
+        public RequestDispatcher getNamedDispatcher(String name)
+        {
+            return null;
+        }
+
+        public Servlet getServlet(String name)
+        {
+            return null;
+        }
+
+        public Enumeration getServlets()
+        {
+            return null;
+        }
+
+        public Enumeration getServletNames()
+        {
+            return null;
+        }
+
+        public void log(String msg)
+        {
+        }
+
+        public void log(Exception exception, String msg)
+        {
+        }
+
+        public void log(String message, Throwable throwable)
+        {
+        }
+
+        public String getRealPath(String path)
+        {
+            return null;
+        }
+
+        public String getServerInfo()
+        {
+            return null;
+        }
+
+        public String getInitParameter(String name)
+        {
+            return null;
+        }
+
+        public Enumeration getInitParameterNames()
+        {
+            return null;
+        }
+
+        public String getServletContextName()
+        {
+            return null;
         }
     }
 }

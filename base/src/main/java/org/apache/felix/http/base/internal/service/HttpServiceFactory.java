@@ -30,18 +30,21 @@ public final class HttpServiceFactory
     private final ServletContext context;
     private final ServletContextAttributeListener attributeListener;
     private final HandlerRegistry handlerRegistry;
+    private final boolean sharedContextAttributes;
 
     public HttpServiceFactory(ServletContext context, HandlerRegistry handlerRegistry,
-        ServletContextAttributeListener attributeListener)
+        ServletContextAttributeListener attributeListener, boolean sharedContextAttributes)
     {
         this.context = context;
         this.attributeListener = attributeListener;
         this.handlerRegistry = handlerRegistry;
+        this.sharedContextAttributes = sharedContextAttributes;
     }
 
     public Object getService(Bundle bundle, ServiceRegistration reg)
     {
-        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry, attributeListener);
+        return new HttpServiceImpl(bundle, this.context, this.handlerRegistry, this.attributeListener,
+            this.sharedContextAttributes);
     }
 
     public void ungetService(Bundle bundle, ServiceRegistration reg, Object service)
