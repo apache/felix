@@ -41,7 +41,7 @@
                             org.apache.felix.http.bundle.internal.CombinedActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${pom.version};-split-package:=merge-first,
+                            org.apache.felix.http.api;version=2.0.4;-split-package:=merge-first,
                             org.osgi.service.http;version=1.2.0;-split-package:=merge-first,
                             javax.servlet.*;version=2.5;-split-package:=merge-first
                         </Export-Package>

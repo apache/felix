@@ -38,7 +38,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${pom.version}
+                            org.apache.felix.http.api;version=2.0.4
                         </Export-Package>
                     </instructions>
                 </configuration>
