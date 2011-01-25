@@ -39,6 +39,8 @@ import org.osgi.util.tracker.ServiceTracker;
  * The <code>ProxyListener</code> implements a Servlet API listener for HTTP
  * Session related events. These events are provided by the servlet container
  * and forwarded to the event dispatcher.
+ *
+ * @since 2.1.0
  */
 public class ProxyListener implements HttpSessionAttributeListener, HttpSessionListener, ServletContextListener
 {
