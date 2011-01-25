@@ -130,7 +130,7 @@ public class R4Library
             }
         }
 
-        return false;
+        return matched;
     }
 
     public String toString()
