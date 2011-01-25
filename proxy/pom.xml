@@ -38,7 +38,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.felix.http.proxy;version=${pom.version}
+                            org.apache.felix.http.proxy;version=2.1.0
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional
