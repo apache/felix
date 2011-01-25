@@ -46,10 +46,10 @@ do
  if [ "$?" = "0" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
  if [ ! -f "$f.asc" ]; then CHKSUM="----"; fi
  echo "gpg:  ${CHKSUM}"
- if [ "`cat $f.md5 2>/dev/null`" = "`openssl md5 < $f 2>/dev/null`" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
+ if [ "`cat $f.md5 2>/dev/null`" = "`openssl md5 < $f 2>/dev/null | sed 's/.*= *//'`" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
  if [ ! -f "$f.md5" ]; then CHKSUM="----"; fi
  echo "md5:  ${CHKSUM}"
- if [ "`cat $f.sha1 2>/dev/null`" = "`openssl sha1 < $f 2>/dev/null`" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
+ if [ "`cat $f.sha1 2>/dev/null`" = "`openssl sha1 < $f 2>/dev/null | sed 's/.*= *//'`" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
  if [ ! -f "$f.sha1" ]; then CHKSUM="----"; fi
  echo "sha1: ${CHKSUM}"
 done
