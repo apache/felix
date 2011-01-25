@@ -1090,6 +1090,14 @@ class BundleImpl implements Bundle
 
     synchronized boolean rollbackRevise() throws Exception
     {
+        boolean isExtension = isExtension();
+        Module m = m_modules.remove(m_modules.size() - 1);
+        if (!isExtension)
+        {
+            // Since revising a module adds the module to the global
+            // state, we must remove it from the global state on rollback.
+            getFramework().getResolverState().removeModule(m);
+        }
         return m_archive.rollbackRevise();
     }
 
