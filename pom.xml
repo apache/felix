@@ -41,7 +41,7 @@
                             org.apache.felix.http.jetty.internal.JettyActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${pom.version},
+                            org.apache.felix.http.api;version=2.0.4,
                             org.osgi.service.http,
                             javax.servlet.*;version=2.5;-split-package:=merge-first
                         </Export-Package>
