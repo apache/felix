@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dependencymanager.impl;
 
-import java.util.Dictionary;
-
 import org.apache.felix.dependencymanager.ConfigurationDependency;
 import org.apache.felix.dependencymanager.DependencyManager;
 
