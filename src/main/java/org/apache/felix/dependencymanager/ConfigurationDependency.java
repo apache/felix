@@ -17,16 +17,6 @@
  * under the License.
  */
 package org.apache.felix.dependencymanager;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Dictionary;
-import java.util.Properties;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
 
 /**
  * Configuration dependency that can track the availability of a (valid) configuration.
