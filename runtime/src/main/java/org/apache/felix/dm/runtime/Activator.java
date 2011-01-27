@@ -20,6 +20,8 @@ package org.apache.felix.dm.runtime;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
@@ -31,24 +33,39 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends DependencyActivatorBase
 {
+    private final static String CONF_LOG = "dm.runtime.log";
+    
     /**
-     * Our bundle is starting: initialize our DependencyManager Runtime service.
+     * Initialize our DependencyManager Runtime service.
+     * 
+     * We depend on the OSGi LogService, and we track all started bundles which do have a 
+     * "DependencyManager-Component" Manifest header.
+     * If the "dm.runtime.log=true" parameter is configured in the Felix config.properties
+     * then we'll use a required/temporal service dependency over the log service.
+     * This temporal dependency avoids us to be restarted if the log service is temporarily 
+     * unavailable (that is: when the log service is updating).
+     * if the "dm.runtime.log" is not configured of it it is set to false, then we'll use 
+     * an optional dependency over the log service, in order to use a NullObject in case
+     * the log service is not available.
      */
     @Override
     public void init(BundleContext context, DependencyManager dm) throws Exception
     {
-        // If the "dm.log=true" parameter is configured in the OSGi config.properties
-        // then, we'll wait for the LogService, else we'll use an optional dependency over it,
-        // and we'll eventually use a Null LogService Object.
-
-        boolean logActive = "true".equals(context.getProperty("dm.runtime.log"));
+        boolean logActive = "true".equalsIgnoreCase(context.getProperty(CONF_LOG));
+        ServiceDependency logDep = logActive ?
+            createTemporalServiceDependency() : createServiceDependency().setRequired(false);        
+        logDep.setService(LogService.class).setAutoConfig(true);              
+        
         dm.add(createComponent()
                .setImplementation(DependencyManagerRuntime.class)
-               .add(createServiceDependency()
-                   .setService(LogService.class)
-                   .setRequired(logActive)
-                   .setAutoConfig("m_log")
-                   .setCallbacks("bind", null)));
+               .setComposition("getComposition")
+               .add(logDep)
+               .add(createBundleDependency()
+                    .setRequired(false)
+                    .setAutoConfig(false)
+                    .setStateMask(Bundle.ACTIVE)
+                    .setFilter("(DependencyManager-Component=*)")
+                    .setCallbacks("bundleStarted", "bundleStopped")));
     }
 
     /**

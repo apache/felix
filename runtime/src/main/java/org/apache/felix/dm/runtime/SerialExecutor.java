@@ -31,7 +31,7 @@ import java.util.LinkedList;
  */
 public final class SerialExecutor
 {
-    private final LinkedList m_workQueue = new LinkedList();
+    private final LinkedList<Runnable> m_workQueue = new LinkedList<Runnable>();
     private Runnable m_active;
 
     /**
@@ -44,6 +44,7 @@ public final class SerialExecutor
     {
         m_workQueue.addLast(new Runnable()
         {
+            @SuppressWarnings("synthetic-access")
             public void run()
             {
                 try

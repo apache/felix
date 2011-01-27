@@ -27,11 +27,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Component;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogService;
 
 /**
  * This class implements a <code>java.util.Set</code> which acts as a service factory.
@@ -189,6 +188,7 @@ public class FactorySet extends AbstractSet<Dictionary>
      * Create or Update a Service.
      */
     @Override
+    @SuppressWarnings("synthetic-access")
     public boolean add(final Dictionary configuration)
     {
         // Check parameter validity
@@ -230,6 +230,7 @@ public class FactorySet extends AbstractSet<Dictionary>
      * (This avoid potential dead locks, especially when Service callback methods are invoked).
      */
     @Override
+    @SuppressWarnings("synthetic-access")
     public boolean remove(final Object configuration)
     {
         // Check parameter validity.
@@ -268,6 +269,7 @@ public class FactorySet extends AbstractSet<Dictionary>
      * (This avoid potential dead locks, especially when Service callback methods are invoked).
      */
     @Override
+    @SuppressWarnings("synthetic-access")
     public void clear()
     {
         if (!m_active)
@@ -383,17 +385,15 @@ public class FactorySet extends AbstractSet<Dictionary>
                     if (name == null)
                     {
                         DependencyBuilder depBuilder = new DependencyBuilder(dependency);
-                        Log.instance().log(
-                                           LogService.LOG_INFO,
-                                           "ServiceLifecycleHandler.init: adding dependency %s into service %s",
-                                           dependency, m_srvMeta);
+                        Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
+                                            dependency, m_srvMeta);
                         Dependency d = depBuilder.build(m_bundle, m_dm, false);
                         s.add(d);
                     }
                 }
 
                 // Register the Service instance, and keep track of it.
-                Log.instance().log(LogService.LOG_INFO, "ServiceFactory: created service %s", m_srvMeta);
+                Log.instance().info("ServiceFactory: created service %s", m_srvMeta);
                 m_dm.add(s);
                 m_services.put(serviceKey, s);
             }
@@ -401,8 +401,8 @@ public class FactorySet extends AbstractSet<Dictionary>
             {
                 // Make sure the SERVICE_CREATING flag is also removed
                 m_services.remove(serviceKey);
-                Log.instance().log(LogService.LOG_ERROR, "ServiceFactory: could not instantiate service %s",
-                                   t, m_srvMeta);
+                Log.instance().error("ServiceFactory: could not instantiate service %s",
+                                     t, m_srvMeta);
             }
         }
         else
@@ -410,7 +410,7 @@ public class FactorySet extends AbstractSet<Dictionary>
             // Reconfigure an already existing Service.
             if (m_configure != null)
             {
-                Log.instance().log(LogService.LOG_INFO, "ServiceFactory: updating service %s", m_impl);
+                Log.instance().info("ServiceFactory: updating service %s", m_impl);
                 invokeConfigure(m_impl, m_configure, configuration);
             }
 
@@ -425,7 +425,7 @@ public class FactorySet extends AbstractSet<Dictionary>
 
     private void doRemove(Dictionary configuraton)
     {
-        Log.instance().log(LogService.LOG_INFO, "ServiceFactory: removing service %s", m_srvMeta);
+        Log.instance().info("ServiceFactory: removing service %s", m_srvMeta);
         ServiceKey serviceKey = new ServiceKey(configuraton);
         Object service = m_services.remove(serviceKey);
         if (service != null && service != SERVICE_CREATING)

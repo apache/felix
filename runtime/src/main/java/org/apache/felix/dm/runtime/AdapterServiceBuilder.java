@@ -21,8 +21,8 @@ package org.apache.felix.dm.runtime;
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
 /**

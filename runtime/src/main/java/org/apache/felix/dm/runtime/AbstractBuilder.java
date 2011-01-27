@@ -24,10 +24,9 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogService;
 
 /**
- * base class for all kind of DM component builders (for Component, Aspect, Adapters ...).
+ * Base class for all kind of DM component builders (for Component, Aspect, Adapters ...).
  */
 public abstract class AbstractBuilder
 {
@@ -46,7 +45,7 @@ public abstract class AbstractBuilder
         throws Exception;
 
     /**
-     * Set common Service parameters, if provided from our Component descriptor
+     * Sets common Service parameters, if provided from our Component descriptor
      */
     protected void setCommonServiceParams(Component service, MetaData serviceMetaData)
         throws Exception
@@ -77,8 +76,7 @@ public abstract class AbstractBuilder
             String name = dependency.getString(Params.name, null);
             if (name == null) {
                 DependencyBuilder depBuilder = new DependencyBuilder(dependency);
-                Log.instance().log(LogService.LOG_INFO, 
-                                   "ServiceLifecycleHandler.init: adding dependency %s into service %s",
+                Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
                                    dependency, srvMeta);
                 Dependency d = depBuilder.build(b, dm, false);
                 s.add(d);
