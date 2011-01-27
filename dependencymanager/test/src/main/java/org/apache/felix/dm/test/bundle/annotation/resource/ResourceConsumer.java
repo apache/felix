@@ -22,8 +22,8 @@ import java.net.URL;
 
 import junit.framework.Assert;
 
-import org.apache.felix.dm.annotation.api.ResourceDependency;
 import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.ResourceDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;

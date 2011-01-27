@@ -21,8 +21,8 @@ package org.apache.felix.dm.test.bundle.annotation.adapter;
 import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.Component;
-import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 @Component
