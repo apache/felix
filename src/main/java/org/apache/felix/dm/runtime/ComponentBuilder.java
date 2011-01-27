@@ -23,10 +23,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogService;
 
 /**
  * Builds a DependencyManager Component.
@@ -52,9 +51,9 @@ public class ComponentBuilder extends AbstractBuilder
         // Check if we must provide a Set Factory.
         if (factory == null)
         {
-            Log.instance().log(LogService.LOG_INFO, 
-                               "ComponentBuilder: building service %s with dependencies %s",
-                               srvMeta, depsMeta);
+            Log.instance().info("ComponentBuilder: building service %s with dependencies %s",
+                                srvMeta,
+                                depsMeta);
 
             String impl = srvMeta.getString(Params.impl);
             String composition = srvMeta.getString(Params.composition, null);
@@ -62,18 +61,21 @@ public class ComponentBuilder extends AbstractBuilder
             if (factoryMethod == null)
             {
                 service.setImplementation(b.loadClass(impl));
-            } else
+            }
+            else
             {
                 service.setFactory(b.loadClass(impl), factoryMethod);
             }
             service.setComposition(composition);
-            
-            // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
+
+            // Adds dependencies (except named dependencies, which are managed by the lifecycle
+            // handler).
             addUnamedDependencies(b, dm, service, srvMeta, depsMeta);
             // Creates a ServiceHandler, which will filter all service lifecycle callbacks.
-            ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
+            ServiceLifecycleHandler lfcleHandler =
+                    new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
             service.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
-            
+
             // Set the provided services
             Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
             String[] services = srvMeta.getStrings(Params.provides, null);
@@ -81,14 +83,15 @@ public class ComponentBuilder extends AbstractBuilder
         }
         else
         {
-            Log.instance().log(LogService.LOG_INFO, 
-                               "ComponentBuilder: providing factory set for service %s with dependencies %s",
-                               srvMeta, depsMeta);
+            Log.instance()
+                    .info("ComponentBuilder: providing factory set for service %s with dependencies %s",
+                          srvMeta,
+                          depsMeta);
 
             // We don't instantiate the service, but instead we provide a Set in the registry.
             // This Set will act as a factory and another component may registers some
             // service configurations into it in order to fire some service instantiations.
-            FactorySet factorySet =  new FactorySet(b, srvMeta, depsMeta);
+            FactorySet factorySet = new FactorySet(b, srvMeta, depsMeta);
             service.setImplementation(factorySet);
             service.setCallbacks(null, "start", "stop", null);
             Hashtable<String, String> props = new Hashtable<String, String>();

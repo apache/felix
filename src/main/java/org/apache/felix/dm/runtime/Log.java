@@ -25,7 +25,7 @@ import org.osgi.service.log.LogService;
  */
 public class Log
 {
-    /** The log service */
+    /** The wrap log service which is actually used (Injected by Activator) */
     private volatile LogService m_logService;
     
     /** Our sole instance */
@@ -36,17 +36,43 @@ public class Log
         return m_instance;
     }
     
-    public void setLogService(LogService logService) {
-        m_logService = logService;
-    }
-        
-    public void log(int level, String format, Object ... args) 
+    public void error(String format, Object ... args) 
     {
-        m_logService.log(level, String.format(format, args));
+        m_logService.log(LogService.LOG_ERROR, String.format(format, args));
     }
     
-    public void log(int level, String format, Throwable t, Object ... args) 
+    public void error(String format, Throwable t, Object ... args) 
     {
-        m_logService.log(level, String.format(format, args), t);
+        m_logService.log(LogService.LOG_ERROR, String.format(format, args), t);
+    }
+    
+    public void warn(String format, Object ... args) 
+    {
+        m_logService.log(LogService.LOG_WARNING, String.format(format, args));
+    }
+    
+    public void warn(String format, Throwable t, Object ... args) 
+    {
+        m_logService.log(LogService.LOG_WARNING, String.format(format, args), t);
+    }
+    
+    public void info(String format, Object ... args) 
+    {
+        m_logService.log(LogService.LOG_INFO, String.format(format, args));
+    }
+    
+    public void info(String format, Throwable t, Object ... args) 
+    {
+        m_logService.log(LogService.LOG_INFO, String.format(format, args), t);
+    }
+    
+    public void debug(String format, Object ... args) 
+    {
+        m_logService.log(LogService.LOG_DEBUG, String.format(format, args));
+    }
+    
+    public void debug(String format, Throwable t, Object ... args) 
+    {
+        m_logService.log(LogService.LOG_DEBUG, String.format(format, args), t);
     }
 }

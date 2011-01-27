@@ -31,18 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.felix.dm.BundleDependency;
-import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.ResourceDependency;
-import org.apache.felix.dm.Component;
-import org.apache.felix.dm.ServiceDependency;
-import org.apache.felix.dm.TemporalServiceDependency;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
 
 /**
  * Allow Services to configure dynamically their dependency filters from their init() method.
@@ -152,7 +144,7 @@ public class ServiceLifecycleHandler
 
         if (starter != null)
         {
-            Log.instance().log(LogService.LOG_DEBUG, "Setting up a lifecycle controller for service %s", serviceInstance);
+            Log.instance().debug("Setting up a lifecycle controller for service %s", serviceInstance);
             String componentName = serviceInstance.getClass().getName();
             m_toggle = new ToggleServiceDependency();
             service.add(m_toggle);
@@ -178,9 +170,8 @@ public class ServiceLifecycleHandler
             }
         }
 
-        Log.instance().log(LogService.LOG_DEBUG,
-                           "ServiceLifecycleHandler.init: invoked init method from service %s " +
-                               ", returned map: %s", serviceInstance, customization);
+        Log.instance().debug("ServiceLifecycleHandler.init: invoked init method from service %s " +
+                             ", returned map: %s", serviceInstance, customization);
 
         for (MetaData dependency: m_depsMeta)
         {
@@ -207,8 +198,7 @@ public class ServiceLifecycleHandler
                 }
 
                 DependencyBuilder depBuilder = new DependencyBuilder(dependency);
-                Log.instance().log(LogService.LOG_INFO,
-                                   "ServiceLifecycleHandler.init: adding dependency %s into service %s",
+                Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
                                    dependency, m_srvMeta);
                 Dependency d = depBuilder.build(m_bundle, dm, true);
                 m_namedDeps.add(d);
@@ -281,7 +271,7 @@ public class ServiceLifecycleHandler
             }
             catch (NoSuchMethodException e)
             {
-                Log.instance().log(LogService.LOG_ERROR, "Lifecycle handler could not reset instanceBound of dependency: %s", e, d);
+                Log.instance().error("Lifecycle handler could not reset instanceBound of dependency: %s", e, d);
             }
         }
     }
@@ -351,10 +341,10 @@ public class ServiceLifecycleHandler
     /**
      * Sets a field of an object by reflexion.
      */
-    private void setField(Object instance, String fieldName, Class fieldClass, Object fieldValue)
+    private void setField(Object instance, String fieldName, Class<?> fieldClass, Object fieldValue)
     {
         Object serviceInstance = instance;
-        Class serviceClazz = serviceInstance.getClass();
+        Class<?> serviceClazz = serviceInstance.getClass();
         if (Proxy.isProxyClass(serviceClazz))
         {
             serviceInstance = Proxy.getInvocationHandler(serviceInstance);
@@ -366,7 +356,7 @@ public class ServiceLifecycleHandler
             for (int j = 0; j < fields.length; j++)
             {
                 Field field = fields[j];
-                Class type = field.getType();
+                Class<?> type = field.getType();
                 if (field.getName().equals(fieldName) && type.isAssignableFrom(fieldClass))
                 {
                     try
@@ -378,7 +368,7 @@ public class ServiceLifecycleHandler
                             field.set(serviceInstance, fieldValue);
                         }
                     }
-                    catch (Exception e)
+                    catch (Throwable e)
                     {
                         throw new RuntimeException("Could not set field " + field, e);
                     }
@@ -396,11 +386,12 @@ public class ServiceLifecycleHandler
             m_componentName = name;
         }
 
+        @SuppressWarnings("synthetic-access")
         public void run()
         {
             if (m_started.compareAndSet(false, true)) {
-                Log.instance().log(LogService.LOG_DEBUG, "Lifecycle controller is activating the component %s",
-                                   m_componentName);
+                Log.instance().debug("Lifecycle controller is activating the component %s",
+                                     m_componentName);
                 m_toggle.setAvailable(true);
             }
         }
@@ -414,11 +405,12 @@ public class ServiceLifecycleHandler
             m_componentName = componentName;
         }
 
+        @SuppressWarnings("synthetic-access")
         public void run()
         {
             if (m_started.compareAndSet(true, false)) {
-                Log.instance().log(LogService.LOG_DEBUG, "Lifecycle controller is deactivating the component %s",
-                                   m_componentName);
+                Log.instance().debug("Lifecycle controller is deactivating the component %s",
+                                    m_componentName);
                 m_toggle.setAvailable(false);
             }
         }

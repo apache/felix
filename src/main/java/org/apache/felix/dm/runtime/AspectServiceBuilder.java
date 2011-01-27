@@ -21,10 +21,9 @@ package org.apache.felix.dm.runtime;
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogService;
 
 public class AspectServiceBuilder extends AbstractBuilder
 {
@@ -37,37 +36,39 @@ public class AspectServiceBuilder extends AbstractBuilder
     }
 
     @Override
-    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
-        Log.instance().log(LogService.LOG_INFO,
-                           "AspectServiceBuilder: building aspect service: %s with dependencies %s", 
-                           srvMeta, depsMeta);
+        Log.instance().info("AspectServiceBuilder: building aspect service: %s with dependencies %s",
+                            srvMeta,
+                            depsMeta);
 
         Class<?> serviceInterface = b.loadClass(srvMeta.getString(Params.service));
         String serviceFilter = srvMeta.getString(Params.filter, null);
         Dictionary<String, Object> aspectProperties = srvMeta.getDictionary(Params.properties, null);
         int ranking = srvMeta.getInt(Params.ranking, 1);
         String implClassName = srvMeta.getString(Params.impl);
-        Object implClass = b.loadClass(implClassName);        
-        String field = srvMeta.getString(Params.field, null);  
+        Object implClass = b.loadClass(implClassName);
+        String field = srvMeta.getString(Params.field, null);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
-        Component service = dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
-                            .setServiceProperties(aspectProperties);
+        Component service =
+                dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
+                        .setServiceProperties(aspectProperties);
         if (factoryMethod == null)
         {
             service.setImplementation(implClass);
-        } 
+        }
         else
         {
             service.setFactory(implClass, factoryMethod);
         }
-        
+
         service.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.
         service.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
-        // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
+        // Adds dependencies (except named dependencies, which are managed by the lifecycle
+        // handler).
         addUnamedDependencies(b, dm, service, srvMeta, depsMeta);
         dm.add(service);
     }
