@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.felix.dm.DependencyManager;
 import org.json.JSONObject;
 import org.osgi.framework.Bundle;
-import org.osgi.service.log.LogService;
 
 /**
  * This class parses files generated in OSGI-INF/*.dm by the DependencyManager bnd plugin.
@@ -49,7 +48,7 @@ public class DescriptorParser
 
         // The first line is a Service Component (a Service, an Aspect Service, etc ...)
         line = reader.readLine();
-        Log.instance().log(LogService.LOG_DEBUG, "DescriptorParser: parsing service %s", line);
+        Log.instance().debug("DescriptorParser: parsing service %s", line);
         JSONObject json = new JSONObject(line);
         JSONMetaData serviceMetaData = new JSONMetaData(json);
 
@@ -58,14 +57,14 @@ public class DescriptorParser
         if (builder == null)
         {
             throw new IllegalArgumentException("Invalid descriptor"
-                + ": no \"type\" parameter found in first line");
+                    + ": no \"type\" parameter found in first line");
         }
 
         // Parse the rest of the lines (dependencies)
         List<MetaData> serviceDependencies = new ArrayList<MetaData>();
         while ((line = reader.readLine()) != null)
         {
-            Log.instance().log(LogService.LOG_DEBUG, "Parsing dependency Ms", line);
+            Log.instance().debug("Parsing dependency Ms", line);
             JSONObject dep = new JSONObject(line);
             serviceDependencies.add(new JSONMetaData(dep));
         }

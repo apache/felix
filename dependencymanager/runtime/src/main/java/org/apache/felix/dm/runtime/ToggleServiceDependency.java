@@ -33,7 +33,7 @@ import org.apache.felix.dm.DependencyService;
  */
 public class ToggleServiceDependency implements Dependency, DependencyActivation
 {
-    private final List m_services = new ArrayList();
+    private final List<Object> m_services = new ArrayList<Object>();
     private volatile boolean m_isAvailable;
     private volatile boolean m_stopped;
 
@@ -106,11 +106,12 @@ public class ToggleServiceDependency implements Dependency, DependencyActivation
         return null;
     }
 
-    public Class getAutoConfigType()
+    public Class<?> getAutoConfigType()
     {
         return String.class;
     }
 
+    @SuppressWarnings("unchecked")
     public Dictionary getProperties()
     {
         return null;
