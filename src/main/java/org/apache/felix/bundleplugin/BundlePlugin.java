@@ -25,21 +25,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import aQute.lib.osgi.*;
 import org.apache.maven.archiver.ManifestSection;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -61,12 +51,6 @@ import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.StringInputStream;
 import org.codehaus.plexus.util.StringUtils;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Builder;
-import aQute.lib.osgi.Constants;
-import aQute.lib.osgi.EmbeddedResource;
-import aQute.lib.osgi.FileResource;
-import aQute.lib.osgi.Jar;
 import aQute.lib.spring.SpringXMLType;
 
 
@@ -569,6 +553,25 @@ public class BundlePlugin extends AbstractMojo
             Manifest bundleManifest = jar.getManifest();
             bundleManifest.getMainAttributes().putAll( mainMavenAttributes );
             bundleManifest.getEntries().putAll( mavenManifest.getEntries() );
+
+            // adjust the import package attributes so that optional dependencies use
+            // optional resolution.
+            String importPackages = bundleManifest.getMainAttributes().getValue("Import-Package");
+            if( importPackages!=null ) {
+                Set optionalPackages = getOptionalPackages(currentProject);
+
+                Map<String, Map<String, String>> values = new Analyzer().parseHeader(importPackages);
+                for (Map.Entry<String, Map<String, String>> entry: values.entrySet()) {
+                    String pkg = entry.getKey();
+                    Map<String, String> options = entry.getValue();
+                    if( !options.containsKey("resolution:") && optionalPackages.contains(pkg) ) {
+                        options.put("resolution:", "optional");
+                    }
+                }
+                String result = Processor.printClauses(values, "resolution:");
+                bundleManifest.getMainAttributes().putValue("Import-Package", result);
+            }
+
             jar.setManifest( bundleManifest );
         }
         catch ( Exception e )
@@ -582,6 +585,37 @@ public class BundlePlugin extends AbstractMojo
         }
     }
 
+
+    protected Set getOptionalPackages( MavenProject currentProject ) throws IOException, MojoExecutionException
+    {
+        HashSet required = new HashSet();
+        HashSet optional = new HashSet();
+        final Collection artifacts = getSelectedDependencies( currentProject.getArtifacts() );
+        for ( Iterator it = artifacts.iterator(); it.hasNext(); )
+        {
+            Artifact artifact = ( Artifact ) it.next();
+            if ( artifact.getArtifactHandler().isAddedToClasspath() )
+            {
+                if ( !Artifact.SCOPE_TEST.equals( artifact.getScope() ) )
+                {
+                    File file = getFile( artifact );
+                    if ( file == null )
+                    {
+                        continue;
+                    }
+                    Jar jar = new Jar( artifact.getArtifactId(), file );
+                    if( artifact.isOptional() ) {
+                        optional.addAll(jar.getPackages());
+                    } else {
+                        required.addAll(jar.getPackages());
+                    }
+                    jar.close();
+                }
+            }
+        }
+        optional.removeAll(required);
+        return optional;
+    }
 
     private void unpackBundle( File jarFile )
     {
