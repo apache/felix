@@ -379,7 +379,7 @@ public class BundlePlugin extends AbstractMojo
         includeMavenResources( currentProject, builder, getLog() );
 
         // calculate default export/private settings based on sources
-        addLocalPackages( currentProject.getCompileSourceRoots(), builder );
+        addLocalPackages( outputDirectory, builder );
 
         // update BND instructions to embed selected Maven dependencies
         Collection embeddableArtifacts = getEmbeddableArtifacts( currentProject, builder );
@@ -913,29 +913,25 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    private static void addLocalPackages( List sourceDirectories, Analyzer analyzer )
+    private static void addLocalPackages( File outputDirectory, Analyzer analyzer )
     {
         Collection packages = new LinkedHashSet();
 
-        for ( Iterator d = sourceDirectories.iterator(); d.hasNext(); )
+        if ( outputDirectory != null && outputDirectory.isDirectory() )
         {
-            String sourceDirectory = (String) d.next();
-            if ( sourceDirectory != null && new File( sourceDirectory ).isDirectory() )
+            // scan classes directory for potential packages
+            DirectoryScanner scanner = new DirectoryScanner();
+            scanner.setBasedir( outputDirectory );
+            scanner.setIncludes( new String[]
+                { "**/*.class" } );
+
+            scanner.addDefaultExcludes();
+            scanner.scan();
+
+            String[] paths = scanner.getIncludedFiles();
+            for ( int i = 0; i < paths.length; i++ )
             {
-                // scan local Java sources for potential packages
-                DirectoryScanner scanner = new DirectoryScanner();
-                scanner.setBasedir( sourceDirectory );
-                scanner.setIncludes( new String[]
-                    { "**/*.java" } );
-
-                scanner.addDefaultExcludes();
-                scanner.scan();
-
-                String[] paths = scanner.getIncludedFiles();
-                for ( int i = 0; i < paths.length; i++ )
-                {
-                    packages.add( getPackageName( paths[i] ) );
-                }
+                packages.add( getPackageName( paths[i] ) );
             }
         }
 
