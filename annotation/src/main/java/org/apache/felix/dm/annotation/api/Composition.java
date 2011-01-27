@@ -25,7 +25,45 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates a method returning the list of objects which are part of the Service implementation.
- * Each instances will be injected with Service dependencies.
+ * Each instances will be injected with Service dependencies (attributes or callbacks), and if the 
+ * service has some annotated lifecycle callbacks (@Init/@Start/@Stop/@Destroy), then the same callbacks
+ * will be invoked on the objects which are part of the composition.<p>
+ * 
+ * <h3>Usage Examples</h3>
+ * 
+ * <p> Here, the "MyComponent" component is composed of the Helper class, which is also injected with 
+ * service dependencies. The lifecycle callbacks are also invoked in the Helper (if the Helper defines 
+ * them):<p>
+ * <blockquote>
+ * <pre>
+ *
+ * class Helper {
+ *     LogService logService; // Injected
+ *     void start() {} // lifecycle callback
+ *     void bind(OtherService otherService) {} // injected
+ * }
+ * 
+ * &#64;Component
+ * class MyComponent {
+ *     // Helper which will also be injected with our service dependencies
+ *     private Helper helper = new Helper();
+ *      
+ *     &#64;Composition
+ *     Object[] getComposition() {
+ *         return new Object[] { this, helper }; 
+ *     }
+ *
+ *     &#64;ServiceDependency
+ *     private LogService logService; // Helper.logService will be also be injected, if defined.
+ *     
+ *     &#64;Start
+ *     void start() {} // the Helper.start() method will also be called, if defined
+ *     
+ *     &#64;ServiceDependency
+ *     void bind(OtherService otherService) {} // the Helper.bind() method will also be called, if defined     
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
