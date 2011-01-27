@@ -27,12 +27,12 @@ import junit.framework.Assert;
 
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
-import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;

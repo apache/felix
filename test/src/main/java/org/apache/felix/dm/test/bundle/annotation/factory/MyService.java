@@ -24,9 +24,9 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Property;
-import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;

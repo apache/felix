@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.AspectService;
-import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
