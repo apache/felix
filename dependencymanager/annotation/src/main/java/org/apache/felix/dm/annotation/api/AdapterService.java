@@ -23,13 +23,37 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 /**
  * Annotates an Adapater Service. The adapter will be applied to any service that
  * matches the implemented interface and filter. The adapter will be registered 
  * with the specified interface and existing properties from the original service 
  * plus any extra properties you supply here. It will also inherit all dependencies, 
  * and if you declare the original service as a member it will be injected.
+ * 
+ * <h3>Usage Examples</h3>
+ * 
+ * <p> Here, the AdapterService is registered into the OSGI registry each time an AdapteeService
+ * is found from the registry. The AdapterImpl class adapts the AdapteeService to the AdapterService.
+ * The AdapterService will also have a service property (param=value), and will also include eventual
+ * service properties found from the AdapteeService:<p>
+ * <blockquote>
+ * <pre>
+ * 
+ * &#64;AdapterService(adapteeService = AdapteeService.class, 
+ *                 properties={&#64;Property(name="param", value="value")})
+ * class AdapterImpl implements AdapterService
+ * {
+ *     // The service we are adapting (injected by reflection)
+ *     protected AdapteeService adaptee;
+ *   
+ *     public void doWork()
+ *     {
+ *        adaptee.mehod1();
+ *        adaptee.method2();
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
