@@ -28,7 +28,32 @@ import java.lang.annotation.Target;
  * matches the specified interface and filter. The aspect will be registered 
  * with the same interface and properties as the original service, plus any 
  * extra properties you supply here. It will also inherit all dependencies, 
- * and if you can declare the original service as a member it will be injected.
+ * and if you can declare the original service as a member it will be injected.<p>
+ * 
+ * <h3>Usage Examples</h3>
+ * 
+ * <p> Here, the AspectService is registered into the OSGI registry each time an InterceptedService
+ * is found from the registry. The AspectService class intercepts the InterceptedService, and decorates
+ * its "doWork()" method. This aspect uses a rank with value "10", meaning that it will intercept some
+ * other eventual aspects with lower ranks. The Aspect also uses a service property (param=value), and 
+ * include eventual service properties found from the InterceptedService:<p>
+ * <blockquote>
+ * <pre>
+ * 
+ * &#64;AspectService(ranking=10), 
+ *                properties={&#64;Property(name="param", value="value")})
+ * class AspectService implements InterceptedService
+ * {
+ *     // The service we are intercepting (injected by reflection)
+ *     protected InterceptedService intercepted;
+ *   
+ *     public void doWork()
+ *     {
+ *        intercepted.doWork();
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -63,7 +88,7 @@ public @interface AspectService
     String field() default "";
     
     /**
-     * Sets the static method used to create the AspectService implementation instance. By default, the
+     * Sets the static method used to create the AspectService implementation instance. The
      * default constructor of the annotated class is used. The factoryMethod can be used to provide a specific
      * aspect implements, like a DynamicProxy.
      */

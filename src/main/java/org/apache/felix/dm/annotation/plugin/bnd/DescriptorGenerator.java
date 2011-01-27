@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.dm.annotation.api.Component;
-
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Clazz;
 import aQute.lib.osgi.EmbeddedResource;

@@ -19,7 +19,6 @@
 package org.apache.felix.dm.annotation.plugin.mvn;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 

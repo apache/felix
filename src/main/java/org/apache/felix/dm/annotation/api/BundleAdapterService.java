@@ -60,7 +60,7 @@ public @Retention(RetentionPolicy.CLASS)
     int stateMask() default Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
     
     /**
-     * Specifies if manifest headers from the bundle should be propagated to the service.
+     * Specifies if manifest headers from the bundle should be propagated to the service properties.
      */
     boolean propagate() default true;
     
