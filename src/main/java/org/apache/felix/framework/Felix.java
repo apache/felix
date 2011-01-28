@@ -749,6 +749,14 @@ public class Felix extends BundleImpl implements Framework
                 // Now that the system bundle is successfully created we can give
                 // its bundle context to the logger so that it can track log services.
                 m_logger.setSystemBundleContext(_getBundleContext());
+
+                // Clear the cache of classes coming from the system bundle.
+                // This is only used for Felix.getBundle(Class clazz) to speed
+                // up class lookup for the system bundle.
+                synchronized (m_systemBundleClassCache)
+                {
+                    m_systemBundleClassCache.clear();
+                }
             }
         }
         finally
@@ -3040,6 +3048,9 @@ public class Felix extends BundleImpl implements Framework
     // PackageAdmin related methods.
     //
 
+    private final Map<Class, Boolean> m_systemBundleClassCache =
+        new WeakHashMap<Class, Boolean>();
+
     /**
      * This method returns the bundle associated with the specified class if
      * the class was loaded from a bundle from this framework instance. If the
@@ -3053,6 +3064,8 @@ public class Felix extends BundleImpl implements Framework
     **/
     Bundle getBundle(Class clazz)
     {
+        // If the class comes from bundle class loader, then return
+        // associated bundle if it is from this framework instance.
         if (clazz.getClassLoader() instanceof BundleReference)
         {
             // Only return the bundle if it is from this framework.
@@ -3061,19 +3074,41 @@ public class Felix extends BundleImpl implements Framework
                 && (((BundleImpl) br.getBundle()).getFramework() == this))
                     ? br.getBundle() : null;
         }
-        try
+        // Otherwise check if the class conceptually comes from the
+        // system bundle. Ignore implicit boot delegation.
+        if (!clazz.getName().startsWith("java."))
         {
-            // For implicit boot delegation, we don't want those classes
-            // to be shown as coming from the system bundle.
-            if (!clazz.getName().startsWith("java."))
+            Boolean fromSystemBundle;
+            synchronized (m_systemBundleClassCache)
             {
-                return (m_extensionManager.getModule().getClassByDelegation(clazz.getName()) == clazz)
-                    ? this : null;
+                fromSystemBundle = m_systemBundleClassCache.get(clazz);
             }
-        }
-        catch(ClassNotFoundException ex)
-        {
-            // Ignore and return null.
+            if (fromSystemBundle == null)
+            {
+                Class sbClass = null;
+                try
+                {
+                    sbClass = m_extensionManager
+                        .getModule().getClassByDelegation(clazz.getName());
+                }
+                catch (ClassNotFoundException ex)
+                {
+                    // Ignore, treat as false.
+                }
+                synchronized (m_systemBundleClassCache)
+                {
+                    if (sbClass == clazz)
+                    {
+                        fromSystemBundle = Boolean.TRUE;
+                    }
+                    else
+                    {
+                        fromSystemBundle = Boolean.FALSE;
+                    }
+                    m_systemBundleClassCache.put(clazz, fromSystemBundle);
+                }
+            }
+            return fromSystemBundle.booleanValue() ? this : null;
         }
         return null;
     }
