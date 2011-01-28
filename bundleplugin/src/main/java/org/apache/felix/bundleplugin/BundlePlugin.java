@@ -588,8 +588,7 @@ public class BundlePlugin extends AbstractMojo
 
     protected Set getOptionalPackages( MavenProject currentProject ) throws IOException, MojoExecutionException
     {
-        HashSet required = new HashSet();
-        HashSet optional = new HashSet();
+        ArrayList inscope = new ArrayList();
         final Collection artifacts = getSelectedDependencies( currentProject.getArtifacts() );
         for ( Iterator it = artifacts.iterator(); it.hasNext(); )
         {
@@ -598,23 +597,65 @@ public class BundlePlugin extends AbstractMojo
             {
                 if ( !Artifact.SCOPE_TEST.equals( artifact.getScope() ) )
                 {
-                    File file = getFile( artifact );
-                    if ( file == null )
-                    {
-                        continue;
-                    }
-                    Jar jar = new Jar( artifact.getArtifactId(), file );
-                    if( artifact.isOptional() ) {
-                        optional.addAll(jar.getPackages());
-                    } else {
-                        required.addAll(jar.getPackages());
-                    }
-                    jar.close();
+                    inscope.add(artifact);
                 }
             }
         }
+
+        HashSet optionalArtifactIds = new HashSet();
+        for ( Iterator it = inscope.iterator(); it.hasNext(); )
+        {
+            Artifact artifact = ( Artifact ) it.next();
+            if( artifact.isOptional() ) {
+                String id = artifact.toString();
+                if( artifact.getScope()!=null ) {
+                    // strip the scope...
+                    id = id.replaceFirst(":[^:]*$", "");
+                }
+                optionalArtifactIds.add(id);
+            }
+
+        }
+
+        HashSet required = new HashSet();
+        HashSet optional = new HashSet();
+        for ( Iterator it = inscope.iterator(); it.hasNext(); )
+        {
+            Artifact artifact = ( Artifact ) it.next();
+            File file = getFile( artifact );
+            if ( file == null )
+            {
+                continue;
+            }
+
+            Jar jar = new Jar( artifact.getArtifactId(), file );
+            if( isTransitivelyOptional(optionalArtifactIds, artifact) ) {
+                optional.addAll(jar.getPackages());
+            } else {
+                required.addAll(jar.getPackages());
+            }
+            jar.close();
+        }
+
         optional.removeAll(required);
         return optional;
+    }
+
+    /**
+     * Check to see if any dependency along the dependency trail of
+     * the artifact is optional.
+     *
+     * @param artifact
+     */
+    protected boolean isTransitivelyOptional(HashSet optionalArtifactIds, Artifact artifact) {
+        List trail = artifact.getDependencyTrail();
+        for (Iterator iterator = trail.iterator(); iterator.hasNext();) {
+            String next = (String) iterator.next();
+            if( optionalArtifactIds.contains(next) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void unpackBundle( File jarFile )
