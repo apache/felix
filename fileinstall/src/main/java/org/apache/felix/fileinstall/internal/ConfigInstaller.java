@@ -33,6 +33,7 @@ import java.util.Properties;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
+import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
@@ -65,7 +66,13 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         if (registration == null)
         {
             Properties props = new Properties();
-            registration = this.context.registerService(ConfigurationListener.class.getName(), this, props);
+            registration = this.context.registerService(
+                    new String[] {
+                        ConfigurationListener.class.getName(),
+                        ArtifactListener.class.getName(),
+                        ArtifactInstaller.class.getName()
+                    },
+                    this, props);
         }
     }
 
