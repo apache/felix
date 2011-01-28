@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>3.0.7</version>
+  <version>3.0.8-RC</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -38,10 +38,10 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>3.0.7</framework.version>
-    <gogo.runtime.version>0.6.1</gogo.runtime.version>
-    <gogo.shell.version>0.6.1</gogo.shell.version>
-    <gogo.command.version>0.6.1</gogo.command.version>
+    <framework.version>3.0.8-RC</framework.version>
+    <gogo.runtime.version>0.8.0</gogo.runtime.version>
+    <gogo.shell.version>0.8.0</gogo.shell.version>
+    <gogo.command.version>0.8.0</gogo.command.version>
     <obr.version>1.6.2</obr.version>
   </properties>
   <profiles>
@@ -169,10 +169,4 @@
       </resource>
     </resources> 
   </build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-3.0.7</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-3.0.7</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-3.0.7</url>
-  </scm>
 </project>
