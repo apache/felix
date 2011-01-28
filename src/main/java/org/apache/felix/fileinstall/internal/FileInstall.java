@@ -41,7 +41,8 @@ public class FileInstall implements BundleActivator
     static ServiceTracker padmin;
     static ServiceTracker startLevel;
     static Runnable cmSupport;
-    static List /* <ArtifactListener> */ listeners = new ArrayList /* <ArtifactListener> */();
+    static final Map /* <ServiceReference, ArtifactListener> */ listeners = new TreeMap /* <ServiceReference, ArtifactListener> */();
+    static final BundleTransformer bundleTransformer = new BundleTransformer();
     BundleContext context;
     Map watchers = new HashMap();
     ServiceTracker listenersTracker;
@@ -51,7 +52,6 @@ public class FileInstall implements BundleActivator
     public void start(BundleContext context) throws Exception
     {
         this.context = context;
-        addListener(new BundleTransformer());
 
         Hashtable props = new Hashtable();
         props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
@@ -69,12 +69,18 @@ public class FileInstall implements BundleActivator
             public Object addingService(ServiceReference serviceReference)
             {
                 ArtifactListener listener = (ArtifactListener) super.addingService(serviceReference);
-                addListener(listener);
+                addListener(serviceReference, listener);
                 return listener;
+            }
+            public void modifiedService(ServiceReference reference, Object service)
+            {
+                super.modifiedService(reference, service);
+                removeListener(reference);
+                addListener(reference, (ArtifactListener) service);
             }
             public void removedService(ServiceReference serviceReference, Object o)
             {
-                removeListener((ArtifactListener) o);
+                removeListener(serviceReference);
             }
         };
         listenersTracker.open();
@@ -221,20 +227,20 @@ public class FileInstall implements BundleActivator
         watcher.start();
     }
 
-    private void addListener(ArtifactListener listener)
+    private void addListener(ServiceReference reference, ArtifactListener listener)
     {
         synchronized (listeners)
         {
-            listeners.add(listener);
+            listeners.put(reference, listener);
         }
         notifyWatchers();
     }
 
-    private void removeListener(ArtifactListener listener)
+    private void removeListener(ServiceReference reference)
     {
         synchronized (listeners)
         {
-            listeners.remove(listener);
+            listeners.remove(reference);
         }
         notifyWatchers();
     }
@@ -260,7 +266,9 @@ public class FileInstall implements BundleActivator
     {
         synchronized (listeners)
         {
-            return new ArrayList(listeners);
+            List l = new ArrayList(listeners.values());
+            l.add(bundleTransformer);
+            return l;
         }
     }
 
@@ -349,7 +357,6 @@ public class FileInstall implements BundleActivator
                 ConfigurationAdmin cm = (ConfigurationAdmin) super.addingService(serviceReference);
                 configInstaller = new ConfigInstaller(context, cm);
                 configInstaller.init();
-                fileInstall.addListener(configInstaller);
                 return cm;
             }
 
@@ -358,7 +365,6 @@ public class FileInstall implements BundleActivator
                 if (configInstaller != null)
                 {
                     configInstaller.destroy();
-                    fileInstall.removeListener(configInstaller);
                     configInstaller = null;
                 }
                 super.removedService(serviceReference, o);
