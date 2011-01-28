@@ -1516,7 +1516,7 @@ public class ManifestParser
      * included in the set of delimiter characters.
      * @param value the delimited string to parse.
      * @param delim the characters delimiting the tokens.
-     * @return an array of string tokens or null if there were no tokens.
+     * @return a list of string or an empty list if there are none.
     **/
     public static List<String> parseDelimitedString(String value, String delim)
     {

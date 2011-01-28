@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.osgi.framework.Constants;
@@ -84,45 +85,52 @@ public class R4Library
     **/
     public boolean match(Map configMap, String name)
     {
+        // First, check for an exact match.
+        boolean matched = false;
+        if (m_libraryFile.equals(name) || m_libraryFile.endsWith("/" + name))
+        {
+            matched = true;
+        }
+
+        // Then check the mapped name.
         String libname = System.mapLibraryName(name);
+        // As well as any additional library file extensions.
         List<String> exts = ManifestParser.parseDelimitedString(
             (String) configMap.get(Constants.FRAMEWORK_LIBRARY_EXTENSIONS), ",");
-        int extIdx = 0;
-
-        // First try to match the default name, then try to match any additionally
-        // specified library extensions.
-        do
+        if (exts == null)
         {
+            exts = new ArrayList<String>();
+        }
+        // For Mac OSX, try dylib too.
+        if (libname.endsWith(".jnilib") && m_libraryFile.endsWith(".dylib"))
+        {
+            exts.add("dylib");
+        }
+        // Loop until we find a match or not.
+        int extIdx = -1;
+        while (!matched && (extIdx < exts.size()))
+        {
+            // Check if the current name matches.
             if (m_libraryFile.equals(libname) || m_libraryFile.endsWith("/" + libname))
             {
-                return true;
+                matched = true;
             }
-            else if (libname.endsWith(".jnilib") && m_libraryFile.endsWith(".dylib"))
-            {
-                libname = libname.substring(0, libname.length() - 6) + "dylib";
-                if (m_libraryFile.equals(libname) || m_libraryFile.endsWith("/" + libname))
-                {
-                    return true;
-                }
-            }
-            else if (m_libraryFile.equals(name) || m_libraryFile.endsWith("/" + name))
-            {
-                return true;
-            }
+
+            // Increment extension index.
+            extIdx++;
 
             // If we have other native library extensions to try, then
             // calculate the new native library name.
-            if ((exts != null) && (extIdx < exts.size()))
+            if (!matched && (extIdx < exts.size()))
             {
                 int idx = libname.lastIndexOf(".");
                 libname = (idx < 0)
-                    ? libname + "." + exts.get(extIdx++)
-                    : libname.substring(0, idx) + "." + exts.get(extIdx++);
+                    ? libname + "." + exts.get(extIdx)
+                    : libname.substring(0, idx + 1) + exts.get(extIdx);
             }
         }
-        while ((exts != null) && (extIdx < exts.size()));
 
-        return false;
+        return matched;
     }
 
     public String toString()
