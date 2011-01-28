@@ -87,7 +87,7 @@ public class BundleCache
 
     private final Logger m_logger;
     private final Map m_configMap;
-    private final FileLock m_lock;
+    private final Object m_lock;
 
     public BundleCache(Logger logger, Map configMap)
         throws Exception
@@ -109,8 +109,10 @@ public class BundleCache
         }
 
         Object locking = m_configMap.get(CACHE_LOCKING_PROP);
-        locking = (locking == null) ? "true" : locking.toString();
-        if (Boolean.parseBoolean((String) locking))
+        locking = (locking == null)
+            ? Boolean.TRUE.toString()
+            : locking.toString().toLowerCase();
+        if (((String) locking).equals(Boolean.TRUE.toString()))
         {
             File lockFile = new File(cacheDir, CACHE_LOCK_NAME);
             FileChannel fc = null;
@@ -162,8 +164,8 @@ public class BundleCache
         {
             try
             {
-                m_lock.release();
-                m_lock.channel().close();
+                ((FileLock) m_lock).release();
+                ((FileLock) m_lock).channel().close();
             }
             catch (Exception ex)
             {
