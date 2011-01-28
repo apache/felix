@@ -1959,58 +1959,57 @@ public class Felix extends BundleImpl implements Framework
                     throw new BundleException(
                         "Cannot acquire global lock to update the bundle.");
                 }
-                boolean wasExtension = bundle.isExtension();
                 try
                 {
-// TODO: REFACTOR - This adds the module to the resolver state, but should we do the
-//            security check first?
+                    // Try to revise.
+                    boolean wasExtension = bundle.isExtension();
                     bundle.revise(updateLocation, is);
+
+                    // Verify bundle revision.
+                    try
+                    {
+                        Object sm = System.getSecurityManager();
+
+                        if (sm != null)
+                        {
+                            ((SecurityManager) sm).checkPermission(
+                                new AdminPermission(bundle, AdminPermission.LIFECYCLE));
+                        }
+
+                        // If this is an update from a normal to an extension bundle
+                        // then attach the extension
+                        if (!wasExtension && bundle.isExtension())
+                        {
+                            m_extensionManager.addExtensionBundle(this, bundle);
+// TODO: REFACTOR - Perhaps we could move this into extension manager.
+                            m_resolverState.refreshSystemBundleModule(m_extensionManager.getModule());
+// TODO: REFACTOR - Not clear why this is here. We should look at all of these steps more closely.
+                            setBundleStateAndNotify(bundle, Bundle.RESOLVED);
+                        }
+                        else if (wasExtension)
+                        {
+                            setBundleStateAndNotify(bundle, Bundle.INSTALLED);
+                        }
+                    }
+                    catch (Throwable ex)
+                    {
+                        try
+                        {
+                            bundle.rollbackRevise();
+                        }
+                        catch (Exception busted)
+                        {
+                            m_logger.log(
+                                bundle, Logger.LOG_ERROR, "Unable to rollback.", busted);
+                        }
+
+                        throw ex;
+                    }
                 }
                 finally
                 {
                     // Always release the global lock.
                     releaseGlobalLock();
-                }
-
-                // Verify updated bundle.
-                try
-                {
-                    Object sm = System.getSecurityManager();
-
-                    if (sm != null)
-                    {
-                        ((SecurityManager) sm).checkPermission(
-                            new AdminPermission(bundle, AdminPermission.LIFECYCLE));
-                    }
-
-                    // If this is an update from a normal to an extension bundle
-                    // then attach the extension
-                    if (!wasExtension && bundle.isExtension())
-                    {
-                        m_extensionManager.addExtensionBundle(this, bundle);
-// TODO: REFACTOR - Perhaps we could move this into extension manager.
-                        m_resolverState.refreshSystemBundleModule(m_extensionManager.getModule());
-// TODO: REFACTOR - Not clear why this is here. We should look at all of these steps more closely.
-                        setBundleStateAndNotify(bundle, Bundle.RESOLVED);
-                    }
-                    else if (wasExtension)
-                    {
-                        setBundleStateAndNotify(bundle, Bundle.INSTALLED);
-                    }
-                }
-                catch (Throwable ex)
-                {
-                    try
-                    {
-                        bundle.rollbackRevise();
-                    }
-                    catch (Exception busted)
-                    {
-                        m_logger.log(
-                            bundle, Logger.LOG_ERROR, "Unable to rollback.", busted);
-                    }
-
-                    throw ex;
                 }
             }
             catch (Throwable ex)
