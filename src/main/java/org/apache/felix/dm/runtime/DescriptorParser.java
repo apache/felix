@@ -64,7 +64,7 @@ public class DescriptorParser
         List<MetaData> serviceDependencies = new ArrayList<MetaData>();
         while ((line = reader.readLine()) != null)
         {
-            Log.instance().debug("Parsing dependency Ms", line);
+            Log.instance().debug("Parsing dependency %s", line);
             JSONObject dep = new JSONObject(line);
             serviceDependencies.add(new JSONMetaData(dep));
         }
