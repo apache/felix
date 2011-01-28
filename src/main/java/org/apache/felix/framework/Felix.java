@@ -4081,7 +4081,6 @@ public class Felix extends BundleImpl implements Framework
                             wires.add(candidateWire);
                             ((ModuleImpl) module).setWires(wires);
                             m_logger.log(
-                                module.getBundle(),
                                 Logger.LOG_DEBUG,
                                 "DYNAMIC WIRE: " + wires.get(wires.size() - 1));
                         }
@@ -4176,7 +4175,7 @@ public class Felix extends BundleImpl implements Framework
                     // only modules may not have wires.
                     for (int wireIdx = 0; wireIdx < wires.size(); wireIdx++)
                     {
-                        m_logger.log(module.getBundle(),
+                        m_logger.log(
                             Logger.LOG_DEBUG,
                             "WIRE: " + wires.get(wireIdx));
                     }

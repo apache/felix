@@ -118,10 +118,20 @@ public class Logger implements ServiceListener
         Bundle bundle, ServiceReference sr, int level,
         String msg, Throwable throwable)
     {
-        String s = (sr == null) ? null : "SvcRef " + sr;
-        s = (s == null) ? null : s + " Bundle '" + bundle.getBundleId() + "'";
-        s = (s == null) ? msg : s + " " + msg;
-        s = (throwable == null) ? s : s + " (" + throwable + ")";
+        String s = "";
+        if (sr != null)
+        {
+            s = s + "SvcRef "  + sr + ": ";
+        }
+        else if (bundle != null)
+        {
+            s = s + "Bundle " + bundle.toString() + ": ";
+        }
+        s = s + msg;
+        if (throwable != null)
+        {
+            s = s + " (" + throwable + ")";
+        }
         switch (level)
         {
             case LOG_DEBUG:
