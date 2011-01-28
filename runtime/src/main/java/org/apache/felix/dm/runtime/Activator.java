@@ -44,7 +44,7 @@ public class Activator extends DependencyActivatorBase
      * then we'll use a required/temporal service dependency over the log service.
      * This temporal dependency avoids us to be restarted if the log service is temporarily 
      * unavailable (that is: when the log service is updating).
-     * if the "dm.runtime.log" is not configured of it it is set to false, then we'll use 
+     * if the "dm.runtime.log" is not configured or it it is set to false, then we'll use 
      * an optional dependency over the log service, in order to use a NullObject in case
      * the log service is not available.
      */
