@@ -115,16 +115,17 @@ public abstract class AbstractDependencyFilter
             StringBuilder tag = new StringBuilder();
             tag.append( clause.getKey() );
 
-            filter = new DependencyFilter( ( String ) clause.getKey() )
-            {
-                boolean matches( Artifact dependency )
+            if( !((String)clause.getKey()).matches("\\*~*") ) {
+                filter = new DependencyFilter( ( String ) clause.getKey() )
                 {
-                    return super.matches( dependency.getArtifactId() );
-                }
-            };
-
-            // FILTER ON MAIN CLAUSE
-            filter.filter( filteredDependencies );
+                    boolean matches( Artifact dependency )
+                    {
+                        return super.matches( dependency.getArtifactId() );
+                    }
+                };
+                // FILTER ON MAIN CLAUSE
+                filter.filter( filteredDependencies );
+            }
 
             for ( Iterator attrIterator = ( ( Map ) clause.getValue() ).entrySet().iterator(); attrIterator.hasNext(); )
             {
