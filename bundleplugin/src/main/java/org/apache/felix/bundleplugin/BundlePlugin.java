@@ -1012,6 +1012,8 @@ public class BundlePlugin extends AbstractMojo
 
         StringBuffer exportedPkgs = new StringBuffer();
         StringBuffer privatePkgs = new StringBuffer();
+        
+        boolean noprivatePackages = "!*".equals(analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) );
 
         for ( Iterator i = packages.iterator(); i.hasNext(); )
         {
@@ -1021,7 +1023,7 @@ public class BundlePlugin extends AbstractMojo
             privatePkgs.append( pkg ).append( ";-split-package:=merge-first," );
 
             // we can't export the default package (".") and we shouldn't export internal packages 
-            if ( !( ".".equals( pkg ) || pkg.contains( ".internal" ) || pkg.contains( ".impl" ) ) )
+            if ( noprivatePackages || !( ".".equals( pkg ) || pkg.contains( ".internal" ) || pkg.contains( ".impl" ) ) )
             {
                 if( exportedPkgs.length() > 0 )
                 {
