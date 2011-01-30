@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>3.0.8-RC</version>
+  <version>3.0.8-RC-SNAPSHOT</version>
   <dependencies>
   </dependencies>
   <properties>
