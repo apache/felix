@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>3.0.8-RC</version>
+  <version>3.0.8-RC-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -38,7 +38,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>3.0.8-RC</framework.version>
+    <framework.version>3.0.8</framework.version>
     <gogo.runtime.version>0.8.0</gogo.runtime.version>
     <gogo.shell.version>0.8.0</gogo.shell.version>
     <gogo.command.version>0.8.0</gogo.command.version>
