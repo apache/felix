@@ -1,3 +1,9 @@
+Version 3.1.8
+-------------
+** Bug
+    * [FELIX-2799] - FileInstall creates multiple configurations for factory configurations on windows
+    * [FELIX-2798] - ArtifactListener services are not ordered according to the OSGi ranking
+
 Version 3.1.6
 -------------
 ** Bug
