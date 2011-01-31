@@ -1,3 +1,11 @@
+Changes from 2.2.0 to 2.3.0
+---------------------------
+
+ * [2011-01-27] FELIX-2808: maven-bundle-plugin should scan for local packages by looking for *.class files instead of *.java so that all the JVM languages can be supported.
+ * [2011-01-27] FELIX-2809: maven-bundle-plugin should automatically add "resolution:=optional" to imported packages that are in optional maven dependencies.
+ * [2011-01-29] FELIX-2811: If <Private-Package>!*</Private-Package> is defined the all packages should be exported by {local-packages}
+ * [2011-01-29] FELIX-2812: The <Embed-Dependency> filter can fail if your matching against multiple "*" artifact ids.
+
 Changes from 2.1.0 to 2.2.0
 ---------------------------
 
