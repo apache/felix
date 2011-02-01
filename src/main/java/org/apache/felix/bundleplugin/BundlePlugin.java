@@ -113,7 +113,7 @@ public class BundlePlugin extends AbstractMojo
      *
      * @parameter
      */
-    private List supportedProjectTypes = Arrays.asList( new String[]
+    protected List supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
     /**
