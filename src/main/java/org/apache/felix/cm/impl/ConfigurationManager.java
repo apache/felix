@@ -102,7 +102,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     private BundleContext bundleContext;
 
     // the service registration of the configuration admin
-    private ServiceRegistration configurationAdminRegistration;
+    private volatile ServiceRegistration configurationAdminRegistration;
 
     // the ServiceTracker to emit log services (see log(int, String, Throwable))
     private ServiceTracker logTracker;
@@ -241,6 +241,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class.getName(), caf, props );
 
+        // start processing the event queues only after registering the service
+        // see FELIX-2813 for details
+        this.updateThread.start();
+        this.eventThread.start();
+
         // start handling ManagedService[Factory] services
         managedServiceTracker = new ManagedServiceTracker(this);
         managedServiceFactoryTracker = new ManagedServiceFactoryTracker(this);
@@ -252,6 +257,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         // stop handling bundle events immediately
         handleBundleEvents = false;
+
+        // stop queue processing before unregistering the service
+        // see FELIX-2813 for details
+        if ( updateThread != null )
+        {
+            updateThread.terminate();
+        }
+        if ( eventThread != null )
+        {
+            eventThread.terminate();
+        }
 
         // immediately unregister the Configuration Admin before cleaning up
         // clearing the field before actually unregistering the service
@@ -276,16 +292,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         if ( configurationListenerTracker != null )
         {
             configurationListenerTracker.close();
-        }
-
-        if ( updateThread != null )
-        {
-            updateThread.terminate();
-        }
-
-        if ( eventThread != null )
-        {
-            eventThread.terminate();
         }
 
         if ( logTracker != null )

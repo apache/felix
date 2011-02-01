@@ -35,6 +35,9 @@ public class UpdateThread implements Runnable
     // (this is mainly used for logging)
     private final ConfigurationManager configurationManager;
 
+    // the thread group into which the worker thread will be placed
+    private final ThreadGroup workerThreadGroup;
+
     // the thread's base name
     private final String workerBaseName;
 
@@ -42,18 +45,16 @@ public class UpdateThread implements Runnable
     private final LinkedList updateTasks;
 
     // the actual thread
-    private final Thread worker;
+    private Thread worker;
 
 
     public UpdateThread( final ConfigurationManager configurationManager, final ThreadGroup tg, final String name )
     {
         this.configurationManager = configurationManager;
+        this.workerThreadGroup = tg;
         this.workerBaseName = name;
 
         this.updateTasks = new LinkedList();
-        this.worker = new Thread( tg, this, name );
-        this.worker.setDaemon( true );
-        this.worker.start();
     }
 
 
@@ -94,7 +95,7 @@ public class UpdateThread implements Runnable
             try
             {
                 // set the thread name indicating the current task
-                worker.setName( workerBaseName + " (" + task + ")" );
+                Thread.currentThread().setName( workerBaseName + " (" + task + ")" );
 
                 if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
                 {
@@ -110,26 +111,67 @@ public class UpdateThread implements Runnable
             finally
             {
                 // reset the thread name to "idle"
-                worker.setName( workerBaseName );
+                Thread.currentThread().setName( workerBaseName );
             }
         }
     }
 
-
-    // cause this thread to terminate by adding this thread to the end
-    // of the queue and wait for the thread to actually terminate
-    void terminate()
+    /**
+     * Starts processing the queued tasks. This method does nothing if the
+     * worker has already been started.
+     */
+    synchronized void start()
     {
-        schedule( this );
-
-        // wait for all updates to terminate
-        try
+        if ( this.worker == null )
         {
-            worker.join();
+            Thread workerThread = new Thread( workerThreadGroup, this, workerBaseName );
+            workerThread.setDaemon( true );
+            workerThread.start();
+            this.worker = workerThread;
         }
-        catch ( InterruptedException ie )
+    }
+
+
+    /**
+     * Terminates the worker thread and waits for the thread to have processed
+     * all outstanding events up to and including the termination job. All
+     * jobs {@link #schedule(Runnable) scheduled} after termination has been
+     * initiated will not be processed any more. This method does nothing if
+     * the worker thread is not currently active.
+     * <p>
+     * If the worker thread does not terminate within 5 seconds it is killed
+     * by calling the (deprecated) <code>Thread.stop()</code> method. It may
+     * be that the worker thread may be blocked by a deadlock (it should not,
+     * though). In this case hope is that <code>Thread.stop()</code> will be
+     * able to released that deadlock at the expense of one or more tasks to
+     * not be executed any longer.... In any case an ERROR message is logged
+     * with the LogService in this situation.
+     */
+    synchronized void terminate()
+    {
+        if ( this.worker != null )
         {
-            // don't really care
+            Thread workerThread = this.worker;
+            this.worker = null;
+
+            schedule( this );
+
+            // wait for all updates to terminate (<= 10 seconds !)
+            try
+            {
+                workerThread.join( 5000 );
+            }
+            catch ( InterruptedException ie )
+            {
+                // don't really care
+            }
+
+            if ( workerThread.isAlive() )
+            {
+                this.configurationManager.log( LogService.LOG_ERROR, "Worker thread " + workerBaseName
+                    + " did not terminate within 5 seconds; trying to kill", null );
+                workerThread.stop();
+            }
         }
     }
 
