@@ -1,3 +1,13 @@
+Changes from 3.1.6 to 3.1.8
+---------------------------
+
+** Bug
+    * [FELIX-2713] - Problem in HtmlConfigurationWriter
+    * [FELIX-2729] - Webconsole - Configuration fails to print configuration for bundles without MetatypeService config
+    * [FELIX-2735] - ClassCastException in PermissionsConfigurationPrinter
+    * [FELIX-2793] - Plugin request is not detected as html request if context path contains a dot
+    * [FELIX-2795] - Parameters are not removed from symbolic name when installing a bundle
+
 Changes from 3.1.2 to 3.1.6
 ---------------------------
 
