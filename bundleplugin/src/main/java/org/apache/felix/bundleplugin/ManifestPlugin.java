@@ -55,7 +55,7 @@ public class ManifestPlugin extends BundlePlugin
         Manifest manifest;
         try
         {
-            if ( "bundle".equals( project.getPackaging() ) )
+            if ( supportedProjectTypes.contains( getProject().getArtifact().getType() ) )
             {
                 Builder builder = buildOSGiBundle( project, instructions, properties, classpath );
                 manifest = builder.getJar().getManifest();
