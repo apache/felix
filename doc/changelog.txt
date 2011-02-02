@@ -1,4 +1,4 @@
-Changes from 2.2.0 to 2.3.0
+Changes from 2.2.0 to 2.3.4
 ---------------------------
 
  * [2011-02-01] FELIX-2817: The maven-bundle-plugin manifest goal should honor the supportedProjectTypes configuration setting.
