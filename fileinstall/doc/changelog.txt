@@ -1,11 +1,7 @@
 Version 3.1.10
 --------------
 ** Bug
-   * [FELIX-2818] - File Install does not support empty configuration when no configuration already exists
-
-Version 3.1.8
--------------
-** Bug
+    * [FELIX-2818] - File Install does not support empty configuration when no configuration already exists
     * [FELIX-2799] - FileInstall creates multiple configurations for factory configurations on windows
     * [FELIX-2798] - ArtifactListener services are not ordered according to the OSGi ranking
 
