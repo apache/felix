@@ -221,10 +221,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
         Dictionary props = config.getProperties();
-        Hashtable old = props != null ? new Hashtable(new DictionaryAsMap(props)) : new Hashtable();
-        old.remove( DirectoryWatcher.FILENAME );
-        old.remove( Constants.SERVICE_PID );
-        old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+        Hashtable old = props != null ? new Hashtable(new DictionaryAsMap(props)) : null;
+        if (old != null) {
+        	old.remove( DirectoryWatcher.FILENAME );
+        	old.remove( Constants.SERVICE_PID );
+        	old.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+        }
 
         if( !ht.equals( old ) )
         {
