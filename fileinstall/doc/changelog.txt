@@ -1,3 +1,8 @@
+Version 3.1.10
+--------------
+** Bug
+   * [FELIX-2818] - File Install does not support empty configuration when no configuration already exists
+
 Version 3.1.8
 -------------
 ** Bug
@@ -80,31 +85,31 @@ Version 2.0.8
 Version 2.0.4
 -------------
 ** Bug
-    * [FELIX-1386] - Updating fileinstall bundle in watched directory 
+    * [FELIX-1386] - Updating fileinstall bundle in watched directory
       causes IllegalsStateException
-    * [FELIX-1572] - File Install running in an infinite loop while watching 
+    * [FELIX-1572] - File Install running in an infinite loop while watching
       multiple directories, once of which is itself
-    * [FELIX-1578] - FileInstall issue when updating already installed bundles 
+    * [FELIX-1578] - FileInstall issue when updating already installed bundles
       at startup time
-    * [FELIX-1591] - FIleInstall should have an optional / dynamic import on 
+    * [FELIX-1591] - FIleInstall should have an optional / dynamic import on
       org.osgi.service.cm instead of exporting it
     * [FELIX-1593] - Got an exception when restarting FileInstall bundle
-    * [FELIX-1628] - Fileinstall should load configurations as soon as config 
+    * [FELIX-1628] - Fileinstall should load configurations as soon as config
       admin is available
     * [FELIX-1715] - osgi:update on xml deployments will cause ZIPExceptions
-    * [FELIX-1716] - Fileinstall does not recognize changes in lastmodification 
+    * [FELIX-1716] - Fileinstall does not recognize changes in lastmodification
       date of an uninstalled bundle inside deploy folder
-    * [FELIX-1736] - After a restart, fileinstall does not always properly 
+    * [FELIX-1736] - After a restart, fileinstall does not always properly
       uninstall bundles
     * [FELIX-1750] - fileinstall does not work on jdk 1.4
-    * [FELIX-1787] - REGRESSION: FileInstall relies on location to be a valid 
+    * [FELIX-1787] - REGRESSION: FileInstall relies on location to be a valid
       URL for update to be successful
     * [FELIX-1788] - Set felix.fileinstall.tmpdir to ${java.io.tmpdir} by default
-    * [FELIX-1790] - fileinstal tmp dir needs to be different for each 
+    * [FELIX-1790] - fileinstal tmp dir needs to be different for each
       watched directory
 
 ** Improvement
-    * [FELIX-1756] - Allow fileinstall to override (i.e. update) bundles that have 
+    * [FELIX-1756] - Allow fileinstall to override (i.e. update) bundles that have
       not been deployed by fiileinstall initially
 
 ** New Feature
@@ -113,32 +118,32 @@ Version 2.0.4
 Version 2.0.0
 -------------
 ** Bug
-    * [FELIX-938] - FileInstall starts a stopped bundles even if it is stopped 
+    * [FELIX-938] - FileInstall starts a stopped bundles even if it is stopped
       transiently by user
-    * [FELIX-1269] - MalformedURLException for bundle locations installed 
+    * [FELIX-1269] - MalformedURLException for bundle locations installed
       by FileInstall
-    * [FELIX-1377] - fileinstall tries to process files which are not fully 
-      copied yet 
+    * [FELIX-1377] - fileinstall tries to process files which are not fully
+      copied yet
     * [FELIX-1382] - FileInstall attempts to uninstall "System Bundle"
-    * [FELIX-1481] - When performing variable substitution, fileinstall throws an 
+    * [FELIX-1481] - When performing variable substitution, fileinstall throws an
       exception if there is a start or stop delimiter without the other one
-    * [FELIX-1540] - [FileInstall] When removing/re-adding a bundle, all the 
+    * [FELIX-1540] - [FileInstall] When removing/re-adding a bundle, all the
       dependent bundles don't start anymore
 
 ** Improvement
-    * [FELIX-1301] - Limit FileInstall configuration information to one line in 
+    * [FELIX-1301] - Limit FileInstall configuration information to one line in
       the output
     * [FELIX-1387] - FileInstall unnenessarily computes length of files
     * [FELIX-1475] - Add a file filter for a given watched directory
-    * [FELIX-1476] - Allow system property substitution while loading configurations 
+    * [FELIX-1476] - Allow system property substitution while loading configurations
       from files
-    * [FELIX-1553] - fileinstall bundle should have an optional import on 
+    * [FELIX-1553] - fileinstall bundle should have an optional import on
       org.osgi.service.log instead of exporting it
-    * [FELIX-1554] - fileinstall should not export org.apache.felix.fileinstall 
+    * [FELIX-1554] - fileinstall should not export org.apache.felix.fileinstall
       and org.apache.felix.fileinstall.utils packages
 
 ** New Feature
-    * [FELIX-922] - File Install bundle should be extensible to support new 
+    * [FELIX-922] - File Install bundle should be extensible to support new
       artifact type
     * [FELIX-1483] - Fileinstall should support exploded artifacts
 
@@ -156,7 +161,7 @@ Version 1.2.0
      when log service is not used
    * [FELIX-1251] - Looping NullPointerException if the polled directory is
      removed after File Install registration
-   * [FELIX-1241] - Log "Bundle Started" 
+   * [FELIX-1241] - Log "Bundle Started"
 
 Version 1.0.0
 -------------
@@ -177,12 +182,12 @@ Version 0.9.2
     * [FELIX-938] - FileInstall starts a stopped bundles even if it is stopped transiently by user
 
 ** Improvement
-    * [FELIX-920] - Add option to only install or "install and start" newly discovered bundles 
+    * [FELIX-920] - Add option to only install or "install and start" newly discovered bundles
     * [FELIX-939] - Optimize File Install
     * [FELIX-942] - Fileinstall unit tests
     * [FELIX-983] - Allow property substitution in config file
     * [FELIX-998] - Metatype definition for FileInstall
-    
+
 Version 0.9.0
 --------------
 
