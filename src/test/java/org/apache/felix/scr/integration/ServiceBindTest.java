@@ -20,11 +20,12 @@ package org.apache.felix.scr.integration;
 
 
 import java.util.Hashtable;
-
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
+import org.apache.felix.scr.integration.components.SimpleComponent2;
+import org.apache.felix.scr.integration.components.SimpleService2Impl;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1226,5 +1227,39 @@ public class ServiceBindTest extends ComponentTestBase
         TestCase.assertTrue( comp32.m_multiRef.contains( srv5 ) );
         TestCase.assertFalse( comp32.m_multiRef.contains( srv6 ) );
         TestCase.assertTrue( comp32.m_multiRef.contains( srv7 ) );
+    }
+
+    @Test
+    public void test_multi_service_bind_unbind_order()
+    {
+        final Component component = findComponentByName( "test_multi_service_bind_unbind_order" );
+        TestCase.assertNotNull( component );
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
+        final SimpleService2Impl srv2 = SimpleService2Impl.create( bundleContext, "srv2" );
+
+        // async enabling
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        final SimpleComponent2 comp10 = SimpleComponent2.INSTANCE;
+        TestCase.assertNotNull( comp10 );
+        TestCase.assertEquals( 2, comp10.getBindings().size() );
+        TestCase.assertEquals( "bindSimpleService", comp10.getBindings().get( 0 ) );
+        TestCase.assertEquals( "bindSimpleService2", comp10.getBindings().get( 1 ) );
+
+        component.disable();
+        delay();
+
+        TestCase.assertEquals( 4, comp10.getBindings().size() );
+        TestCase.assertEquals( "bindSimpleService", comp10.getBindings().get( 0 ) );
+        TestCase.assertEquals( "bindSimpleService2", comp10.getBindings().get( 1 ) );
+        TestCase.assertEquals( "unbindSimpleService2", comp10.getBindings().get( 2 ) );
+        TestCase.assertEquals( "unbindSimpleService", comp10.getBindings().get( 3 ) );
+
+        srv1.drop();
+        srv2.drop();
     }
 }
