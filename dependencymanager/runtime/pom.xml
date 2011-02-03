@@ -28,7 +28,6 @@
 	<artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
 	<packaging>bundle</packaging>
 
-
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -75,6 +74,7 @@
 						<Import-Package>org.apache.felix.dm;version="[3.0.0,4.0.0)",*</Import-Package>
 						<Embed-Dependency>json</Embed-Dependency>
 						<Bundle-Activator>org.apache.felix.dm.runtime.Activator</Bundle-Activator>
+						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource> 
 					</instructions>
 				</configuration>
 			</plugin>
