@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.coordination.impl;
+package org.apache.felix.coordinator.impl;
 
+import org.apache.felix.coordinator.impl.CoordinationMgr;
+import org.apache.felix.coordinator.impl.CoordinatorImpl;
 import org.apache.felix.service.coordinator.Coordination;
 import org.apache.felix.service.coordinator.CoordinationException;
 import org.apache.felix.service.coordinator.Participant;

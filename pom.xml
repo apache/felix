@@ -79,16 +79,16 @@
                             http://felix.apache.org/site/apache-felix-coordination-service.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.felix.jmx.service.coordination;
-                            org.apache.felix.service.coordination;
+                            org.apache.felix.jmx.service.coordinator;
+                            org.apache.felix.service.coordinator;
                                 version=1.0;
                                 mandatory:="status"; status="provisional"
                         </Export-Package>
                         <Private-Package>
-                            org.apache.felix.coordination.impl.*
+                            org.apache.felix.coordinator.impl.*
                         </Private-Package>
                         <Bundle-Activator>
-                            org.apache.felix.coordination.impl.Activator
+                            org.apache.felix.coordinator.impl.Activator
                         </Bundle-Activator>
                     </instructions>
                 </configuration>
