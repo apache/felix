@@ -199,7 +199,7 @@ public class DependencyManager implements ServiceListener, Reference
                             // if static reference: activate if currentl unsatisifed, otherwise no influence
                             if ( m_componentManager.getState() == AbstractComponentManager.STATE_UNSATISFIED )
                             {
-                                m_componentManager.log( LogService.LOG_INFO,
+                                m_componentManager.log( LogService.LOG_DEBUG,
                                     "Dependency Manager: Service {0} registered, activate component", new Object[]
                                         { m_dependencyMetadata.getName() }, null );
 
@@ -275,7 +275,7 @@ public class DependencyManager implements ServiceListener, Reference
         // if the component is pending deactivation)
         if ( m_componentManager.getState() == AbstractComponentManager.STATE_UNSATISFIED )
         {
-            m_componentManager.log( LogService.LOG_INFO,
+            m_componentManager.log( LogService.LOG_DEBUG,
                 "Dependency Manager: Service {0} registered, activate component", new Object[]
                     { m_dependencyMetadata.getName() }, null );
 

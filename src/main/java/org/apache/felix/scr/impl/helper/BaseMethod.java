@@ -235,7 +235,7 @@ abstract class BaseMethod
         }
         catch ( IllegalStateException ise )
         {
-            getComponentManager().log( LogService.LOG_INFO, ise.getMessage(), null );
+            getComponentManager().log( LogService.LOG_DEBUG, ise.getMessage(), null );
             return false;
         }
         catch ( IllegalAccessException ex )

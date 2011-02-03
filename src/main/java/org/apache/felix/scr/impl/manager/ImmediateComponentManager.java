@@ -457,7 +457,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
             DependencyManager dm = ( DependencyManager ) it.next();
             if ( !dm.canUpdateDynamically( props ) )
             {
-                log( LogService.LOG_INFO,
+                log( LogService.LOG_DEBUG,
                     "Cannot dynamically update the configuration due to dependency changes induced on dependency {0}",
                     new Object[]
                         { dm.getName() }, null );
