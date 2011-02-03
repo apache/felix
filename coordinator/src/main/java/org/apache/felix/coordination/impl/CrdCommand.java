@@ -21,8 +21,8 @@ package org.apache.felix.coordination.impl;
 import java.util.Collection;
 import java.util.Hashtable;
 
-import org.apache.felix.service.coordination.Coordination;
-import org.apache.felix.service.coordination.Participant;
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.Participant;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;

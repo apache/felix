@@ -18,9 +18,9 @@
  */
 package org.apache.felix.coordination.impl;
 
-import org.apache.felix.service.coordination.Coordination;
-import org.apache.felix.service.coordination.CoordinationException;
-import org.apache.felix.service.coordination.Participant;
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Participant;
 
 import junit.framework.TestCase;
 
@@ -43,129 +43,132 @@ public class CoordinatorImplTest extends TestCase
     public void test_createCoordination()
     {
         final String name = "test";
-        final Coordination c1 = coordinator.create(name);
+        final Coordination c1 = coordinator.create(name, 0);
         assertNotNull(c1);
         assertEquals(name, c1.getName());
-        assertNull(coordinator.getCurrentCoordination());
-        assertFalse(c1.isFailed());
+        assertNull(coordinator.peek());
+        assertNull(c1.getFailure());
         assertFalse(c1.isTerminated());
         assertTrue(c1.getParticipants().isEmpty());
 
-        assertTrue(c1.fail(new Exception()));
-        assertTrue(c1.isFailed());
+        Exception cause = new Exception();
+        assertTrue(c1.fail(cause));
+        assertSame(cause, c1.getFailure());
         assertTrue(c1.isTerminated());
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
 
         assertFalse(c1.fail(new Exception()));
         try
         {
             c1.end();
-            fail("Expected IllegalStateException on end() after fail()");
+            fail("Expected CoordinationException.ALREADY_ENDED on end() after fail()");
         }
-        catch (IllegalStateException ise)
+        catch (CoordinationException ce)
         {
-            // expected
+            // expected already terminated
+            assertEquals(CoordinationException.ALREADY_ENDED, ce.getType());
         }
 
-        final Coordination c2 = coordinator.create(name);
+        final Coordination c2 = coordinator.create(name, 0);
         assertNotNull(c2);
         assertEquals(name, c2.getName());
-        assertNull(coordinator.getCurrentCoordination());
-        assertFalse(c2.isFailed());
+        assertNull(coordinator.peek());
+        assertNull(c2.getFailure());
         assertFalse(c2.isTerminated());
         assertTrue(c2.getParticipants().isEmpty());
 
-        assertEquals(Coordination.OK, c2.end());
-        assertFalse(c2.isFailed());
+        c2.end();
+        assertNull(c2.getFailure());
         assertTrue(c2.isTerminated());
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
 
         assertFalse(c2.fail(new Exception()));
         try
         {
             c2.end();
-            fail("Expected IllegalStateException on second end()");
+            fail("Expected CoordinationException.ALREADY_ENDED on second end()");
         }
-        catch (IllegalStateException ise)
+        catch (CoordinationException ce)
         {
-            // expected
+            // expected already terminated
+            assertEquals(CoordinationException.ALREADY_ENDED, ce.getType());
         }
     }
 
     public void test_beginCoordination()
     {
         final String name = "test";
-        final Coordination c1 = coordinator.begin(name);
+        final Coordination c1 = coordinator.begin(name, 0);
         assertNotNull(c1);
         assertEquals(name, c1.getName());
 
-        assertEquals(c1, coordinator.getCurrentCoordination());
+        assertEquals(c1, coordinator.peek());
         assertEquals(c1, coordinator.pop());
 
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
         coordinator.push(c1);
-        assertEquals(c1, coordinator.getCurrentCoordination());
+        assertEquals(c1, coordinator.peek());
 
         c1.end();
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
 
-        final Coordination c2 = coordinator.begin(name);
+        final Coordination c2 = coordinator.begin(name, 0);
         assertNotNull(c2);
         assertEquals(name, c2.getName());
-        assertEquals(c2, coordinator.getCurrentCoordination());
+        assertEquals(c2, coordinator.peek());
         c2.fail(null);
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
     }
 
     public void test_beginCoordination_stack()
     {
         final String name = "test";
 
-        final Coordination c1 = coordinator.begin(name);
+        final Coordination c1 = coordinator.begin(name, 0);
         assertNotNull(c1);
         assertEquals(name, c1.getName());
-        assertEquals(c1, coordinator.getCurrentCoordination());
+        assertEquals(c1, coordinator.peek());
 
-        final Coordination c2 = coordinator.begin(name);
+        final Coordination c2 = coordinator.begin(name, 0);
         assertNotNull(c2);
         assertEquals(name, c2.getName());
-        assertEquals(c2, coordinator.getCurrentCoordination());
+        assertEquals(c2, coordinator.peek());
 
         c2.end();
-        assertEquals(c1, coordinator.getCurrentCoordination());
+        assertEquals(c1, coordinator.peek());
 
         c1.end();
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
     }
 
     public void test_beginCoordination_stack2()
     {
         final String name = "test";
 
-        final Coordination c1 = coordinator.begin(name);
+        final Coordination c1 = coordinator.begin(name, 0);
         assertNotNull(c1);
         assertEquals(name, c1.getName());
-        assertEquals(c1, coordinator.getCurrentCoordination());
+        assertEquals(c1, coordinator.peek());
 
-        final Coordination c2 = coordinator.begin(name);
+        final Coordination c2 = coordinator.begin(name, 0);
         assertNotNull(c2);
         assertEquals(name, c2.getName());
-        assertEquals(c2, coordinator.getCurrentCoordination());
+        assertEquals(c2, coordinator.peek());
 
         c1.end();
-        assertEquals(c2, coordinator.getCurrentCoordination());
+        assertEquals(c2, coordinator.peek());
 
         c2.end();
-        assertNull(coordinator.getCurrentCoordination());
+        assertNull(coordinator.peek());
     }
 
-    public void test_participate_with_ended()
+    public void test_addParticipant_with_ended()
     {
         final String name = "test";
-        final Coordination c1 = coordinator.create(name);
+        final Coordination c1 = coordinator.create(name, 0);
 
         final MockParticipant p1 = new MockParticipant();
-        c1.participate(p1);
+        c1.addParticipant(p1);
         assertTrue(c1.getParticipants().contains(p1));
         assertEquals(1, c1.getParticipants().size());
 
@@ -175,11 +178,11 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c1, p1.c);
 
         // assert order of call
-        final Coordination c2 = coordinator.create(name);
+        final Coordination c2 = coordinator.create(name, 0);
         final MockParticipant p21 = new MockParticipant();
         final MockParticipant p22 = new MockParticipant();
-        c2.participate(p21);
-        c2.participate(p22);
+        c2.addParticipant(p21);
+        c2.addParticipant(p22);
         assertTrue(c2.getParticipants().contains(p21));
         assertTrue(c2.getParticipants().contains(p22));
         assertEquals(2, c2.getParticipants().size());
@@ -192,12 +195,12 @@ public class CoordinatorImplTest extends TestCase
         assertTrue("p21 must be called before p22", p21.time < p22.time);
 
         // assert order of call with two registrations
-        final Coordination c3 = coordinator.create(name);
+        final Coordination c3 = coordinator.create(name, 0);
         final MockParticipant p31 = new MockParticipant();
         final MockParticipant p32 = new MockParticipant();
-        c3.participate(p31);
-        c3.participate(p32);
-        c3.participate(p31); // should be "ignored"
+        c3.addParticipant(p31);
+        c3.addParticipant(p32);
+        c3.addParticipant(p31); // should be "ignored"
         assertTrue(c3.getParticipants().contains(p31));
         assertTrue(c3.getParticipants().contains(p32));
         assertEquals(2, c3.getParticipants().size());
@@ -210,13 +213,13 @@ public class CoordinatorImplTest extends TestCase
         assertTrue("p21 must be called before p22", p31.time < p32.time);
     }
 
-    public void test_participate_with_failed()
+    public void test_addParticipant_with_failed()
     {
         final String name = "test";
-        final Coordination c1 = coordinator.create(name);
+        final Coordination c1 = coordinator.create(name, 0);
 
         final MockParticipant p1 = new MockParticipant();
-        c1.participate(p1);
+        c1.addParticipant(p1);
         assertTrue(c1.getParticipants().contains(p1));
         assertEquals(1, c1.getParticipants().size());
 
@@ -226,11 +229,11 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c1, p1.c);
 
         // assert order of call
-        final Coordination c2 = coordinator.create(name);
+        final Coordination c2 = coordinator.create(name, 0);
         final MockParticipant p21 = new MockParticipant();
         final MockParticipant p22 = new MockParticipant();
-        c2.participate(p21);
-        c2.participate(p22);
+        c2.addParticipant(p21);
+        c2.addParticipant(p22);
         assertTrue(c2.getParticipants().contains(p21));
         assertTrue(c2.getParticipants().contains(p22));
         assertEquals(2, c2.getParticipants().size());
@@ -243,12 +246,12 @@ public class CoordinatorImplTest extends TestCase
         assertTrue("p21 must be called before p22", p21.time < p22.time);
 
         // assert order of call with two registrations
-        final Coordination c3 = coordinator.create(name);
+        final Coordination c3 = coordinator.create(name, 0);
         final MockParticipant p31 = new MockParticipant();
         final MockParticipant p32 = new MockParticipant();
-        c3.participate(p31);
-        c3.participate(p32);
-        c3.participate(p31); // should be "ignored"
+        c3.addParticipant(p31);
+        c3.addParticipant(p32);
+        c3.addParticipant(p31); // should be "ignored"
         assertTrue(c3.getParticipants().contains(p31));
         assertTrue(c3.getParticipants().contains(p32));
         assertEquals(2, c3.getParticipants().size());
@@ -264,26 +267,25 @@ public class CoordinatorImplTest extends TestCase
     public void test_Coordination_timeout() throws InterruptedException
     {
         final String name = "test";
-        final Coordination c1 = coordinator.create(name);
+        final Coordination c1 = coordinator.create(name, 200);
         final MockParticipant p1 = new MockParticipant();
-        c1.participate(p1);
+        c1.addParticipant(p1);
         assertTrue(c1.getParticipants().contains(p1));
         assertEquals(1, c1.getParticipants().size());
 
-        // set a short timeout and wait for it to pass
-        c1.addTimeout(100);
-        Thread.sleep(150);
+        // wait for the coordination to time out
+        Thread.sleep(250);
 
         // expect coordination to have terminated
         assertTrue(c1.isTerminated());
-        assertTrue(c1.isFailed());
+        assertSame(Coordination.TIMEOUT, c1.getFailure());
 
         // expect Participant.failed() being called
         assertTrue(p1.failed);
         assertEquals(c1, p1.c);
     }
 
-    public void test_Coordination_participate_timeout() throws InterruptedException
+    public void test_Coordination_addParticipant_timeout() throws InterruptedException
     {
         final String name1 = "test1";
         final String name2 = "test2";
@@ -292,31 +294,31 @@ public class CoordinatorImplTest extends TestCase
         // ensure short timeout for participation
         mgr.configure(60000, 200);
 
-        final Coordination c1 = coordinator.create(name1);
-        c1.participate(p1);
+        final Coordination c1 = coordinator.create(name1, 0);
+        c1.addParticipant(p1);
         assertTrue(c1.getParticipants().contains(p1));
         assertEquals(1, c1.getParticipants().size());
 
         // preset p1PartFailure to be be sure the participation actually starts
-        p1.participateFailure(new Exception("Not Started yet"));
+        p1.addParticipantFailure(new Exception("Not Started yet"));
 
         Thread c2Thread = new Thread()
         {
             public void run()
             {
-                final Coordination c2 = coordinator.create(name2);
+                final Coordination c2 = coordinator.create(name2, 0);
                 try
                 {
-                    p1.participateFailure(null);
-                    c2.participate(p1);
+                    p1.addParticipantFailure(null);
+                    c2.addParticipant(p1);
                 }
                 catch (Throwable t)
                 {
-                    p1.participateFailure(t);
+                    p1.addParticipantFailure(t);
                 }
                 finally
                 {
-                    c2.terminate();
+                    c2.end();
                 }
             }
         };
@@ -327,21 +329,21 @@ public class CoordinatorImplTest extends TestCase
         c2Thread.join(2000);
         assertFalse("Thread for second Coordination did not terminate....", c2Thread.isAlive());
 
-        Throwable p1PartFailure = p1.participateFailure;
+        Throwable p1PartFailure = p1.addParticipantFailure;
         if (p1PartFailure == null)
         {
-            fail("Expecting CoordinationException/TIMEOUT for second participation");
+            fail("Expecting CoordinationException/UNKNOWN for second participation");
         }
         else if (p1PartFailure instanceof CoordinationException)
         {
-            assertEquals(CoordinationException.TIMEOUT, ((CoordinationException) p1PartFailure).getReason());
+            assertEquals(CoordinationException.UNKNOWN, ((CoordinationException) p1PartFailure).getType());
         }
         else
         {
-            fail("Unexpected Throwable while trying to participate: " + p1PartFailure);
+            fail("Unexpected Throwable while trying to addParticipant: " + p1PartFailure);
         }
 
-        c1.terminate();
+        c1.end();
 
         // make sure c2Thread has terminated
         if (c2Thread.isAlive())
@@ -363,7 +365,7 @@ public class CoordinatorImplTest extends TestCase
 
         boolean ended;
 
-        Throwable participateFailure;
+        Throwable addParticipantFailure;
 
         public void failed(Coordination c) throws Exception
         {
@@ -379,9 +381,9 @@ public class CoordinatorImplTest extends TestCase
             this.time = System.nanoTime();
         }
 
-        void participateFailure(Throwable t)
+        void addParticipantFailure(Throwable t)
         {
-            this.participateFailure = t;
+            this.addParticipantFailure = t;
         }
     }
 }

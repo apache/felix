@@ -21,6 +21,7 @@ package org.apache.felix.coordination.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -35,10 +36,10 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 
-import org.apache.felix.jmx.service.coordination.CoordinatorMBean;
-import org.apache.felix.service.coordination.Coordination;
-import org.apache.felix.service.coordination.CoordinationException;
-import org.apache.felix.service.coordination.Participant;
+import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Participant;
 
 /**
  * The <code>CoordinationMgr</code> is the actual backend manager of all
@@ -117,15 +118,15 @@ public class CoordinationMgr implements CoordinatorMBean
         this.participationTimeOut = participationTimeout;
     }
 
-    void schedule(final TimerTask task, final long delay)
+    void schedule(final TimerTask task, final long deadLine)
     {
-        if (delay < 0)
+        if (deadLine < 0)
         {
             task.cancel();
         }
         else
         {
-            coordinationTimer.schedule(task, delay);
+            coordinationTimer.schedule(task, new Date(deadLine));
         }
     }
 
@@ -139,20 +140,29 @@ public class CoordinationMgr implements CoordinatorMBean
             CoordinationImpl current = participants.get(p);
             while (current != null && current != c)
             {
+                if (current.getThread() == c.getThread())
+                {
+                    throw new CoordinationException("Participant " + p + " already participating in Coordination "
+                        + current.getId() + "/" + current.getName() + " in this thread", c,
+                        CoordinationException.DEADLOCK_DETECTED);
+                }
+
                 try
                 {
                     participants.wait(waitTime);
                 }
                 catch (InterruptedException ie)
                 {
-                    // don't worry, just keep on waiting
+                    throw new CoordinationException("Interrupted waiting to add Participant " + p
+                        + " currently participating in Coordination " + current.getId() + "/" + current.getName()
+                        + " in this thread", c, CoordinationException.LOCK_INTERRUPTED);
                 }
 
                 // timeout waiting for participation
                 if (System.currentTimeMillis() > cutOff)
                 {
-                    throw new CoordinationException("Timed out waiting to join coordinaton", c.getName(),
-                        CoordinationException.TIMEOUT);
+                    throw new CoordinationException("Timed out waiting to join coordinaton", c,
+                        CoordinationException.UNKNOWN);
                 }
 
                 // check again
@@ -175,10 +185,10 @@ public class CoordinationMgr implements CoordinatorMBean
 
     // ---------- Coordinator back end implementation
 
-    Coordination create(final CoordinatorImpl owner, final String name)
+    Coordination create(final CoordinatorImpl owner, final String name, final int timeout)
     {
         long id = ctr.incrementAndGet();
-        CoordinationImpl c = new CoordinationImpl(owner, id, name, defaultTimeOut);
+        CoordinationImpl c = new CoordinationImpl(owner, id, name, timeout);
         coordinations.put(id, c);
         return c;
     }
@@ -214,7 +224,7 @@ public class CoordinationMgr implements CoordinatorMBean
         return null;
     }
 
-    Coordination getCurrentCoordination()
+    Coordination peek()
     {
         Stack<Coordination> stack = threadStacks.get();
         if (stack != null && !stack.isEmpty())
@@ -233,6 +243,12 @@ public class CoordinationMgr implements CoordinatorMBean
             result.addAll(stack);
         }
         return result;
+    }
+
+    Coordination getCoordinationById(final long id)
+    {
+        CoordinationImpl c = coordinations.get(id);
+        return (c == null || c.isTerminated()) ? null : c;
     }
 
     // ---------- CoordinatorMBean interface
@@ -260,12 +276,12 @@ public class CoordinationMgr implements CoordinatorMBean
 
     public CompositeData getCoordination(long id) throws IOException
     {
-        CoordinationImpl c = coordinations.get(id);
+        Coordination c = getCoordinationById(id);
         if (c != null)
         {
             try
             {
-                return fromCoordination(c);
+                return fromCoordination((CoordinationImpl) c);
             }
             catch (OpenDataException e)
             {
@@ -277,7 +293,7 @@ public class CoordinationMgr implements CoordinatorMBean
 
     public boolean fail(long id, String reason)
     {
-        Coordination c = coordinations.get(id);
+        Coordination c = getCoordinationById(id);
         if (c != null)
         {
             return c.fail(new Exception(reason));
@@ -287,10 +303,10 @@ public class CoordinationMgr implements CoordinatorMBean
 
     public void addTimeout(long id, long timeout)
     {
-        Coordination c = coordinations.get(id);
+        Coordination c = getCoordinationById(id);
         if (c != null)
         {
-            c.addTimeout(timeout);
+            c.extendTimeout(timeout);
         }
     }
 
@@ -298,6 +314,6 @@ public class CoordinationMgr implements CoordinatorMBean
     {
         return new CompositeDataSupport(COORDINATION_TYPE, new String[]
             { ID, NAME, TIMEOUT }, new Object[]
-            { c.getId(), c.getName(), c.getTimeOut() });
+            { c.getId(), c.getName(), c.getDeadLine() });
     }
 }

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -22,10 +22,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.TimerTask;
 
-import org.apache.felix.service.coordination.Coordination;
-import org.apache.felix.service.coordination.CoordinationException;
-import org.apache.felix.service.coordination.Coordinator;
-import org.apache.felix.service.coordination.Participant;
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Coordinator;
+import org.apache.felix.service.coordinator.Participant;
 import org.osgi.framework.Bundle;
 
 @SuppressWarnings("deprecation")
@@ -51,7 +51,7 @@ public class CoordinatorImpl implements Coordinator
      * <p>
      * Called by the Coordinator ServiceFactory when this CoordinatorImpl
      * instance is not used any longer by the owner bundle.
-     * 
+     *
      * @see FELIX-2671/OSGi Bug 104
      */
     void dispose()
@@ -80,51 +80,15 @@ public class CoordinatorImpl implements Coordinator
         }
     }
 
-    public Coordination create(String name)
+    public Coordination create(final String name, final int timeout)
     {
         // TODO: check permission
-        Coordination c = mgr.create(this, name);
+        Coordination c = mgr.create(this, name, timeout);
         synchronized (coordinations)
         {
             coordinations.add(c);
         }
         return c;
-    }
-
-    public Coordination begin(String name)
-    {
-        // TODO: check permission
-        return push(create(name));
-    }
-
-    public Coordination push(Coordination c)
-    {
-        // TODO: check permission
-        return mgr.push(c);
-    }
-
-    public Coordination pop()
-    {
-        // TODO: check permission
-        return mgr.pop();
-    }
-
-    public Coordination getCurrentCoordination()
-    {
-        // TODO: check permission
-        return mgr.getCurrentCoordination();
-    }
-
-    public boolean alwaysFail(Throwable reason)
-    {
-        // TODO: check permission
-        CoordinationImpl current = (CoordinationImpl) getCurrentCoordination();
-        if (current != null)
-        {
-            current.mustFail(reason);
-            return true;
-        }
-        return false;
     }
 
     public Collection<Coordination> getCoordinations()
@@ -133,16 +97,59 @@ public class CoordinatorImpl implements Coordinator
         return mgr.getCoordinations();
     }
 
-    public boolean participate(Participant participant) throws CoordinationException
+    public boolean fail(Throwable reason)
     {
         // TODO: check permission
-        Coordination current = getCurrentCoordination();
+        CoordinationImpl current = (CoordinationImpl) peek();
         if (current != null)
         {
-            current.participate(participant);
+            return current.fail(reason);
+        }
+        return false;
+    }
+
+    public Coordination peek()
+    {
+        // TODO: check permission
+        return mgr.peek();
+    }
+
+    public Coordination begin(final String name, final int timeoutInMillis)
+    {
+        // TODO: check permission
+        return push(create(name, timeoutInMillis));
+    }
+
+    public Coordination pop()
+    {
+        // TODO: check permission
+        return mgr.pop();
+    }
+
+    public boolean addParticipant(Participant participant) throws CoordinationException
+    {
+        // TODO: check permission
+        Coordination current = peek();
+        if (current != null)
+        {
+            current.addParticipant(participant);
             return true;
         }
         return false;
+    }
+
+    public Coordination getCoordination(long id)
+    {
+        // TODO: check permission
+        return mgr.getCoordinationById(id);
+    }
+
+    //----------
+
+    Coordination push(Coordination c)
+    {
+        // TODO: check permission
+        return mgr.push(c);
     }
 
     void unregister(final CoordinationImpl c)
@@ -154,9 +161,9 @@ public class CoordinatorImpl implements Coordinator
         }
     }
 
-    void schedule(final TimerTask task, final long delay)
+    void schedule(final TimerTask task, final long deadLine)
     {
-        mgr.schedule(task, delay);
+        mgr.schedule(task, deadLine);
     }
 
     void lockParticipant(final Participant p, final CoordinationImpl c)

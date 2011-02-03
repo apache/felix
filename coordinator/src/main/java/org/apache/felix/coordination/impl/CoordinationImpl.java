@@ -25,8 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
 
-import org.apache.felix.service.coordination.Coordination;
-import org.apache.felix.service.coordination.Participant;
+import org.apache.felix.service.coordinator.Coordination;
+import org.apache.felix.service.coordinator.CoordinationException;
+import org.apache.felix.service.coordinator.Participant;
 
 @SuppressWarnings("deprecation")
 public class CoordinationImpl implements Coordination
@@ -41,9 +42,6 @@ public class CoordinationImpl implements Coordination
     /** Coordination completed */
     private static final int TERMINATED = 3;
 
-    /** Coordination failed */
-    private static final int FAILED = 4;
-
     private final CoordinatorImpl owner;
 
     private final long id;
@@ -51,7 +49,7 @@ public class CoordinationImpl implements Coordination
     private final String name;
 
     // TODO: timeout must be enforced
-    private long timeOutInMs;
+    private long deadLine;
 
     /**
      * Access to this field must be synchronized as long as the expected state
@@ -60,8 +58,6 @@ public class CoordinationImpl implements Coordination
      * by the thread successfully setting the state to {@link #TERMINATING}.
      */
     private volatile int state;
-
-    private int mustFail;
 
     private Throwable failReason;
 
@@ -73,19 +69,25 @@ public class CoordinationImpl implements Coordination
 
     private Thread initiatorThread;
 
-    public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final long defaultTimeOutInMs)
+    public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final int timeOutInMs)
     {
+        // TODO: validate name against Bundle Symbolic Name pattern
+
         this.owner = owner;
         this.id = id;
         this.name = name;
-        this.mustFail = 0;
         this.state = ACTIVE;
         this.participants = new ArrayList<Participant>();
         this.variables = new HashMap<Class<?>, Object>();
-        this.timeOutInMs = -defaultTimeOutInMs;
+        this.deadLine = (timeOutInMs > 0) ? System.currentTimeMillis() + timeOutInMs : 0;
         this.initiatorThread = Thread.currentThread();
 
-        scheduleTimeout(defaultTimeOutInMs);
+        scheduleTimeout(deadLine);
+    }
+
+    public long getId()
+    {
+        return this.id;
     }
 
     public String getName()
@@ -93,153 +95,82 @@ public class CoordinationImpl implements Coordination
         return name;
     }
 
-    long getId()
-    {
-        return this.id;
-    }
-
-    void mustFail(final Throwable reason)
-    {
-        this.mustFail = FAILED;
-        this.failReason = reason;
-    }
-
-    /**
-     * Initiates a coordination timeout. Called from the timer task scheduled by
-     * the {@link #scheduleTimeout(long)} method.
-     * <p>
-     * This method is inteded to only be called from the scheduled timer task.
-     */
-    void timeout()
-    {
-        // If a timeout happens, the coordination thread is set to always fail
-        this.mustFail = TIMEOUT;
-
-        // Fail the Coordination upon timeout
-        fail(null);
-    }
-
-    long getTimeOut()
-    {
-        return this.timeOutInMs;
-    }
-
-    public int end() throws IllegalStateException
-    {
-        if (startTermination())
-        {
-            if (mustFail != 0)
-            {
-                failInternal();
-                return mustFail;
-            }
-            return endInternal();
-        }
-
-        // already terminated
-        throw new IllegalStateException();
-    }
-
     public boolean fail(Throwable reason)
     {
         if (startTermination())
         {
             this.failReason = reason;
-            failInternal();
+
+            // consider failure reason (if not null)
+            for (Participant part : participants)
+            {
+                try
+                {
+                    part.failed(this);
+                }
+                catch (Exception e)
+                {
+                    // TODO: log
+                }
+
+                // release the participant for other coordinations
+                owner.releaseParticipant(part);
+            }
+
+            state = TERMINATED;
+
+            synchronized (this)
+            {
+                this.notifyAll();
+            }
+
             return true;
         }
         return false;
     }
 
-    public boolean terminate()
+    public void end()
     {
-        if (state == ACTIVE)
+        if (startTermination())
         {
-            try
+            boolean partialFailure = false;
+            for (Participant part : participants)
             {
-                end();
-                return true;
-            }
-            catch (IllegalStateException ise)
-            {
-                // another thread might have started the termination just
-                // after the current thread checked the state but before the
-                // end() method called on this thread was able to change the
-                // state. Just ignore this exception and continue.
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns whether the coordination has ended in failure.
-     * <p>
-     * The return value of <code>false</code> may be a transient situation if
-     * the coordination is in the process of terminating due to a failure.
-     */
-    public boolean isFailed()
-    {
-        return state == FAILED;
-    }
-
-    /**
-     * Returns whether the coordination has ended.
-     * <p>
-     * The return value of <code>false</code> may be a transient situation if
-     * the coordination is in the process of terminating.
-     */
-    public boolean isTerminated()
-    {
-        return state == TERMINATED || state == FAILED;
-    }
-
-    public void addTimeout(long timeOutInMs)
-    {
-        if (this.timeOutInMs > 0)
-        {
-            // already set, ignore
-        }
-
-        this.timeOutInMs = timeOutInMs;
-        scheduleTimeout(timeOutInMs);
-    }
-
-    /**
-     * Adds the participant to the end of the list of participants of this
-     * coordination.
-     * <p>
-     * This method blocks if the given participant is currently participating in
-     * another coordination.
-     * <p>
-     * Participants can only be added to a coordination if it is active.
-     *
-     * @throws org.apache.felix.service.coordination.CoordinationException if
-     *             the participant cannot currently participate in this
-     *             coordination
-     */
-    public boolean participate(Participant p)
-    {
-
-        // ensure participant only pariticipates on a single coordination
-        // this blocks until the participant can participate or until
-        // a timeout occurrs (or a deadlock is detected)
-        owner.lockParticipant(p, this);
-
-        // synchronize access to the state to prevent it from being changed
-        // while adding the participant
-        synchronized (this)
-        {
-            if (state == ACTIVE)
-            {
-                if (!participants.contains(p))
+                try
                 {
-                    participants.add(p);
+                    part.ended(this);
                 }
-                return true;
+                catch (Exception e)
+                {
+                    // TODO: log
+                    partialFailure = true;
+                }
+
+                // release the participant for other coordinations
+                owner.releaseParticipant(part);
             }
-            return false;
+
+            state = TERMINATED;
+
+            synchronized (this)
+            {
+                this.notifyAll();
+            }
+
+            if (partialFailure)
+            {
+                throw new CoordinationException("One or more participants threw while ending the coordination", this,
+                    CoordinationException.PARTIALLY_ENDED);
+            }
+        }
+        else
+        {
+            // already terminated
+            throw new CoordinationException("Coordination " + id + "/" + name + " has already terminated", this,
+                CoordinationException.ALREADY_ENDED);
         }
     }
+
 
     public Collection<Participant> getParticipants()
     {
@@ -256,9 +187,129 @@ public class CoordinationImpl implements Coordination
         return Collections.<Participant> emptyList();
     }
 
+    public Throwable getFailure()
+    {
+        return failReason;
+    }
+
+
+    /**
+     * Adds the participant to the end of the list of participants of this
+     * coordination.
+     * <p>
+     * This method blocks if the given participant is currently participating in
+     * another coordination.
+     * <p>
+     * Participants can only be added to a coordination if it is active.
+     *
+     * @throws org.apache.felix.service.coordination.CoordinationException if
+     *             the participant cannot currently participate in this
+     *             coordination
+     */
+    public void addParticipant(Participant p)
+    {
+
+        // ensure participant only pariticipates on a single coordination
+        // this blocks until the participant can participate or until
+        // a timeout occurrs (or a deadlock is detected)
+        owner.lockParticipant(p, this);
+
+        // synchronize access to the state to prevent it from being changed
+        // while adding the participant
+        synchronized (this)
+        {
+            if (isTerminated())
+            {
+                owner.releaseParticipant(p);
+
+                throw new CoordinationException("Cannot add Participant " + p + " to terminated Coordination", this,
+                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED);
+            }
+
+            if (!participants.contains(p))
+            {
+                participants.add(p);
+            }
+        }
+    }
+
     public Map<Class<?>, ?> getVariables()
     {
         return variables;
+    }
+
+    public long extendTimeout(long timeOutInMs)
+    {
+        synchronized (this)
+        {
+            if (isTerminated())
+            {
+                throw new CoordinationException("Cannot extend timeout on terminated Coordination", this,
+                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED);
+            }
+
+            if (timeOutInMs > 0)
+            {
+                this.deadLine += timeOutInMs;
+                scheduleTimeout(this.deadLine);
+            }
+
+            return this.deadLine;
+        }
+    }
+
+    /**
+     * Returns whether the coordination has ended.
+     * <p>
+     * The return value of <code>false</code> may be a transient situation if
+     * the coordination is in the process of terminating.
+     */
+    public boolean isTerminated()
+    {
+        return state != ACTIVE;
+    }
+
+    public Thread getThread()
+    {
+        return initiatorThread;
+    }
+
+    public void join(long timeoutInMillis) throws InterruptedException
+    {
+        synchronized (this)
+        {
+            if (!isTerminated())
+            {
+                this.wait(timeoutInMillis);
+            }
+        }
+    }
+
+    public Coordination push()
+    {
+        // TODO: Check whether this has already been pushed !
+        // throw new CoordinationException("Coordination already pushed", this, CoordinationException.ALREADY_PUSHED);
+
+        return owner.push(this);
+    }
+
+    //-------
+
+    /**
+     * Initiates a coordination timeout. Called from the timer task scheduled by
+     * the {@link #scheduleTimeout(long)} method.
+     * <p>
+     * This method is inteded to only be called from the scheduled timer task.
+     */
+    void timeout()
+    {
+        // Fail the Coordination upon timeout
+        fail(TIMEOUT);
+    }
+
+    long getDeadLine()
+    {
+        return this.deadLine;
     }
 
     /**
@@ -288,72 +339,13 @@ public class CoordinationImpl implements Coordination
     }
 
     /**
-     * Internal implemenation of successful termination of the coordination.
-     * <p>
-     * This method must only be called after the {@link #state} field has been
-     * set to {@link State#TERMINATING} and only be the method successfully
-     * setting this state.
-     *
-     * @return OK or PARTIALLY_ENDED depending on whether all participants
-     *         succeeded or some of them failed ending the coordination.
-     */
-    private int endInternal()
-    {
-        int reason = OK;
-        for (Participant part : participants)
-        {
-            try
-            {
-                part.ended(this);
-            }
-            catch (Exception e)
-            {
-                // TODO: log
-                reason = PARTIALLY_ENDED;
-            }
-
-            // release the participant for other coordinations
-            owner.releaseParticipant(part);
-        }
-        state = TERMINATED;
-        return reason;
-    }
-
-    /**
-     * Internal implemenation of coordination failure.
-     * <p>
-     * This method must only be called after the {@link #state} field has been
-     * set to {@link State#TERMINATING} and only be the method successfully
-     * setting this state.
-     */
-    private void failInternal()
-    {
-        // consider failure reason (if not null)
-        for (Participant part : participants)
-        {
-            try
-            {
-                part.failed(this);
-            }
-            catch (Exception e)
-            {
-                // TODO: log
-            }
-
-            // release the participant for other coordinations
-            owner.releaseParticipant(part);
-        }
-        state = FAILED;
-    }
-
-    /**
      * Helper method for timeout scheduling. If a timer is currently scheduled
      * it is canceled. If the new timeout value is a positive value a new timer
-     * is scheduled to fire of so many milliseconds from now.
+     * is scheduled to fire at the desired time (in the future)
      *
-     * @param timeout The new timeout value
+     * @param deadline The at which to schedule the timer
      */
-    private void scheduleTimeout(final long timeout)
+    private void scheduleTimeout(final long deadLine)
     {
         if (timeoutTask != null)
         {
@@ -361,7 +353,7 @@ public class CoordinationImpl implements Coordination
             timeoutTask = null;
         }
 
-        if (timeout > 0)
+        if (deadLine > System.currentTimeMillis())
         {
             timeoutTask = new TimerTask()
             {
@@ -372,7 +364,7 @@ public class CoordinationImpl implements Coordination
                 }
             };
 
-            owner.schedule(timeoutTask, timeout);
+            owner.schedule(timeoutTask, deadLine);
         }
     }
 }

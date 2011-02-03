@@ -24,8 +24,8 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.apache.felix.jmx.service.coordination.CoordinatorMBean;
-import org.apache.felix.service.coordination.Coordinator;
+import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
+import org.apache.felix.service.coordinator.Coordinator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
