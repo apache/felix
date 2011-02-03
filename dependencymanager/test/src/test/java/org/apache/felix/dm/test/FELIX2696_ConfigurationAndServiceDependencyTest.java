@@ -106,8 +106,6 @@ public class FELIX2696_ConfigurationAndServiceDependencyTest extends Base {
     }
 
     public static class ConfigurationConsumer implements ManagedService {
-        private boolean m_isConfigured;
-        private boolean m_isInitialized;
         private final Ensure m_ensure;
 
         public ConfigurationConsumer(Ensure e) {
