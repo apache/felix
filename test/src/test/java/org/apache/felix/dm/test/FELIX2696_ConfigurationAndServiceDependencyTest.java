@@ -41,7 +41,7 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 @RunWith(JUnit4TestRunner.class)
-public class FELIX_2696_ConfigurationAndServiceDependencyTest extends Base {
+public class FELIX2696_ConfigurationAndServiceDependencyTest extends Base {
     @Configuration
     public static Option[] configuration() {
         return options(
