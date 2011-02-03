@@ -34,5 +34,5 @@
  * @Provisional
  */
 @Deprecated
-package org.apache.felix.jmx.service.coordination;
+package org.apache.felix.jmx.service.coordinator;
 
