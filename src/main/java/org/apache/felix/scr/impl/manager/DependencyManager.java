@@ -784,14 +784,14 @@ public class DependencyManager implements ServiceListener, Reference
         {
             service = m_componentManager.getActivator().getBundleContext().getService( serviceReference );
         }
-        catch ( IllegalStateException ise )
+        catch ( Exception e )
         {
             // caused by getService() called on invalid bundle context
             // or if there is a service reference cycle involving service
             // factories !
             m_componentManager.log( LogService.LOG_ERROR, "Failed getting service {0} ({1}/{2,number,#})", new Object[]
                 { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface(),
-                    serviceReference.getProperty( Constants.SERVICE_ID ) }, ise );
+                    serviceReference.getProperty( Constants.SERVICE_ID ) }, e );
             service = null;
         }
 
