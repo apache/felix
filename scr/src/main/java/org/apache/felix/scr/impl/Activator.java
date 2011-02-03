@@ -291,7 +291,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
             if ( e instanceof IllegalStateException && bundle.getState() != Bundle.ACTIVE )
             {
                 log(
-                    LogService.LOG_INFO,
+                    LogService.LOG_DEBUG,
                     m_context.getBundle(),
                     "Bundle "
                         + bundle.getSymbolicName()

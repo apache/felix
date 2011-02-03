@@ -94,7 +94,7 @@ class ComponentActorThread implements Runnable
             // otherwise execute the task, log any issues
             try
             {
-                Activator.log( LogService.LOG_INFO, null, "Running task: " + task, null );
+                Activator.log( LogService.LOG_DEBUG, null, "Running task: " + task, null );
                 task.run();
             }
             catch ( Throwable t )

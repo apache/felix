@@ -548,7 +548,7 @@ public class BundleComponentActivator implements Logger
             }
             else
             {
-                log( LogService.LOG_INFO, "Component Actor Thread not running, calling synchronously", null, null );
+                log( LogService.LOG_DEBUG, "Component Actor Thread not running, calling synchronously", null, null );
                 try
                 {
                     synchronized ( this )
@@ -558,13 +558,13 @@ public class BundleComponentActivator implements Logger
                 }
                 catch ( Throwable t )
                 {
-                    log( LogService.LOG_INFO, "Unexpected problem executing task", null, t );
+                    log( LogService.LOG_WARNING, "Unexpected problem executing task", null, t );
                 }
             }
         }
         else
         {
-            log( LogService.LOG_INFO, "BundleComponentActivator is not active; not scheduling {0}", new Object[]
+            log( LogService.LOG_WARNING, "BundleComponentActivator is not active; not scheduling {0}", new Object[]
                 { task }, null, null );
         }
     }

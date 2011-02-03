@@ -556,7 +556,7 @@ public abstract class AbstractComponentManager implements Component
                         final Permission perm = new ServicePermission( services[i], ServicePermission.REGISTER );
                         if ( !bundle.hasPermission( perm ) )
                         {
-                            log( LogService.LOG_INFO, "Permission to register service {0} is denied", new Object[]
+                            log( LogService.LOG_DEBUG, "Permission to register service {0} is denied", new Object[]
                                 { services[i] }, null );
                             allowed = false;
                         }
@@ -618,14 +618,14 @@ public abstract class AbstractComponentManager implements Component
             if ( !dm.hasGetPermission() )
             {
                 // bundle has no service get permission
-                log( LogService.LOG_INFO, "No permission to get dependency: {0}", new Object[]
+                log( LogService.LOG_DEBUG, "No permission to get dependency: {0}", new Object[]
                     { dm.getName() }, null );
                 satisfied = false;
             }
             else if ( !dm.isSatisfied() )
             {
                 // bundle would have permission but there are not enough services
-                log( LogService.LOG_INFO, "Dependency not satisfied: {0}", new Object[]
+                log( LogService.LOG_DEBUG, "Dependency not satisfied: {0}", new Object[]
                     { dm.getName() }, null );
                 satisfied = false;
             }
@@ -982,7 +982,7 @@ public abstract class AbstractComponentManager implements Component
             // test if we have configuration if such is required
             if ( !acm.hasConfiguration() && acm.getComponentMetadata().isConfigurationRequired() )
             {
-                acm.log( LogService.LOG_INFO, "Missing required configuration, cannot activate", null );
+                acm.log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
                 acm.changeState( Unsatisfied.getInstance() );
                 return;
             }
@@ -991,7 +991,7 @@ public abstract class AbstractComponentManager implements Component
             // test if all the mandatory dependencies are satisfied
             if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
             {
-                acm.log( LogService.LOG_INFO, "Not all dependencies satisified, cannot activate", null );
+                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisified, cannot activate", null );
                 acm.changeState( Unsatisfied.getInstance() );
                 return;
             }
@@ -1000,7 +1000,7 @@ public abstract class AbstractComponentManager implements Component
             // test that the bundle has enough permissions to register services
             if ( !acm.hasServiceRegistrationPermissions() )
             {
-                acm.log( LogService.LOG_INFO, "Component is not permitted to register all services, cannot activate",
+                acm.log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
                     null );
                 acm.changeState( Unsatisfied.getInstance() );
                 return;
