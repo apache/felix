@@ -55,8 +55,8 @@
 						<Bundle-Name>Apache Felix Dependency Manager Compatibility</Bundle-Name>
 						<Bundle-Description>A bundle that provides compatibility with old 2.x.x dependencymanager.</Bundle-Description>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-						<Export-Package>org.apache.felix.dependencymanager</Export-Package>
-						<Import-Package>!org.apache.felix.dependencymanager,*</Import-Package>
+						<Export-Package>org.apache.felix.dependencymanager;version="2.0.2"</Export-Package>
+						<Import-Package>!org.apache.felix.dependencymanager,org.apache.felix.dm;version="[3,4)",*</Import-Package>
 						<Private-Package>org.apache.felix.dependencymanager.impl</Private-Package>
 					</instructions>
 				</configuration>
