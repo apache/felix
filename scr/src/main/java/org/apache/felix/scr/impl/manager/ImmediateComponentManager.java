@@ -204,7 +204,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
                         { dm.getName() }, null );
 
                 // make sure, we keep no bindings
-                it = getDependencyManagers();
+                it = getReversedDependencyManagers();
                 while ( it.hasNext() )
                 {
                     dm = ( DependencyManager ) it.next();
@@ -261,8 +261,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
             reason ), true );
 
         // 2. Unbind any bound services
-        Iterator it = getDependencyManagers();
-
+        Iterator it = getReversedDependencyManagers();
         while ( it.hasNext() )
         {
             DependencyManager dm = ( DependencyManager ) it.next();

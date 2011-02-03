@@ -269,4 +269,26 @@
         />
     </scr:component>
 
+    <scr:component name="test_multi_service_bind_unbind_order"
+        enabled="false"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent2" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="0..n"
+            policy="static"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+        />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService2"
+            cardinality="0..n"
+            policy="static"
+            bind="bindSimpleService2"
+            unbind="unbindSimpleService2"
+        />
+    </scr:component>
+
 </components>

@@ -21,12 +21,12 @@ package org.apache.felix.scr.impl.manager;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -634,10 +634,26 @@ public abstract class AbstractComponentManager implements Component
         return satisfied;
     }
 
+    /**
+     * Returns an iterator over the {@link DependencyManager} objects
+     * representing the declared references in declaration order
+     */
     Iterator getDependencyManagers()
     {
         return m_dependencyManagers.iterator();
     }
+
+    /**
+     * Returns an iterator over the {@link DependencyManager} objects
+     * representing the declared references in reversed declaration order
+     */
+    Iterator getReversedDependencyManagers()
+    {
+        List list = new ArrayList( m_dependencyManagers );
+        Collections.reverse( list );
+        return list.iterator();
+    }
+
 
     DependencyManager getDependencyManager(String name)
     {
