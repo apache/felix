@@ -449,7 +449,8 @@ public class FilePersistenceManager implements PersistenceManager
         {
             public Object run()
             {
-                return Boolean.valueOf( _exists( pid ) );
+                // FELIX-2771: Boolean.valueOf(boolean) is not in Foundation
+                return _exists( pid ) ? Boolean.TRUE : Boolean.FALSE;
             }
         } );
         return ( ( Boolean ) result ).booleanValue();
@@ -504,7 +505,8 @@ public class FilePersistenceManager implements PersistenceManager
         }
         catch ( PrivilegedActionException pae )
         {
-            throw ( IOException ) pae.getCause();
+            // FELIX-2771: getCause() is not available in Foundation
+            throw ( IOException ) pae.getException();
         }
     }
 
@@ -597,7 +599,8 @@ public class FilePersistenceManager implements PersistenceManager
         }
         catch ( PrivilegedActionException pae )
         {
-            throw ( IOException ) pae.getCause();
+            // FELIX-2771: getCause() is not available in Foundation
+            throw ( IOException ) pae.getException();
         }
     }
 
