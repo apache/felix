@@ -33,6 +33,7 @@ import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 
 /**
  * The <code>ScrCommand</code> class provides the implementations for the
@@ -71,6 +72,8 @@ class ScrCommand
             props.put("osgi.command.scope", "scr");
             props.put("osgi.command.function", new String[]
                 { "config", "disable", "enable", "info", "list" });
+            props.put(Constants.SERVICE_DESCRIPTION, "SCR Gogo Shell Support");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
             bundleContext.registerService(scrGogoCommandClassName, gogoCmd, props);
         }
         catch (Throwable t)
@@ -85,8 +88,11 @@ class ScrCommand
         {
             // Register "scr" impl command service as a
             // wrapper for the bundle repository service.
+            final Hashtable props = new Hashtable();
+            props.put(Constants.SERVICE_DESCRIPTION, "SCR Legacy Shell Support");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
             bundleContext.registerService(org.apache.felix.shell.Command.class.getName(), new ScrShellCommand(cmd),
-                null);
+                props);
         }
         catch (Throwable th)
         {
