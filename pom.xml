@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.0</version>
+        <version>2-SNAPSHOT</version>
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -145,20 +145,6 @@
     </dependencies>
     <build>
         <directory>${bundle.build.name}</directory>
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-            </resource>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>LICENSE</include>
-                    <include>NOTICE</include>
-                    <include>DEPENDENCIES</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -336,6 +322,14 @@
                         <exclude>**/instances/**</exclude>
                         <exclude>**/instances2/**</exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <excludePackageNames>*.impl</excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
