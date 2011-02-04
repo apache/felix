@@ -167,6 +167,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Category>osgi</Bundle-Category>
                         <Bundle-SymbolicName>
                             ${artifactId}
                         </Bundle-SymbolicName>
