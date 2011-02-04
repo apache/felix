@@ -26,7 +26,9 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.manager.DelayedComponentManager;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
+import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.service.component.ComponentConstants;
 
@@ -52,8 +54,18 @@ import org.osgi.service.component.ComponentConstants;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public class ConfiguredComponentHolder extends AbstractComponentHolder
+public class ImmediateComponentHolder implements ComponentHolder
 {
+
+    /**
+     * The activator owning the per-bundle components
+     */
+    private final BundleComponentActivator m_activator;
+
+    /**
+     * The {@link ComponentMetadata} describing the held component(s)
+     */
+    private final ComponentMetadata m_componentMetadata;
 
     /**
      * A map of components configured with factory configuration. The indices
@@ -91,13 +103,58 @@ public class ConfiguredComponentHolder extends AbstractComponentHolder
     private boolean m_enabled;
 
 
-    ConfiguredComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
+    public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
     {
-        super( activator, metadata );
-
+        this.m_activator = activator;
+        this.m_componentMetadata = metadata;
         this.m_components = new HashMap();
         this.m_singleComponent = createComponentManager();
         this.m_enabled = false;
+    }
+
+    protected ImmediateComponentManager createComponentManager()
+    {
+
+        ImmediateComponentManager manager;
+        if ( m_componentMetadata.isFactory() )
+        {
+            throw new IllegalArgumentException( "Cannot create component factory for " + m_componentMetadata.getName() );
+        }
+        else if ( m_componentMetadata.isImmediate() )
+        {
+            manager = new ImmediateComponentManager( m_activator, this, m_componentMetadata );
+        }
+        else if ( m_componentMetadata.getServiceMetadata() != null )
+        {
+            if ( m_componentMetadata.getServiceMetadata().isServiceFactory() )
+            {
+                manager = new ServiceFactoryComponentManager( m_activator, this, m_componentMetadata );
+            }
+            else
+            {
+                manager = new DelayedComponentManager( m_activator, this, m_componentMetadata );
+            }
+        }
+        else
+        {
+            // if we get here, which is not expected after all, we fail
+            throw new IllegalArgumentException( "Cannot create a component manager for "
+                + m_componentMetadata.getName() );
+        }
+
+        return manager;
+    }
+
+
+    public final BundleComponentActivator getActivator()
+    {
+        return m_activator;
+    }
+
+
+    public final ComponentMetadata getComponentMetadata()
+    {
+        return m_componentMetadata;
     }
 
 
@@ -128,7 +185,7 @@ public class ConfiguredComponentHolder extends AbstractComponentHolder
             return;
         }
 
-        if ( pid.equals( getComponentName() ) )
+        if ( pid.equals( getComponentMetadata().getName() ) )
         {
             // singleton configuration deleted
             m_singleComponent.reconfigure( null );
@@ -195,7 +252,7 @@ public class ConfiguredComponentHolder extends AbstractComponentHolder
             return;
         }
 
-        if ( pid.equals( getComponentName() ) )
+        if ( pid.equals( getComponentMetadata().getName() ) )
         {
             // singleton configuration has pid equal to component name
             m_singleComponent.reconfigure( props );

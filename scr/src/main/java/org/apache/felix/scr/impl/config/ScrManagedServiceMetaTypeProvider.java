@@ -20,38 +20,29 @@ package org.apache.felix.scr.impl.config;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Dictionary;
 
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
-public class MetaTypeProviderImpl
-    implements MetaTypeProvider, ManagedService
+/**
+ * The <code>ScrManagedServiceMetaTypeProvider</code> receives the Declarative
+ * Services Runtime configuration (by extending the {@link ScrManagedService}
+ * class but also provides a MetaType Service ObjectClassDefinition.
+ */
+class ScrManagedServiceMetaTypeProvider extends ScrManagedService
+    implements MetaTypeProvider
 {
 
-    private final int logLevel;
-
-    private final boolean factoryEnabled;
-
-    private final ManagedService delegatee;
-
-    public MetaTypeProviderImpl(final int logLevel,
-                                final boolean factoryEnabled,
-                                final ManagedService delegatee)
+    static ManagedService create(final ScrConfiguration scrConfiguration)
     {
-        this.logLevel = logLevel;
-        this.factoryEnabled = factoryEnabled;
-        this.delegatee = delegatee;
+        return new ScrManagedServiceMetaTypeProvider(scrConfiguration);
     }
 
-    private ObjectClassDefinition ocd;
-
-    public void updated(Dictionary properties) throws ConfigurationException
+    private ScrManagedServiceMetaTypeProvider(final ScrConfiguration scrConfiguration)
     {
-        this.delegatee.updated(properties);
+        super(scrConfiguration);
     }
 
     /**
@@ -72,68 +63,61 @@ public class MetaTypeProviderImpl
             return null;
         }
 
-        if ( ocd == null )
+        final ArrayList adList = new ArrayList();
+
+        adList.add(new AttributeDefinitionImpl(ScrConfiguration.PROP_LOGLEVEL, "SCR Log Level",
+            "Allows limiting the amount of logging information sent to the OSGi LogService."
+                + " Supported values are DEBUG, INFO, WARN, and ERROR. Default is ERROR.", AttributeDefinition.INTEGER,
+            new String[]
+                { String.valueOf(this.getScrConfiguration().getLogLevel()) }, 0, new String[]
+                { "Debug", "Information", "Warnings", "Error" }, new String[]
+                { "4", "3", "2", "1" }));
+
+        adList
+            .add(new AttributeDefinitionImpl(
+                ScrConfiguration.PROP_FACTORY_ENABLED,
+                "Extended Factory Components",
+                "Whether or not to enable the support for creating Factory Component instances based on factory configuration."
+                    + " This is an Apache Felix SCR specific extension, explicitly not supported by the Declarative Services "
+                    + "specification. Reliance on this feature prevent the component from being used with other Declarative "
+                    + "Services implementations. The default value is false to disable this feature.", this
+                    .getScrConfiguration().isFactoryEnabled()));
+
+        return new ObjectClassDefinition()
         {
-            final ArrayList adList = new ArrayList();
 
-            adList.add( new AttributeDefinitionImpl( ScrConfiguration.PROP_LOGLEVEL, "SCR Log Level",
-                    "Allows limiting the amount of logging information sent to the OSGi LogService." +
-                    " Supported values are DEBUG, INFO, WARN, and ERROR. Default is ERROR.",
-                    AttributeDefinition.INTEGER,
-                    new String[] {String.valueOf(this.logLevel)}, 0,
-                    new String[] {"Debug", "Information", "Warnings", "Error"},
-                    new String[] {"4", "3", "2", "1"} ) );
+            private final AttributeDefinition[] attrs = (AttributeDefinition[]) adList
+                .toArray(new AttributeDefinition[adList.size()]);
 
-            adList.add( new AttributeDefinitionImpl( ScrConfiguration.PROP_FACTORY_ENABLED, "Extended Factory Components",
-                "Whether or not to enable the support for creating Factory Component instances based on factory configuration." +
-                " This is an Apache Felix SCR specific extension, explicitly not supported by the Declarative Services " +
-                "specification. Reliance on this feature prevent the component from being used with other Declarative " +
-                "Services implementations. The default value is false to disable this feature.",
-                this.factoryEnabled ) );
-
-            ocd = new ObjectClassDefinition()
+            public String getName()
             {
+                return "Apache Felix Declarative Service Implementation";
+            }
 
-                private final AttributeDefinition[] attrs = ( AttributeDefinition[] ) adList
-                    .toArray( new AttributeDefinition[adList.size()] );
+            public InputStream getIcon(int arg0)
+            {
+                return null;
+            }
 
+            public String getID()
+            {
+                return ScrConfiguration.PID;
+            }
 
-                public String getName()
-                {
-                    return "Apache Felix Declarative Service Implementation";
-                }
+            public String getDescription()
+            {
+                return "Configuration for the Apache Felix Declarative Services Implementation."
+                    + " This configuration overwrites configuration defined in framework properties of the same names.";
+            }
 
-
-                public InputStream getIcon( int arg0 )
-                {
-                    return null;
-                }
-
-
-                public String getID()
-                {
-                    return ScrConfiguration.PID;
-                }
-
-
-                public String getDescription()
-                {
-                    return "Configuration for the Apache Felix Declarative Services Implementation." +
-                           " This configuration overwrites configuration defined in framework properties of the same names.";
-                }
-
-
-                public AttributeDefinition[] getAttributeDefinitions( int filter )
-                {
-                    return ( filter == OPTIONAL ) ? null : attrs;
-                }
-            };
-        }
-
-        return ocd;
+            public AttributeDefinition[] getAttributeDefinitions(int filter)
+            {
+                return (filter == OPTIONAL) ? null : attrs;
+            }
+        };
     }
 
-    class AttributeDefinitionImpl implements AttributeDefinition
+    private static class AttributeDefinitionImpl implements AttributeDefinition
     {
 
         private final String id;

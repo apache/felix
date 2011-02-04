@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.impl.config.ConfigurationComponentRegistry;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -94,7 +93,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
 
         // prepare component registry
         m_componentBundles = new HashMap();
-        m_componentRegistry = createComponentRegistry( context);
+        m_componentRegistry = new ComponentRegistry( context );
 
         // get the configuration
         m_configuration = new ScrConfiguration( context );
@@ -365,22 +364,6 @@ public class Activator implements BundleActivator, SynchronousBundleListener
                 }
             }
         }
-    }
-
-
-    public static ComponentRegistry createComponentRegistry( BundleContext bundleContext )
-    {
-        try
-        {
-            return new ConfigurationComponentRegistry( bundleContext );
-        }
-        catch ( Throwable t )
-        {
-            log( LogService.LOG_INFO, bundleContext.getBundle(),
-                "ConfigurationAdmin supporting ComponentRegistry not available, not using ConfigurationAdmin", t );
-        }
-
-        return new ComponentRegistry( bundleContext );
     }
 
 

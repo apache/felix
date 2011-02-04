@@ -44,6 +44,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.container.def.PaxRunnerOptions;
 import org.ops4j.pax.exam.junit.Configuration;
+import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -120,9 +121,9 @@ public abstract class ComponentTestBase
     @Before
     public void setUp() throws BundleException
     {
-        scrTracker = new ServiceTracker( bundleContext, ScrService.class.getName(), null );
+        scrTracker = new ServiceTracker( bundleContext, "org.apache.felix.scr.ScrService", null );
         scrTracker.open();
-        configAdminTracker = new ServiceTracker( bundleContext, ConfigurationAdmin.class.getName(), null );
+        configAdminTracker = new ServiceTracker( bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null );
         configAdminTracker.open();
 
         bundle = installBundle( descriptorFile );

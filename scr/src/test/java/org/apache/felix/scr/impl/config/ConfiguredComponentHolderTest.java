@@ -178,11 +178,11 @@ public class ConfiguredComponentHolderTest extends TestCase
     }
 
 
-    private static ImmediateComponentManager getSingleManager( ConfiguredComponentHolder holder )
+    private static ImmediateComponentManager getSingleManager( ImmediateComponentHolder holder )
     {
         try
         {
-            final Field f = ConfiguredComponentHolder.class.getDeclaredField( "m_singleComponent" );
+            final Field f = ImmediateComponentHolder.class.getDeclaredField( "m_singleComponent" );
             f.setAccessible( true );
             return ( ImmediateComponentManager ) f.get( holder );
         }
@@ -194,11 +194,11 @@ public class ConfiguredComponentHolderTest extends TestCase
     }
 
 
-    private static ImmediateComponentManager[] getComponentManagers( ConfiguredComponentHolder holder )
+    private static ImmediateComponentManager[] getComponentManagers( ImmediateComponentHolder holder )
     {
         try
         {
-            final Method m = ConfiguredComponentHolder.class.getDeclaredMethod( "getComponentManagers", new Class[]
+            final Method m = ImmediateComponentHolder.class.getDeclaredMethod( "getComponentManagers", new Class[]
                 { Boolean.TYPE } );
             m.setAccessible( true );
             return ( ImmediateComponentManager[] ) m.invoke( holder, new Object[]
@@ -211,7 +211,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         }
     }
 
-    private static class TestingConfiguredComponentHolder extends ConfiguredComponentHolder
+    private static class TestingConfiguredComponentHolder extends ImmediateComponentHolder
     {
         TestingConfiguredComponentHolder( ComponentMetadata metadata )
         {
