@@ -53,7 +53,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     private ScrConfiguration m_configuration;
 
     // Flag that sets error messages
-    private static int m_logLevel = LogService.LOG_ERROR;
+    private static int m_logLevel = LogService.LOG_DEBUG;
 
     // this bundle's context
     private static BundleContext m_context;
@@ -87,12 +87,14 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     public void start( BundleContext context ) throws Exception
     {
         m_context = context;
-        m_componentBundles = new HashMap();
-        m_componentRegistry = createComponentRegistry( context);
 
         // require the log service
         m_logService = new ServiceTracker( context, LOGSERVICE_CLASS, null );
         m_logService.open();
+
+        // prepare component registry
+        m_componentBundles = new HashMap();
+        m_componentRegistry = createComponentRegistry( context);
 
         // get the configuration
         m_configuration = new ScrConfiguration( context );
