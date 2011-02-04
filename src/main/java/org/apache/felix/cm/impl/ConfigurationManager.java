@@ -93,7 +93,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     // random number generator to create configuration PIDs for factory
     // configurations
-    private static SecureRandom numberGenerator;
+    private static Random numberGenerator;
 
     // comparator used to keep the ordered persistence manager map
     private static final Comparator cmRankComp = new RankingComparator( true, ConfigurationPlugin.CM_RANKING );
@@ -870,10 +870,19 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     private static String createPid( String factoryPid )
     {
-        SecureRandom ng = numberGenerator;
+        Random ng = numberGenerator;
         if ( ng == null )
         {
-            numberGenerator = ng = new SecureRandom();
+            // FELIX-2771 Secure Random not available on Mika
+            try
+            {
+                ng = new SecureRandom();
+            }
+            catch ( Throwable t )
+            {
+                // fall back to Random
+                ng = new Random();
+            }
         }
 
         byte[] randomBytes = new byte[16];
