@@ -113,11 +113,18 @@ public class ComponentRegistry implements ScrService, ServiceListener
         // keep me informed on ConfigurationAdmin state changes
         try
         {
-            context.addServiceListener( this, "(objectclass=" + CONFIGURATION_ADMIN + ")" );
+            context.addServiceListener(this, "(objectclass=" + CONFIGURATION_ADMIN + ")");
         }
-        catch ( InvalidSyntaxException ise )
+        catch (InvalidSyntaxException ise)
         {
             // not expected (filter is tested valid)
+        }
+
+        // If the Configuration Admin Service is already registered, setup
+        // configuration support immediately
+        if (context.getServiceReference(CONFIGURATION_ADMIN) != null)
+        {
+            getOrCreateConfigurationSupport();
         }
 
         // register as ScrService
@@ -448,7 +455,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
     {
         if (event.getType() == ServiceEvent.REGISTERED)
         {
-            this.configurationSupport = new ConfigurationSupport(this.m_bundleContext, this);
+            ConfigurationSupport configurationSupport = getOrCreateConfigurationSupport();
 
             final ServiceReference caRef = event.getServiceReference();
             final Object service = m_bundleContext.getService(caRef);
@@ -456,7 +463,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
             {
                 try
                 {
-                    this.configurationSupport.configureComponentHolders(caRef, service);
+                    configurationSupport.configureComponentHolders(caRef, service);
                 }
                 finally
                 {
@@ -466,11 +473,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         }
         else if (event.getType() == ServiceEvent.UNREGISTERING)
         {
-            if (configurationSupport != null)
-            {
-                this.configurationSupport.dispose();
-                this.configurationSupport = null;
-            }
+            disposeConfigurationSupport();
         }
     }
 
@@ -516,5 +519,23 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
         // fall back: bundle is not considered active
         return false;
+    }
+
+    private ConfigurationSupport getOrCreateConfigurationSupport()
+    {
+        if (configurationSupport == null)
+        {
+            configurationSupport = new ConfigurationSupport(m_bundleContext, this);
+        }
+        return configurationSupport;
+    }
+
+    private void disposeConfigurationSupport()
+    {
+        if (configurationSupport != null)
+        {
+            this.configurationSupport.dispose();
+            this.configurationSupport = null;
+        }
     }
 }
