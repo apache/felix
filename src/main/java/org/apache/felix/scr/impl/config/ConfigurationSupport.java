@@ -39,7 +39,8 @@ import org.osgi.service.log.LogService;
 public class ConfigurationSupport implements ConfigurationListener
 {
 
-    final ComponentRegistry m_registry;
+    // the registry of components to be configured
+    private final ComponentRegistry m_registry;
 
     // the service m_registration of the ConfigurationListener service
     private ServiceRegistration m_registration;
