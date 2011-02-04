@@ -257,17 +257,20 @@ class ConfigurationImpl extends ConfigurationBase
         if ( localPersistenceManager != null )
         {
             // read configuration from persistence (again)
-            Dictionary properties = localPersistenceManager.load( getPid() );
-
-            // ensure serviceReference pid
-            String servicePid = ( String ) properties.get( Constants.SERVICE_PID );
-            if ( servicePid != null && !getPid().equals( servicePid ) )
+            if ( localPersistenceManager.exists( getPid() ) )
             {
-                throw new IOException( "PID of configuration file does match requested PID; expected " + getPid() + ", got "
-                    + servicePid );
-            }
+                Dictionary properties = localPersistenceManager.load( getPid() );
 
-            configureFromPersistence( properties );
+                // ensure serviceReference pid
+                String servicePid = ( String ) properties.get( Constants.SERVICE_PID );
+                if ( servicePid != null && !getPid().equals( servicePid ) )
+                {
+                    throw new IOException( "PID of configuration file does match requested PID; expected " + getPid()
+                        + ", got " + servicePid );
+                }
+
+                configureFromPersistence( properties );
+            }
 
             // update the service but do not fire an CM_UPDATED event
             getConfigurationManager().updated( this, false );

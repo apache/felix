@@ -1417,7 +1417,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             this.config = config;
             synchronized ( config )
             {
-                this.properties = config.getProperties( true );
+                Dictionary props = config.getProperties( true );
+                if ( props == null )
+                {
+                    props = new Hashtable();
+                }
+
+                this.properties = props;
                 this.lastModificationTime = config.getLastModificationTime();
             }
         }
@@ -1575,7 +1581,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             {
                                 final ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext
                                     .getService( ref );
-                                if ( srv != null && properties != null )
+                                if ( srv != null )
                                 {
                                     Dictionary props = new CaseInsensitiveDictionary( properties );
                                     callPlugins( props, config.getFactoryPid(), ref, config );
