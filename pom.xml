@@ -138,6 +138,9 @@
                             ${artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+                        <Bundle-DocURL>
+                            http://felix.apache.org/site/apache-felix-config-admin.html
+                        </Bundle-DocURL>
                         <Bundle-Activator>
                             org.apache.felix.cm.impl.ConfigurationManager
                         </Bundle-Activator>
