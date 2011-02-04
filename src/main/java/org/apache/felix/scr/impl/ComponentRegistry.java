@@ -28,13 +28,18 @@ import java.util.Map;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ComponentHolder;
-import org.apache.felix.scr.impl.config.UnconfiguredComponentHolder;
+import org.apache.felix.scr.impl.config.ConfigurationSupport;
+import org.apache.felix.scr.impl.config.ImmediateComponentHolder;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentException;
 
@@ -45,8 +50,14 @@ import org.osgi.service.component.ComponentException;
  * registers itself as the {@link ScrService} to support access to the
  * registered components.
  */
-public class ComponentRegistry implements ScrService
+public class ComponentRegistry implements ScrService, ServiceListener
 {
+
+    // the name of the ConfigurationAdmin service
+    public static final String CONFIGURATION_ADMIN = "org.osgi.service.cm.ConfigurationAdmin";
+
+    // the bundle context
+    private BundleContext m_bundleContext;
 
     /**
      * The map of known components indexed by component name. The values are
@@ -88,12 +99,26 @@ public class ComponentRegistry implements ScrService
      */
     private ServiceRegistration m_registration;
 
+    // ConfigurationAdmin support -- created on demand upon availability of
+    // the ConfigurationAdmin service
+    private ConfigurationSupport configurationSupport;
 
     protected ComponentRegistry( BundleContext context )
     {
+        m_bundleContext = context;
         m_componentHoldersByName = new HashMap();
         m_componentsById = new HashMap();
         m_componentCounter = -1;
+
+        // keep me informed on ConfigurationAdmin state changes
+        try
+        {
+            context.addServiceListener( this, "(objectclass=" + CONFIGURATION_ADMIN + ")" );
+        }
+        catch ( InvalidSyntaxException ise )
+        {
+            // not expected (filter is tested valid)
+        }
 
         // register as ScrService
         Dictionary props = new Hashtable();
@@ -106,6 +131,14 @@ public class ComponentRegistry implements ScrService
 
     public void dispose()
     {
+        m_bundleContext.removeServiceListener(this);
+
+        if (configurationSupport != null)
+        {
+            configurationSupport.dispose();
+            configurationSupport = null;
+        }
+
         if ( m_registration != null )
         {
             m_registration.unregister();
@@ -378,17 +411,68 @@ public class ComponentRegistry implements ScrService
      */
     public ComponentHolder createComponentHolder( BundleComponentActivator activator, ComponentMetadata metadata )
     {
-        if ( metadata.isFactory() )
+        ComponentHolder holder;
+
+        if (metadata.isFactory())
         {
             // 112.2.4 SCR must register a Component Factory
             // service on behalf ot the component
             // as soon as the component factory is satisfied
-            return new ComponentFactoryImpl( activator, metadata );
+            holder = new ComponentFactoryImpl(activator, metadata);
+        }
+        else
+        {
+            holder = new ImmediateComponentHolder(activator, metadata);
         }
 
-        return new UnconfiguredComponentHolder( activator, metadata );
+        if (configurationSupport != null)
+        {
+            configurationSupport.configureComponentHolder(holder);
+        }
+
+        return holder;
     }
 
+
+    //---------- ServiceListener
+
+    /**
+     * Called if the Configuration Admin service changes state. This
+     * implementation is mainly interested in the Configuration Admin service
+     * being registered <i>after</i> the Declarative Services setup to be able
+     * to forward existing configuration.
+     *
+     * @param event The service change event
+     */
+    public void serviceChanged(ServiceEvent event)
+    {
+        if (event.getType() == ServiceEvent.REGISTERED)
+        {
+            this.configurationSupport = new ConfigurationSupport(this.m_bundleContext, this);
+
+            final ServiceReference caRef = event.getServiceReference();
+            final Object service = m_bundleContext.getService(caRef);
+            if (service != null)
+            {
+                try
+                {
+                    this.configurationSupport.configureComponentHolders(caRef, service);
+                }
+                finally
+                {
+                    m_bundleContext.ungetService(caRef);
+                }
+            }
+        }
+        else if (event.getType() == ServiceEvent.UNREGISTERING)
+        {
+            if (configurationSupport != null)
+            {
+                this.configurationSupport.dispose();
+                this.configurationSupport = null;
+            }
+        }
+    }
 
     //---------- Helper method
 

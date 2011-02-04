@@ -25,10 +25,7 @@ import java.util.Hashtable;
 import org.apache.felix.scr.impl.Activator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
-import org.osgi.service.metatype.MetaTypeProvider;
 
 
 /**
@@ -68,8 +65,6 @@ public class ScrConfiguration
 
     private boolean factoryEnabled;
 
-    private boolean ctWorkaround;
-
     static final String PID = "org.apache.felix.scr.ScrService";
 
     public ScrConfiguration( BundleContext bundleContext )
@@ -80,35 +75,12 @@ public class ScrConfiguration
         configure( null );
 
         // listen for Configuration Admin configuration
-        try
-        {
-            Object service = new ManagedService()
-            {
-                public void updated( Dictionary properties ) throws ConfigurationException
-                {
-                    configure( properties );
-                }
-            };
-            // add meta type provider if interfaces are available
-            Object enhancedService = tryToCreateMetaTypeProvider(service);
-            final String[] interfaceNames;
-            if ( enhancedService == null )
-            {
-                interfaceNames = new String[] {ManagedService.class.getName()};
-            }
-            else
-            {
-                interfaceNames = new String[] {ManagedService.class.getName(), MetaTypeProvider.class.getName()};
-                service = enhancedService;
-            }
-            Dictionary props = new Hashtable();
-            props.put( Constants.SERVICE_PID, PID );
-            bundleContext.registerService( interfaceNames, service, props );
-        }
-        catch ( Throwable t )
-        {
-            // don't care
-        }
+        Dictionary props = new Hashtable();
+        props.put(Constants.SERVICE_PID, PID);
+        props.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
+            props);
     }
 
     void configure( Dictionary config )
@@ -222,20 +194,5 @@ public class ScrConfiguration
 
         // default log level (errors only)
         return LogService.LOG_ERROR;
-    }
-
-
-    private Object tryToCreateMetaTypeProvider( final Object managedService )
-    {
-        try
-        {
-            return new MetaTypeProviderImpl( getDefaultLogLevel(), getDefaultFactoryEnabled(),
-                ( ManagedService ) managedService );
-        }
-        catch ( Throwable t )
-        {
-            // we simply ignore this
-        }
-        return null;
     }
 }
