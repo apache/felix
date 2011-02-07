@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 /**
  * This annotation describes the data types of a configuration Property.
  * It can be used by other annotations which require meta type support.
- * For now, the following annotations are using <code>PropertyMeteData</code:
+ * For now, the following annotations are using <code>PropertyMetaData</code:
  * <ul>
  *   <li>{@link ConfigurationDependency}: This dependency allows to define a 
  *   dependency over a <code>Configuration Admin</code> configuration dictionaries, whose 

@@ -24,7 +24,85 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a method of field as a Resource Dependency.
+ * Annotates a method of field as a Resource Dependency. A resource dependency allows you to 
+ * depend on a resource. Resources are an abstraction that is introduced by the dependency manager, represented as a URL. 
+ * They can be implemented to serve resources embedded in bundles, somewhere on a file system or in 
+ * an http content repository server, or database. <p> A resource is a URL and you can use a filter condition based on 
+ * protocol, host, port, and path. 
+ * 
+ * <h3>Usage Examples</h3>
+ * Here, the "VideoPlayer" component plays any provided MKV video resources
+ * <blockquote>
+ * <pre>
+ * 
+ * &#64;Component
+ * public class VideoPlayer {
+ *     &#64;ResourceDependency(required=false, filter="(path=/videos/*.mkv)")
+ *     void playResource(URL video) { ... }
+ * }
+ * </pre>
+ * </blockquote>
+ *
+ * And here is an example of a VideoProvider, which provides some videos using a web URL.
+ * Notice that Resource providers need to depend on the DependencyManager API:
+ * 
+ * <blockquote>
+ * <pre>
+ * import java.net.MalformedURLException;
+ * import java.net.URL;
+ * import java.util.HashMap;
+ * import java.util.Map;
+ * 
+ * import org.apache.felix.dm.ResourceHandler;
+ * import org.apache.felix.dm.ResourceUtil;
+ * import org.apache.felix.dm.annotation.api.Component;
+ * import org.apache.felix.dm.annotation.api.Init;
+ * import org.apache.felix.dm.annotation.api.ServiceDependency;
+ * import org.osgi.framework.BundleContext;
+ * import org.osgi.framework.Filter;
+ * import org.osgi.framework.InvalidSyntaxException;
+ * 
+ * &#64;Component
+ * public class VideoProvider
+ * {
+ *     // Injected by reflection
+ *     private volatile BundleContext context;
+ *     // List of known resource handlers
+ *     private Map&#60;ResourceHandler, Filter&#62; m_handlers = new HashMap&#60;ResourceHandler, Filter&#62;();
+ *     // List of known video resources
+ *     private URL[] m_videos;
+ * 
+ *     &#64;Init
+ *     void init() throws MalformedURLException
+ *     {
+ *        m_videos = new URL[] {
+ *                new URL("http://localhost:8080/videos/video1.mkv"),
+ *                new URL("http://localhost:8080/videos/video2.mkv"),
+ *         };
+ *     }
+ * 
+ *     // Track resource handlers
+ *     &#64;ServiceDependency(required = false)
+ *     public void add(Map&#60;String, String&#62; serviceProperties, ResourceHandler handler) throws InvalidSyntaxException
+ *     {
+ *         String filterString = serviceProperties.get("filter");
+ *         filterString = (filterString != null) ? filterString : "(path=*)";
+ *         Filter filter = context.createFilter(filterString);
+ *         synchronized (this)
+ *         {
+ *             m_handlers.put(handler, filter);
+ *         }
+ *         for (URL video : m_videos)
+ *         {
+ *             if (filter.match(ResourceUtil.createProperties(video)))
+ *             {
+ *                 handler.added(video);
+ *             }
+ *         }
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD, ElementType.FIELD})
@@ -48,20 +126,18 @@ public @interface ResourceDependency
 
     /**
      * Returns whether the Service dependency is required or not.
-     * @return true if the dependency is required, false if not.
      */
     boolean required() default true;
     
     /**
      * Returns the Service dependency OSGi filter.
-     * @return The Service dependency filter.
      */
     String filter() default "";
 
     /**
-     * TODO add comments for this method.
-     * @param propagate
-     * @return
+     * Specifies if the resource URL properties must be propagated. If set to true, then the URL properties 
+     * ("protocol"/"host"/"port"/"path") will be propagated to the service properties of the component which 
+     * is using this dependency. 
      */
     boolean propagate() default false;
     

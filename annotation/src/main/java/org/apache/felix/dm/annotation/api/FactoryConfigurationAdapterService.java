@@ -29,7 +29,114 @@ import java.lang.annotation.Target;
  * the specified factoryPid, an instance of this service will be created.
  * The adapter will be registered with the specified interface, and with the specified adapter service properties.
  * Depending on the <code>propagate</code> parameter, every public factory configuration properties 
- * (which don't start with ".") will be propagated along with the adapter service properties. 
+ * (which don't start with ".") will be propagated along with the adapter service properties. <p>
+ * 
+ * Like in &#64;{@link ConfigurationDependency}, you can optionally specify the meta types of your
+ * configurations for Web Console GUI customization (configuration heading/descriptions/default values/etc ...).
+ *
+ * <h3>Usage Examples</h3>
+ * Here, a "Dictionary" service instance is instantiated for each existing factory configuration
+ * instances matching the factory pid "DictionaryServiceFactory".
+ * <blockquote>
+ * <pre>
+ * &#64;FactoryConfigurationAdapterService(factoryPid="DictionaryServiceFactory", updated="updated")
+ * public class DictionaryImpl implements DictionaryService
+ * {
+ *     &#47;**
+ *      * The key of our config admin dictionary language.
+ *      *&#47;
+ *     final static String LANG = "lang";
+ *     
+ *     &#47;**
+ *      * The key of our config admin dictionary values.
+ *      *&#47;
+ *     final static String WORDS = "words";
+ *     
+ *     &#47;**
+ *      * We store all configured words in a thread-safe data structure, because ConfigAdmin
+ *      * may invoke our updated method at any time.
+ *      *&#47;
+ *     private CopyOnWriteArrayList&#60;String&#62; m_words = new CopyOnWriteArrayList&#60;String&#62;();
+ *     
+ *     &#47;**
+ *      * Our Dictionary language.
+ *      *&#47;
+ *     private String m_lang;
+ * 
+ *     protected void updated(Dictionary&#60;String, ?&#62; config) {
+ *         m_lang = (String) config.get(LANG);
+ *         m_words.clear();
+ *         String[] words = (String[]) config.get(WORDS);
+ *         for (String word : words) {
+ *             m_words.add(word);
+ *         }
+ *     }   
+ *     ...
+ * }
+ * </pre>
+ * </blockquote>
+ * Here, this is the same example as above, but using meta types:
+ * 
+ * <blockquote>
+ * <pre>
+ * &#64;FactoryConfigurationAdapterService(
+ *     factoryPid="DictionaryServiceFactory", 
+ *     propagate=true, 
+ *     updated="updated",
+ *     heading="Dictionary Services",
+ *     description="Declare here some Dictionary instances, allowing to instantiates some DictionaryService services for a given dictionary language",
+ *     metadata={
+ *         &#64;PropertyMetaData(
+ *             heading="Dictionary Language",
+ *             description="Declare here the language supported by this dictionary. " +
+ *                 "This property will be propagated with the Dictionary Service properties.",
+ *             defaults={"en"},
+ *             id=DictionaryImpl.LANG,
+ *             cardinality=0),
+ *         &#64;PropertyMetaData(
+ *             heading="Dictionary words",
+ *             description="Declare here the list of words supported by this dictionary. This properties starts with a Dot and won't be propagated with Dictionary OSGi service properties.",
+ *             defaults={"hello", "world"},
+ *             id=DictionaryImpl.WORDS,
+ *             cardinality=Integer.MAX_VALUE)
+ *     }
+ * )  
+ * public class DictionaryImpl implements DictionaryService
+ * {
+ *     &#47;**
+ *      * The key of our config admin dictionary language.
+ *      *&#47;
+ *     final static String LANG = "lang";
+ *     
+ *     &#47;**
+ *      * The key of our config admin dictionary values.
+ *      *&#47;
+ *     final static String WORDS = "words";
+ *     
+ *     &#47;**
+ *      * We store all configured words in a thread-safe data structure, because ConfigAdmin
+ *      * may invoke our updated method at any time.
+ *      *&#47;
+ *     private CopyOnWriteArrayList&#60;String&#62; m_words = new CopyOnWriteArrayList&#60;String&#62;();
+ *     
+ *     &#47;**
+ *      * Our Dictionary language.
+ *      *&#47;
+ *     private String m_lang;
+ * 
+ *     protected void updated(Dictionary&#60;String, ?&#62; config) {
+ *         m_lang = (String) config.get(LANG);
+ *         m_words.clear();
+ *         String[] words = (String[]) config.get(WORDS);
+ *         for (String word : words) {
+ *             m_words.add(word);
+ *         }
+ *     }
+ *     
+ *     ...
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)

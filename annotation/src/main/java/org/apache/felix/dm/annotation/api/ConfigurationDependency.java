@@ -25,7 +25,66 @@ import java.lang.annotation.Target;
 
 
 /**
- * Annotates a method for injecting a Configuration Dependency.
+ * Annotates a method for injecting a Configuration Dependency. A configuration dependency 
+ * is always required, and allows you to depend on the availability of a valid configuration 
+ * for your component. This dependency requires the OSGi Configuration Admin Service.
+ * 
+ * <h3>Usage Examples</h3>
+ * 
+ * <p> In the following example, the "Printer" component depends on a configuration
+ * whose PID name is "org.apache.felix.sample.Printer". This service will initialize
+ * its ip/port number from the provided configuration:
+ * <p>
+ * <blockquote>
+ * <pre>
+ * package org.apache.felix.sample;
+ * 
+ * &#64;Component
+ * public class Printer {
+ *     &#64;ConfigurationDependency
+ *     void updated(Dictionary config) {
+ *         // load printer ip/port from the provided dictionary.
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
+ * 
+ * <p> This other example shows how to specify a configuration dependency, as well as meta data
+ * used to customize the WebConsole GUI. Using these meta data, you can specify for example the
+ * default value for your configurations data, some descriptions, the cardinality of configuration 
+ * values, etc ... 
+ * <p>
+ * <blockquote>
+ * <pre>
+ * package org.apache.felix.sample;
+ * 
+ * &#64;Component
+ * public class Printer {
+ *     &#64;ConfigurationDependency(
+ *         heading = "Printer Service",
+ *         description = "Declare here parameters used to configure the Printer service", 
+ *         metadata = { 
+ *             &#64;PropertyMetaData(heading = "Ip Address", 
+ *                               description = "Enter the ip address for the Printer service",
+ *                               defaults = { "127.0.0.1" }, 
+ *                               type = String.class,
+ *                               id = "IPADDR", 
+ *                               cardinality = 0),
+ *             &#64;PropertyMetaData(heading = "Port Number", 
+ *                               description = "Enter the port number for the Printer service",
+ *                               defaults = { "4444" }, 
+ *                               type = Integer.class,
+ *                               id = "PORTNUM", 
+ *                               cardinality = 0) 
+
+ *         }
+ *     )
+ *     void updated(Dictionary config) {
+ *         // load configuration from the provided dictionary.
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)

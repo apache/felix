@@ -26,7 +26,36 @@ import java.lang.annotation.Target;
 import org.osgi.framework.Bundle;
 
 /**
- * Annotates a method for a bundle dependency.
+ * Annotates a class or method for a bundle dependency. A bundle dependency allows you to 
+ * depend on a bundle in a certain set of states (INSTALLED|RESOLVED|STARTED|...), as 
+ * indicated by a state mask. You can also use a filter condition that is matched against 
+ * all manifest entries. When applied on a class field, optional unavailable dependencies 
+ * are injected with a NullObject.
+ * 
+ * <h3>Usage Examples</h3>
+ * 
+ * <p> In the following example, the "SCR" Component allows to track 
+ * all bundles containing a specific "Service-Component" OSGi header, in order to load
+ * and manage all Declarative Service components specified in the SCR xml documents referenced by the header:
+ * <p>
+ * <blockquote>
+ * <pre>
+ * &#64;Component
+ * public class SCR {
+ *     &#64;BundleDependency(required = false,
+ *                       removed = "unloadServiceComponents", 
+ *                       filter = "(Service-Component=*)")
+ *     void loadServiceComponents(Bundle b) {
+ *         String descriptorPaths = (String) b.getHeaders().get("Service-Component");
+ *         // load all service component specified in the XML descriptorPaths files ...
+ *     }
+ *
+ *     void unloadServiceComponents(Bundle b) {
+ *         // unload all service component we loaded from our "loadServiceComponents" method.
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)

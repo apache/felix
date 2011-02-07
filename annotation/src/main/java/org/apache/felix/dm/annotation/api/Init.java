@@ -25,7 +25,35 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates a method which will be invoked when the Service is initializing.
- * If you don't supply this annotation, then no "init" method will be invoked.
+ * All required dependencies are already injected before the annotated method is called, and 
+ * optional dependencies on class fields are injected with NullObjects if the optional
+ * dependencies are not currently available.<p>
+ * 
+ * If some dependencies are declared using a <b>named</b> &#64;{@link ServiceDependency} annotation, 
+ * then the annotated method may optionally return a Map used to dynamically configure such 
+ * dependencies (Please refer to &#64;{@link ServiceDependency#name()} attribute for more 
+ * information about this feature).<p>
+ * 
+ * After the init method returns, the component is then invoked in the method annotated with
+ * &#64;{@link Start}, in order to notify that the component is about to be registered into the OSGi 
+ * registry (if this one provides a service). However, you can take control of when the service is registered,
+ * using the &#64;{@link LifecycleController} annotation).
+ * 
+ * <h3>Usage Examples</h3>
+ * Here, the "VideoPlayer" init method is called after the "log" dependency is injected.
+ * <blockquote>
+ * <pre>
+ * 
+ * &#64;Component
+ * public class VideoPlayer {
+ *     &#64;ServiceDependency
+ *     LogService log;
+ *     
+ *     &#64;Init
+ *     void init() {} // initialize our service (the "log" dependency is already injected).
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)

@@ -26,6 +26,16 @@ import java.lang.annotation.Target;
 /**
  * Annotates a method or a field for injecting a Service Dependency. When applied on a class 
  * field, optional unavailable dependencies are injected with a NullObject.
+ * 
+ * <h3>Usage Examples</h3>
+ * Here, the MyComponent component is injected with a dependency over a "MyDependency" service
+ * 
+ * <blockquote><pre>
+ * &#64;Component
+ * class MyComponent {
+ *     &#64;ServiceDependency(timeout=15000)
+ *     MyDependency dependency;
+ * </pre></blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD, ElementType.FIELD})
@@ -85,10 +95,10 @@ public @interface ServiceDependency
      * 
      * <p> Sample Code:<p>
      * <blockquote><pre>
-     * &#64;Service
+     * &#64;Component
      * class MyServer implements Runnable {
      *   &#64;ServiceDependency(timeout=15000)
-     *   MyDependency _dependency;.
+     *   MyDependency dependency;.
      *   
      *   &#64;Start
      *   void start() {
@@ -97,7 +107,7 @@ public @interface ServiceDependency
      *   
      *   public void run() {
      *     try {
-     *       _dependency.doWork();
+     *       dependency.doWork();
      *     } catch (IllegalStateException e) {
      *       t.printStackTrace();
      *     }
