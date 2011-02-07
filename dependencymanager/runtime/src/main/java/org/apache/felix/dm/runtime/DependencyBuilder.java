@@ -224,13 +224,16 @@ public class DependencyBuilder
         String filter = m_metaData.getString(Params.filter, null);
         boolean required = "true".equals(m_metaData.getString(Params.required, "true"));
         boolean propagate = "true".equals(m_metaData.getString(Params.propagate, "false"));
+        String autoConfigField = m_metaData.getString(Params.autoConfig, null);
 
-        Dependency dp = createResourceDependency(dm, added, changed, removed, required, filter, propagate, instanceBound);
+        Dependency dp = createResourceDependency(dm, added, changed, removed, required, filter, 
+                                                 propagate, autoConfigField, instanceBound);
         return dp;
     }
 
     private Dependency createResourceDependency(DependencyManager dm, String added,
-        String changed, String removed, boolean required, String filter, boolean propagate, boolean instanceBound)
+        String changed, String removed, boolean required, String filter, boolean propagate, 
+        String autoConfigField, boolean instanceBound)
     {
         ResourceDependency rd = dm.createResourceDependency();
         rd.setCallbacks(added, changed, removed);
@@ -238,6 +241,10 @@ public class DependencyBuilder
         if (filter != null)
         {
             rd.setFilter(filter);
+        }
+        if (autoConfigField != null)
+        {
+            rd.setAutoConfig(autoConfigField);
         }
         rd.setPropagate(propagate);
         rd.setInstanceBound(instanceBound);
