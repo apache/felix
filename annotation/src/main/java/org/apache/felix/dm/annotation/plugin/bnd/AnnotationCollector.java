@@ -648,8 +648,13 @@ public class AnnotationCollector extends ClassDataCollector
             Verifier.verifyFilter(filter, 0);
             writer.put(EntryParam.filter, filter);
         }
+        
+        if (m_isField)
+        {
+            writer.put(EntryParam.autoConfig, m_field);
+        }
 
-        writer.putString(annotation, EntryParam.added, m_method);
+        writer.putString(annotation, EntryParam.added, (!m_isField) ? m_method : null);
         writer.putString(annotation, EntryParam.changed, null);
         writer.putString(annotation, EntryParam.removed, null);
         writer.putString(annotation, EntryParam.required, null);
