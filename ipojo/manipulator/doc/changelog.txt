@@ -1,3 +1,9 @@
+Changes from the 1.8.0 to 1.8.2
+-------------------------------
+** Bug
+    * [FELIX-2825] - The maven-ipojo-plugin does not replace component classes in WAR files
+
+
 Changes from the 1.6.4 to 1.8.0
 -------------------------------
 ** Bug

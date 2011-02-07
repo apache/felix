@@ -1,6 +1,7 @@
 Changes from the 1.8.0 to 1.8.2
 -------------------------------
 ** Bug
+    * [FELIX-2825] - The maven-ipojo-plugin does not replace component classes in WAR files
     * [FELIX-2829] - The maven-ipojo-plugin archetype descriptor is not conform
 
 Changes from the 1.6.0 to 1.8.0
