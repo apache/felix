@@ -351,6 +351,21 @@ public class Pojoization {
     }
 
     /**
+     * Gets the class name from the jar entry.
+     * This method handles the WAR case.
+     * @param entry the entry
+     * @return the class name
+     */
+    private String getClassNameForEntry(JarEntry entry) {
+    	// If we're manipulating a war file remove the WEB-INF/classes prefix.
+    	if (entry.getName().startsWith("WEB-INF/classes/")) {
+        	return entry.getName().substring("WEB-INF/classes/".length());
+        } else {
+        	return entry.getName();
+        }
+    }
+
+    /**
      * Manipulate the input bundle.
      * @param out final bundle
      */
@@ -381,9 +396,11 @@ public class Pojoization {
 
                 // If the class was manipulated, write out the manipulated
                 // version of the bytecode
-                if (m_classes.containsKey(curEntry.getName())) {
+
+                String classEntry = getClassNameForEntry(curEntry);
+                if (m_classes.containsKey(classEntry)) {
                     JarEntry je = new JarEntry(curEntry.getName());
-                    byte[] outClazz = (byte[]) m_classes.get(curEntry.getName());
+                    byte[] outClazz = (byte[]) m_classes.get(classEntry);
                     if (outClazz != null && outClazz.length != 0) {
                         jos.putNextEntry(je); // copy the entry header to jos
                         jos.write(outClazz);
@@ -475,7 +492,6 @@ public class Pojoization {
             while (entries.hasMoreElements()) {
                 String curName = (String) entries.nextElement();
                 try {
-
                     // Need to load the bytecode for each .class entry
                     byte[] in = getBytecode(curName);
 
@@ -484,7 +500,7 @@ public class Pojoization {
 
                     // We check the array size to avoid manipulating empty files
                     // produced by incremental compilers (like Eclipse Compiler)
-                    if(in != null || in.length > 0) {
+                    if(in != null && in.length > 0) {
                         computeAnnotations(in);
                     } else {
                         error("Cannot compute annotations from " + curName + " : Empty file");
@@ -1088,7 +1104,7 @@ public class Pojoization {
         }
 
         if (meta == null || meta.length == 0) {
-            warn("Neither component types, nor instances in the metadata");
+            warn("Neither component types, nor instances in the XML metadata");
         }
 
         m_metadata.addAll(Arrays.asList(meta));
