@@ -24,11 +24,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates an Adapater Service. The adapter will be applied to any service that
- * matches the implemented interface and filter. The adapter will be registered 
- * with the specified interface and existing properties from the original service 
- * plus any extra properties you supply here. It will also inherit all dependencies, 
- * and if you declare the original service as a member it will be injected.
+ * Annotates an Adapater service. Adapters, like {@link AspectService}, are used to "extend" 
+ * existing services, and can publish different services based on the existing one. 
+ * An example would be implementing a management interface for an existing service, etc .... 
+ * <p>When you annotate an adapter class with the <code>@AdapterService</code> annotation, it will be applied 
+ * to any service that matches the implemented interface and filter. The adapter will be registered 
+ * with the specified interface and existing properties from the original service plus any extra 
+ * properties you supply here. If you declare the original service as a member it will be injected.
  * 
  * <h3>Usage Examples</h3>
  * 
@@ -39,15 +41,12 @@ import java.lang.annotation.Target;
  * <blockquote>
  * <pre>
  * 
- * &#64;AdapterService(adapteeService = AdapteeService.class, 
- *                 properties={&#64;Property(name="param", value="value")})
- * class AdapterImpl implements AdapterService
- * {
+ * &#64;AdapterService(adapteeService = AdapteeService.class, properties={&#64;Property(name="param", value="value")})
+ * class AdapterImpl implements AdapterService {
  *     // The service we are adapting (injected by reflection)
  *     protected AdapteeService adaptee;
  *   
- *     public void doWork()
- *     {
+ *     public void doWork() {
  *        adaptee.mehod1();
  *        adaptee.method2();
  *     }

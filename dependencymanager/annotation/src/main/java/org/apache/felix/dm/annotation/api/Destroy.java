@@ -24,8 +24,25 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a method which is invoked when the Service is destroyed.
- * If you don't supply this annotation, then no "destroy" method will be invoked.
+ * Annotates a method which is invoked when the component is destroyed.
+ * The method is called when the component's bundle is stopped, or when one of its
+ * required dependency is lost (unless the dependency has been defined as an "instance bound" 
+ * dependency using the Dependency Manager API).
+ * </ul>
+ * 
+ * <h3>Usage Examples</h3>
+ * <blockquote>
+ * <pre>
+ * &#64;Component
+ * class MyComponent {
+ *     &#64;ServiceDependency
+ *     private LogService logService; // Required dependency over the log service.
+ *     
+ *     &#64;Destroy
+ *     void destroyed() {} // called if bundle is stopped or if we have lost some required dependencies.     
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
