@@ -44,7 +44,8 @@ import org.osgi.framework.Bundle;
  * public class SCR {
  *     &#64;BundleDependency(required = false,
  *                       removed = "unloadServiceComponents", 
- *                       filter = "(Service-Component=*)")
+ *                       filter = "(Service-Component=*)"
+ *                       stateMask = Bundle.ACTIVE)
  *     void loadServiceComponents(Bundle b) {
  *         String descriptorPaths = (String) b.getHeaders().get("Service-Component");
  *         // load all service component specified in the XML descriptorPaths files ...
