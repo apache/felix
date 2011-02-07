@@ -53,11 +53,17 @@ public class DescriptorParser
         JSONMetaData serviceMetaData = new JSONMetaData(json);
 
         String type = (String) json.get("type");
+        if (type == null)
+        {
+            throw new IllegalArgumentException("Invalid descriptor"
+                    + ": no \"type\" parameter found in first line");
+        }
+
         AbstractBuilder builder = m_builders.get(type);
         if (builder == null)
         {
             throw new IllegalArgumentException("Invalid descriptor"
-                    + ": no \"type\" parameter found in first line");
+                    + ": invalid \"type\" parameter found in first line");
         }
 
         // Parse the rest of the lines (dependencies)
