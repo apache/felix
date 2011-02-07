@@ -24,11 +24,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates an Aspect Service. The aspect will be applied to any service that
- * matches the specified interface and filter. The aspect will be registered 
- * with the same interface and properties as the original service, plus any 
+ * Annotates an Aspect service. Aspects allow you to define an interceptor, or chain of interceptors 
+ * for a service (to add features like caching or logging, etc ...). The dependency manager intercepts 
+ * the original service, and allows you to execute some code before invoking the original service ...
+ * The aspect will be applied to any service that matches the specified interface and filter and 
+ * will be registered with the same interface and properties as the original service, plus any 
  * extra properties you supply here. It will also inherit all dependencies, 
- * and if you can declare the original service as a member it will be injected.<p>
+ * and if you declare the original service as a member it will be injected.<p>
  * 
  * <h3>Usage Examples</h3>
  * 
@@ -40,15 +42,12 @@ import java.lang.annotation.Target;
  * <blockquote>
  * <pre>
  * 
- * &#64;AspectService(ranking=10), 
- *                properties={&#64;Property(name="param", value="value")})
- * class AspectService implements InterceptedService
- * {
+ * &#64;AspectService(ranking=10), properties={&#64;Property(name="param", value="value")})
+ * class AspectService implements InterceptedService {
  *     // The service we are intercepting (injected by reflection)
  *     protected InterceptedService intercepted;
  *   
- *     public void doWork()
- *     {
+ *     public void doWork() {
  *        intercepted.doWork();
  *     }
  * }

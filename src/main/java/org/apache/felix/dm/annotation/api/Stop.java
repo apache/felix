@@ -24,8 +24,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a method which is invoked when the Service is stopped.
- * If you don't supply this annotation, then no "stop" method will be invoked.
+ * Annotates a method which is invoked when the Service is being unregistered from the 
+ * OSGi registry.
+ * The method is called when the component's bundle is stopped, or when one of its
+ * required dependency is lost, or when a {@link LifecycleController} is programatically used to
+ * stop a service.
+ * </ul>
+ * 
+ * <h3>Usage Examples</h3>
+ * <blockquote>
+ * <pre>
+ * &#64;Component
+ * class MyComponent implements MyService {
+ *     &#64;ServiceDependency
+ *     private LogService logService; // Required dependency over the log service.
+ *     
+ *     &#64;Stop
+ *     void stop() {} // We are unregistering from the OSGi registry.     
+ * }
+ * </pre>
+ * </blockquote>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)

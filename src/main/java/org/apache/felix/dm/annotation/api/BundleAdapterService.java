@@ -26,13 +26,36 @@ import java.lang.annotation.Target;
 import org.osgi.framework.Bundle;
 
 /**
- * Annotates a Bundle Adapter Service class. The adapter will be applied to any bundle that
- * matches the specified bundle state mask and filter condition. For each matching
- * bundle an adapter will be created based on the adapter implementation class.
- * The adapter will be registered with the specified interface and existing properties 
- * from the original resource plus any extra properties you supply here.
- * It will also inherit all dependencies, and if you declare the original
- * bundle as a member it will be injected.
+ * Annotates a bundle adapter service class. Bundle adapters are similar to {@link AdapterService},
+ * but instead of adapting a service, they adapt a bundle with a certain set of states (STARTED|INSTALLED|...),
+ * and provide a service on top of it. <p>
+ * The bundle adapter will be applied to any bundle that matches the specified bundle state mask and 
+ * filter conditions, which may match some of the bundle OSGi manifest headers. For each matching 
+ * bundle an adapter will be created based on the adapter implementation class. The adapter will be 
+ * registered with the specified interface and with service properties found from the original bundle
+ * OSGi manifest headers plus any extra properties you supply here.
+ * If you declare the original bundle as a member it will be injected.
+ * 
+ * <h3>Usage Examples</h3>
+ * 
+ * <p> In the following example, a "VideoPlayer" Service is registered into the OSGi registry each time
+ * an active bundle containing a "Video-Path" manifest header is detected:
+ * <p>
+ * <blockquote>
+ * <pre>
+ * &#64;BundleAdapterService(filter = "(Video-Path=*)", stateMask = Bundle.ACTIVE, propagate=true)
+ * public class VideoPlayerImpl implements VideoPlayer {
+ *     Bundle bundle; // Injected by reflection
+ *     
+ *     void play() {
+ *         URL mpegFile = bundle.getEntry(bundle.getHeaders().get("Video-Path"));
+ *         // play the video provided by the bundle ...
+ *     }
+ *     
+ *     void stop() {}
+ * }
+ * </pre>
+ * </blockquote>
  */
 public @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
