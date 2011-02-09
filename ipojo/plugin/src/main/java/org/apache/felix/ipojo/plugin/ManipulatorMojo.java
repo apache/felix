@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.felix.ipojo.manipulator.Pojoization;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -73,6 +74,13 @@ public class ManipulatorMojo extends AbstractMojo {
     private String m_classifier;
 
     /**
+     * If set, select the manipulated artifact using this classifier.
+     *
+     * @parameter alias="input-classifier"
+     */
+    private String m_inputClassifier;
+
+    /**
      * The Maven project.
      *
      * @parameter expression="${project}"
@@ -106,10 +114,6 @@ public class ManipulatorMojo extends AbstractMojo {
      */
     private boolean m_ignoreEmbeddedXSD;
 
-    protected MavenProject getProject() {
-        return this.m_project;
-    }
-
     private boolean isXML() {
         return m_metadata != null && (m_metadata.indexOf('<') > -1);
     }
@@ -121,8 +125,10 @@ public class ManipulatorMojo extends AbstractMojo {
      */
     public void execute() throws MojoExecutionException {
         // ignore project types not supported, useful when the plugin is configured in the parent pom
-        if (!this.m_supportedProjectTypes.contains(this.getProject().getArtifact().getType())) {
-            this.getLog().debug("Ignoring project " + this.getProject().getArtifact() + " : type " + this.getProject().getArtifact().getType() + " is not supported by iPOJO plugin, supported types are " + this.m_supportedProjectTypes);
+        if (!this.m_supportedProjectTypes.contains(m_project.getArtifact().getType())) {
+            this.getLog().debug("Ignoring project "
+            		+ m_project.getArtifact() + " : type " + m_project.getArtifact().getType()
+            		+ " is not supported by iPOJO plugin, supported types are " + this.m_supportedProjectTypes);
             return;
         }
 
@@ -186,10 +192,32 @@ public class ManipulatorMojo extends AbstractMojo {
         }
 
         // Get input bundle, we use the already create artifact.
-        File in = m_project.getArtifact().getFile();
-        getLog().info("Input Bundle File : " + in.getAbsolutePath());
-        if (! in.exists()) {
-            throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
+        File in = null;
+        if (m_inputClassifier == null) {
+        	in = m_project.getArtifact().getFile();
+        	getLog().info("Input Bundle File : " + in.getAbsolutePath());
+        	if (! in.exists()) {
+        		throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
+        	}
+        } else {
+        	// Look from attached artifacts.
+        	List attached = m_project.getAttachedArtifacts();
+        	for (int i = 0; in == null  && attached != null  && i < attached.size(); i++) {
+        		Artifact artifact = (Artifact) attached.get(i);
+        		if (artifact.hasClassifier()  && m_inputClassifier.equals(artifact.getClassifier())) {
+        			in = artifact.getFile();
+        		}
+        	}
+
+        	if (in == null) {
+        		throw new MojoExecutionException("Cannot find the file to manipulate, " +
+        				"no attached artifact with classifier " + m_inputClassifier);
+        	}
+
+        	getLog().info("Input Bundle File : " + in.getAbsolutePath());
+        	if (! in.exists()) {
+        		throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
+        	}
         }
 
         File out = new File(m_buildDirectory + File.separator + "_out.jar");
