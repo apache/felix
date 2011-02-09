@@ -97,20 +97,16 @@ class BundleImpl implements Bundle
     synchronized void close()
     {
         closeModules();
-        // System bundle has no archive associated with it.
-        if (m_archive != null)
+        try
         {
-            try
-            {
-                m_archive.close();
-            }
-            catch (Exception ex)
-            {
-                getFramework().getLogger().log(
-                    this,
-                    Logger.LOG_ERROR,
-                    "Unable to close archive revisions.", ex);
-            }
+            m_archive.close();
+        }
+        catch (Exception ex)
+        {
+            getFramework().getLogger().log(
+                this,
+                Logger.LOG_ERROR,
+                "Unable to close archive revisions.", ex);
         }
     }
 
