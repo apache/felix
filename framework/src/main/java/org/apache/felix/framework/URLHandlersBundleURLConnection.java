@@ -47,6 +47,17 @@ class URLHandlersBundleURLConnection extends URLConnection
         throws IOException
     {
         super(url);
+
+        // If this is an attempt to create a connection to the root of
+        // the bundle, then throw an exception since this isn't possible.
+        // We only allow "/" as a valid URL so it can be used as context
+        // for creating other URLs.
+        String path = url.getPath();
+        if ((path == null) || (path.length() == 0) || path.equals("/"))
+        {
+            throw new IOException("Resource does not exist: " + url);
+        }
+
         m_framework = framework;
 
         // If we don't have a framework instance, try to find
