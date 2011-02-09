@@ -83,7 +83,7 @@ public class Felix extends BundleImpl implements Framework
     static final SecureAction m_secureAction = new SecureAction();
 
     // The extension manager to handle extension bundles
-    ExtensionManager m_extensionManager;
+    private final ExtensionManager m_extensionManager;
 
     // Logging related member variables.
     private final Logger m_logger;
@@ -437,6 +437,13 @@ public class Felix extends BundleImpl implements Framework
         }
 
         return result;
+    }
+
+    // This overrides BundleImpl.close() which avoids removing the
+    // system bundle module from the resolver state.
+    @Override
+    void close()
+    {
     }
 
     // This overrides the default behavior of BundleImpl.getFramework()
