@@ -61,7 +61,7 @@ public class DefaultThreadPool
                 {
                     final Thread thread = new Thread( command );
                     thread.setPriority( Thread.NORM_PRIORITY );
-                    thread.setDaemon( false );
+                    thread.setDaemon( true );
 
                     return thread;
                 }
