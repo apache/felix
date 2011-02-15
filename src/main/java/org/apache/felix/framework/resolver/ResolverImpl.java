@@ -34,8 +34,8 @@ import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
+import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.RequirementImpl;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
 public class ResolverImpl implements Resolver
@@ -102,11 +102,6 @@ public class ResolverImpl implements Resolver
                     catch (ResolveException ex)
                     {
                         rethrow = ex;
-                        m_logger.log(
-                            module.getBundle(),
-                            Logger.LOG_DEBUG,
-                            "Current candidate permutation failed, will try another if possible.",
-                            ex);
                     }
                 }
                 while ((rethrow != null)
@@ -179,11 +174,6 @@ public class ResolverImpl implements Resolver
                     catch (ResolveException ex)
                     {
                         rethrow = ex;
-                        m_logger.log(
-                            module.getBundle(),
-                            Logger.LOG_DEBUG,
-                            "Current candidate permutation failed, will try another if possible.",
-                            ex);
                     }
                 }
                 while ((rethrow != null)
@@ -886,15 +876,27 @@ public class ResolverImpl implements Resolver
                         permutate(candidateMap, sourceBlame.m_reqs.get(0), m_importPermutations);
                         // Report conflict.
                         ResolveException ex = new ResolveException(
-                            "Constraint violation for package '"
-                            + entry.getKey() + "' when resolving module "
-                            + module + " between an import "
-                            + sourceBlame + " and a fragment import "
-                            + blame, module, blame.m_reqs.get(0));
+                            "Unable to resolve module "
+                            + module.getSymbolicName()
+                            + " [" + module
+                            + "] because it is exposed to package '"
+                            + entry.getKey()
+                            + "' from "
+                            + sourceBlame.m_cap.getModule().getSymbolicName()
+                            + " [" + sourceBlame.m_cap.getModule()
+                            + "] and "
+                            + blame.m_cap.getModule().getSymbolicName()
+                            + " [" + blame.m_cap.getModule()
+                            + "] via two dependency chains.\n\nChain 1:\n"
+                            + toStringBlame(sourceBlame)
+                            + "\n\nChain 2:\n"
+                            + toStringBlame(blame),
+                            null,
+                            null);
                         m_logger.log(
-                            module.getBundle(),
                             Logger.LOG_DEBUG,
-                            "Conflicting fragment import",
+                            "Candidate permutation failed due to a conflict with a "
+                            + "fragment import; will try another if possible.",
                             ex);
                         throw ex;
                     }
@@ -922,11 +924,18 @@ public class ResolverImpl implements Resolver
                     rethrow = (rethrow != null)
                         ? rethrow
                         : new ResolveException(
-                            "Constraint violation for package '"
-                            + pkgName + "' when resolving module "
-                            + module + " between existing export "
-                            + exportBlame + " and uses constraint "
-                            + usedBlame, null, null);
+                            "Unable to resolve module "
+                            + module.getSymbolicName()
+                            + " [" + module
+                            + "] because it exports package '"
+                            + pkgName
+                            + "' and is also exposed to it from "
+                            + usedBlame.m_cap.getModule().getSymbolicName()
+                            + " [" + usedBlame.m_cap.getModule()
+                            + "] via the following dependency chain:\n\n"
+                            + toStringBlame(usedBlame),
+                            null,
+                            null);
 
                     mutated = (mutated != null)
                         ? mutated
@@ -967,12 +976,10 @@ public class ResolverImpl implements Resolver
                 {
                     m_usesPermutations.add(permutation);
                 }
-                Bundle bundle =
-                    (rethrow.getModule() != null) ? rethrow.getModule().getBundle() : null;
                 m_logger.log(
-                    bundle,
                     Logger.LOG_DEBUG,
-                    "Conflict between an export and import",
+                    "Candidate permutation failed due to a conflict between "
+                    + "an export and import; will try another if possible.",
                     rethrow);
                 throw rethrow;
             }
@@ -1000,11 +1007,23 @@ public class ResolverImpl implements Resolver
                         rethrow = (rethrow != null)
                             ? rethrow
                             : new ResolveException(
-                                "Constraint violation for package '"
-                                + pkgName + "' when resolving module "
-                                + module + " between existing import "
-                                + importBlame + " and uses constraint "
-                                + usedBlame, null, null);
+                                "Unable to resolve module "
+                                + module.getSymbolicName()
+                                + " [" + module
+                                + "] because it is exposed to package '"
+                                + pkgName
+                                + "' from "
+                                + importBlame.m_cap.getModule().getSymbolicName()
+                                + " [" + importBlame.m_cap.getModule()
+                                + "] and "
+                                + usedBlame.m_cap.getModule().getSymbolicName()
+                                + " [" + usedBlame.m_cap.getModule()
+                                + "] via two dependency chains.\n\nChain 1:\n"
+                                + toStringBlame(importBlame)
+                                + "\n\nChain 2:\n"
+                                + toStringBlame(usedBlame),
+                                null,
+                                null);
 
                         mutated = (mutated != null)
                             ? mutated
@@ -1066,13 +1085,10 @@ public class ResolverImpl implements Resolver
                         permutateIfNeeded(candidateMap, req, m_importPermutations);
                     }
 
-                    Bundle bundle =
-                        (rethrow.getModule() != null)
-                            ? rethrow.getModule().getBundle() : null;
                     m_logger.log(
-                        bundle,
                         Logger.LOG_DEBUG,
-                        "Conflict between imports",
+                        "Candidate permutation failed due to a conflict between "
+                        + "imports; will try another if possible.",
                         rethrow);
                     throw rethrow;
                 }
@@ -1496,6 +1512,74 @@ public class ResolverImpl implements Resolver
         {
             System.out.println("    " + entry.getKey() + " - " + entry.getValue());
         }
+    }
+
+    private static String toStringBlame(Blame blame)
+    {
+        StringBuffer sb = new StringBuffer();
+        if ((blame.m_reqs != null) && !blame.m_reqs.isEmpty())
+        {
+            for (int i = 0; i < blame.m_reqs.size(); i++)
+            {
+                Requirement req = blame.m_reqs.get(i);
+                sb.append("  ");
+                sb.append(req.getModule().getSymbolicName());
+                sb.append(" [");
+                sb.append(req.getModule().toString());
+                sb.append("]\n    import: ");
+                sb.append(req.getFilter().toString());
+                sb.append("\n     |");
+                sb.append("\n    export: ");
+                if ((i + 1) < blame.m_reqs.size())
+                {
+                    Capability export = Util.getSatisfyingCapability(
+                        blame.m_reqs.get(i + 1).getModule(),
+                        blame.m_reqs.get(i));
+                    sb.append(export.getAttribute(Capability.PACKAGE_ATTR).toString());
+                    Capability usedCap;
+                    if ((i + 2) < blame.m_reqs.size())
+                    {
+                        usedCap = Util.getSatisfyingCapability(
+                            blame.m_reqs.get(i + 2).getModule(),
+                            blame.m_reqs.get(i + 1));
+                    }
+                    else
+                    {
+                        usedCap = Util.getSatisfyingCapability(
+                            blame.m_cap.getModule(),
+                            blame.m_reqs.get(i + 1));
+                    }
+                    sb.append("; uses:=");
+                    sb.append(usedCap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                    sb.append("\n");
+                }
+                else
+                {
+                    Capability export = Util.getSatisfyingCapability(
+                        blame.m_cap.getModule(),
+                        blame.m_reqs.get(i));
+                    sb.append(export.getAttribute(Capability.PACKAGE_ATTR).toString());
+                    if (!export.getAttribute(Capability.PACKAGE_ATTR).getValue()
+                        .equals(blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue()))
+                    {
+                        sb.append("; uses:=");
+                        sb.append(blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                        sb.append("\n    export: ");
+                        sb.append(blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).toString());
+                    }
+                    sb.append("\n  ");
+                    sb.append(blame.m_cap.getModule().getSymbolicName());
+                    sb.append(" [");
+                    sb.append(blame.m_cap.getModule().toString());
+                    sb.append("]");
+                }
+            }
+        }
+        else
+        {
+            sb.append(blame.m_cap.getModule().toString());
+        }
+        return sb.toString();
     }
 
     private static class Packages

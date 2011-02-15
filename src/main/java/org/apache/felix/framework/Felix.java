@@ -3420,10 +3420,6 @@ public class Felix extends BundleImpl implements Framework
                 catch (BundleException ex)
                 {
                     result = false;
-                    m_logger.log(targets[i],
-                        Logger.LOG_WARNING,
-                        "Unable to resolve bundle " + targets[i].getBundleId(),
-                        ex);
                 }
             }
 
