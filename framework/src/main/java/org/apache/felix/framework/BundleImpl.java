@@ -964,14 +964,22 @@ class BundleImpl implements Bundle
                 AdminPermission.LIFECYCLE));
         }
 
-        // After a bundle is uninstalled, rhe spec says getHeaders() should
+        // After a bundle is uninstalled, the spec says getHeaders() should
         // return the localized headers for the default locale at the time of
-        // of uninstall. So, let's clear the existing header cache and populate
-        // it with the headers for the default locale.
+        // of uninstall. So, let's clear the existing header cache to throw
+        // away any other locales and populate it with the headers for the
+        // default locale. We only do this if there are multiple cached locales
+        // and if the default locale is not cached. If this method is called
+        // more than once, then subsequent calls will do nothing here since
+        // only the default locale will be left in the header cache.
         synchronized (m_cachedHeaders)
         {
-            m_cachedHeaders.clear();
-            Map map = getCurrentLocalizedHeader(Locale.getDefault().toString());
+            if ((m_cachedHeaders.size() > 1)
+                || !m_cachedHeaders.containsKey(Locale.getDefault().toString()))
+            {
+                m_cachedHeaders.clear();
+                Map map = getCurrentLocalizedHeader(Locale.getDefault().toString());
+            }
         }
 
         // Uninstall the bundle.
