@@ -891,8 +891,8 @@ public class ResolverImpl implements Resolver
                             + toStringBlame(sourceBlame)
                             + "\n\nChain 2:\n"
                             + toStringBlame(blame),
-                            null,
-                            null);
+                            module,
+                            blame.m_reqs.get(0));
                         m_logger.log(
                             Logger.LOG_DEBUG,
                             "Candidate permutation failed due to a conflict with a "
@@ -1526,31 +1526,53 @@ public class ResolverImpl implements Resolver
                 sb.append(req.getModule().getSymbolicName());
                 sb.append(" [");
                 sb.append(req.getModule().toString());
-                sb.append("]\n    import: ");
+                sb.append("]\n");
+                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                {
+                    sb.append("    import: ");
+                }
+                else
+                {
+                    sb.append("    require: ");
+                }
                 sb.append(req.getFilter().toString());
                 sb.append("\n     |");
-                sb.append("\n    export: ");
+                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                {
+                    sb.append("\n    export: ");
+                }
+                else
+                {
+                    sb.append("\n    provide: ");
+                }
                 if ((i + 1) < blame.m_reqs.size())
                 {
-                    Capability export = Util.getSatisfyingCapability(
+                    Capability cap = Util.getSatisfyingCapability(
                         blame.m_reqs.get(i + 1).getModule(),
                         blame.m_reqs.get(i));
-                    sb.append(export.getAttribute(Capability.PACKAGE_ATTR).toString());
-                    Capability usedCap;
-                    if ((i + 2) < blame.m_reqs.size())
+                    if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
                     {
-                        usedCap = Util.getSatisfyingCapability(
-                            blame.m_reqs.get(i + 2).getModule(),
-                            blame.m_reqs.get(i + 1));
+                        sb.append(cap.getAttribute(Capability.PACKAGE_ATTR).toString());
+                        Capability usedCap;
+                        if ((i + 2) < blame.m_reqs.size())
+                        {
+                            usedCap = Util.getSatisfyingCapability(
+                                blame.m_reqs.get(i + 2).getModule(),
+                                blame.m_reqs.get(i + 1));
+                        }
+                        else
+                        {
+                            usedCap = Util.getSatisfyingCapability(
+                                blame.m_cap.getModule(),
+                                blame.m_reqs.get(i + 1));
+                        }
+                        sb.append("; uses:=");
+                        sb.append(usedCap.getAttribute(Capability.PACKAGE_ATTR).getValue());
                     }
                     else
                     {
-                        usedCap = Util.getSatisfyingCapability(
-                            blame.m_cap.getModule(),
-                            blame.m_reqs.get(i + 1));
+                        sb.append(cap);
                     }
-                    sb.append("; uses:=");
-                    sb.append(usedCap.getAttribute(Capability.PACKAGE_ATTR).getValue());
                     sb.append("\n");
                 }
                 else
