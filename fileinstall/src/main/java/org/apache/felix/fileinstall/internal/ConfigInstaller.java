@@ -18,18 +18,9 @@
  */
 package org.apache.felix.fileinstall.internal;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.fileinstall.ArtifactInstaller;
@@ -37,13 +28,8 @@ import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationEvent;
-import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.framework.*;
+import org.osgi.service.cm.*;
 
 /**
  * ArtifactInstaller for configurations.
@@ -270,7 +256,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     String[] parsePid(String path)
     {
-        String pid = path.substring(0, path.length() - 4);
+        String pid = path.substring(0, path.lastIndexOf('.'));
         int n = pid.indexOf('-');
         if (n > 0)
         {
