@@ -1006,18 +1006,28 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     static String toString( ServiceReference ref )
     {
         String[] ocs = ( String[] ) ref.getProperty( "objectClass" );
-        String oc = "[";
+        StringBuffer buf = new StringBuffer("[");
         for ( int i = 0; i < ocs.length; i++ )
         {
-            oc += ocs[i];
+            buf.append(ocs[i]);
             if ( i < ocs.length - 1 )
-                oc += ", ";
+                buf.append(", ");
         }
 
-        oc += ", id=" + ref.getProperty( Constants.SERVICE_ID );
-        oc += ", bundle=" + ref.getBundle().getBundleId();
-        oc += "]";
-        return oc;
+        buf.append( ", id=" ).append( ref.getProperty( Constants.SERVICE_ID ) );
+
+        Bundle provider = ref.getBundle();
+        if ( provider != null )
+        {
+            buf.append( ", bundle=" ).append( provider.getBundleId() );
+        }
+        else
+        {
+            buf.append( ", unregistered" );
+        }
+
+        buf.append( "]" );
+        return buf.toString();
     }
 
 
