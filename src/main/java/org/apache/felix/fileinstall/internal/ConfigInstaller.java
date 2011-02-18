@@ -136,9 +136,20 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                     else if( fileName.endsWith( ".config" ) )
                     {
                         OutputStream fos = new FileOutputStream( file );
+                        Properties props = new Properties();
+                        for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
+                        {
+                            String key = e.nextElement().toString();
+                            if( !Constants.SERVICE_PID.equals(key)
+                                    && !ConfigurationAdmin.SERVICE_FACTORYPID.equals(key)
+                                    && !DirectoryWatcher.FILENAME.equals(key) )
+                            {
+                                props.put( key, dict.get( key ) );
+                            }
+                        }
                         try
                         {
-                            ConfigurationHandler.write( fos, dict );
+                            ConfigurationHandler.write( fos, props );
                         }
                         finally
                         {
