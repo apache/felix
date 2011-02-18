@@ -169,12 +169,15 @@ public class PropertyHandler {
                 if (Constants.PROPERTY_OPTIONS.equals(parameters[j])) {
                     options = new LinkedHashMap<String, String>();
                 } else if (options != null) {
-                    String optionLabel = parameters[j];
-                    String optionValue = (j < parameters.length-2) ? parameters[j+2] : null;
-                    if (optionValue != null) {
-                        options.put(optionLabel, optionValue);
+                    final String option = parameters[j];
+                    final int pos = option.indexOf('=');
+                    if ( pos != -1 ) {
+                        String optionLabel = option.substring(0, pos);
+                        String optionValue = option.substring(pos + 1);
+                        if (optionValue != null && optionValue.length() > 0 ) {
+                            options.put(optionLabel, optionValue);
+                        }
                     }
-                    j += 2;
                 }
             }
             ad.setOptions(options);
