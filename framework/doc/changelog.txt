@@ -1,3 +1,13 @@
+Changes from 3.0.7 to 3.0.8
+---------------------------
+
+** Bug
+    * [FELIX-2749] - Boolean.parseBoolean() newly defined in Java5 should not be used.
+    * [FELIX-2789] - Native library matching is not correctly checking additional extensions
+    * [FELIX-2800] - Logging will throw an NPE if no bundle is specified
+    * [FELIX-2802] - A failed update doesn't rollback properly
+    * [FELIX-2805] - Cache PackageAdmin.getBundle() result for system bundle classes
+
 Changes from 3.0.6 to 3.0.7
 ---------------------------
 
