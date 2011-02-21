@@ -18,15 +18,9 @@
  */
 package org.apache.felix.scrplugin.tags.annotation.defaulttag;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.scrplugin.tags.JavaField;
@@ -254,7 +248,13 @@ public class PropertyTag extends AbstractTag {
                 map.put(Constants.PROPERTY_CARDINALITY, "-");
             }
         } else if (this.annotation.cardinality() != 0) {
-            map.put(Constants.PROPERTY_CARDINALITY, String.valueOf(this.annotation.cardinality()));
+            if ( this.annotation.cardinality() == Integer.MAX_VALUE ) {
+                map.put(Constants.PROPERTY_CARDINALITY, "+");
+            } else if ( this.annotation.cardinality() == Integer.MIN_VALUE ) {
+                map.put(Constants.PROPERTY_CARDINALITY, "-");
+            } else {
+                map.put(Constants.PROPERTY_CARDINALITY, String.valueOf(this.annotation.cardinality()));
+            }
         }
 
         map.put(Constants.PROPERTY_PRIVATE, String.valueOf(this.annotation.propertyPrivate()));
