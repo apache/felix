@@ -157,8 +157,9 @@ public class FelixResolverState implements Resolver.ResolverState
 
     public void detachFragment(Module host, Module fragment)
     {
-        List<Module> fragments = ((ModuleImpl) host).getFragments();
+        List<Module> fragments = new ArrayList<Module>(((ModuleImpl) host).getFragments());
         fragments.remove(fragment);
+        removeFragment(fragment);
         try
         {
             ((ModuleImpl) host).attachFragments(fragments);
