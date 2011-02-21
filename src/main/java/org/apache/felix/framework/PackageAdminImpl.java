@@ -193,18 +193,21 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         // If the bundle is not a fragment, then return its fragments.
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) == 0)
         {
-            // Get attached fragments.
-            List<Module> modules =
-                ((ModuleImpl)
-                    ((BundleImpl) bundle).getCurrentModule()).getFragments();
             // Convert fragment modules to bundles.
             List list = new ArrayList();
-            for (int i = 0; (modules != null) && (i < modules.size()); i++)
+            // Iterate through modules
+            List<Module> modules = ((BundleImpl) bundle).getModules();
+            for (int modIdx = 0; modIdx < modules.size(); modIdx++)
             {
-                Bundle b = modules.get(i).getBundle();
-                if (b != null)
+                // Get attached fragments.
+                List<Module> frags = ((ModuleImpl) modules.get(modIdx)).getFragments();
+                for (int i = 0; (frags != null) && (i < frags.size()); i++)
                 {
-                    list.add(b);
+                    Bundle b = frags.get(i).getBundle();
+                    if (b != null)
+                    {
+                        list.add(b);
+                    }
                 }
             }
             // Convert list to an array.
