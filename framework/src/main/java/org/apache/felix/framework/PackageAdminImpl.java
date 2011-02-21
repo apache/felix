@@ -189,42 +189,66 @@ class PackageAdminImpl implements PackageAdmin, Runnable
 
     public Bundle[] getFragments(Bundle bundle)
     {
-        Bundle[] fragments = null;
         // If the bundle is not a fragment, then return its fragments.
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) == 0)
         {
-            // Convert fragment modules to bundles.
-            List list = new ArrayList();
+            List<Bundle> list = new ArrayList<Bundle>();
             // Iterate through modules
             List<Module> modules = ((BundleImpl) bundle).getModules();
             for (int modIdx = 0; modIdx < modules.size(); modIdx++)
             {
                 // Get attached fragments.
-                List<Module> frags = ((ModuleImpl) modules.get(modIdx)).getFragments();
-                for (int i = 0; (frags != null) && (i < frags.size()); i++)
+                ModuleImpl module = (ModuleImpl) modules.get(modIdx);
+                if (module.isResolved())
                 {
-                    Bundle b = frags.get(i).getBundle();
-                    if (b != null)
+                    List<Module> fragments = module.getFragments();
+                    for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
                     {
-                        list.add(b);
+                        Bundle b = fragments.get(i).getBundle();
+                        if (b != null)
+                        {
+                            list.add(b);
+                        }
                     }
                 }
             }
             // Convert list to an array.
-            fragments = (list.size() == 0)
+            return (list.size() == 0)
                 ? null
                 : (Bundle[]) list.toArray(new Bundle[list.size()]);
         }
-        return fragments;
+        return null;
     }
 
     public Bundle[] getHosts(Bundle bundle)
     {
-        if (getBundleType(bundle) == BUNDLE_TYPE_FRAGMENT)
+        // If the bundle is a fragment, return its hosts
+        if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) != 0)
         {
-            List<Bundle> hosts = m_felix.getDependentBundles((BundleImpl) bundle);
-            return ((hosts != null) && (hosts.size() > 0))
-                ? hosts.toArray(new Bundle[hosts.size()]) : null;
+            List<Bundle> list = new ArrayList<Bundle>();
+            // Iterate through modules
+            List<Module> modules = ((BundleImpl) bundle).getModules();
+            for (int modIdx = 0; modIdx < modules.size(); modIdx++)
+            {
+                // Get hosts
+                ModuleImpl module = (ModuleImpl) modules.get(modIdx);
+                if (module.isResolved())
+                {
+                    List<Module> hosts = module.getDependentHosts();
+                    for (int i = 0; (hosts != null) && (i < hosts.size()); i++)
+                    {
+                        Bundle b = hosts.get(i).getBundle();
+                        if (b != null)
+                        {
+                            list.add(b);
+                        }
+                    }
+                }
+            }
+            // Convert list to an array.
+            return (list.size() == 0)
+                ? null
+                : (Bundle[]) list.toArray(new Bundle[list.size()]);
         }
         return null;
     }
