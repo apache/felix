@@ -55,12 +55,16 @@ public abstract class Util {
     public static int getIntValue(Annotation annotation, String name, final Class<?> clazz) {
         final Object obj = annotation.getNamedParameter(name);
         if ( obj != null ) {
-            if ( obj instanceof String ) {
-                return Integer.valueOf((String)obj);
-            } else if ( obj instanceof Number ) {
+            if ( obj instanceof Number ) {
                 return ((Number)obj).intValue();
             }
-            return Integer.valueOf(obj.toString());
+            final String value = obj.toString();
+            if ( value.equals("Integer.MAX_VALUE") ) {
+                return Integer.MAX_VALUE;
+            } else if ( value.equals("Integer.MIN_VALUE") ) {
+                return Integer.MIN_VALUE;
+            }
+            return Integer.valueOf(value);
         }
         try {
             return (Integer) clazz.getMethod(name).getDefaultValue();
