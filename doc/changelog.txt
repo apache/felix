@@ -1,3 +1,20 @@
+Changes from 3.0.8 to 3.0.9
+---------------------------
+
+** Bug
+    * [FELIX-1581] - Bundle#update, Bundle#uninstall and Bundle#stop should wait for a (configurable) timeout before throwing an exception if the bundle is starting or stopping
+    * [FELIX-2784] - When the framework try to grab the bundle lock, it ignores thread interruption
+    * [FELIX-2796] - felix.auto.deploy.action throws NPE with only "update" action
+    * [FELIX-2822] - [Framework] System bundle module's state not reset when framework restarted leading to NPE
+    * [FELIX-2832] - [Framework] It should not be possible to open an URLConnection to "/" for a bundle URL
+    * [FELIX-2840] - [Framework] Uninstalling an uninstalled bundle throws NoSuchElementException
+    * [FELIX-2849] - PackageAdmin is inconsistent between getFragments and getHosts
+    * [FELIX-2850] - PackageAdmin return fragments / hosts even if the host isn't resolved
+    * [FELIX-2851] - Resolution problems after a fragment can't be resolved
+
+** Improvement
+    * [FELIX-2841] - [Framework] Improve resolve exception messages
+
 Changes from 3.0.7 to 3.0.8
 ---------------------------
 
