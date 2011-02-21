@@ -155,7 +155,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         //    service.
         // 2. The service factory is NOT provided by the bundle providing
         //    the service.
-        // For case 1, we will use the class loaded of the service factory
+        // For case 1, we will use the class loader of the service factory
         // to find the class. For case 2, we will assume we have an extender
         // at work here and always return true, since we have no real way of
         // knowing the wiring of the provider unless we actually get the
