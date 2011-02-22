@@ -18,18 +18,17 @@
  */
 package org.apache.felix.scr.annotations;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Allows to define multiple {@link Service} annotations for one type.
+ *
+ * @deprecated It's now possible to use multiple classes in the {@link Service} annotation.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
+@Deprecated
 public @interface Services {
 
     /**

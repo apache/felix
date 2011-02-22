@@ -18,8 +18,7 @@
  */
 package org.apache.felix.scrplugin.tags.annotation.defaulttag;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.felix.scr.annotations.AutoDetect;
 import org.apache.felix.scr.annotations.Service;
@@ -37,26 +36,19 @@ public class ServiceTag extends AbstractTag {
 
     protected final Service annotation;
 
+    protected final String serviceInterface;
+
     /**
      * @param annotation Annotation
      * @param desc Description
      */
-    public ServiceTag(final Annotation annotation, JavaClassDescription desc) {
+    public ServiceTag(final Annotation annotation,
+            final JavaClassDescription desc,
+            final Service tag,
+            final String serviceInterface) {
         super(annotation, desc, null);
-        this.annotation = new Service() {
-
-            public boolean serviceFactory() {
-                return Util.getBooleanValue(annotation, "serviceFactory", Service.class);
-            }
-
-            public Class<?> value() {
-                return Util.getClassValue(annotation, "value", Service.class);
-            }
-
-            public Class<? extends java.lang.annotation.Annotation> annotationType() {
-                return null;
-            }
-        };
+        this.annotation = tag;
+        this.serviceInterface = serviceInterface;
     }
 
     @Override
@@ -68,15 +60,37 @@ public class ServiceTag extends AbstractTag {
     public Map<String, String> createNamedParameterMap() {
         final Map<String, String> map = new HashMap<String, String>();
 
-        String serviceInterface = null;
-        if (this.annotation.value() != AutoDetect.class) {
-            serviceInterface = this.annotation.value().getName();
-        }
-        map.put(Constants.SERVICE_INTERFACE, serviceInterface);
-
+        map.put(Constants.SERVICE_INTERFACE, this.serviceInterface);
         map.put(Constants.SERVICE_FACTORY, String.valueOf(this.annotation.serviceFactory()));
 
         return map;
     }
 
+    public static List<ServiceTag> createServiceTags(final Annotation annotation, JavaClassDescription desc) {
+        final Service tag = new Service() {
+
+            public boolean serviceFactory() {
+                return Util.getBooleanValue(annotation, "serviceFactory", Service.class);
+            }
+
+            public Class<?>[] value() {
+                return Util.getClassArrayValue(annotation, "value", Service.class);
+            }
+
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return null;
+            }
+        };
+        final Class<?>[] classes = tag.value();
+        System.out.println("Classes: " + Arrays.toString(classes));
+        if ( classes != null && classes.length > 0
+             && (classes.length != 1 || !classes[0].getName().equals(AutoDetect.class.getName()))) {
+            final List<ServiceTag> tags = new ArrayList<ServiceTag>();
+            for(final Class<?> c : classes ) {
+                tags.add(new ServiceTag(annotation, desc, tag, c.getName()));
+            }
+            return tags;
+        }
+        return Collections.singletonList(new ServiceTag(annotation, desc, tag, null));
+    }
 }

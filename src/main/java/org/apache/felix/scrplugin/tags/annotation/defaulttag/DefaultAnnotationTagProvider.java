@@ -21,13 +21,7 @@ package org.apache.felix.scrplugin.tags.annotation.defaulttag;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.Services;
+import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaTag;
 import org.apache.felix.scrplugin.tags.annotation.AnnotationJavaClassDescription;
@@ -53,7 +47,7 @@ public class DefaultAnnotationTagProvider implements AnnotationTagProvider {
         } else if (annotation.getType().getJavaClass().getFullyQualifiedName().equals(Property.class.getName())) {
             tags.add(new PropertyTag(annotation, description, field));
         } else if (annotation.getType().getJavaClass().getFullyQualifiedName().equals(Service.class.getName())) {
-            tags.add(new ServiceTag(annotation, description));
+            tags.addAll(ServiceTag.createServiceTags(annotation, description));
         } else if (annotation.getType().getJavaClass().getFullyQualifiedName().equals(Reference.class.getName())) {
             tags.add(new ReferenceTag(annotation, description, field));
         }
@@ -69,7 +63,7 @@ public class DefaultAnnotationTagProvider implements AnnotationTagProvider {
             @SuppressWarnings("unchecked")
             final List<Annotation> services = (List<Annotation>)annotation.getNamedParameter("value");
             for (Annotation service : services) {
-                tags.add(new ServiceTag(service, description));
+                tags.addAll(ServiceTag.createServiceTags(service, description));
             }
         } else if (annotation.getType().getJavaClass().getFullyQualifiedName().equals(References.class.getName())) {
             @SuppressWarnings("unchecked")
