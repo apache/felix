@@ -308,6 +308,38 @@ public abstract class Util {
         }
     }
 
+    public static Class<?>[] getClassArrayValue(Annotation annotation, String name, final Class<?> clazz) {
+        final Object obj = annotation.getNamedParameter(name);
+        if ( obj != null ) {
+            if ( obj instanceof Class<?> ) {
+                return new Class<?>[] {(Class<?>)obj};
+            }
+            if ( obj.getClass().isArray() ) {
+                final Object[] objArray = (Object[])obj;
+                final Class<?>[] result = new Class<?>[objArray.length];
+                for(int i=0; i<objArray.length;i++) {
+                    if ( objArray[i] instanceof Class<?>) {
+                        result[i] = (Class<?>)objArray[i];
+                    } else {
+                        result[i] = ClassUtil.getClass(objArray[i].toString());
+                    }
+                }
+                return result;
+            }
+            return new Class<?>[] {ClassUtil.getClass(obj.toString())};
+        }
+        try {
+            final Object val = clazz.getMethod(name).getDefaultValue();
+            if ( val instanceof Class<?> ) {
+                return new Class<?>[] {(Class<?>)val};
+            }
+            return (Class<?>[])val;
+        } catch( NoSuchMethodException mnfe) {
+            // we ignore this
+            return null;
+        }
+    }
+
     public static <T extends Enum<T>> T getEnumValue(Annotation annotation,
                                                   String name,
                                                   final Class<T> enumClass,
