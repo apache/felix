@@ -82,7 +82,6 @@ public class ServiceTag extends AbstractTag {
             }
         };
         final Class<?>[] classes = tag.value();
-        System.out.println("Classes: " + Arrays.toString(classes));
         if ( classes != null && classes.length > 0
              && (classes.length != 1 || !classes[0].getName().equals(AutoDetect.class.getName()))) {
             final List<ServiceTag> tags = new ArrayList<ServiceTag>();
