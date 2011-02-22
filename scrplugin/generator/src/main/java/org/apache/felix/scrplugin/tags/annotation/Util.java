@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scrplugin.tags.annotation;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
@@ -309,10 +310,13 @@ public abstract class Util {
     }
 
     public static Class<?>[] getClassArrayValue(Annotation annotation, String name, final Class<?> clazz) {
-        final Object obj = annotation.getNamedParameter(name);
+        Object obj = annotation.getNamedParameter(name);
         if ( obj != null ) {
             if ( obj instanceof Class<?> ) {
                 return new Class<?>[] {(Class<?>)obj};
+            }
+            if ( obj instanceof Collection<?> ) {
+                obj = ((Collection<?>)obj).toArray();
             }
             if ( obj.getClass().isArray() ) {
                 final Object[] objArray = (Object[])obj;
