@@ -93,6 +93,10 @@ public class PropertyTag extends AbstractTag {
                 return Util.getStringValues(annotation, desc, "value");
             }
 
+            public Class<?>[] classValue() {
+                return Util.getClassArrayValue(annotation, "classValue", Property.class);
+            }
+
             public boolean[] boolValue() {
                 return Util.getBooleanValues(annotation, desc, "boolValue");
             }
@@ -153,76 +157,85 @@ public class PropertyTag extends AbstractTag {
         Object[] values = this.annotation.value();
         // we now check all options
         if (values == null || values.length == 0 ) {
-            long[] lValues = this.annotation.longValue();
-            if ( lValues == null || lValues.length == 0 ) {
-                double[] dValues = this.annotation.doubleValue();
-                if ( dValues == null || dValues.length == 0 ) {
-                    float[] fValues = this.annotation.floatValue();
-                    if ( fValues == null || fValues.length == 0 ) {
-                        int[] iValues = this.annotation.intValue();
-                        if ( iValues == null || iValues.length == 0 ) {
-                            byte[] byteValues = this.annotation.byteValue();
-                            if ( byteValues == null || byteValues.length == 0 ) {
-                                char[] cValues = this.annotation.charValue();
-                                if ( cValues == null || cValues.length == 0 ) {
-                                    boolean[] boolValues = this.annotation.boolValue();
-                                    if ( boolValues == null || boolValues.length == 0 ) {
-                                        short[] sValues  = this.annotation.shortValue();
-                                        if ( sValues != null && sValues.length != 0 ) {
-                                            values = new Object[sValues.length];
-                                            for(int i=0;i<sValues.length;i++) {
-                                                values[i] = sValues[i];
+            final Class<?>[] classValues = this.annotation.classValue();
+            if ( classValues == null || classValues.length == 0 ) {
+                long[] lValues = this.annotation.longValue();
+                if ( lValues == null || lValues.length == 0 ) {
+                    double[] dValues = this.annotation.doubleValue();
+                    if ( dValues == null || dValues.length == 0 ) {
+                        float[] fValues = this.annotation.floatValue();
+                        if ( fValues == null || fValues.length == 0 ) {
+                            int[] iValues = this.annotation.intValue();
+                            if ( iValues == null || iValues.length == 0 ) {
+                                byte[] byteValues = this.annotation.byteValue();
+                                if ( byteValues == null || byteValues.length == 0 ) {
+                                    char[] cValues = this.annotation.charValue();
+                                    if ( cValues == null || cValues.length == 0 ) {
+                                        boolean[] boolValues = this.annotation.boolValue();
+                                        if ( boolValues == null || boolValues.length == 0 ) {
+                                            short[] sValues  = this.annotation.shortValue();
+                                            if ( sValues != null && sValues.length != 0 ) {
+                                                values = new Object[sValues.length];
+                                                for(int i=0;i<sValues.length;i++) {
+                                                    values[i] = sValues[i];
+                                                }
+                                                type = "Short";
                                             }
-                                            type = "Short";
+                                        } else {
+                                            values = new Object[boolValues.length];
+                                            for(int i=0;i<boolValues.length;i++) {
+                                                values[i] = boolValues[i];
+                                            }
+                                            type = "Boolean";
                                         }
                                     } else {
-                                        values = new Object[boolValues.length];
-                                        for(int i=0;i<boolValues.length;i++) {
-                                            values[i] = boolValues[i];
+                                        values = new Object[cValues.length];
+                                        for(int i=0;i<cValues.length;i++) {
+                                            values[i] = cValues[i];
                                         }
-                                        type = "Boolean";
+                                        type = "Char";
                                     }
                                 } else {
-                                    values = new Object[cValues.length];
-                                    for(int i=0;i<cValues.length;i++) {
-                                        values[i] = cValues[i];
+                                    values = new Object[byteValues.length];
+                                    for(int i=0;i<byteValues.length;i++) {
+                                        values[i] = byteValues[i];
                                     }
-                                    type = "Char";
+                                    type = "Byte";
                                 }
                             } else {
-                                values = new Object[byteValues.length];
-                                for(int i=0;i<byteValues.length;i++) {
-                                    values[i] = byteValues[i];
+                                values = new Object[iValues.length];
+                                for(int i=0;i<iValues.length;i++) {
+                                    values[i] = iValues[i];
                                 }
-                                type = "Byte";
+                                type = "Integer";
                             }
                         } else {
-                            values = new Object[iValues.length];
-                            for(int i=0;i<iValues.length;i++) {
-                                values[i] = iValues[i];
+                            values = new Object[fValues.length];
+                            for(int i=0;i<fValues.length;i++) {
+                                values[i] = fValues[i];
                             }
-                            type = "Integer";
+                            type = "Float";
                         }
                     } else {
-                        values = new Object[fValues.length];
-                        for(int i=0;i<fValues.length;i++) {
-                            values[i] = fValues[i];
+                        values = new Object[dValues.length];
+                        for(int i=0;i<dValues.length;i++) {
+                            values[i] = dValues[i];
                         }
-                        type = "Float";
+                        type = "Double";
                     }
                 } else {
-                    values = new Object[dValues.length];
-                    for(int i=0;i<dValues.length;i++) {
-                        values[i] = dValues[i];
+                    values = new Object[lValues.length];
+                    for(int i=0;i<lValues.length;i++) {
+                        values[i] = lValues[i];
                     }
-                    type = "Double";
+                    type = "Long";
                 }
             } else {
-                values = new Object[lValues.length];
-                for(int i=0;i<lValues.length;i++) {
-                    values[i] = lValues[i];
+                values = new Object[classValues.length];
+                for(int i=0;i<classValues.length;i++) {
+                    values[i] = classValues[i].getName();
                 }
-                type = "Long";
+                type = "String";
             }
         } else {
             type = "String";
