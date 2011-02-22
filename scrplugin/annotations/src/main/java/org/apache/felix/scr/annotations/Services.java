@@ -23,7 +23,7 @@ import java.lang.annotation.*;
 /**
  * Allows to define multiple {@link Service} annotations for one type.
  *
- * @deprecated It's now possible to use multiple classes in the {@link Service} annotation.
+ * @deprecated Since 1.5. It's now possible to use multiple classes in the {@link Service} annotation.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
