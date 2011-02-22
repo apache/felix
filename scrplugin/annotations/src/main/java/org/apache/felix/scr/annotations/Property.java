@@ -18,11 +18,7 @@
  */
 package org.apache.felix.scr.annotations;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * The <code>Property</code> annotation defines properties which are made
@@ -68,6 +64,14 @@ public @interface Property {
      * value attributes.
      */
     String[] value() default {};
+
+    /**
+     * The class value(s) of the property.
+     * This attribute should not be used in combination with any of the other
+     * value attributes or the type attribute.
+     * @since 1.5
+     */
+    Class<?>[] classValue() default {};
 
     /**
      * The long value(s) of the property.
