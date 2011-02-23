@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.SortedSet;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.Attribute;
 import org.apache.felix.framework.capabilityset.Capability;
@@ -44,90 +44,152 @@ public class ResolverImpl implements Resolver
 
     // Holds candidate permutations based on permutating "uses" chains.
     // These permutations are given higher priority.
-    private final List<Map<Requirement, Set<Capability>>> m_usesPermutations =
-        new ArrayList<Map<Requirement, Set<Capability>>>();
+    private final List<Candidates> m_usesPermutations = new ArrayList<Candidates>();
     // Holds candidate permutations based on permutating requirement candidates.
     // These permutations represent backtracking on previous decisions.
-    private final List<Map<Requirement, Set<Capability>>> m_importPermutations =
-        new ArrayList<Map<Requirement, Set<Capability>>>();
+    private final List<Candidates> m_importPermutations = new ArrayList<Candidates>();
 
     public ResolverImpl(Logger logger)
     {
         m_logger = logger;
     }
 
-    public Map<Module, List<Wire>> resolve(ResolverState state, Module module)
+    public Map<Module, List<Wire>> resolve(
+        ResolverState state, Module module, Set<Module> fragments)
     {
         Map<Module, List<Wire>> wireMap = new HashMap<Module, List<Wire>>();
-
         Map<Module, Packages> modulePkgMap = new HashMap<Module, Packages>();
 
         if (!module.isResolved())
         {
-            try
+            boolean retryFragments;
+            do
             {
-                Map<Requirement, Set<Capability>> candidateMap =
-                    new HashMap<Requirement, Set<Capability>>();
+                retryFragments = false;
 
-                populateCandidates(
-                    state, module, candidateMap, new HashMap<Module, Object>());
-                m_usesPermutations.add(candidateMap);
-
-                ResolveException rethrow = null;
-
-                do
+                try
                 {
-                    rethrow = null;
+                    Candidates allCandidates = new Candidates(module);
 
-                    modulePkgMap.clear();
-                    m_packageSourcesCache.clear();
+                    // Populate all candidates.
+                    Map<Module, Object> resultCache = new HashMap<Module, Object>();
+                    populateCandidates(
+                        state, module, allCandidates, resultCache);
 
-                    candidateMap = (m_usesPermutations.size() > 0)
-                        ? m_usesPermutations.remove(0)
-                        : m_importPermutations.remove(0);
-//dumpCandidateMap(candidateMap);
+                    // Try to populate optional fragments.
+                    for (Module fragment : fragments)
+                    {
+                        try
+                        {
+                            populateCandidates(state, fragment, allCandidates, resultCache);
+                        }
+                        catch (ResolveException ex)
+                        {
+                            // Ignore, since fragments are optional.
+                         }
+                    }
 
-                    calculatePackageSpaces(
-                        module, candidateMap, modulePkgMap,
-                        new HashMap(), new HashSet());
+                    // Merge any fragments into hosts.
+                    allCandidates.mergeFragments();
+
+                    // Record the initial candidate permutation.
+                     m_usesPermutations.add(allCandidates);
+
+                    ResolveException rethrow = null;
+
+                    // If the requested module is a fragment, then
+                    // ultimately we will verify the host.
+                    Requirement hostReq = getHostRequirement(module);
+                    Module target = module;
+
+                    do
+                    {
+                        rethrow = null;
+
+                        modulePkgMap.clear();
+                        m_packageSourcesCache.clear();
+
+                        allCandidates = (m_usesPermutations.size() > 0)
+                            ? m_usesPermutations.remove(0)
+                            : m_importPermutations.remove(0);
+//allCandidates.dump();
+
+                        // If we are resolving a fragment, then we
+                        // actually want to verify its host.
+                        if (hostReq != null)
+                        {
+                            target = allCandidates.getCandidates(hostReq)
+                                .iterator().next().getModule();
+                        }
+
+                        calculatePackageSpaces(
+                            allCandidates.getWrappedHost(target), allCandidates, modulePkgMap,
+                            new HashMap(), new HashSet());
 //System.out.println("+++ PACKAGE SPACES START +++");
 //dumpModulePkgMap(modulePkgMap);
 //System.out.println("+++ PACKAGE SPACES END +++");
 
-                    try
-                    {
-                        checkPackageSpaceConsistency(
-                            false, module, candidateMap, modulePkgMap, new HashMap());
+                        try
+                        {
+                            checkPackageSpaceConsistency(
+                                false, allCandidates.getWrappedHost(target),
+                                allCandidates, modulePkgMap, new HashMap());
+                        }
+                        catch (ResolveException ex)
+                        {
+                            rethrow = ex;
+                        }
                     }
-                    catch (ResolveException ex)
+                    while ((rethrow != null)
+                        && ((m_usesPermutations.size() > 0) || (m_importPermutations.size() > 0)));
+
+                    // If there is a resolve exception, then determine if an
+                    // optionally resolved module is to blame (typically a fragment).
+                    // If so, then remove the optionally resolved module and try
+                    // again; otherwise, rethrow the resolve exception.
+                    if (rethrow != null)
                     {
-                        rethrow = ex;
+                        Module faultyModule = getActualModule(rethrow.getModule());
+                        if (rethrow.getRequirement() instanceof WrappedRequirement)
+                        {
+                            faultyModule =
+                                ((WrappedRequirement) rethrow.getRequirement())
+                                    .getWrappedRequirement().getModule();
+                        }
+                        if (fragments.remove(faultyModule))
+                        {
+                            retryFragments = true;
+                        }
+                        else
+                        {
+                            throw rethrow;
+                        }
+                    }
+                    // If there is no exception to rethrow, then this was a clean
+                    // resolve, so populate the wire map.
+                    else
+                    {
+                        wireMap =
+                            populateWireMap(
+                                allCandidates.getWrappedHost(target),
+                                modulePkgMap, wireMap, allCandidates);
                     }
                 }
-                while ((rethrow != null)
-                    && ((m_usesPermutations.size() > 0) || (m_importPermutations.size() > 0)));
-
-                if (rethrow != null)
+                finally
                 {
-                    throw rethrow;
+                    // Always clear the state.
+                    m_usesPermutations.clear();
+                    m_importPermutations.clear();
                 }
-
-                wireMap =
-                    populateWireMap(module, modulePkgMap, wireMap,
-                    candidateMap);
             }
-            finally
-            {
-                // Always clear the state.
-                m_usesPermutations.clear();
-                m_importPermutations.clear();
-            }
+            while (retryFragments);
         }
 
         return wireMap;
     }
 
-    public Map<Module, List<Wire>> resolve(ResolverState state, Module module, String pkgName)
+    public Map<Module, List<Wire>> resolve(
+        ResolverState state, Module module, String pkgName, Set<Module> fragments)
     {
         // We can only create a dynamic import if the following
         // conditions are met:
@@ -138,71 +200,157 @@ public class ResolverImpl implements Resolver
         // 5. The package in question matches a dynamic import of the bundle.
         // The following call checks all of these conditions and returns
         // the associated dynamic import and matching capabilities.
-        Map<Requirement, Set<Capability>> candidateMap =
+        Candidates allCandidates =
             getDynamicImportCandidates(state, module, pkgName);
-        if (candidateMap != null)
+        if (allCandidates != null)
         {
-            try
+            Map<Module, List<Wire>> wireMap = new HashMap<Module, List<Wire>>();
+            Map<Module, Packages> modulePkgMap = new HashMap<Module, Packages>();
+
+            boolean retryFragments;
+            do
             {
-                Map<Module, List<Wire>> wireMap = new HashMap();
-                Map<Module, Packages> modulePkgMap = new HashMap();
+                retryFragments = false;
 
-                populateDynamicCandidates(state, module, candidateMap);
-                m_usesPermutations.add(candidateMap);
-
-                ResolveException rethrow = null;
-
-                do
+                try
                 {
-                    rethrow = null;
+                    // Populate all candidates.
+                    Map<Module, Object> resultCache = new HashMap<Module, Object>();
+                    populateDynamicCandidates(state, module, allCandidates, resultCache);
 
-                    modulePkgMap.clear();
-
-                    candidateMap = (m_usesPermutations.size() > 0)
-                        ? m_usesPermutations.remove(0)
-                        : m_importPermutations.remove(0);
-
-                    calculatePackageSpaces(
-                        module, candidateMap, modulePkgMap,
-                        new HashMap(), new HashSet());
-
-                    try
+                    // Try to populate optional fragments.
+                    for (Module fragment : fragments)
                     {
-                        checkPackageSpaceConsistency(
-                            true, module, candidateMap, modulePkgMap, new HashMap());
+                        try
+                        {
+                            populateCandidates(state, fragment, allCandidates, resultCache);
+                        }
+                        catch (ResolveException ex)
+                        {
+                            // Ignore, since fragments are optional.
+                         }
                     }
-                    catch (ResolveException ex)
+
+                    // Merge any fragments into hosts.
+                    allCandidates.mergeFragments();
+
+                    // Record the initial candidate permutation.
+                     m_usesPermutations.add(allCandidates);
+
+                    ResolveException rethrow = null;
+
+                    // If the requested module is a fragment, then
+                    // ultimately we will verify the host.
+                    Requirement hostReq = getHostRequirement(module);
+                    Module target = module;
+
+                    do
                     {
-                        rethrow = ex;
-                    }
-                }
-                while ((rethrow != null)
-                    && ((m_usesPermutations.size() > 0)
-                        || (m_importPermutations.size() > 0)));
+                        rethrow = null;
 
-                if (rethrow != null)
-                {
-                    throw rethrow;
-                }
+                        modulePkgMap.clear();
+                        m_packageSourcesCache.clear();
 
+                        allCandidates = (m_usesPermutations.size() > 0)
+                            ? m_usesPermutations.remove(0)
+                            : m_importPermutations.remove(0);
+//allCandidates.dump();
+
+                        // For a dynamic import, the instigating module
+                        // will never be a fragment since fragments never
+                        // execute code, so we don't need to check for
+                        // this case like we do for a normal resolve.
+
+                        calculatePackageSpaces(
+                            allCandidates.getWrappedHost(target), allCandidates, modulePkgMap,
+                            new HashMap(), new HashSet());
+//System.out.println("+++ PACKAGE SPACES START +++");
 //dumpModulePkgMap(modulePkgMap);
-                wireMap = populateDynamicWireMap(
-                    module, pkgName, modulePkgMap, wireMap, candidateMap);
+//System.out.println("+++ PACKAGE SPACES END +++");
 
-                return wireMap;
+                        try
+                        {
+                            checkPackageSpaceConsistency(
+                                false, allCandidates.getWrappedHost(target),
+                                allCandidates, modulePkgMap, new HashMap());
+                        }
+                        catch (ResolveException ex)
+                        {
+                            rethrow = ex;
+                        }
+                    }
+                    while ((rethrow != null)
+                        && ((m_usesPermutations.size() > 0) || (m_importPermutations.size() > 0)));
+
+                    // If there is a resolve exception, then determine if an
+                    // optionally resolved module is to blame (typically a fragment).
+                    // If so, then remove the optionally resolved module and try
+                    // again; otherwise, rethrow the resolve exception.
+                    if (rethrow != null)
+                    {
+                        Module faultyModule = getActualModule(rethrow.getModule());
+                        if (rethrow.getRequirement() instanceof WrappedRequirement)
+                        {
+                            faultyModule =
+                                ((WrappedRequirement) rethrow.getRequirement())
+                                    .getWrappedRequirement().getModule();
+                        }
+                        if (fragments.remove(faultyModule))
+                        {
+                            retryFragments = true;
+                        }
+                        else
+                        {
+                            throw rethrow;
+                        }
+                    }
+                    // If there is no exception to rethrow, then this was a clean
+                    // resolve, so populate the wire map.
+                    else
+                    {
+                        wireMap = populateDynamicWireMap(
+                            module, pkgName, modulePkgMap, wireMap, allCandidates);
+                        return wireMap;
+                    }
+                }
+                finally
+                {
+                    // Always clear the state.
+                    m_usesPermutations.clear();
+                    m_importPermutations.clear();
+                }
             }
-            finally
-            {
-                // Always clear the state.
-                m_usesPermutations.clear();
-                m_importPermutations.clear();
-            }
+            while (retryFragments);
         }
 
         return null;
     }
 
-    private static Map<Requirement, Set<Capability>> getDynamicImportCandidates(
+    private static Capability getHostCapability(Module m)
+    {
+        for (Capability c : m.getCapabilities())
+        {
+            if (c.getNamespace().equals(Capability.HOST_NAMESPACE))
+            {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    private static Requirement getHostRequirement(Module m)
+    {
+        for (Requirement r : m.getRequirements())
+        {
+            if (r.getNamespace().equals(Capability.HOST_NAMESPACE))
+            {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    private static Candidates getDynamicImportCandidates(
         ResolverState state, Module module, String pkgName)
     {
         // Unresolved modules cannot dynamically import, nor can the default
@@ -250,7 +398,7 @@ public class ResolverImpl implements Resolver
         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
         Requirement req = new RequirementImpl(
             module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<Capability> candidates = state.getCandidates(module, req, false);
+        SortedSet<Capability> candidates = state.getCandidates(module, req, false);
 
         // First find a dynamic requirement that matches the capabilities.
         Requirement dynReq = null;
@@ -289,9 +437,9 @@ public class ResolverImpl implements Resolver
 
         if (candidates.size() > 0)
         {
-            Map<Requirement, Set<Capability>> candidateMap = new HashMap();
-            candidateMap.put(dynReq, candidates);
-            return candidateMap;
+            Candidates allCandidates = new Candidates(module);
+            allCandidates.add(dynReq, candidates);
+            return allCandidates;
         }
 
         return null;
@@ -299,8 +447,7 @@ public class ResolverImpl implements Resolver
 
 // TODO: FELIX3 - Modify to not be recursive.
     private void populateCandidates(
-        ResolverState state, Module module,
-        Map<Requirement, Set<Capability>> candidateMap,
+        ResolverState state, Module module, Candidates allCandidates,
         Map<Module, Object> resultCache)
     {
         // Determine if we've already calculated this module's candidates.
@@ -323,7 +470,7 @@ public class ResolverImpl implements Resolver
 
         // Keeps track of the candidates we've already calculated for the
         // current module's requirements.
-        Map<Requirement, Set<Capability>> localCandidateMap = null;
+        Map<Requirement, SortedSet<Capability>> localCandidateMap = null;
 
         // Keeps track of the current module's requirements for which we
         // haven't yet found candidates.
@@ -390,7 +537,7 @@ public class ResolverImpl implements Resolver
 
             // Get satisfying candidates and populate their candidates if necessary.
             ResolveException rethrow = null;
-            Set<Capability> candidates = state.getCandidates(module, req, true);
+            SortedSet<Capability> candidates = state.getCandidates(module, req, true);
             for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
             {
                 Capability candCap = itCandCap.next();
@@ -410,7 +557,7 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         populateCandidates(state, candCap.getModule(),
-                            candidateMap, resultCache);
+                            allCandidates, resultCache);
                     }
                     catch (ResolveException ex)
                     {
@@ -438,11 +585,6 @@ public class ResolverImpl implements Resolver
                 }
                 rethrow = new ResolveException(msg, module, req);
                 resultCache.put(module, rethrow);
-                m_logger.log(
-                    module.getBundle(),
-                    Logger.LOG_DEBUG,
-                    "No viable candidates",
-                    rethrow);
                 throw rethrow;
             }
             // If we actually have candidates for the requirement, then
@@ -467,22 +609,23 @@ public class ResolverImpl implements Resolver
             // Merge local candidate map into global candidate map.
             if (localCandidateMap.size() > 0)
             {
-                candidateMap.putAll(localCandidateMap);
+                allCandidates.add(localCandidateMap);
             }
         }
     }
 
     private void populateDynamicCandidates(
-        ResolverState state, Module module,
-        Map<Requirement, Set<Capability>> candidateMap)
+        ResolverState state, Module module, Candidates allCandidates,
+        Map<Module, Object> resultCache)
     {
         // There should be one entry in the candidate map, which are the
         // the candidates for the matching dynamic requirement. Get the
         // matching candidates and populate their candidates if necessary.
         ResolveException rethrow = null;
-        Entry<Requirement, Set<Capability>> entry = candidateMap.entrySet().iterator().next();
+        Entry<Requirement, SortedSet<Capability>> entry =
+            allCandidates.getCandidateMap().entrySet().iterator().next();
         Requirement dynReq = entry.getKey();
-        Set<Capability> candidates = entry.getValue();
+        SortedSet<Capability> candidates = entry.getValue();
         for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
         {
             Capability candCap = itCandCap.next();
@@ -491,7 +634,7 @@ public class ResolverImpl implements Resolver
                 try
                 {
                     populateCandidates(state, candCap.getModule(),
-                        candidateMap, new HashMap<Module, Object>());
+                        allCandidates, resultCache);
                 }
                 catch (ResolveException ex)
                 {
@@ -506,7 +649,6 @@ public class ResolverImpl implements Resolver
 
         if (candidates.isEmpty())
         {
-            candidateMap.remove(dynReq);
             if (rethrow == null)
             {
                 rethrow = new ResolveException("Dynamic import failed.", module, dynReq);
@@ -517,7 +659,7 @@ public class ResolverImpl implements Resolver
 
     private void calculatePackageSpaces(
         Module module,
-        Map<Requirement, Set<Capability>> candidateMap,
+        Candidates allCandidates,
         Map<Module, Packages> modulePkgMap,
         Map<Capability, List<Module>> usesCycleMap,
         Set<Module> cycle)
@@ -548,7 +690,7 @@ public class ResolverImpl implements Resolver
             for (Requirement req : module.getDynamicRequirements())
             {
                 // Get the candidates for the current requirement.
-                Set<Capability> candCaps = candidateMap.get(req);
+                SortedSet<Capability> candCaps = allCandidates.getCandidates(req);
                 // Optional requirements may not have any candidates.
                 if (candCaps == null)
                 {
@@ -569,7 +711,7 @@ public class ResolverImpl implements Resolver
             for (Requirement req : module.getRequirements())
             {
                 // Get the candidates for the current requirement.
-                Set<Capability> candCaps = candidateMap.get(req);
+                SortedSet<Capability> candCaps = allCandidates.getCandidates(req);
                 // Optional requirements may not have any candidates.
                 if (candCaps == null)
                 {
@@ -583,7 +725,7 @@ public class ResolverImpl implements Resolver
         }
 
         // First, add all exported packages to the target module's package space.
-        calculateExportedPackages(module, candidateMap, modulePkgMap);
+        calculateExportedPackages(module, allCandidates, modulePkgMap);
         Packages modulePkgs = modulePkgMap.get(module);
 
         // Second, add all imported packages to the target module's package space.
@@ -591,15 +733,15 @@ public class ResolverImpl implements Resolver
         {
             Requirement req = reqs.get(i);
             Capability cap = caps.get(i);
-            calculateExportedPackages(cap.getModule(), candidateMap, modulePkgMap);
-            mergeCandidatePackages(module, req, cap, modulePkgMap, candidateMap);
+            calculateExportedPackages(cap.getModule(), allCandidates, modulePkgMap);
+            mergeCandidatePackages(module, req, cap, modulePkgMap, allCandidates);
         }
 
         // Third, have all candidates to calculate their package spaces.
         for (int i = 0; i < caps.size(); i++)
         {
             calculatePackageSpaces(
-                caps.get(i).getModule(), candidateMap, modulePkgMap,
+                caps.get(i).getModule(), allCandidates, modulePkgMap,
                 usesCycleMap, cycle);
         }
 
@@ -630,7 +772,7 @@ public class ResolverImpl implements Resolver
                             blame.m_cap,
                             blameReqs,
                             modulePkgMap,
-                            candidateMap,
+                            allCandidates,
                             usesCycleMap);
                     }
                 }
@@ -648,7 +790,7 @@ public class ResolverImpl implements Resolver
                         blame.m_cap,
                         blameReqs,
                         modulePkgMap,
-                        candidateMap,
+                        allCandidates,
                         usesCycleMap);
                 }
             }
@@ -657,7 +799,8 @@ public class ResolverImpl implements Resolver
 
     private void mergeCandidatePackages(
         Module current, Requirement currentReq, Capability candCap,
-        Map<Module, Packages> modulePkgMap, Map<Requirement, Set<Capability>> candidateMap)
+        Map<Module, Packages> modulePkgMap,
+        Candidates allCandidates)
     {
         if (candCap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
         {
@@ -668,7 +811,7 @@ public class ResolverImpl implements Resolver
         {
 // TODO: FELIX3 - THIS NEXT LINE IS A HACK. IMPROVE HOW/WHEN WE CALCULATE EXPORTS.
             calculateExportedPackages(
-                candCap.getModule(), candidateMap, modulePkgMap);
+                candCap.getModule(), allCandidates, modulePkgMap);
 
             // Get the candidate's package space to determine which packages
             // will be visible to the current module.
@@ -694,14 +837,14 @@ public class ResolverImpl implements Resolver
                 {
                     Directive dir = req.getDirective(Constants.VISIBILITY_DIRECTIVE);
                     if ((dir != null) && dir.getValue().equals(Constants.VISIBILITY_REEXPORT)
-                        && (candidateMap.get(req) != null))
+                        && (allCandidates.getCandidates(req) != null))
                     {
                         mergeCandidatePackages(
                             current,
                             currentReq,
-                            candidateMap.get(req).iterator().next(),
+                            allCandidates.getCandidates(req).iterator().next(),
                             modulePkgMap,
-                            candidateMap);
+                            allCandidates);
                     }
                 }
             }
@@ -760,8 +903,9 @@ public class ResolverImpl implements Resolver
 
     private void mergeUses(
         Module current, Packages currentPkgs,
-        Capability mergeCap, List<Requirement> blameReqs, Map<Module, Packages> modulePkgMap,
-        Map<Requirement, Set<Capability>> candidateMap,
+        Capability mergeCap, List<Requirement> blameReqs,
+        Map<Module, Packages> modulePkgMap,
+        Candidates allCandidates,
         Map<Capability, List<Module>> cycleMap)
     {
         if (!mergeCap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
@@ -821,14 +965,14 @@ public class ResolverImpl implements Resolver
                         List<Requirement> blameReqs2 = new ArrayList(blameReqs);
                         blameReqs2.add(blame.m_reqs.get(blame.m_reqs.size() - 1));
                         usedCaps.add(new Blame(blame.m_cap, blameReqs2));
-                            mergeUses(current, currentPkgs, blame.m_cap, blameReqs2,
-                            modulePkgMap, candidateMap, cycleMap);
+                        mergeUses(current, currentPkgs, blame.m_cap, blameReqs2,
+                            modulePkgMap, allCandidates, cycleMap);
                     }
                     else
                     {
                         usedCaps.add(new Blame(blame.m_cap, blameReqs));
                         mergeUses(current, currentPkgs, blame.m_cap, blameReqs,
-                            modulePkgMap, candidateMap, cycleMap);
+                            modulePkgMap, allCandidates, cycleMap);
                     }
                 }
             }
@@ -836,8 +980,9 @@ public class ResolverImpl implements Resolver
     }
 
     private void checkPackageSpaceConsistency(
-        boolean isDynamicImport, Module module,
-        Map<Requirement, Set<Capability>> candidateMap,
+        boolean isDynamicImport,
+        Module module,
+        Candidates allCandidates,
         Map<Module, Packages> modulePkgMap,
         Map<Module, Object> resultCache)
     {
@@ -853,7 +998,7 @@ public class ResolverImpl implements Resolver
         Packages pkgs = modulePkgMap.get(module);
 
         ResolveException rethrow = null;
-        Map<Requirement, Set<Capability>> permutation = null;
+        Candidates permutation = null;
         Set<Requirement> mutated = null;
 
         // Check for conflicting imports from fragments.
@@ -871,9 +1016,9 @@ public class ResolverImpl implements Resolver
                     else if (!sourceBlame.m_cap.getModule().equals(blame.m_cap.getModule()))
                     {
                         // Try to permutate the conflicting requirement.
-                        permutate(candidateMap, blame.m_reqs.get(0), m_importPermutations);
+                        permutate(allCandidates, blame.m_reqs.get(0), m_importPermutations);
                         // Try to permutate the source requirement.
-                        permutate(candidateMap, sourceBlame.m_reqs.get(0), m_importPermutations);
+                        permutate(allCandidates, sourceBlame.m_reqs.get(0), m_importPermutations);
                         // Report conflict.
                         ResolveException ex = new ResolveException(
                             "Unable to resolve module "
@@ -920,7 +1065,7 @@ public class ResolverImpl implements Resolver
                     // that conflict with existing selected candidates.
                     permutation = (permutation != null)
                         ? permutation
-                        : copyCandidateMap(candidateMap);
+                        : allCandidates.copy();
                     rethrow = (rethrow != null)
                         ? rethrow
                         : new ResolveException(
@@ -956,7 +1101,7 @@ public class ResolverImpl implements Resolver
                         // See if we can permutate the candidates for blamed
                         // requirement; there may be no candidates if the module
                         // associated with the requirement is already resolved.
-                        Set<Capability> candidates = permutation.get(req);
+                        SortedSet<Capability> candidates = permutation.getCandidates(req);
                         if ((candidates != null) && (candidates.size() > 1))
                         {
                             mutated.add(req);
@@ -985,7 +1130,7 @@ public class ResolverImpl implements Resolver
             }
         }
 
-        // Check if there are any conflicts with imported packages.
+        // Check if there are any uses conflicts with imported packages.
         for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.entrySet())
         {
             for (Blame importBlame : entry.getValue())
@@ -1003,7 +1148,7 @@ public class ResolverImpl implements Resolver
                         // that conflict with existing selected candidates.
                         permutation = (permutation != null)
                             ? permutation
-                            : copyCandidateMap(candidateMap);
+                            : allCandidates.copy();
                         rethrow = (rethrow != null)
                             ? rethrow
                             : new ResolveException(
@@ -1044,7 +1189,7 @@ public class ResolverImpl implements Resolver
                             // See if we can permutate the candidates for blamed
                             // requirement; there may be no candidates if the module
                             // associated with the requirement is already resolved.
-                            Set<Capability> candidates = permutation.get(req);
+                            SortedSet<Capability> candidates = permutation.getCandidates(req);
                             if ((candidates != null) && (candidates.size() > 1))
                             {
                                 mutated.add(req);
@@ -1082,7 +1227,7 @@ public class ResolverImpl implements Resolver
                         // with existing import decisions, we may end up trying
                         // to permutate the same import a lot of times, so we should
                         // try to check if that the case and only permutate it once.
-                        permutateIfNeeded(candidateMap, req, m_importPermutations);
+                        permutateIfNeeded(allCandidates, req, m_importPermutations);
                     }
 
                     m_logger.log(
@@ -1111,8 +1256,8 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            false, importBlame.m_cap.getModule(), candidateMap,
-                            modulePkgMap, resultCache);
+                            false, importBlame.m_cap.getModule(),
+                            allCandidates, modulePkgMap, resultCache);
                     }
                     catch (ResolveException ex)
                     {
@@ -1123,7 +1268,7 @@ public class ResolverImpl implements Resolver
                         if (permCount == (m_usesPermutations.size() + m_importPermutations.size()))
                         {
                             Requirement req = importBlame.m_reqs.get(0);
-                            permutate(candidateMap, req, m_importPermutations);
+                            permutate(allCandidates, req, m_importPermutations);
                         }
                         throw ex;
                     }
@@ -1133,14 +1278,13 @@ public class ResolverImpl implements Resolver
     }
 
     private static void permutate(
-        Map<Requirement, Set<Capability>> candidateMap, Requirement req,
-        List<Map<Requirement, Set<Capability>>> permutations)
+        Candidates allCandidates, Requirement req, List<Candidates> permutations)
     {
-        Set<Capability> candidates = candidateMap.get(req);
+        SortedSet<Capability> candidates = allCandidates.getCandidates(req);
         if (candidates.size() > 1)
         {
-            Map<Requirement, Set<Capability>> perm = copyCandidateMap(candidateMap);
-            candidates = perm.get(req);
+            Candidates perm = allCandidates.copy();
+            candidates = perm.getCandidates(req);
             Iterator it = candidates.iterator();
             it.next();
             it.remove();
@@ -1149,10 +1293,9 @@ public class ResolverImpl implements Resolver
     }
 
     private static void permutateIfNeeded(
-        Map<Requirement, Set<Capability>> candidateMap, Requirement req,
-        List<Map<Requirement, Set<Capability>>> permutations)
+        Candidates allCandidates, Requirement req, List<Candidates> permutations)
     {
-        Set<Capability> candidates = candidateMap.get(req);
+        SortedSet<Capability> candidates = allCandidates.getCandidates(req);
         if (candidates.size() > 1)
         {
             // Check existing permutations to make sure we haven't
@@ -1162,9 +1305,9 @@ public class ResolverImpl implements Resolver
             // initial candidate for the requirement in question,
             // then it has already been permutated.
             boolean permutated = false;
-            for (Map<Requirement, Set<Capability>> existingPerm : permutations)
+            for (Candidates existingPerm : permutations)
             {
-                Set<Capability> existingPermCands = existingPerm.get(req);
+                Set<Capability> existingPermCands = existingPerm.getCandidates(req);
                 if (!existingPermCands.iterator().next().equals(candidates.iterator().next()))
                 {
                     permutated = true;
@@ -1174,14 +1317,14 @@ public class ResolverImpl implements Resolver
             // import, do so now.
             if (!permutated)
             {
-                permutate(candidateMap, req, permutations);
+                permutate(allCandidates, req, permutations);
             }
         }
     }
 
     private static void calculateExportedPackages(
         Module module,
-        Map<Requirement, Set<Capability>> candidateMap,
+        Candidates allCandidates,
         Map<Module, Packages> modulePkgMap)
     {
         Packages packages = modulePkgMap.get(module);
@@ -1225,7 +1368,7 @@ public class ResolverImpl implements Resolver
             {
                 if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
                 {
-                    Set<Capability> cands = candidateMap.get(req);
+                    Set<Capability> cands = allCandidates.getCandidates(req);
                     if ((cands != null) && !cands.isEmpty())
                     {
                         String pkgName = (String) cands.iterator().next()
@@ -1331,60 +1474,77 @@ public class ResolverImpl implements Resolver
         return sources;
     }
 
-    private static Map<Requirement, Set<Capability>> copyCandidateMap(
-        Map<Requirement, Set<Capability>> candidateMap)
+    private static Module getActualModule(Module m)
     {
-        Map<Requirement, Set<Capability>> copy =
-            new HashMap<Requirement, Set<Capability>>();
-        for (Entry<Requirement, Set<Capability>> entry : candidateMap.entrySet())
+        if (m instanceof WrappedModule)
         {
-            Set<Capability> candidates = new TreeSet(new CandidateComparator());
-            candidates.addAll(entry.getValue());
-            copy.put(entry.getKey(), candidates);
+            return ((WrappedModule) m).getWrappedModule();
         }
-        return copy;
+        return m;
+    }
+
+    private static Capability getActualCapability(Capability c)
+    {
+        if (c instanceof WrappedCapability)
+        {
+            return ((WrappedCapability) c).getWrappedCapability();
+        }
+        return c;
+    }
+
+    private static Requirement getActualRequirement(Requirement r)
+    {
+        if (r instanceof WrappedRequirement)
+        {
+            return ((WrappedRequirement) r).getWrappedRequirement();
+        }
+        return r;
     }
 
     private static Map<Module, List<Wire>> populateWireMap(
         Module module, Map<Module, Packages> modulePkgMap,
-        Map<Module, List<Wire>> wireMap, Map<Requirement, Set<Capability>> candidateMap)
+        Map<Module, List<Wire>> wireMap,
+        Candidates allCandidates)
     {
-        if (!module.isResolved() && !wireMap.containsKey(module))
+        Module unwrappedModule = getActualModule(module);
+        if (!unwrappedModule.isResolved() && !wireMap.containsKey(unwrappedModule))
         {
-            wireMap.put(module, (List<Wire>) Collections.EMPTY_LIST);
+            wireMap.put(unwrappedModule, (List<Wire>) Collections.EMPTY_LIST);
 
             List<Wire> packageWires = new ArrayList<Wire>();
             List<Wire> moduleWires = new ArrayList<Wire>();
 
             for (Requirement req : module.getRequirements())
             {
-                Set<Capability> cands = candidateMap.get(req);
+                SortedSet<Capability> cands = allCandidates.getCandidates(req);
                 if ((cands != null) && (cands.size() > 0))
                 {
                     Capability cand = cands.iterator().next();
                     if (!cand.getModule().isResolved())
                     {
                         populateWireMap(cand.getModule(),
-                            modulePkgMap, wireMap, candidateMap);
+                            modulePkgMap, wireMap, allCandidates);
                     }
                     // Ignore modules that import themselves.
                     if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE)
                         && !module.equals(cand.getModule()))
                     {
                         packageWires.add(
-                            new WireImpl(module,
-                                req,
-                                cand.getModule(),
-                                cand));
+                            new WireImpl(
+                                unwrappedModule,
+                                getActualRequirement(req),
+                                getActualModule(cand.getModule()),
+                                getActualCapability(cand)));
                     }
                     else if (req.getNamespace().equals(Capability.MODULE_NAMESPACE))
                     {
                         Packages candPkgs = modulePkgMap.get(cand.getModule());
                         moduleWires.add(
-                            new WireModuleImpl(module,
-                                req,
-                                cand.getModule(),
-                                cand,
+                            new WireModuleImpl(
+                                unwrappedModule,
+                                getActualRequirement(req),
+                                getActualModule(cand.getModule()),
+                                getActualCapability(cand),
                                 candPkgs.getExportedAndReexportedPackages()));
                     }
                 }
@@ -1392,7 +1552,28 @@ public class ResolverImpl implements Resolver
 
             // Combine wires with module wires last.
             packageWires.addAll(moduleWires);
-            wireMap.put(module, packageWires);
+            wireMap.put(unwrappedModule, packageWires);
+
+            // Add host wire for any fragments.
+            if (module instanceof WrappedModule)
+            {
+                List<Module> fragments = ((WrappedModule) module).getFragments();
+                for (Module fragment : fragments)
+                {
+                    List<Wire> hostWires = wireMap.get(fragment);
+                    if (hostWires == null)
+                    {
+                        hostWires = new ArrayList<Wire>();
+                        wireMap.put(fragment, hostWires);
+                    }
+                    hostWires.add(
+                        new WireHostImpl(
+                            getActualModule(fragment),
+                            getHostRequirement(fragment),
+                            unwrappedModule,
+                            getHostCapability(unwrappedModule)));
+                }
+            }
         }
 
         return wireMap;
@@ -1400,7 +1581,7 @@ public class ResolverImpl implements Resolver
 
     private static Map<Module, List<Wire>> populateDynamicWireMap(
         Module module, String pkgName, Map<Module, Packages> modulePkgMap,
-        Map<Module, List<Wire>> wireMap, Map<Requirement, Set<Capability>> candidateMap)
+        Map<Module, List<Wire>> wireMap, Candidates allCandidates)
     {
         wireMap.put(module, (List<Wire>) Collections.EMPTY_LIST);
 
@@ -1419,7 +1600,7 @@ public class ResolverImpl implements Resolver
                     if (!blame.m_cap.getModule().isResolved())
                     {
                         populateWireMap(blame.m_cap.getModule(), modulePkgMap, wireMap,
-                            candidateMap);
+                            allCandidates);
                     }
 
                     List<Attribute> attrs = new ArrayList();
@@ -1444,40 +1625,6 @@ public class ResolverImpl implements Resolver
         wireMap.put(module, packageWires);
 
         return wireMap;
-    }
-
-    private static void dumpCandidateMap(Map<Requirement, Set<Capability>> candidateMap)
-    {
-        // Create set of all modules from requirements.
-        Set<Module> modules = new HashSet();
-        for (Entry<Requirement, Set<Capability>> entry : candidateMap.entrySet())
-        {
-            modules.add(entry.getKey().getModule());
-        }
-        // Now dump the modules.
-        System.out.println("=== BEGIN CANDIDATE MAP ===");
-        for (Module module : modules)
-        {
-            System.out.println("  " + module
-                 + " (" + (module.isResolved() ? "RESOLVED)" : "UNRESOLVED)"));
-            for (Requirement req : module.getRequirements())
-            {
-                Set<Capability> candidates = candidateMap.get(req);
-                if ((candidates != null) && (candidates.size() > 0))
-                {
-                    System.out.println("    " + req + ": " + candidates);
-                }
-            }
-            for (Requirement req : module.getDynamicRequirements())
-            {
-                Set<Capability> candidates = candidateMap.get(req);
-                if ((candidates != null) && (candidates.size() > 0))
-                {
-                    System.out.println("    " + req + ": " + candidates);
-                }
-            }
-        }
-        System.out.println("=== END CANDIDATE MAP ===");
     }
 
     private static void dumpModulePkgMap(Map<Module, Packages> modulePkgMap)

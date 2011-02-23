@@ -124,25 +124,28 @@ class BundleImpl implements Bundle
     {
         // Remove the bundle's associated modules from the resolver state
         // and close them.
-        for (int i = 0; i < m_modules.size(); i++)
+        for (Module m : m_modules)
         {
-            getFramework().getResolverState().removeModule(m_modules.get(i));
-            ((ModuleImpl) m_modules.get(i)).close();
-        }
-    }
+            // Remove the module from the resolver state.
+            getFramework().getResolver().removeModule(m);
 
-    /**
-     * This is sort of a hacky method called after uninstalling a bundle.
-     * If the bundle is a fragment, this will unmerge it from any unresolved
-     * hosts. This is necessary since fragments are pre-merged into unresolved
-     * hosts. If uninstalled fragments are not unmerged from unresolved hosts,
-     * any attempts to subsequently resolve the host will result in an exception.
-     */
-    synchronized void cleanAfterUninstall()
-    {
-        for (int i = 0; i < m_modules.size(); i++)
-        {
-            getFramework().getResolverState().unmergeFragment(m_modules.get(i));
+            // Set fragments to null, which will remove the module from all
+            // of its dependent fragment modules.
+            try
+            {
+                ((ModuleImpl) m).attachFragments(null);
+            }
+            catch (Exception ex)
+            {
+                getFramework().getLogger().log(
+                    m.getBundle(), Logger.LOG_ERROR, "Error detaching fragments.", ex);
+            }
+            // Set wires to null, which will remove the module from all
+            // of its dependent modules.
+            ((ModuleImpl) m).setWires(null);
+
+            // Close the module's content.
+            ((ModuleImpl) m).close();
         }
     }
 
@@ -1100,7 +1103,7 @@ class BundleImpl implements Bundle
         {
             // Since revising a module adds the module to the global
             // state, we must remove it from the global state on rollback.
-            getFramework().getResolverState().removeModule(m);
+            getFramework().getResolver().removeModule(m);
         }
         return m_archive.rollbackRevise();
     }
@@ -1139,7 +1142,7 @@ class BundleImpl implements Bundle
         {
             // Now that the module is added to the bundle, we can update
             // the resolver's module state.
-            getFramework().getResolverState().addModule(module);
+            getFramework().getResolver().addModule(module);
         }
     }
 
