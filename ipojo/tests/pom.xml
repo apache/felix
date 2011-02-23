@@ -45,7 +45,7 @@
     <ipojo.api.snapshot>1.7.0-SNAPSHOT</ipojo.api.snapshot>
 
     <ipojo.composite.release>1.6.0</ipojo.composite.release>
-    <ipojo.composite.snapshot>1.7.0-SNAPSHOT</ipojo.composite.snapshot>
+    <ipojo.composite.snapshot>1.9.0-SNAPSHOT</ipojo.composite.snapshot>
 
     <ipojo.eah.release>1.6.0</ipojo.eah.release>
     <ipojo.eah.snapshot>1.7.0-SNAPSHOT</ipojo.eah.snapshot>
@@ -156,7 +156,7 @@
               <plugin>
                   <groupId>org.apache.felix</groupId>
                   <artifactId>maven-ipojo-plugin</artifactId>
-                  <version>1.7.0-SNAPSHOT</version>
+                  <version>1.8.0</version>
               </plugin>
               <plugin>
                   <groupId>org.apache.felix</groupId>
