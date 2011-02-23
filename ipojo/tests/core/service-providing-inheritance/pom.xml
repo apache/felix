@@ -28,7 +28,7 @@
   <groupId>ipojo.tests</groupId>
   <artifactId>tests.core.inheritance</artifactId>
   <name>iPOJO Service Providing with inheritance Test Suite</name>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>${ipojo.core.snapshot}</version>
   <description>The the service providing with inheritance</description>
 
   <build>
@@ -61,7 +61,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>1.7.0-SNAPSHOT</version>
+      <version>${ipojo.core.snapshot}</version>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>

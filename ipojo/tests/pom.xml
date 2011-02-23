@@ -36,6 +36,23 @@
       </repository>
   </repositories>
 
+
+  <properties>
+    <ipojo.core.release>1.8.0</ipojo.core.release>
+    <ipojo.core.snapshot>1.9.0-SNAPSHOT</ipojo.core.snapshot>
+
+    <ipojo.api.release>1.6.0</ipojo.api.release>
+    <ipojo.api.snapshot>1.7.0-SNAPSHOT</ipojo.api.snapshot>
+
+    <ipojo.composite.release>1.6.0</ipojo.composite.release>
+    <ipojo.composite.snapshot>1.7.0-SNAPSHOT</ipojo.composite.snapshot>
+
+    <ipojo.eah.release>1.6.0</ipojo.eah.release>
+    <ipojo.eah.snapshot>1.7.0-SNAPSHOT</ipojo.eah.snapshot>
+    <ipojo.temporal.snapshot>1.7.0-SNAPSHOT</ipojo.temporal.snapshot>
+    <ipojo.wbp.snapshot>1.5.0-SNAPSHOT</ipojo.wbp.snapshot>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
         <dependency>
@@ -51,27 +68,27 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.6.4</version>
+            <version>${ipojo.core.release}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.6.4</version>
+            <version>${ipojo.core.release}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.api</artifactId>
-            <version>1.6.0</version>
+            <version>${ipojo.api.release}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.composite</artifactId>
-            <version>1.6.0</version>
+            <version>${ipojo.composite.release}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.6.4</version>
+            <version>${ipojo.core.release}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

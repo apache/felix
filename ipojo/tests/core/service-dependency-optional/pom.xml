@@ -27,7 +27,7 @@
   <groupId>ipojo.tests</groupId>
   <artifactId>tests.core.dependency.optional</artifactId>
   <name>iPOJO Optional Dependency Test Suite</name>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>${ipojo.core.snapshot}</version>
   <description>Test the optional dependencies</description>
 
   <build>
@@ -61,11 +61,12 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>1.7.0-SNAPSHOT</version>
+      <version>${ipojo.core.snapshot}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+      <version>${ipojo.core.snapshot}</version>
     </dependency>
     <!--
     Pax Exam API:

@@ -27,7 +27,7 @@
   <groupId>ipojo.tests</groupId>
   <artifactId>tests.core.handler</artifactId>
   <name>iPOJO Handler Mechanism Test Suite</name>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>${ipojo.core.snapshot}</version>
   <description>Test the handler mechanism</description>
 
   <build>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>1.7.0-SNAPSHOT</version>
+      <version>${ipojo.core.snapshot}</version>
     </dependency>
 
   <!-- Pax Exam API: -->

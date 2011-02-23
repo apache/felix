@@ -28,12 +28,11 @@
 	<name>iPOJO Service Dependency Comparator Test Suite</name>
 	<artifactId>tests.core.service.dependency.comparator</artifactId>
 	<groupId>ipojo.tests</groupId>
-	<version>1.5.0-SNAPSHOT</version>
+	<version>${ipojo.core.snapshot}</version>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.ipojo</artifactId>
-			<version>1.7.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
