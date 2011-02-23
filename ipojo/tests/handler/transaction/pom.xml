@@ -41,7 +41,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-      <version>1.7.0-SNAPSHOT</version>
+      <version>${ipojo.core.release}</version>
     </dependency>
     <dependency>
       <groupId>org.ow2.chameleon</groupId>
@@ -121,8 +121,8 @@
           <groupId>com.sun.jmx</groupId>
         </exclusion>
         <exclusion>
-        	<artifactId>mail</artifactId>
-        	<groupId>javax.mail</groupId>
+          <artifactId>mail</artifactId>
+          <groupId>javax.mail</groupId>
         </exclusion>
       </exclusions>
     </dependency>

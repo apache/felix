@@ -3,14 +3,14 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-  	<groupId>ipojo.tests</groupId>
-  	<artifactId>ipojo.tests</artifactId>
-  	<version>1.5.0-SNAPSHOT</version>
+    <groupId>ipojo.tests</groupId>
+    <artifactId>ipojo.tests</artifactId>
+    <version>1.5.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.felix</groupId>
   <artifactId>org.apache.felix.ipojo.online.manipulator.test</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.7.0-SNAPSHOT</version>
   <name>Online Manipulator Test</name>
   <packaging>jar</packaging>
     <build>
@@ -40,7 +40,7 @@
   </build>
 
   <dependencies>
-  	<dependency>
+    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
     </dependency>
@@ -69,42 +69,42 @@
     If your test code is based on JUnit you will have to have the Junit
     support artifact:
   -->
-	<dependency>
-		<groupId>org.ops4j.pax.exam</groupId>
-		<artifactId>pax-exam-junit</artifactId>
-		<version>1.2.0</version>
-	</dependency>
-	<dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<version>4.5</version>
-		<type>jar</type>
-		<scope>test</scope>
-	</dependency>
+  <dependency>
+    <groupId>org.ops4j.pax.exam</groupId>
+    <artifactId>pax-exam-junit</artifactId>
+    <version>1.2.0</version>
+  </dependency>
+  <dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.5</version>
+    <type>jar</type>
+    <scope>test</scope>
+  </dependency>
 
-	<dependency>
-		<groupId>org.ops4j.pax.swissbox</groupId>
-		<artifactId>pax-swissbox-tinybundles</artifactId>
-		<version>1.2.0</version>
-	</dependency>
-	<dependency>
-		<groupId>xerces</groupId>
-		<artifactId>xercesImpl</artifactId>
-		<version>2.4.0</version>
-	</dependency>
-	<dependency>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>org.apache.felix.ipojo.annotations</artifactId>
-	</dependency>
-	<dependency>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>org.apache.felix.ipojo</artifactId>
-	</dependency>
-	<dependency>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>org.apache.felix.ipojo.online.manipulator</artifactId>
-		<version>1.7.0-SNAPSHOT</version>
-	</dependency>
+  <dependency>
+    <groupId>org.ops4j.pax.swissbox</groupId>
+    <artifactId>pax-swissbox-tinybundles</artifactId>
+    <version>1.2.0</version>
+  </dependency>
+  <dependency>
+    <groupId>xerces</groupId>
+    <artifactId>xercesImpl</artifactId>
+    <version>2.4.0</version>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.ipojo</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.ipojo.online.manipulator</artifactId>
+    <version>1.7.0-SNAPSHOT</version>
+  </dependency>
 
   </dependencies>
 </project>
