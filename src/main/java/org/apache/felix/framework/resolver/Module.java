@@ -52,6 +52,11 @@ public interface Module
     List<Wire> getWires();
     boolean isResolved();
     Object getSecurityContext();
+    // TODO: FRAGMENT RESOLVER - Technically, this is only necessary for fragments.
+    //       When we refactoring for the new R4.3 framework API, we'll have to see
+    //       if this is still necessary, since the new BundleWirings API will give
+    //       us another way to detect it.
+    boolean isRemovalPending();
 
     // Content access methods.
     Content getContent();

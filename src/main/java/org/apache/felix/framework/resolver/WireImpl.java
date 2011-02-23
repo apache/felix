@@ -25,6 +25,7 @@ import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.CapabilityImpl;
 
+// TODO: FRAGMENT-RESOLVER - This should probably be package private.
 public class WireImpl implements Wire
 {
     private final Module m_importer;
@@ -62,7 +63,10 @@ public class WireImpl implements Wire
 
     public String toString()
     {
-        return m_req + " -> " + "[" + m_exporter + "]";
+        return "[" + m_importer + "] "
+            + m_req.getNamespace() + "; "
+            + m_req.getFilter() + " -> "
+            + "[" + m_exporter + "]";
     }
 
     /* (non-Javadoc)

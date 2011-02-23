@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.felix.framework.Felix.FelixResolver;
+import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.capabilityset.Attribute;
 import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.Directive;
@@ -199,7 +199,6 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             m_capabilities = new ArrayList<Capability>(0);
             m_logger.log(
-                felix,
                 Logger.LOG_ERROR,
                 "Error parsing system bundle export statement: "
                 + syspkgs, ex);
@@ -726,7 +725,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             return null;
         }
 
-        public FelixResolver getResolver()
+        public StatefulResolver getResolver()
         {
             return null;
         }

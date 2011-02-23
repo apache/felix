@@ -24,7 +24,6 @@ import java.net.*;
 import java.security.*;
 import java.util.*;
 import java.util.Map.Entry;
-import org.apache.felix.framework.ModuleImpl.FragmentRequirement;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.cache.BundleCache;
@@ -76,6 +75,7 @@ import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.startlevel.StartLevel;
+import sun.org.mozilla.javascript.internal.UintMap;
 
 public class Felix extends BundleImpl implements Framework
 {
@@ -92,9 +92,8 @@ public class Felix extends BundleImpl implements Framework
     // Mutable configuration properties passed into constructor.
     private final Map m_configMutableMap;
 
-    // MODULE FACTORY.
-    private final FelixResolverState m_resolverState;
-    private final FelixResolver m_felixResolver;
+    // Resolver and resolver state.
+    private final StatefulResolver m_resolver;
 
     // Lock object used to determine if an individual bundle
     // lock or the global lock can be acquired.
@@ -364,10 +363,11 @@ public class Felix extends BundleImpl implements Framework
         m_bundleStreamHandler = new URLHandlersBundleStreamHandler(this);
 
         // Create a resolver and its state.
-        m_resolverState = new FelixResolverState(
-            m_logger, (String) m_configMap.get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT));
-        m_felixResolver = new FelixResolver(
-            new ResolverImpl(m_logger), m_resolverState);
+        m_resolver = new StatefulResolver(
+            new ResolverImpl(m_logger),
+            new ResolverStateImpl(
+                m_logger,
+                (String) m_configMap.get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT)));
 
         // Create the extension manager, which we will use as the module
         // definition for creating the system bundle module.
@@ -394,14 +394,9 @@ public class Felix extends BundleImpl implements Framework
         return m_configMap;
     }
 
-    FelixResolver getResolver()
+    StatefulResolver getResolver()
     {
-        return m_felixResolver;
-    }
-
-    FelixResolverState getResolverState()
-    {
-        return m_resolverState;
+        return m_resolver;
     }
 
     URLStreamHandler getBundleStreamHandler()
@@ -641,7 +636,7 @@ public class Felix extends BundleImpl implements Framework
                 // state to be set to RESOLVED.
                 try
                 {
-                    m_felixResolver.resolve(getCurrentModule());
+                    m_resolver.resolve(getCurrentModule());
                 }
                 catch (ResolveException ex)
                 {
@@ -1989,7 +1984,7 @@ public class Felix extends BundleImpl implements Framework
                         {
                             m_extensionManager.addExtensionBundle(this, bundle);
 // TODO: REFACTOR - Perhaps we could move this into extension manager.
-                            m_resolverState.refreshSystemBundleModule(m_extensionManager.getModule());
+                            m_resolver.addModule(m_extensionManager.getModule());
 // TODO: REFACTOR - Not clear why this is here. We should look at all of these steps more closely.
                             setBundleStateAndNotify(bundle, Bundle.RESOLVED);
                         }
@@ -2374,10 +2369,6 @@ public class Felix extends BundleImpl implements Framework
             // Set state to uninstalled.
             setBundleStateAndNotify(bundle, Bundle.UNINSTALLED);
             bundle.setLastModified(System.currentTimeMillis());
-
-            // If this bundle is a fragment, unmerge it from any
-            // unresolved hosts.
-            bundle.cleanAfterUninstall();
         }
         finally
         {
@@ -2552,7 +2543,7 @@ public class Felix extends BundleImpl implements Framework
                 else
                 {
                     m_extensionManager.addExtensionBundle(this, bundle);
-                    m_resolverState.refreshSystemBundleModule(m_extensionManager.getModule());
+                    m_resolver.addModule(m_extensionManager.getModule());
                 }
             }
             catch (Throwable ex)
@@ -3135,7 +3126,7 @@ public class Felix extends BundleImpl implements Framework
         List<Attribute> attrs = new ArrayList<Attribute>(1);
         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
         Requirement req = new RequirementImpl(null, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<Capability> exports = m_resolverState.getCandidates(null, req, false);
+        Set<Capability> exports = m_resolver.getCandidates(null, req, false);
 
         // We only want resolved capabilities.
         for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
@@ -3282,7 +3273,7 @@ public class Felix extends BundleImpl implements Framework
                         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
                         Requirement req =
                             new RequirementImpl(null, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-                        Set<Capability> exports = m_resolverState.getCandidates(null, req, false);
+                        Set<Capability> exports = m_resolver.getCandidates(null, req, false);
                         // We only want resolved capabilities.
                         for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
                         {
@@ -3436,13 +3427,13 @@ public class Felix extends BundleImpl implements Framework
     {
         try
         {
-            m_felixResolver.resolve(bundle.getCurrentModule());
+            m_resolver.resolve(bundle.getCurrentModule());
         }
         catch (ResolveException ex)
         {
             if (ex.getModule() != null)
             {
-                Bundle b = ((ModuleImpl) ex.getModule()).getBundle();
+                Bundle b = ex.getModule().getBundle();
                 throw new BundleException(
                     "Unresolved constraint in bundle "
                     + b + ": " + ex.getMessage());
@@ -3974,18 +3965,34 @@ public class Felix extends BundleImpl implements Framework
     // Miscellaneous inner classes.
     //
 
-    public class FelixResolver
+    class StatefulResolver
     {
         private final Resolver m_resolver;
-        private final FelixResolverState m_resolverState;
+        private final ResolverStateImpl m_resolverState;
 
-        public FelixResolver(Resolver resolver, FelixResolverState resolverState)
+        StatefulResolver(Resolver resolver, ResolverStateImpl resolverState)
         {
             m_resolver = resolver;
             m_resolverState = resolverState;
         }
 
-        public void resolve(Module rootModule) throws ResolveException
+        void addModule(Module m)
+        {
+            m_resolverState.addModule(m);
+        }
+
+        void removeModule(Module m)
+        {
+            m_resolverState.removeModule(m);
+        }
+
+        Set<Capability> getCandidates(
+            Module reqModule, Requirement req, boolean obeyMandatory)
+        {
+            return m_resolverState.getCandidates(reqModule, req, obeyMandatory);
+        }
+
+        void resolve(Module rootModule) throws ResolveException
         {
             // Although there is a race condition to check the bundle state
             // then lock it, we do this because we don't want to acquire the
@@ -4013,48 +4020,16 @@ public class Felix extends BundleImpl implements Framework
                         return;
                     }
 
-                    // If the root module to resolve is a fragment, then we
-                    // must find a host to attach it to and resolve the host
-                    // instead, since the underlying resolver doesn't know
-                    // how to deal with fragments.
-                    Module newRootModule = m_resolverState.findHost(rootModule);
-                    if (!Util.isFragment(newRootModule))
-                    {
-                        // Check singleton status.
-                        m_resolverState.checkSingleton(newRootModule);
+                    // Check singleton status.
+// TOOD: FRAGMENT RESOLVER - Merge singleton handling into resolver.
+//                    m_resolverState.checkSingleton(rootModule);
 
-                        boolean repeat;
-                        do
-                        {
-                            repeat = false;
-                            try
-                            {
-                                // Resolve the module.
-                                wireMap = m_resolver.resolve(m_resolverState, newRootModule);
+                    // Resolve the module.
+                    wireMap = m_resolver.resolve(
+                        m_resolverState, rootModule, m_resolverState.getFragments());
 
-                                // Mark all modules as resolved.
-                                markResolvedModules(wireMap);
-                            }
-                            catch (ResolveException ex)
-                            {
-                                if ((ex.getRequirement() != null)
-                                    && (ex.getRequirement() instanceof FragmentRequirement)
-                                    && (rootModule !=
-                                        ((FragmentRequirement) ex.getRequirement()).getFragment()))
-                                {
-                                    m_resolverState.detachFragment(
-                                        newRootModule,
-                                        ((FragmentRequirement) ex.getRequirement()).getFragment());
-                                    repeat = true;
-                                }
-                                else
-                                {
-                                    throw ex;
-                                }
-                            }
-                        }
-                        while (repeat);
-                    }
+                    // Mark all modules as resolved.
+                    markResolvedModules(wireMap);
                 }
                 finally
                 {
@@ -4066,7 +4041,7 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        public Wire resolve(Module module, String pkgName) throws ResolveException
+        Wire resolve(Module module, String pkgName) throws ResolveException
         {
             Wire candidateWire = null;
             // We cannot dynamically import if the module is not already resolved
@@ -4100,7 +4075,8 @@ public class Felix extends BundleImpl implements Framework
                         }
                     }
 
-                    wireMap = m_resolver.resolve(m_resolverState, module, pkgName);
+                    wireMap = m_resolver.resolve(
+                        m_resolverState, module, pkgName, m_resolverState.getFragments());
 
                     if ((wireMap != null) && wireMap.containsKey(module))
                     {
@@ -4135,15 +4111,9 @@ public class Felix extends BundleImpl implements Framework
             return candidateWire;
         }
 
-        public synchronized Set<Capability> getCandidates(
-            Module reqModule, Requirement req, boolean obeyMandatory)
-        {
-            return m_resolverState.getCandidates(reqModule, req, obeyMandatory);
-        }
-
         // This method duplicates a lot of logic from:
         // ResolverImpl.getDynamicImportCandidates()
-        public boolean isAllowedDynamicImport(Module module, String pkgName)
+        boolean isAllowedDynamicImport(Module module, String pkgName)
         {
             // Unresolved modules cannot dynamically import, nor can the default
             // package be dynamically imported.
@@ -4196,42 +4166,136 @@ public class Felix extends BundleImpl implements Framework
         }
 
         private void markResolvedModules(Map<Module, List<Wire>> wireMap)
+            throws ResolveException
         {
+// DO THIS IN THREE PASSES:
+// 1. Aggregate fragments per host.
+// 2. Attach wires and fragments to hosts.
+//    -> If fragments fail to attach, then undo.
+// 3. Mark hosts and fragments as resolved.
             if (wireMap != null)
             {
-                Iterator<Entry<Module, List<Wire>>> iter = wireMap.entrySet().iterator();
-                // Iterate over the map to mark the modules as resolved and
-                // update our resolver data structures.
-                while (iter.hasNext())
+                // First pass: Loop through the wire map to find the host wires
+                // for any fragments and map a host to all of its fragments.
+                Map<Module, List<Module>> hosts = new HashMap<Module, List<Module>>();
+                for (Entry<Module, List<Wire>> entry : wireMap.entrySet())
                 {
-                    Entry<Module, List<Wire>> entry = iter.next();
                     Module module = entry.getKey();
                     List<Wire> wires = entry.getValue();
 
-                    // Only add wires attribute if some exist; export
-                    // only modules may not have wires.
-                    for (int wireIdx = 0; wireIdx < wires.size(); wireIdx++)
+                    if (Util.isFragment(module))
                     {
-                        m_logger.log(
-                            Logger.LOG_DEBUG,
-                            "WIRE: " + wires.get(wireIdx));
+                        for (Iterator<Wire> itWires = wires.iterator(); itWires.hasNext(); )
+                        {
+                            Wire w = itWires.next();
+                            List<Module> fragments = hosts.get(w.getExporter());
+                            if (fragments == null)
+                            {
+                                fragments = new ArrayList<Module>();
+                                hosts.put(w.getExporter(), fragments);
+                            }
+                            fragments.add(w.getImporter());
+                        }
                     }
+                }
+
+                // Second pass: Loop through the wire map to set wires and attach
+                // fragments, if any.
+                for (Entry<Module, List<Wire>> entry : wireMap.entrySet())
+                {
+                    Module module = entry.getKey();
+                    List<Wire> wires = entry.getValue();
+
+// TODO: FRAGMENT RESOLVER - Better way to handle log level?
+                    for (Iterator<Wire> itWires = wires.iterator(); itWires.hasNext(); )
+                    {
+                        Wire w = itWires.next();
+                        if (!Util.isFragment(module))
+                        {
+                            m_logger.log(Logger.LOG_DEBUG, "WIRE: " + w);
+                        }
+                        else
+                        {
+                            m_logger.log(
+                                Logger.LOG_DEBUG,
+                                "FRAGMENT WIRE: "
+                                + module + " -> hosted by -> " + w.getExporter());
+                        }
+                    }
+
+                    // Set the module's wires.
                     ((ModuleImpl) module).setWires(wires);
 
-                    // Resolve all attached fragments.
-                    List<Module> fragments = ((ModuleImpl) module).getFragments();
-                    for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
+                    // Attach fragments, if any.
+                    List<Module> fragments = hosts.get(module);
+                    if (fragments != null)
                     {
-                        ((ModuleImpl) fragments.get(i)).setResolved();
-                        // Update the state of the module's bundle to resolved as well.
-                        markBundleResolved(fragments.get(i));
-                        m_logger.log(((ModuleImpl) fragments.get(i)).getBundle(),
-                            Logger.LOG_DEBUG,
-                            "FRAGMENT WIRE: " + fragments.get(i) + " -> hosted by -> " + module);
+                        try
+                        {
+                            ((ModuleImpl) module).attachFragments(fragments);
+                        }
+                        catch (Exception ex)
+                        {
+                            // This is a fatal error, so undo everything and
+                            // throw an exception.
+                            for (Entry<Module, List<Wire>> reentry : wireMap.entrySet())
+                            {
+                                module = reentry.getKey();
+
+                                // Undo wires.
+                                ((ModuleImpl) module).setWires(null);
+
+                                fragments = hosts.get(module);
+                                if (fragments != null)
+                                {
+                                    try
+                                    {
+                                        // Undo fragments.
+                                        ((ModuleImpl) module).attachFragments(null);
+                                    }
+                                    catch (Exception ex2)
+                                    {
+                                        // We are in big trouble.
+                                        RuntimeException rte = new RuntimeException(
+                                            "Unable to clean up resolver failure.", ex2);
+                                        m_logger.log(
+                                            Logger.LOG_ERROR,
+                                            rte.getMessage(), ex2);
+                                        throw rte;
+                                    }
+
+                                    // Reindex host with no fragments.
+                                    m_resolverState.addModule(module);
+                                }
+                            }
+
+                            ResolveException re = new ResolveException(
+                                "Unable to attach fragments to " + module,
+                                module, null);
+                            re.initCause(ex);
+                            m_logger.log(
+                                Logger.LOG_ERROR,
+                                re.getMessage(), ex);
+                            throw re;
+                        }
+
+                        // Reindex host with attached fragments.
+                        m_resolverState.addModule(module);
                     }
-                    // Update the resolver state to show the module as resolved.
+                }
+
+                // Third pass: Loop through the wire map to mark modules as resolved
+                // and update the resolver state.
+                for (Entry<Module, List<Wire>> entry : wireMap.entrySet())
+                {
+                    Module module = entry.getKey();
+                    // Mark module as resolved.
                     ((ModuleImpl) module).setResolved();
-                    m_resolverState.moduleResolved(module);
+                    // Update resolver state to remove substituted capabilities.
+                    if (!Util.isFragment(module))
+                    {
+                        m_resolverState.removeSubstitutedCapabilities(module);
+                    }
                     // Update the state of the module's bundle to resolved as well.
                     markBundleResolved(module);
                 }
@@ -4419,7 +4483,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable throwable)
                 {
-                    m_logger.log(Felix.this,
+                    m_logger.log(
                         Logger.LOG_WARNING,
                         "Exception stopping a system bundle activator.",
                         throwable);
