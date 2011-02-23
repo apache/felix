@@ -21,17 +21,20 @@ package org.apache.felix.framework.resolver;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.Requirement;
 
 public interface Resolver
 {
-    Map<Module, List<Wire>> resolve(ResolverState state, Module module);
-    Map<Module, List<Wire>> resolve(ResolverState state, Module module, String pkgName);
+    Map<Module, List<Wire>> resolve(ResolverState state, Module module, Set<Module> fragments);
+    Map<Module, List<Wire>> resolve(
+        ResolverState state, Module module, String pkgName, Set<Module> fragments);
 
     public static interface ResolverState
     {
-        Set<Capability> getCandidates(Module module, Requirement req, boolean obeyMandatory);
+        SortedSet<Capability> getCandidates(
+            Module module, Requirement req, boolean obeyMandatory);
         void checkExecutionEnvironment(Module module) throws ResolveException;
         void checkNativeLibraries(Module module) throws ResolveException;
     }

@@ -36,7 +36,7 @@ import org.apache.felix.framework.util.StringComparator;
 public class CapabilitySet
 {
     private final Map<String, Map<Object, Set<Capability>>> m_indices;
-    private final Set<Capability> m_capList = new HashSet<Capability>();
+    private final Set<Capability> m_capSet = new HashSet<Capability>();
     private final static SecureAction m_secureAction = new SecureAction();
 
     public CapabilitySet(List<String> indexProps, boolean caseSensitive)
@@ -52,7 +52,7 @@ public class CapabilitySet
 
     public void addCapability(Capability cap)
     {
-        m_capList.add(cap);
+        m_capSet.add(cap);
 
         // Index capability.
         for (Entry<String, Map<Object, Set<Capability>>> entry : m_indices.entrySet())
@@ -98,7 +98,7 @@ public class CapabilitySet
 
     public void removeCapability(Capability cap)
     {
-        if (m_capList.remove(cap))
+        if (m_capSet.remove(cap))
         {
             for (Entry<String, Map<Object, Set<Capability>>> entry : m_indices.entrySet())
             {
@@ -146,7 +146,7 @@ public class CapabilitySet
 
     public Set<Capability> match(SimpleFilter sf, boolean obeyMandatory)
     {
-        Set<Capability> matches = match(m_capList, sf);
+        Set<Capability> matches = match(m_capSet, sf);
         return (obeyMandatory)
             ? matchMandatory(matches, sf)
             : matches;

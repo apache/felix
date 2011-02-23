@@ -38,8 +38,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-import org.apache.felix.framework.Felix.FelixResolver;
+import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.capabilityset.Attribute;
 import org.apache.felix.framework.capabilityset.Capability;
@@ -72,7 +74,7 @@ public class ModuleImpl implements Module
 {
     private final Logger m_logger;
     private final Map m_configMap;
-    private final FelixResolver m_resolver;
+    private final StatefulResolver m_resolver;
     private final String m_id;
     private final Content m_content;
     private final Map m_headerMap;
@@ -201,7 +203,7 @@ public class ModuleImpl implements Module
     }
 
     public ModuleImpl(
-        Logger logger, Map configMap, FelixResolver resolver,
+        Logger logger, Map configMap, StatefulResolver resolver,
         Bundle bundle, String id, Map headerMap, Content content,
         URLStreamHandler streamHandler, String[] bootPkgs,
         boolean[] bootPkgWildcards)
@@ -473,10 +475,20 @@ public class ModuleImpl implements Module
 
     public synchronized void setWires(List<Wire> wires)
     {
+        // This not only sets the wires for the module, but it also records
+        // the dependencies this module has on other modules (i.e., the provider
+        // end of the wire) to simplify bookkeeping.
+
+        // Fragments don't depend on other their hosts, so we just record the
+        // wires for informational purposes.
+// TODO: FRAGMENT RESOLVER - It is possible for a fragment to get more wires
+//       later if it is attached to more hosts. We need to deal with that.
+        boolean isFragment = Util.isFragment(this);
+
         // Remove module from old wire modules' dependencies,
         // since we are no longer dependent on any the moduels
         // from the old wires.
-        for (int i = 0; (m_wires != null) && (i < m_wires.size()); i++)
+        for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
             if (m_wires.get(i).getCapability().getNamespace().equals(Capability.MODULE_NAMESPACE))
             {
@@ -491,7 +503,7 @@ public class ModuleImpl implements Module
         m_wires = wires;
 
         // Add ourself as a dependent to the new wires' modules.
-        for (int i = 0; (m_wires != null) && (i < m_wires.size()); i++)
+        for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
             if (m_wires.get(i).getCapability().getNamespace().equals(Capability.MODULE_NAMESPACE))
             {
@@ -512,6 +524,27 @@ public class ModuleImpl implements Module
     public void setResolved()
     {
         m_isResolved = true;
+    }
+
+
+    public synchronized void setSecurityContext(Object securityContext)
+    {
+        m_protectionDomain = (ProtectionDomain) securityContext;
+    }
+
+    public synchronized Object getSecurityContext()
+    {
+        return m_protectionDomain;
+    }
+
+    // TODO: FRAGMENT RESOLVER - Technically, this is only necessary for fragments.
+    //       When we refactoring for the new R4.3 framework API, we'll have to see
+    //       if this is still necessary, since the new BundleWirings API will give
+    //       us another way to detect it.
+    public boolean isRemovalPending()
+    {
+        return (m_bundle.getState() == Bundle.UNINSTALLED)
+            || (this != ((BundleImpl) m_bundle).getCurrentModule());
     }
 
     //
@@ -623,7 +656,7 @@ public class ModuleImpl implements Module
 
         // If there is nothing on the class path, then include
         // "." by default, as per the spec.
-        if (localContentList.size() == 0)
+        if (localContentList.isEmpty())
         {
             localContentList.add(content);
         }
@@ -1156,6 +1189,25 @@ public class ModuleImpl implements Module
             ((ModuleImpl) m_fragments.get(i)).removeDependentHost(this);
         }
 
+        // Close previous fragment contents.
+        for (int i = 0; (m_fragmentContents != null) && (i < m_fragmentContents.length); i++)
+        {
+            m_fragmentContents[i].close();
+        }
+        m_fragmentContents = null;
+
+        // Close the old content path, since we'll need to recalculate it for
+        // for the added (or removed) fragments.
+        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.length); i++)
+        {
+            // Don't close this module's content, if it is on the content path.
+            if (m_content != m_contentPath[i])
+            {
+                m_contentPath[i].close();
+            }
+        }
+        m_contentPath = null;
+
         // Remove cached capabilities and requirements.
         m_cachedCapabilities = null;
         m_cachedRequirements = null;
@@ -1164,46 +1216,35 @@ public class ModuleImpl implements Module
         // Update the dependencies on the new fragments.
         m_fragments = fragments;
 
-        // We need to add ourself as a dependent of each fragment
-        // module. We also need to create an array of fragment contents
-        // to attach to our content loader.
+        // We need to sort the fragments and add ourself as a dependent of each one.
+        // We also need to create an array of fragment contents to attach to our
+        // content path.
         if (m_fragments != null)
         {
-            Content[] fragmentContents = new Content[m_fragments.size()];
+            // Sort fragments according to ID order, if necessary.
+            // Note that this sort order isn't 100% correct since
+            // it uses a string, but it is likely close enough and
+            // avoids having to create more objects.
+            if (m_fragments.size() > 1)
+            {
+                SortedMap<String, Module> sorted = new TreeMap<String, Module>();
+                for (Module f : m_fragments)
+                {
+                    sorted.put(f.getId(), f);
+                }
+                m_fragments = new ArrayList(sorted.values());
+            }
+            m_fragmentContents = new Content[m_fragments.size()];
             for (int i = 0; (m_fragments != null) && (i < m_fragments.size()); i++)
             {
                 ((ModuleImpl) m_fragments.get(i)).addDependentHost(this);
-                fragmentContents[i] =
+                m_fragmentContents[i] =
                     m_fragments.get(i).getContent()
                         .getEntryAsContent(FelixConstants.CLASS_PATH_DOT);
             }
-            // Now attach the fragment contents to our content loader.
-            attachFragmentContents(fragmentContents);
+            // Recalculate the content path for the new fragments.
+            m_contentPath = initializeContentPath();
         }
-    }
-
-    // This must be called holding the object lock.
-    private void attachFragmentContents(Content[] fragmentContents)
-        throws Exception
-    {
-        // Close existing fragment contents.
-        if (m_fragmentContents != null)
-        {
-            for (int i = 0; i < m_fragmentContents.length; i++)
-            {
-                m_fragmentContents[i].close();
-            }
-        }
-        m_fragmentContents = fragmentContents;
-
-        if (m_contentPath != null)
-        {
-            for (int i = 0; i < m_contentPath.length; i++)
-            {
-                m_contentPath[i].close();
-            }
-        }
-        m_contentPath = initializeContentPath();
     }
 
     public synchronized List<Module> getDependentHosts()
@@ -1277,21 +1318,13 @@ public class ModuleImpl implements Module
         {
             m_contentPath[i].close();
         }
+        m_contentPath = null;
         for (int i = 0; (m_fragmentContents != null) && (i < m_fragmentContents.length); i++)
         {
             m_fragmentContents[i].close();
         }
+        m_fragmentContents = null;
         m_classLoader = null;
-    }
-
-    public synchronized void setSecurityContext(Object securityContext)
-    {
-        m_protectionDomain = (ProtectionDomain) securityContext;
-    }
-
-    public synchronized Object getSecurityContext()
-    {
-        return m_protectionDomain;
     }
 
     public String toString()
@@ -2150,7 +2183,7 @@ public class ModuleImpl implements Module
     }
 
     private static String diagnoseClassLoadError(
-        FelixResolver resolver, ModuleImpl module, String name)
+        StatefulResolver resolver, ModuleImpl module, String name)
     {
         // We will try to do some diagnostics here to help the developer
         // deal with this exception.
