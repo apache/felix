@@ -124,21 +124,25 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
                 pattern = localePrefix.substring( lastSlash + 1 );
             }
 
-            Enumeration entries = getBundle().findEntries( path, pattern + "*.properties", false );
             TreeSet localeSet = new TreeSet();
-            while ( entries.hasMoreElements() )
+
+            Enumeration entries = getBundle().findEntries( path, pattern + "*.properties", false );
+            if ( entries != null )
             {
-                URL url = ( URL ) entries.nextElement();
-                String name = url.getPath();
-                name = name.substring( name.lastIndexOf( '/' ) + 1 + pattern.length(), name.length()
-                    - ".properties".length() );
-                if ( name.startsWith( "_" ) )
+                while ( entries.hasMoreElements() )
                 {
-                    name = name.substring( 1 );
-                }
-                if ( name.length() > 0 )
-                {
-                    localeSet.add( name );
+                    URL url = ( URL ) entries.nextElement();
+                    String name = url.getPath();
+                    name = name.substring( name.lastIndexOf( '/' ) + 1 + pattern.length(), name.length()
+                        - ".properties".length() );
+                    if ( name.startsWith( "_" ) )
+                    {
+                        name = name.substring( 1 );
+                    }
+                    if ( name.length() > 0 )
+                    {
+                        localeSet.add( name );
+                    }
                 }
             }
 
