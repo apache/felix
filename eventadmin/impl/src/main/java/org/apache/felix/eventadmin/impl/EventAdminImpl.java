@@ -18,6 +18,8 @@
  */
 package org.apache.felix.eventadmin.impl;
 
+import java.util.List;
+
 import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.handler.HandlerTasks;
 import org.apache.felix.eventadmin.impl.tasks.*;
@@ -128,7 +130,7 @@ public class EventAdminImpl implements EventAdmin
              * @throws IllegalStateException - This is a null object and this method
              *          will always throw an IllegalStateException
              */
-            public HandlerTask[] createHandlerTasks(final Event event)
+            public List createHandlerTasks(final Event event)
             {
                 throw new IllegalStateException("The EventAdmin is stopped");
             }
@@ -149,10 +151,10 @@ public class EventAdminImpl implements EventAdmin
      * This is a utility method that uses the given DeliverTasks to create a
      * dispatch tasks that subsequently is used to dispatch the given HandlerTasks.
      */
-    private void handleEvent(final HandlerTask[] managers,
+    private void handleEvent(List managers,
         final DeliverTask manager)
     {
-        if (0 < managers.length)
+        if (managers != null && managers.size() > 0 )
         {
             // This might throw an IllegalStateException in case that we are stopped
             // and the null object for m_managers was not fast enough established
