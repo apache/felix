@@ -62,7 +62,7 @@ public class AsyncDeliverTasks implements DeliverTask
      *
      * @see org.apache.felix.eventadmin.impl.tasks.DeliverTask#execute(org.apache.felix.eventadmin.impl.tasks.HandlerTask[])
      */
-    public void execute(final HandlerTask[] tasks)
+    public void execute(final List tasks)
     {
         final Thread currentThread = Thread.currentThread();
         TaskExecuter executer = null;
@@ -91,7 +91,7 @@ public class AsyncDeliverTasks implements DeliverTask
 
         private final Object m_key;
 
-        public TaskExecuter(final HandlerTask[] tasks, final Object key)
+        public TaskExecuter(final List tasks, final Object key)
         {
             m_key = key;
             m_tasks.add(tasks);
@@ -102,10 +102,10 @@ public class AsyncDeliverTasks implements DeliverTask
             boolean running;
             do
             {
-                HandlerTask[] tasks = null;
+                List tasks = null;
                 synchronized ( m_tasks )
                 {
-                    tasks = (HandlerTask[]) m_tasks.remove(0);
+                    tasks = (List) m_tasks.remove(0);
                 }
                 m_deliver_task.execute(tasks);
                 synchronized ( m_running_threads )
@@ -119,7 +119,7 @@ public class AsyncDeliverTasks implements DeliverTask
             } while ( running );
         }
 
-        public void add(final HandlerTask[] tasks)
+        public void add(final List tasks)
         {
             synchronized ( m_tasks )
             {

@@ -18,7 +18,8 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
-import org.apache.felix.eventadmin.impl.tasks.HandlerTask;
+import java.util.List;
+
 import org.osgi.service.event.Event;
 
 /**
@@ -37,5 +38,5 @@ public interface HandlerTasks
      *
      * @return A delivery task for each handler that matches the given event
      */
-    HandlerTask[] createHandlerTasks(final Event event);
+   List createHandlerTasks(final Event event);
 }

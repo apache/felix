@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.felix.eventadmin.impl.security.PermissionsUtil;
-import org.apache.felix.eventadmin.impl.tasks.HandlerTask;
 import org.apache.felix.eventadmin.impl.tasks.HandlerTaskImpl;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.*;
@@ -91,10 +90,8 @@ public class BlacklistingHandlerTasks implements HandlerTasks
      *
      * @see org.apache.felix.eventadmin.impl.handler.HandlerTasks#createHandlerTasks(org.osgi.service.event.Event)
      */
-    public HandlerTask[] createHandlerTasks(final Event event)
+    public List createHandlerTasks(final Event event)
     {
-        final List result = new ArrayList();
-
         ServiceReference[] handlerRefs = null;
 
         try
@@ -108,11 +105,12 @@ public class BlacklistingHandlerTasks implements HandlerTasks
                 "Invalid EVENT_TOPIC [" + event.getTopic() + "]", e);
         }
 
-        if(null == handlerRefs)
+        if (null == handlerRefs || handlerRefs.length == 0 )
         {
-            handlerRefs = new ServiceReference[0];
+            return null;
         }
 
+        final List result = new ArrayList();
         for (int i = 0; i < handlerRefs.length; i++)
         {
             if (!m_blackList.contains(handlerRefs[i])
@@ -142,8 +140,7 @@ public class BlacklistingHandlerTasks implements HandlerTasks
             }
         }
 
-        return (HandlerTaskImpl[]) result
-            .toArray(new HandlerTaskImpl[result.size()]);
+        return result;
     }
 
     /**

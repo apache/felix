@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +18,19 @@
  */
 package org.apache.felix.eventadmin.impl.tasks;
 
+import java.util.List;
+
 /**
  * Dispatch given event dispatch tasks.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface DeliverTask
 {
     /**
      * Dispatch the given event dispatch tasks.
-     * 
+     *
      * @param handlerTasks The event dispatch tasks to execute
      */
-    public void execute(final HandlerTask[] handlerTasks);
+    public void execute(List handlerTasks);
 }

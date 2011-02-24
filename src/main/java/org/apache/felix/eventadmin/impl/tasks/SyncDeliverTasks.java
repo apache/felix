@@ -18,6 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl.tasks;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
 
 import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
@@ -189,9 +192,9 @@ public class SyncDeliverTasks implements DeliverTask
      *
      * @param tasks The event handler dispatch tasks to execute
      *
-     * @see org.apache.felix.eventadmin.impl.tasks.DeliverTask#execute(HandlerTask[])
+     * @see org.apache.felix.eventadmin.impl.tasks.DeliverTask#execute(List)
      */
-    public void execute(final HandlerTask[] tasks)
+    public void execute(final List tasks)
     {
         final Thread sleepingThread = Thread.currentThread();
         SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
@@ -207,9 +210,10 @@ public class SyncDeliverTasks implements DeliverTask
             syncThread.innerEventHandlingStart();
         }
 
-        for(int i=0;i<tasks.length;i++)
+        final Iterator i = tasks.iterator();
+        while ( i.hasNext() )
         {
-            final HandlerTask task = tasks[i];
+            final HandlerTask task = (HandlerTask)i.next();
 
             if ( !useTimeout(task) )
             {

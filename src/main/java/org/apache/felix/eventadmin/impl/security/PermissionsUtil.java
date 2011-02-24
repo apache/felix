@@ -23,8 +23,6 @@ import org.osgi.service.event.TopicPermission;
 /**
  * Utility class for permissions.
  *
- * @see org.apache.felix.eventadmin.impl.security.TopicPermissions
- *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class PermissionsUtil
@@ -45,7 +43,6 @@ public abstract class PermissionsUtil
      * @return The created permission or a <tt>java.lang.Object</tt> in case the
      *      permission could not be created.
      *
-     * @see org.apache.felix.eventadmin.impl.security.TopicPermissions#createTopicPermission(String)
      * @see org.osgi.service.event.TopicPermission
      */
     public static Object createPublishPermission(final String topic)
@@ -81,7 +78,6 @@ public abstract class PermissionsUtil
      * @return The created permission or a <tt>java.lang.Object</tt> in case the
      *      permission could not be created.
      *
-     * @see org.apache.felix.eventadmin.impl.security.TopicPermissions#createTopicPermission(String)
      * @see org.osgi.service.event.TopicPermission
      */
     public static Object createSubscribePermission(final String topic)
