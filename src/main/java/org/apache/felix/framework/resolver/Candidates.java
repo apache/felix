@@ -245,6 +245,8 @@ public class Candidates
                         }
                         else
                         {
+// TODO: FRAGMENT RESOLVER - Fragments should only be removed when they no longer
+//       match any hosts, not immediately.
                             unselectedFragments.add(m);
                         }
                     }

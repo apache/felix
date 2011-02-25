@@ -446,6 +446,7 @@ public class ResolverImpl implements Resolver
     }
 
 // TODO: FELIX3 - Modify to not be recursive.
+// TODO: FRAGMENT RESOLVER - Does it make sense to move this to Candidates?
     private void populateCandidates(
         ResolverState state, Module module, Candidates allCandidates,
         Map<Module, Object> resultCache)
