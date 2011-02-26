@@ -39,8 +39,8 @@ public class JSONMetaData implements MetaData, Cloneable
     private HashMap<String, Object> m_metadata = new HashMap<String, Object>();
 
     /**
-     * Decodes a JSON metadata for either a Service or a Dependency descriptor entry.
-     * The JSON object values contains either some of the following types: a String, a String[], or a Dictionary of String/String[].
+     * Decodes SON metadata for either a Service or a Dependency descriptor entry.
+     * The JSON object contains some of the following types: a String, a String[], or a Dictionary of String/String[].
      * @param jso the JSON object that corresponds to a dependency manager descriptor entry line.
      * @throws JSONException 
      */
