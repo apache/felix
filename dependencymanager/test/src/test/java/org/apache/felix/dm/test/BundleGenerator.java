@@ -20,9 +20,9 @@ package org.apache.felix.dm.test;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.Properties;
 
 import aQute.lib.osgi.Analyzer;
@@ -79,9 +79,12 @@ public class BundleGenerator
             // Check if the system tmp dir exists
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            if (tmp != null && !tmp.exists())
+            if (!tmp.exists())
             {
-                tmp.mkdirs();
+                if (! tmp.mkdirs())
+                {
+                    throw new IOException("Could not create temporary directory: " + tmp);
+                }
             }
 
             // Deduce the classpath from Export-Package, or Private-Package headers.
