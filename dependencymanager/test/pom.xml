@@ -52,12 +52,10 @@
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
 		</dependency>
-		
 		<dependency>
 			<groupId>biz.aQute</groupId>
-			<artifactId>bnd</artifactId>
+			<artifactId>bndlib</artifactId>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.ops4j.pax.exam</groupId>
 			<artifactId>pax-exam</artifactId>

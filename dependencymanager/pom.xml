@@ -106,8 +106,8 @@
 
 			<dependency>
 				<groupId>biz.aQute</groupId>
-				<artifactId>bnd</artifactId>
-				<version>0.0.401</version>
+				<artifactId>bndlib</artifactId>
+				<version>1.15.0</version>
 			</dependency>
 
 			<dependency>
@@ -197,12 +197,6 @@
 			<id>maven2-repository.dev.java.net</id>
 			<name>Java.net Maven 2 Repository</name>
 			<url>http://download.java.net/maven/2</url>
-		</repository>
-
-		<repository>
-			<id>maven2-repository.biz.aQute</id>
-			<name>aQute SARL Maven 2 Repository</name>
-			<url>http://www.aqute.biz/repo</url>
 		</repository>
 	</repositories>
 

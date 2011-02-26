@@ -15,16 +15,19 @@
 * KIND, either express or implied.  See the License for the
 * specific language governing permissions and limitations
 * under the License.
-*/
+ */
 package org.apache.felix.dm.test;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Properties;
 
-import aQute.bnd.main.bnd;
+import aQute.lib.osgi.Analyzer;
+import aQute.lib.osgi.Builder;
+import aQute.lib.osgi.Jar;
 
 /**
  * Helper used to generate a bundle dynamically.
@@ -74,12 +77,13 @@ public class BundleGenerator
         try
         {
             // Check if the system tmp dir exists
-            
+
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            if (tmp != null && ! tmp.exists()) {
+            if (tmp != null && !tmp.exists())
+            {
                 tmp.mkdirs();
             }
-            
+
             // Deduce the classpath from Export-Package, or Private-Package headers.
 
             String pkg = _directives.getProperty("Export-Package");
@@ -89,8 +93,7 @@ public class BundleGenerator
             }
             if (pkg == null)
             {
-                throw new IllegalArgumentException(
-                    "You must either specify a Private-Package, or an Export-Package directive");
+                throw new IllegalArgumentException("You must either specify a Private-Package, or an Export-Package directive");
             }
 
             String classpath = getClassPath(pkg);
@@ -131,9 +134,7 @@ public class BundleGenerator
 
             // Launch Bnd in order to generate our tiny test bundle.
 
-            bnd bnd = new bnd();
-            bnd.main(new String[] { "-failok", "build", "-noeclipse", "-classpath", classpath,
-                    "-output", output.getPath(), directives.getPath() });
+            buildWithBnd(_directives, classpath, output);
 
             // Return the URL of the generated bundle, as a String.
 
@@ -149,6 +150,22 @@ public class BundleGenerator
         {
             throw new RuntimeException("Unexpected exception while generating DM test bundle", t);
         }
+    }
+
+    /**
+     * Invoke Bnd builder for generating the target tiny bundle.
+     */
+    private void buildWithBnd(Properties directives, String classpath, File output)
+        throws Exception
+    {
+        Builder builder = new Builder();
+        builder.setProperty(Analyzer.FAIL_OK, "true");
+        builder.setProperties(directives);
+        builder.setClasspath(new String[] { classpath });
+        Jar jar = builder.build();
+        jar.setName(output.getName());
+        jar.write(output);
+        builder.close();
     }
 
     /**
