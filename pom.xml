@@ -68,7 +68,7 @@
 				<artifactId>maven-bundle-plugin</artifactId>
 				<configuration>
 					<instructions>
-						<Bundle-SymbolicName>org.apache.felix.dm.shell</Bundle-SymbolicName>
+						<Bundle-SymbolicName>org.apache.felix.dependencymanager.shell</Bundle-SymbolicName>
 						<Bundle-Activator>org.apache.felix.dm.shell.Activator</Bundle-Activator>
 						<Bundle-Name>Apache Felix Dependency Manager Shell</Bundle-Name>
 						<Bundle-Description>Shell command for the dependency manager.</Bundle-Description>
