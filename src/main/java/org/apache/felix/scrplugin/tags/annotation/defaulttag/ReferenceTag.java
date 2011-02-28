@@ -21,11 +21,7 @@ package org.apache.felix.scrplugin.tags.annotation.defaulttag;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.AutoDetect;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.ReferenceStrategy;
+import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.scrplugin.tags.JavaField;
@@ -94,7 +90,7 @@ public class ReferenceTag extends AbstractTag {
 
     @Override
     public String getName() {
-        return Constants.REFERENCE;
+        return "Reference";
     }
 
     @Override
