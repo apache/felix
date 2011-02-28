@@ -322,7 +322,7 @@ public class Component extends AbstractObject {
                     boolean isServiceFactory = false;
                     if (this.getService() != null) {
                         if ( this.getService().getInterfaces().size() == 0 ) {
-                            this.logError( iLog, "Service interface information is missing for @scr.service tag" );
+                            this.logError( iLog, "Service interface information is missing!" );
                         }
                         this.getService().validate(specVersion, iLog);
                         isServiceFactory = this.getService().isServicefactory();

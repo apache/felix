@@ -21,11 +21,7 @@ package org.apache.felix.scrplugin.tags.annotation.defaulttag;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.scrplugin.tags.annotation.AbstractTag;
@@ -121,7 +117,7 @@ public class ComponentTag extends AbstractTag {
 
     @Override
     public String getName() {
-        return Constants.COMPONENT;
+        return "Component";
     }
 
     @Override
