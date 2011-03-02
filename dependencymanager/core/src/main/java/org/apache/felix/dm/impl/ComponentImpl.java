@@ -514,7 +514,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     	synchronized (m_dependencies) {
     		state = m_state;
     	}
-    	if (state.isAllRequiredAvailable()) {
+    	if (state.isBound()) {
     		listener.starting(this);
     		listener.started(this);
     	}
