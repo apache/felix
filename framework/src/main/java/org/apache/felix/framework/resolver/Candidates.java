@@ -42,11 +42,11 @@ public class Candidates
     private final Map<Capability, Set<Requirement>> m_dependentMap;
     // Maps a requirement to the capability it matches.
     private final Map<Requirement, SortedSet<Capability>> m_candidateMap;
-    // Maps a module to a map containing its potential fragments; the
-    // fragment map maps a fragment symbolic name to a map that maps
-    // a version to a list of fragments matching that symbolic name
-    // and version.
-    private final Map<Module, Map<String, Map<Version, List<Module>>>> m_hostFragments;
+    // Maps a host capability to a map containing its potential fragments;
+    // the fragment map maps a fragment symbolic name to a map that maps
+    // a version to a list of fragments requirements matching that symbolic
+    // name and version.
+    private final Map<Capability, Map<String, Map<Version, List<Requirement>>>> m_hostFragments;
     // Maps a module to its associated wrapped module; this only happens
     // when a module being resolved has fragments to attach to it.
     private final Map<Module, WrappedModule> m_allWrappedHosts;
@@ -63,7 +63,7 @@ public class Candidates
         Module root,
         Map<Capability, Set<Requirement>> dependentMap,
         Map<Requirement, SortedSet<Capability>> candidateMap,
-        Map<Module, Map<String, Map<Version, List<Module>>>> hostFragments,
+        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
         Map<Module, WrappedModule> wrappedHosts)
     {
         m_root = root;
@@ -86,7 +86,8 @@ public class Candidates
         m_root = root;
         m_dependentMap = new HashMap<Capability, Set<Requirement>>();
         m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
-        m_hostFragments = new HashMap<Module, Map<String, Map<Version, List<Module>>>>();
+        m_hostFragments =
+            new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
         m_allWrappedHosts = new HashMap<Module, WrappedModule>();
     }
 
@@ -118,27 +119,28 @@ public class Candidates
             // Keep track of hosts and associated fragments.
             if (isFragment)
             {
-                Map<String, Map<Version, List<Module>>> fragments =
-                    m_hostFragments.get(cap.getModule());
+                Map<String, Map<Version, List<Requirement>>>
+                    fragments = m_hostFragments.get(cap);
                 if (fragments == null)
                 {
-                    fragments = new HashMap<String, Map<Version, List<Module>>>();
-                    m_hostFragments.put(cap.getModule(), fragments);
+                    fragments = new HashMap<String, Map<Version, List<Requirement>>>();
+                    m_hostFragments.put(cap, fragments);
                 }
-                Map<Version, List<Module>> fragmentVersions =
+                Map<Version, List<Requirement>> fragmentVersions =
                     fragments.get(req.getModule().getSymbolicName());
                 if (fragmentVersions == null)
                 {
-                    fragmentVersions = new TreeMap<Version, List<Module>>(Collections.reverseOrder());
+                    fragmentVersions =
+                        new TreeMap<Version, List<Requirement>>(Collections.reverseOrder());
                     fragments.put(req.getModule().getSymbolicName(), fragmentVersions);
                 }
-                List<Module> actual = fragmentVersions.get(req.getModule().getVersion());
+                List<Requirement> actual = fragmentVersions.get(req.getModule().getVersion());
                 if (actual == null)
                 {
-                    actual = new ArrayList<Module>();
+                    actual = new ArrayList<Requirement>();
                     fragmentVersions.put(req.getModule().getVersion(), actual);
                 }
-                actual.add(req.getModule());
+                actual.add(req);
             }
         }
     }
@@ -224,41 +226,54 @@ public class Candidates
         // Steps 1 and 2
         List<WrappedModule> wrappedHosts = new ArrayList<WrappedModule>();
         List<Module> unselectedFragments = new ArrayList<Module>();
-        for (Entry<Module, Map<String, Map<Version, List<Module>>>> entry :
+        for (Entry<Capability, Map<String, Map<Version, List<Requirement>>>> hostEntry :
             m_hostFragments.entrySet())
         {
             // Step 1
+            Capability hostCap = hostEntry.getKey();
+            Map<String, Map<Version, List<Requirement>>> fragments = hostEntry.getValue();
             List<Module> selectedFragments = new ArrayList<Module>();
-            Module host = entry.getKey();
-            Map<String, Map<Version, List<Module>>> fragments = entry.getValue();
-            for (Entry<String, Map<Version, List<Module>>> fragEntry : fragments.entrySet())
+            for (Entry<String, Map<Version, List<Requirement>>> fragEntry : fragments.entrySet())
             {
                 boolean isFirst = true;
-                for (Entry<Version, List<Module>> versionEntry : fragEntry.getValue().entrySet())
+                for (Entry<Version, List<Requirement>> versionEntry
+                    : fragEntry.getValue().entrySet())
                 {
-                    for (Module m : versionEntry.getValue())
+                    for (Requirement hostReq : versionEntry.getValue())
                     {
-                        if (isFirst && !m.isRemovalPending())
+                        // Select the highest version of the fragment that
+                        // is not removal pending.
+                        if (isFirst && !hostReq.getModule().isRemovalPending())
                         {
-                            selectedFragments.add(m);
+                            selectedFragments.add(hostReq.getModule());
                             isFirst = false;
                         }
+                        // For any fragment that wasn't selected, remove the
+                        // current host as a potential host for it and remove it
+                        // as a dependent on the host. If there are no more
+                        // potential hosts for the fragment, then mark it as
+                        // unselected for later removal.
                         else
                         {
-// TODO: FRAGMENT RESOLVER - Fragments should only be removed when they no longer
-//       match any hosts, not immediately.
-                            unselectedFragments.add(m);
+                            m_dependentMap.get(hostCap).remove(hostReq);
+                            SortedSet<Capability> hosts = m_candidateMap.get(hostReq);
+                            hosts.remove(hostCap);
+                            if (hosts.isEmpty())
+                            {
+                                unselectedFragments.add(hostReq.getModule());
+                            }
                         }
                     }
                 }
             }
 
             // Step 2
-            WrappedModule wrappedHost = new WrappedModule(host, selectedFragments);
+            WrappedModule wrappedHost = new WrappedModule(hostCap.getModule(), selectedFragments);
             wrappedHosts.add(wrappedHost);
-            m_allWrappedHosts.put(host, wrappedHost);
+            m_allWrappedHosts.put(hostCap.getModule(), wrappedHost);
         }
 
+System.out.println("+++ UNSELECTED FRAGMENTS: " + unselectedFragments);
         // Step 3
         for (Module m : unselectedFragments)
         {
@@ -364,18 +379,19 @@ public class Candidates
 
                 if (isFragment)
                 {
-                    Map<String, Map<Version, List<Module>>> fragments =
-                        m_hostFragments.get(cap.getModule());
+                    Map<String, Map<Version, List<Requirement>>>
+                        fragments = m_hostFragments.get(cap);
                     if (fragments != null)
                     {
-                        Map<Version, List<Module>> fragmentVersions =
+                        Map<Version, List<Requirement>> fragmentVersions =
                             fragments.get(req.getModule().getSymbolicName());
                         if (fragmentVersions != null)
                         {
-                            List<Module> actual = fragmentVersions.get(req.getModule().getVersion());
+                            List<Requirement> actual =
+                                fragmentVersions.get(req.getModule().getVersion());
                             if (actual != null)
                             {
-                                actual.remove(req.getModule());
+                                actual.remove(req);
                                 if (actual.isEmpty())
                                 {
                                     fragmentVersions.remove(req.getModule().getVersion());
@@ -384,7 +400,7 @@ public class Candidates
                                         fragments.remove(req.getModule().getSymbolicName());
                                         if (fragments.isEmpty())
                                         {
-                                            m_hostFragments.remove(cap.getModule());
+                                            m_hostFragments.remove(cap);
                                         }
                                     }
                                 }
