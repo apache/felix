@@ -21,6 +21,7 @@ package org.apache.felix.gogo.runtime;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -67,7 +68,7 @@ public class CommandProcessorImpl implements CommandProcessor
             session.close();
         }
     }
-    
+
     public void addConverter(Converter c)
     {
         converters.add(c);
@@ -88,10 +89,9 @@ public class CommandProcessorImpl implements CommandProcessor
         listeners.remove(l);
     }
 
-
     public Set<String> getCommands()
     {
-        return commands.keySet();
+        return Collections.unmodifiableSet(commands.keySet());
     }
 
     Function getCommand(String name, final Object path)
@@ -104,9 +104,10 @@ public class CommandProcessorImpl implements CommandProcessor
         }
 
         name = name.toLowerCase();
-        Object cmd = commands.get(name);
         String cfunction = name.substring(colon);
         boolean anyScope = (colon == 1 && name.charAt(0) == '*');
+
+        Object cmd = commands.get(name);
 
         if (null == cmd && anyScope)
         {
@@ -116,12 +117,15 @@ public class CommandProcessorImpl implements CommandProcessor
             {
                 if (scope.equals("*"))
                 {
-                    for (Entry<String, Object> entry : commands.entrySet())
+                    synchronized (commands)
                     {
-                        if (entry.getKey().endsWith(cfunction))
+                        for (Entry<String, Object> entry : commands.entrySet())
                         {
-                            cmd = entry.getValue();
-                            break;
+                            if (entry.getKey().endsWith(cfunction))
+                            {
+                                cmd = entry.getValue();
+                                break;
+                            }
                         }
                     }
                 }
@@ -178,22 +182,31 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public void addCommand(String scope, Object target, String function)
     {
-        commands.put((scope + ":" + function).toLowerCase(), target);
+        synchronized (commands)
+        {
+            commands.put((scope + ":" + function).toLowerCase(), target);
+        }
     }
 
     public void removeCommand(String scope, String function)
     {
         String func = (scope + ":" + function).toLowerCase();
-        commands.remove(func);
+        synchronized (commands)
+        {
+            commands.remove(func);
+        }
     }
 
     public void removeCommand(Object target)
     {
-        for (Iterator<Object> i = commands.values().iterator(); i.hasNext();)
+        synchronized (commands)
         {
-            if (i.next() == target)
+            for (Iterator<Object> i = commands.values().iterator(); i.hasNext();)
             {
-                i.remove();
+                if (i.next() == target)
+                {
+                    i.remove();
+                }
             }
         }
     }
@@ -226,7 +239,10 @@ public class CommandProcessorImpl implements CommandProcessor
 
     protected void put(String name, Object target)
     {
-        commands.put(name, target);
+        synchronized (commands)
+        {
+            commands.put(name, target);
+        }
     }
 
     public Object convert(Class<?> desiredType, Object in)
@@ -279,7 +295,8 @@ public class CommandProcessorImpl implements CommandProcessor
         }
     }
 
-    void afterExecute(CommandSession session, CharSequence commandline, Exception exception)
+    void afterExecute(CommandSession session, CharSequence commandline,
+        Exception exception)
     {
         for (CommandSessionListener l : listeners)
         {
