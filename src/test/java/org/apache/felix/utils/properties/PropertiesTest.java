@@ -88,4 +88,21 @@ public class PropertiesTest extends TestCase {
         props.save(System.err);
         System.err.println("=====");
     }
+
+    public void testJavaUtilPropertiesCompatibility() throws Exception {
+        Properties properties = new Properties();
+        properties.load(this.getClass().getClassLoader().getResourceAsStream(TEST_PROPERTIES_FILE));
+
+        String test = properties.getProperty("test");
+        assertEquals(test, "test");
+
+        String defaultValue = properties.getProperty("notfound", "default");
+        assertEquals(defaultValue, "default");
+
+        properties.setProperty("another", "another");
+        assertEquals(properties.getProperty("another"), "another");
+
+        properties.store(System.err, null);
+        System.err.println("====");
+    }
 }

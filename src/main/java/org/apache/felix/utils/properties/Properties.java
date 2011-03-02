@@ -29,13 +29,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p>
@@ -133,9 +127,68 @@ public class Properties extends AbstractMap<String, String> {
         saveLayout(writer);
     }
 
+    /**
+     * Store a properties into a output stream, preserving comments, special character, etc.
+     * This method is mainly to be compatible with the java.util.Properties class.
+     *
+     * @param os an output stream.
+     * @param comment this parameter is ignored as this Properties
+     * @throws IOException
+     */
+    public void store(OutputStream os, String comment) throws IOException {
+        this.save(os);
+    }
+
+    /**
+     * Searches for the property with the specified key in this property list.
+     *
+     * @param key the property key.
+     * @return the value in this property list with the specified key value.
+     */
+    public String getProperty(String key) {
+        return this.get(key);
+    }
+
+    /**
+     * Searches for the property with the specified key in this property list. If the key is not found in this property
+     * list, the default property list, and its defaults, recursively, are then checked. The method returns the default
+     * value argument if the property is not found.
+     *
+     * @param key the property key.
+     * @param defaultValue a default value.
+     * @return
+     */
+    public String getProperty(String key, String defaultValue) {
+        if (this.get(key) != null)
+            return this.get(key);
+        return defaultValue;
+    }
+
     @Override
     public Set<Entry<String, String>> entrySet() {
         return storage.entrySet();
+    }
+
+    /**
+     * Returns an enumeration of all the keys in this property list, including distinct keys in the default property
+     * list if a key of the same name has not already been found from the main properties list.
+     *
+     * @return an enumeration of all the keys in this property list, including the keys in the default property list.
+     */
+    public Enumeration<?> propertyNames() {
+        return Collections.enumeration(storage.keySet());
+    }
+
+    /**
+     * Calls the map method put. Provided for parallelism with the getProperty method.
+     * Enforces use of strings for property keys and values. The value returned is the result of the map call to put.
+     *
+     * @param key the key to be placed into this property list.
+     * @param value the value corresponding to the key.
+     * @return the previous value of the specified key in this property list, or null if it did not have one.
+     */
+    public Object setProperty(String key, String value) {
+        return this.put(key, value);
     }
 
     @Override
