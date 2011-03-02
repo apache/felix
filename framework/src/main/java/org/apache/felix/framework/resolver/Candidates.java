@@ -273,7 +273,6 @@ public class Candidates
             m_allWrappedHosts.put(hostCap.getModule(), wrappedHost);
         }
 
-System.out.println("+++ UNSELECTED FRAGMENTS: " + unselectedFragments);
         // Step 3
         for (Module m : unselectedFragments)
         {
