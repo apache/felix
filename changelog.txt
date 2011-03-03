@@ -1,3 +1,13 @@
+Changes from 1.2.8 to 1.2.10
+----------------------------
+
+** Bug
+    * [FELIX-2836] - Async threads should be daemon threads
+
+** Improvement
+    * [FELIX-2861] - Remove unnecessary object creation
+
+
 Changes from 1.2.6 to 1.2.8
 ---------------------------
 
