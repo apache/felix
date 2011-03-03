@@ -71,7 +71,7 @@
     </url>
 
     <url name="aQute" m2compatible="true">
-      <artifact pattern="http://www.aQute.biz/repo/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+      <artifact pattern="http://repo1.maven.org/maven2/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
     </url>
   </resolvers>
 
