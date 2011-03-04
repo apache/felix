@@ -23,11 +23,11 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http</artifactId>
         <version>2.2.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <name>Apache Felix Http Bundle</name>
-    <artifactId>org.apache.felix.http.bundle</artifactId>
+    <name>Apache Felix Http Samples - Cometd</name>
+    <artifactId>org.apache.felix.http.samples.cometd</artifactId>
     <packaging>jar</packaging>
 
     <build>
@@ -38,30 +38,29 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.felix.http.bundle.internal.CombinedActivator
+                            org.apache.felix.http.samples.cometd.Activator
                         </Bundle-Activator>
-                        <Export-Package>
-                            org.apache.felix.http.api;version=2.0.4;-split-package:=merge-first,
-                            org.osgi.service.http;version=1.2.0;-split-package:=merge-first,
-                            org.cometd;version=1.0.beta7,
-                            javax.servlet.*;version=2.5;-split-package:=merge-first
-                        </Export-Package>
                         <Private-Package>
-                            org.apache.felix.http.base.*;-split-package:=merge-first,
-                            org.apache.felix.http.bridge.*,
-                            org.apache.felix.http.bundle.*,
-                            org.apache.felix.http.cometd.*,
-                            org.apache.felix.http.jetty.*,
-                            org.apache.felix.http.whiteboard.*,
-                            org.mortbay.*;-split-package:=merge-first
+                            org.apache.felix.http.samples.cometd.*
                         </Private-Package>
                         <Import-Package>
-                            javax.servlet.*,
-                            org.cometd,
                             *;resolution:=optional
                         </Import-Package>
                     </instructions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.0.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -84,22 +83,7 @@
         </dependency>
         <dependency>
             <groupId>${pom.groupId}</groupId>
-            <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${pom.groupId}</groupId>
-            <artifactId>org.apache.felix.http.cometd</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${pom.groupId}</groupId>
-            <artifactId>org.apache.felix.http.jetty</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${pom.groupId}</groupId>
-            <artifactId>org.apache.felix.http.whiteboard</artifactId>
+            <artifactId>org.apache.felix.http.api</artifactId>
             <version>${pom.version}</version>
         </dependency>
     </dependencies>

@@ -20,6 +20,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.apache.felix.http.bridge.internal.BridgeActivator;
 import org.apache.felix.http.whiteboard.internal.WhiteboardActivator;
+import org.apache.felix.http.cometd.internal.CometdActivator;
 import org.apache.felix.http.jetty.internal.JettyActivator;
 
 public final class CombinedActivator
@@ -27,10 +28,12 @@ public final class CombinedActivator
 {
     private final static String JETTY_ENABLED_PROP = "org.apache.felix.http.jettyEnabled";
     private final static String WHITEBOARD_ENABLED_PROP = "org.apache.felix.http.whiteboardEnabled";
+    private final static String COMETD_ENABLED_PROP = "org.apache.felix.http.cometdEnabled";
 
     private BundleActivator jettyActivator;
     private BundleActivator bridgeActivator;
     private BundleActivator whiteboardActivator;
+    private BundleActivator cometdActivator;
 
     public void start(BundleContext context)
         throws Exception
@@ -45,6 +48,10 @@ public final class CombinedActivator
             this.whiteboardActivator = new WhiteboardActivator();
         }
 
+        if ("true".equals(context.getProperty(COMETD_ENABLED_PROP))) {
+            this.cometdActivator = new CometdActivator();
+        }
+
         if (this.jettyActivator != null) {
             this.jettyActivator.start(context);
         }
@@ -56,11 +63,19 @@ public final class CombinedActivator
         if (this.whiteboardActivator != null) {
             this.whiteboardActivator.start(context);
         }
+
+        if (this.cometdActivator != null) {
+            this.cometdActivator.start(context);
+        }
     }
 
     public void stop(BundleContext context)
         throws Exception
     {
+        if (this.cometdActivator != null) {
+            this.cometdActivator.stop(context);
+        }
+
         if (this.whiteboardActivator != null) {
             this.whiteboardActivator.stop(context);
         }
