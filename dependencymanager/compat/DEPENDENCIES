@@ -7,10 +7,6 @@ Apache software licensed under Apache License 2.0.
 
 I. Included Third-Party Software
 
-This product includes software from http://www.json.org.
-Copyright (c) 2002 JSON.org
-Licensed under the JSON License
-
 II. Used Third-Party Software
 
 This product uses software developed at
@@ -21,4 +17,4 @@ Licensed under the Apache License 2.0.
 III. Overall License Summary
 
 - Apache License 2.0
-- JSON License
+
