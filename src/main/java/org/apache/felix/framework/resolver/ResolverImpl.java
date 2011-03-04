@@ -69,10 +69,8 @@ public class ResolverImpl implements Resolver
 
                 try
                 {
-                    Candidates allCandidates = new Candidates(module);
-
                     // Populate all candidates.
-                    allCandidates.populate(state, module);
+                    Candidates allCandidates = new Candidates(state, module);
 
                     // Try to populate optional fragments.
                     for (Module fragment : fragments)
@@ -212,9 +210,6 @@ public class ResolverImpl implements Resolver
 
                 try
                 {
-                    // Populate all candidates.
-                    allCandidates.populate(state, module);
-
                     // Try to populate optional fragments.
                     for (Module fragment : fragments)
                     {
@@ -436,7 +431,7 @@ public class ResolverImpl implements Resolver
 
         if (candidates.size() > 0)
         {
-            allCandidates = new Candidates(module, dynReq, candidates);
+            allCandidates = new Candidates(state, module, dynReq, candidates);
         }
 
         return allCandidates;
