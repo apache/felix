@@ -58,6 +58,7 @@
 						<Export-Package>org.apache.felix.dependencymanager"</Export-Package>
 						<Import-Package>!org.apache.felix.dependencymanager,org.apache.felix.dm;version="[3,4)",*</Import-Package>
 						<Private-Package>org.apache.felix.dependencymanager.impl</Private-Package>
+						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource> 
 					</instructions>
 				</configuration>
 			</plugin>
