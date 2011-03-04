@@ -99,10 +99,12 @@
         <module>jetty</module>
         <module>proxy</module>
         <module>whiteboard</module>
+        <module>cometd</module>
         <module>bundle</module>
         <module>samples/filter</module>
         <module>samples/bridge</module>
         <module>samples/whiteboard</module>
+        <module>samples/cometd</module>
     </modules>
 
     <dependencies>
