@@ -33,8 +33,7 @@ public interface Resolver
 
     public static interface ResolverState
     {
-        SortedSet<Capability> getCandidates(
-            Module module, Requirement req, boolean obeyMandatory);
+        SortedSet<Capability> getCandidates(Requirement req, boolean obeyMandatory);
         void checkExecutionEnvironment(Module module) throws ResolveException;
         void checkNativeLibraries(Module module) throws ResolveException;
     }

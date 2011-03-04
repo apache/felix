@@ -73,6 +73,8 @@ public class ResolverImpl implements Resolver
                     Candidates allCandidates = new Candidates(state, module);
 
                     // Try to populate optional fragments.
+// TODO: SINGLETON RESOLVER - These optional modules will not be considered
+//       for singleton calculation -- fix this.
                     for (Module fragment : fragments)
                     {
                         try
@@ -86,7 +88,7 @@ public class ResolverImpl implements Resolver
                     }
 
                     // Merge any fragments into hosts.
-                    allCandidates.mergeFragments();
+                    allCandidates.prepare(getResolvedSingletons(state));
 
                     // Record the initial candidate permutation.
                      m_usesPermutations.add(allCandidates);
@@ -211,6 +213,8 @@ public class ResolverImpl implements Resolver
                 try
                 {
                     // Try to populate optional fragments.
+// TODO: SINGLETON RESOLVER - These optional modules will not be considered
+//       for singleton calculation -- fix this.
                     for (Module fragment : fragments)
                     {
                         try
@@ -224,7 +228,7 @@ public class ResolverImpl implements Resolver
                     }
 
                     // Merge any fragments into hosts.
-                    allCandidates.mergeFragments();
+                    allCandidates.prepare(getResolvedSingletons(state));
 
                     // Record the initial candidate permutation.
                      m_usesPermutations.add(allCandidates);
@@ -318,6 +322,25 @@ public class ResolverImpl implements Resolver
         return null;
     }
 
+    private static List<Module> getResolvedSingletons(ResolverState state)
+    {
+        Requirement req = new RequirementImpl(
+            null,
+            Capability.SINGLETON_NAMESPACE,
+            Collections.EMPTY_LIST,
+            Collections.EMPTY_LIST);
+        SortedSet<Capability> caps = state.getCandidates(req, true);
+        List<Module> singletons = new ArrayList();
+        for (Capability cap : caps)
+        {
+            if (cap.getModule().isResolved())
+            {
+                singletons.add(cap.getModule());
+            }
+        }
+        return singletons;
+    }
+
     private static Capability getHostCapability(Module m)
     {
         for (Capability c : m.getCapabilities())
@@ -390,7 +413,7 @@ public class ResolverImpl implements Resolver
         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
         Requirement req = new RequirementImpl(
             module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        SortedSet<Capability> candidates = state.getCandidates(module, req, false);
+        SortedSet<Capability> candidates = state.getCandidates(req, false);
 
         // First find a dynamic requirement that matches the capabilities.
         Requirement dynReq = null;

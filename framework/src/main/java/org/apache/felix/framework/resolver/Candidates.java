@@ -31,14 +31,19 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.apache.felix.framework.capabilityset.Capability;
+import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
+import org.apache.felix.framework.util.Util;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 public class Candidates
 {
     private final Module m_root;
 
+    // Set of all candidate modules.
+    private final Set<Module> m_candidateModules;
     // Maps a capability to requirements that match it.
     private final Map<Capability, Set<Requirement>> m_dependentMap;
     // Maps a requirement to the capability it matches.
@@ -64,12 +69,14 @@ public class Candidates
     **/
     private Candidates(
         Module root,
+        Set<Module> candidateModules,
         Map<Capability, Set<Requirement>> dependentMap,
         Map<Requirement, SortedSet<Capability>> candidateMap,
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
         Map<Module, WrappedModule> wrappedHosts, Map<Module, Object> populateResultCache)
     {
         m_root = root;
+        m_candidateModules = candidateModules;
         m_dependentMap = dependentMap;
         m_candidateMap = candidateMap;
         m_hostFragments = hostFragments;
@@ -85,6 +92,7 @@ public class Candidates
     public Candidates(ResolverState state, Module root)
     {
         m_root = root;
+        m_candidateModules = new HashSet<Module>();
         m_dependentMap = new HashMap<Capability, Set<Requirement>>();
         m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
         m_hostFragments =
@@ -109,6 +117,7 @@ public class Candidates
         Requirement req, SortedSet<Capability> candidates)
     {
         m_root = root;
+        m_candidateModules = new HashSet<Module>();
         m_dependentMap = new HashMap<Capability, Set<Requirement>>();
         m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
         m_hostFragments =
@@ -216,7 +225,7 @@ public class Candidates
 
             // Get satisfying candidates and populate their candidates if necessary.
             ResolveException rethrow = null;
-            SortedSet<Capability> candidates = state.getCandidates(module, req, true);
+            SortedSet<Capability> candidates = state.getCandidates(req, true);
             for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
             {
                 Capability candCap = itCandCap.next();
@@ -347,9 +356,17 @@ public class Candidates
 
         // Record the candidates.
         m_candidateMap.put(req, candidates);
-        // Add the requirement as a dependent on the candidates.
+
+        // Make a list of all candidate modules for determining singetons.
+        // Add the requirement as a dependent on the candidates. Keep track
+        // of fragments for hosts.
         for (Capability cap : candidates)
         {
+            // Remember the module for all capabilities so we can
+            // determine which ones are singletons.
+            m_candidateModules.add(cap.getModule());
+
+            // Record the requirement as dependent on the capability.
             Set<Requirement> dependents = m_dependentMap.get(cap);
             if (dependents == null)
             {
@@ -357,6 +374,7 @@ public class Candidates
                 m_dependentMap.put(cap, dependents);
             }
             dependents.add(req);
+
             // Keep track of hosts and associated fragments.
             if (isFragment)
             {
@@ -435,11 +453,80 @@ public class Candidates
      * can attach to two hosts effectively gets multiplied across the two hosts.
      * So, any modules being satisfied by the fragment will end up having the
      * two hosts as potential candidates, rather than the single fragment.
+     * @param existingSingletons existing resolved singletons.
      * @throws ResolveException if the removal of any unselected fragments result
      *         in the root module being unable to resolve.
     **/
-    public void mergeFragments() throws ResolveException
+    public void prepare(List<Module> existingSingletons)
     {
+        final Map<String, Module> singletons = new HashMap<String, Module>();
+
+        for (Iterator<Module> it = m_candidateModules.iterator(); it.hasNext(); )
+        {
+            Module m = it.next();
+            if (isSingleton(m))
+            {
+                // See if there is an existing singleton for the
+                // module's symbolic name.
+                Module singleton = singletons.get(m.getSymbolicName());
+                // If there is no existing singleton or this module is
+                // a resolved singleton or this module has a higher version
+                // and the existing singleton is not resolved, then select
+                // this module as the singleton.
+                if ((singleton == null)
+                    || m.isResolved()
+                    || ((m.getVersion().compareTo(singleton.getVersion()) > 0)
+                        && !singleton.isResolved()))
+                {
+                    singletons.put(m.getSymbolicName(), m);
+                    // Remove the singleton module from the candidates
+                    // if it wasn't selected.
+                    if (singleton != null)
+                    {
+                        removeModule(singleton);
+                    }
+                }
+                else
+                {
+                    removeModule(m);
+                }
+            }
+        }
+
+        // If the root is a singleton, then prefer it over any other singleton.
+        if (isSingleton(m_root))
+        {
+            Module singleton = singletons.get(m_root.getSymbolicName());
+            singletons.put(m_root.getSymbolicName(), m_root);
+            if (singleton != null)
+            {
+                if (singleton.isResolved())
+                {
+                    throw new ResolveException(
+                        "Cannot resolve singleton "
+                        + m_root
+                        + " because "
+                        + singleton
+                        + " singleton is already resolved.",
+                        m_root, null);
+                }
+                removeModule(singleton);
+            }
+        }
+
+        // Make sure selected singletons do not conflict with existing
+        // singletons passed into this method.
+        for (int i = 0; (existingSingletons != null) && (i < existingSingletons.size()); i++)
+        {
+            Module existing = existingSingletons.get(i);
+            Module singleton = singletons.get(existing.getSymbolicName());
+            if ((singleton != null) && (singleton != existing))
+            {
+                singletons.remove(singleton.getSymbolicName());
+                removeModule(singleton);
+            }
+        }
+
         // This method performs the following steps:
         // 1. Select the fragments to attach to a given host.
         // 2. Wrap hosts and attach fragments.
@@ -507,7 +594,7 @@ public class Candidates
         // Step 3
         for (Module m : unselectedFragments)
         {
-            unselectFragment(m);
+            removeModule(m);
         }
 
         // Step 4
@@ -546,22 +633,30 @@ public class Candidates
     }
 
     /**
-     * Removes a fragment from the internal data structures if it wasn't selected.
-     * This process may cause other modules to become unresolved if they depended
-     * on fragment capabilities and there is no other candidate.
-     * @param fragment the fragment to remove.
-     * @throws ResolveException if removing the fragment caused the resolve to fail.
+     * Removes a module from the internal data structures if it wasn't selected
+     * as a fragment or a singleton. This process may cause other modules to
+     * become unresolved if they depended on the module's capabilities and there
+     * is no other candidate.
+     * @param module the module to remove.
+     * @throws ResolveException if removing the module caused the resolve to fail.
     **/
-    private void unselectFragment(Module fragment) throws ResolveException
+    private void removeModule(Module module) throws ResolveException
     {
+        if (m_root.equals(module))
+        {
+// TODO: SINGLETON RESOLVER - Improve this message.
+            String msg = "Unable to resolve " + m_root;
+            ResolveException ex = new ResolveException(msg, m_root, null);
+            throw ex;
+        }
         Set<Module> unresolvedModules = new HashSet<Module>();
-        remove(fragment, unresolvedModules);
+        remove(module, unresolvedModules);
         while (!unresolvedModules.isEmpty())
         {
             Iterator<Module> it = unresolvedModules.iterator();
-            fragment = it.next();
+            module = it.next();
             it.remove();
-            remove(fragment, unresolvedModules);
+            remove(module, unresolvedModules);
         }
     }
 
@@ -686,6 +781,8 @@ public class Candidates
     **/
     public Candidates copy()
     {
+        Set<Module> candidateModules = new HashSet<Module>(m_candidateModules);
+
         Map<Capability, Set<Requirement>> dependentMap =
             new HashMap<Capability, Set<Requirement>>();
         for (Entry<Capability, Set<Requirement>> entry : m_dependentMap.entrySet())
@@ -703,7 +800,7 @@ public class Candidates
         }
 
         return new Candidates(
-            m_root, dependentMap, candidateMap,
+            m_root, candidateModules, dependentMap, candidateMap,
             m_hostFragments, m_allWrappedHosts, m_populateResultCache);
     }
 
@@ -740,5 +837,33 @@ public class Candidates
             }
         }
         System.out.println("=== END CANDIDATE MAP ===");
+    }
+
+    /**
+     * Returns true if the specified module is a singleton
+     * (i.e., directive singleton:=true).
+     *
+     * @param module the module to check for singleton status.
+     * @return true if the module is a singleton, false otherwise.
+    **/
+    private static boolean isSingleton(Module module)
+    {
+        final List<Capability> modCaps =
+            Util.getCapabilityByNamespace(
+                module, Capability.MODULE_NAMESPACE);
+        if (modCaps == null || modCaps.isEmpty())
+        {
+            return false;
+        }
+        final List<Directive> dirs = modCaps.get(0).getDirectives();
+        for (int dirIdx = 0; (dirs != null) && (dirIdx < dirs.size()); dirIdx++)
+        {
+            if (dirs.get(dirIdx).getName().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE)
+                && Boolean.valueOf((String) dirs.get(dirIdx).getValue()))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

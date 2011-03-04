@@ -189,6 +189,10 @@ public class RequirementImpl implements Requirement
         {
             sf = new SimpleFilter(null, filters, SimpleFilter.AND);
         }
+        else if (filters.isEmpty())
+        {
+            sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
+        }
 
         return sf;
     }

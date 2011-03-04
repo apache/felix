@@ -3126,7 +3126,7 @@ public class Felix extends BundleImpl implements Framework
         List<Attribute> attrs = new ArrayList<Attribute>(1);
         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
         Requirement req = new RequirementImpl(null, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<Capability> exports = m_resolver.getCandidates(null, req, false);
+        Set<Capability> exports = m_resolver.getCandidates(req, false);
 
         // We only want resolved capabilities.
         for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
@@ -3273,7 +3273,7 @@ public class Felix extends BundleImpl implements Framework
                         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
                         Requirement req =
                             new RequirementImpl(null, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-                        Set<Capability> exports = m_resolver.getCandidates(null, req, false);
+                        Set<Capability> exports = m_resolver.getCandidates(req, false);
                         // We only want resolved capabilities.
                         for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
                         {
@@ -3986,10 +3986,9 @@ public class Felix extends BundleImpl implements Framework
             m_resolverState.removeModule(m);
         }
 
-        Set<Capability> getCandidates(
-            Module reqModule, Requirement req, boolean obeyMandatory)
+        Set<Capability> getCandidates(Requirement req, boolean obeyMandatory)
         {
-            return m_resolverState.getCandidates(reqModule, req, obeyMandatory);
+            return m_resolverState.getCandidates(req, obeyMandatory);
         }
 
         void resolve(Module rootModule) throws ResolveException
@@ -4160,7 +4159,7 @@ public class Felix extends BundleImpl implements Framework
             attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
             Requirement req = new RequirementImpl(
                 module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-            Set<Capability> candidates = m_resolverState.getCandidates(module, req, false);
+            Set<Capability> candidates = m_resolverState.getCandidates(req, false);
 
             return !candidates.isEmpty();
         }
