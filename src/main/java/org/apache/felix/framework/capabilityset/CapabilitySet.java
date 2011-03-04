@@ -156,7 +156,11 @@ public class CapabilitySet
     {
         Set<Capability> matches = new HashSet<Capability>();
 
-        if (sf.getOperation() == SimpleFilter.AND)
+        if (sf.getOperation() == SimpleFilter.MATCH_ALL)
+        {
+            matches.addAll(caps);
+        }
+        else if (sf.getOperation() == SimpleFilter.AND)
         {
             // Evaluate each subfilter against the remaining capabilities.
             // For AND we calculate the intersection of each subfilter.

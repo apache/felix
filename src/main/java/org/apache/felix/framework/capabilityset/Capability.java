@@ -26,6 +26,7 @@ public interface Capability
     static final String MODULE_NAMESPACE = "module";
     static final String HOST_NAMESPACE = "host";
     static final String PACKAGE_NAMESPACE = "package";
+    static final String SINGLETON_NAMESPACE = "singleton";
 
     public static final String PACKAGE_ATTR = "package";
     public static final String VERSION_ATTR = "version";

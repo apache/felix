@@ -2297,7 +2297,7 @@ public class ModuleImpl implements Module
             attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
             Requirement req = new RequirementImpl(
                 module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-            Set<Capability> exporters = resolver.getCandidates(module, req, false);
+            Set<Capability> exporters = resolver.getCandidates(req, false);
 
             Wire wire = null;
             try
@@ -2336,7 +2336,7 @@ public class ModuleImpl implements Module
         attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
         Requirement req = new RequirementImpl(
             module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<Capability> exports = resolver.getCandidates(module, req, false);
+        Set<Capability> exports = resolver.getCandidates(req, false);
         if (exports.size() > 0)
         {
             boolean classpath = false;

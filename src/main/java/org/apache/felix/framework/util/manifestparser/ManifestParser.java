@@ -112,6 +112,19 @@ public class ManifestParser
                     owner, Capability.HOST_NAMESPACE, new ArrayList<Directive>(0),
                     ((CapabilityImpl) moduleCap).getAttributes()));
             }
+
+            // Add a singleton capability if the bundle is a singleton.
+            // This is sort of a hack, but we need this for the resolver
+            // to be able to resolve singletons. It is not possible to
+            // attach this information to the module or host capabilities
+            // because fragments don't have those capabilities, but fragments
+            // can be singletons too.
+            if (isSingleton(moduleCap))
+            {
+                capList.add(new CapabilityImpl(
+                    owner, Capability.SINGLETON_NAMESPACE, new ArrayList<Directive>(0),
+                    ((CapabilityImpl) moduleCap).getAttributes()));
+            }
         }
 
         // Verify that bundle symbolic name is specified.
@@ -224,6 +237,23 @@ public class ManifestParser
         parseActivationPolicy(headerMap);
 
         m_isExtension = checkExtensionBundle(headerMap);
+    }
+
+    private static boolean isSingleton(Capability cap)
+    {
+        if (cap.getNamespace().equals(Capability.MODULE_NAMESPACE))
+        {
+            final List<Directive> dirs = cap.getDirectives();
+            for (int dirIdx = 0; (dirs != null) && (dirIdx < dirs.size()); dirIdx++)
+            {
+                if (dirs.get(dirIdx).getName().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE)
+                    && Boolean.valueOf((String) dirs.get(dirIdx).getValue()))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static List<ParsedHeaderClause> normalizeImportClauses(

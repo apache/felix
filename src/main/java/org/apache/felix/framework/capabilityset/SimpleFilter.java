@@ -23,6 +23,7 @@ import java.util.List;
 
 public class SimpleFilter
 {
+    public static final int MATCH_ALL = 0;
     public static final int AND = 1;
     public static final int OR = 2;
     public static final int NOT = 3;
