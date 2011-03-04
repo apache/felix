@@ -18,9 +18,7 @@
  */
 package org.apache.felix.scrplugin.helper;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.apache.felix.scrplugin.Log;
 
@@ -35,6 +33,8 @@ public class IssueLog {
 
     private final List<Entry> warnings = new ArrayList<Entry>();
 
+    private final List<Entry> deprecationWarnings = new ArrayList<Entry>();
+
     public IssueLog(final boolean strictMode) {
         this.strictMode = strictMode;
     }
@@ -44,7 +44,8 @@ public class IssueLog {
     }
 
     public boolean hasErrors() {
-        return errors.size() > 0 || (this.strictMode && warnings.size() > 0 );
+        return errors.size() > 0 ||
+               (this.strictMode && (warnings.size() > 0 || this.deprecationWarnings.size() > 0));
     }
 
     public void addError(final String message, final String location, final int lineNumber) {
@@ -55,10 +56,40 @@ public class IssueLog {
         warnings.add( new Entry( message, location, lineNumber ) );
     }
 
+    public void addDeprecationWarning(final String message, final String location, final int lineNumber) {
+        deprecationWarnings.add( new Entry( message, location, lineNumber ) );
+    }
+
     public void logMessages( final Log log )
     {
         // now log warnings and errors (warnings first)
         // in strict mode everything is an error!
+        final Iterator<Entry> depWarnings = this.deprecationWarnings.iterator();
+        while ( depWarnings.hasNext() )
+        {
+            final Entry entry = depWarnings.next();
+            if ( strictMode )
+            {
+                log.error( entry.message, entry.location, entry.lineNumber);
+            }
+            else
+            {
+                log.warn( entry.message, entry.location, entry.lineNumber);
+            }
+        }
+        if ( this.deprecationWarnings.size() > 0 ) {
+            final String msg = "It is highly recommended to fix these problems, as future versions might not " +
+             "support these features anymore.";
+            if ( strictMode )
+            {
+                log.error( msg );
+            }
+            else
+            {
+                log.warn( msg );
+            }
+        }
+
         final Iterator<Entry> warnings = this.warnings.iterator();
         while ( warnings.hasNext() )
         {
@@ -79,14 +110,6 @@ public class IssueLog {
             final Entry entry = errors.next();
             log.error( entry.message, entry.location, entry.lineNumber);
         }
-    }
-
-    public Iterator<String> getWarnings() {
-        return null; // warnings.iterator();
-    }
-
-    public Iterator<String> getErrors() {
-        return null; // errors.iterator();
     }
 
     private static class Entry

@@ -26,6 +26,7 @@ import org.apache.felix.scrplugin.helper.*;
 import org.apache.felix.scrplugin.om.*;
 import org.apache.felix.scrplugin.om.metatype.*;
 import org.apache.felix.scrplugin.tags.*;
+import org.apache.felix.scrplugin.tags.annotation.AnnotationJavaClassDescription;
 import org.apache.felix.scrplugin.tags.qdox.QDoxJavaClassDescription;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.felix.scrplugin.xml.MetaTypeIO;
@@ -240,6 +241,13 @@ public class SCRDescriptorGenerator
             final JavaTag tag = javaSources[i].getTagByName( Constants.COMPONENT );
             if ( tag != null )
             {
+                // FELIX-2853 : Deprecate javadoc tags.
+                // This is not the most clever way of doing this, but it is the least intrusive...
+                if ( javaSources[i] instanceof QDoxJavaClassDescription
+                     && !(javaSources[i] instanceof AnnotationJavaClassDescription)) {
+                    iLog.addDeprecationWarning("Class " + javaSources[i].getName() + " is using deprecated javadoc tags ",
+                            tag.getSourceLocation(), tag.getLineNumber());
+                }
                 this.logger.debug( "Processing service class " + javaSources[i].getName() );
                 // check if there is more than one component tag!
                 if ( javaSources[i].getTagsByName( Constants.COMPONENT, false ).length > 1 )
