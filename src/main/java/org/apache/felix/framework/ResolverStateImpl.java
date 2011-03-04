@@ -167,8 +167,9 @@ class ResolverStateImpl implements Resolver.ResolverState
     //
 
     public synchronized SortedSet<Capability> getCandidates(
-        Module module, Requirement req, boolean obeyMandatory)
+        Requirement req, boolean obeyMandatory)
     {
+        Module module = req.getModule();
         SortedSet<Capability> result = new TreeSet<Capability>(new CandidateComparator());
 
         CapabilitySet capSet = m_capSets.get(req.getNamespace());
