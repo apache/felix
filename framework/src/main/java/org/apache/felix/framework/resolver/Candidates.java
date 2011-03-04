@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.Requirement;
+import org.apache.felix.framework.resolver.Resolver.ResolverState;
 import org.osgi.framework.Version;
 
 public class Candidates
@@ -50,6 +51,8 @@ public class Candidates
     // Maps a module to its associated wrapped module; this only happens
     // when a module being resolved has fragments to attach to it.
     private final Map<Module, WrappedModule> m_allWrappedHosts;
+    // Map used when populating candidates to hold intermediate and final results.
+    Map<Module, Object> m_populateResultCache;
 
     /**
      * Private copy constructor used by the copy() method.
@@ -64,21 +67,22 @@ public class Candidates
         Map<Capability, Set<Requirement>> dependentMap,
         Map<Requirement, SortedSet<Capability>> candidateMap,
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
-        Map<Module, WrappedModule> wrappedHosts)
+        Map<Module, WrappedModule> wrappedHosts, Map<Module, Object> populateResultCache)
     {
         m_root = root;
         m_dependentMap = dependentMap;
         m_candidateMap = candidateMap;
         m_hostFragments = hostFragments;
         m_allWrappedHosts = wrappedHosts;
+        m_populateResultCache = populateResultCache;
     }
 
     /**
-     * Constructs a new object with the specified root module. The root module
-     * is used to determine if the resolves fails when manipulating the candidates.
-     * For example, it may be necessary to remove an unselected fragment, which
-     * can cause a ripple effect all the way to the root module. If that happens
-     * then the resolve fails.
+     * Constructs a new Candidates object with the specified root module. The root
+     * module is used to determine if the resolves fails when manipulating the
+     * candidates. For example, it may be necessary to remove an unselected
+     * fragment, which can cause a ripple effect all the way to the root module.
+     * If that happens then the resolve fails.
      * @param root the root module for the resolve.
     **/
     public Candidates(Module root)
@@ -89,6 +93,251 @@ public class Candidates
         m_hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
         m_allWrappedHosts = new HashMap<Module, WrappedModule>();
+        m_populateResultCache = new HashMap<Module, Object>();
+    }
+
+    /**
+     * Constructs a new Candidates object with the specified root module and
+     * starting requirement and matching candidates. This constructor is used
+     * when the root module is performing a dynamic import for the given
+     * requirement and the given potential candidates.
+     * @param root the module with a dynamic import to resolve.
+     * @param req the requirement being resolved.
+     * @param candidates the potential candidates matching the requirement.
+    **/
+    public Candidates(Module root, Requirement req, SortedSet<Capability> candidates)
+    {
+        m_root = root;
+        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
+        m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
+        m_hostFragments =
+            new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
+        m_allWrappedHosts = new HashMap<Module, WrappedModule>();
+        m_populateResultCache = new HashMap<Module, Object>();
+
+        add(req, candidates);
+    }
+
+    public void populate(ResolverState state, Module module)
+    {
+        // If we are resolving a dynamic import, then the candidate
+        // map will be pre-populated with the candidates for the
+        // dynamic requirement we need to resolve, so we need to
+        // handle that case a little differently.
+        if (m_candidateMap.isEmpty())
+        {
+            populateInternal(state, module);
+        }
+        else
+        {
+            populateDynamic(state, module);
+        }
+    }
+
+// TODO: FELIX3 - Modify to not be recursive.
+    private void populateInternal(ResolverState state, Module module)
+    {
+        // Determine if we've already calculated this module's candidates.
+        // The result cache will have one of three values:
+        //   1. A resolve exception if we've already attempted to populate the
+        //      module's candidates but were unsuccessful.
+        //   2. Boolean.TRUE indicating we've already attempted to populate the
+        //      module's candidates and were successful.
+        //   3. An array containing the cycle count, current map of candidates
+        //      for already processed requirements, and a list of remaining
+        //      requirements whose candidates still need to be calculated.
+        // For case 1, rethrow the exception. For case 2, simply return immediately.
+        // For case 3, this means we have a cycle so we should continue to populate
+        // the candidates where we left off and not record any results globally
+        // until we've popped completely out of the cycle.
+
+        // Keeps track of the number of times we've reentered this method
+        // for the current module.
+        Integer cycleCount = null;
+
+        // Keeps track of the candidates we've already calculated for the
+        // current module's requirements.
+        Map<Requirement, SortedSet<Capability>> localCandidateMap = null;
+
+        // Keeps track of the current module's requirements for which we
+        // haven't yet found candidates.
+        List<Requirement> remainingReqs = null;
+
+        // Get the cache value for the current module.
+        Object cacheValue = m_populateResultCache.get(module);
+
+        // This is case 1.
+        if (cacheValue instanceof ResolveException)
+        {
+            throw (ResolveException) cacheValue;
+        }
+        // This is case 2.
+        else if (cacheValue instanceof Boolean)
+        {
+            return;
+        }
+        // This is case 3.
+        else if (cacheValue != null)
+        {
+            // Increment and get the cycle count.
+            cycleCount = (Integer)
+                (((Object[]) cacheValue)[0]
+                    = new Integer(((Integer) ((Object[]) cacheValue)[0]).intValue() + 1));
+            // Get the already populated candidates.
+            localCandidateMap = (Map) ((Object[]) cacheValue)[1];
+            // Get the remaining requirements.
+            remainingReqs = (List) ((Object[]) cacheValue)[2];
+        }
+
+        // If there is no cache value for the current module, then this is
+        // the first time we are attempting to populate its candidates, so
+        // do some one-time checks and initialization.
+        if ((remainingReqs == null) && (localCandidateMap == null))
+        {
+            // Verify that any required execution environment is satisfied.
+            state.checkExecutionEnvironment(module);
+
+            // Verify that any native libraries match the current platform.
+            state.checkNativeLibraries(module);
+
+            // Record cycle count.
+            cycleCount = new Integer(0);
+
+            // Create a local map for populating candidates first, just in case
+            // the module is not resolvable.
+            localCandidateMap = new HashMap();
+
+            // Create a modifiable list of the module's requirements.
+            remainingReqs = new ArrayList(module.getRequirements());
+
+            // Add these value to the result cache so we know we are
+            // in the middle of populating candidates for the current
+            // module.
+            m_populateResultCache.put(module,
+                cacheValue = new Object[] { cycleCount, localCandidateMap, remainingReqs });
+        }
+
+        // If we have requirements remaining, then find candidates for them.
+        while (remainingReqs.size() > 0)
+        {
+            Requirement req = remainingReqs.remove(0);
+
+            // Get satisfying candidates and populate their candidates if necessary.
+            ResolveException rethrow = null;
+            SortedSet<Capability> candidates = state.getCandidates(module, req, true);
+            for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
+            {
+                Capability candCap = itCandCap.next();
+
+                // If the candidate module is not resolved and not the current
+                // module we are trying to populate, then try to populate the
+                // candidate module as well.
+                // NOTE: Technically, we don't have to check to see if the
+                // candidate module is equal to the current module, but this
+                // saves us from recursing and also simplifies exceptions messages
+                // since we effectively chain exception messages for each level
+                // of recursion; thus, any avoided recursion results in fewer
+                // exceptions to chain when an error does occur.
+                if (!candCap.getModule().isResolved()
+                    && !candCap.getModule().equals(module))
+                {
+                    try
+                    {
+                        populateInternal(state, candCap.getModule());
+                    }
+                    catch (ResolveException ex)
+                    {
+                        if (rethrow == null)
+                        {
+                            rethrow = ex;
+                        }
+                        // Remove the candidate since we weren't able to
+                        // populate its candidates.
+                        itCandCap.remove();
+                    }
+                }
+            }
+
+            // If there are no candidates for the current requirement
+            // and it is not optional, then create, cache, and throw
+            // a resolve exception.
+            if (candidates.isEmpty() && !req.isOptional())
+            {
+                String msg = "Unable to resolve " + module
+                    + ": missing requirement " + req;
+                if (rethrow != null)
+                {
+                    msg = msg + " [caused by: " + rethrow.getMessage() + "]";
+                }
+                rethrow = new ResolveException(msg, module, req);
+                m_populateResultCache.put(module, rethrow);
+                throw rethrow;
+            }
+            // If we actually have candidates for the requirement, then
+            // add them to the local candidate map.
+            else if (candidates.size() > 0)
+            {
+                localCandidateMap.put(req, candidates);
+            }
+        }
+
+        // If we are exiting from a cycle then decrement
+        // cycle counter, otherwise record the result.
+        if (cycleCount.intValue() > 0)
+        {
+            ((Object[]) cacheValue)[0] = new Integer(cycleCount.intValue() - 1);
+        }
+        else if (cycleCount.intValue() == 0)
+        {
+            // Record that the module was successfully populated.
+            m_populateResultCache.put(module, Boolean.TRUE);
+
+            // Merge local candidate map into global candidate map.
+            if (localCandidateMap.size() > 0)
+            {
+                add(localCandidateMap);
+            }
+        }
+    }
+
+    private void populateDynamic(ResolverState state, Module module)
+    {
+        // There should be one entry in the candidate map, which are the
+        // the candidates for the matching dynamic requirement. Get the
+        // matching candidates and populate their candidates if necessary.
+        ResolveException rethrow = null;
+        Entry<Requirement, SortedSet<Capability>> entry =
+            m_candidateMap.entrySet().iterator().next();
+        Requirement dynReq = entry.getKey();
+        SortedSet<Capability> candidates = entry.getValue();
+        for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
+        {
+            Capability candCap = itCandCap.next();
+            if (!candCap.getModule().isResolved())
+            {
+                try
+                {
+                    populateInternal(state, candCap.getModule());
+                }
+                catch (ResolveException ex)
+                {
+                    if (rethrow == null)
+                    {
+                        rethrow = ex;
+                    }
+                    itCandCap.remove();
+                }
+            }
+        }
+
+        if (candidates.isEmpty())
+        {
+            if (rethrow == null)
+            {
+                rethrow = new ResolveException("Dynamic import failed.", module, dynReq);
+            }
+            throw rethrow;
+        }
     }
 
     /**
@@ -100,7 +349,7 @@ public class Candidates
      * @param req the requirement to add.
      * @param candidates the candidates matching the requirement.
     **/
-    public void add(Requirement req, SortedSet<Capability> candidates)
+    private void add(Requirement req, SortedSet<Capability> candidates)
     {
         boolean isFragment = req.getNamespace().equals(Capability.HOST_NAMESPACE);
 
@@ -151,7 +400,7 @@ public class Candidates
      * be further modified by the caller.
      * @param candidates the bulk requirements and candidates to add.
     **/
-    public void add(Map<Requirement, SortedSet<Capability>> candidates)
+    private void add(Map<Requirement, SortedSet<Capability>> candidates)
     {
         for (Entry<Requirement, SortedSet<Capability>> entry : candidates.entrySet())
         {
@@ -183,18 +432,6 @@ public class Candidates
     }
 
     /**
-     * Gets the complete candidate map. This is only used in the dynamic
-     * import case, since the requirement is unknown and it just needs the
-     * one and only requirement in the map. (This could probably be handled
-     * differently or better, but it is sufficient for now.)
-     * @return The entire candidate map.
-    **/
-    public Map<Requirement, SortedSet<Capability>> getCandidateMap()
-    {
-        return m_candidateMap;
-    }
-
-    /**
      * Merges fragments into their hosts. It does this by wrapping all host
      * modules and attaching their selected fragments, removing all unselected
      * fragment modules, and replacing all occurrences of the original fragments
@@ -206,8 +443,10 @@ public class Candidates
      * can attach to two hosts effectively gets multiplied across the two hosts.
      * So, any modules being satisfied by the fragment will end up having the
      * two hosts as potential candidates, rather than the single fragment.
+     * @throws ResolveException if the removal of any unselected fragments result
+     *         in the root module being unable to resolve.
     **/
-    public void mergeFragments()
+    public void mergeFragments() throws ResolveException
     {
         // This method performs the following steps:
         // 1. Select the fragments to attach to a given host.
@@ -215,7 +454,7 @@ public class Candidates
         // 3. Remove any unselected fragments. This is necessary because
         //    other modules may depend on the capabilities of unselected
         //    fragments, so we need to remove the unselected fragments and
-        //    any module that depends on them, which could ultimately cause
+        //    any modules that depends on them, which could ultimately cause
         //    the entire resolve to fail.
         // 4. Replace all fragments with any host it was merged into
         //    (effectively multiplying it).
@@ -472,7 +711,8 @@ public class Candidates
         }
 
         return new Candidates(
-            m_root, dependentMap, candidateMap, m_hostFragments, m_allWrappedHosts);
+            m_root, dependentMap, candidateMap,
+            m_hostFragments, m_allWrappedHosts, m_populateResultCache);
     }
 
     public void dump()
