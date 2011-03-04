@@ -78,14 +78,11 @@ public class Candidates
     }
 
     /**
-     * Constructs a new Candidates object with the specified root module. The root
-     * module is used to determine if the resolves fails when manipulating the
-     * candidates. For example, it may be necessary to remove an unselected
-     * fragment, which can cause a ripple effect all the way to the root module.
-     * If that happens then the resolve fails.
+     * Constructs a new populated Candidates object for the specified root module.
+     * @param state the resolver state used for populating the candidates.
      * @param root the root module for the resolve.
     **/
-    public Candidates(Module root)
+    public Candidates(ResolverState state, Module root)
     {
         m_root = root;
         m_dependentMap = new HashMap<Capability, Set<Requirement>>();
@@ -94,18 +91,22 @@ public class Candidates
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
         m_allWrappedHosts = new HashMap<Module, WrappedModule>();
         m_populateResultCache = new HashMap<Module, Object>();
+
+        populate(state, m_root);
     }
 
     /**
-     * Constructs a new Candidates object with the specified root module and
+     * Constructs a new populated Candidates object with the specified root module and
      * starting requirement and matching candidates. This constructor is used
      * when the root module is performing a dynamic import for the given
      * requirement and the given potential candidates.
+     * @param state the resolver state used for populating the candidates.
      * @param root the module with a dynamic import to resolve.
      * @param req the requirement being resolved.
      * @param candidates the potential candidates matching the requirement.
     **/
-    public Candidates(Module root, Requirement req, SortedSet<Capability> candidates)
+    public Candidates(ResolverState state, Module root,
+        Requirement req, SortedSet<Capability> candidates)
     {
         m_root = root;
         m_dependentMap = new HashMap<Capability, Set<Requirement>>();
@@ -116,26 +117,17 @@ public class Candidates
         m_populateResultCache = new HashMap<Module, Object>();
 
         add(req, candidates);
+
+        populateDynamic(state, m_root);
     }
 
-    public void populate(ResolverState state, Module module)
-    {
-        // If we are resolving a dynamic import, then the candidate
-        // map will be pre-populated with the candidates for the
-        // dynamic requirement we need to resolve, so we need to
-        // handle that case a little differently.
-        if (m_candidateMap.isEmpty())
-        {
-            populateInternal(state, module);
-        }
-        else
-        {
-            populateDynamic(state, module);
-        }
-    }
-
+    /**
+     * Populates additional candidates for the specified module.
+     * @param state the resolver state used for populating the candidates.
+     * @param module the module whose candidates should be populated.
+     */
 // TODO: FELIX3 - Modify to not be recursive.
-    private void populateInternal(ResolverState state, Module module)
+    public final void populate(ResolverState state, Module module)
     {
         // Determine if we've already calculated this module's candidates.
         // The result cache will have one of three values:
@@ -243,7 +235,7 @@ public class Candidates
                 {
                     try
                     {
-                        populateInternal(state, candCap.getModule());
+                        populate(state, candCap.getModule());
                     }
                     catch (ResolveException ex)
                     {
@@ -317,7 +309,7 @@ public class Candidates
             {
                 try
                 {
-                    populateInternal(state, candCap.getModule());
+                    populate(state, candCap.getModule());
                 }
                 catch (ResolveException ex)
                 {
