@@ -73,8 +73,6 @@ public class ResolverImpl implements Resolver
                     Candidates allCandidates = new Candidates(state, module);
 
                     // Try to populate optional fragments.
-// TODO: SINGLETON RESOLVER - These optional modules will not be considered
-//       for singleton calculation -- fix this.
                     for (Module fragment : fragments)
                     {
                         try
@@ -213,8 +211,6 @@ public class ResolverImpl implements Resolver
                 try
                 {
                     // Try to populate optional fragments.
-// TODO: SINGLETON RESOLVER - These optional modules will not be considered
-//       for singleton calculation -- fix this.
                     for (Module fragment : fragments)
                     {
                         try
