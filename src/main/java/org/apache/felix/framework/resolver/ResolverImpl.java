@@ -469,8 +469,8 @@ public class ResolverImpl implements Resolver
         }
         cycle.add(module);
 
-        // Create a map of wires or proposed wired depending on whether
-        // the module is resolved or not.
+        // Create parallel arrays for requirement and proposed candidate
+        // capability or actual capability if module is resolved or not.
         List<Requirement> reqs = new ArrayList();
         List<Capability> caps = new ArrayList();
         boolean isDynamicImport = false;
@@ -1415,8 +1415,8 @@ public class ResolverImpl implements Resolver
                                 Capability.PACKAGE_NAMESPACE,
                                 new ArrayList(0),
                                 attrs),
-                            blame.m_cap.getModule(),
-                            blame.m_cap));
+                            getActualModule(blame.m_cap.getModule()),
+                            getActualCapability(blame.m_cap)));
                 }
             }
         }
