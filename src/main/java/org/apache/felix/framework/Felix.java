@@ -75,7 +75,6 @@ import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.startlevel.StartLevel;
-import sun.org.mozilla.javascript.internal.UintMap;
 
 public class Felix extends BundleImpl implements Framework
 {
