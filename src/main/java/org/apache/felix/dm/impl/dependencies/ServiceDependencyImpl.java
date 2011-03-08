@@ -599,79 +599,95 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
      * @return this service dependency
      */
     public synchronized ServiceDependency setService(Class serviceName) {
-        ensureNotActive();
-        if (serviceName == null) {
-            throw new IllegalArgumentException("Service name cannot be null.");
-        }
-        m_trackedServiceName = serviceName;
-        m_trackedServiceReference = null;
-        m_trackedServiceFilter = null;
+        setService(serviceName, null, null);
         return this;
     }
     
     /**
      * Sets the name of the service that should be tracked. You can either specify
-     * only the name, or the name and a filter. In the latter case, the filter is used
+     * only the name, only the filter, or the name and a filter.
+     * <p>
+     * If you specify name and filter, the filter is used
      * to track the service and should only return services of the type that was specified
      * in the name. To make sure of this, the filter is actually extended internally to
      * filter on the correct name.
+     * <p>
+     * If you specify only the filter, the name is assumed to be a service of type
+     * <code>Object</code> which means that, when auto configuration is on, instances
+     * of that service will be injected in any field of type <code>Object</code>.
      * 
      * @param serviceName the name of the service
      * @param serviceFilter the filter condition
      * @return this service dependency
      */
     public synchronized ServiceDependency setService(Class serviceName, String serviceFilter) {
-        ensureNotActive();
-        if (serviceName == null) {
-            throw new IllegalArgumentException("Service name cannot be null.");
-        }
-        m_trackedServiceName = serviceName;
-        if (serviceFilter != null) {
-            m_trackedServiceFilterUnmodified = serviceFilter;
-            m_trackedServiceFilter ="(&(" + Constants.OBJECTCLASS + "=" + serviceName.getName() + ")" + serviceFilter + ")";
-        }
-        else {
-            m_trackedServiceFilterUnmodified = null;
-            m_trackedServiceFilter = null;
-        }
-        m_trackedServiceReference = null;
+        setService(serviceName, null, serviceFilter);
         return this;
     }
     
+    /**
+     * Sets the name of the service that should be tracked. The name is assumed to be 
+     * a service of type <code>Object</code> which means that, when auto configuration 
+     * is on, instances of that service will be injected in any field of type 
+     * <code>Object</code>.
+     * 
+     * @param serviceFilter the filter condition
+     * @return this service dependency
+     */
     public synchronized ServiceDependency setService(String serviceFilter) {
-        ensureNotActive();
         if (serviceFilter == null) {
             throw new IllegalArgumentException("Service filter cannot be null.");
         }
-        m_trackedServiceName = Object.class;
-        if (serviceFilter != null) {
-            m_trackedServiceFilterUnmodified = serviceFilter;
-            m_trackedServiceFilter = serviceFilter;
-        }
-        m_trackedServiceReference = null;
+        setService(null, null, serviceFilter);
         return this;
     }
 
     /**
-     * Sets the name of the service that should be tracked. You can either specify
-     * only the name, or the name and a reference. In the latter case, the service reference
-     * is used to track the service and should only return services of the type that was 
-     * specified in the name.
+     * Sets the name of the service that should be tracked. By specifying the service
+     * reference of the service you want to track, you can directly track a single
+     * service. The name you use must match the type of service referred to by the
+     * service reference and it is up to you to make sure that is the case.
      * 
      * @param serviceName the name of the service
      * @param serviceReference the service reference to track
      * @return this service dependency
      */
     public synchronized ServiceDependency setService(Class serviceName, ServiceReference serviceReference) {
+        setService(serviceName, serviceReference, null);
+        return this;
+    }
+
+    /** Internal method to set the name, service reference and/or filter. */
+    private void setService(Class serviceName, ServiceReference serviceReference, String serviceFilter) {
         ensureNotActive();
         if (serviceName == null) {
-            throw new IllegalArgumentException("Service name cannot be null.");
+            m_trackedServiceName = Object.class;
         }
-        m_trackedServiceName = serviceName;
-        m_trackedServiceReference = serviceReference;
-        m_trackedServiceFilterUnmodified = null;
-        m_trackedServiceFilter = null;
-        return this;
+        else {
+            m_trackedServiceName = serviceName;
+        }
+        if (serviceFilter != null) {
+            m_trackedServiceFilterUnmodified = serviceFilter;
+            if (serviceName == null) {
+                m_trackedServiceFilter = serviceFilter;
+            }
+            else {
+                m_trackedServiceFilter ="(&(" + Constants.OBJECTCLASS + "=" + serviceName.getName() + ")" + serviceFilter + ")";
+            }
+        }
+        else {
+            m_trackedServiceFilterUnmodified = null;
+            m_trackedServiceFilter = null;
+        }
+        if (serviceReference != null) {
+            m_trackedServiceReference = serviceReference;
+            if (serviceFilter != null) {
+                throw new IllegalArgumentException("Cannot specify both a filter and a service reference.");
+            }
+        }
+        else {
+            m_trackedServiceReference = null;
+        }
     }
     
     /**
