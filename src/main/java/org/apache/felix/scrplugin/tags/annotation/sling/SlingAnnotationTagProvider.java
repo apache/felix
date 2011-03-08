@@ -21,14 +21,10 @@ package org.apache.felix.scrplugin.tags.annotation.sling;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.sling.SlingFilter;
-import org.apache.felix.scr.annotations.sling.SlingFilterScope;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.apache.felix.scr.annotations.sling.*;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaTag;
-import org.apache.felix.scrplugin.tags.annotation.AnnotationJavaClassDescription;
-import org.apache.felix.scrplugin.tags.annotation.AnnotationTagProvider;
-import org.apache.felix.scrplugin.tags.annotation.Util;
+import org.apache.felix.scrplugin.tags.annotation.*;
 
 /**
  * Annotation tag provider for sling-specific SCR annotations.
@@ -130,13 +126,13 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
                 tags.add(new SlingFilterServiceTag(annotation, description));
             }
 
-            // property order
+            // property order = service.ranking
             final int order = Util.getIntValue(annotation, "order", SlingFilter.class);
-            tags.add(new SlingServletPropertyTag(annotation, "filter.order",String.valueOf(order), description, "Integer", true));
+            tags.add(new SlingServletPropertyTag(annotation, "service.ranking", String.valueOf(order), description, "Integer", true));
 
             // property scope
             final SlingFilterScope scope = Util.getEnumValue(annotation, "scope", SlingFilterScope.class, SlingFilter.class);
-            tags.add(new SlingServletPropertyTag(annotation, "filter.scope",scope.getScope(), description, null, true));
+            tags.add(new SlingServletPropertyTag(annotation, "sling.filter.scope", scope.getScope(), description, null, true));
         }
 
         return tags;
