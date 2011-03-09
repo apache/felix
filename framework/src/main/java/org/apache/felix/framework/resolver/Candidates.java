@@ -230,17 +230,21 @@ public class Candidates
             {
                 Capability candCap = itCandCap.next();
 
-                // If the candidate module is not resolved and not the current
-                // module we are trying to populate, then try to populate the
-                // candidate module as well.
+                // If the candidate module is a fragment, then always attempt
+                // to populate candidates for its dependency, since it must be
+                // attached to a host to be used. Otherwise, if the candidate
+                // module is not already resolved and is not the current module
+                // we are trying to populate, then populate the candidates for
+                // its dependencies as well.
                 // NOTE: Technically, we don't have to check to see if the
                 // candidate module is equal to the current module, but this
                 // saves us from recursing and also simplifies exceptions messages
                 // since we effectively chain exception messages for each level
                 // of recursion; thus, any avoided recursion results in fewer
                 // exceptions to chain when an error does occur.
-                if (!candCap.getModule().isResolved()
-                    && !candCap.getModule().equals(module))
+                if (Util.isFragment(candCap.getModule())
+                    || (!candCap.getModule().isResolved()
+                        && !candCap.getModule().equals(module)))
                 {
                     try
                     {

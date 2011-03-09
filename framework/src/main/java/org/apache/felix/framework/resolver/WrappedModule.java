@@ -34,7 +34,6 @@ import org.osgi.framework.Version;
 
 class WrappedModule implements Module
 {
-    private final String m_id;
     private final Module m_module;
     private final List<Module> m_fragments;
     private List<Capability> m_cachedCapabilities = null;
@@ -42,7 +41,6 @@ class WrappedModule implements Module
 
     public WrappedModule(Module module, List<Module> fragments)
     {
-        m_id = module.getId() + " [" + super.hashCode() + "]";
         m_module = module;
         m_fragments = fragments;
     }
@@ -59,7 +57,7 @@ class WrappedModule implements Module
 
     public String getId()
     {
-        return m_id;
+        return m_module.getId();
     }
 
     public List<Capability> getCapabilities()
