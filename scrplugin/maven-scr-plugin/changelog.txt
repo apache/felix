@@ -8,6 +8,7 @@ Changes from 1.6.0 to 1.7.0
     * [FELIX-2770] - maven-scr-plugin 1.6.0 incompatible with <packaging>pom</packaging> projects
     * [FELIX-2731] - NPE while scanning sources with QDox
     * [FELIX-2681] - NPE in assertMinScrAnnotationArtifactVersion when checking min. version of annotations dependency
+    * [FELIX-2876] - <reference> element not generated when name is missing
 
 ** Improvement
     * [FELIX-2853] - Deprecate javadoc tags
