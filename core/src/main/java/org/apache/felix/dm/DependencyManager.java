@@ -167,20 +167,73 @@ public class DependencyManager {
      * <h3>Usage Example</h3>
      * 
      * <blockquote><pre>
-     *  manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "m_aspect")
-     *         .setImplementation(ExistingServiceAspect.class)
-     *         .setServiceProperties(new Hashtable() {{ put("additional", "properties"); }});
+     * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "m_service")
+     *     .setImplementation(ExistingServiceAspect.class)
+     * );
      * </pre></blockquote>
      * 
      * @param serviceInterface the service interface to apply the aspect to
      * @param serviceFilter the filter condition to use with the service interface
      * @param ranking the level used to organize the aspect chain ordering
-     * @param attributeName the aspect implementation field name where to inject original service. 
+     * @param autoConfig the aspect implementation field name where to inject original service. 
      *     If null, any field matching the original service will be injected.
      * @return a service that acts as a factory for generating aspects
      */
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
-        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, attributeName);
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String autoConfig) {
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, autoConfig, null, null, null);
+    }
+    /**
+     * Creates a new aspect. The aspect will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an aspect will be created based on the aspect implementation class.
+     * The aspect will be registered with the same interface and properties
+     * as the original service, plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAspectService(ExistingService.class, "(foo=bar)", 10)
+     *     .setImplementation(ExistingServiceAspect.class)
+     * );
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the aspect to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param ranking the level used to organize the aspect chain ordering
+     * @return a service that acts as a factory for generating aspects
+     */
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, null, null, null);
+    }
+    /**
+     * Creates a new aspect. The aspect will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an aspect will be created based on the aspect implementation class.
+     * The aspect will be registered with the same interface and properties
+     * as the original service, plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "add", "change", "remove")
+     *     .setImplementation(ExistingServiceAspect.class)
+     * );
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the aspect to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param ranking the level used to organize the aspect chain ordering
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @return a service that acts as a factory for generating aspects
+     */
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove);
     }
     
     /**
@@ -195,18 +248,69 @@ public class DependencyManager {
      * <h3>Usage Example</h3>
      * 
      * <blockquote><pre>
-     *  manager.createAdapterService(AdapteeService.class, "(foo=bar)")
-     *         // The interface to use when registering adapter
-     *         .setInterface(AdapterService.class, new Hashtable() {{ put("additional", "properties"); }})
-     *         // the implementation of the adapter
-     *         .setImplementation(AdapterImpl.class);
+     * manager.createAdapterService(AdapteeService.class, "(foo=bar)")
+     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
+     *     .setImplementation(AdapterImpl.class);
      * </pre></blockquote>
+     * 
      * @param serviceInterface the service interface to apply the adapter to
      * @param serviceFilter the filter condition to use with the service interface
      * @return a service that acts as a factory for generating adapters
      */
     public Component createAdapterService(Class serviceInterface, String serviceFilter) {
-        return new AdapterServiceImpl(this, serviceInterface, serviceFilter);
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, null, null);
+    }
+    /**
+     * Creates a new adapter. The adapter will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an adapter will be created based on the adapter implementation class.
+     * The adapter will be registered with the specified interface and existing properties
+     * from the original service plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "m_service")
+     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
+     *     .setImplementation(AdapterImpl.class);
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the adapter to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param autoConfig the name of the member to inject the service into
+     * @return a service that acts as a factory for generating adapters
+     */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String autoConfig) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null);
+    }
+    /**
+     * Creates a new adapter. The adapter will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an adapter will be created based on the adapter implementation class.
+     * The adapter will be registered with the specified interface and existing properties
+     * from the original service plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAdapterService(AdapteeService.class, "(foo=bar)", "add", "change", "remove")
+     *     .setInterface(AdapterService.class, new Hashtable() {{ put("extra", "property"); }})
+     *     .setImplementation(AdapterImpl.class);
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the adapter to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @return a service that acts as a factory for generating adapters
+     */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
     }
         
     /**

@@ -25,6 +25,7 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -36,14 +37,18 @@ public class AdapterServiceImpl extends FilterService
 {
     /**
      * Creates a new Adapter Service implementation.
+     * 
      * @param dm the dependency manager used to create our internal adapter service
      * @param adapteeInterface the service interface to apply the adapter to
      * @param adapteeFilter the filter condition to use with the service interface
+     * @param add
+     * @param change
+     * @param remove
      */
-    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter)
+    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove)
     {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_service.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter))
+        m_service.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove))
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
@@ -53,10 +58,18 @@ public class AdapterServiceImpl extends FilterService
     public class AdapterImpl extends AbstractDecorator {
         private final Class m_adapteeInterface;
         private final String m_adapteeFilter;
+        private final String m_add;
+        private final String m_change;
+        private final String m_remove;
+        private final String m_autoConfig;
         
-        public AdapterImpl(Class adapteeInterface, String adapteeFilter) {
+        public AdapterImpl(Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
             m_adapteeInterface = adapteeInterface;
             m_adapteeFilter = adapteeFilter;
+            m_autoConfig = autoConfig;
+            m_add = add;
+            m_change = change;
+            m_remove = remove;
         }
         
         public Component createService(Object[] properties) {
@@ -81,15 +94,23 @@ public class AdapterServiceImpl extends FilterService
             }
             List dependencies = m_service.getDependencies();
             dependencies.remove(0);
+            ServiceDependency dependency = m_manager.createServiceDependency()
+                 .setService(m_adapteeInterface, ref)
+                 .setRequired(true);
+            if (m_autoConfig != null) {
+                dependency.setAutoConfig(m_autoConfig);
+            }
+            if (m_add != null || m_change != null || m_remove != null) {
+                dependency.setCallbacks(m_add, m_change, m_remove);
+            }
+            
             Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-                .add(m_manager.createServiceDependency()
-                     .setService(m_adapteeInterface, ref)
-                     .setRequired(true));
+                .add(dependency);
             
             configureAutoConfigState(service, m_service);
             
