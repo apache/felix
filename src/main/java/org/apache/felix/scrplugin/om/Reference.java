@@ -22,9 +22,7 @@ import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaMethod;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.tags.*;
 
 /**
  * <code>Reference.java</code>...
@@ -169,7 +167,9 @@ public class Reference extends AbstractObject {
 
         // validate name
         if (StringUtils.isEmpty(this.name)) {
-            this.logError( iLog, "Reference has no name" );
+            if ( specVersion < Constants.VERSION_1_1 ) {
+                this.logError( iLog, "Reference has no name" );
+            }
         }
 
         // validate interface
