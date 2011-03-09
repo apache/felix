@@ -23,11 +23,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceDependency;
-import org.apache.felix.dm.ComponentStateListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -36,10 +36,10 @@ import org.osgi.framework.ServiceReference;
  * some Service methods for configuring actual aspect service implementation.
  */
 public class AspectServiceImpl extends FilterService {
-    public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig)
+    public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove)
     { 
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_service.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig))
+        m_service.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig, add, change, remove))
              .add(dm.createServiceDependency()
                   .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
                   .setAutoConfig(false)
@@ -64,13 +64,19 @@ public class AspectServiceImpl extends FilterService {
         private final Class m_aspectInterface; // the service decorated by this aspect
         private final String m_aspectFilter; // the service filter decorated by this aspect
         private final int m_ranking; // the aspect ranking
-        private final String m_field; // the aspect impl field name where to inject decorated service
+        private final String m_autoConfig; // the aspect impl field name where to inject decorated service
+        private final String m_add;
+        private final String m_change;
+        private final String m_remove;
       
-        public AspectImpl(Class aspectInterface, String aspectFilter, int ranking, String field) {
+        public AspectImpl(Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove) {
             m_aspectInterface = aspectInterface;
             m_aspectFilter = aspectFilter;
             m_ranking = ranking;
-            m_field = field;
+            m_autoConfig = autoConfig;
+            m_add = add;
+            m_change = change;
+            m_remove = remove;
         }
         
         public Component createService(Object[] params) {
@@ -80,13 +86,21 @@ public class AspectServiceImpl extends FilterService {
             // replace it with one that points to the specific service that just was passed in
             Properties serviceProperties = getServiceProperties(params);
             String[] serviceInterfaces = getServiceInterfaces();
+            ServiceReference ref = (ServiceReference) params[0];
+            ServiceDependency dependency = m_manager.createServiceDependency().setService(m_aspectInterface, createAspectFilter(ref)).setRequired(true);
+            if (m_autoConfig != null) {
+                dependency.setAutoConfig(m_autoConfig);
+            }
+            if (m_add != null || m_change != null || m_remove != null) {
+                dependency.setCallbacks(m_add, m_change, m_remove);
+            }
             Component service = m_manager.createComponent()
                 .setInterface(serviceInterfaces, serviceProperties)
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
-                .add(getAspectDependency(params));
+                .add(dependency);
             
             configureAutoConfigState(service, m_service);
             
@@ -140,15 +154,6 @@ public class AspectServiceImpl extends FilterService {
                 }
             }
             return (String[]) serviceNames.toArray(new String[serviceNames.size()]);
-        }
-
-        private Dependency getAspectDependency(Object[] params) {
-            ServiceReference ref = (ServiceReference) params[0];
-            ServiceDependency sd = m_manager.createServiceDependency().setService(m_aspectInterface, createAspectFilter(ref)).setRequired(true);
-            if (m_field != null) {
-                sd.setAutoConfig(m_field);
-            }
-            return sd;
         }
 
         private String createAspectFilter(ServiceReference ref) {

@@ -189,18 +189,60 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * Creates a new aspect service.
      * 
      * @return the aspect service
+     * @see DependencyManager#createAspectService(Class, String, int, String)
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
         return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, attributeName);
+    }
+    
+    /**
+     * Creates a new aspect service.
+     * 
+     * @return the aspect service
+     * @see DependencyManager#createAspectService(Class, String, int)
+     */
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking);
+    }
+    
+    /**
+     * Creates a new aspect service.
+     * 
+     * @return the aspect service
+     * @see DependencyManager#createAspectService(Class, String, int, String, String, String)
+     */
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove);
     }
 
     /**
      * Creates a new adapter service.
      * 
      * @return the adapter service
+     * @see DependencyManager#createAdapterService(Class, String)
      */
     public Component createAdapterService(Class serviceInterface, String serviceFilter) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter);
+    }
+    
+    /**
+     * Creates a new adapter service.
+     * 
+     * @return the adapter service
+     * @see DependencyManager#createAdapterService(Class, String, String)
+     */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String autoConfig) {
+        return m_manager.createAdapterService(serviceInterface, serviceFilter, autoConfig);
+    }
+    
+    /**
+     * Creates a new adapter service.
+     * 
+     * @return the adapter service
+     * @see DependencyManager#createAdapterService(Class, String, String, String, String)
+     */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
+        return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove);
     }
 
     /**
