@@ -70,7 +70,7 @@ public class SlingServletPropertyTag extends AbstractTag {
 
     @Override
     public String getName() {
-        return "SlingServlet";
+        return Constants.PROPERTY;
     }
 
     @Override
