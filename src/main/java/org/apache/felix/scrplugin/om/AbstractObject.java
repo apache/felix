@@ -34,11 +34,11 @@ public abstract class AbstractObject {
     }
 
     protected void logWarn(IssueLog iLog, String message) {
-        iLog.addWarning( "@" + this.tag.getName() + ": " + message, tag.getSourceLocation(), tag.getLineNumber() );
+        iLog.addWarning( "@" + this.tag.getSourceName() + ": " + message, tag.getSourceLocation(), tag.getLineNumber() );
     }
 
     protected void logError(IssueLog iLog, String message) {
-        iLog.addError( "@" + this.tag.getName() + ": " + message, tag.getSourceLocation(), tag.getLineNumber() );
+        iLog.addError( "@" + this.tag.getSourceName() + ": " + message, tag.getSourceLocation(), tag.getLineNumber() );
     }
 
     public JavaTag getJavaTag() {

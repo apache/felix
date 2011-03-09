@@ -115,6 +115,11 @@ public abstract class AbstractTag implements JavaTag {
     public abstract String getName();
 
     /**
+     * @see JavaTag#getSourceName()
+     */
+    public abstract String getSourceName();
+
+    /**
      * @see org.apache.felix.scrplugin.tags.JavaTag#getNamedParameterMap()
      */
     public Map<String, String> getNamedParameterMap() {
