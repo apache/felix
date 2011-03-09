@@ -5,6 +5,7 @@ Changes from 1.0.0 to 1.1.0
     * [FELIX-2704] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
     * [FELIX-2835] - SCR plugin: Parsing of "options" for property tag broken for javadoc annotations
     * [FELIX-2731] - NPE while scanning sources with QDox
+    * [FELIX-2876] - <reference> element not generated when name is missing
 
 ** Improvement
     * [FELIX-2853] - Deprecate javadoc tags
