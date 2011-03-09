@@ -90,7 +90,7 @@ public class ReferenceTag extends AbstractTag {
 
     @Override
     public String getName() {
-        return "Reference";
+        return Constants.REFERENCE;
     }
 
     @Override

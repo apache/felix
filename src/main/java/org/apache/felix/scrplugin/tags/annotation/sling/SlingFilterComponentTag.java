@@ -55,7 +55,7 @@ public class SlingFilterComponentTag extends AbstractTag {
 
     @Override
     public String getName() {
-        return "SlingFilter";
+        return Constants.COMPONENT;
     }
 
     @Override
