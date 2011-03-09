@@ -23,9 +23,15 @@ package org.apache.felix.scr.annotations.sling;
  */
 public enum SlingFilterScope {
 
-    REQUEST("request"),
+    REQUEST("REQUEST"),
 
-    COMPONENT("component");
+    COMPONENT("COMPONENT"),
+
+    ERROR("ERROR"),
+
+    INCLUDE("INCLUDE"),
+
+    FORWARD("FORWARD");
 
     private final String scope;
 

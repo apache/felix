@@ -141,6 +141,11 @@ public class PropertyTag extends AbstractTag {
 
     @Override
     public String getName() {
+        return Constants.PROPERTY;
+    }
+
+    @Override
+    public String getSourceName() {
         return "Property";
     }
 

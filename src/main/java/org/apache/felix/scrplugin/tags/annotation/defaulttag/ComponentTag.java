@@ -117,6 +117,11 @@ public class ComponentTag extends AbstractTag {
 
     @Override
     public String getName() {
+        return Constants.COMPONENT;
+    }
+
+    @Override
+    public String getSourceName() {
         return "Component";
     }
 

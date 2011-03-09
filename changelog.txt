@@ -1,0 +1,14 @@
+Changes from 1.4.0 to 1.5.0
+---------------------------
+
+** Bug
+    * [FELIX-2704] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
+
+** Improvement
+    * [FELIX-2753] - Support array of classes for @Service annotation
+    * [FELIX-2874] - Add new scopes to SlingFilter annotation and use new property names
+    * [FELIX-2838] - Allow classes to be specifed as values for the @Property annotation
+    * [FELIX-2863] - Warnings and error messages contain @scr.* if annotations are used
+    * [FELIX-2690] - Add changelog.txt to SCR/Metatype generation modules
+
+

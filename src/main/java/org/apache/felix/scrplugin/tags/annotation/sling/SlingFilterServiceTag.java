@@ -44,6 +44,11 @@ public class SlingFilterServiceTag extends AbstractTag {
 
     @Override
     public String getName() {
+        return Constants.SERVICE;
+    }
+
+    @Override
+    public String getSourceName() {
         return "SlingFilter";
     }
 

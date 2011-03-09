@@ -53,6 +53,11 @@ public class ServiceTag extends AbstractTag {
 
     @Override
     public String getName() {
+        return Constants.SERVICE;
+    }
+
+    @Override
+    public String getSourceName() {
         return "Service";
     }
 
