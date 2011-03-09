@@ -145,6 +145,11 @@ public class PropertyTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "Property";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         final Map<String, String> map = new LinkedHashMap<String, String>();
 

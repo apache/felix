@@ -89,6 +89,13 @@ public class ClassLoaderJavaTag implements JavaTag {
     }
 
     /**
+     * @see org.apache.felix.scrplugin.tags.JavaTag#getSourceName()
+     */
+    public String getSourceName() {
+        return this.getName();
+    }
+
+    /**
      * @see org.apache.felix.scrplugin.tags.JavaTag#getNamedParameter(java.lang.String)
      */
     public String getNamedParameter(String name) {

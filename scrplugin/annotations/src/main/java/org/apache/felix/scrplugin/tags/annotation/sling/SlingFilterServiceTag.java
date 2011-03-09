@@ -48,6 +48,11 @@ public class SlingFilterServiceTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "SlingFilter";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         return INTERFACE_MAP;
     }

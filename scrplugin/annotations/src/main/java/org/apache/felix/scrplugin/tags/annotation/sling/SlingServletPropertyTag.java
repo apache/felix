@@ -74,6 +74,11 @@ public class SlingServletPropertyTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "SlingServlet";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         final SortedMap<String, String> map = new TreeMap<String, String>();
 

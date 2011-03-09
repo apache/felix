@@ -121,6 +121,11 @@ public class ComponentTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "Component";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         final Map<String, String> map = new HashMap<String, String>();
 
