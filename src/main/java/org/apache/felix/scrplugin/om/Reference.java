@@ -22,9 +22,7 @@ import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaMethod;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.tags.*;
 
 /**
  * <code>Reference.java</code>...
@@ -169,7 +167,9 @@ public class Reference extends AbstractObject {
 
         // validate name
         if (StringUtils.isEmpty(this.name)) {
-            this.logError( iLog, "Reference has no name" );
+            if ( specVersion < Constants.VERSION_1_1 ) {
+                this.logError( iLog, "Reference has no name" );
+            }
         }
 
         // validate interface
@@ -248,7 +248,7 @@ public class Reference extends AbstractObject {
         final JavaMethod method = this.findMethod(specVersion, methodName);
         if (method == null) {
             if ( !componentIsAbstract ) {
-                this.logError( iLog, "Missing method " + methodName + " for reference " + this.getName() );
+                this.logError( iLog, "Missing method " + methodName + " for reference " + (this.getName() == null ? "" : this.getName()));
             }
             return null;
         }
@@ -287,8 +287,15 @@ public class Reference extends AbstractObject {
 
         // append reference name with service interface and ServiceReference
         if (method == null) {
-            realMethodName = methodName + Character.toUpperCase(this.name.charAt(0))
-            + this.name.substring(1);
+            final String info;
+            if (StringUtils.isEmpty(this.name)) {
+                final String interfaceName = this.getInterfacename();
+                final int pos = interfaceName.lastIndexOf('.');
+                info = interfaceName.substring(pos + 1);
+            } else {
+                info = this.name;
+            }
+            realMethodName = methodName + Character.toUpperCase(info.charAt(0)) + info.substring(1);
 
             method = this.javaClassDescription.getMethodBySignature(realMethodName, sig);
         }

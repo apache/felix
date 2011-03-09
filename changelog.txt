@@ -1,0 +1,16 @@
+Changes from 1.0.0 to 1.0.2
+---------------------------
+
+** Bug
+    * [FELIX-2704] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
+    * [FELIX-2835] - SCR plugin: Parsing of "options" for property tag broken for javadoc annotations
+    * [FELIX-2731] - NPE while scanning sources with QDox
+    * [FELIX-2876] - <reference> element not generated when name is missing
+
+** Improvement
+    * [FELIX-2853] - Deprecate javadoc tags
+    * [FELIX-2753] - Support array of classes for @Service annotation
+    * [FELIX-2863] - Warnings and error messages contain @scr.* if annotations are used
+    * [FELIX-2690] - Add changelog.txt to SCR/Metatype generation modules
+
+

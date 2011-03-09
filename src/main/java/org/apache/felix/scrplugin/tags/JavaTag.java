@@ -26,7 +26,16 @@ import java.util.Map;
  */
 public interface JavaTag {
 
+    /**
+     * The name of the tag, e.g. scr.component etc.
+     */
     String getName();
+
+    /**
+     * The name of the tag as used in the source code.
+     * For javadoc tags this is like {@link #getName()}, for annoations this is different.
+     */
+    String getSourceName();
 
     String[] getParameters();
 
