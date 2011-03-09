@@ -57,6 +57,11 @@ public class ServiceTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "Service";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         final Map<String, String> map = new HashMap<String, String>();
 

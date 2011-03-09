@@ -94,6 +94,11 @@ public class ReferenceTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "Reference";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         final Map<String, String> map = new HashMap<String, String>();
 

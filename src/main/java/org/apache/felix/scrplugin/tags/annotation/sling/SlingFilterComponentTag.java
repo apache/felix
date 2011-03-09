@@ -59,6 +59,11 @@ public class SlingFilterComponentTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "SlingFilter";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         final Map<String, String> params = new HashMap<String, String>();
         if ( this.name != null ) {

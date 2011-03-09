@@ -45,6 +45,11 @@ public class SlingServletComponentTag extends AbstractTag {
     }
 
     @Override
+    public String getSourceName() {
+        return "SlingServlet";
+    }
+
+    @Override
     public Map<String, String> createNamedParameterMap() {
         return Collections.emptyMap();
     }
