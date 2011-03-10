@@ -162,8 +162,7 @@ public class Felix extends BundleImpl implements Framework
     private final String[] m_bootPkgs;
     private final boolean[] m_bootPkgWildcards;
 
-    // Shutdown thread.
-    private Thread m_shutdownThread = null;
+    // Shutdown gate.
     private volatile ThreadGate m_shutdownGate = null;
     
     // Security Manager created by the framework
@@ -867,7 +866,24 @@ public class Felix extends BundleImpl implements Framework
                 AdminPermission.EXECUTE));
         }
 
-        stopBundle(this, true);
+        // Spec says stop() on SystemBundle should return immediately and
+        // shutdown framework on another thread.
+        new Thread(new Runnable() {
+            public void run()
+            {
+                try
+                {
+                    stopBundle(Felix.this, true);
+                }
+                catch (BundleException ex)
+                {
+                    m_logger.log(
+                        Logger.LOG_ERROR,
+                        "Exception trying to stop framework.",
+                        ex);
+                }
+            }
+        }, "FelixShutdown").start();
     }
 
     public void stop(int options) throws BundleException
@@ -4370,7 +4386,7 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    class SystemBundleActivator implements BundleActivator, Runnable
+    class SystemBundleActivator implements BundleActivator
     {
         public void start(BundleContext context) throws Exception
         {
@@ -4390,18 +4406,6 @@ public class Felix extends BundleImpl implements Framework
         }
 
         public void stop(BundleContext context)
-        {
-            // Spec says stop() on SystemBundle should return immediately and
-            // shutdown framework on another thread.
-            if (m_shutdownThread == null)
-            {
-                // Initial call of stop, so kick off shutdown.
-                m_shutdownThread = new Thread(this, "FelixShutdown");
-                m_shutdownThread.start();
-            }
-        }
-
-        public void run()
         {
             // The state of the framework should be STOPPING, so
             // acquire the bundle lock to verify it.
@@ -4522,7 +4526,6 @@ public class Felix extends BundleImpl implements Framework
                 setBundleStateAndNotify(Felix.this, Bundle.RESOLVED);
                 m_shutdownGate.open();
                 m_shutdownGate = null;
-                m_shutdownThread = null;
             }
             finally
             {
