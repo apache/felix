@@ -20,9 +20,11 @@ package org.apache.felix.framework;
 
 import java.util.*;
 import org.apache.felix.framework.resolver.Module;
+import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -234,10 +236,10 @@ class PackageAdminImpl implements PackageAdmin, Runnable
                 ModuleImpl module = (ModuleImpl) modules.get(modIdx);
                 if (module.isResolved())
                 {
-                    List<Module> hosts = module.getDependentHosts();
-                    for (int i = 0; (hosts != null) && (i < hosts.size()); i++)
+                    List<Wire> hostWires = module.getWires();
+                    for (int i = 0; (hostWires != null) && (i < hostWires.size()); i++)
                     {
-                        Bundle b = hosts.get(i).getBundle();
+                        Bundle b = hostWires.get(i).getExporter().getBundle();
                         if (b != null)
                         {
                             list.add(b);
@@ -246,7 +248,7 @@ class PackageAdminImpl implements PackageAdmin, Runnable
                 }
             }
             // Convert list to an array.
-            return (list.size() == 0)
+            return (list.isEmpty())
                 ? null
                 : (Bundle[]) list.toArray(new Bundle[list.size()]);
         }

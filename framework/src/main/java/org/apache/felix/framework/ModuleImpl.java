@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +99,6 @@ public class ModuleImpl implements Module
 
     private List<Module> m_fragments = null;
     private List<Wire> m_wires = null;
-    private List<Module> m_dependentHosts = new ArrayList<Module>(0);
     private List<Module> m_dependentImporters = new ArrayList<Module>(0);
     private List<Module> m_dependentRequirers = new ArrayList<Module>(0);
     private volatile boolean m_isResolved = false;
@@ -472,10 +472,9 @@ public class ModuleImpl implements Module
         // the dependencies this module has on other modules (i.e., the provider
         // end of the wire) to simplify bookkeeping.
 
-        // Fragments don't depend on other their hosts, so we just record the
-        // wires for informational purposes.
-// TODO: FRAGMENT RESOLVER - It is possible for a fragment to get more wires
-//       later if it is attached to more hosts. We need to deal with that.
+        // For fragments we don't need to capture any additional dependency
+        // information, since the wires are sufficient, so just record the
+        // new wires. The wires are to the hosts to which the fragment is attached.
         boolean isFragment = Util.isFragment(this);
 
         // Remove module from old wire modules' dependencies,
@@ -1176,12 +1175,22 @@ public class ModuleImpl implements Module
 
     public synchronized void attachFragments(List<Module> fragments) throws Exception
     {
-        // Remove module from old fragment dependencies.
-        // We will generally only remove module fragment
-        // dependencies when we are uninstalling the module.
+        // Remove the host wires for this module from old fragments.
+        // We will generally only remove host wires when we are uninstalling
+        // the module.
         for (int i = 0; (m_fragments != null) && (i < m_fragments.size()); i++)
         {
-            ((ModuleImpl) m_fragments.get(i)).removeDependentHost(this);
+            List<Wire> hostWires = new ArrayList<Wire>(m_fragments.get(i).getWires());
+            for (Iterator<Wire> it = hostWires.iterator(); it.hasNext(); )
+            {
+                Wire hostWire = it.next();
+                if (hostWire.getExporter().equals(this))
+                {
+                    it.remove();
+                    ((ModuleImpl) m_fragments.get(i)).setWires(hostWires);
+                    break;
+                }
+            }
         }
 
         // Close previous fragment contents.
@@ -1232,7 +1241,6 @@ public class ModuleImpl implements Module
             m_fragmentContents = new Content[m_fragments.size()];
             for (int i = 0; (m_fragments != null) && (i < m_fragments.size()); i++)
             {
-                ((ModuleImpl) m_fragments.get(i)).addDependentHost(this);
                 m_fragmentContents[i] =
                     m_fragments.get(i).getContent()
                         .getEntryAsContent(FelixConstants.CLASS_PATH_DOT);
@@ -1240,24 +1248,6 @@ public class ModuleImpl implements Module
             // Recalculate the content path for the new fragments.
             m_contentPath = initializeContentPath();
         }
-    }
-
-    public synchronized List<Module> getDependentHosts()
-    {
-        return m_dependentHosts;
-    }
-
-    public synchronized void addDependentHost(Module module)
-    {
-        if (!m_dependentHosts.contains(module))
-        {
-            m_dependentHosts.add(module);
-        }
-    }
-
-    public synchronized void removeDependentHost(Module module)
-    {
-        m_dependentHosts.remove(module);
     }
 
     public synchronized List<Module> getDependentImporters()
@@ -1298,11 +1288,22 @@ public class ModuleImpl implements Module
 
     public synchronized List<Module> getDependents()
     {
-        List<Module> dependents = new ArrayList<Module>
-            (m_dependentHosts.size() + m_dependentImporters.size() + m_dependentRequirers.size());
-        dependents.addAll(m_dependentHosts);
-        dependents.addAll(m_dependentImporters);
-        dependents.addAll(m_dependentRequirers);
+        List<Module> dependents;
+        if (Util.isFragment(this))
+        {
+            dependents = new ArrayList<Module>();
+            for (int i = 0; (m_wires != null) && (i < m_wires.size()); i++)
+            {
+                dependents.add(m_wires.get(i).getExporter());
+            }
+        }
+        else
+        {
+            dependents = new ArrayList<Module>
+                (m_dependentImporters.size() + m_dependentRequirers.size());
+            dependents.addAll(m_dependentImporters);
+            dependents.addAll(m_dependentRequirers);
+        }
         return dependents;
     }
 

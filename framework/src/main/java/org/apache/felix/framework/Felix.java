@@ -4221,7 +4221,13 @@ public class Felix extends BundleImpl implements Framework
                         }
                     }
 
-                    // Set the module's wires.
+                    // Set the module's wires. If the module is a resolved
+                    // fragment, then we must actually append any new host
+                    // wires to the existing ones.
+                    if (Util.isFragment(module) && module.isResolved())
+                    {
+                        wires.addAll(module.getWires());
+                    }
                     ((ModuleImpl) module).setWires(wires);
 
                     // Attach fragments, if any.
