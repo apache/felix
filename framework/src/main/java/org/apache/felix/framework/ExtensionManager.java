@@ -506,7 +506,13 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
-        throw new IOException("Resource not provided by any extension!");
+        return new URLConnection(url)
+            {
+                public void connect() throws IOException
+                {
+                    throw new IOException("Resource not provided by any extension!");
+                }
+            };
     }
 
     protected InetAddress getHostAddress(URL u)
