@@ -137,6 +137,11 @@ class WrappedModule implements Module
         return m_cachedRequirements;
     }
 
+    public String toString()
+    {
+        return m_module.getId();
+    }
+
     public Map getHeaders()
     {
         throw new UnsupportedOperationException("Not supported yet.");
