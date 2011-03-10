@@ -25,8 +25,7 @@ import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.CapabilityImpl;
 
-// TODO: FRAGMENT-RESOLVER - This should probably be package private.
-public class WireImpl implements Wire
+class WireImpl implements Wire
 {
     private final Module m_importer;
     private final Requirement m_req;

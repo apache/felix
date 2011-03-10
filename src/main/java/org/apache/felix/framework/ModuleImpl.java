@@ -47,7 +47,6 @@ import org.apache.felix.framework.capabilityset.Attribute;
 import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
-import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.Content;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.HostedRequirement;
@@ -55,8 +54,6 @@ import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.resolver.Wire;
-import org.apache.felix.framework.resolver.WireImpl;
-import org.apache.felix.framework.resolver.WireModuleImpl;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
@@ -111,7 +108,7 @@ public class ModuleImpl implements Module
     private ModuleClassLoader m_classLoader;
     private boolean m_isActivationTriggered = false;
     private ProtectionDomain m_protectionDomain = null;
-    private static SecureAction m_secureAction = new SecureAction();
+    private final static SecureAction m_secureAction = new SecureAction();
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -203,7 +200,7 @@ public class ModuleImpl implements Module
         m_bootClassLoader = m_defBootClassLoader;
     }
 
-    public ModuleImpl(
+    ModuleImpl(
         Logger logger, Map configMap, StatefulResolver resolver,
         Bundle bundle, String id, Map headerMap, Content content,
         URLStreamHandler streamHandler, String[] bootPkgs,
@@ -939,7 +936,8 @@ public class ModuleImpl implements Module
         List<Wire> wires = getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
-            if (wires.get(i) instanceof WireImpl)
+            if (wires.get(i).getRequirement().getNamespace()
+                .equals(Capability.PACKAGE_NAMESPACE))
             {
                 try
                 {
@@ -964,7 +962,8 @@ public class ModuleImpl implements Module
         // step potentially passing on the result of this search (if any).
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
-            if (wires.get(i) instanceof WireModuleImpl)
+            if (wires.get(i).getRequirement().getNamespace()
+                .equals(Capability.MODULE_NAMESPACE))
             {
                 try
                 {
@@ -1323,6 +1322,7 @@ public class ModuleImpl implements Module
         m_classLoader = null;
     }
 
+    @Override
     public String toString()
     {
         return m_id;
@@ -1738,6 +1738,7 @@ public class ModuleImpl implements Module
             super(parent);
         }
 
+        @Override
         public Enumeration getResources(String name)
         {
             Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
@@ -1748,6 +1749,7 @@ public class ModuleImpl implements Module
             return urls;
         }
 
+        @Override
         protected Enumeration findResources(String name)
         {
             return ModuleImpl.this.getResourcesLocal(name);
@@ -1779,6 +1781,7 @@ public class ModuleImpl implements Module
             return ModuleImpl.this.getBundle();
         }
 
+        @Override
         protected Class loadClass(String name, boolean resolve)
             throws ClassNotFoundException
         {
@@ -1824,6 +1827,7 @@ public class ModuleImpl implements Module
             return clazz;
         }
 
+        @Override
         protected Class findClass(String name) throws ClassNotFoundException
         {
             Class clazz = null;
@@ -2044,6 +2048,7 @@ public class ModuleImpl implements Module
             return null;
         }
 
+        @Override
         public URL getResource(String name)
         {
             URL url = ModuleImpl.this.getResourceByDelegation(name);
@@ -2054,6 +2059,7 @@ public class ModuleImpl implements Module
             return url;
         }
 
+        @Override
         protected URL findResource(String name)
         {
             return ModuleImpl.this.getResourceLocal(name);
@@ -2064,6 +2070,7 @@ public class ModuleImpl implements Module
         // getResources() method was final and could not be overridden. We should
         // override getResources() like getResource() to make it delegate, but we
         // can't. As a workaround, we make findResources() delegate instead.
+        @Override
         protected Enumeration findResources(String name)
         {
             Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
@@ -2074,6 +2081,7 @@ public class ModuleImpl implements Module
             return urls;
         }
 
+        @Override
         protected String findLibrary(String name)
         {
             // Remove leading slash, if present.
@@ -2135,6 +2143,7 @@ public class ModuleImpl implements Module
             return result;
         }
 
+        @Override
         public String toString()
         {
             return ModuleImpl.this.toString();
