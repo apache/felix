@@ -49,6 +49,8 @@ import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.Content;
+import org.apache.felix.framework.resolver.HostedCapability;
+import org.apache.felix.framework.resolver.HostedRequirement;
 import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
@@ -60,7 +62,6 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.CapabilityImpl;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.util.manifestparser.RequirementImpl;
@@ -312,11 +313,7 @@ public class ModuleImpl implements Module
                     if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
                     {
                         capList.add(
-                            new CapabilityImpl(
-                                this,
-                                caps.get(capIdx).getNamespace(),
-                                caps.get(capIdx).getDirectives(),
-                                caps.get(capIdx).getAttributes()));
+                            new HostedCapability(this, caps.get(capIdx)));
                     }
                 }
             }
@@ -344,8 +341,7 @@ public class ModuleImpl implements Module
                         || reqs.get(reqIdx).getNamespace().equals(Capability.MODULE_NAMESPACE))
                     {
                         reqList.add(
-                            new FragmentRequirement(
-                                this, reqs.get(reqIdx)));
+                            new HostedRequirement(this, reqs.get(reqIdx)));
                     }
                 }
             }
@@ -403,7 +399,7 @@ public class ModuleImpl implements Module
             // We need to return null here if we don't have any libraries, since a
             // zero-length array is used to indicate that matching native libraries
             // could not be found when resolving the bundle.
-            result = (nativeList.size() == 0)
+            result = (nativeList.isEmpty())
                 ? null
                 : Collections.unmodifiableList(nativeList);
         }
@@ -2437,57 +2433,5 @@ public class ModuleImpl implements Module
         sb.append(" ***");
 
         return sb.toString();
-    }
-
-    static class FragmentRequirement implements Requirement
-    {
-        private final Module m_owner;
-        private final Requirement m_fragmentReq;
-
-        public FragmentRequirement(Module owner, Requirement fragmentReq)
-        {
-            m_owner = owner;
-            m_fragmentReq = fragmentReq;
-        }
-
-        public Module getFragment()
-        {
-            return m_fragmentReq.getModule();
-        }
-
-        public Module getModule()
-        {
-            return m_owner;
-        }
-
-        public String getNamespace()
-        {
-            return m_fragmentReq.getNamespace();
-        }
-
-        public SimpleFilter getFilter()
-        {
-            return m_fragmentReq.getFilter();
-        }
-
-        public boolean isOptional()
-        {
-            return m_fragmentReq.isOptional();
-        }
-
-        public Directive getDirective(String name)
-        {
-            return m_fragmentReq.getDirective(name);
-        }
-
-        public List<Directive> getDirectives()
-        {
-            return m_fragmentReq.getDirectives();
-        }
-
-        public String toString()
-        {
-            return m_fragmentReq.toString();
-        }
     }
 }

@@ -55,7 +55,7 @@ public class Candidates
     private final Map<Capability, Map<String, Map<Version, List<Requirement>>>> m_hostFragments;
     // Maps a module to its associated wrapped module; this only happens
     // when a module being resolved has fragments to attach to it.
-    private final Map<Module, WrappedModule> m_allWrappedHosts;
+    private final Map<Module, HostModule> m_allWrappedHosts;
     // Map used when populating candidates to hold intermediate and final results.
     Map<Module, Object> m_populateResultCache;
 
@@ -73,7 +73,7 @@ public class Candidates
         Map<Capability, Set<Requirement>> dependentMap,
         Map<Requirement, SortedSet<Capability>> candidateMap,
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
-        Map<Module, WrappedModule> wrappedHosts, Map<Module, Object> populateResultCache)
+        Map<Module, HostModule> wrappedHosts, Map<Module, Object> populateResultCache)
     {
         m_root = root;
         m_candidateModules = candidateModules;
@@ -97,7 +97,7 @@ public class Candidates
         m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
         m_hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        m_allWrappedHosts = new HashMap<Module, WrappedModule>();
+        m_allWrappedHosts = new HashMap<Module, HostModule>();
         m_populateResultCache = new HashMap<Module, Object>();
 
         populate(state, m_root);
@@ -122,7 +122,7 @@ public class Candidates
         m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
         m_hostFragments =
             new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        m_allWrappedHosts = new HashMap<Module, WrappedModule>();
+        m_allWrappedHosts = new HashMap<Module, HostModule>();
         m_populateResultCache = new HashMap<Module, Object>();
 
         add(req, candidates);
@@ -546,7 +546,7 @@ public class Candidates
         //      with host's attached fragment capabilities.
 
         // Steps 1 and 2
-        List<WrappedModule> wrappedHosts = new ArrayList<WrappedModule>();
+        List<HostModule> wrappedHosts = new ArrayList<HostModule>();
         List<Module> unselectedFragments = new ArrayList<Module>();
         for (Entry<Capability, Map<String, Map<Version, List<Requirement>>>> hostEntry :
             m_hostFragments.entrySet())
@@ -590,7 +590,7 @@ public class Candidates
             }
 
             // Step 2
-            WrappedModule wrappedHost = new WrappedModule(hostCap.getModule(), selectedFragments);
+            HostModule wrappedHost = new HostModule(hostCap.getModule(), selectedFragments);
             wrappedHosts.add(wrappedHost);
             m_allWrappedHosts.put(hostCap.getModule(), wrappedHost);
         }
@@ -602,20 +602,20 @@ public class Candidates
         }
 
         // Step 4
-        for (WrappedModule wrappedHost : wrappedHosts)
+        for (HostModule wrappedHost : wrappedHosts)
         {
             // Replaces capabilities from fragments with the capabilities
             // from the merged host.
             for (Capability c : wrappedHost.getCapabilities())
             {
                 Set<Requirement> dependents =
-                    m_dependentMap.get(((WrappedCapability) c).getWrappedCapability());
+                    m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
                 if (dependents != null)
                 {
                     for (Requirement r : dependents)
                     {
                         Set<Capability> cands = m_candidateMap.get(r);
-                        cands.remove(((WrappedCapability) c).getWrappedCapability());
+                        cands.remove(((HostedCapability) c).getDeclaredCapability());
                         cands.add(c);
                     }
                 }
@@ -627,7 +627,7 @@ public class Candidates
             for (Requirement r : wrappedHost.getRequirements())
             {
                 SortedSet<Capability> cands =
-                    m_candidateMap.get(((WrappedRequirement) r).getWrappedRequirement());
+                    m_candidateMap.get(((HostedRequirement) r).getDeclaredRequirement());
                 if (cands != null)
                 {
                     m_candidateMap.put(r, new TreeSet<Capability>(cands));

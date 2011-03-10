@@ -32,22 +32,22 @@ import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
-class WrappedModule implements Module
+class HostModule implements Module
 {
-    private final Module m_module;
+    private final Module m_host;
     private final List<Module> m_fragments;
     private List<Capability> m_cachedCapabilities = null;
     private List<Requirement> m_cachedRequirements = null;
 
-    public WrappedModule(Module module, List<Module> fragments)
+    public HostModule(Module module, List<Module> fragments)
     {
-        m_module = module;
+        m_host = module;
         m_fragments = fragments;
     }
 
-    public Module getWrappedModule()
+    public Module getHost()
     {
-        return m_module;
+        return m_host;
     }
 
     public List<Module> getFragments()
@@ -57,7 +57,7 @@ class WrappedModule implements Module
 
     public String getId()
     {
-        return m_module.getId();
+        return m_host.getId();
     }
 
     public List<Capability> getCapabilities()
@@ -67,13 +67,13 @@ class WrappedModule implements Module
             List<Capability> capList = new ArrayList<Capability>();
 
             // Wrap host capabilities.
-            List<Capability> caps = m_module.getCapabilities();
+            List<Capability> caps = m_host.getCapabilities();
             for (int capIdx = 0;
                 (caps != null) && (capIdx < caps.size());
                 capIdx++)
             {
                 capList.add(
-                    new WrappedCapability(this, caps.get(capIdx)));
+                    new HostedCapability(this, caps.get(capIdx)));
             }
 
             // Wrap fragment capabilities.
@@ -89,7 +89,7 @@ class WrappedModule implements Module
                     if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
                     {
                         capList.add(
-                            new WrappedCapability(this, caps.get(capIdx)));
+                            new HostedCapability(this, caps.get(capIdx)));
                     }
                 }
             }
@@ -105,13 +105,13 @@ class WrappedModule implements Module
             List<Requirement> reqList = new ArrayList<Requirement>();
 
             // Wrap host requirements.
-            List<Requirement> reqs = m_module.getRequirements();
+            List<Requirement> reqs = m_host.getRequirements();
             for (int reqIdx = 0;
                 (reqs != null) && (reqIdx < reqs.size());
                 reqIdx++)
             {
                 reqList.add(
-                    new WrappedRequirement(this, reqs.get(reqIdx)));
+                    new HostedRequirement(this, reqs.get(reqIdx)));
             }
 
             // Wrap fragment requirements.
@@ -128,7 +128,7 @@ class WrappedModule implements Module
                         || reqs.get(reqIdx).getNamespace().equals(Capability.MODULE_NAMESPACE))
                     {
                         reqList.add(
-                            new WrappedRequirement(this, reqs.get(reqIdx)));
+                            new HostedRequirement(this, reqs.get(reqIdx)));
                     }
                 }
             }
@@ -139,7 +139,7 @@ class WrappedModule implements Module
 
     public String toString()
     {
-        return m_module.getId();
+        return m_host.getId();
     }
 
     public Map getHeaders()
@@ -154,7 +154,7 @@ class WrappedModule implements Module
 
     public String getSymbolicName()
     {
-        return m_module.getSymbolicName();
+        return m_host.getSymbolicName();
     }
 
     public Version getVersion()
@@ -179,7 +179,7 @@ class WrappedModule implements Module
 
     public Bundle getBundle()
     {
-        return m_module.getBundle();
+        return m_host.getBundle();
     }
 
     public List<Wire> getWires()
@@ -199,7 +199,7 @@ class WrappedModule implements Module
 
     public boolean isRemovalPending()
     {
-        return m_module.isRemovalPending();
+        return m_host.isRemovalPending();
     }
 
     public Content getContent()
