@@ -479,8 +479,24 @@ public class ResolverImpl implements Resolver
             // Use wires to get actual requirements and satisfying capabilities.
             for (Wire wire : module.getWires())
             {
-                reqs.add(wire.getRequirement());
-                caps.add(wire.getCapability());
+                // Wrap the requirement as a hosted requirement
+                // if it comes from a fragment, since we will need
+                // to know the host.
+                Requirement r = wire.getRequirement();
+                if (!r.getModule().equals(wire.getImporter()))
+                {
+                    r = new WrappedRequirement(wire.getImporter(), r);
+                }
+                // Wrap the capability as a hosted capability
+                // if it comes from a fragment, since we will need
+                // to know the host.
+                Capability c = wire.getCapability();
+                if (!c.getModule().equals(wire.getExporter()))
+                {
+                    c = new WrappedCapability(wire.getExporter(), c);
+                }
+                reqs.add(r);
+                caps.add(c);
             }
 
             // Since the module is resolved, it could be dynamically importing,
