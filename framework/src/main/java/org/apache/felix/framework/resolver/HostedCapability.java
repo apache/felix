@@ -23,25 +23,57 @@ import org.apache.felix.framework.capabilityset.Attribute;
 import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.Directive;
 
-class WrappedCapability implements Capability
+public class HostedCapability implements Capability
 {
-    private final Module m_module;
+    private final Module m_host;
     private final Capability m_cap;
 
-    public WrappedCapability(Module module, Capability cap)
+    public HostedCapability(Module module, Capability cap)
     {
-        m_module = module;
+        m_host = module;
         m_cap = cap;
     }
 
-    public Capability getWrappedCapability()
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final HostedCapability other = (HostedCapability) obj;
+        if (m_host != other.m_host && (m_host == null || !m_host.equals(other.m_host)))
+        {
+            return false;
+        }
+        if (m_cap != other.m_cap && (m_cap == null || !m_cap.equals(other.m_cap)))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 37 * hash + (m_host != null ? m_host.hashCode() : 0);
+        hash = 37 * hash + (m_cap != null ? m_cap.hashCode() : 0);
+        return hash;
+    }
+
+    public Capability getDeclaredCapability()
     {
         return m_cap;
     }
 
     public Module getModule()
     {
-        return m_module;
+        return m_host;
     }
 
     public String getNamespace()
@@ -74,17 +106,18 @@ class WrappedCapability implements Capability
         return m_cap.getUses();
     }
 
+    @Override
     public String toString()
     {
-        if (m_module == null)
+        if (m_host == null)
         {
             return getAttributes().toString();
         }
         if (getNamespace().equals(Capability.PACKAGE_NAMESPACE))
         {
-            return "[" + m_module + "] "
+            return "[" + m_host + "] "
                 + getNamespace() + "; " + getAttribute(Capability.PACKAGE_ATTR);
         }
-        return "[" + m_module + "] " + getNamespace() + "; " + getAttributes();
+        return "[" + m_host + "] " + getNamespace() + "; " + getAttributes();
     }
 }
