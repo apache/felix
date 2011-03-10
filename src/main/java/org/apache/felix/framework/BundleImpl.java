@@ -27,7 +27,9 @@ import java.util.*;
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.ext.SecurityProvider;
+import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.StringMap;
+import org.apache.felix.framework.util.Util;
 import org.osgi.framework.*;
 
 class BundleImpl implements Bundle
@@ -473,15 +475,19 @@ class BundleImpl implements Bundle
         // version instead of the fragment itself. If there are
         // no hosts, but the module is a fragment, then just
         // search the module itself.
-        List<Module> hosts = module.getDependentHosts();
-        if ((hosts != null) && (hosts.size() > 0))
+        if (Util.isFragment(module))
         {
-            module = (ModuleImpl) hosts.get(0);
-            for (int hostIdx = 1; hostIdx < hosts.size(); hostIdx++)
+            List<Wire> hostWires = module.getWires();
+            if ((hostWires != null) && (hostWires.size() > 0))
             {
-                if (module.getVersion().compareTo(hosts.get(hostIdx).getVersion()) < 0)
+                module = (ModuleImpl) hostWires.get(0).getExporter();
+                for (int hostIdx = 1; hostIdx < hostWires.size(); hostIdx++)
                 {
-                    module = (ModuleImpl) hosts.get(hostIdx);
+                    if (module.getVersion().compareTo(
+                        hostWires.get(hostIdx).getExporter().getVersion()) < 0)
+                    {
+                        module = (ModuleImpl) hostWires.get(hostIdx).getExporter();
+                    }
                 }
             }
         }
