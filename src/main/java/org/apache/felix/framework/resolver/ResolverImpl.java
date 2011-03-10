@@ -146,11 +146,11 @@ public class ResolverImpl implements Resolver
                     if (rethrow != null)
                     {
                         Module faultyModule = getActualModule(rethrow.getModule());
-                        if (rethrow.getRequirement() instanceof WrappedRequirement)
+                        if (rethrow.getRequirement() instanceof HostedRequirement)
                         {
                             faultyModule =
-                                ((WrappedRequirement) rethrow.getRequirement())
-                                    .getWrappedRequirement().getModule();
+                                ((HostedRequirement) rethrow.getRequirement())
+                                    .getDeclaredRequirement().getModule();
                         }
                         if (fragments.remove(faultyModule))
                         {
@@ -281,11 +281,11 @@ public class ResolverImpl implements Resolver
                     if (rethrow != null)
                     {
                         Module faultyModule = getActualModule(rethrow.getModule());
-                        if (rethrow.getRequirement() instanceof WrappedRequirement)
+                        if (rethrow.getRequirement() instanceof HostedRequirement)
                         {
                             faultyModule =
-                                ((WrappedRequirement) rethrow.getRequirement())
-                                    .getWrappedRequirement().getModule();
+                                ((HostedRequirement) rethrow.getRequirement())
+                                    .getDeclaredRequirement().getModule();
                         }
                         if (fragments.remove(faultyModule))
                         {
@@ -485,7 +485,7 @@ public class ResolverImpl implements Resolver
                 Requirement r = wire.getRequirement();
                 if (!r.getModule().equals(wire.getImporter()))
                 {
-                    r = new WrappedRequirement(wire.getImporter(), r);
+                    r = new HostedRequirement(wire.getImporter(), r);
                 }
                 // Wrap the capability as a hosted capability
                 // if it comes from a fragment, since we will need
@@ -493,7 +493,7 @@ public class ResolverImpl implements Resolver
                 Capability c = wire.getCapability();
                 if (!c.getModule().equals(wire.getExporter()))
                 {
-                    c = new WrappedCapability(wire.getExporter(), c);
+                    c = new HostedCapability(wire.getExporter(), c);
                 }
                 reqs.add(r);
                 caps.add(c);
@@ -1291,27 +1291,27 @@ public class ResolverImpl implements Resolver
 
     private static Module getActualModule(Module m)
     {
-        if (m instanceof WrappedModule)
+        if (m instanceof HostModule)
         {
-            return ((WrappedModule) m).getWrappedModule();
+            return ((HostModule) m).getHost();
         }
         return m;
     }
 
     private static Capability getActualCapability(Capability c)
     {
-        if (c instanceof WrappedCapability)
+        if (c instanceof HostedCapability)
         {
-            return ((WrappedCapability) c).getWrappedCapability();
+            return ((HostedCapability) c).getDeclaredCapability();
         }
         return c;
     }
 
     private static Requirement getActualRequirement(Requirement r)
     {
-        if (r instanceof WrappedRequirement)
+        if (r instanceof HostedRequirement)
         {
-            return ((WrappedRequirement) r).getWrappedRequirement();
+            return ((HostedRequirement) r).getDeclaredRequirement();
         }
         return r;
     }
@@ -1370,9 +1370,9 @@ public class ResolverImpl implements Resolver
             wireMap.put(unwrappedModule, packageWires);
 
             // Add host wire for any fragments.
-            if (module instanceof WrappedModule)
+            if (module instanceof HostModule)
             {
-                List<Module> fragments = ((WrappedModule) module).getFragments();
+                List<Module> fragments = ((HostModule) module).getFragments();
                 for (Module fragment : fragments)
                 {
                     List<Wire> hostWires = wireMap.get(fragment);

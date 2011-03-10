@@ -23,25 +23,57 @@ import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 
-class WrappedRequirement implements Requirement
+public class HostedRequirement implements Requirement
 {
-    private final Module m_module;
+    private final Module m_host;
     private final Requirement m_req;
 
-    public WrappedRequirement(Module module, Requirement req)
+    public HostedRequirement(Module module, Requirement req)
     {
-        m_module = module;
+        m_host = module;
         m_req = req;
     }
 
-    public Requirement getWrappedRequirement()
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final HostedRequirement other = (HostedRequirement) obj;
+        if (m_host != other.m_host && (m_host == null || !m_host.equals(other.m_host)))
+        {
+            return false;
+        }
+        if (m_req != other.m_req && (m_req == null || !m_req.equals(other.m_req)))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 37 * hash + (m_host != null ? m_host.hashCode() : 0);
+        hash = 37 * hash + (m_req != null ? m_req.hashCode() : 0);
+        return hash;
+    }
+
+    public Requirement getDeclaredRequirement()
     {
         return m_req;
     }
 
     public Module getModule()
     {
-        return m_module;
+        return m_host;
     }
 
     public String getNamespace()
@@ -71,6 +103,6 @@ class WrappedRequirement implements Requirement
 
     public String toString()
     {
-        return "[" + m_module + "] " + getNamespace() + "; " + getFilter().toString();
+        return "[" + m_host + "] " + getNamespace() + "; " + getFilter().toString();
     }
 }
