@@ -782,6 +782,11 @@ public final class ConditionalPermissionAdminImpl implements
                         // TODO Auto-generated method stub
                         return null;
                     }
+
+                    public boolean isRemovalPending()
+                    {
+                        return false;
+                    }
                 }, permission, m_pai))
                 {
                     if (!posts.isEmpty())
