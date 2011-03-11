@@ -502,7 +502,7 @@ public class Candidates
         {
             Module singleton = singletons.get(m_root.getSymbolicName());
             singletons.put(m_root.getSymbolicName(), m_root);
-            if (singleton != null)
+            if ((singleton != null) && !singleton.equals(m_root))
             {
                 if (singleton.isResolved())
                 {
