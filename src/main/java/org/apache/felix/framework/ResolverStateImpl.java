@@ -205,8 +205,21 @@ class ResolverStateImpl implements Resolver.ResolverState
                     {
                         continue;
                     }
+                    else if (req.getNamespace().equals(Capability.HOST_NAMESPACE) &&
+                        (!((BundleProtectionDomain) req.getModule().getSecurityContext())
+                            .impliesDirect(new BundlePermission(
+                                req.getModule().getSymbolicName(),
+                                BundlePermission.FRAGMENT))
+                        || !((BundleProtectionDomain) cap.getModule().getSecurityContext())
+                            .impliesDirect(new BundlePermission(
+                                cap.getModule().getSymbolicName(),
+                                BundlePermission.HOST))))
+                    {
+                        continue;
+                    }
                 }
-                else if (req.getNamespace().equals(Capability.HOST_NAMESPACE)
+
+                if (req.getNamespace().equals(Capability.HOST_NAMESPACE)
                     && cap.getModule().isResolved())
                 {
                     continue;
