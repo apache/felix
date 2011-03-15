@@ -68,6 +68,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         Object sm = System.getSecurityManager();
 
         if (sm != null)
@@ -91,6 +96,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         return m_bundle;
     }
 
@@ -98,6 +108,12 @@ class BundleContextImpl implements FelixBundleContext
         throws InvalidSyntaxException
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         return new FilterImpl(expr);
     }
 
@@ -111,6 +127,11 @@ class BundleContextImpl implements FelixBundleContext
         throws BundleException
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
 
         Bundle result = null;
 
@@ -136,6 +157,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         return m_felix.getBundle(id);
     }
 
@@ -143,12 +169,21 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         return m_felix.getBundles();
     }
 
     public void addBundleListener(BundleListener l)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
 
         Object sm = System.getSecurityManager();
 
@@ -167,6 +202,10 @@ class BundleContextImpl implements FelixBundleContext
     public void removeBundleListener(BundleListener l)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
 
         Object sm = System.getSecurityManager();
 
@@ -199,12 +238,20 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
+
         m_felix.addServiceListener(m_bundle, l, s);
     }
 
     public void removeServiceListener(ServiceListener l)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
 
         m_felix.removeServiceListener(m_bundle, l);
     }
@@ -213,12 +260,20 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
+
         m_felix.addFrameworkListener(m_bundle, l);
     }
 
     public void removeFrameworkListener(FrameworkListener l)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
 
         m_felix.removeFrameworkListener(m_bundle, l);
     }
@@ -233,6 +288,10 @@ class BundleContextImpl implements FelixBundleContext
         String[] clazzes, Object svcObj, Dictionary dict)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
+        // because internally the framework acquires the bundle state
+        // lock to ensure state consistency.
 
         Object sm = System.getSecurityManager();
 
@@ -254,6 +313,11 @@ class BundleContextImpl implements FelixBundleContext
     public ServiceReference getServiceReference(String clazz)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
 
         try
         {
@@ -297,6 +361,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         return m_felix.getAllowedServiceReferences(m_bundle, clazz, filter, false);
 
     }
@@ -306,6 +375,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         return m_felix.getAllowedServiceReferences(m_bundle, clazz, filter, true);
 
     }
@@ -313,6 +387,11 @@ class BundleContextImpl implements FelixBundleContext
     public Object getService(ServiceReference ref)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
 
         if (ref == null)
         {
@@ -333,6 +412,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
+
         if (ref == null)
         {
             throw new NullPointerException("Specified service reference cannot be null.");
@@ -345,6 +429,11 @@ class BundleContextImpl implements FelixBundleContext
     public File getDataFile(String s)
     {
         checkValidity();
+
+        // CONCURRENCY NOTE: This is a check-then-act situation,
+        // but we ignore it since the time window is small and
+        // the result is the same as if the calling thread had
+        // won the race condition.
 
         return m_felix.getDataFile(m_bundle, s);
     }
