@@ -38,7 +38,7 @@ import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
-public class Candidates
+class Candidates
 {
     private final Module m_root;
 
