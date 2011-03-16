@@ -231,11 +231,6 @@ public class ResolverImpl implements Resolver
 
                     ResolveException rethrow = null;
 
-                    // If the requested module is a fragment, then
-                    // ultimately we will verify the host.
-                    Requirement hostReq = getHostRequirement(module);
-                    Module target = module;
-
                     do
                     {
                         rethrow = null;
@@ -254,7 +249,7 @@ public class ResolverImpl implements Resolver
                         // this case like we do for a normal resolve.
 
                         calculatePackageSpaces(
-                            allCandidates.getWrappedHost(target), allCandidates, modulePkgMap,
+                            allCandidates.getWrappedHost(module), allCandidates, modulePkgMap,
                             new HashMap(), new HashSet());
 //System.out.println("+++ PACKAGE SPACES START +++");
 //dumpModulePkgMap(modulePkgMap);
@@ -263,7 +258,7 @@ public class ResolverImpl implements Resolver
                         try
                         {
                             checkPackageSpaceConsistency(
-                                false, allCandidates.getWrappedHost(target),
+                                false, allCandidates.getWrappedHost(module),
                                 allCandidates, modulePkgMap, new HashMap());
                         }
                         catch (ResolveException ex)
