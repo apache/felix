@@ -57,7 +57,7 @@ class Candidates
     // when a module being resolved has fragments to attach to it.
     private final Map<Module, HostModule> m_allWrappedHosts;
     // Map used when populating candidates to hold intermediate and final results.
-    Map<Module, Object> m_populateResultCache;
+    private final Map<Module, Object> m_populateResultCache;
 
     /**
      * Private copy constructor used by the copy() method.
