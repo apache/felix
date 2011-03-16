@@ -16,17 +16,19 @@
  */
 package org.apache.felix.http.whiteboard.internal.manager;
 
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
+import java.util.Collection;
+import java.util.HashMap;
+
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-
-import javax.servlet.Servlet;
-import javax.servlet.Filter;
-import java.util.HashMap;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.HttpService;
 
 public final class ExtenderManagerImpl
     implements ExtenderManager
@@ -162,20 +164,38 @@ public final class ExtenderManagerImpl
 
     public synchronized void unregisterAll()
     {
-        if (this.httpService != null) {
-            for (AbstractMapping mapping : this.mapping.values()) {
-                mapping.unregister(this.httpService);
-            }
-        }
+    	AbstractMapping[] mappings = null;
+    	HttpService service;
+    	synchronized (this) {
+			service = this.httpService;
+			if (service != null) {
+    			Collection<AbstractMapping> values = this.mapping.values();
+    			mappings = values.toArray(new AbstractMapping[values.size()]);
+    		}
+    	}
+    	if (mappings != null) {
+    		for (AbstractMapping mapping : mappings) {
+    			mapping.unregister(service);
+    		}
+    	}
     }
 
     private synchronized void registerAll()
     {
-        if (this.httpService != null) {
-            for (AbstractMapping mapping : this.mapping.values()) {
-                mapping.register(this.httpService);
-            }
-        }
+    	AbstractMapping[] mappings = null;
+    	HttpService service;
+    	synchronized (this) {
+			service = this.httpService;
+			if (service != null) {
+    			Collection<AbstractMapping> values = this.mapping.values();
+    			mappings = values.toArray(new AbstractMapping[values.size()]);
+    		}
+    	}
+    	if (mappings != null) {
+    		for (AbstractMapping mapping : mappings) {
+    			mapping.register(service);
+    		}
+    	}
     }
 
     private synchronized void addMapping(Object key, AbstractMapping mapping)
