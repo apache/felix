@@ -88,8 +88,8 @@
             </xsl:text>
         </xsl:for-each>
 
-        <xsl:for-each select="//bp:reference[@interface] | //bp:reference-list[@interface]">
-            <xsl:value-of select="concat('Import-Service:', @interface)" />
+        <xsl:for-each select="//bp:reference[@interface]">
+            <xsl:value-of select="concat('Import-Service:', @interface, ';multiple:=false')" />
             <xsl:choose>
                 <xsl:when test="@availability">
                     <xsl:value-of select="concat(';availability:=', @availability)"/>
@@ -125,7 +125,44 @@
             </xsl:text>
         </xsl:for-each>
 
-    </xsl:template>
+        <xsl:for-each select="//bp:reference-list[@interface]">
+            <xsl:value-of select="concat('Import-Service:', @interface, ';multiple:=true')"/>
+            <xsl:choose>
+                <xsl:when test="@availability">
+                    <xsl:value-of select="concat(';availability:=', @availability)"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="/bp:blueprint/@default-availability">
+                            <xsl:value-of select="concat(';availability:=', /bp:blueprint/@default-availability)"/>
+                        </xsl:when>
+                    </xsl:choose>
+                </xsl:otherwise>
+            </xsl:choose>
+            <xsl:choose>
+                <xsl:when test="@filter">
+                    <xsl:choose>
+                        <xsl:when test="@component-name">
+                            <xsl:value-of select="concat(';filter=&quot;(&amp;', @filter, ')(osgi.service.blueprint.compname=',  @component-name, ')&quot;')" />
+                         </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="concat(';filter=&quot;', @filter, '&quot;')" />
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="@component-name">
+                            <xsl:value-of select="concat(';filter=&quot;(osgi.service.blueprint.compname=', @component-name, ')&quot;')" />
+                        </xsl:when>
+                    </xsl:choose>
+                </xsl:otherwise>
+            </xsl:choose>
+            <xsl:text>
+            </xsl:text>
+        </xsl:for-each>
+
+   </xsl:template>
 
 </xsl:stylesheet>
 
