@@ -575,8 +575,9 @@ public class DataModelHelperImpl implements DataModelHelper
             ri.addText("Import Service " + imports[i].getName());
 
             String avail = imports[i].getDirective("availability");
+            String mult = imports[i].getDirective("multiple");
             ri.setOptional("optional".equalsIgnoreCase(avail));
-            ri.setMultiple(true);
+            ri.setMultiple(!"false".equalsIgnoreCase(mult));
             resource.addRequire(ri);
         }
 
