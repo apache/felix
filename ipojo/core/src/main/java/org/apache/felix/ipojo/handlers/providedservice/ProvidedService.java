@@ -327,41 +327,66 @@ public class ProvidedService implements ServiceFactory {
      * service.
      * This method also notifies the creation strategy of the publication.
      */
-    protected synchronized void registerService() {
-        // Unregister if registered
-        if (m_serviceRegistration != null) {
-            unregisterService();
+    protected void registerService() {
+        ServiceRegistration reg = null;
+        Properties serviceProperties = null;
+
+        synchronized (this) {
+            // Unregister if registered
+            if (m_serviceRegistration != null) {
+                unregisterService();
+            }
+
+            if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
+                    && m_serviceRegistration == null
+                    && isAtLeastAServiceControllerValid()) {
+                // Build the service properties list
+
+                BundleContext bc = m_handler.getInstanceManager().getContext();
+                // Security check
+                if (SecurityHelper.hasPermissionToRegisterServices(
+                        m_serviceSpecifications, bc)) {
+                    serviceProperties = getServiceProperties();
+                    m_strategy.onPublication(getInstanceManager(),
+                            getServiceSpecificationsToRegister(),
+                            serviceProperties);
+                    m_serviceRegistration = bc.registerService(
+                            getServiceSpecificationsToRegister(), this,
+                            serviceProperties);
+                    reg = m_serviceRegistration; // Stack confinement
+                } else {
+                    throw new SecurityException("The bundle "
+                            + bc.getBundle().getBundleId()
+                            + " does not have the"
+                            + " permission to register the services "
+                            + Arrays.asList(m_serviceSpecifications));
+                }
+            }
         }
 
-        if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
-                && m_serviceRegistration == null  && isAtLeastAServiceControllerValid()) {
-            // Build the service properties list
+        // An update may happen during the registration, re-check and apply.
+        // This must be call outside the synchronized block.
+        if (reg != null && m_wasUpdated) {
+            reg.setProperties(getServiceProperties());
+            m_wasUpdated = false;
+        }
 
-            BundleContext bc = m_handler.getInstanceManager().getContext();
-            // Security check
-            if (SecurityHelper.hasPermissionToRegisterServices(m_serviceSpecifications, bc)) {
-                Properties serviceProperties = getServiceProperties();
-                m_strategy.onPublication(getInstanceManager(), getServiceSpecificationsToRegister(), serviceProperties);
-                m_serviceRegistration = bc.registerService(getServiceSpecificationsToRegister(), this, serviceProperties);
-                // An update may happen during the registration, re-check and apply.
-                if (m_wasUpdated) {
-                    m_serviceRegistration.setProperties(getServiceProperties());
-                    m_wasUpdated = false;
+        synchronized (this) {
+            // Call the post-registration callback in the same thread holding
+            // the monitor lock.
+            // This allows to be sure that the callback is called once per
+            // registration.
+            // But the callback must take care to not create a deadlock
+            if (m_postRegistration != null) {
+                try {
+                    m_postRegistration
+                            .call(new Object[] { m_serviceRegistration
+                                    .getReference() });
+                } catch (Exception e) {
+                    m_handler.error(
+                            "Cannot invoke the post-registration callback "
+                                    + m_postRegistration.getMethod(), e);
                 }
-
-                // Call the post-registration callback in the same thread holding the monitor lock.
-                // This allows to be sure that the callback is called once per registration.
-                // But the callback must take care to not create a deadlock
-                if (m_postRegistration != null) {
-	                try {
-						m_postRegistration.call(new Object[] { m_serviceRegistration.getReference() });
-					} catch (Exception e) {
-						m_handler.error("Cannot invoke the post-registration callback " + m_postRegistration.getMethod(), e);
-					}
-                }
-            } else {
-                throw new SecurityException("The bundle " + bc.getBundle().getBundleId() + " does not have the"
-                        + " permission to register the services " + Arrays.asList(m_serviceSpecifications));
             }
         }
     }
@@ -370,12 +395,12 @@ public class ProvidedService implements ServiceFactory {
      * Unregisters the service.
      */
     protected synchronized void unregisterService() {
-    	// Create a copy of the service reference in the case we need
-    	// to inject it to the post-unregistration callback.
+        // Create a copy of the service reference in the case we need
+        // to inject it to the post-unregistration callback.
 
-    	ServiceReference ref = null;
+        ServiceReference ref = null;
         if (m_serviceRegistration != null) {
-    		ref = m_serviceRegistration.getReference();
+            ref = m_serviceRegistration.getReference();
             m_serviceRegistration.unregister();
             m_serviceRegistration = null;
         }
@@ -387,10 +412,10 @@ public class ProvidedService implements ServiceFactory {
         // But the callback must take care to not create a deadlock
         if (m_postUnregistration != null   && ref != null) {
             try {
-            	m_postUnregistration.call(new Object[] { ref });
-			} catch (Exception e) {
-				m_handler.error("Cannot invoke the post-unregistration callback " + m_postUnregistration.getMethod(), e);
-			}
+                m_postUnregistration.call(new Object[] { ref });
+            } catch (Exception e) {
+                m_handler.error("Cannot invoke the post-unregistration callback " + m_postUnregistration.getMethod(), e);
+            }
         }
 
     }
@@ -587,14 +612,14 @@ public class ProvidedService implements ServiceFactory {
     }
 
     public void setPostRegistrationCallback(Callback cb) {
-		m_postRegistration = cb;
-	}
+        m_postRegistration = cb;
+    }
 
     public void setPostUnregistrationCallback(Callback cb) {
-		m_postUnregistration = cb;
-	}
+        m_postUnregistration = cb;
+    }
 
-	/**
+    /**
      * Service Controller.
      */
     class ServiceController {
