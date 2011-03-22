@@ -136,7 +136,7 @@ class ResourceBundleCache
 
                     // calculate the key
                     String entryPath = entry.getPath();
-                    final int start = 1 + file.length(); // leading slash
+                    final int start = entryPath.lastIndexOf( '/' ) + 1 + fileName.length(); // path, slash and base name
                     final int end = entryPath.length() - 11; // .properties suffix
                     entryPath = entryPath.substring( start, end );
 
