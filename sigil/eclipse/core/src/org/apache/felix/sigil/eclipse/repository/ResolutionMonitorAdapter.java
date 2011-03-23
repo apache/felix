@@ -20,6 +20,7 @@
 package org.apache.felix.sigil.eclipse.repository;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.apache.felix.sigil.common.model.IModelElement;
 import org.apache.felix.sigil.common.model.eclipse.ISigilBundle;
 import org.apache.felix.sigil.common.repository.IResolutionMonitor;
@@ -29,6 +30,10 @@ public class ResolutionMonitorAdapter implements IResolutionMonitor
 
     private IProgressMonitor monitor;
 
+    public ResolutionMonitorAdapter() {
+        this.monitor = new NullProgressMonitor();
+    }
+    
     public ResolutionMonitorAdapter(IProgressMonitor monitor)
     {
         this.monitor = monitor;
