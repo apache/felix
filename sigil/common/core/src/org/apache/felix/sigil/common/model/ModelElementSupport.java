@@ -706,7 +706,7 @@ public class ModelElementSupport implements Serializable
             return false;
         }
 
-        abstract Class<? extends IModelElement> getType();
+        abstract Class<IModelElement> getType();
 
         boolean remove(Object target, IModelElement element)
         {
@@ -748,9 +748,9 @@ public class ModelElementSupport implements Serializable
 
         @SuppressWarnings("unchecked")
         @Override
-        Class<? extends IModelElement> getType()
+        Class<IModelElement> getType()
         {
-            return (Class<? extends IModelElement>) m.getReturnType();
+            return (Class<IModelElement>) m.getReturnType();
         }
     }
 
@@ -786,7 +786,7 @@ public class ModelElementSupport implements Serializable
         }
 
         @Override
-        Class<? extends IModelElement> getType()
+        Class<IModelElement> getType()
         {
             // impossible to get type of a collection as erasure removes generics info
             return null;
@@ -817,9 +817,9 @@ public class ModelElementSupport implements Serializable
 
         @SuppressWarnings("unchecked")
         @Override
-        Class<? extends IModelElement> getType()
+        Class<IModelElement> getType()
         {
-            return (Class<? extends IModelElement>) m.getReturnType().getComponentType();
+            return (Class<IModelElement>) m.getReturnType().getComponentType();
         }
     }
 
@@ -860,9 +860,9 @@ public class ModelElementSupport implements Serializable
 
         @SuppressWarnings("unchecked")
         @Override
-        Class<? extends IModelElement> getType()
+        Class<IModelElement> getType()
         {
-            return (Class<? extends IModelElement>) m.getParameterTypes()[0];
+            return (Class<IModelElement>) m.getParameterTypes()[0];
         }
     }
 
@@ -889,9 +889,9 @@ public class ModelElementSupport implements Serializable
 
         @SuppressWarnings("unchecked")
         @Override
-        Class<? extends IModelElement> getType()
+        Class<IModelElement> getType()
         {
-            return (Class<? extends IModelElement>) m.getParameterTypes()[0];
+            return (Class<IModelElement>) m.getParameterTypes()[0];
         }
     }
 
@@ -919,9 +919,9 @@ public class ModelElementSupport implements Serializable
 
         @SuppressWarnings("unchecked")
         @Override
-        Class<? extends IModelElement> getType()
+        Class<IModelElement> getType()
         {
-            return (Class<? extends IModelElement>) m.getParameterTypes()[0];
+            return (Class<IModelElement>) m.getParameterTypes()[0];
         }
     }
 
