@@ -39,13 +39,13 @@ public class Activator implements BundleActivator
 
     public void start( final BundleContext ctx ) throws Exception
     {
+        ServiceTracker tracker = new ServiceTracker( ctx, JUnitService.class.getName(), null );
+        tracker.open();
+
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put( CommandProcessor.COMMAND_SCOPE, "sigil" );
         props.put( CommandProcessor.COMMAND_FUNCTION, new String[]
             { "runTests", "listTests" } );
-
-        ServiceTracker tracker = new ServiceTracker( ctx, JUnitService.class.getName(), null );
-        tracker.open();
 
         ctx.registerService( SigilJunitRunner.class.getName(), new SigilJunitRunner( tracker ), props );
 
@@ -64,7 +64,7 @@ public class Activator implements BundleActivator
     /**
      * @return
      */
-    private String[] getAssertMethods()
+    private static String[] getAssertMethods()
     {
         ArrayList<String> list = new ArrayList<String>();
         for ( Method m : Assert.class.getDeclaredMethods() )
