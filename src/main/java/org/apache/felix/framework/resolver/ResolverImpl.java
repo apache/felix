@@ -1377,7 +1377,7 @@ public class ResolverImpl implements Resolver
                         wireMap.put(fragment, hostWires);
                     }
                     hostWires.add(
-                        new WireHostImpl(
+                        new WireImpl(
                             getActualModule(fragment),
                             getHostRequirement(fragment),
                             unwrappedModule,
