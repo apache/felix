@@ -89,7 +89,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>
-                            ${artifactId}
+                            ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Vendor>
                             The Apache Software Foundation
@@ -177,7 +177,7 @@
                                     <classifier>bare</classifier>
                                     <instructions>
                                         <Bundle-SymbolicName>
-                                            ${artifactId}.bare
+                                            ${project.artifactId}.bare
                                         </Bundle-SymbolicName>
                                         <Include-Resource>
                                             {maven-resources},META-INF=src/main/bare-resources
