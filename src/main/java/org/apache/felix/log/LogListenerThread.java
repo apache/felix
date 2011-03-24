@@ -18,10 +18,9 @@
  */
 package org.apache.felix.log;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
-import java.util.Vector;
 
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
@@ -34,12 +33,12 @@ import org.osgi.service.log.LogListener;
  */
 final class LogListenerThread extends Thread
 {
-    /** Whether the thread is stopping or not. */
+    // Whether the thread is stopping or not.
     private boolean m_stopping = false;
-    /** The stack of entries waiting to be delivered to the log listeners. **/
-    private final Stack m_entriesToDeliver = new Stack();
-    /** The list of listeners. */
-    private final List m_listeners = new Vector();
+    // The list of entries waiting to be delivered to the log listeners.
+    private final List m_entriesToDeliver = new ArrayList();
+    // The list of listeners.
+    private final List m_listeners = new ArrayList();
 
     /**
      * Add an entry to the list of messages to deliver.
@@ -92,10 +91,9 @@ final class LogListenerThread extends Thread
      */
     void shutdown()
     {
-        m_stopping = true;
-
         synchronized (m_entriesToDeliver)
         {
+            m_stopping = true;
             m_entriesToDeliver.notifyAll();
         }
     }
@@ -114,7 +112,7 @@ final class LogListenerThread extends Thread
             {
                 if (!m_entriesToDeliver.isEmpty())
                 {
-                    LogEntry entry = (LogEntry) m_entriesToDeliver.pop();
+                    LogEntry entry = (LogEntry) m_entriesToDeliver.remove(0);
 
                     synchronized (m_listeners)
                     {
