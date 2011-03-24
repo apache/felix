@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
@@ -504,7 +504,7 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private void addMetaTypeNames( final Map pidMap, final Collection ocdCollection, final String filterSpec, final String type )
+    private void addMetaTypeNames( final Map pidMap, final Map ocdCollection, final String filterSpec, final String type )
     {
         Filter filter = null;
         if ( filterSpec != null )
@@ -519,15 +519,23 @@ public class ConfigManager extends ConfigManagerBase
             }
         }
 
-        for ( Iterator oci = ocdCollection.iterator(); oci.hasNext(); )
+        for ( Iterator oci = ocdCollection.entrySet().iterator(); oci.hasNext(); )
         {
-            final ObjectClassDefinition ocd = ( ObjectClassDefinition ) oci.next();
-            final String pid = ocd.getID();
-            final Dictionary props = new Hashtable();
-            props.put( type, pid );
-            if ( filter == null || filter.match( props ) )
+            final Entry ociEntry = (Entry) oci.next();
+            final String pid = (String) ociEntry.getKey();
+            final ObjectClassDefinition ocd = ( ObjectClassDefinition ) ociEntry.getValue();
+            if ( filter == null )
             {
                 pidMap.put( pid, ocd.getName() );
+            }
+            else
+            {
+                final Dictionary props = new Hashtable();
+                props.put( type, pid );
+                if ( filter.match( props ) )
+                {
+                    pidMap.put( pid, ocd.getName() );
+                }
             }
         }
 

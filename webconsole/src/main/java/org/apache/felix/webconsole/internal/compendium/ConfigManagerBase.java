@@ -17,8 +17,6 @@
 package org.apache.felix.webconsole.internal.compendium;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -75,11 +73,11 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * the MetaType information for that PID.
      *
      * @param locale The name of the locale to get the meta data for.
-     * @return see the method description 
+     * @return see the method description
      */
-    protected Collection getPidObjectClasses( final String locale )
+    protected Map getPidObjectClasses( final String locale )
     {
-        return getObjectClasses( PID_GETTER, locale );
+        return getObjectClassDefinitions( PID_GETTER, locale );
     }
 
 
@@ -90,11 +88,11 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * PID.
      *
      * @param locale The name of the locale to get the meta data for.
-     * @return see the method description 
+     * @return see the method description
      */
-    protected Collection getFactoryPidObjectClasses( final String locale )
+    protected Map getFactoryPidObjectClasses( final String locale )
     {
-        return getObjectClasses( FACTORY_PID_GETTER, locale );
+        return getObjectClassDefinitions( FACTORY_PID_GETTER, locale );
     }
 
 
@@ -108,10 +106,12 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      *          or PIDs from <code>MetaTypeInformation</code> objects.
      * @param locale The name of the locale to get the object class definitions
      *          for.
+     * @return Map of <code>ObjectClassDefinition</code> objects indexed by the
+     *      PID (or factory PID) to which they pertain
      */
-    private Collection getObjectClasses( final IdGetter idGetter, final String locale )
+    private Map getObjectClassDefinitions( final IdGetter idGetter, final String locale )
     {
-        final Collection objectClasses = new ArrayList();
+        final Map objectClassesDefinitions = new HashMap();
         final MetaTypeService mts = this.getMetaTypeService();
         if ( mts != null )
         {
@@ -124,13 +124,13 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
                     final String[] idList = idGetter.getIds( mti );
                     for ( int j = 0; idList != null && j < idList.length; j++ )
                     {
-                        // After getting the list of PIDs, a configuration  might be 
+                        // After getting the list of PIDs, a configuration  might be
                         // removed. So the getObjectClassDefinition will throw
                         // an exception, and this will prevent ALL configuration from
                         // being displayed. By catching it, the configurations will be
                         // visible
                         ObjectClassDefinition ocd = null;
-                        try 
+                        try
                         {
                             ocd = mti.getObjectClassDefinition( idList[j], locale );
                         }
@@ -140,13 +140,13 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
                         }
                         if ( ocd != null )
                         {
-                            objectClasses.add( ocd );
+                            objectClassesDefinitions.put( idList[j], ocd );
                         }
                     }
                 }
             }
         }
-        return objectClasses;
+        return objectClassesDefinitions;
     }
 
 
