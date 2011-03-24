@@ -4150,10 +4150,6 @@ public class Felix extends BundleImpl implements Framework
                         return;
                     }
 
-                    // Check singleton status.
-// TOOD: FRAGMENT RESOLVER - Merge singleton handling into resolver.
-//                    m_resolverState.checkSingleton(rootModule);
-
                     // Resolve the module.
                     wireMap = m_resolver.resolve(
                         m_resolverState, rootModule, m_resolverState.getFragments());
