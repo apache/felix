@@ -19,8 +19,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.apache.felix</groupId>
-    <artifactId>felix</artifactId>
-    <version>1.0.4</version>
+    <artifactId>felix-parent</artifactId>
+    <version>1.2.1</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -58,6 +58,7 @@
             <Bundle-Activator>${pom.artifactId}.Activator</Bundle-Activator>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Service>org.osgi.service.log.LogService,org.osgi.service.log.LogReaderService</Export-Service>
+            <Include-Resource>{maven-resources},META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
           </instructions>
         </configuration>
       </plugin>
