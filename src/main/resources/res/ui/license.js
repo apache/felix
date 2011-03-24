@@ -59,19 +59,19 @@ function displayBundle(/* String */ bundleIndex)
                     link += descr.jar + "!/"; // inner jar attribute
                 }
                 link += descr.path;
-				if (descr.path.indexOf('http:') == 0 || descr.path.indexOf('ftp:') == 0) link = descr.path;
+                if (descr.path.indexOf('http:') == 0 || descr.path.indexOf('ftp:') == 0) link = descr.path;
 
-				buttons += '<a href="' + link + '">' + descr.url + '</a> ';
+                buttons += '<a href="' + link + '">' + descr.url + '</a> ';
 
-				if (!firstPage)
-				{
-				    firstPage = link;
-				}
+                if (!firstPage)
+                {
+                    firstPage = link;
+                }
             }
             if (buttons)
             {
-				// apply i18n
-				name =  '__res__' == name ? i18n.resources : i18n.resources_emb.msgFormat( name );
+                // apply i18n
+                name =  '__res__' == name ? i18n.resources : i18n.resources_emb.msgFormat( name );
                 innerHTML += name + ": " + buttons + "<br />";
             }
         }
@@ -80,45 +80,45 @@ function displayBundle(/* String */ bundleIndex)
     }
     
     if (firstPage) {
-		openLicenseLink(firstPage);
+        openLicenseLink(firstPage);
     } else {
         licenseDetails.html("");
     }
     
-	$("#licenseLeft a").removeClass('ui-state-default ui-corner-all');
-	$("#licenseLeft #" +bundleIndex).addClass('ui-state-default ui-corner-all');
+    $("#licenseLeft a").removeClass('ui-state-default ui-corner-all');
+    $("#licenseLeft #" +bundleIndex).addClass('ui-state-default ui-corner-all');
 
     $('#licenseButtons a').click(function() {
-		openLicenseLink(this.href);
-		return false;
+        openLicenseLink(this.href);
+        return false;
     });
 }
 
 function openLicenseLink(uri) {
-	if (uri.indexOf(window.location.href) == 0 || uri.indexOf(pluginRoot) == 0) { // local URI
+    if (uri.indexOf(window.location.href) == 0 || uri.indexOf(pluginRoot) == 0) { // local URI
         $.get(uri, insertLicenseData);
-	} else {
-		licenseDetails.html( '<iframe frameborder="0" src="' + uri+ '"></iframe>' );
-	}
+    } else {
+        licenseDetails.html( '<iframe frameborder="0" src="' + uri+ '"></iframe>' );
+    }
 }
 
 
 $(document).ready(function() {
-	// init elements cache
-	licenseButtons = $("#licenseButtons");
-	licenseDetails = $("#licenseDetails")
+    // init elements cache
+    licenseButtons = $("#licenseButtons");
+    licenseDetails = $("#licenseDetails")
 
-	// render list of bundles
-	var txt = "";
-	for(id in bundleData) {
-		txt += '<a id="' + id + '" href="javascript:displayBundle(\'' + id + '\')">' + bundleData[id].title + '</a>';
-	}
-	if (txt) {
-		$("#licenseLeft").html(txt);
-	} else {
-		$(".statline").html(i18n.status_none);
-	}
+    // render list of bundles
+    var txt = "";
+    for(id in bundleData) {
+        txt += '<a id="' + id + '" href="javascript:displayBundle(\'' + id + '\')">' + bundleData[id].title + '</a>';
+    }
+    if (txt) {
+        $("#licenseLeft").html(txt);
+    } else {
+        $(".statline").html(i18n.status_none);
+    }
 
-	// display first element
-	displayBundle(0);
+    // display first element
+    displayBundle(0);
 });
