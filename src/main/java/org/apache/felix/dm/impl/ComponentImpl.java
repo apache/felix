@@ -736,10 +736,10 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         }
     }
 
-    private Object createInstance(Class clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private Object createInstance(Class clazz) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Constructor constructor = clazz.getConstructor(VOID);
 		constructor.setAccessible(true);
-        return clazz.newInstance();
+        return constructor.newInstance(null);
     }
 
     public void initService() {
