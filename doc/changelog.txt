@@ -1,3 +1,18 @@
+Changes from 3.0.9 to 3.2.0
+---------------------------
+
+* Bug
+    * [FELIX-1816] - deadlock on SystemBundle.stop()
+    * [FELIX-2741] - NPE in ResolverImpl.calculatePackageSpaces
+    * [FELIX-2748] - Possible synchronization issue with BundleContext.getBundle()
+    * [FELIX-2877] - java6 update 24 breaks felix when used inside webstart
+
+
+** Improvement
+    * [FELIX-2858] - [Framework] Modify resolver to be self-contained with respect to fragment handling
+    * [FELIX-2859] - [Framework] Modify resolver to be self-contained with respect to singleton handling
+    * [FELIX-2864] - [Framework] Add package profile for JDK7 to default properties
+
 Changes from 3.0.8 to 3.0.9
 ---------------------------
 
