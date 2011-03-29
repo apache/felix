@@ -205,7 +205,11 @@ public class ServiceLifecycleHandler
             }
             
             // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
-            service.add(m_namedDeps);
+            if (m_namedDeps.size() > 0) {
+                Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
+                                    m_namedDeps);
+                service.add(m_namedDeps);
+            }
         }
     }
 
