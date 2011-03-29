@@ -30,14 +30,13 @@ import java.util.Map;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Clazz;
 import aQute.lib.osgi.EmbeddedResource;
-import aQute.lib.osgi.Processor;
 import aQute.lib.osgi.Resource;
 import aQute.lib.osgi.Clazz.QUERY;
 
 /**
  * This helper parses all classes which contain DM annotations, and generates the corresponding component descriptors.
  */
-public class DescriptorGenerator extends Processor
+public class DescriptorGenerator
 {
     /**
      * This is the bnd analyzer used to lookup classes containing DM annotations.
@@ -57,13 +56,19 @@ public class DescriptorGenerator extends Processor
     private Resource m_metaTypeResource;
 
     /**
+     * Object used to collect logs.
+     */
+    private final Logger m_logger;
+
+    /**
      * Creates a new descriptor generator.
      * @param analyzer The bnd analyzer used to lookup classes containing DM annotations.
+     * @param debug 
      */
-    public DescriptorGenerator(Analyzer analyzer)
+    public DescriptorGenerator(Analyzer analyzer, Logger logger)
     {
-        super(analyzer);
         m_analyzer = analyzer;
+        m_logger = logger;
     }
 
     /**
@@ -71,64 +76,41 @@ public class DescriptorGenerator extends Processor
      * @return true if some annotations were successfully parsed, false if not. corresponding generated 
      * descriptors can then be retrieved by invoking the getDescriptors/getDescriptorPaths methods.
      */
-    public boolean execute()
+    public boolean execute() throws Exception
     {
         boolean annotationsFound = false;
         Clazz clazz = null;
-        try
-        {
-            // Try to locate any classes in the wildcarded universe
-            // that are annotated with the DependencyManager "Service" annotations.
-            Collection<Clazz> expanded = m_analyzer.getClasses("",
-                // Parse everything
-                QUERY.NAMED.toString(), "*");
+        // Try to locate any classes in the wildcarded universe
+        // that are annotated with the DependencyManager "Service" annotations.
+        Collection<Clazz> expanded = m_analyzer.getClasses("",
+                                                           // Parse everything
+                                                           QUERY.NAMED.toString(), "*");
 
-            // Create the object which will collect Config Admin MetaTypes.
-            MetaType metaType = new MetaType();
+        // Create the object which will collect Config Admin MetaTypes.
+        MetaType metaType = new MetaType();
             
-            for (Clazz c : expanded)
-            {
-                clazz = c;
-                // Let's parse all annotations from that class !
-                AnnotationCollector reader = new AnnotationCollector(this, metaType);
-                c.parseClassFileWithCollector(reader);
-                if (reader.finish()) 
-                {
-                    // And store the generated component descriptors in our resource list.
-                    String name = c.getFQN();
-                    Resource resource = createComponentResource(reader);
-                    m_resources.put("OSGI-INF/dependencymanager/" + name, resource);
-                    annotationsFound = true;
-                }
-            }
-
-            // If some Meta Types have been parsed, then creates the corresponding resource file.
-            if (metaType.getSize() > 0) {
-                m_metaTypeResource = createMetaTypeResource(metaType);
-            }
-            return annotationsFound;
-        }
-        catch (Throwable err)
+        for (Clazz c : expanded)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Error while scanning annotations");
-            if (clazz != null)
+            clazz = c;
+            // Let's parse all annotations from that class !
+            AnnotationCollector reader = new AnnotationCollector(m_logger, metaType);
+            c.parseClassFileWithCollector(reader);
+            if (reader.finish())
             {
-                sb.append(" from class " + clazz);
+                // And store the generated component descriptors in our resource list.
+                String name = c.getFQN();
+                Resource resource = createComponentResource(reader);
+                m_resources.put("META-INF/dependencymanager/" + name, resource);
+                annotationsFound = true;
             }
-            sb.append(": ");
-            sb.append(parse(err));
-            error(sb.toString());
-            return false;
         }
 
-        finally
+        // If some Meta Types have been parsed, then creates the corresponding resource file.
+        if (metaType.getSize() > 0)
         {
-            // Collect all logs (warns/errors) from our processor and store them into the analyze.
-            // Bnd will log them, if necessary.
-            m_analyzer.getInfo(this, "DependencyManager: ");
-            close();
+            m_metaTypeResource = createMetaTypeResource(metaType);
         }
+        return annotationsFound;
     }
 
     /**
@@ -196,17 +178,5 @@ public class DescriptorGenerator extends Processor
         byte[] data = out.toByteArray();
         out.close();
         return new EmbeddedResource(data, 0);    
-    }
-    
-    /**
-     * Parse an exception into a string.
-     * @param e The exception to parse
-     * @return the parsed exception
-     */
-    private static String parse(Throwable e) {
-      StringWriter buffer = new StringWriter();
-      PrintWriter  pw = new PrintWriter(buffer);
-      e.printStackTrace(pw);
-      return (buffer.toString());
-    } 
+    }    
 }

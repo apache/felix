@@ -19,7 +19,6 @@
 package org.apache.felix.dm.annotation.plugin.mvn;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.dm.annotation.plugin.bnd.DescriptorGenerator;
@@ -59,6 +58,13 @@ public class AnnotationMojo extends AbstractMojo
      * @required
      */
     private String m_artifactExtension;
+    
+    /**
+     * If set, configures the log level.
+     *
+     * @parameter alias="log"
+     */
+    private String m_log;
 
     /**
      * Executes this mojo. We'll use the bnd library in order to scan classes from our target bundle.
@@ -80,7 +86,7 @@ public class AnnotationMojo extends AbstractMojo
             analyzer.analyze();
 
             // This helper class will parse classes using the analyzer we just created.
-            DescriptorGenerator generator = new DescriptorGenerator(analyzer);
+            DescriptorGenerator generator = new DescriptorGenerator(analyzer, new MvnLogger(getLog(), m_log));
 
             // Start scanning
             if (generator.execute())
@@ -103,25 +109,6 @@ public class AnnotationMojo extends AbstractMojo
                     jar.putResource("OSGI-INF/metatype/metatype.xml", metaType);
                 }
                 copy(jar, target);
-            }
-
-            // Check if some errors have to be logged.
-            if (analyzer.getErrors().size() != 0)
-            {
-                for (Iterator<String> e = analyzer.getErrors().iterator(); e.hasNext();)
-                {
-                    getLog().error(e.next());
-                }
-                throw new MojoExecutionException("Errors while generating dm descriptors");
-            }
-
-            // Check if some warnings have to be logged.
-            if (analyzer.getWarnings().size() != 0)
-            {
-                for (Iterator<String> e = analyzer.getWarnings().iterator(); e.hasNext();)
-                {
-                    getLog().info(e.next());
-                }
             }
         }
 

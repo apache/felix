@@ -75,7 +75,7 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_RESOURCE_ADAPTER_SERVICE = "L" + ResourceAdapterService.class.getName().replace('.', '/') + ";";
     private final static String A_FACTORYCONFIG_ADAPTER_SERVICE = "L" + FactoryConfigurationAdapterService.class.getName().replace('.', '/') + ";";
 
-    private Reporter m_reporter;
+    private Logger m_logger;
     private String m_className;
     private String[] m_interfaces;
     private boolean m_isField;
@@ -103,19 +103,10 @@ public class AnnotationCollector extends ClassDataCollector
      * Makes a new Collector for parsing a given class.
      * @param reporter the object used to report logs.
      */
-    public AnnotationCollector(Reporter reporter, MetaType metaType)
+    public AnnotationCollector(Logger reporter, MetaType metaType)
     {
-        m_reporter = reporter;
+        m_logger = reporter;
         m_metaType = metaType;
-    }
-
-    /**
-     * Returns the log reporter.
-     * @return the log reporter.
-     */
-    public Reporter getReporter()
-    {
-        return m_reporter;
     }
 
     /**
@@ -127,7 +118,7 @@ public class AnnotationCollector extends ClassDataCollector
     public void classBegin(int access, String name)
     {
         m_className = name.replace('/', '.');
-        m_reporter.trace("class name: " + m_className);
+        m_logger.debug("class name: %s", m_className);
     }
 
     /**
@@ -141,7 +132,7 @@ public class AnnotationCollector extends ClassDataCollector
         {
             m_interfaces[i] = interfaces[i].replace('/', '.');
         }
-        m_reporter.trace("implements: %s", Arrays.toString(m_interfaces));
+        m_logger.debug("implements: %s", Arrays.toString(m_interfaces));
     }
 
     /**
@@ -150,7 +141,7 @@ public class AnnotationCollector extends ClassDataCollector
     @Override
     public void method(int access, String name, String descriptor)
     {
-        m_reporter.trace("Parsed method %s, descriptor=%s", name, descriptor);
+        m_logger.debug("Parsed method %s, descriptor=%s", name, descriptor);
         m_isField = false;
         m_method = name;
         m_descriptor = descriptor;
@@ -163,7 +154,7 @@ public class AnnotationCollector extends ClassDataCollector
     @Override
     public void field(int access, String name, String descriptor)
     {
-        m_reporter.trace("Parsed field %s, descriptor=%s", name, descriptor);
+        m_logger.debug("Parsed field %s, descriptor=%s", name, descriptor);
         m_isField = true;
         m_field = name;
         m_descriptor = descriptor;
@@ -175,7 +166,7 @@ public class AnnotationCollector extends ClassDataCollector
     @Override
     public void annotation(Annotation annotation)
     {
-        m_reporter.trace("Parsed annotation: %s", annotation);
+        m_logger.debug("Parsed annotation: %s", annotation);
 
         if (annotation.getName().equals(A_COMPONENT))
         {
@@ -243,6 +234,47 @@ public class AnnotationCollector extends ClassDataCollector
         }
     }
 
+    /**
+     * Finishes up the class parsing. This method must be called once the parseClassFileWithCollector method has returned.
+     * @return true if some annotations have been parsed, false if not.
+     */
+    public boolean finish()
+    {
+        if (m_writers.size() == 0)
+        {
+            return false;
+        }
+
+        // We must have at least a Service annotation.
+        checkServiceDeclared(EntryType.Component, EntryType.AspectService, EntryType.AdapterService,
+            EntryType.BundleAdapterService,
+            EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("Parsed annotation for class ");
+        sb.append(m_className);
+        for (int i = m_writers.size() - 1; i >= 0; i--)
+        {
+            sb.append("\n\t").append(m_writers.get(i).toString());
+        }
+        m_logger.info(sb.toString());
+        return true;
+    }
+
+    /**
+     * Writes the generated component descriptor in the given print writer.
+     * The first line must be the service (@Service or AspectService).
+     * @param pw the writer where the component descriptor will be written.
+     */
+    public void writeTo(PrintWriter pw)
+    {
+        // The last element our our m_writers list contains either the Service, or the AspectService descriptor.
+        for (int i = m_writers.size() - 1; i >= 0; i--)
+        {
+            pw.println(m_writers.get(i).toString());
+        }
+    }
+        
     private void parseComponentAnnotation(Annotation annotation)
     {
         EntryWriter writer = new EntryWriter(EntryType.Component);
@@ -397,6 +429,9 @@ public class AnnotationCollector extends ClassDataCollector
         // pid attribute
         writer.putString(annotation, EntryParam.pid, m_className);
 
+        // the method on which the annotation is applied
+        writer.put(EntryParam.updated, m_method);
+
         // propagate attribute
         writer.putString(annotation, EntryParam.propagate, null);
 
@@ -435,8 +470,8 @@ public class AnnotationCollector extends ClassDataCollector
         // Parse Aspect properties.
         parseProperties(annotation, EntryParam.properties, writer);
         
-        // Parse aspect impl field where to inject the original service.
-        writer.putString(annotation, EntryParam.field, null);
+        // Parse field/added/changed/removed attributes
+        parseAspectOrAdapterCallbackMethods(annotation, writer);
 
         // Parse service interface this aspect is applying to
         Object service = annotation.get(EntryParam.service.toString());
@@ -464,6 +499,36 @@ public class AnnotationCollector extends ClassDataCollector
         
         // Parse factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
+    }
+
+    private void parseAspectOrAdapterCallbackMethods(Annotation annotation, EntryWriter writer)
+    {
+        String field = annotation.get(EntryParam.field.toString());
+        String added = annotation.get(EntryParam.added.toString());
+        String changed = annotation.get(EntryParam.changed.toString());
+        String removed = annotation.get(EntryParam.removed.toString());
+
+        // "field" and "added/changed/removed" attributes can't be mixed
+        if (field != null && (added != null || changed != null || removed != null))
+        {
+            throw new IllegalStateException("Annotation " + annotation + "can't applied on " + m_className
+                    + " can't mix \"field\" attribute with \"added/changed/removed\" attributes");
+        }
+        
+        // changed/removed callbacks are allowed only if added callback is defined
+        if (field == null && added == null && (changed != null || removed != null))
+        {
+            throw new IllegalStateException("Annotation " + annotation + " applied on " + m_className
+                    + " must define an \"added\" callback");
+        }
+        
+        // Parse aspect impl field where to inject the original service.
+        writer.putString(annotation, EntryParam.field, null);
+        
+        // Parse aspect impl callback methods.
+        writer.putString(annotation, EntryParam.added, null);
+        writer.putString(annotation, EntryParam.changed, null);
+        writer.putString(annotation, EntryParam.removed, null);
     }
 
     /**
@@ -500,6 +565,9 @@ public class AnnotationCollector extends ClassDataCollector
         
         // Parse factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
+        
+        // Parse field/added/changed/removed attributes
+        parseAspectOrAdapterCallbackMethods(annotation, writer);
     }
 
     /**
@@ -758,7 +826,7 @@ public class AnnotationCollector extends ClassDataCollector
             m_metaType.add(ocd);
             MetaType.Designate designate = new MetaType.Designate(pid, factory);
             m_metaType.add(designate);
-            m_reporter.warning("Parsed MetaType Properties from class " + m_className);
+            m_logger.info("Parsed MetaType Properties from class " + m_className);
         }
     }
 
@@ -834,56 +902,15 @@ public class AnnotationCollector extends ClassDataCollector
     /**
      * Get an annotation attribute, and return a default value if its not present.
      * @param <T> the type of the variable which is assigned to the return value of this method.
-     * @param properties The annotation we are parsing
+     * @param annotation The annotation we are parsing
      * @param name the attribute name to get from the annotation
      * @param defaultValue the default value to return if the attribute is not found in the annotation
      * @return the annotation attribute value, or the defaultValue if not found
      */
     @SuppressWarnings("unchecked")
-    private <T> T get(Annotation properties, String name, T defaultValue)
+    private <T> T get(Annotation annotation, String name, T defaultValue)
     {
-        T value = (T) properties.get(name);
+        T value = (T) annotation.get(name);
         return value != null ? value : defaultValue;
-    }
-
-    /**
-     * Finishes up the class parsing. This method must be called once the parseClassFileWithCollector method has returned.
-     * @return true if some annotations have been parsed, false if not.
-     */
-    public boolean finish()
-    {
-        if (m_writers.size() == 0)
-        {
-            return false;
-        }
-
-        // We must have at least a Service annotation.
-        checkServiceDeclared(EntryType.Component, EntryType.AspectService, EntryType.AdapterService,
-            EntryType.BundleAdapterService,
-            EntryType.ResourceAdapterService, EntryType.FactoryConfigurationAdapterService);
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append("Parsed annotation for class ");
-        sb.append(m_className);
-        for (int i = m_writers.size() - 1; i >= 0; i--)
-        {
-            sb.append("\n\t").append(m_writers.get(i).toString());
-        }
-        m_reporter.warning(sb.toString());
-        return true;
-    }
-
-    /**
-     * Writes the generated component descriptor in the given print writer.
-     * The first line must be the service (@Service or AspectService).
-     * @param pw the writer where the component descriptor will be written.
-     */
-    public void writeTo(PrintWriter pw)
-    {
-        // The last element our our m_writers list contains either the Service, or the AspectService descriptor.
-        for (int i = m_writers.size() - 1; i >= 0; i--)
-        {
-            pw.println(m_writers.get(i).toString());
-        }
-    }
+    }        
 }
