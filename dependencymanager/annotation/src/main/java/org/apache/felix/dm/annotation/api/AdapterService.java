@@ -84,4 +84,28 @@ public @interface AdapterService
      * By default, the default constructor of the annotated class is used.
      */
     String factoryMethod() default "";
+    
+    /**
+     * Sets the field name where to inject the original service. By default, the original service is injected
+     * in any attributes in the aspect implementation that are of the same type as the aspect interface.
+     */
+    String field() default "";
+    
+    /**
+     * The callback method to be invoked when the original service is available. This attribute can't be mixed with
+     * the field attribute.
+     */
+    String added() default "";
+
+    /**
+     * The callback method to be invoked when the original service properties have changed. When this attribute is used, 
+     * then the added attribute must also be used.
+     */
+    String changed() default "";
+
+    /**
+     * The callback method to invoke when the service is lost. When this attribute is used, then the added attribute 
+     * must also be used.
+     */
+    String removed() default "";
 }
