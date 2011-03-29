@@ -47,8 +47,40 @@ public class AdapterServiceBuilder extends AbstractBuilder
         String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.properties, null);
         Class<?> adapteeService = b.loadClass(srvMeta.getString(Params.adapteeService));
-        String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);     
-        Component service = dm.createAdapterService(adapteeService, adapteeFilter);
+        String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);   
+        String field = srvMeta.getString(Params.field, null);
+        String added = srvMeta.getString(Params.added, null);
+        String changed = srvMeta.getString(Params.changed, null);
+        String removed = srvMeta.getString(Params.removed, null);
+        
+        if (field != null && (added != null || changed != null || removed != null))
+        {
+            throw new IllegalArgumentException("autoconfig field " + field + " cant be defined with both added/changed/removed calllbacks");
+        }
+        if (field == null && added == null && (changed != null || removed != null))
+        {
+            throw new IllegalArgumentException("missing added callback");
+        }
+        
+        Component service;
+        
+        if (field != null)
+        {
+            service = dm.createAdapterService(adapteeService, adapteeFilter, field);
+        }
+        else
+        {
+            if (added != null)
+            {
+                service = dm.createAdapterService(adapteeService, adapteeFilter, added, changed, removed);
+
+            }
+            else
+            {
+                service = dm.createAdapterService(adapteeService, adapteeFilter);
+            }
+        }
+        
         service.setInterface(provides, adapterProperties);
         
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);

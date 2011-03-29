@@ -66,6 +66,9 @@
 						<goals>
 							<goal>scan</goal>
 						</goals>
+						<configuration>
+							<log>warn</log>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

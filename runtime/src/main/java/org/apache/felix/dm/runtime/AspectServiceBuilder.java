@@ -50,10 +50,44 @@ public class AspectServiceBuilder extends AbstractBuilder
         String implClassName = srvMeta.getString(Params.impl);
         Object implClass = b.loadClass(implClassName);
         String field = srvMeta.getString(Params.field, null);
-        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
-        Component service =
-                dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
+        String added = srvMeta.getString(Params.added, null);
+        String changed = srvMeta.getString(Params.changed, null);
+        String removed = srvMeta.getString(Params.removed, null);
+        
+        if (field != null && (added != null || changed != null || removed != null))
+        {
+            throw new IllegalArgumentException("autoconfig field " + field + " cant be defined with both added/changed/removed calllbacks");
+        }
+        if (field == null && added == null && (changed != null || removed != null))
+        {
+            throw new IllegalArgumentException("missing added callback");
+        }
+
+        Component service;
+        if (field != null)
+        {
+            service =
+                    dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
+                            .setServiceProperties(aspectProperties);
+        } 
+        else
+        {
+            if (added != null)
+            {
+                service =
+                    dm.createAspectService(serviceInterface, serviceFilter, ranking, added, changed, removed)
                         .setServiceProperties(aspectProperties);
+            } 
+            else
+            {
+                service =
+                    dm.createAspectService(serviceInterface, serviceFilter, ranking)
+                        .setServiceProperties(aspectProperties);
+            }
+ 
+        }
+        
+        String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
             service.setImplementation(implClass);

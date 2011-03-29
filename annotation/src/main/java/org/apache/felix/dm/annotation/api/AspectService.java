@@ -87,6 +87,24 @@ public @interface AspectService
     String field() default "";
     
     /**
+     * The callback method to be invoked when the original service is available. This attribute can't be mixed with
+     * the field attribute.
+     */
+    String added() default "";
+
+    /**
+     * The callback method to be invoked when the original service properties have changed. When this attribute is used, 
+     * then the added attribute must also be used.
+     */
+    String changed() default "";
+
+    /**
+     * The callback method to invoke when the service is lost. When this attribute is used, then the added attribute 
+     * must also be used.
+     */
+    String removed() default "";
+    
+    /**
      * Sets the static method used to create the AspectService implementation instance. The
      * default constructor of the annotated class is used. The factoryMethod can be used to provide a specific
      * aspect implements, like a DynamicProxy.
