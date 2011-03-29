@@ -128,7 +128,15 @@ public class DependencyManagerRuntime
     {
         Log.instance().info("Runtime: Removing services from stopping bundle: %s", b.getSymbolicName());
         DependencyManager dm = m_managers.remove(b);
-        // DM automatically remove services when the bundle is stopped: so, no need to clean anything here.        
+        if (dm != null)
+        {
+            List<Component> services = new ArrayList(dm.getServices());
+            for (Component service : services)
+            {
+                Log.instance().info("Runtime: Removing service: %s", service);
+                dm.remove(service);
+            }
+        }
     }
 
     /**
