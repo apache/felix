@@ -25,7 +25,6 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.test.BundleGenerator;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -55,7 +54,7 @@ public class CompositeAnnotationsTest extends AnnotationBase
                     .set("Export-Package", "org.apache.felix.dm.test.bundle.annotation.sequencer")
                     .set("Private-Package", "org.apache.felix.dm.test.bundle.annotation.composite")
                     .set("Import-Package", "*")
-                    .set("-plugin", "org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin")
+                    .set("-plugin", "org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=warn")
                     .build()));            
     }
 
@@ -64,7 +63,9 @@ public class CompositeAnnotationsTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(m.createComponent() .setImplementation(this).setInterface(Sequencer.class.getName(), null));
+        m.add(makeSequencer(m, "CompositeService"));
+        m.add(makeSequencer(m, "Dependency1"));
+        m.add(makeSequencer(m, "Dependency2"));
         // Check if the components have been initialized orderly
         m_ensure.waitForStep(4, 10000);
         // Stop the bundle

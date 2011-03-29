@@ -23,9 +23,9 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.test.BundleGenerator;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -59,12 +59,42 @@ public class AdapterAnnotationTest extends AnnotationBase
                     .build()));           
     }
 
+    /**
+     * Check if an adapter gets injected with its adaptee using default auto config mode.
+     */
     @Test
-    public void testAnnotatedAdapter(BundleContext context)
+    public void testAnnotatedAdapterAutoConfig(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        // Provide the Sequencer to the adapeter bundle service (see main/src/.../adapter/*.java). 
-        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), null));
-        m_ensure.waitForStep(4, 10000);
+        // Provide the Sequencer to the org.apache.felix.dm.test.bundle.annotation.adapter.AdapterTest bundle 
+        m.add(makeSequencer(m, "AdapterAutoConfig"));
+        m_ensure.waitForStep(3, 10000);
+    }
+    
+    /**
+     * Check if an adapter gets injected with its adaptee in a named class field.
+     */
+    @Test
+    public void testAnnotatedAdapterAutoConfigField(BundleContext context)
+    {
+        DependencyManager m = new DependencyManager(context);
+        // Provide the Sequencer to the org.apache.felix.dm.test.bundle.annotation.adapter.AdapterTest bundle 
+        m.add(makeSequencer(m, "AdapterAutoConfigField"));
+        m_ensure.waitForStep(3, 10000);
+    }
+    
+    /**
+     * Check if an adapter gets injected with its adaptee in a callback method.
+     */
+    @Test
+    public void testAnnotatedAdapterCallback(BundleContext context)
+    {
+        DependencyManager m = new DependencyManager(context);
+        // Provide the Sequencer to the org.apache.felix.dm.test.bundle.annotation.adapter.AdapterTest bundle 
+        Component sequencer = makeSequencer(m, "AdapterCallback");
+        m.add(sequencer);
+        m_ensure.waitForStep(3, 10000);
+        m.remove(sequencer);
+        m_ensure.waitForStep(5, 10000);        
     }
 }

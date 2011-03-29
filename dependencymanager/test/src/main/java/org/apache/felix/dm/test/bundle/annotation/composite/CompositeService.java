@@ -34,11 +34,11 @@ public class CompositeService
 
     /* This dependency filter will be configured from our init method */
     @ServiceDependency(name = "D")
-    private Runnable m_runnable;
-
+    public volatile Runnable m_runnable;
+    
     /* Object used to check that methods are called in the proper sequence */
-    @ServiceDependency
-    private Sequencer m_sequencer;
+    @ServiceDependency(filter="(name=CompositeService)")
+    private volatile Sequencer m_sequencer;
 
     /**
      *  Dynamically configure our "D" dependency, using a dependency customization map 
@@ -48,12 +48,9 @@ public class CompositeService
     {
         m_sequencer.step(1);
         // Configure a filter for our dependency whose name is "D"
-        Map<String, String> customization = new HashMap<String, String>()
-        {
-            {
-                put("D.filter", "(foo=bar2)");
-            }
-        };
+        Map<String, String> customization = new HashMap<String, String>();
+        customization.put("D.filter", "(foo=bar2)");
+        customization.put("D.required", "true");
         return customization;
     }
 
@@ -72,6 +69,7 @@ public class CompositeService
     @Start
     void start()
     {
+        System.out.println("start: m_runnable=" + m_runnable);
         m_sequencer.step(3);
         m_runnable.run(); /* step 4 */
         // Our Component.start() method should be called once this method returns.

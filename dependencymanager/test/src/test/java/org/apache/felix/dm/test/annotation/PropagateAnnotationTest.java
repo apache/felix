@@ -66,7 +66,7 @@ public class PropagateAnnotationTest extends AnnotationBase
     public void testServiceDependencyPropagate(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "ServiceDependencyPropagateTest"); 
+        m.add(makeSequencer(m, "ServiceDependencyPropagateTest")); 
         m_ensure.waitForStep(3, 10000);
     }    
 }

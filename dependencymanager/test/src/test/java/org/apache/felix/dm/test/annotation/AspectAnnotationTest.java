@@ -23,12 +23,9 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.test.BundleGenerator;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -63,18 +60,31 @@ public class AspectAnnotationTest extends AnnotationBase
     }
 
     @Test
-    public void testAnnotatedAspect(BundleContext context)
+    public void testAspectChain(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        // Provide the Sequencer to the "ServiceProvider" service (see main/src/.../AspectTest.java). 
-        Dictionary props = new Hashtable() {{ put("test", "aspect.ServiceProvider"); }};
-        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
-        // Check if the ServiceProvider has been injected in the AspectTest service.
-        m_ensure.waitForStep(1, 10000);
-        // Provide the Sequencer for activating the ServiceProviderAspect service
-        props = new Hashtable() {{ put("test", "aspect.ServiceProviderAspect"); }};
-        m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
-        // And check if the AspectTest has been injected with the aspect
-        m_ensure.waitForStep(2, 10000);
-    }
+        // Activate service consumer
+        Component scSequencer = makeSequencer(m, "AspectChainTest.ServiceConsumer");
+        m.add(scSequencer);
+        // Activate service provider
+        Component spSequencer = makeSequencer(m, "AspectChainTest.ServiceProvider");
+        m.add(spSequencer);
+        // Activate service aspect 2
+        Component sa2Sequencer = makeSequencer(m, "AspectChainTest.ServiceAspect2");
+        m.add(sa2Sequencer);
+        // Activate service aspect 3
+        Component sa3Sequencer = makeSequencer(m, "AspectChainTest.ServiceAspect3");
+        m.add(sa3Sequencer);
+        // Activate service aspect 1
+        Component sa1Sequencer = makeSequencer(m, "AspectChainTest.ServiceAspect1");
+        m.add(sa1Sequencer);
+
+        m_ensure.step();
+        m_ensure.waitForStep(7, 10000);
+
+        // Deactivate service provider
+        m.remove(spSequencer);
+        // Make sure that service aspect 1 has been called in ts removed and stop callbacks 
+        m_ensure.waitForStep(9, 10000);
+    }    
 }

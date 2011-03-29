@@ -34,6 +34,8 @@ import org.osgi.service.log.LogService;
  */
 public class Base implements LogService
 {
+    private final static int LOG_LEVEL=LogService.LOG_WARNING;
+    
     /**
      * Register us as a LogService
      * @param context
@@ -83,33 +85,41 @@ public class Base implements LogService
 
     public void log(int level, String message)
     {
-        System.out.println(getLevel(level) + " " + message);
+        if (LOG_LEVEL >= level) {
+            System.out.println(getLevel(level) + " " + message);
+        }
     }
 
     public void log(int level, String message, Throwable exception)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getLevel(level) + " ");
-        sb.append(message);
-        parse(sb, exception);
-        System.out.println(sb.toString());
+        if (LOG_LEVEL >= level) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(getLevel(level) + " ");
+            sb.append(message);
+            parse(sb, exception);
+            System.out.println(sb.toString());
+        }
     }
 
     public void log(ServiceReference sr, int level, String message)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getLevel(level) + " ");
-        sb.append(message);
-        System.out.println(sb.toString());
+        if (LOG_LEVEL >= level) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(getLevel(level) + " ");
+            sb.append(message);
+            System.out.println(sb.toString());
+        }
     }
 
     public void log(ServiceReference sr, int level, String message, Throwable exception)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getLevel(level) + " ");
-        sb.append(message);
-        parse(sb, exception);
-        System.out.println(sb.toString());
+        if (LOG_LEVEL >= level) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(getLevel(level) + " ");
+            sb.append(message);
+            parse(sb, exception);
+            System.out.println(sb.toString());
+        }
     }
 
     private void parse(StringBuilder sb, Throwable t)
