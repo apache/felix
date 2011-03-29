@@ -43,7 +43,7 @@ public class BundleAdapterServiceTestWithPublisher
     @Component
     public static class Consumer
     {
-        @ServiceDependency(filter="(test=BundleAdapterServiceTestWithPublisher)")
+        @ServiceDependency(filter="(name=BundleAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
         
         @ServiceDependency(required=false, removed = "unbind")
@@ -88,7 +88,7 @@ public class BundleAdapterServiceTestWithPublisher
         @LifecycleController(start=false)
         Runnable m_unpublisher; // injected and used to unregister our service
         
-        @ServiceDependency(filter="(test=BundleAdapterServiceTestWithPublisher)")
+        @ServiceDependency(filter="(name=BundleAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
 
         @Init

@@ -14,14 +14,21 @@ package org.apache.felix.dm.test.bundle.annotation.composite;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 @Component(properties = @Property(name = "foo", value = "bar1"))
 public class Dependency1 implements Runnable
 {
-    @ServiceDependency
+    @ServiceDependency(filter="(name=Dependency1)")
     Sequencer m_sequencer;
 
+    @Start
+    void start()
+    {
+        System.out.println("Dependency1.start");
+    }
+    
     public void run()
     {
         m_sequencer.step(Integer.MAX_VALUE); // Makes the test fail.

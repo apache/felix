@@ -45,7 +45,7 @@ public class FactoryServiceTestWthPublisher
     @Component
     public static class Consumer
     {
-        @ServiceDependency(filter="(test=FactoryServiceTestWthPublisher)")
+        @ServiceDependency(filter="(name=FactoryServiceTestWthPublisher)")
         Sequencer m_sequencer;
         
         @ServiceDependency(required=false, removed = "unbind")
@@ -81,7 +81,7 @@ public class FactoryServiceTestWthPublisher
         @LifecycleController(start=false)
         Runnable m_unpublisher; // injected and used to unregister our service
         
-        @ServiceDependency(filter="(test=FactoryServiceTestWthPublisher)")
+        @ServiceDependency(filter="(name=FactoryServiceTestWthPublisher)")
         Sequencer m_sequencer;
         
         @Init

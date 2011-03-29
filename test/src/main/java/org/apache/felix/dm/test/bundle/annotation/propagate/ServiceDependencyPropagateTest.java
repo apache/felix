@@ -40,7 +40,7 @@ public class ServiceDependencyPropagateTest
             m_producerProps = props;
         }
         
-        @ServiceDependency(filter="(test=ServiceDependencyPropagateTest)")
+        @ServiceDependency(filter="(name=ServiceDependencyPropagateTest)")
         Sequencer m_sequencer;
         
         @Start

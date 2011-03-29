@@ -23,11 +23,8 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
-import java.util.Hashtable;
-
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.test.BundleGenerator;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -69,7 +66,7 @@ public class PublisherAnnotationTest extends AnnotationBase
     public void testServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "ServiceTestWthPublisher"); 
+        m.add(makeSequencer(m, "ServiceTestWthPublisher")); 
         m_ensure.waitForStep(4, 10000);
     }
     
@@ -81,7 +78,7 @@ public class PublisherAnnotationTest extends AnnotationBase
     public void testFactoryServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "FactoryServiceTestWthPublisher"); 
+        m.add(makeSequencer(m, "FactoryServiceTestWthPublisher")); 
         m_ensure.waitForStep(5, 10000);
     }
 
@@ -92,7 +89,7 @@ public class PublisherAnnotationTest extends AnnotationBase
     public void testAdapterServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "AdapterServiceTestWithPublisher"); 
+        m.add(makeSequencer(m, "AdapterServiceTestWithPublisher")); 
         m_ensure.waitForStep(6, 10000);
     }
 
@@ -103,7 +100,7 @@ public class PublisherAnnotationTest extends AnnotationBase
     public void testBundleAdapterServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "BundleAdapterServiceTestWithPublisher"); 
+        m.add(makeSequencer(m, "BundleAdapterServiceTestWithPublisher")); 
         m_ensure.waitForStep(5, 10000);
     }
 
@@ -114,7 +111,7 @@ public class PublisherAnnotationTest extends AnnotationBase
     public void TestResourceAdapterServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "ResourceAdapterServiceTestWithPublisher"); 
+        m.add(makeSequencer(m, "ResourceAdapterServiceTestWithPublisher")); 
         m_ensure.waitForStep(5, 10000);
     }
 
@@ -125,7 +122,7 @@ public class PublisherAnnotationTest extends AnnotationBase
     public void testFactoryAdapterServiceWithPublisher(BundleContext context)
     {
         DependencyManager m = new DependencyManager(context);
-        registerSequencer(m, "FactoryConfigurationAdapterServiceTestWithPublisher"); 
+        m.add(makeSequencer(m, "FactoryConfigurationAdapterServiceTestWithPublisher")); 
         m_ensure.waitForStep(5, 10000);
     }
 }

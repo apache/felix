@@ -36,7 +36,8 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
  * This service will be instantiated by our MyServiceFactory class.
  */
 @Component(factorySet = "MyServiceFactory", 
-         factoryConfigure = "configure", properties = { @Property(name = "foo", value = "bar") })
+           factoryConfigure = "configure",
+           properties = { @Property(name = "foo", value = "bar") })
 public class MyService implements MyServiceInterface
 {
     /**

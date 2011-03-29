@@ -52,7 +52,7 @@ public class ResourceAdapterServiceTestWithPublisher
     @Component
     public static class Consumer
     {
-        @ServiceDependency(filter="(test=ResourceAdapterServiceTestWithPublisher)")
+        @ServiceDependency(filter="(name=ResourceAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
         
         @ServiceDependency(required=false, removed = "unbind")
@@ -190,7 +190,7 @@ public class ResourceAdapterServiceTestWithPublisher
         @LifecycleController(start=false)
         Runnable m_unpublisher; // injected and used to unregister our service
         
-        @ServiceDependency(filter="(test=ResourceAdapterServiceTestWithPublisher)")
+        @ServiceDependency(filter="(name=ResourceAdapterServiceTestWithPublisher)")
         Sequencer m_sequencer;
   
         // Injected by reflection

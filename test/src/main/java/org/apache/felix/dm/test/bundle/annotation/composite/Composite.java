@@ -19,11 +19,11 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 public class Composite
 {
     // Injected dependency (from CompositeService)
-    private Sequencer m_sequencer;
+    private volatile Sequencer m_sequencer;
 
     // Injected dependency (from CompositeService)
-    Runnable m_runnable;
-
+    public volatile Runnable m_runnable;
+    
     // lifecycle callback (same method as the one from CompositeService)
     void init()
     {
