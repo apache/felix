@@ -119,32 +119,19 @@ public class ToggleServiceDependency implements Dependency, DependencyActivation
 
     public void invokeAdded(DependencyService service)
     {
-        invoke(service, "added");
     }
 
     public void invokeRemoved(DependencyService service)
     {
-        invoke(service, "removed");
     }
 
     public void invoke(DependencyService dependencyService, String name)
     {
-        if (name != null)
-        {
-            dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name,
-                                                   new Class[][] { { String.class }, { Object.class }, {} },
-                                                   new Object[][] { { getAutoConfigInstance() }, { getAutoConfigInstance() }, {} });
-        }
-    }
-
-    private synchronized Object[] getCallbackInstances(DependencyService dependencyService)
-    {
-        return dependencyService.getCompositionInstances();
     }
 
     public boolean isAutoConfig()
     {
-        return true;
+        return false;
     }
 
     public boolean isAvailable()
