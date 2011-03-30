@@ -107,7 +107,13 @@ public final class Reflective
 
                 Object[] parms = new Object[types.length];
                 int local = coerce(session, target, m, types, parms, xargs);
-                if ((local >= xargs.size()) && (local >= types.length))
+
+                // FELIX-2894 xargs can contain parameters thus the size
+		// does not match the available slots. I think someone
+		// copied the xargs list in coerce but that left xargs
+		// having an incorrect length
+ 
+                if (/*(local >= xargs.size()) && */(local >= types.length))
                 {
                     boolean exact = ((local == xargs.size()) && (local == types.length));
                     if (exact || (local > match))
@@ -236,12 +242,14 @@ public final class Reflective
                                 {
                                     if (name.equals(item))
                                     {
-                                        if (param.presentValue() == null)
+					// FELIX-2984 annotations never return null, the Parameter annotation
+					// returns UNSPECIFIED
+                                        if (param.presentValue() == null || param.presentValue().equals(Parameter.UNSPECIFIED))
                                         {
-                                            itArgs.remove();
+                                            itArgs.remove(); // parameter name
                                             assert itArgs.hasNext();
-                                            Object value = itArgs.next();
-                                            itArgs.remove();
+                                            Object value = itArgs.next(); // the value
+                                            itArgs.remove(); // remove it
                                             out[argIndex] = coerce(session, target,
                                                 types[argIndex], value);
                                         }
