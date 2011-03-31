@@ -513,7 +513,7 @@ public class FactorySet extends AbstractSet<Dictionary>
             else
             {
                 throw new RuntimeException("Could not invoke method " + configure
-                                           + " on object " + impl);
+                                           + " on object " + impl, t);
             }
         }
     }
