@@ -93,8 +93,8 @@ public class AdapterAnnotationTest extends AnnotationBase
         // Provide the Sequencer to the org.apache.felix.dm.test.bundle.annotation.adapter.AdapterTest bundle 
         Component sequencer = makeSequencer(m, "AdapterCallback");
         m.add(sequencer);
-        m_ensure.waitForStep(3, 10000);
+        m_ensure.waitForStep(2, 10000);
         m.remove(sequencer);
-        m_ensure.waitForStep(5, 10000);        
+        m_ensure.waitForStep(4, 10000);        
     }
 }

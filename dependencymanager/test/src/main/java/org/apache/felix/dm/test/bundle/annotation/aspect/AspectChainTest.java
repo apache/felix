@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.aspect;
 
-import java.util.Hashtable;
-
 import org.apache.felix.dm.annotation.api.AspectService;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Destroy;
@@ -43,17 +41,21 @@ public class AspectChainTest
         protected Sequencer m_sequencer;
         // Injected by reflection.
         protected ServiceRegistration m_sr;
-                
+               
+        @Init
+        void init() {
+            System.out.println("ServiceProvider.init");
+        }
+        
+        @Destroy
+        void destroy() {
+            System.out.println("ServiceProvider.destroy");
+        }
+
         public void invoke(Runnable run)
         {
             run.run();
             m_sequencer.step(6);
-            Thread update = new Thread() {
-                public void run() {
-                    m_sr.setProperties(new Hashtable<String, String>() {{ put("foo", "bar");}});      
-                }
-            };
-            update.start();
         }
     }
     
@@ -65,6 +67,16 @@ public class AspectChainTest
         // Injected by reflection.
         private volatile ServiceInterface m_parentService;
 
+        @Init
+        void init() {
+            System.out.println("ServiceAspect2.init");
+        }
+        
+        @Destroy
+        void destroy() {
+            System.out.println("ServiceAspect2.destroy");
+        }
+        
         public void invoke(Runnable run)
         {
             m_sequencer.step(3);
@@ -80,6 +92,16 @@ public class AspectChainTest
         // Injected using add callback.
         private volatile ServiceInterface m_parentService;
 
+        @Init
+        void init() {
+            System.out.println("ServiceAspect3.init");
+        }
+        
+        @Destroy
+        void destroy() {
+            System.out.println("ServiceAspect3.destroy");
+        }
+
         void add(ServiceInterface si)
         {
             m_parentService = si;
@@ -92,7 +114,7 @@ public class AspectChainTest
         }
     }
 
-    @AspectService(ranking = 10, added="added", changed="changed", removed="removed")
+    @AspectService(ranking = 10, added="added", removed="removed")
     public static class ServiceAspect1 implements ServiceInterface
     {
         @ServiceDependency(filter="(name=AspectChainTest.ServiceAspect1)")
@@ -100,25 +122,30 @@ public class AspectChainTest
         // Injected by reflection.
         private volatile ServiceInterface m_parentService;
 
+        @Init
+        void init() {
+            System.out.println("ServiceAspect1.init");
+        }
+        
+        @Destroy
+        void destroy() {
+            System.out.println("ServiceAspect1.destroy");
+        }
+
         void added(ServiceInterface si)
         {
             m_parentService = si;
         }
-        
-        void changed(ServiceInterface si)
+                
+        @Stop
+        void stop()
         {
             m_sequencer.step(7);
         }
         
-        @Stop
-        void stop()
-        {
-            m_sequencer.step(8);
-        }
-        
         void removed(ServiceInterface si)
         {
-            m_sequencer.step(9);
+            m_sequencer.step(8);
         }
         
         public void invoke(Runnable run)
@@ -142,7 +169,7 @@ public class AspectChainTest
         @Init
         public void init()
         {
-            m_thread = new Thread(this);
+            m_thread = new Thread(this, "ServiceConsumer");
             m_thread.start();
         }
 
