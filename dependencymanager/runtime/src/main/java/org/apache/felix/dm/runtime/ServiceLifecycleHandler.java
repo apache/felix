@@ -96,7 +96,6 @@ public class ServiceLifecycleHandler
     private List<MetaData> m_depsMeta;
     private List<Dependency> m_namedDeps = new ArrayList<Dependency>();
     private Bundle m_bundle;
-    private final AtomicBoolean m_started = new AtomicBoolean(false);
     private ToggleServiceDependency m_toggle;
     private final static Object SYNC = new Object();
 
@@ -144,14 +143,21 @@ public class ServiceLifecycleHandler
 
         if (starter != null)
         {
+            // We'll inject two runnables: one that will start or service, when invoked, and the other
+            // that will stop our service, when invoked. We'll use a shared atomic boolean in order to
+            // synchronize both runnables.
             Log.instance().debug("Setting up a lifecycle controller for service %s", serviceInstance);
             String componentName = serviceInstance.getClass().getName();
+            // Create a toggle service, used to start/stop our service.
             m_toggle = new ToggleServiceDependency();
+            AtomicBoolean startFlag = new AtomicBoolean(false);
+            // Add the toggle to the service (we'll remove it from our destroy emthod).
             service.add(m_toggle);
-            setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName));
-
+            // Inject the runnable that will start our service, when invoked.
+            setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName, m_toggle, startFlag));
             if (stopper != null) {
-                setField(serviceInstance, stopper, Runnable.class, new ComponentStopper(componentName));
+                // Inject the runnable that will stop our service, when invoked.
+                setField(serviceInstance, stopper, Runnable.class, new ComponentStopper(componentName, m_toggle, startFlag));
             }
         }
 
@@ -297,6 +303,14 @@ public class ServiceLifecycleHandler
     public void destroy(Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
+        // Clear named dependencies eventuall returned by our service init callback. 
+        m_namedDeps.clear();
+        if (m_toggle != null)
+        {
+            // If we created a toggle for our service, just remove it from the service.
+            service.remove(m_toggle);
+            m_toggle = null;
+        }
         callbackComposites(service, m_destroy);
     }
 
@@ -382,18 +396,22 @@ public class ServiceLifecycleHandler
         }
     }
     
-    private class ComponentStarter implements Runnable {
-        private String m_componentName;
+    private static class ComponentStarter implements Runnable {
+        private final String m_componentName;
+        private final ToggleServiceDependency m_toggle;
+        private final AtomicBoolean m_startFlag;
 
-        public ComponentStarter(String name)
+        public ComponentStarter(String name, ToggleServiceDependency toggle, AtomicBoolean startFlag)
         {
             m_componentName = name;
+            m_toggle = toggle;
+            m_startFlag = startFlag;
         }
 
         @SuppressWarnings("synthetic-access")
         public void run()
         {
-            if (m_started.compareAndSet(false, true)) {
+            if (m_startFlag.compareAndSet(false, true)) {
                 Log.instance().debug("Lifecycle controller is activating the component %s",
                                      m_componentName);
                 m_toggle.setAvailable(true);
@@ -401,18 +419,22 @@ public class ServiceLifecycleHandler
         }
     }
     
-    private class ComponentStopper implements Runnable {
-        private Object m_componentName;
+    private static class ComponentStopper implements Runnable {
+        private final Object m_componentName;
+        private final ToggleServiceDependency m_toggle;
+        private final AtomicBoolean m_startFlag;
 
-        public ComponentStopper(String componentName)
+        public ComponentStopper(String componentName, ToggleServiceDependency toggle, AtomicBoolean startFlag)
         {
             m_componentName = componentName;
+            m_toggle = toggle;
+            m_startFlag = startFlag;
         }
 
         @SuppressWarnings("synthetic-access")
         public void run()
         {
-            if (m_started.compareAndSet(true, false)) {
+            if (m_startFlag.compareAndSet(true, false)) {
                 Log.instance().debug("Lifecycle controller is deactivating the component %s",
                                     m_componentName);
                 m_toggle.setAvailable(false);
