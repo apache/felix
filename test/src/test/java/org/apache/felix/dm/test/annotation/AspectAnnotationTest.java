@@ -80,11 +80,11 @@ public class AspectAnnotationTest extends AnnotationBase
         m.add(sa1Sequencer);
 
         m_ensure.step();
-        m_ensure.waitForStep(7, 10000);
+        m_ensure.waitForStep(6, 10000);
 
         // Deactivate service provider
         m.remove(spSequencer);
         // Make sure that service aspect 1 has been called in ts removed and stop callbacks 
-        m_ensure.waitForStep(9, 10000);
+        m_ensure.waitForStep(8, 10000);
     }    
 }

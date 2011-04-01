@@ -111,7 +111,6 @@ public class AdapterTest
     @AdapterService(adapteeService = S1.class, 
                     properties={@Property(name="adapter", value="true")},
                     added="bind", 
-                    changed="changed",
                     removed="removed")
     public static class S1ToS3AdapterCallback implements S3
     {
@@ -128,23 +127,18 @@ public class AdapterTest
         
         public void run3()
         {
-            ((S1) m_s1).run(); // s1 will change its properties here
+            ((S1) m_s1).run();
         }
-        
-        void changed(S1 s1)
+                
+        @Stop
+        void stop() 
         {
             m_sequencer.step(3);            
         }
         
-        @Stop
-        void stop() 
-        {
-            m_sequencer.step(4);            
-        }
-        
         void removed(S1 s1)
         {
-            m_sequencer.step(5);            
+            m_sequencer.step(4);            
         }
     }
 
@@ -157,22 +151,10 @@ public class AdapterTest
         @ServiceDependency
         protected S2 m_s2;
         
-        // Injected when started
-        ServiceRegistration m_registration;
-
         public void run()
         {
             m_sequencer.step(1);
             m_s2.run2();
-            Thread update = new Thread() {
-                public void run() {
-                    m_registration.setProperties(new Hashtable<String, String>() {{ 
-                        put("param1", "value1");
-                        put("param2", "value2");
-                    }});
-                }
-            };
-            update.start();
         }
     }
     
