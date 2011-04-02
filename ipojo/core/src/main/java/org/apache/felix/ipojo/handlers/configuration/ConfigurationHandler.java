@@ -127,7 +127,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
             if (fieldName == null && methodName == null  && paramIndex == null) {
                 throw new ConfigurationException("Malformed property : The property needs to contain" +
-                		" at least a field, a method or a constructor-parameter");
+                        " at least a field, a method or a constructor-parameter");
             }
 
             String name = configurables[i].getAttribute("name");
@@ -135,9 +135,9 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 if (fieldName == null  && methodName != null) {
                     name = methodName;
                 } else if (fieldName == null  && paramIndex != null) {
-                	name = paramIndex;
+                    name = paramIndex;
                 } else {
-                	name = fieldName;
+                    name = fieldName;
                 }
                 configurables[i].addAttribute(new Attribute("name", name)); // Add the type to avoid configure checking
             }
@@ -167,18 +167,18 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 type = field.getFieldType();
                 configurables[i].addAttribute(new Attribute("type", type)); // Add the type to avoid configure checking
             } else if (paramIndex != null) {
-            	int index = Integer.parseInt(paramIndex);
-            	type = configurables[i].getAttribute("type");
-        		MethodMetadata[] cts = manipulation.getConstructors();
-        		// If we don't have a type, try to get the first constructor and get the type of the parameter
-        		// we the index 'index'.
-        		if (type == null && cts.length > 0  && cts[0].getMethodArguments().length > index) {
-            		type = cts[0].getMethodArguments()[index];
-            	} else if (type == null) { // Applied only if type was not determined.
-            		throw new ConfigurationException("Cannot determine the type of the property " + index +
-            				", please use the type attribute");
-            	}
-            	configurables[i].addAttribute(new Attribute("type", type));
+                int index = Integer.parseInt(paramIndex);
+                type = configurables[i].getAttribute("type");
+                MethodMetadata[] cts = manipulation.getConstructors();
+                // If we don't have a type, try to get the first constructor and get the type of the parameter
+                // we the index 'index'.
+                if (type == null && cts.length > 0  && cts[0].getMethodArguments().length > index) {
+                    type = cts[0].getMethodArguments()[index];
+                } else if (type == null) { // Applied only if type was not determined.
+                    throw new ConfigurationException("Cannot determine the type of the property " + index +
+                            ", please use the type attribute");
+                }
+                configurables[i].addAttribute(new Attribute("type", type));
             }
 
             // Is the property set to immutable
@@ -222,11 +222,13 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         Element[] configurables = confs[0].getElements("Property");
 
         // Check if the component is dynamically configurable
-        m_mustPropagate = false;
+        // Propagation enabled by default.
+        m_mustPropagate = true;
+        m_toPropagate = configuration; // Instance configuration to propagate.
         String propa = confs[0].getAttribute("propagation");
-        if (propa != null && propa.equalsIgnoreCase("true")) {
-            m_mustPropagate = true;
-            m_toPropagate = configuration; // Instance configuration to propagate.
+        if (propa != null && propa.equalsIgnoreCase("false")) {
+            m_mustPropagate = false;
+            m_toPropagate = null;
         }
 
         // Check if the component support ConfigurationADmin reconfiguration
@@ -239,19 +241,19 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         // updated method
         String upd = confs[0].getAttribute("updated");
         if (upd != null) {
-        	MethodMetadata method = getPojoMetadata().getMethod(upd);
-        	if (method == null) {
-        		throw new ConfigurationException("The updated method is not found in the class "
-        				+ getInstanceManager().getClassName());
-        	} else if (method.getMethodArguments().length == 0) {
-        		m_updated = new Callback(upd, new Class[0], false, getInstanceManager());
-        	} else if (method.getMethodArguments().length == 1
-        			&& method.getMethodArguments()[0].equals(Dictionary.class.getName())) {
-        		m_updated = new Callback(upd, new Class[] {Dictionary.class}, false, getInstanceManager());
-        	} else {
-        		throw new ConfigurationException("The updated method is found in the class "
-        				+ getInstanceManager().getClassName() + " must have either no argument or a Dictionary");
-        	}
+            MethodMetadata method = getPojoMetadata().getMethod(upd);
+            if (method == null) {
+                throw new ConfigurationException("The updated method is not found in the class "
+                        + getInstanceManager().getClassName());
+            } else if (method.getMethodArguments().length == 0) {
+                m_updated = new Callback(upd, new Class[0], false, getInstanceManager());
+            } else if (method.getMethodArguments().length == 1
+                    && method.getMethodArguments()[0].equals(Dictionary.class.getName())) {
+                m_updated = new Callback(upd, new Class[] {Dictionary.class}, false, getInstanceManager());
+            } else {
+                throw new ConfigurationException("The updated method is found in the class "
+                        + getInstanceManager().getClassName() + " must have either no argument or a Dictionary");
+            }
         }
 
         for (int i = 0; configurables != null && i < configurables.length; i++) {
@@ -267,11 +269,11 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
             Property prop = null;
             if (paramIndex == null) {
-            	prop = new Property(name, fieldName, methodName, value, type, getInstanceManager(), this);
+                prop = new Property(name, fieldName, methodName, value, type, getInstanceManager(), this);
             } else {
-            	index = Integer.parseInt(paramIndex);
-            	prop = new Property(name, fieldName, methodName, index,
-            			value, type, getInstanceManager(), this);
+                index = Integer.parseInt(paramIndex);
+                prop = new Property(name, fieldName, methodName, index,
+                        value, type, getInstanceManager(), this);
             }
             addProperty(prop);
 
@@ -290,7 +292,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             }
 
             if (index != -1) {
-            	getInstanceManager().register(index, prop);
+                getInstanceManager().register(index, prop);
             }
         }
 
@@ -336,11 +338,11 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
         // Give initial values and reset the 'invoked' flag.
         for (int i = 0; i < m_configurableProperties.size(); i++) {
-        	Property prop = (Property) m_configurableProperties.get(i);
-        	prop.reset(); // Clear the invoked flag.
-        	if (prop.hasField() && prop.getValue() != Property.NO_VALUE && prop.getValue() != null) {
-        		getInstanceManager().onSet(null, prop.getField(), prop.getValue());
-        	}
+            Property prop = (Property) m_configurableProperties.get(i);
+            prop.reset(); // Clear the invoked flag.
+            if (prop.hasField() && prop.getValue() != Property.NO_VALUE && prop.getValue() != null) {
+                getInstanceManager().onSet(null, prop.getField(), prop.getValue());
+            }
         }
 
         if (m_managedServicePID != null && m_sr == null) {
@@ -518,9 +520,9 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         }
 
         if (m_updated.getArguments().length == 0) {
-        	// We don't have to compute the properties,
-        	// we just call the callback.
-        	try {
+            // We don't have to compute the properties,
+            // we just call the callback.
+            try {
                 if (instance == null) {
                     m_updated.call(new Object[0]);
                 } else {
