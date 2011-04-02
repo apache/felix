@@ -21,7 +21,6 @@ package org.apache.felix.bundleplugin;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -398,7 +397,7 @@ public class BundleAllPlugin extends ManifestPlugin
     }
 
 
-    private boolean isOsgi( Jar jar ) throws IOException
+    private boolean isOsgi( Jar jar ) throws Exception
     {
         if ( jar.getManifest() != null )
         {
