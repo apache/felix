@@ -485,12 +485,21 @@ public class ProvidedService implements ServiceFactory {
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
             Object value = props.get(key);
-            Property prop;
-            try {
-                prop = new Property(key, null, null, value.toString(), value.getClass().getName(), getInstanceManager(), m_handler);
-                addProperty(prop);
-            } catch (ConfigurationException e) {
-                m_handler.error("The propagated property " + key + " cannot be created correctly : " + e.getMessage());
+
+            boolean alreadyExisting = false;
+            for (int i = 0; i < m_properties.length; i++) {
+                if (key.equals(m_properties[i].getName())) {
+                    alreadyExisting = true;
+                }
+            }
+
+            if (! alreadyExisting) {
+                try {
+                    Property prop = new Property(key, null, null, value.toString(), value.getClass().getName(), getInstanceManager(), m_handler);
+                    addProperty(prop);
+                } catch (ConfigurationException e) {
+                    m_handler.error("The propagated property " + key + " cannot be created correctly : " + e.getMessage());
+                }
             }
         }
     }
