@@ -112,7 +112,6 @@
                             org.osgi.service.http,
                             org.apache.felix.shell;
                             org.osgi.service.*;resolution:=optional,
-                            javax.portlet;resolution:=optional,
                             javax.servlet.*;version=2.4,
                             *
                         </Import-Package>
@@ -130,13 +129,17 @@
                                 inline=org/osgi/util/tracker/*,
                                 
                             <!-- Required for JSON data transfer -->
-                            json,
+                            json;inline=org/json/*,
                             
                             <!-- File Upload functionality -->
-                            commons-fileupload,
+                            commons-fileupload;inline=org/apache/commons/fileupload/*|
+                                org/apache/commons/fileupload/disk/*|
+                                org/apache/commons/fileupload/servlet/*,
     
                             <!-- Required by FileUpload and Util -->
-                            commons-io
+                            commons-io;inline=org/apache/commons/io/*|
+                                org/apache/commons/io/filefilter/*| 
+                                org/apache/commons/io/output/* 
                         </Embed-Dependency>
                         
                         <_removeheaders>
