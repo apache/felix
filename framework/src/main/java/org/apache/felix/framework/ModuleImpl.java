@@ -1180,15 +1180,21 @@ public class ModuleImpl implements Module
         // the module.
         for (int i = 0; (m_fragments != null) && (i < m_fragments.size()); i++)
         {
-            List<Wire> hostWires = new ArrayList<Wire>(m_fragments.get(i).getWires());
-            for (Iterator<Wire> it = hostWires.iterator(); it.hasNext(); )
+            // If the fragment has no wires, then there is no reason to try to
+            // remove ourself from its wires since it has apparently already
+            // been refreshed.
+            if (m_fragments.get(i).getWires() != null)
             {
-                Wire hostWire = it.next();
-                if (hostWire.getExporter().equals(this))
+                List<Wire> hostWires = new ArrayList<Wire>(m_fragments.get(i).getWires());
+                for (Iterator<Wire> it = hostWires.iterator(); it.hasNext(); )
                 {
-                    it.remove();
-                    ((ModuleImpl) m_fragments.get(i)).setWires(hostWires);
-                    break;
+                    Wire hostWire = it.next();
+                    if (hostWire.getExporter().equals(this))
+                    {
+                        it.remove();
+                        ((ModuleImpl) m_fragments.get(i)).setWires(hostWires);
+                        break;
+                    }
                 }
             }
         }
