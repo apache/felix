@@ -160,7 +160,7 @@ public class QDoxJavaClassDescription
             // check for fully qualified
             int firstDot = name.indexOf('.');
             if ( firstDot == lastDot ) {
-                // we only have one dot, so either the class is imported or in the same package
+                // we only have one dot, so either the class is imported or in the same package or in the default package (java.lang)
                 final String className = name.substring(0, lastDot);
                 final String constantName = name.substring(lastDot+1);
                 final String importDef = this.searchImport('.' + className);
@@ -170,11 +170,23 @@ public class QDoxJavaClassDescription
                         return jcd.getFieldByName(constantName);
                     }
                 }
-                final JavaClassDescription jcd = this.manager.getJavaClassDescription(this.javaClass.getSource().getPackage().getName() + '.' + className);
-                if ( jcd != null ) {
-                    return jcd.getFieldByName(constantName);
+                try {
+                    final JavaClassDescription jcd = this.manager.getJavaClassDescription(this.javaClass.getSource().getPackage().getName() + '.' + className);
+                    if ( jcd != null ) {
+                        return jcd.getFieldByName(constantName);
+                    }
+                } catch (final SCRDescriptorException sde) {
+                    // try java.lang (FELIX-2906)
+                    try {
+                        final JavaClassDescription jcd = this.manager.getJavaClassDescription("java.lang." + className);
+                        if ( jcd != null ) {
+                            return jcd.getFieldByName(constantName);
+                        }
+                    } catch (final SCRDescriptorException ignore) {
+                        // ignore
+                    }
+                    throw sde;
                 }
-
             } else {
                 // we have more than one dot, so this is a fully qualified class
                 final String className = name.substring(0, lastDot);
