@@ -59,6 +59,9 @@ class Candidates
     // Map used when populating candidates to hold intermediate and final results.
     private final Map<Module, Object> m_populateResultCache;
 
+    // Flag to signal if fragments are present in the candidate map.
+    private boolean m_fragmentsPresent = false;
+
     /**
      * Private copy constructor used by the copy() method.
      * @param root the root module for the resolve.
@@ -73,7 +76,8 @@ class Candidates
         Map<Capability, Set<Requirement>> dependentMap,
         Map<Requirement, SortedSet<Capability>> candidateMap,
         Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
-        Map<Module, HostModule> wrappedHosts, Map<Module, Object> populateResultCache)
+        Map<Module, HostModule> wrappedHosts, Map<Module, Object> populateResultCache,
+        boolean fragmentsPresent)
     {
         m_root = root;
         m_candidateModules = candidateModules;
@@ -82,6 +86,7 @@ class Candidates
         m_hostFragments = hostFragments;
         m_allWrappedHosts = wrappedHosts;
         m_populateResultCache = populateResultCache;
+        m_fragmentsPresent = fragmentsPresent;
     }
 
     /**
@@ -305,6 +310,100 @@ class Candidates
         }
     }
 
+    public final void populateOptional(ResolverState state, Module module)
+    {
+        try
+        {
+            // If the optional module is a fragment, then we only want to populate
+            // the fragment if it has a candidate host in the set of already populated
+            // modules. We do this to avoid unnecessary work in prepare(). If the
+            // fragment has a host, we'll prepopulate the result cache here to avoid
+            // having to do the host lookup again in populate().
+            boolean isFragment = Util.isFragment(module);
+            if (isFragment)
+            {
+                // Get the current result cache value, to make sure the module
+                // hasn't already been populated.
+                Object cacheValue = m_populateResultCache.get(module);
+                if (cacheValue == null)
+                {
+                    // Create a modifiable list of the module's requirements.
+                    List<Requirement> remainingReqs = new ArrayList(module.getRequirements());
+
+                    // Find the host requirement.
+                    Requirement hostReq = null;
+                    for (Iterator<Requirement> it = remainingReqs.iterator(); it.hasNext(); )
+                    {
+                        Requirement r = it.next();
+                        if (r.getNamespace().equals(Capability.HOST_NAMESPACE))
+                        {
+                            hostReq = r;
+                            it.remove();
+                        }
+                    }
+
+                    // Get candidates hosts and keep any that have been populated.
+                    SortedSet<Capability> hosts = state.getCandidates(hostReq, false);
+                    for (Iterator<Capability> it = hosts.iterator(); it.hasNext(); )
+                    {
+                        Capability host = it.next();
+                        if (!isPopulated(host.getModule()))
+                        {
+                            it.remove();
+                        }
+                    }
+
+                    // If there aren't any populated hosts, then we can just
+                    // return since this fragment isn't needed.
+                    if (hosts.isEmpty())
+                    {
+                        return;
+                    }
+
+                    // If there are populates host candidates, then finish up
+                    // some other checks and prepopulate the result cache with
+                    // the work we've done so far.
+                    
+                    // Verify that any required execution environment is satisfied.
+                    state.checkExecutionEnvironment(module);
+
+                    // Verify that any native libraries match the current platform.
+                    state.checkNativeLibraries(module);
+
+                    // Record cycle count, but start at -1 since it will
+                    // be incremented again in populate().
+                    Integer cycleCount = new Integer(-1);
+
+                    // Create a local map for populating candidates first, just in case
+                    // the module is not resolvable.
+                    Map<Requirement, SortedSet<Capability>> localCandidateMap = new HashMap();
+
+                    // Add the discovered host candidates to the local candidate map.
+                    localCandidateMap.put(hostReq, hosts);
+
+                    // Add these value to the result cache so we know we are
+                    // in the middle of populating candidates for the current
+                    // module.
+                    m_populateResultCache.put(module,
+                        new Object[] { cycleCount, localCandidateMap, remainingReqs });
+                }
+            }
+
+            // Try to populate candidates for the optional module.
+            populate(state, module);
+        }
+        catch (ResolveException ex)
+        {
+            // Ignore since the module is optional.
+        }
+    }
+
+    private boolean isPopulated(Module module)
+    {
+        Object value = m_populateResultCache.get(module);
+        return ((value != null) && (value instanceof Boolean));
+    }
+
     private void populateDynamic(ResolverState state, Module module)
     {
         // There should be one entry in the candidate map, which are the
@@ -356,7 +455,10 @@ class Candidates
     **/
     private void add(Requirement req, SortedSet<Capability> candidates)
     {
-        boolean isFragment = req.getNamespace().equals(Capability.HOST_NAMESPACE);
+        if (req.getNamespace().equals(Capability.HOST_NAMESPACE))
+        {
+            m_fragmentsPresent = true;
+        }
 
         // Record the candidates.
         m_candidateMap.put(req, candidates);
@@ -369,42 +471,6 @@ class Candidates
             // Remember the module for all capabilities so we can
             // determine which ones are singletons.
             m_candidateModules.add(cap.getModule());
-
-            // Record the requirement as dependent on the capability.
-            Set<Requirement> dependents = m_dependentMap.get(cap);
-            if (dependents == null)
-            {
-                dependents = new HashSet<Requirement>();
-                m_dependentMap.put(cap, dependents);
-            }
-            dependents.add(req);
-
-            // Keep track of hosts and associated fragments.
-            if (isFragment)
-            {
-                Map<String, Map<Version, List<Requirement>>>
-                    fragments = m_hostFragments.get(cap);
-                if (fragments == null)
-                {
-                    fragments = new HashMap<String, Map<Version, List<Requirement>>>();
-                    m_hostFragments.put(cap, fragments);
-                }
-                Map<Version, List<Requirement>> fragmentVersions =
-                    fragments.get(req.getModule().getSymbolicName());
-                if (fragmentVersions == null)
-                {
-                    fragmentVersions =
-                        new TreeMap<Version, List<Requirement>>(Collections.reverseOrder());
-                    fragments.put(req.getModule().getSymbolicName(), fragmentVersions);
-                }
-                List<Requirement> actual = fragmentVersions.get(req.getModule().getVersion());
-                if (actual == null)
-                {
-                    actual = new ArrayList<Requirement>();
-                    fragmentVersions.put(req.getModule().getVersion(), actual);
-                }
-                actual.add(req);
-            }
         }
     }
 
@@ -463,6 +529,14 @@ class Candidates
     **/
     public void prepare(List<Module> existingSingletons)
     {
+        boolean init = false;
+
+        if (m_fragmentsPresent)
+        {
+            populateDependents();
+            init = true;
+        }
+
         final Map<String, Module> singletons = new HashMap<String, Module>();
 
         for (Iterator<Module> it = m_candidateModules.iterator(); it.hasNext(); )
@@ -470,6 +544,12 @@ class Candidates
             Module m = it.next();
             if (isSingleton(m))
             {
+                if (!init)
+                {
+                    populateDependents();
+                    init = true;
+                }
+
                 // See if there is an existing singleton for the
                 // module's symbolic name.
                 Module singleton = singletons.get(m.getSymbolicName());
@@ -636,6 +716,53 @@ class Candidates
         }
     }
 
+    private void populateDependents()
+    {
+        for (Entry<Requirement, SortedSet<Capability>> entry : m_candidateMap.entrySet())
+        {
+            Requirement req = entry.getKey();
+            SortedSet<Capability> caps = entry.getValue();
+            for (Capability cap : caps)
+            {
+                // Record the requirement as dependent on the capability.
+                Set<Requirement> dependents = m_dependentMap.get(cap);
+                if (dependents == null)
+                {
+                    dependents = new HashSet<Requirement>();
+                    m_dependentMap.put(cap, dependents);
+                }
+                dependents.add(req);
+
+                // Keep track of hosts and associated fragments.
+                if (req.getNamespace().equals(Capability.HOST_NAMESPACE))
+                {
+                    Map<String, Map<Version, List<Requirement>>>
+                        fragments = m_hostFragments.get(cap);
+                    if (fragments == null)
+                    {
+                        fragments = new HashMap<String, Map<Version, List<Requirement>>>();
+                        m_hostFragments.put(cap, fragments);
+                    }
+                    Map<Version, List<Requirement>> fragmentVersions =
+                        fragments.get(req.getModule().getSymbolicName());
+                    if (fragmentVersions == null)
+                    {
+                        fragmentVersions =
+                            new TreeMap<Version, List<Requirement>>(Collections.reverseOrder());
+                        fragments.put(req.getModule().getSymbolicName(), fragmentVersions);
+                    }
+                    List<Requirement> actual = fragmentVersions.get(req.getModule().getVersion());
+                    if (actual == null)
+                    {
+                        actual = new ArrayList<Requirement>();
+                        fragmentVersions.put(req.getModule().getVersion(), actual);
+                    }
+                    actual.add(req);
+                }
+            }
+        }   
+    }
+
     /**
      * Removes a module from the internal data structures if it wasn't selected
      * as a fragment or a singleton. This process may cause other modules to
@@ -785,8 +912,6 @@ class Candidates
     **/
     public Candidates copy()
     {
-        Set<Module> candidateModules = new HashSet<Module>(m_candidateModules);
-
         Map<Capability, Set<Requirement>> dependentMap =
             new HashMap<Capability, Set<Requirement>>();
         for (Entry<Capability, Set<Requirement>> entry : m_dependentMap.entrySet())
@@ -804,8 +929,9 @@ class Candidates
         }
 
         return new Candidates(
-            m_root, candidateModules, dependentMap, candidateMap,
-            m_hostFragments, m_allWrappedHosts, m_populateResultCache);
+            m_root, m_candidateModules, dependentMap, candidateMap,
+            m_hostFragments, m_allWrappedHosts, m_populateResultCache,
+            m_fragmentsPresent);
     }
 
     public void dump()

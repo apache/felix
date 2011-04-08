@@ -75,14 +75,7 @@ public class ResolverImpl implements Resolver
                     // Try to populate optional fragments.
                     for (Module fragment : fragments)
                     {
-                        try
-                        {
-                            allCandidates.populate(state, fragment);
-                        }
-                        catch (ResolveException ex)
-                        {
-                            // Ignore, since fragments are optional.
-                        }
+                        allCandidates.populateOptional(state, fragment);
                     }
 
                     // Merge any fragments into hosts.
@@ -213,14 +206,7 @@ public class ResolverImpl implements Resolver
                     // Try to populate optional fragments.
                     for (Module fragment : fragments)
                     {
-                        try
-                        {
-                            allCandidates.populate(state, fragment);
-                        }
-                        catch (ResolveException ex)
-                        {
-                            // Ignore, since fragments are optional.
-                        }
+                        allCandidates.populateOptional(state, fragment);
                     }
 
                     // Merge any fragments into hosts.
