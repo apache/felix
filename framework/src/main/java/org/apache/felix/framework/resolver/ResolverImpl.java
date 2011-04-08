@@ -831,7 +831,7 @@ public class ResolverImpl implements Resolver
                         permutate(allCandidates, sourceBlame.m_reqs.get(0), m_importPermutations);
                         // Report conflict.
                         ResolveException ex = new ResolveException(
-                            "Unable to resolve module "
+                            "Uses constraint violation. Unable to resolve module "
                             + module.getSymbolicName()
                             + " [" + module
                             + "] because it is exposed to package '"
@@ -879,7 +879,7 @@ public class ResolverImpl implements Resolver
                     rethrow = (rethrow != null)
                         ? rethrow
                         : new ResolveException(
-                            "Unable to resolve module "
+                            "Uses constraint violation. Unable to resolve module "
                             + module.getSymbolicName()
                             + " [" + module
                             + "] because it exports package '"
@@ -962,7 +962,7 @@ public class ResolverImpl implements Resolver
                         rethrow = (rethrow != null)
                             ? rethrow
                             : new ResolveException(
-                                "Unable to resolve module "
+                                "Uses constraint violation. Unable to resolve module "
                                 + module.getSymbolicName()
                                 + " [" + module
                                 + "] because it is exposed to package '"
