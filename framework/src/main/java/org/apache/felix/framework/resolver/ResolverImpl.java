@@ -836,7 +836,7 @@ public class ResolverImpl implements Resolver
                             + " [" + module
                             + "] because it is exposed to package '"
                             + entry.getKey()
-                            + "' from "
+                            + "' from modules "
                             + sourceBlame.m_cap.getModule().getSymbolicName()
                             + " [" + sourceBlame.m_cap.getModule()
                             + "] and "
@@ -884,7 +884,7 @@ public class ResolverImpl implements Resolver
                             + " [" + module
                             + "] because it exports package '"
                             + pkgName
-                            + "' and is also exposed to it from "
+                            + "' and is also exposed to it from module "
                             + usedBlame.m_cap.getModule().getSymbolicName()
                             + " [" + usedBlame.m_cap.getModule()
                             + "] via the following dependency chain:\n\n"
@@ -967,7 +967,7 @@ public class ResolverImpl implements Resolver
                                 + " [" + module
                                 + "] because it is exposed to package '"
                                 + pkgName
-                                + "' from "
+                                + "' from modules "
                                 + importBlame.m_cap.getModule().getSymbolicName()
                                 + " [" + importBlame.m_cap.getModule()
                                 + "] and "
