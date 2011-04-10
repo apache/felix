@@ -174,7 +174,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @return the logger
      */
     public Logger getLogger() {
-    	return m_logger;
+        return m_logger;
     }
 
     /**
@@ -208,11 +208,11 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
         // Check that the constructor parameter are continuous.
         if (m_constructorRegistration != null) {
-        	for (int i = 0; i < m_constructorRegistration.size(); i++) {
-        		if (! m_constructorRegistration.containsKey(new Integer(i))) {
-        			throw new ConfigurationException("The constructor parameter " + i + " is not managed");
-        		}
-        	}
+            for (int i = 0; i < m_constructorRegistration.size(); i++) {
+                if (! m_constructorRegistration.containsKey(new Integer(i))) {
+                    throw new ConfigurationException("The constructor parameter " + i + " is not managed");
+                }
+            }
         }
     }
 
@@ -611,41 +611,41 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         if (m_factoryMethod == null) {
             // No factory-method, we use the constructor.
             try {
-            	// Try to find the correct constructor.
-            	if (m_constructorRegistration != null) {
-            		// Initialize the injected values and types
-            		// We have the IM first.
-            		Object[] values = new Object[m_constructorRegistration.size() + 1];
-            		Class[] types = new Class[m_constructorRegistration.size() + 1];
-            		values[0] = this;
-            		types[0] = InstanceManager.class;
+                // Try to find the correct constructor.
+                if (m_constructorRegistration != null) {
+                    // Initialize the injected values and types
+                    // We have the IM first.
+                    Object[] values = new Object[m_constructorRegistration.size() + 1];
+                    Class[] types = new Class[m_constructorRegistration.size() + 1];
+                    values[0] = this;
+                    types[0] = InstanceManager.class;
 
-            		// Iterate over the constructor injector
-            		for (int i = 0; i < m_constructorRegistration.size(); i++) {
-        				ConstructorInjector injector = (ConstructorInjector)
-        					m_constructorRegistration.get(new Integer(i));
-        				Object v = injector.getConstructorParameter(i);
-        				if (v != null) {
-        					values[i + 1] = v;
-        					Class t = injector.getConstructorParameterType(i);
-        					if (t == null) {
-        						t = v.getClass();
-        					}
-        					types[i + 1] = t;
-        				}
-            		}
-            		// Find the constructor.
-            		Constructor cst = m_clazz.getDeclaredConstructor(types);
-            		if (! cst.isAccessible()) {
+                    // Iterate over the constructor injector
+                    for (int i = 0; i < m_constructorRegistration.size(); i++) {
+                        ConstructorInjector injector = (ConstructorInjector)
+                            m_constructorRegistration.get(new Integer(i));
+                        Object v = injector.getConstructorParameter(i);
+                        if (v != null) {
+                            values[i + 1] = v;
+                            Class t = injector.getConstructorParameterType(i);
+                            if (t == null) {
+                                t = v.getClass();
+                            }
+                            types[i + 1] = t;
+                        }
+                    }
+                    // Find the constructor.
+                    Constructor cst = m_clazz.getDeclaredConstructor(types);
+                    if (! cst.isAccessible()) {
                         cst.setAccessible(true);
                     }
-            		String methodId = MethodMetadata.computeMethodId(cst);
+                    String methodId = MethodMetadata.computeMethodId(cst);
                     onEntry(null, methodId,  values);
-            		instance = cst.newInstance(values);
-            		onExit(instance, methodId, instance);
-            	} else {
-            		// Old semantic
-            		// Try to find if there is a constructor with a bundle context as parameter :
+                    instance = cst.newInstance(values);
+                    onExit(instance, methodId, instance);
+                } else {
+                    // Old semantic
+                    // Try to find if there is a constructor with a bundle context as parameter :
                     try {
                         Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class, BundleContext.class });
                         if (! cst.isAccessible()) {
@@ -668,7 +668,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                             onExit(instance, MethodMetadata.EMPTY_CONSTRUCTOR_ID, instance);
                         }
                     }
-            	}
+                }
 
             } catch (IllegalAccessException e) {
                 m_logger.log(Logger.ERROR,
@@ -743,7 +743,32 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 }
 
                 // Now call the setInstanceManager method.
-                Method method = instance.getClass().getDeclaredMethod("_setInstanceManager", new Class[] { InstanceManager.class });
+                // Find declaring super class.
+                Class declaringClass = instance.getClass();
+                Method method = null;
+                while (declaringClass != null && method == null) {
+                    try {
+                        method = declaringClass.getDeclaredMethod("_setInstanceManager",
+                                new Class[] { InstanceManager.class });
+                    } catch (NoSuchMethodException e) {
+                        //Do nothing
+                    }
+
+                    declaringClass = declaringClass.getSuperclass();
+                }
+
+                if (method == null) {
+                    // Error : _setInstanceManager method is missing
+                    m_logger
+                            .log(
+                                 Logger.ERROR,
+                                 "["
+                                         + m_name
+                                         + "] createInstance -> Cannot invoke the factory-method (the _setInstanceManager method does not exist");
+                    stop();
+                    throw new RuntimeException("Cannot create a POJO instance, the factory-method cannot be found");
+                }
+
                 if (!method.isAccessible()) {
                     method.setAccessible(true);
                 }
@@ -757,17 +782,6 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 onError(null, m_className, e.getTargetException());
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the factory-method has thrown an exception: " + e.getTargetException().getMessage());
-            } catch (NoSuchMethodException e) {
-                // Error : _setInstanceManager method is missing
-                m_logger
-                        .log(
-                             Logger.ERROR,
-                             "["
-                                     + m_name
-                                     + "] createInstance -> Cannot invoke the factory-method (the _setInstanceManager method does not exist) : "
-                                     + e.getMessage(), e);
-                stop();
-                throw new RuntimeException("Cannot create a POJO instance, the factory-method cannot be found : " + e.getMessage());
             } catch (Throwable e) {
                 // Catch every other possible error and runtime exception.
                 m_logger.log(Logger.ERROR,
@@ -999,16 +1013,16 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * injector
      */
     public void register(int index, ConstructorInjector injector) throws ConfigurationException {
-    	Integer key = new Integer(index);
-    	if (m_constructorRegistration == null) {
-    		m_constructorRegistration = new HashMap();
-    	}
-    	if (! m_constructorRegistration.containsKey(key)) {
-    		m_constructorRegistration.put(key, injector);
-    	} else {
-    		throw new ConfigurationException("Another constructor injector " +
-    				"manages the parameter " + index);
-    	}
+        Integer key = new Integer(index);
+        if (m_constructorRegistration == null) {
+            m_constructorRegistration = new HashMap();
+        }
+        if (! m_constructorRegistration.containsKey(key)) {
+            m_constructorRegistration.put(key, injector);
+        } else {
+            throw new ConfigurationException("Another constructor injector " +
+                    "manages the parameter " + index);
+        }
     }
 
     /**
@@ -1175,22 +1189,22 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @param fieldName the field name on which the PUTFIELD instruction is called
      * @param objectValue the new value of the field
      */
-	public void onSet(final Object pojo, final String fieldName, final Object objectValue) {
-		synchronized (this) {
-			// First, store the new value.
-			// This must be done in a synchronized block to avoid
-			// concurrent modification
-			m_fields.put(fieldName, objectValue);
-		}
-		// The registrations cannot be modified, so we can directly access
-		// the interceptor list.
-		FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration
-				.get(fieldName);
-		for (int i = 0; list != null && i < list.length; i++) {
-			 // The callback must be call outside the synchronization block.
-			list[i].onSet(null, fieldName, objectValue);
-		}
-	}
+    public void onSet(final Object pojo, final String fieldName, final Object objectValue) {
+        synchronized (this) {
+            // First, store the new value.
+            // This must be done in a synchronized block to avoid
+            // concurrent modification
+            m_fields.put(fieldName, objectValue);
+        }
+        // The registrations cannot be modified, so we can directly access
+        // the interceptor list.
+        FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration
+                .get(fieldName);
+        for (int i = 0; list != null && i < list.length; i++) {
+             // The callback must be call outside the synchronization block.
+            list[i].onSet(null, fieldName, objectValue);
+        }
+    }
 
 
     /**
@@ -1247,17 +1261,17 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @see org.apache.felix.ipojo.ComponentInstance#reconfigure(java.util.Dictionary)
      */
     public void reconfigure(Dictionary configuration) {
-    	 m_logger.log(Logger.INFO, "Reconfiguring " + getInstanceName());
+         m_logger.log(Logger.INFO, "Reconfiguring " + getInstanceName());
         for (int i = 0; i < m_handlers.length; i++) {
             m_handlers[i].getHandler().reconfigure(configuration);
         }
         // We synchronized the state computation.
         synchronized (this) {
-        	if (m_state == STOPPED) {
-        		m_logger.log(Logger.INFO, "Instance stopped during reconfiguration - Try to restart");
-        		start();
-        	} else if (m_state == INVALID) {
-        		m_logger.log(Logger.INFO, "Instance invalid during reconfiguration - Recompute state");
+            if (m_state == STOPPED) {
+                m_logger.log(Logger.INFO, "Instance stopped during reconfiguration - Try to restart");
+                start();
+            } else if (m_state == INVALID) {
+                m_logger.log(Logger.INFO, "Instance invalid during reconfiguration - Recompute state");
                 // Try to revalidate the instance after reconfiguration
                 for (int i = 0; i < m_handlers.length; i++) {
                     if (m_handlers[i].getState() != VALID) {
