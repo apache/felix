@@ -60,7 +60,8 @@ public class UtilTest
     @Before
     public void before() throws Exception
     {
-
+    	System.setProperty("org.osgi.vendor.framework", "org.apache.felix.framework");
+    	
     	MockitoAnnotations.initMocks(this);
     	
         m_devA = new DeviceAnalyzer( m_context );

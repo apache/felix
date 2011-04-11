@@ -49,7 +49,7 @@ public class Utils
     }
 
 
-    public static void inject( Object target, Class<?> clazz, Object injectable )
+    public static void inject( Object target, Class clazz, Object injectable )
     {
 
         Field[] fields = target.getClass().getDeclaredFields();

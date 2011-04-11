@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -53,7 +54,9 @@ import org.osgi.service.log.LogService;
 
 
 /**
- * TODO: add javadoc
+ * This class represents the Apache Felix implementation of the device access specification.
+ * It is based on version 1.1 of the spec.
+ * 
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -63,13 +66,13 @@ public class DeviceManager implements Log
     private final long DEFAULT_TIMEOUT_SEC = 1;
 
     // the logger
-    private LogService m_log;
+    private volatile LogService m_log;
 
     // the bundle context
     private final BundleContext m_context;
 
     // the driver selector
-    private DriverSelector m_selector;
+    private volatile DriverSelector m_selector;
 
     // the driver locators
     private List<DriverLocator> m_locators;
@@ -86,11 +89,19 @@ public class DeviceManager implements Log
     // used to add delayed actions
     private ScheduledExecutorService m_delayed;
 
+    //the devices filter
     private Filter m_deviceImplFilter;
 
+    //the drivers filter
     private Filter m_driverImplFilter;
 
 
+    /**
+     * Public constructor. Used by the Activator in this <code>Bundle</code>
+     * to instantiate one instance.
+     * 
+     * @param context the <code>BundleContext</code>
+     */
     public DeviceManager( BundleContext context )
     {
         m_context = context;
@@ -165,6 +176,19 @@ public class DeviceManager implements Log
 
     // callback methods
 
+    public void selectorAdded( DriverSelector selector )
+    {
+        m_selector = selector;
+        debug( "driver selector appeared" );
+    }
+
+
+    public void selectorRemoved( DriverSelector selector )
+    {
+        m_selector = null;
+        debug( "driver selector lost" );
+    }
+    
     public void locatorAdded( DriverLocator locator )
     {
         m_locators.add( locator );
@@ -185,6 +209,9 @@ public class DeviceManager implements Log
         m_drivers.put( ref, new DriverAttributes( ref, driver ) );
 
         debug( "driver appeared: " + Util.showDriver( ref ) );
+        
+        //immediately check for idle devices
+//        submit( new CheckForIdleDevices() );
     }
 
 
@@ -532,7 +559,7 @@ public class DeviceManager implements Log
             // if there are no driver locators
             // we'll have to do with the drivers that where
             // added 'manually'
-            List<String> driverIds = m_driverLoader.findDrivers( m_locators, dict );
+            Set<String> driverIds = m_driverLoader.findDrivers( m_locators, dict );
 
             // remove the driverIds that are already available
             for ( DriverAttributes da : m_drivers.values() )
@@ -542,6 +569,7 @@ public class DeviceManager implements Log
             driverIds.removeAll( m_drivers.keySet() );
             try
             {
+            	debug("entering attach phase for " + Util.showDevice( m_ref ) );
                 return driverAttachment( dict, driverIds.toArray( new String[0] ) );
             }
             finally
@@ -564,7 +592,7 @@ public class DeviceManager implements Log
             // now load the drivers
             List<ServiceReference> driverRefs = m_driverLoader.loadDrivers( m_locators, driverIds );
             // these are the possible driver references that have been added
-            // add the to the list of included drivers
+            // add them to the list of included drivers
             for ( ServiceReference serviceReference : driverRefs )
             {
                 DriverAttributes da = m_drivers.get( serviceReference );
@@ -582,8 +610,10 @@ public class DeviceManager implements Log
                 try
                 {
                     int match = driver.match( m_ref );
-                    if ( match <= Device.MATCH_NONE )
+                    if ( match <= Device.MATCH_NONE ) 
+                    {
                         continue;
+                    }
                     mi.add( match, driver );
                 }
                 catch ( Throwable t )
@@ -593,15 +623,20 @@ public class DeviceManager implements Log
             }
 
             // get the best match
-            Match bestMatch;
+            Match bestMatch = null;
 
             // local copy
             final DriverSelector selector = m_selector;
+            
             if ( selector != null )
             {
                 bestMatch = mi.selectBestMatch( m_ref, selector );
+                if (bestMatch != null) {
+                	debug(String.format("DriverSelector (%s) found best match: %s", selector.getClass().getName(), Util.showDriver(bestMatch.getDriver())));
+                }
             }
-            else
+            
+            if (bestMatch == null) 
             {
                 bestMatch = mi.getBestMatch();
             }

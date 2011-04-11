@@ -50,7 +50,7 @@ public class DriverAnalyzer
         }
         if ( String.class.isInstance( driverId ) )
         {
-            String value = String.class.cast( driverId );
+            String value = (String)( driverId );
             if ( value.length() == 0 )
             {
                 m_log.log( LogService.LOG_ERROR, "invalid driver: empty driver id: " + Util.showDriver( ref ) );

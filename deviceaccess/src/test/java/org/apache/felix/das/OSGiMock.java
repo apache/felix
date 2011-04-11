@@ -100,6 +100,8 @@ public class OSGiMock
 
         Mockito.when( m_context.getService( ref ) ).thenReturn( impl );
 
+        Mockito.when( ref.getUsingBundles() ).thenReturn( new Bundle[0] );
+        
         m_references.put( impl, ref );
 
         return ref;

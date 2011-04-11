@@ -19,20 +19,17 @@
 package org.apache.felix.das;
 
 
+import org.apache.felix.das.util.Util;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyActivatorBase;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-
 import org.osgi.service.device.Device;
 import org.osgi.service.device.Driver;
 import org.osgi.service.device.DriverLocator;
 import org.osgi.service.device.DriverSelector;
 import org.osgi.service.log.LogService;
-
-import org.apache.felix.dependencymanager.DependencyActivatorBase;
-import org.apache.felix.dependencymanager.DependencyManager;
-import org.apache.felix.dependencymanager.Service;
-
-import org.apache.felix.das.util.Util;
 
 
 /**
@@ -71,37 +68,39 @@ public class Activator extends DependencyActivatorBase
         // the real device manager
         startDeviceManager();
 
-        // the analyzers to inform the user (and me) if something is wrong
-        // startAnalyzers();
-
     }
 
 
-    private void startDeviceManager()
-    {
+    private void startDeviceManager() {
 
-        final String driverFilter = Util.createFilterString( "(&(%s=%s)(%s=%s))", new String[]
-            { Constants.OBJECTCLASS, Driver.class.getName(), org.osgi.service.device.Constants.DRIVER_ID, "*" } );
+        final String driverFilter = Util.createFilterString( "(%s=%s)", new String[]
+            { org.osgi.service.device.Constants.DRIVER_ID, "*" } );
 
-        final String deviceFilter = Util.createFilterString( "(|(%s=%s)(%s=%s))", new String[]
-            { Constants.OBJECTCLASS, Device.class.getName(), org.osgi.service.device.Constants.DEVICE_CATEGORY, "*" } );
+        final String deviceFilter = Util.createFilterString( "(|(%s=%s)(&(%s=%s)(%s=%s)))", new String[]
+            { 
+        	Constants.OBJECTCLASS, Device.class.getName(), 
+        	Constants.OBJECTCLASS, "*", 
+        	org.osgi.service.device.Constants.DEVICE_CATEGORY, "*" 
+        	} );
 
-        Service svc = createService();
+        Component svc = createComponent();
 
         svc.setImplementation( m_deviceManager );
 
         svc.add( createServiceDependency().setService( LogService.class ).setRequired( false ) );
 
-        svc.add( createServiceDependency().setService( DriverSelector.class ).setRequired( false )
-            .setAutoConfig( false ) );
+        svc.add( createServiceDependency().setService( DriverSelector.class ).setRequired( false ).setAutoConfig( false )
+    		.setCallbacks( "selectorAdded", "selectorRemoved" ) );
 
         svc.add( createServiceDependency().setService( DriverLocator.class ).setRequired( false ).setAutoConfig( false )
             .setCallbacks( "locatorAdded", "locatorRemoved" ) );
-        svc.add( createServiceDependency().setService( Driver.class, driverFilter ).setRequired( false ).setCallbacks(
-            "driverAdded", "driverRemoved" ) );
-        svc.add( createServiceDependency().setService( Device.class, deviceFilter ).setRequired( false ).setCallbacks(
-            "deviceAdded", "deviceModified", "deviceRemoved" ) );
-
+        
+        svc.add( createServiceDependency().setService( Driver.class, driverFilter ).setRequired( false )
+    		.setCallbacks( "driverAdded", "driverRemoved" ) );
+        
+        svc.add( createServiceDependency().setService( deviceFilter ).setRequired( false )
+    		.setCallbacks( "deviceAdded", "deviceModified", "deviceRemoved" ) );
+        
         m_manager.add( svc );
 
     }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.felix.das.DeviceManager;
 import org.junit.Assert;
@@ -90,7 +91,7 @@ public class DriverLoaderTest
         List<DriverLocator> locators = new ArrayList<DriverLocator>();
 
 
-        List<String> driverIds = m_loader.findDrivers( locators, new Properties() );
+        Set<String> driverIds = m_loader.findDrivers( locators, new Properties() );
         Assert.assertTrue( "should be an empty list", driverIds.size() == 0 );
         
     }
@@ -113,7 +114,7 @@ public class DriverLoaderTest
         locators.add( dl );
 
         Properties dict = new Properties();
-        List<String> driverIds = m_loader.findDrivers( locators, dict );
+        Set<String> driverIds = m_loader.findDrivers( locators, dict );
 
         Assert.assertEquals( "should not be an empty list", 2, driverIds.size());
 
@@ -144,7 +145,7 @@ public class DriverLoaderTest
 
         
         Properties dict = new Properties();
-        List<String> driverIds = m_loader.findDrivers( locators, dict );
+        Set<String> driverIds = m_loader.findDrivers( locators, dict );
 
         Assert.assertEquals( "should not be an empty list", 4, driverIds.size() );
 
@@ -163,7 +164,7 @@ public class DriverLoaderTest
 
         Mockito.when( dl.findDrivers( Mockito.eq( dict ) ) ).thenThrow( new RuntimeException( "test exception" ) );
 
-        List<String> driverIds = m_loader.findDrivers( locators, dict );
+        Set<String> driverIds = m_loader.findDrivers( locators, dict );
 
         Assert.assertTrue( "should be an empty list", driverIds.size() == 0 );
 

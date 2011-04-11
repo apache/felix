@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.das.DriverAttributes;
 import org.apache.felix.das.Log;
@@ -65,9 +67,9 @@ public class DriverLoader
 
 
     @SuppressWarnings("all")
-    public List<String> findDrivers( Collection<DriverLocator> locators, Dictionary dict )
+    public Set<String> findDrivers( Collection<DriverLocator> locators, Dictionary dict )
     {
-        final List<String> list = new ArrayList<String>();
+        final Set<String> list = new HashSet<String>();
         for ( DriverLocator locator : locators )
         {
             list.addAll( findDrivers( locator, dict ) );
