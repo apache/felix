@@ -208,14 +208,14 @@ public class ServiceLifecycleHandler
                                    dependency, m_srvMeta);
                 Dependency d = depBuilder.build(m_bundle, dm, true);
                 m_namedDeps.add(d);
-            }
-            
-            // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
-            if (m_namedDeps.size() > 0) {
-                Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
-                                    m_namedDeps);
-                service.add(m_namedDeps);
-            }
+            }            
+        }
+        
+        // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
+        if (m_namedDeps.size() > 0) {
+            Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
+                                m_namedDeps);
+            service.add(m_namedDeps);
         }
     }
 
