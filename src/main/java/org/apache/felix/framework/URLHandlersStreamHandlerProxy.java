@@ -328,7 +328,9 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             } 
             catch (NoSuchMethodException e) 
             {
-                throw new UnsupportedOperationException(e);
+                RuntimeException rte = new UnsupportedOperationException(e.getMessage());
+                rte.initCause(e);
+                throw rte;
             }
             try 
             {
