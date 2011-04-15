@@ -557,7 +557,9 @@ public class Felix extends BundleImpl implements Framework
                                 }
                                 catch (AccessControlException ex)
                                 {
-                                    throw new SecurityException(ex);
+                                    SecurityException se = new SecurityException(ex.getMessage());
+                                    se.initCause(ex);
+                                    throw se;
                                 }
                             }
                         });
@@ -571,7 +573,11 @@ public class Felix extends BundleImpl implements Framework
                         } 
                         catch (Throwable t)
                         {
-                            throw new SecurityException("Unable to install custom SecurityManager: " + security, t); 
+                            SecurityException se =
+                                new SecurityException(
+                                    "Unable to install custom SecurityManager: " + security);
+                            se.initCause(t);
+                            throw se;
                         }
                     }
                 }
