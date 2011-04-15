@@ -1,3 +1,10 @@
+Changes from 1.2.10 to 1.2.12
+-----------------------------
+
+** Bug
+    * [FELIX-2915] - Potential deadlock on shutdown
+
+
 Changes from 1.2.8 to 1.2.10
 ----------------------------
 

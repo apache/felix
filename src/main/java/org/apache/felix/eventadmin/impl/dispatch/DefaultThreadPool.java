@@ -89,14 +89,6 @@ public class DefaultThreadPool
     {
         shutdownNow();
 
-	    try
-	    {
-	        awaitTerminationAfterShutdown();
-	    }
-	    catch (final InterruptedException ie)
-	    {
-            // ignore this
-	    }
     }
 
     /**
