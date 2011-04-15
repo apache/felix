@@ -75,7 +75,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>1.4.3</version>
+                <version>2.3.4</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -90,7 +90,6 @@
                             org.osgi.service.log
                         </DynamicImport-Package>
                         <Import-Package>
-                            !org.osgi.service.log,
                             <!--
                                 Configuration Admin is optional and if it is
                                 present, version 1.2 (from R4.0) is enough  
@@ -114,8 +113,9 @@
                         <Export-Service>
             	            org.osgi.service.event.EventAdmin
                         </Export-Service>
+                        <!-- Include concurrent lib but not sub packages -->
                         <Embed-Dependency>
-                            concurrent;inline="EDU/oswego/cs/dl/util/concurrent/*"
+                            concurrent;inline="EDU/oswego/cs/dl/util/concurrent/[A-Z]*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
