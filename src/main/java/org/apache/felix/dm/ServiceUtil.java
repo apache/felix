@@ -51,13 +51,17 @@ public class ServiceUtil {
      * @return the service ID
      */
     public static long getServiceId(ServiceReference ref) {
-        Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
+        return getServiceIdObject(ref).longValue();
+    }
+    
+    public static Long getServiceIdObject(ServiceReference ref) {
         Long aid = (Long) ref.getProperty(DependencyManager.ASPECT);
         if (aid != null) {
-            return aid.longValue();
+            return aid;
         }
+        Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
         if (sid != null) {
-            return sid.longValue();
+            return sid;
         }
         throw new IllegalArgumentException("Invalid service reference, no service ID found");
     }
