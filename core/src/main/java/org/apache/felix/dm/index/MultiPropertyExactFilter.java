@@ -81,7 +81,7 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
         tracker.close();
     }
 
-    public ServiceReference[] getAllServiceReferences(String clazz, String filter) {
+    public List /* <ServiceReference> */ getAllServiceReferences(String clazz, String filter) {
         List /* <ServiceReference> */ result = new ArrayList();
         List keys = createKeysFromFilter(clazz, filter);
         Iterator iterator = keys.iterator();
@@ -95,12 +95,7 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
                 }
             }
         }
-        if (result.size() == 0) {
-            return null;
-        }
-        else {
-            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
-        }
+        return result;
     }
 
     public Object addingService(ServiceReference reference) {
@@ -118,13 +113,13 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
 
     public void addedService(ServiceReference reference, Object service) {
         if (isApplicable(reference.getPropertyKeys())) {
-            update(reference);
+            add(reference);
         }
     }
 
     public void modifiedService(ServiceReference reference, Object service) {
         if (isApplicable(reference.getPropertyKeys())) {
-            update(reference);
+            modify(reference);
         }
     }
 
@@ -133,11 +128,41 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
             remove(reference);
         }
     }
-    
-    public void update(ServiceReference reference) {
+
+    public void add(ServiceReference reference) {
         List /* <String> */ keys = createKeys(reference);
         synchronized (m_keyToServiceReferencesMap) {
-            // TODO any 'old' references that are still in the index need to be removed in case of an update
+            for (int i = 0; i < keys.size(); i++) {
+                List /* <ServiceReference> */ references = (List) m_keyToServiceReferencesMap.get(keys.get(i));
+                if (references == null) {
+                    references = new ArrayList();
+                    m_keyToServiceReferencesMap.put(keys.get(i), references);
+                }
+                references.add(reference);
+            }
+        }
+    }
+
+    public void modify(ServiceReference reference) {
+        List /* <String> */ keys = createKeys(reference);
+        synchronized (m_keyToServiceReferencesMap) {
+            // TODO this is a quite expensive linear scan over the existing collection
+            // because we first need to remove any existing references and they can be
+            // all over the place :)
+            Iterator iterator = m_keyToServiceReferencesMap.values().iterator();
+            while (iterator.hasNext()) {
+                List /* <ServiceReference> */ list = (List) iterator.next();
+                if (list != null) {
+                    Iterator i2 = list.iterator();
+                    while (i2.hasNext()) {
+                        ServiceReference ref = (ServiceReference) i2.next();
+                        if (ref.equals(reference)) {
+                            i2.remove();
+                        }
+                    }
+                }
+            }
+            
             for (int i = 0; i < keys.size(); i++) {
                 List /* <ServiceReference> */ references = (List) m_keyToServiceReferencesMap.get(keys.get(i));
                 if (references == null) {
@@ -282,7 +307,6 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
     }
     
     private List /* <String> */ createKeysFromFilter(String clazz, String filter) {
-        // TODO array support
         List result = new ArrayList();
         StringBuffer index = new StringBuffer();
         Iterator iterator = m_propertyKeys.iterator();
