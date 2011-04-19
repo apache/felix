@@ -22,10 +22,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>dependencymanager-reactor</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+	    <groupId>org.apache.felix</groupId>
+	    <artifactId>felix-parent</artifactId>
+	    <version>1.2.0</version>
+	    <relativePath>../../pom/pom.xml</relativePath>
 	</parent>
+
+	<properties>
+		<felix.dependencymanager.version>3.0.0-SNAPSHOT</felix.dependencymanager.version>
+		<osgi.version>4.2.0</osgi.version>
+		<pax.exam.version>1.2.0</pax.exam.version>
+	</properties>
 
 	<name>Apache Felix Dependency Manager Shell</name>
 	<artifactId>org.apache.felix.dependencymanager.shell</artifactId>
@@ -35,34 +42,56 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
+			<version>${osgi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
+			<version>${osgi.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>org.apache.felix.shell</artifactId>
+			<version>1.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>org.apache.felix.dependencymanager</artifactId>
+			<version>${felix.dependencymanager.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>org.apache.felix.gogo.runtime</artifactId>
+			<version>0.6.0</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.eclipse.equinox</groupId>
 			<artifactId>osgi</artifactId>
+			<version>3.1.1</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.felix</groupId>
+					<artifactId>maven-bundle-plugin</artifactId>
+					<version>1.4.0</version>
+					<extensions>true</extensions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<target>1.3</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
@@ -75,7 +104,7 @@
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Export-Package></Export-Package>
 						<Private-Package>org.apache.felix.dm.shell</Private-Package>
-						<Import-Package>org.apache.felix.dm;version="[3.0.0,4.0.0)",org.apache.felix.shell;version="1.0";resolution:=optional,org.osgi.framework;version="1.3",org.eclipse.osgi.framework.console;resolution:=optional,org.apache.felix.service.command;resolution:=optional</Import-Package>
+						<Import-Package>org.apache.felix.dm;version="[3.0.0,4.0.0)", org.apache.felix.shell;version="[1.0,2.0)";resolution:=optional, org.osgi.framework;version="[1.3,2.0)", org.eclipse.osgi.framework.console;resolution:=optional, org.apache.felix.service.command;resolution:=optional</Import-Package>
 					</instructions>
 				</configuration>
 			</plugin>
