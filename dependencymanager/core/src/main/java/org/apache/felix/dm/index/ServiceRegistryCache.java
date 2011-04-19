@@ -29,7 +29,6 @@ import org.eclipse.osgi.framework.console.CommandProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 public class ServiceRegistryCache implements ServiceListener, CommandProvider {
@@ -136,15 +135,10 @@ public class ServiceRegistryCache implements ServiceListener, CommandProvider {
                 a2 = ci.nextArgument();
             }
             if (filterIndex.isApplicable(a1, a2)) {
-                ServiceReference[] references = filterIndex.getAllServiceReferences(a1, a2);
-                if (references == null) {
-                    ci.println("No results.");
-                }
-                else {
-                    ci.println("Found " + references.length + " references:");
-                    for (int i = 0; i < references.length; i++) {
-                        ci.println("" + i + " - " + references[i]);
-                    }
+                List /* <ServiceReference> */ references = filterIndex.getAllServiceReferences(a1, a2);
+                ci.println("Found " + references.size() + " references:");
+                for (int i = 0; i < references.size(); i++) {
+                    ci.println("" + i + " - " + references.get(i));
                 }
             }
             else {

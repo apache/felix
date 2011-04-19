@@ -18,7 +18,12 @@
  */
 package org.apache.felix.dm.index;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
@@ -39,7 +44,6 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         }
         else {
             m_context.addServiceListener(listener, filter);
-//            super.addServiceListener(listener, filter);
         }
     }
 
@@ -50,7 +54,6 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         }
         else {
             m_context.addServiceListener(listener);
-//            super.addServiceListener(listener);
         }
     }
 
@@ -61,7 +64,6 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         }
         else {
             m_context.removeServiceListener(listener);
-//            super.removeServiceListener(listener);
         }
     }
 
@@ -69,47 +71,52 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         // first we ask the cache if there is an index for our request (class and filter combination)
         FilterIndex filterIndex = m_cache.hasFilterIndexFor(clazz, filter);
         if (filterIndex != null) {
-            ServiceReference[] result = filterIndex.getAllServiceReferences(clazz, filter);
-            // TODO filter for assignability
-            return result;
+            List /* <ServiceReference> */ result = filterIndex.getAllServiceReferences(clazz, filter);
+            Iterator iterator = result.iterator();
+            while (iterator.hasNext()) {
+                ServiceReference reference = (ServiceReference) iterator.next();
+                String[] list = (String[]) reference.getProperty(Constants.OBJECTCLASS);
+                for (int i = 0; i < list.length; i++) {
+                    if (!reference.isAssignableTo(m_context.getBundle(), list[i])) {
+                        iterator.remove();
+                        break;
+                    }
+                }
+            }
+            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
         }
         else {
             // if they don't know, we ask the real bundle context instead
             return m_context.getServiceReferences(clazz, filter);
         }
-        
     }
 
     public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
-        // TODO implement
-        return m_context.getAllServiceReferences(clazz, filter);
+        // first we ask the cache if there is an index for our request (class and filter combination)
+        FilterIndex filterIndex = m_cache.hasFilterIndexFor(clazz, filter);
+        if (filterIndex != null) {
+            List /* <ServiceReference> */ result = filterIndex.getAllServiceReferences(clazz, filter);
+            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
+        }
+        else {
+            // if they don't know, we ask the real bundle context instead
+            return m_context.getAllServiceReferences(clazz, filter);
+        }
     }
 
     public ServiceReference getServiceReference(String clazz) {
-        // TODO implement
-        return m_context.getServiceReference(clazz);
+        ServiceReference[] references;
+        try {
+            references = getServiceReferences(clazz, null);
+            Arrays.sort(references);
+            return references[references.length - 1];
+        }
+        catch (InvalidSyntaxException e) {
+            throw new Error("Invalid filter syntax thrown for null filter.", e);
+        }
     }
 
     public void serviceChanged(ServiceEvent event) {
         m_cache.serviceChangedForFilterIndices(event);
-//        Entry[] entries = synchronizeCollection();
-//        for (int i = 0; i < entries.length; i++) {
-//            Entry serviceListenerFilterEntry = entries[i];
-//            ServiceListener serviceListener = (ServiceListener) serviceListenerFilterEntry.getKey();
-//            String filter = (String) serviceListenerFilterEntry.getValue();
-//            if (filter == null) {
-//                serviceListener.serviceChanged(event);
-//            }
-//            else {
-//                try {
-//                    if (m_context.createFilter(filter).match(event.getServiceReference())) {
-//                        serviceListener.serviceChanged(event);
-//                    }
-//                }
-//                catch (InvalidSyntaxException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
     }
 }
