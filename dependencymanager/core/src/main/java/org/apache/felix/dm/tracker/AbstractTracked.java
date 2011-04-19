@@ -42,7 +42,7 @@ abstract class AbstractTracked {
 	 * 
 	 * @GuardedBy this
 	 */
-	private final Map			tracked;
+	private Map			tracked;
 
 	/**
 	 * Modification count. This field is initialized to zero and incremented by
@@ -99,11 +99,15 @@ abstract class AbstractTracked {
 	 * AbstractTracked constructor.
 	 */
 	AbstractTracked() {
-		tracked = new HashMap();
-		trackingCount = 0;
-		adding = new ArrayList(6);
-		initial = new LinkedList();
-		closed = false;
+	    this.tracked = new HashMap();
+	    trackingCount = 0;
+	    adding = new ArrayList(6);
+	    initial = new LinkedList();
+	    closed = false;
+	}
+	
+	void setTracked(HashMap map) {
+	    this.tracked = map;
 	}
 
 	/**
