@@ -19,28 +19,66 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>dependencymanager-reactor</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+	    <groupId>org.apache.felix</groupId>
+	    <artifactId>felix-parent</artifactId>
+	    <version>1.2.0</version>
+	    <relativePath>../../pom/pom.xml</relativePath>
 	</parent>
+
+	<properties>
+		<felix.dependencymanager.version>3.0.0-SNAPSHOT</felix.dependencymanager.version>
+		<osgi.version>4.2.0</osgi.version>
+		<pax.exam.version>1.2.0</pax.exam.version>
+	</properties>
 
 	<name>Apache Felix Dependency Manager</name>
 	<artifactId>org.apache.felix.dependencymanager</artifactId>
+	<version>${felix.dependencymanager.version}</version>
 	<packaging>bundle</packaging>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
+			<version>${osgi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
+			<version>${osgi.version}</version>
 		</dependency>
+		
+		<!-- please remove me again -->
+        <dependency>
+            <groupId>org.eclipse.equinox</groupId>
+            <artifactId>osgi</artifactId>
+			<version>3.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+		
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.felix</groupId>
+					<artifactId>maven-bundle-plugin</artifactId>
+					<version>1.4.0</version>
+					<extensions>true</extensions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
 		<plugins>
+			<!-- by default the dependency manager will run on any OSGi execution environment -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<target>1.3</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
@@ -52,7 +90,7 @@
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Export-Package>org.apache.felix.dm;version="3.0.0",org.apache.felix.dm.tracker;version="3.0.0"</Export-Package>
 						<Import-Package>!org.apache.felix.dm,*</Import-Package>
-						<Private-Package>org.apache.felix.dm.impl,org.apache.felix.dm.impl.dependencies,org.apache.felix.dm.impl.tracker,org.apache.felix.dm.impl.metatype</Private-Package>
+						<Private-Package>org.apache.felix.dm.impl, org.apache.felix.dm.impl.*, org.apache.felix.dm.index</Private-Package>
 						<!-- Uncomment this line to include source code in the bundle.
 						<Include-Resource>src/main/java</Include-Resource>
                         -->

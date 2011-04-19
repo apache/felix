@@ -35,7 +35,10 @@ import org.apache.felix.dm.impl.dependencies.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.TemporalServiceDependencyImpl;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
+import org.apache.felix.dm.index.MultiPropertyExactFilter;
+import org.apache.felix.dm.index.ServiceRegistryCache;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * The dependency manager manages all components and their dependencies. Using 
@@ -49,6 +52,7 @@ import org.osgi.framework.BundleContext;
  */
 public class DependencyManager {
     public static final String ASPECT = "org.apache.felix.dependencymanager.aspect";
+    public static final String SERVICEREGISTRY_CACHE_INDICES = "dm.index"; // TODO rename
     private final BundleContext m_context;
     private final Logger m_logger;
     private List m_services = Collections.synchronizedList(new ArrayList());
@@ -66,9 +70,73 @@ public class DependencyManager {
     }
     
     DependencyManager(BundleContext context, Logger logger) {
-        m_context = context;
+        m_context = createContext(context);
         m_logger = logger;
     }
+
+    // service registry cache
+    private static ServiceRegistryCache m_serviceRegistryCache;
+    static {
+        String index = System.getProperty(SERVICEREGISTRY_CACHE_INDICES);
+        m_serviceRegistryCache = new ServiceRegistryCache(FrameworkUtil.getBundle(DependencyManager.class).getBundleContext());
+        m_serviceRegistryCache.open(); // TODO close it somewhere
+        if (index != null) {
+            String[] props = index.split(";");
+            for (int i = 0; i < props.length; i++) {
+                String[] propList = props[i].split(",");
+                m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
+//                System.out.println("DM: Creating index on " + props[i]);
+            }
+        }
+        else {
+//            System.out.println("DM: Property 'dm.index' not found, not setting indices.");
+        }
+
+    }
+    
+    private BundleContext createContext(BundleContext context) {
+        if (m_serviceRegistryCache != null) {
+//            System.out.println("DM: Enabling bundle context interceptor for bundle #" + context.getBundle().getBundleId());
+            return m_serviceRegistryCache.createBundleContextInterceptor(context);
+        }
+        else {
+            return context;
+        }
+    }
+
+//    private BundleContext createContextX(BundleContext context) {
+//        System.out.println("DM: Enabling bundle context interceptor for bundle #" + context.getBundle().getBundleId());
+//        BundleContextInterceptor result = new BundleContextInterceptor(context);
+//        if (BundleContextInterceptor.indices() == 0) {
+//            String index = System.getProperty("dm.index");
+//            if (index != null) {
+//                String[] props = index.split(";");
+//                for (int i = 0; i < props.length; i++) {
+//                    String[] propList = props[i].split(",");
+//                    MultiPropertyExactFilter filter;
+//                    try {
+//                        filter = new MultiPropertyExactFilter(result, propList);
+//                        m_filterIndices.add(filter);
+//                        System.out.println("DM: Creating index on " + props[i]);
+//                    }
+//                    catch (InvalidSyntaxException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//            else {
+//                System.out.println("DM: Property 'dm.index' not found, not setting indices.");
+//            }
+//        }
+//        System.out.println("DM: Indices created, setting them on the interceptor.");
+//        Iterator iterator = m_filterIndices.iterator();
+//        while (iterator.hasNext()) {
+//            FilterIndex filter = (FilterIndex) iterator.next();
+//            result.addFilterIndex(filter);
+//        }
+//        return result;
+//    }
 
     /**
      * Adds a new service to the dependency manager. After the service was added

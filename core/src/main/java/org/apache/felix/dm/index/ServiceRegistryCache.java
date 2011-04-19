@@ -1,0 +1,160 @@
+package org.apache.felix.dm.index;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.eclipse.osgi.framework.console.CommandInterpreter;
+import org.eclipse.osgi.framework.console.CommandProvider;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+
+public class ServiceRegistryCache implements ServiceListener, CommandProvider {
+    private final List /* <FilterIndex> */ m_filterIndexList = new CopyOnWriteArrayList();
+    private final BundleContext m_context;
+    private final FilterIndexBundleContext m_filterIndexBundleContext;
+    private final Map /* <BundleContext, BundleContextInterceptor> */ m_bundleContextInterceptorMap = new HashMap();
+    private long m_currentVersion = 0;
+    private long m_arrayVersion = -1;
+    private BundleContextInterceptor[] m_interceptors = null;
+    private ServiceRegistration m_registration;
+
+    
+    public ServiceRegistryCache(BundleContext context) {
+        m_context = context;
+        m_filterIndexBundleContext = new FilterIndexBundleContext(m_context);
+    }
+    
+    public void open() {
+        m_context.addServiceListener(this);
+        m_registration = m_context.registerService(CommandProvider.class.getName(), this, null);
+    }
+    
+    public void close() {
+        m_registration.unregister();
+        m_context.removeServiceListener(this);
+    }
+    
+    public void addFilterIndex(FilterIndex index) {
+        m_filterIndexList.add(index);
+        index.open(m_filterIndexBundleContext);
+    }
+    
+    public void removeFilterIndex(FilterIndex index) {
+        index.close();
+        m_filterIndexList.remove(index);
+    }
+
+    public void serviceChanged(ServiceEvent event) {
+        // any incoming event is first dispatched to the list of filter indices
+        m_filterIndexBundleContext.serviceChanged(event);
+        // and then all the other listeners can access it
+        synchronized (m_bundleContextInterceptorMap) {
+            if (m_currentVersion != m_arrayVersion) {
+                // if our copy is out of date, we make a new one
+                m_interceptors = (BundleContextInterceptor[]) m_bundleContextInterceptorMap.values().toArray(new BundleContextInterceptor[m_bundleContextInterceptorMap.size()]);
+                m_arrayVersion = m_currentVersion;
+            }
+        }
+        for (int i = 0; i < m_interceptors.length; i++) {
+            BundleContextInterceptor bundleContextInterceptor = m_interceptors[i];
+            bundleContextInterceptor.serviceChanged(event);
+        }
+    }
+    
+    /** Creates an interceptor for a bundle context that uses our cache. */
+    public BundleContext createBundleContextInterceptor(BundleContext context) {
+        synchronized (m_bundleContextInterceptorMap) {
+            BundleContextInterceptor bundleContextInterceptor = (BundleContextInterceptor) m_bundleContextInterceptorMap.get(context);
+            if (bundleContextInterceptor == null) {
+                bundleContextInterceptor = new BundleContextInterceptor(this, context);
+                m_bundleContextInterceptorMap.put(context, bundleContextInterceptor);
+                m_currentVersion++;
+                // TODO figure out a good way to clean up bundle contexts that are no longer valid so they can be garbage collected
+            }
+            return bundleContextInterceptor;
+        }
+    }
+
+    public FilterIndex hasFilterIndexFor(String clazz, String filter) {
+        Iterator iterator = m_filterIndexList.iterator();
+        while (iterator.hasNext()) {
+            FilterIndex filterIndex = (FilterIndex) iterator.next();
+            if (filterIndex.isApplicable(clazz, filter)) {
+                return filterIndex;
+            }
+        }
+        return null;
+    }
+
+    public void serviceChangedForFilterIndices(ServiceEvent event) {
+        Iterator iterator = m_filterIndexList.iterator();
+        while (iterator.hasNext()) {
+            FilterIndex filterIndex = (FilterIndex) iterator.next();
+            filterIndex.serviceChanged(event);
+        }
+    }
+
+    public void _sc(CommandInterpreter ci) {
+        ci.println(toString());
+    }
+    
+    public void _fi(CommandInterpreter ci) {
+        String arg = ci.nextArgument();
+        if (arg != null) {
+            int x = Integer.parseInt(arg);
+            FilterIndex filterIndex = (FilterIndex) m_filterIndexList.get(x);
+            String a1 = ci.nextArgument();
+            String a2 = null;
+            if (a1 != null) {
+                if ("-".equals(a1)) {
+                    a1 = null;
+                }
+                a2 = ci.nextArgument();
+            }
+            if (filterIndex.isApplicable(a1, a2)) {
+                ServiceReference[] references = filterIndex.getAllServiceReferences(a1, a2);
+                if (references == null) {
+                    ci.println("No results.");
+                }
+                else {
+                    ci.println("Found " + references.length + " references:");
+                    for (int i = 0; i < references.length; i++) {
+                        ci.println("" + i + " - " + references[i]);
+                    }
+                }
+            }
+            else {
+                ci.println("Filter not applicable.");
+            }
+        }
+        else {
+            ci.println("FilterIndices:");
+            Iterator iterator = m_filterIndexList.iterator();
+            int index = 0;
+            while (iterator.hasNext()) {
+                FilterIndex filterIndex = (FilterIndex) iterator.next();
+                ci.println("" + index + " " + filterIndex);
+                index++;
+            }
+        }
+    }
+    
+    public String getHelp() {
+        return "I'm not going to help you!";
+    }
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("ServiceRegistryCache[");
+        sb.append("FilterIndices: " + m_filterIndexList.size());
+        sb.append(", BundleContexts intercepted: " + m_bundleContextInterceptorMap.size());
+        sb.append("]");
+        return sb.toString();
+    }
+}
