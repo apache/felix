@@ -24,14 +24,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.eclipse.osgi.framework.console.CommandInterpreter;
-import org.eclipse.osgi.framework.console.CommandProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceRegistration;
 
-public class ServiceRegistryCache implements ServiceListener, CommandProvider {
+public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*/ {
     private final List /* <FilterIndex> */ m_filterIndexList = new CopyOnWriteArrayList();
     private final BundleContext m_context;
     private final FilterIndexBundleContext m_filterIndexBundleContext;
@@ -49,11 +47,11 @@ public class ServiceRegistryCache implements ServiceListener, CommandProvider {
     
     public void open() {
         m_context.addServiceListener(this);
-        m_registration = m_context.registerService(CommandProvider.class.getName(), this, null);
+//        m_registration = m_context.registerService(CommandProvider.class.getName(), this, null);
     }
     
     public void close() {
-        m_registration.unregister();
+//        m_registration.unregister();
         m_context.removeServiceListener(this);
     }
     
@@ -117,49 +115,49 @@ public class ServiceRegistryCache implements ServiceListener, CommandProvider {
         }
     }
 
-    public void _sc(CommandInterpreter ci) {
-        ci.println(toString());
-    }
-    
-    public void _fi(CommandInterpreter ci) {
-        String arg = ci.nextArgument();
-        if (arg != null) {
-            int x = Integer.parseInt(arg);
-            FilterIndex filterIndex = (FilterIndex) m_filterIndexList.get(x);
-            String a1 = ci.nextArgument();
-            String a2 = null;
-            if (a1 != null) {
-                if ("-".equals(a1)) {
-                    a1 = null;
-                }
-                a2 = ci.nextArgument();
-            }
-            if (filterIndex.isApplicable(a1, a2)) {
-                List /* <ServiceReference> */ references = filterIndex.getAllServiceReferences(a1, a2);
-                ci.println("Found " + references.size() + " references:");
-                for (int i = 0; i < references.size(); i++) {
-                    ci.println("" + i + " - " + references.get(i));
-                }
-            }
-            else {
-                ci.println("Filter not applicable.");
-            }
-        }
-        else {
-            ci.println("FilterIndices:");
-            Iterator iterator = m_filterIndexList.iterator();
-            int index = 0;
-            while (iterator.hasNext()) {
-                FilterIndex filterIndex = (FilterIndex) iterator.next();
-                ci.println("" + index + " " + filterIndex);
-                index++;
-            }
-        }
-    }
-    
-    public String getHelp() {
-        return "I'm not going to help you!";
-    }
+//    public void _sc(CommandInterpreter ci) {
+//        ci.println(toString());
+//    }
+//    
+//    public void _fi(CommandInterpreter ci) {
+//        String arg = ci.nextArgument();
+//        if (arg != null) {
+//            int x = Integer.parseInt(arg);
+//            FilterIndex filterIndex = (FilterIndex) m_filterIndexList.get(x);
+//            String a1 = ci.nextArgument();
+//            String a2 = null;
+//            if (a1 != null) {
+//                if ("-".equals(a1)) {
+//                    a1 = null;
+//                }
+//                a2 = ci.nextArgument();
+//            }
+//            if (filterIndex.isApplicable(a1, a2)) {
+//                List /* <ServiceReference> */ references = filterIndex.getAllServiceReferences(a1, a2);
+//                ci.println("Found " + references.size() + " references:");
+//                for (int i = 0; i < references.size(); i++) {
+//                    ci.println("" + i + " - " + references.get(i));
+//                }
+//            }
+//            else {
+//                ci.println("Filter not applicable.");
+//            }
+//        }
+//        else {
+//            ci.println("FilterIndices:");
+//            Iterator iterator = m_filterIndexList.iterator();
+//            int index = 0;
+//            while (iterator.hasNext()) {
+//                FilterIndex filterIndex = (FilterIndex) iterator.next();
+//                ci.println("" + index + " " + filterIndex);
+//                index++;
+//            }
+//        }
+//    }
+//    
+//    public String getHelp() {
+//        return "I'm not going to help you!";
+//    }
     
     public String toString() {
         StringBuffer sb = new StringBuffer();

@@ -108,6 +108,9 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         ServiceReference[] references;
         try {
             references = getServiceReferences(clazz, null);
+            if (references == null || references.length == 0) {
+                return null;
+            }
             Arrays.sort(references);
             return references[references.length - 1];
         }
