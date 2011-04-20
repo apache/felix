@@ -24,6 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.test.Base;
 import org.apache.felix.dm.test.BundleGenerator;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class SimpleAnnotationTest extends AnnotationBase
         return options(
             systemProperty(DMLOG_PROPERTY).value( "true" ),
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager.runtime").versionAsInProject()),
             provision(

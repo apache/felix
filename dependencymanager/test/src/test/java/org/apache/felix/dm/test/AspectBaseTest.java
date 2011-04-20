@@ -45,10 +45,8 @@ public class AspectBaseTest extends Base {
     @Configuration
     public static Option[] configuration() {
         return options(
-//            vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" ),
-//            waitForFrameworkStartupFor(Long.MAX_VALUE),
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
             )
         );
@@ -63,9 +61,19 @@ public class AspectBaseTest extends Base {
         // create a service provider and consumer
         ServiceProvider p = new ServiceProvider(e, "a");
         ServiceConsumer c = new ServiceConsumer(e);
-        Component sp = m.createComponent().setImplementation(p).setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }});
-        Component sc = m.createComponent().setImplementation(c).add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true).setCallbacks("add", "remove").setAutoConfig(true));
-        Component sa = m.createAspectService(ServiceInterface.class, null, 20, null).setImplementation(ServiceAspect.class);
+        Component sp = m.createComponent()
+            .setInterface(ServiceInterface.class.getName(), new Properties() {{ put("name", "a"); }})
+            .setImplementation(p);
+        Component sc = m.createComponent()
+            .setImplementation(c)
+            .add(m.createServiceDependency()
+                .setService(ServiceInterface.class)
+                .setRequired(true)
+                .setCallbacks("add", "remove")
+                .setAutoConfig(true)
+            );
+        Component sa = m.createAspectService(ServiceInterface.class, null, 20, null)
+            .setImplementation(ServiceAspect.class);
         m.add(sc);
         m.add(sp);
         // after the provider was added, the consumer's add should have been invoked once

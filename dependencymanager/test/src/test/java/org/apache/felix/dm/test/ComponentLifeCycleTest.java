@@ -41,7 +41,7 @@ public class ComponentLifeCycleTest extends Base {
     public static Option[] configuration() {
         return options(
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
             )
         );
@@ -259,6 +259,85 @@ public class ComponentLifeCycleTest extends Base {
         public void starting(Component component) {
             debug();
             m_ensure.step(3);
+        }
+
+        public void started(Component component) {
+            debug();
+            m_ensure.step(5);
+            ServiceReference reference = m_registration.getReference();
+            Assert.assertNotNull("Service not yet registered.", reference);
+        }
+
+        public void stopping(Component component) {
+            debug();
+            m_ensure.step(6);
+        }
+
+        public void stopped(Component component) {
+            debug();
+            m_ensure.step(8);
+        }
+    }
+    
+    
+    @Test
+    public void testDynamicComponentStateListingLifeCycle2(BundleContext context) {
+        
+        // TODO this test still fails (starting is not invoked...)
+        
+        DependencyManager m = new DependencyManager(context);
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        // create a simple service component
+        Component s = m.createComponent()
+            .setInterface(MyInterface.class.getName(), null)
+            .setImplementation(new DynamicComponentStateListeningInstance2(e));
+        // add it, and since it has no dependencies, it should be activated immediately
+        m.add(s);
+        // remove it so it gets destroyed
+        m.remove(s);
+        // ensure we executed all steps inside the component instance
+        e.step(10);
+    }
+
+    static class DynamicComponentStateListeningInstance2 implements MyInterface, ComponentStateListener {
+        volatile ServiceRegistration m_registration;
+        private final Ensure m_ensure;
+        
+        public DynamicComponentStateListeningInstance2(Ensure e) {
+            m_ensure = e;
+            m_ensure.step(1);
+        }
+        
+        private void debug() {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+            System.out.println("AT: " + stackTrace[2].getClassName() + "." + stackTrace[2].getMethodName() + "():" + stackTrace[2].getLineNumber());
+        }
+        
+        public void init(Component c) {
+            debug();
+            m_ensure.step(2);
+        }
+        
+        public void start(Component c) {
+            debug();
+            m_ensure.step(3);
+            c.addStateListener(this);
+        }
+        public void stop(Component c) {
+            debug();
+            m_ensure.step(7);
+            c.removeStateListener(this);
+        }
+        
+        public void destroy(Component c) {
+            debug();
+            m_ensure.step(9);
+        }
+        
+        public void starting(Component component) {
+            debug();
+            m_ensure.step(4);
         }
 
         public void started(Component component) {

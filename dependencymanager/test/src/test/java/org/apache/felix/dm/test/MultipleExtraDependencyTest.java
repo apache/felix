@@ -24,8 +24,8 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 
 import java.util.Hashtable;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -42,7 +42,7 @@ public class MultipleExtraDependencyTest extends Base {
     public static Option[] configuration() {
         return options(
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
             )
         );

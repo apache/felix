@@ -32,9 +32,9 @@ import org.osgi.service.log.LogService;
 /**
  * Base class for all test cases.
  */
-public class Base implements LogService
-{
-    private final static int LOG_LEVEL=LogService.LOG_WARNING;
+public class Base implements LogService {
+    public static final String OSGI_SPEC_VERSION = "4.2.0";
+    private final static int LOG_LEVEL = LogService.LOG_WARNING;
     
     /**
      * Register us as a LogService

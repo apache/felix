@@ -29,6 +29,7 @@ import java.util.Hashtable;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.test.Base;
 import org.apache.felix.dm.test.BundleGenerator;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.junit.Test;
@@ -53,7 +54,7 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
         return options(
             systemProperty(DMLOG_PROPERTY).value( "true" ),
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.8"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager.runtime").versionAsInProject()),

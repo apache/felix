@@ -22,8 +22,8 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -37,7 +37,7 @@ public class FELIX2078_ServiceDependencyTest extends Base {
     public static Option[] configuration() {
         return options(
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
             )
         );

@@ -39,7 +39,7 @@ public class AdapterWithAspectTest extends Base {
     public static Option[] configuration() {
         return options(
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
             )
         );
@@ -47,6 +47,10 @@ public class AdapterWithAspectTest extends Base {
     
     @Test
     public void testAdapterWithAspectMultipleTimes(BundleContext context) {
+        // TODO this test is broken, it assumes that the order in which listeners are added to the BundleContext will also
+        // be the order in which they're invoked (which from a spec point of view is not true)
+        
+        
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -95,10 +99,15 @@ public class AdapterWithAspectTest extends Base {
             // the aspect adapter will disappear
             // the original adapter will (briefly) appear
             // the original adapter will disappear
+            
+            // TODO the test will fail somewhere here most of the time
+            
             e.waitForStep(8 + offset, 5000);
             m.remove(consumer);
+            
             // nothing should happen, all consumed services were already gone
             e.step(9 + offset);
+            
             m.add(provider);
             // still nothing should happen
             e.step(10 + offset);
