@@ -53,9 +53,16 @@ public class Ensure {
         step++;
         Assert.assertEquals(nr, step);
         if (DEBUG) {
-            STREAM.println("[Ensure " + INSTANCE + "] step " + step + " [" + currentThread() + "]");
+            String info = getLineInfo(3);
+            STREAM.println("[Ensure " + INSTANCE + "] step " + step + " [" + currentThread() + "] " + info);
         }
         notifyAll();
+    }
+
+    private String getLineInfo(int depth) {
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        String info = trace[depth].getClassName() + "." + trace[depth].getMethodName() + ":" + trace[depth].getLineNumber();
+        return info;
     }
     
     /**
@@ -64,7 +71,8 @@ public class Ensure {
     public synchronized void step() {
         step++;
         if (DEBUG) {
-            STREAM.println("[Ensure " + INSTANCE + "] next step " + step + " [" + currentThread() + "]");
+            String info = getLineInfo(3);
+            STREAM.println("[Ensure " + INSTANCE + "] next step " + step + " [" + currentThread() + "] " + info);
         }
         notifyAll();
     }
@@ -81,7 +89,8 @@ public class Ensure {
     public synchronized void waitForStep(int nr, int timeout) {
         final int initialTimeout = timeout;
         if (DEBUG) {
-            STREAM.println("[Ensure " + INSTANCE + "] waiting for step " + nr + " [" + currentThread() + "]");
+            String info = getLineInfo(3);
+            STREAM.println("[Ensure " + INSTANCE + "] waiting for step " + nr + " [" + currentThread() + "] " + info);
         }
         while (step < nr && timeout > 0) {
             try {
@@ -94,7 +103,8 @@ public class Ensure {
             throw new IllegalStateException("Timed out waiting for " + initialTimeout + " ms for step " + nr + ", we are still at step " + step);
         }
         if (DEBUG) {
-            STREAM.println("[Ensure " + INSTANCE + "] arrived at step " + nr + " [" + currentThread() + "]");
+            String info = getLineInfo(3);
+            STREAM.println("[Ensure " + INSTANCE + "] arrived at step " + nr + " [" + currentThread() + "] " + info);
         }
     }
     

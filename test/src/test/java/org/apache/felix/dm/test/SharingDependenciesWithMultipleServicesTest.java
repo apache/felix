@@ -27,12 +27,12 @@ import java.util.Dictionary;
 import java.util.Properties;
 
 import org.apache.felix.dm.BundleDependency;
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ConfigurationDependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
-import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +53,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
     public static Option[] configuration() {
         return options(
             provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version("4.1.0"),
+                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.8")
             )
