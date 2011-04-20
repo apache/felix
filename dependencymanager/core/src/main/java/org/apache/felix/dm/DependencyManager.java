@@ -35,6 +35,7 @@ import org.apache.felix.dm.impl.dependencies.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.TemporalServiceDependencyImpl;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
+import org.apache.felix.dm.index.AspectFilterIndex;
 import org.apache.felix.dm.index.MultiPropertyExactFilter;
 import org.apache.felix.dm.index.ServiceRegistryCache;
 import org.osgi.framework.BundleContext;
@@ -78,13 +79,18 @@ public class DependencyManager {
     private static ServiceRegistryCache m_serviceRegistryCache;
     static {
         String index = System.getProperty(SERVICEREGISTRY_CACHE_INDICES);
-        m_serviceRegistryCache = new ServiceRegistryCache(FrameworkUtil.getBundle(DependencyManager.class).getBundleContext());
-        m_serviceRegistryCache.open(); // TODO close it somewhere
         if (index != null) {
+            m_serviceRegistryCache = new ServiceRegistryCache(FrameworkUtil.getBundle(DependencyManager.class).getBundleContext());
+            m_serviceRegistryCache.open(); // TODO close it somewhere
             String[] props = index.split(";");
             for (int i = 0; i < props.length; i++) {
-                String[] propList = props[i].split(",");
-                m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
+                if (props[i].equals("*aspect*")) {
+                    m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
+                }
+                else {
+                    String[] propList = props[i].split(",");
+                    m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
+                }
 //                System.out.println("DM: Creating index on " + props[i]);
             }
         }
