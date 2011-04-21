@@ -14,7 +14,7 @@ try {
   addcommand context ${.context}
 
   # add methods on System object as commands
-  addcommand system ((${.context} bundle 0) loadclass java.lang.System)
+  addcommand system (((${.context} bundles) 0) loadclass java.lang.System)
 
   # alias to print full stack trace
   e = { $exception printStackTrace }
