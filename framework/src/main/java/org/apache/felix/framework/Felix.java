@@ -2747,25 +2747,7 @@ public class Felix extends BundleImpl implements Framework
 
     void removeBundleListener(BundleImpl bundle, BundleListener l)
     {
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STOPPING | Bundle.ACTIVE);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only remove listeners while bundle is active or activating.");
-        }
-
-        try
-        {
-            m_dispatcher.removeListener(bundle, BundleListener.class, l);
-        }
-        finally
-        {
-            releaseBundleLock(bundle);
-        }
+        m_dispatcher.removeListener(bundle, BundleListener.class, l);
     }
 
     /**
@@ -2844,28 +2826,8 @@ public class Felix extends BundleImpl implements Framework
     **/
     void removeServiceListener(BundleImpl bundle, ServiceListener l)
     {
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STOPPING | Bundle.ACTIVE);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only remove listeners while bundle is active or activating.");
-        }
-
-        ListenerHook.ListenerInfo listener;
-
-        try
-        {
-            listener =
-                m_dispatcher.removeListener(bundle, ServiceListener.class, l);
-        }
-        finally
-        {
-            releaseBundleLock(bundle);
-        }
+        ListenerHook.ListenerInfo listener =
+            m_dispatcher.removeListener(bundle, ServiceListener.class, l);
 
         if (listener != null)
         {
@@ -2905,25 +2867,7 @@ public class Felix extends BundleImpl implements Framework
 
     void removeFrameworkListener(BundleImpl bundle, FrameworkListener l)
     {
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STOPPING | Bundle.ACTIVE);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only remove listeners while bundle is active or activating.");
-        }
-
-        try
-        {
-            m_dispatcher.removeListener(bundle, FrameworkListener.class, l);
-        }
-        finally
-        {
-            releaseBundleLock(bundle);
-        }
+        m_dispatcher.removeListener(bundle, FrameworkListener.class, l);
     }
 
     /**
