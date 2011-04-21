@@ -19,10 +19,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>dependencymanager-reactor</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+	    <groupId>org.apache.felix</groupId>
+	    <artifactId>felix-parent</artifactId>
+	    <version>1.2.0</version>
+	    <relativePath>../../pom/pom.xml</relativePath>
 	</parent>
+
+	<properties>
+		<felix.dependencymanager.version>3.0.0-SNAPSHOT</felix.dependencymanager.version>
+		<osgi.version>4.2.0</osgi.version>
+		<pax.exam.version>1.2.0</pax.exam.version>
+	</properties>
 
 	<name>Apache Felix Dependency Manager Runtime</name>
 	<artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
@@ -32,25 +39,37 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
+			<version>${osgi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
+			<version>${osgi.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>org.apache.felix.dependencymanager</artifactId>
+			<version>${felix.dependencymanager.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
 			<scope>provided</scope>
+			<version>20070829</version>
 		</dependency>
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.felix</groupId>
+					<artifactId>maven-bundle-plugin</artifactId>
+					<version>1.4.0</version>
+					<extensions>true</extensions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
