@@ -10,16 +10,16 @@ public class Activator extends DependencyActivatorBase {
             .setImplementation(Task.class)
             .add(createConfigurationDependency()
                 .setPid("config.pid")
-                .setHeading("English Dictionary") 
-                .setDescription("Configuration for the EnglishDictionary Service")
+                // The following is optional and allows to display our configuration from webconsole
+                .setHeading("Task Configuration") 
+                .setDescription("Configuration for the Task Service")
                 .add(createPropertyMetaData()
-                    .setCardinality(Integer.MAX_VALUE)
-                    .setType(String.class)
-                    .setHeading("English Words")
-                    .setDescription("Declare here some valid english words")
-                    .setDefaults(new String[] {"hello", "world"})
-                    .setId("words")))
-        );
+                     .setCardinality(0)
+                     .setType(String.class)
+                     .setHeading("Task Interval")
+                     .setDescription("Declare here the interval used to trigger the Task")
+                     .setDefaults(new String[] {"10"})
+                     .setId("interval"))));
     }
     
     public void destroy(BundleContext context, DependencyManager manager) throws Exception {}
