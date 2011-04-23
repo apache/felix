@@ -21,8 +21,10 @@ package org.apache.felix.bundleplugin;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -42,6 +44,8 @@ import org.apache.maven.artifact.resolver.ArtifactCollector;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
+import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -51,6 +55,7 @@ import org.apache.maven.project.artifact.InvalidDependencyVersionException;
 import org.apache.maven.shared.dependency.tree.DependencyNode;
 import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
 import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
+import org.apache.maven.shared.dependency.tree.traversal.DependencyNodeVisitor;
 import org.codehaus.plexus.util.FileUtils;
 
 import aQute.lib.osgi.Analyzer;
@@ -67,9 +72,32 @@ import aQute.lib.osgi.Jar;
  */
 public class BundleAllPlugin extends ManifestPlugin
 {
+    @SuppressWarnings("serial")
+    static class MojoExecutionRuntimeException extends RuntimeException {
+        public MojoExecutionRuntimeException(MojoExecutionException e) {
+            super(e);
+        }
+        
+        @Override
+        public MojoExecutionException getCause() {
+            return (MojoExecutionException) super.getCause();
+        }
+    }
+
     private static final String LS = System.getProperty( "line.separator" );
 
     private static final Pattern SNAPSHOT_VERSION_PATTERN = Pattern.compile( "[0-9]{8}_[0-9]{6}_[0-9]+" );
+
+    /**
+     * The scope to filter by when resolving the dependency tree, or <code>null</code> to include dependencies from
+     * all scopes. Note that this feature does not currently work due to MNG-3236.
+     *
+     * @since 2.0-alpha-5
+     * @see <a href="http://jira.codehaus.org/browse/MNG-3236">MNG-3236</a>
+     *
+     * @parameter expression="${scope}"
+     */
+    private String scope;
 
     /**
      * Local repository.
@@ -144,12 +172,20 @@ public class BundleAllPlugin extends ManifestPlugin
      * @parameter
      */
     private int depth = Integer.MAX_VALUE;
-
+    
+    
+    /**
+     * Supported project types 
+     * 
+     * @parameter
+     */
+    private List supportedProjectTypes = Arrays.asList(new String[]{ "jar", "bundle" });
 
     public void execute() throws MojoExecutionException
     {
         BundleInfo bundleInfo = bundleAll( getProject() );
-        logDuplicatedPackages( bundleInfo );
+        if( bundleInfo != null )
+            logDuplicatedPackages( bundleInfo );
     }
 
 
@@ -172,130 +208,37 @@ public class BundleAllPlugin extends ManifestPlugin
      * @param maxDepth how deep to process the dependency tree
      * @throws MojoExecutionException
      */
-    protected BundleInfo bundleAll( MavenProject project, int maxDepth ) throws MojoExecutionException
+    protected BundleInfo bundleAll( final MavenProject project, int maxDepth ) throws MojoExecutionException
     {
-
-        if ( alreadyBundled( project.getArtifact() ) )
-        {
-            getLog().debug( "Ignoring project already processed " + project.getArtifact() );
+        if( !supportedProjectTypes.contains(project.getPackaging()) ){
+            getLog().warn(
+                "Ignoring project type " + project.getPackaging() + " - supportedProjectTypes = " + supportedProjectTypes );
             return null;
         }
-
-        if ( m_artifactsBeingProcessed.contains( project.getArtifact() ) )
-        {
-            getLog().warn( "Ignoring artifact due to dependency cycle " + project.getArtifact() );
-            return null;
-        }
-        m_artifactsBeingProcessed.add( project.getArtifact() );
-
+        
         DependencyNode dependencyTree;
 
         try
         {
             dependencyTree = m_dependencyTreeBuilder.buildDependencyTree( project, localRepository, m_factory,
-                m_artifactMetadataSource, null, m_collector );
+                m_artifactMetadataSource, createResolvingArtifactFilter(), m_collector );
         }
         catch ( DependencyTreeBuilderException e )
         {
             throw new MojoExecutionException( "Unable to build dependency tree", e );
         }
 
-        BundleInfo bundleInfo = new BundleInfo();
-
-        if ( !dependencyTree.hasChildren() )
-        {
-            /* no need to traverse the tree */
-            return bundleRoot( project, bundleInfo );
-        }
+        final BundleInfo bundleInfo = new BundleInfo();
 
         getLog().debug( "Will bundle the following dependency tree" + LS + dependencyTree );
 
-        for ( Iterator it = dependencyTree.inverseIterator(); it.hasNext(); )
-        {
-            DependencyNode node = ( DependencyNode ) it.next();
-            if ( !it.hasNext() )
-            {
-                /* this is the root, current project */
-                break;
-            }
-
-            if ( node.getState() != DependencyNode.INCLUDED )
-            {
-                continue;
-            }
-
-            if ( Artifact.SCOPE_SYSTEM.equals( node.getArtifact().getScope() ) )
-            {
-                getLog().debug( "Ignoring system scoped artifact " + node.getArtifact() );
-                continue;
-            }
-
-            Artifact artifact;
-            try
-            {
-                artifact = resolveArtifact( node.getArtifact() );
-            }
-            catch ( ArtifactNotFoundException e )
-            {
-                if ( ignoreMissingArtifacts )
-                {
-                    continue;
-                }
-
-                throw new MojoExecutionException( "Artifact was not found in the repo" + node.getArtifact(), e );
-            }
-
-            node.getArtifact().setFile( artifact.getFile() );
-
-            int nodeDepth = node.getDepth();
-            if ( nodeDepth > maxDepth )
-            {
-                /* node is deeper than we want */
-                getLog().debug(
-                    "Ignoring " + node.getArtifact() + ", depth is " + nodeDepth + ", bigger than " + maxDepth );
-                continue;
-            }
-
-            MavenProject childProject;
-            try
-            {
-                childProject = m_mavenProjectBuilder.buildFromRepository( artifact, remoteRepositories,
-                    localRepository, true );
-                if ( childProject.getDependencyArtifacts() == null )
-                {
-                    childProject.setDependencyArtifacts( childProject.createArtifacts( m_factory, null, null ) );
-                }
-            }
-            catch ( ProjectBuildingException e )
-            {
-                throw new MojoExecutionException( "Unable to build project object for artifact " + artifact, e );
-            }
-            catch ( InvalidDependencyVersionException e )
-            {
-                throw new MojoExecutionException( "Invalid dependency version for artifact " + artifact );
-            }
-
-            childProject.setArtifact( artifact );
-            getLog().debug( "Child project artifact location: " + childProject.getArtifact().getFile() );
-
-            if ( ( Artifact.SCOPE_COMPILE.equals( artifact.getScope() ) )
-                || ( Artifact.SCOPE_RUNTIME.equals( artifact.getScope() ) ) )
-            {
-                BundleInfo subBundleInfo = bundleAll( childProject, maxDepth - 1 );
-                if ( subBundleInfo != null )
-                {
-                    bundleInfo.merge( subBundleInfo );
-                }
-            }
-            else
-            {
-                getLog().debug(
-                    "Not processing due to scope (" + childProject.getArtifact().getScope() + "): "
-                        + childProject.getArtifact() );
-            }
+        try {
+            dependencyTree.accept(new Bundler(bundleInfo, maxDepth));
+        } catch (MojoExecutionRuntimeException e) {
+            throw e.getCause();
         }
 
-        return bundleRoot( project, bundleInfo );
+        return bundleInfo;
     }
 
 
@@ -340,19 +283,7 @@ public class BundleAllPlugin extends ManifestPlugin
             Map instructions = new LinkedHashMap();
             instructions.put( Analyzer.IMPORT_PACKAGE, wrapImportPackage );
 
-            project.getArtifact().setFile( getFile( artifact ) );
             File outputFile = getOutputFile( artifact );
-
-            if ( project.getArtifact().getFile().equals( outputFile ) )
-            {
-                /* TODO find the cause why it's getting here */
-                return null;
-                //                getLog().error(
-                //                                "Trying to read and write " + artifact + " to the same file, try cleaning: "
-                //                                    + outputFile );
-                //                throw new IllegalStateException( "Trying to read and write " + artifact
-                //                    + " to the same file, try cleaning: " + outputFile );
-            }
 
             Analyzer analyzer = getAnalyzer( project, instructions, new Properties(), getClasspath( project ) );
 
@@ -365,7 +296,7 @@ public class BundleAllPlugin extends ManifestPlugin
             {
                 /* if it is already an OSGi jar copy it as is */
                 getLog().info(
-                    "Using existing OSGi bundle for " + project.getGroupId() + ":" + project.getArtifactId() + ":"
+                    " - Using existing OSGi bundle for " + project.getGroupId() + ":" + project.getArtifactId() + ":"
                         + project.getVersion() );
                 String exportHeader = osgiJar.getManifest().getMainAttributes().getValue( Analyzer.EXPORT_PACKAGE );
                 exportedPackages = analyzer.parseHeader( exportHeader ).keySet();
@@ -534,7 +465,10 @@ public class BundleAllPlugin extends ManifestPlugin
 
     protected File getOutputFile( Artifact artifact )
     {
-        return new File( getOutputDirectory(), getBundleName( artifact ) );
+        File bundleFolder = new File(getBuildDirectory(), "bundles");
+        if( !bundleFolder.exists() )
+            bundleFolder.mkdir();
+        return new File(bundleFolder, getBundleName( artifact ) );
     }
 
 
@@ -592,6 +526,190 @@ public class BundleAllPlugin extends ManifestPlugin
                 getLog().warn( "  " + artifact );
             }
 
+        }
+    }
+    
+    /**
+     * Gets the artifact filter to use when resolving the dependency tree.
+     *
+     * @return the artifact filter
+     */
+    private ArtifactFilter createResolvingArtifactFilter()
+    {
+        ArtifactFilter filter;
+
+        // filter scope
+        if ( scope != null )
+        {
+            getLog().debug( "+ Resolving dependency tree for scope '" + scope + "'" );
+
+            filter = new ScopeArtifactFilter( scope );
+        }
+        else
+        {
+            filter = null;
+        }
+
+        return filter;
+    }
+    
+    
+    /**
+     * A dependency node visitor that serializes visited nodes to a writer.
+     * 
+     * @author <a href="mailto:markhobson@gmail.com">Mark Hobson</a>
+     * @version $Id: SerializingDependencyNodeVisitor.java 661727 2008-05-30 14:21:49Z bentmann $
+     * @since 1.1
+     */
+    class Bundler implements DependencyNodeVisitor
+    {
+        /**
+         * The depth of the currently visited dependency node.
+         */
+        private Deque<BundleInfo> bundleInfos = new ArrayDeque<BundleInfo>();
+        private int maxDepth = Integer.MAX_VALUE;
+        
+        /**
+         * Creates a dependency node visitor that serializes visited nodes to the specified writer using the specified
+         * tokens.
+         * @param bundleInfo 
+         * @param maxDepth 
+         * 
+         * @param writer
+         *            the writer to serialize to
+         * @param tokens
+         *            the tokens to use when serializing the dependency tree
+         */
+        public Bundler(BundleInfo bundleInfo, int maxDepth)
+        {
+            bundleInfos.addLast(bundleInfo);
+        }
+
+        /**
+         * 
+         * @return
+         */
+        public int getDepth()
+        {
+            return bundleInfos.size();
+        }
+
+        // DependencyNodeVisitor methods ------------------------------------------
+        /**
+         * {@inheritDoc}
+         */
+        public boolean visit(DependencyNode node)
+        {
+            if( getDepth() > maxDepth ){
+                /* node is deeper than we want */
+                getLog().debug(
+                    "Ignoring " + node.getArtifact() + ", depth is " + getDepth()
+                        + ", bigger than " + maxDepth);
+                return false;
+            }
+            
+            bundleInfos.addLast(new BundleInfo());
+
+            return true;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean endVisit(DependencyNode node)
+        {
+            if( getDepth() > maxDepth )
+                return false;
+
+            BundleInfo subBundleInfo = bundleInfos.removeLast();
+
+            try
+            {
+                BundleInfo bundleInfo = bundle(node, subBundleInfo);
+                if (!bundleInfos.isEmpty())
+                    bundleInfos.peekLast().merge(bundleInfo);
+            }
+            catch (MojoExecutionException e)
+            {
+                throw new MojoExecutionRuntimeException(e);
+            }
+
+            return true;
+        }
+
+        protected BundleInfo bundle(DependencyNode node, BundleInfo bundleInfo)
+            throws MojoExecutionException
+        {
+            Artifact artifact = null;
+            try
+            {
+                artifact = resolveArtifact(node.getArtifact());
+            }
+            catch (ArtifactNotFoundException e)
+            {
+                if (!ignoreMissingArtifacts)
+                {
+                    throw new MojoExecutionException(
+                            "Artifact was not found in the repo"
+                                    + node.getArtifact(), e);
+                }
+            }
+
+            node.getArtifact().setFile(artifact.getFile());
+
+            MavenProject project;
+            try
+            {
+                project = m_mavenProjectBuilder.buildFromRepository(artifact,
+                    remoteRepositories,
+                    localRepository, true);
+                if (project.getDependencyArtifacts() == null)
+                {
+                    project.setDependencyArtifacts(project.createArtifacts(m_factory,
+                        null, null));
+                }
+            }
+            catch (ProjectBuildingException e)
+            {
+                throw new MojoExecutionException(
+                    "Unable to build project object for artifact " + artifact, e);
+            }
+            catch (InvalidDependencyVersionException e)
+            {
+                throw new MojoExecutionException(
+                    "Invalid dependency version for artifact " + artifact);
+            }
+
+            project.setArtifact(artifact);
+
+            return bundleRoot(project, bundleInfo);
+        }
+
+        /**
+         * Gets whether the specified dependency node is the last of its siblings.
+         * 
+         * @param node
+         *            the dependency node to check
+         * @return <code>true</code> if the specified dependency node is the last of its last siblings
+         */
+        private boolean isLast(DependencyNode node)
+        {
+            DependencyNode parent = node.getParent();
+
+            boolean last;
+
+            if (parent == null)
+            {
+                last = true;
+            }
+            else
+            {
+                List<?> siblings = parent.getChildren();
+
+                last = (siblings.indexOf(node) == siblings.size() - 1);
+            }
+
+            return last;
         }
     }
 }
