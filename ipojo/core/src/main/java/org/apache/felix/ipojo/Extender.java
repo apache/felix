@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,20 +57,35 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
      * scale applications. The internal dispatcher is disabled by default.
      */
     static boolean DISPATCHER_ENABLED = true;
-    
+
+    /**
+     * Disables the iPOJO asynchronous processing.
+     * When set to false, the bundles are processed in the listener thread
+     * making iPOJO usable on Google App Engine. By default, the processing
+     * is asynchronous.
+     */
+    static boolean SYNCHRONOUS_PROCESSING_ENABLED = false;
+
     /**
      * Property allowing to set if the internal dispatcher is enabled or disabled.
      * Possible value are either <code>true</code> or <code>false</code>.
      */
     private static final String ENABLING_DISPATCHER = "ipojo.internal.dispatcher";
-    
+
+    /**
+     * Property allowing to disable the asynchronous process (and so enables the
+     * synchronous processing).
+     * Possible value are either <code>true</code> or <code>false</code>.
+     */
+    private static final String SYNCHRONOUS_PROCESSING = "ipojo.processing.synchronous";
+
     /**
      * iPOJO Component Type and Instance declaration header.
      */
     private static final String IPOJO_HEADER = "iPOJO-Components";
 
     /**
-     * iPOJO Extension declaration header. 
+     * iPOJO Extension declaration header.
      */
     private static final String IPOJO_EXTENSION = "IPOJO-Extension";
 
@@ -78,7 +93,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
      * The Bundle Context of the iPOJO Core bundle.
      */
     private static BundleContext m_context;
-    
+
     /**
      * The iPOJO Extender logger.
      */
@@ -105,11 +120,11 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
      * A type is unbound if the matching extension is not deployed.
      */
     private final List m_unboundTypes = new ArrayList();
-    
+
     /**
-     * The thread analyzing arriving bundles and creating iPOJO contributions.
+     * The processor analyzing arriving bundles and creating iPOJO contributions.
      */
-    private final CreatorThread m_thread = new CreatorThread();
+    private final CreatorThread m_processor = new CreatorThread();
 
     /**
      * Bundle Listener Notification.
@@ -122,11 +137,12 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         switch (event.getType()) {
             case BundleEvent.STARTED:
                 // Put the bundle in the queue
-                m_thread.addBundle(event.getBundle());
+                m_processor.addBundle(event.getBundle());
                 break;
             case BundleEvent.STOPPING:
-                m_thread.removeBundle(event.getBundle());
-                closeManagementFor(event.getBundle()); //TODO Should be done in another thread
+                m_processor.removeBundle(event.getBundle());
+                //TODO Should be done in another thread in the asynchronous case.
+                closeManagementFor(event.getBundle());
                 break;
             default:
                 break;
@@ -135,9 +151,9 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     }
 
     /**
-     * Ends the iPOJO Management for the given bundle. 
+     * Ends the iPOJO Management for the given bundle.
      * Generally the bundle is leaving. This method
-     * stops every factories declared is the bundle and 
+     * stops every factories declared is the bundle and
      * disposed every declared instances.
      * @param bundle the bundle.
      */
@@ -189,7 +205,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     }
 
     /**
-     * Checks if the given bundle is an iPOJO bundle, and begin 
+     * Checks if the given bundle is an iPOJO bundle, and begin
      * the iPOJO management is true.
      * @param bundle the bundle to check.
      */
@@ -247,7 +263,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     }
 
     /**
-     * Parses the internal metadata (from the manifest 
+     * Parses the internal metadata (from the manifest
      * (in the iPOJO-Components property)). This methods
      * creates factories and add instances to the instance creator.
      * @param bundle the owner bundle.
@@ -281,18 +297,21 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         m_creator = new InstanceCreator(context);
 
         m_logger = new Logger(m_context, "IPOJO-Extender");
-        
+
         enablingDispatcher(context, m_logger);
-        
+        enablingSynchronousProcessing(context, m_logger);
+
         // Create the dispatcher only if required.
         if (DISPATCHER_ENABLED) {
             EventDispatcher.create(context);
         }
-        
+
         // Begin by initializing core handlers
         startManagementFor(m_bundle);
-        
-        new Thread(m_thread).start();
+
+        if (! SYNCHRONOUS_PROCESSING_ENABLED) {
+            new Thread(m_processor).start();
+        }
 
         synchronized (this) {
             // listen to any changes in bundles.
@@ -300,11 +319,11 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
             // compute already started bundles.
             for (int i = 0; i < context.getBundles().length; i++) {
                 if (context.getBundles()[i].getState() == Bundle.ACTIVE) {
-                    m_thread.addBundle(context.getBundles()[i]); // Bundles are processed in another thread.
+                    m_processor.addBundle(context.getBundles()[i]); // Bundles are processed in another thread.
                 }
             }
         }
-        
+
         m_logger.log(Logger.INFO, "iPOJO Runtime started");
     }
 
@@ -314,9 +333,9 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) {
-        m_thread.stop(); // Stop the thread processing bundles.
+        m_processor.stop(); // Stop the thread processing bundles.
         m_context.removeBundleListener(this);
-        
+
         if (DISPATCHER_ENABLED) {
             EventDispatcher.dispose();
         }
@@ -340,11 +359,11 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
 
         m_factoryTypes = null;
         m_creator = null;
-        
+
         m_logger.log(Logger.INFO, "iPOJO Runtime stopped");
         m_context = null;
     }
-    
+
     /**
      * Gets iPOJO bundle context.
      * @return the iPOJO Bundle Context
@@ -352,7 +371,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     public static BundleContext getIPOJOBundleContext() {
         return m_context;
     }
-    
+
     /**
      * Enables or disables the internal dispatcher, so sets the
      * {@link Extender#DISPATCHER_ENABLED} flag.
@@ -367,13 +386,13 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     private static void enablingDispatcher(BundleContext context, Logger logger) {
         // First check in the framework and in the system properties
         String flag = context.getProperty(ENABLING_DISPATCHER);
-        
+
         // If null, look in bundle manifest
         if (flag == null) {
             String key = ENABLING_DISPATCHER.replace('.', '-');
             flag = (String) context.getBundle().getHeaders().get(key);
         }
-        
+
         if (flag != null) {
             if (flag.equalsIgnoreCase("true")) {
                 Extender.DISPATCHER_ENABLED = true;
@@ -381,11 +400,48 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
                 return;
             }
         }
-        
+
         // Either l is null, or the specified value was false
         Extender.DISPATCHER_ENABLED = false;
         logger.log(Logger.INFO, "iPOJO Internal Event Dispatcher disables");
-        
+
+    }
+
+    /**
+     * Enables or disables the asynchronous processing, so sets the
+     * {@link Extender#SYNCHRONOUS_PROCESSING_ENABLED} flag.
+     * Disabling asynchronous processing avoids iPOJO to create a new
+     * thread to process bundles. So, iPOJO can be used on the
+     * Google App Engine.
+     * This method checks if the {@link Extender#SYNCHRONOUS_PROCESSING}
+     * property is set to <code>true</code>. Otherwise, asynchronous processing
+     * is used (default). The property can be set as a system
+     * property (<code>ipojo.processing.synchronous</code>) or inside the
+     * iPOJO bundle manifest.
+     * @param context the bundle context.
+     * @param logger the logger to indicates if the internal dispatcher is set.
+     */
+    private static void enablingSynchronousProcessing(BundleContext context, Logger logger) {
+        String flag = context.getProperty(SYNCHRONOUS_PROCESSING);
+
+        // If null, look in bundle manifest
+        if (flag == null) {
+            String key = SYNCHRONOUS_PROCESSING.replace('.', '-');
+            flag = (String) context.getBundle().getHeaders().get(key);
+        }
+
+        if (flag != null) {
+            if (flag.equalsIgnoreCase("true")) {
+                Extender.SYNCHRONOUS_PROCESSING_ENABLED = true;
+                logger.log(Logger.INFO, "iPOJO Asynchronous processing disabled");
+                return;
+            }
+        }
+
+        // Either l is null, or the specified value was false
+        Extender.SYNCHRONOUS_PROCESSING_ENABLED = false;
+        logger.log(Logger.INFO, "iPOJO synchrnous processing disables");
+
     }
 
     /**
@@ -411,7 +467,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
             return;
         }
 
-        // Once found, we invoke the AbstractFactory constructor to create the component factory. 
+        // Once found, we invoke the AbstractFactory constructor to create the component factory.
         Class clazz = factoryType.m_clazz;
         try {
             // Look for the constructor, and invoke it.
@@ -475,7 +531,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         Bundle m_bundle;
 
         /**
-         * The factories created by this extension. 
+         * The factories created by this extension.
          */
         private Map m_created;
 
@@ -555,7 +611,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         }
 
         if (meth != null) {
-            if (! meth.isAccessible()) { 
+            if (! meth.isAccessible()) {
                 // If not accessible, try to set the accessibility.
                 meth.setAccessible(true);
             }
@@ -573,7 +629,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
             }
         }
 
-        // Else : Field inspection (KF and Prosyst)        
+        // Else : Field inspection (KF and Prosyst)
         Field[] fields = bundle.getClass().getDeclaredFields();
         for (int i = 0; i < fields.length; i++) {
             if (BundleContext.class.isAssignableFrom(fields[i].getType())) {
@@ -594,7 +650,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         m_logger.log(Logger.ERROR, "Cannot find the BundleContext for " + bundle.getSymbolicName(), null);
         return null;
     }
-    
+
 
     /**
      * The creator thread analyzes arriving bundles to create iPOJO contribution.
@@ -605,23 +661,29 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
          * Is the creator thread started?
          */
         private boolean m_started = true;
-        
+
         /**
          * The list of bundle that are going to be analyzed.
          */
         private List m_bundles = new ArrayList();
-        
+
         /**
          * A bundle is arriving.
          * This method is synchronized to avoid concurrent modification of the waiting list.
          * @param bundle the new bundle
          */
         public synchronized void addBundle(Bundle bundle) {
-            m_bundles.add(bundle);
-            notifyAll(); // Notify the thread to force the process.
-            m_logger.log(Logger.DEBUG, "Creator thread is going to analyze the bundle " + bundle.getBundleId() + " List : " + m_bundles);
+            if (SYNCHRONOUS_PROCESSING_ENABLED) {
+                m_logger.log(Logger.DEBUG, "Analyzing " + bundle.getBundleId());
+                startManagementFor(bundle);
+            } else {
+                // Asynchronous case, we add the bundle to the queue
+                m_bundles.add(bundle);
+                notifyAll(); // Notify the thread to force the process.
+                m_logger.log(Logger.DEBUG, "Creator thread is going to analyze the bundle " + bundle.getBundleId() + " List : " + m_bundles);
+            }
         }
-        
+
         /**
          * A bundle is leaving.
          * If the bundle was not already processed, the bundle is remove from the waiting list.
@@ -631,7 +693,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         public synchronized void removeBundle(Bundle bundle) {
             m_bundles.remove(bundle);
         }
-        
+
         /**
          * Stops the creator thread.
          */
@@ -644,7 +706,7 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         /**
          * Creator thread's run method.
          * While the list is not empty, the thread launches the bundle analyzing on the next bundle.
-         * When the list is empty, the thread sleeps until the arrival of a new bundle 
+         * When the list is empty, the thread sleeps until the arrival of a new bundle
          * or until iPOJO stops.
          * @see java.lang.Runnable#run()
          */
