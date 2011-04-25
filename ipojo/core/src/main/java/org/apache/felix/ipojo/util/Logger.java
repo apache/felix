@@ -108,7 +108,7 @@ public class Logger {
      */
     public Logger(BundleContext context, ComponentInstance instance, int level) {
         m_instance = instance;
-    	m_name = m_instance.getInstanceName();
+        m_name = m_instance.getInstanceName();
         m_level = level;
         m_context = context;
     }
@@ -184,7 +184,7 @@ public class Logger {
         String message = null;
         String name = m_name;
         if (name == null) {
-        	name = "";
+            name = "";
         }
 
         switch (level) {
@@ -258,7 +258,7 @@ public class Logger {
         String message = null;
         String name = m_name;
         if (name == null) {
-        	name = "";
+            name = "";
         }
 
         switch (level) {
@@ -317,27 +317,27 @@ public class Logger {
      * @param error the error
      */
     private void invokeErrorHandler(int level, String msg, Throwable error) {
-    	// First check the level
-    	if (level > WARNING) {
-    		return; // Others levels are not supported.
-    	}
-    	// Try to get the error handler service
-    	try {
-	    	ServiceReference ref = m_context.getServiceReference(ErrorHandler.class.getName());
-	    	if (ref != null) {
-	    		ErrorHandler handler = (ErrorHandler) m_context.getService(ref);
-	    		if (level == ERROR) {
-	        		handler.onError(m_instance, msg, error);
-	        	} else if (level == WARNING) {
-	        		handler.onWarning(m_instance, msg, error);
-	        	} // The others case are not supported
-	    		m_context.ungetService(ref);
-	    		return;
-	    	} // Else do nothing...
-    	} catch (IllegalStateException e) {
-    		// Ignore
-    		// The iPOJO bundle is stopping.
-    	}
+        // First check the level
+        if (level > WARNING) {
+            return; // Others levels are not supported.
+        }
+        // Try to get the error handler service
+        try {
+            ServiceReference ref = m_context.getServiceReference(ErrorHandler.class.getName());
+            if (ref != null) {
+                ErrorHandler handler = (ErrorHandler) m_context.getService(ref);
+                if (level == ERROR) {
+                    handler.onError(m_instance, msg, error);
+                } else if (level == WARNING) {
+                    handler.onWarning(m_instance, msg, error);
+                } // The others case are not supported
+                m_context.ungetService(ref);
+                return;
+            } // Else do nothing...
+        } catch (IllegalStateException e) {
+            // Ignore
+            // The iPOJO bundle is stopping.
+        }
     }
 
     /**
