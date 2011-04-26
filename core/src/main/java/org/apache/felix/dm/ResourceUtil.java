@@ -22,6 +22,9 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.Properties;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceUtil {
     public static Dictionary createProperties(URL url) {
         Properties props = new Properties();

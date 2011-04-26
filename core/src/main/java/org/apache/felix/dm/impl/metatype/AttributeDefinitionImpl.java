@@ -20,67 +20,57 @@ package org.apache.felix.dm.impl.metatype;
 
 import org.osgi.service.metatype.AttributeDefinition;
 
-public class AttributeDefinitionImpl implements AttributeDefinition
-{
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class AttributeDefinitionImpl implements AttributeDefinition {
     private PropertyMetaDataImpl m_propertyMetaData;
     private Resource m_resource;
 
-    public AttributeDefinitionImpl(PropertyMetaDataImpl propertyMetaData, Resource resource)
-    {
+    public AttributeDefinitionImpl(PropertyMetaDataImpl propertyMetaData, Resource resource) {
         m_propertyMetaData = propertyMetaData;
         m_resource = resource;
     }
 
-    public int getCardinality()
-    {
+    public int getCardinality() {
         return m_propertyMetaData.getCardinality();
     }
 
-    public String[] getDefaultValue()
-    {
+    public String[] getDefaultValue() {
         return m_propertyMetaData.getDefaults();
     }
 
-    public String getDescription()
-    {
+    public String getDescription() {
         return m_resource.localize(m_propertyMetaData.getDescription());
     }
 
-    public String getID()
-    {
+    public String getID() {
         return m_propertyMetaData.getId();
     }
 
-    public String getName()
-    {
+    public String getName() {
         return m_resource.localize(m_propertyMetaData.getHeading());
     }
 
-    public String[] getOptionLabels()
-    {
+    public String[] getOptionLabels() {
         String[] labels = m_propertyMetaData.getOptionLabels();
-        if (labels != null)
-        {
-            for (int i = 0; i < labels.length; i++)
-            {
+        if (labels != null) {
+            for (int i = 0; i < labels.length; i++) {
                 labels[i] = m_resource.localize(labels[i]);
             }
         }
         return labels;
     }
 
-    public String[] getOptionValues()
-    {
+    public String[] getOptionValues() {
         return m_propertyMetaData.getOptionValues();
     }
 
-    public int getType()
-    {
+    public int getType() {
         return m_propertyMetaData.getType();
     }
 
-    public String validate(String value)
-    {
+    public String validate(String value) {
         return null;
     }
 }

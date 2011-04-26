@@ -25,24 +25,25 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.ResourceDependency;
 import org.apache.felix.dm.ResourceHandler;
-import org.apache.felix.dm.Component;
-import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceDependencyImpl extends DependencyBase implements ResourceDependency, ResourceHandler, DependencyActivation, ComponentDependencyDeclaration {
 	private volatile BundleContext m_context;
 	private volatile ServiceRegistration m_registration;
-//	private long m_resourceCounter;
-
     private Object m_callbackInstance;
     private String m_callbackAdded;
     private String m_callbackChanged;
@@ -312,63 +313,6 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         m_autoConfigInstance = instanceName;
         return this;
     }
-    
-//    private void invokeCallbackMethod(Object[] instances, String methodName, Object service) {
-//        for (int i = 0; i < instances.length; i++) {
-//            try {
-//                invokeCallbackMethod(instances[i], methodName, service);
-//            }
-//            catch (NoSuchMethodException e) {
-//                m_logger.log(Logger.LOG_DEBUG, "Method '" + methodName + "' does not exist on " + instances[i] + ". Callback skipped.");
-//            }
-//        }
-//    }
-//
-//    private void invokeCallbackMethod(Object instance, String methodName, Object service) throws NoSuchMethodException {
-//        Class currentClazz = instance.getClass();
-//        boolean done = false;
-//        while (!done && currentClazz != null) {
-//            done = invokeMethod(instance, currentClazz, methodName,
-//                new Class[][] {{Resource.class}, {Object.class}, {}},
-//                new Object[][] {{service}, {service}, {}},
-//                false);
-//            if (!done) {
-//                currentClazz = currentClazz.getSuperclass();
-//            }
-//        }
-//        if (!done && currentClazz == null) {
-//            throw new NoSuchMethodException(methodName);
-//        }
-//    }
-//    
-//    private boolean invokeMethod(Object object, Class clazz, String name, Class[][] signatures, Object[][] parameters, boolean isSuper) {
-//        Method m = null;
-//        for (int i = 0; i < signatures.length; i++) {
-//            Class[] signature = signatures[i];
-//            try {
-//                m = clazz.getDeclaredMethod(name, signature);
-//                if (!(isSuper && Modifier.isPrivate(m.getModifiers()))) {
-//                    m.setAccessible(true);
-//                    try {
-//                        m.invoke(object, parameters[i]);
-//                    }
-//                    catch (InvocationTargetException e) {
-//                        m_logger.log(Logger.LOG_ERROR, "Exception while invoking method " + m + ".", e);
-//                    }
-//                    // we did find and invoke the method, so we return true
-//                    return true;
-//                }
-//            }
-//            catch (NoSuchMethodException e) {
-//                // ignore this and keep looking
-//            }
-//            catch (Exception e) {
-//                // could not even try to invoke the method
-//                m_logger.log(Logger.LOG_ERROR, "Exception while trying to invoke method " + m + ".", e);
-//            }
-//        }
-//        return false;
-//    }
     
     private synchronized Object[] getCallbackInstances(DependencyService ds) {
         if (m_callbackInstance == null) {

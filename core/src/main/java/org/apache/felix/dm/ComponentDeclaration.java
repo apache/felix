@@ -18,6 +18,8 @@
  */
 package org.apache.felix.dm;
 
+import org.osgi.framework.BundleContext;
+
 /**
  * Describes a component. Component declarations form descriptions of components
  * that are managed by the dependency manager. They can be used to query their state
@@ -39,4 +41,6 @@ public interface ComponentDeclaration {
     public String getName();
     /** Returns the state of this component. */
     public int getState();
+    /** Returns the bundle context associated with this component. */
+    public BundleContext getBundleContext();
 }

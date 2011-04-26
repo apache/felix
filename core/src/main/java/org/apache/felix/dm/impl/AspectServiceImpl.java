@@ -34,6 +34,8 @@ import org.osgi.framework.ServiceReference;
 /**
  * Aspect Service implementation. This class extends the FilterService in order to catch
  * some Service methods for configuring actual aspect service implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AspectServiceImpl extends FilterService {
     public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove)

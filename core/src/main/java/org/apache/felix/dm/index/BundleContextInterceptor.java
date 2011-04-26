@@ -29,6 +29,9 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
     private final ServiceRegistryCache m_cache;
 
@@ -43,6 +46,7 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             filterIndex.addServiceListener(listener, filter);
         }
         else {
+//            System.out.println("BCI:Listener " + listener.getClass().getName() + " filter " + filter);
             m_context.addServiceListener(listener, filter);
         }
     }
@@ -53,6 +57,7 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             filterIndex.addServiceListener(listener, null);
         }
         else {
+//            System.out.println("BCI:Listener " + listener.getClass().getName() + " without filter");
             m_context.addServiceListener(listener);
         }
     }

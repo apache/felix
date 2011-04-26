@@ -22,15 +22,17 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.felix.dm.Dependency;
-import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
 /**
  * Bundle Adapter Service implementation. This class extends the FilterService in order to catch
  * some Service methods for configuring actual adapter service implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleAdapterServiceImpl extends FilterService
 {

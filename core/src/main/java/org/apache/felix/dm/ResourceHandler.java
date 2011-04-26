@@ -22,6 +22,8 @@ import java.net.URL;
 
 /** 
  * Service interface for anybody wanting to be notified of changes to resources. 
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ResourceHandler {
     /** Name of the property that's used to describe the filter condition for a resource. */

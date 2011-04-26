@@ -20,6 +20,9 @@ package org.apache.felix.dm;
 
 import org.osgi.framework.Bundle;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface BundleDependency extends Dependency, ComponentDependencyDeclaration {
     /**
      * Sets the callbacks for this dependency. These callbacks can be used as hooks whenever a dependency is added or removed.

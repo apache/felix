@@ -18,6 +18,9 @@
  */
 package org.apache.felix.dm;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface DependencyActivation {
   public void start(DependencyService service);
   public void stop(DependencyService service);

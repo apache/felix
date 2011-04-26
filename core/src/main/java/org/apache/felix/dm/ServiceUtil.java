@@ -18,12 +18,16 @@
  */
 package org.apache.felix.dm;
 
+import java.util.List;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /**
  * OSGi service utilities.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServiceUtil {
     /**
@@ -100,14 +104,30 @@ public class ServiceUtil {
             else {
                 buf.append("ServiceReference[unregistered]{");
             }
-            String[] keys = ref.getPropertyKeys();
-            for (int i = 0; i < keys.length; i++) {
-                if (i > 0) { 
-                    buf.append(','); 
-                }
-                buf.append(keys[i]);
-                buf.append('=');
-                Object val = ref.getProperty(keys[i]);
+            buf.append(propertiesToString(ref, null));
+            buf.append("}");
+            return buf.toString();
+        }
+    }
+    
+    /**
+     * Converts the properties of a service reference to a string.
+     * 
+     * @param ref the service reference
+     * @param exclude a list of properties to exclude, or <code>null</code> to show everything
+     * @return a string representation of the service properties
+     */
+    public static String propertiesToString(ServiceReference ref, List /* <String> */ exclude) {
+        StringBuffer buf = new StringBuffer();
+        String[] keys = ref.getPropertyKeys();
+        for (int i = 0; i < keys.length; i++) {
+            if (i > 0) { 
+                buf.append(','); 
+            }
+            buf.append(keys[i]);
+            buf.append('=');
+            Object val = ref.getProperty(keys[i]);
+            if (exclude == null || !exclude.contains(val)) {
                 if (val instanceof String[]) {
                     String[] valArray = (String[]) val;
                     StringBuffer valBuf = new StringBuffer();
@@ -125,8 +145,7 @@ public class ServiceUtil {
                     buf.append(val.toString());
                 }
             }
-            buf.append("}");
-            return buf.toString();
         }
+        return buf.toString();
     }
 }

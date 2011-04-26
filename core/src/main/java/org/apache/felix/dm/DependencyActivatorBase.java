@@ -296,7 +296,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @param manager the dependency manager
      */
     private void cleanup(DependencyManager manager) {
-        List services = manager.getServices();
+        List services = manager.getComponents();
         for (int i = services.size() - 1; i >= 0; i--) {
             Component service = (Component) services.get(i);
             manager.remove(service);

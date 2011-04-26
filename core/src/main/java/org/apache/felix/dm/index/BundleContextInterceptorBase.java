@@ -36,7 +36,11 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-/** Base class for bundle context interceptors that keep track of service listeners and delegate incoming changes to them. */
+/**
+ * Base class for bundle context interceptors that keep track of service listeners and delegate incoming changes to them.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public abstract class BundleContextInterceptorBase implements BundleContext, ServiceListener {
     protected final BundleContext m_context;
     /** Keeps track of all service listeners and their optional filters. */

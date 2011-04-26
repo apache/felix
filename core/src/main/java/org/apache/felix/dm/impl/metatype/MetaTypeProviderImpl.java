@@ -47,9 +47,10 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  * When a ConfigurationDepdendency is configured with properties metadata, we provide
  * a specific ManagedService which also implements the MetaTypeProvider interface. This interface
  * allows the MetaTypeService to retrieve our properties metadata, which will then be handled by webconsole.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, ManagedServiceFactory
-{
+public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, ManagedServiceFactory {
     private ManagedService m_managedServiceDelegate;
     private ManagedServiceFactory m_managedServiceFactoryDelegate;
     private List m_propertiesMetaData = new ArrayList();
@@ -61,8 +62,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
     private BundleContext m_bctx;
     private String m_pid;
 
-    public MetaTypeProviderImpl(String pid, BundleContext ctx, Logger logger, ManagedService msDelegate, ManagedServiceFactory msfDelegate)
-    {
+    public MetaTypeProviderImpl(String pid, BundleContext ctx, Logger logger, ManagedService msDelegate, ManagedServiceFactory msfDelegate) {
         m_pid = pid;
         m_bctx = ctx;
         m_logger = logger;
@@ -72,10 +72,8 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
         // By default, this file can be stored in OSGI-INF/l10n/bundle.properties (and corresponding localized version
         // in OSGI-INF/l10n/bundle_en_GB_welsh.properties,  OSGI-INF/l10n/bundle_en_GB.properties, etc ...
         // This default localization property file name can be overriden using the PropertyMetaData.setLocalization method.
-        m_localization = (String) m_bctx.getBundle().getHeaders().get(
-            Constants.BUNDLE_LOCALIZATION);
-        if (m_localization == null)
-        {
+        m_localization = (String) m_bctx.getBundle().getHeaders().get(Constants.BUNDLE_LOCALIZATION);
+        if (m_localization == null) {
             m_localization = Constants.BUNDLE_LOCALIZATION_DEFAULT_BASENAME;
         }
     }
@@ -84,8 +82,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * Registers the metatype information of a given configuration property
      * @param property
      */
-    public void add(PropertyMetaData property)
-    {
+    public void add(PropertyMetaData property) {
         m_propertiesMetaData.add(property);
     }
 
@@ -93,8 +90,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * A human readable description of the PID this annotation is associated with. Example: "Configuration for the PrinterService bundle".
      * @return A human readable description of the PID this annotation is associated with (may be localized)
      */
-    public void setDescription(String description)
-    {
+    public void setDescription(String description) {
         m_description = description;
     }
 
@@ -102,8 +98,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * The label used to display the tab name (or section) where the properties are displayed. Example: "Printer Service".
      * @return The label used to display the tab name where the properties are displayed (may be localized)
      */
-    public void setName(String heading)
-    {
+    public void setName(String heading) {
         m_heading = heading;
     }
 
@@ -113,14 +108,12 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * The default localization base name for the properties is OSGI-INF/l10n/bundle, but can
      * be overridden by the manifest Bundle-Localization header (see core specification, in section Localization on page 68).
      */
-    public void setLocalization(String path)
-    {
-        if (path.endsWith(".properties"))
-        {
+    public void setLocalization(String path) {
+        if (path.endsWith(".properties")) {
             throw new IllegalArgumentException(
                 "path must point to the base name of the propertie file, "
-                    + "excluding local suffixes. For example: "
-                    + "foo/bar/person is valid and matches the property file \"foo/bar/person_bundle_en_GB_welsh.properties\"");
+                + "excluding local suffixes. For example: "
+                + "foo/bar/person is valid and matches the property file \"foo/bar/person_bundle_en_GB_welsh.properties\"");
         }
         m_localization = path.startsWith("/") ? path.substring(1) : path;
     }
@@ -133,8 +126,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * "en_GB", "en_GB_welsh" ...
      * @return the list of Locale supported by our bundle.
      */
-    public String[] getLocales()
-    {
+    public String[] getLocales() {
         int lastSlash = m_localization.lastIndexOf("/");
         String path = (lastSlash == -1) ? "/" : ("/" + m_localization.substring(0, lastSlash - 1));
         String base = (lastSlash == -1) ? m_localization : m_localization.substring(lastSlash + 1);
@@ -145,20 +137,17 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
         }
         
         TreeSet set = new TreeSet();
-        while (e.hasMoreElements())
-        {
+        while (e.hasMoreElements()) {
             // We have found a locale property file in the form of "path/file[_language[_ country[_variation]].properties"
             // And now, we have to get the "language[_country[_variation]]" part ...
             URL url = (URL) e.nextElement();
             String name = url.getPath();
             name = name.substring(name.lastIndexOf("/") + 1);
             int underscore = name.indexOf("_");
-            if (underscore != -1)
-            {
+            if (underscore != -1) {
                 name = name.substring(underscore + 1, name.length() - ".properties".length());
             }
-            if (name.length() > 0)
-            {
+            if (name.length() > 0) {
                 set.add(name);
             }
         }
@@ -170,13 +159,10 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
     /**
      * Returns the ObjectClassDefinition for a given Pid/Locale.
      */
-    public ObjectClassDefinition getObjectClassDefinition(String id, String locale)
-    {
-        try
-        {
+    public ObjectClassDefinition getObjectClassDefinition(String id, String locale) {
+        try {
             // Check if the id matches our PID
-            if (!id.equals(m_pid))
-            {
+            if (!id.equals(m_pid)) {
                 m_logger.log(LogService.LOG_ERROR, "id " + id + " does not match pid " + m_pid);
                 return null;
             }
@@ -186,8 +172,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
                 m_description, m_propertiesMetaData, new Resource(localeProperties));
         }
 
-        catch (Throwable t)
-        {
+        catch (Throwable t) {
             m_logger.log(
                 Logger.LOG_ERROR,
                 "Unexpected exception while geting ObjectClassDefinition for " + id + " (locale="
@@ -200,8 +185,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * We also implements the ManagedService and we just delegates the configuration handling to
      * our associated ConfigurationDependency.
      */
-    public void updated(Dictionary properties) throws ConfigurationException
-    {
+    public void updated(Dictionary properties) throws ConfigurationException {
         m_managedServiceDelegate.updated(properties);
     }
 
@@ -211,36 +195,28 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * @return
      * @throws IOException
      */
-    private synchronized Properties getLocaleProperties(String locale) throws IOException
-    {
+    private synchronized Properties getLocaleProperties(String locale) throws IOException {
         locale = locale == null ? Locale.getDefault().toString() : locale;
         Properties properties = (Properties) m_localesProperties.get(locale);
-        if (properties == null)
-        {
+        if (properties == null) {
             properties = new Properties();
-            URL url = m_bctx.getBundle().getEntry(
-                m_localization + ".properties");
-            if (url != null)
-            {
+            URL url = m_bctx.getBundle().getEntry(m_localization + ".properties");
+            if (url != null) {
                 loadLocale(properties, url);
             }
 
             String path = m_localization;
             StringTokenizer tok = new StringTokenizer(locale, "_");
-            while (tok.hasMoreTokens())
-            {
+            while (tok.hasMoreTokens()) {
                 path += "_" + tok.nextToken();
                 url = m_bctx.getBundle().getEntry(path + ".properties");
-                if (url != null)
-                {
+                if (url != null) {
                     properties = new Properties(properties);
                     loadLocale(properties, url);
                 }
             }
-
             m_localesProperties.put(locale, properties);
         }
-
         return properties;
     }
 
@@ -250,43 +226,33 @@ public class MetaTypeProviderImpl implements MetaTypeProvider, ManagedService, M
      * @param url
      * @throws IOException
      */
-    private void loadLocale(Properties properties, URL url) throws IOException
-    {
+    private void loadLocale(Properties properties, URL url) throws IOException {
         InputStream in = null;
-        try
-        {
+        try {
             in = url.openStream();
             properties.load(in);
         }
-        finally
-        {
-            if (in != null)
-            {
-                try
-                {
+        finally {
+            if (in != null) {
+                try {
                     in.close();
                 }
-                catch (IOException ignored)
-                {
+                catch (IOException ignored) {
                 }
             }
         }
     }
 
     // ManagedServiceFactory implementation
-    
-    public void deleted(String pid)
-    {
+    public void deleted(String pid) {
         m_managedServiceFactoryDelegate.deleted(pid);
     }
 
-    public String getName()
-    {
+    public String getName() {
         return m_pid;
     }
 
-    public void updated(String pid, Dictionary properties) throws ConfigurationException
-    {
+    public void updated(String pid, Dictionary properties) throws ConfigurationException {
         m_managedServiceFactoryDelegate.updated(pid, properties);
     }
 }
