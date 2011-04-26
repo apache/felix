@@ -26,6 +26,8 @@ import org.osgi.framework.ServiceListener;
 
 /**
  * A filter index is an interface you can implement to create your own, optimized index for specific filter expressions.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface FilterIndex {
     /** Opens this filter index. */

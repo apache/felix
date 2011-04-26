@@ -37,6 +37,9 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCustomizer {
     private final Object m_lock = new Object();
     private ServiceTracker m_tracker;

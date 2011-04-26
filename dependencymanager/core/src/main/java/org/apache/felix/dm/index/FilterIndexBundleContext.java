@@ -25,6 +25,9 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FilterIndexBundleContext extends BundleContextInterceptorBase {
     public FilterIndexBundleContext(BundleContext context) {
         super(context);

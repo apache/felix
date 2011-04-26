@@ -28,9 +28,10 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * ObjectClassDefinition implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ObjectClassDefinitionImpl implements ObjectClassDefinition
-{
+public class ObjectClassDefinitionImpl implements ObjectClassDefinition {
     // Our OCD name (may be localized)
     private String m_name;
     
@@ -46,8 +47,7 @@ public class ObjectClassDefinitionImpl implements ObjectClassDefinition
     // The localized resource that can be used when localizing some parameters
     private Resource m_resource;
 
-    public ObjectClassDefinitionImpl(String id, String name, String description, List propertiesMetaData, Resource resource)
-    {
+    public ObjectClassDefinitionImpl(String id, String name, String description, List propertiesMetaData, Resource resource) {
         m_id = id;
         m_name = name;
         m_description = description;
@@ -57,26 +57,21 @@ public class ObjectClassDefinitionImpl implements ObjectClassDefinition
 
     // --------------------- ObjectClassDefinition ----------------------------------------
 
-    public AttributeDefinition[] getAttributeDefinitions(int filter)
-    {
+    public AttributeDefinition[] getAttributeDefinitions(int filter) {
         List attrs = new ArrayList();
-        for (int i = 0; i < m_propertiesMetaData.size(); i++)
-        {
+        for (int i = 0; i < m_propertiesMetaData.size(); i++) {
             PropertyMetaDataImpl metaData = (PropertyMetaDataImpl) m_propertiesMetaData.get(i);
-            switch (filter)
-            {
+            switch (filter) {
                 case ObjectClassDefinition.ALL:
                     attrs.add(new AttributeDefinitionImpl(metaData, m_resource));
                     break;
                 case ObjectClassDefinition.OPTIONAL:
-                    if (!metaData.isRequired())
-                    {
+                    if (!metaData.isRequired()) {
                         attrs.add(new AttributeDefinitionImpl(metaData, m_resource));
                     }
                     break;
                 case ObjectClassDefinition.REQUIRED:
-                    if (metaData.isRequired())
-                    {
+                    if (metaData.isRequired()) {
                         attrs.add(new AttributeDefinitionImpl(metaData, m_resource));
                     }
                     break;
@@ -87,24 +82,20 @@ public class ObjectClassDefinitionImpl implements ObjectClassDefinition
         return (AttributeDefinition[]) attrs.toArray(array);
     }
 
-    public String getDescription()
-    {
+    public String getDescription() {
         return m_resource.localize(m_description);
     }
 
-    public String getID()
-    {
+    public String getID() {
         return m_id;
     }
 
-    public InputStream getIcon(int size) throws IOException
-    {
+    public InputStream getIcon(int size) throws IOException {
         // TODO Auto-generated method stub
         return null;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return m_resource.localize(m_name);
     }
 }

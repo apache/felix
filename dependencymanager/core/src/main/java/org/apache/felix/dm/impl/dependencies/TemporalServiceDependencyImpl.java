@@ -25,10 +25,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 /**
-* Temporal Service dependency implementation, used to hide temporary service dependency "outage".
-* Only works with required dependency.
-* (see javadoc in {@link TemporalServiceDependency}).
-*/
+ * Temporal Service dependency implementation, used to hide temporary service dependency "outage".
+ * Only works with a required dependency.
+ *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class TemporalServiceDependencyImpl extends ServiceDependencyImpl implements TemporalServiceDependency, InvocationHandler {
     // Max millis to wait for service availability.
     private long m_timeout = 30000;

@@ -32,9 +32,10 @@ import org.osgi.framework.ServiceReference;
 /**
  * Adapter Service implementation. This class extends the FilterService in order to catch
  * some Service methods for configuring actual adapter service implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class AdapterServiceImpl extends FilterService
-{
+public class AdapterServiceImpl extends FilterService {
     /**
      * Creates a new Adapter Service implementation.
      * 
@@ -45,8 +46,7 @@ public class AdapterServiceImpl extends FilterService
      * @param change
      * @param remove
      */
-    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove)
-    {
+    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_service.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove))
                  .add(dm.createServiceDependency()

@@ -22,19 +22,18 @@ import java.util.Properties;
 
 /**
  * Helper class used to localize a given Property Meta Data.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Resource
-{
+public class Resource {
     private Properties m_properties;
 
     public Resource(Properties properties) {
         m_properties = properties;
     }
     
-    public String localize(String param)
-    {
-        if (m_properties != null && param != null && param.startsWith("%"))
-        {
+    public String localize(String param) {
+        if (m_properties != null && param != null && param.startsWith("%")) {
             param = param.substring(1);
             return m_properties.getProperty(param);
         }

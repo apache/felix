@@ -18,7 +18,9 @@
  */
 package org.apache.felix.dm;
 
-
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface DependencyService {
     /**
      * Will be called when the dependency becomes available.

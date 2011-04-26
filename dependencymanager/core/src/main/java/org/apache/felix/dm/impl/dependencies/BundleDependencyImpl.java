@@ -25,9 +25,9 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.dm.BundleDependency;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyService;
-import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.impl.DefaultNullObject;
 import org.apache.felix.dm.impl.Logger;
@@ -40,6 +40,9 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.log.LogService;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BundleDependencyImpl extends DependencyBase implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
 	private final BundleContext m_context;
 	private boolean m_isStarted;
