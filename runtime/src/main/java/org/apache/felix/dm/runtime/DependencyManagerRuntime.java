@@ -83,7 +83,7 @@ public class DependencyManagerRuntime
         Log.instance().info("Runtime: stopping services");
         for (DependencyManager dm : m_managers.values())
         {
-            List<Component> services = new ArrayList<Component>(dm.getServices());
+            List<Component> services = new ArrayList<Component>(dm.getComponents());
             for (Component service : services)
             {
                 dm.remove(service);
@@ -130,7 +130,7 @@ public class DependencyManagerRuntime
         DependencyManager dm = m_managers.remove(b);
         if (dm != null)
         {
-            List<Component> services = new ArrayList(dm.getServices());
+            List<Component> services = new ArrayList(dm.getComponents());
             for (Component service : services)
             {
                 Log.instance().info("Runtime: Removing service: %s", service);
