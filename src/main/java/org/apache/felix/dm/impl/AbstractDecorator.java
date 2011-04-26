@@ -35,6 +35,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public abstract class AbstractDecorator  {
     protected volatile DependencyManager m_manager;
     private final Map m_services = new HashMap();

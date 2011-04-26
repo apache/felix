@@ -49,14 +49,16 @@ import org.osgi.framework.ServiceRegistration;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ComponentImpl implements Component, DependencyService, ComponentDeclaration {
+public class ComponentImpl implements Component, DependencyService, ComponentDeclaration, Comparable {
     private static final Class[] VOID = new Class[] {};
 	private static final ServiceRegistration NULL_REGISTRATION;
     private static final ComponentStateListener[] SERVICE_STATE_LISTENER_TYPE = new ComponentStateListener[] {};
+    private static long HIGHEST_ID = 0;
 
     private final Object SYNC = new Object();
     private final BundleContext m_context;
     private final DependencyManager m_manager;
+    private final long m_id;
 
     // configuration (static)
     private String m_callbackInit;
@@ -99,11 +101,16 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 	
 	// internal logging
     private final Logger m_logger;
-    private ServiceRegistration m_serviceRegistration;
+    
     private Map m_autoConfig = new HashMap();
     private Map m_autoConfigInstance = new HashMap();
+    
+    private boolean m_isStarted = false;
 
     public ComponentImpl(BundleContext context, DependencyManager manager, Logger logger) {
+        synchronized (VOID) {
+            m_id = HIGHEST_ID++;
+        }
     	m_logger = logger;
         m_state = new State((List) m_dependencies.clone(), false, false, false);
         m_context = context;
@@ -159,11 +166,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
             m_executor.enqueue(new Runnable() {
                 public void run() {
                     // TODO as far as I can see there is nothing left to do here
-                    
-                    
-                    //////////unbindService(newState);
-                    
-                    
+                    // unbindService(newState);
                 }});
         }
         if (oldState.isTrackingOptional() && newState.isWaitingForRequired()) {
@@ -235,22 +238,6 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         	oldState = m_state;
             m_dependencies.add(dependency);
         }
-        
-//        if (dependency.isInstanceBound()) {
-//            // At this point: this dependency is added from init(): but we don't want to start it now, 
-//            // because if we start it, and if the required dependency is available, then the service.start() 
-//            // method will be called, and this is a problem if a further
-//            // required (but unavailable) dependency is then added again from the init() method ...
-//            // Once the init() method will return, the activateService method will then calculate the state changes,
-//            // but at this point, all added extra-dependencies will be known.
-//            return this;
-//        } 
-        
-        ///
-        
-//        if (oldState.isAllRequiredAvailable() || (oldState.isWaitingForRequiredInstantiated() && dependency.isRequired()) || (oldState.isWaitingForRequired() && dependency.isRequired())) {
-//        	((DependencyActivation) dependency).start(this);
-//        }
         
         // if we're inactive, don't do anything, otherwise we might want to start
         // the dependency
@@ -395,8 +382,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     public synchronized void start() {
-    	if (m_serviceRegistration == null) {
-	        m_serviceRegistration = m_context.registerService(ComponentDeclaration.class.getName(), this, null);
+    	if (!m_isStarted) {
+    	    m_isStarted = true;
 	        State oldState, newState;
 	        synchronized (m_dependencies) {
 	            oldState = m_state;
@@ -408,9 +395,8 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     public synchronized void stop() {
-    	if (m_serviceRegistration != null) {
-	        m_serviceRegistration.unregister();
-	        m_serviceRegistration = null;
+        if (m_isStarted) {
+            m_isStarted = false;
 	        State oldState, newState;
 	        synchronized (m_dependencies) {
 	            oldState = m_state;
@@ -454,8 +440,6 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         return this;
     }
 	
-	
-
 	public synchronized Component setImplementation(Object implementation) {
 	    ensureNotActive();
 	    m_implementation = implementation;
@@ -1099,10 +1083,13 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                 }
                 sb.append(names[i]);
             }
+            sb.append('(');
+            sb.append(propertiesToString());
+            sb.append(')');
             return sb.toString();
         }
         else if (serviceName instanceof String) {
-            return serviceName.toString();
+            return serviceName.toString() + "(" + propertiesToString() + ")";
         }
         else {
             Object implementation = m_implementation;
@@ -1113,6 +1100,38 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                 return super.toString();
             }
         }
+    }
+    
+    private String propertiesToString() {
+        StringBuffer result = new StringBuffer();
+        Dictionary properties = calculateServiceProperties();
+        if (properties != null) {
+            Enumeration enumeration = properties.keys();
+            while (enumeration.hasMoreElements()) {
+                String key = (String) enumeration.nextElement();
+                if (result.length() > 0) {
+                    result.append(',');
+                }
+                result.append(key);
+                result.append('=');
+                Object value = properties.get(key);
+                if (value instanceof String[]) {
+                    String[] values = (String[]) value;
+                    result.append('{');
+                    for (int i = 0; i < values.length; i++) {
+                        if (i > 0) {
+                            result.append(',');
+                        }
+                        result.append(values[i].toString());
+                    }
+                    result.append('}');
+                }
+                else {
+                    result.append(value.toString());
+                }
+            }
+        }
+        return result.toString();
     }
 
     public int getState() {
@@ -1125,5 +1144,22 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     
     static {
         NULL_REGISTRATION = (ServiceRegistration) Proxy.newProxyInstance(ComponentImpl.class.getClassLoader(), new Class[] {ServiceRegistration.class}, new DefaultNullObject());
+    }
+
+    public BundleContext getBundleContext() {
+        return m_context;
+    }
+
+    public int compareTo(Object object) {
+        if (object instanceof ComponentImpl) {
+            ComponentImpl other = (ComponentImpl) object;
+            long id1 = this.getBundleContext().getBundle().getBundleId();
+            long id2 = ((ComponentImpl) other).getBundleContext().getBundle().getBundleId();
+            if (id1 == id2) {
+                return (int)(this.m_id - other.m_id);
+            }
+            return (int)(id1 - id2);
+        }
+        return -1;
     }
 }

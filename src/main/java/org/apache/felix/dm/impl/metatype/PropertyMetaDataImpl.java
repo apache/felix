@@ -29,9 +29,10 @@ import org.osgi.service.metatype.AttributeDefinition;
 /**
  * DependencyManager PropertyMetaData Implementation. This class describes meta informations regarding
  * one given configuration property.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class PropertyMetaDataImpl implements PropertyMetaData
-{
+public class PropertyMetaDataImpl implements PropertyMetaData {
     /**
      * List of option labels (may be localized)
      */
@@ -83,68 +84,56 @@ public class PropertyMetaDataImpl implements PropertyMetaData
      * Mapping between java types and valid MetaType types.
      * @see {@link AttributeDefinition#getType()}
      */
-    private final static Map m_typeMapping = new HashMap()
-    {
-        {
-            put(Boolean.class, new Integer(AttributeDefinition.BOOLEAN));
-            put(Byte.class, new Integer(AttributeDefinition.BYTE));
-            put(Character.class, new Integer(AttributeDefinition.CHARACTER));
-            put(Double.class, new Integer(AttributeDefinition.FLOAT));
-            put(Integer.class, new Integer(AttributeDefinition.INTEGER));
-            put(Long.class, new Integer(AttributeDefinition.LONG));
-            put(Short.class, new Integer(AttributeDefinition.SHORT));
-            put(String.class, new Integer(AttributeDefinition.STRING));
-        }
-    };
+    private final static Map m_typeMapping = new HashMap() {{
+        put(Boolean.class, new Integer(AttributeDefinition.BOOLEAN));
+        put(Byte.class, new Integer(AttributeDefinition.BYTE));
+        put(Character.class, new Integer(AttributeDefinition.CHARACTER));
+        put(Double.class, new Integer(AttributeDefinition.FLOAT));
+        put(Integer.class, new Integer(AttributeDefinition.INTEGER));
+        put(Long.class, new Integer(AttributeDefinition.LONG));
+        put(Short.class, new Integer(AttributeDefinition.SHORT));
+        put(String.class, new Integer(AttributeDefinition.STRING));
+    }};
 
-    public PropertyMetaData addOption(String optionLabel, String optionValue)
-    {
+    public PropertyMetaData addOption(String optionLabel, String optionValue) {
         m_optionsLabels.add(optionLabel);
         m_optionsValues.add(optionValue);
         return this;
     }
 
-    public PropertyMetaData setCardinality(int cardinality)
-    {
+    public PropertyMetaData setCardinality(int cardinality) {
         m_cardinality = cardinality;
         return this;
     }
 
-    public PropertyMetaData setDefaults(String[] defaults)
-    {
+    public PropertyMetaData setDefaults(String[] defaults) {
         m_defaults = defaults;
         return this;
     }
 
-    public PropertyMetaData setDescription(String description)
-    {
+    public PropertyMetaData setDescription(String description) {
         m_description = description;
         return this;
     }
 
-    public PropertyMetaData setHeading(String heading)
-    {
+    public PropertyMetaData setHeading(String heading) {
         m_heading = heading;
         return this;
     }
 
-    public PropertyMetaData setId(String id)
-    {
+    public PropertyMetaData setId(String id) {
         m_id = id;
         return this;
     }
 
-    public PropertyMetaData setRequired(boolean required)
-    {
+    public PropertyMetaData setRequired(boolean required) {
         m_required = required;
         return this;
     }
 
-    public PropertyMetaData setType(Class classType)
-    {
+    public PropertyMetaData setType(Class classType) {
         Integer type = (Integer) m_typeMapping.get(classType);
-        if (type == null)
-        {
+        if (type == null) {
             throw new IllegalArgumentException("Invalid type: " + classType + ". Valid types are "
                 + m_typeMapping.keySet());
         }
@@ -152,50 +141,41 @@ public class PropertyMetaDataImpl implements PropertyMetaData
         return this;
     }
 
-    public String[] getOptionLabels()
-    {
+    public String[] getOptionLabels() {
         String[] optionLabels = new String[m_optionsLabels.size()];
         return (String[]) m_optionsLabels.toArray(optionLabels);
     }
 
-    public String[] getOptionValues()
-    {
+    public String[] getOptionValues() {
         String[] optionValues = new String[m_optionsValues.size()];
         return (String[]) m_optionsValues.toArray(optionValues);
     }
 
-    public int getCardinality()
-    {
+    public int getCardinality() {
         return m_cardinality;
     }
 
-    public String[] getDefaults()
-    {
+    public String[] getDefaults() {
         return m_defaults;
     }
 
-    public String getDescription()
-    {
+    public String getDescription() {
         return m_description;
     }
 
-    public String getHeading()
-    {
+    public String getHeading() {
         return m_heading;
     }
 
-    public String getId()
-    {
+    public String getId() {
         return m_id;
     }
 
-    public boolean isRequired()
-    {
+    public boolean isRequired() {
         return m_required;
     }
 
-    public int getType()
-    {
+    public int getType() {
         return m_type;
     }
     

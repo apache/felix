@@ -41,6 +41,9 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class AspectFilterIndex implements FilterIndex, ServiceTrackerCustomizer {
     private static final String FILTER_START = "(&(" + Constants.OBJECTCLASS + "=";
     private static final String FILTER_SUBSTRING_0 = ")(&(|(!(" + Constants.SERVICE_RANKING + "=*))(" + Constants.SERVICE_RANKING + "<=";

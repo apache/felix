@@ -13,6 +13,8 @@ package org.apache.felix.dm;
 
 /**
  * This interface defines meta data regarding a given configuration property.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface PropertyMetaData {
     /**

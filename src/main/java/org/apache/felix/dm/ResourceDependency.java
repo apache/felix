@@ -20,7 +20,9 @@ package org.apache.felix.dm;
 
 import java.net.URL;
 
-
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public interface ResourceDependency extends Dependency, ComponentDependencyDeclaration, ResourceHandler {
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a

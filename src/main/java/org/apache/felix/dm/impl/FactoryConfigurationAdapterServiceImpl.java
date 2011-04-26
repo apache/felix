@@ -25,26 +25,26 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.PropertyMetaData;
-import org.apache.felix.dm.Component;
-import org.apache.felix.dm.ComponentStateListener;
-import org.osgi.framework.Constants;
-import org.osgi.service.cm.ManagedServiceFactory;
 import org.apache.felix.dm.impl.metatype.MetaTypeProviderImpl;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * Factory configuration adapter service implementation. This class extends the FilterService in order to catch
  * some Service methods for configuring actual adapter service implementation.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class FactoryConfigurationAdapterServiceImpl extends FilterService
-{
-    public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate)
-    {
+public class FactoryConfigurationAdapterServiceImpl extends FilterService {
+    public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
@@ -54,23 +54,21 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
     }
     
     public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate,
-                                                  BundleContext bctx, Logger logger, String heading, String description, String localization, PropertyMetaData[] properyMetaData)
-    {
+        BundleContext bctx, Logger logger, String heading, String description, String localization, PropertyMetaData[] properyMetaData) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_service
             .setInterface(ManagedServiceFactory.class.getName(), props)
             .setImplementation(new MetaTypeAdapterImpl(factoryPid, update, propagate,
-                                                       bctx, logger, heading, description,
-                                                       localization, properyMetaData));
+                bctx, logger, heading, description,
+                localization, properyMetaData));
     }
     
     /**
      * Creates, updates, or removes a service, when a ConfigAdmin factory configuration is created/updated or deleted.
      */
-    public class AdapterImpl extends AbstractDecorator implements ManagedServiceFactory
-    {
+    public class AdapterImpl extends AbstractDecorator implements ManagedServiceFactory {
         // Our injected dependency manager
         protected volatile DependencyManager m_dm;
         
@@ -93,8 +91,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
          * @param adapterProperties
          * @param propagate
          */
-        public AdapterImpl(String factoryPid, String updateMethod, boolean propagate)
-        {
+        public AdapterImpl(String factoryPid, String updateMethod, boolean propagate) {
             m_factoryPid = factoryPid;
             m_update = updateMethod;
             m_propagate = propagate;
@@ -103,8 +100,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
         /**
          * Returns the managed service factory name.
          */
-        public String getName()
-        {
+        public String getName() {
             return m_factoryPid;
         }
       
@@ -118,9 +114,9 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
             
             try {
                 if (m_serviceImpl != null) {
-                    impl = (m_serviceImpl instanceof Class) ? 
-                        ((Class) m_serviceImpl).newInstance() : m_serviceImpl;
-                } else {
+                    impl = (m_serviceImpl instanceof Class) ? ((Class) m_serviceImpl).newInstance() : m_serviceImpl;
+                }
+                else {
                     impl = instantiateFromFactory(m_factory, m_factoryCreateMethod);
                 }
                 InvocationUtil.invokeCallbackMethod(impl, m_update, 
@@ -128,8 +124,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
                     new Object[][] {{ settings }, {}});
             }
             
-            catch (Throwable t)
-            {
+            catch (Throwable t) {
                handleException(t);
             }
 
@@ -144,7 +139,6 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 newService.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
-
             return newService;
         }
 
@@ -152,14 +146,12 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
          * Method called from our superclass, when we need to update a Service, because 
          * the configuration has changed.
          */
-        public void updateService(Object[] properties) 
-        {
+        public void updateService(Object[] properties) {
             Dictionary settings = (Dictionary) properties[0];
             Component service = (Component) properties[1];
             Object impl = service.getService();
            
-            try
-            {
+            try {
                 InvocationUtil.invokeCallbackMethod(impl, m_update, 
                     new Class[][] {{ Dictionary.class }, {}}, 
                     new Object[][] {{ settings }, {}});
@@ -169,8 +161,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
                 }
             }
             
-            catch (Throwable t)
-            {
+            catch (Throwable t) {
                 handleException(t);
             }
         }   
@@ -183,8 +174,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
          * @param settings
          * @return
          */
-        private Dictionary mergeSettings(Dictionary adapterProperties, Dictionary settings)
-        {
+        private Dictionary mergeSettings(Dictionary adapterProperties, Dictionary settings) {
             Dictionary props = new Hashtable();
             
             if (adapterProperties != null) {
@@ -208,8 +198,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
             return props;
         }
     
-        private Object instantiateFromFactory(Object mFactory, String mFactoryCreateMethod)
-        {
+        private Object instantiateFromFactory(Object mFactory, String mFactoryCreateMethod) {
             Object factory = null;
             if (m_factory instanceof Class) {
                 try {
@@ -224,8 +213,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
             }
 
             try {
-                return InvocationUtil.invokeMethod(factory, factory.getClass(), m_factoryCreateMethod,
-                                                   new Class[][] {{}}, new Object[][] {{}}, false);
+                return InvocationUtil.invokeMethod(factory, factory.getClass(), m_factoryCreateMethod, new Class[][] { {} }, new Object[][] { {} }, false);
             }
             catch (Throwable t) {
                 handleException(t);
@@ -240,14 +228,15 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
         }
     
         private void handleException(Throwable t) {
-            if (t instanceof InvocationTargetException)
-            {
+            if (t instanceof InvocationTargetException) {
                 // Our super class will check if the target exception is itself a ConfigurationException.
                 // In this case, it will simply re-thrown.
                 throw new RuntimeException(((InvocationTargetException) t).getTargetException());
-            } else if (t instanceof RuntimeException) {
+            }
+            else if (t instanceof RuntimeException) {
                 throw (RuntimeException) t;
-            } else {
+            }
+            else {
                 throw new RuntimeException(t);
             }
         }
@@ -264,29 +253,24 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService
         public MetaTypeAdapterImpl(String factoryPid, String updateMethod, boolean propagate,
                                    BundleContext bctx, Logger logger, String heading, 
                                    String description, String localization,
-                                   PropertyMetaData[] properyMetaData)
-        {
+                                   PropertyMetaData[] properyMetaData) {
             super(factoryPid, updateMethod, propagate);
             m_metaType = new MetaTypeProviderImpl(m_factoryPid, bctx, logger, null, this);
             m_metaType.setName(heading);
             m_metaType.setDescription(description);
-            if (localization != null) 
-            {
+            if (localization != null) {
                 m_metaType.setLocalization(localization);
             }
-            for (int i = 0; i < properyMetaData.length; i ++) 
-            {
+            for (int i = 0; i < properyMetaData.length; i++) {
                 m_metaType.add(properyMetaData[i]);
             }
         }
         
-        public String[] getLocales()
-        {
+        public String[] getLocales() {
             return m_metaType.getLocales();
         }
 
-        public ObjectClassDefinition getObjectClassDefinition(String id, String locale)
-        {
+        public ObjectClassDefinition getObjectClassDefinition(String id, String locale) {
             return m_metaType.getObjectClassDefinition(id, locale);
         }
     }    

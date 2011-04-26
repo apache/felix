@@ -29,6 +29,9 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*/ {
     private final List /* <FilterIndex> */ m_filterIndexList = new CopyOnWriteArrayList();
     private final BundleContext m_context;

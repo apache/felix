@@ -18,9 +18,13 @@
  */
 package org.apache.felix.dm;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.dm.impl.AdapterServiceImpl;
 import org.apache.felix.dm.impl.AspectServiceImpl;
@@ -56,7 +60,7 @@ public class DependencyManager {
     public static final String SERVICEREGISTRY_CACHE_INDICES = "dm.index"; // TODO rename
     private final BundleContext m_context;
     private final Logger m_logger;
-    private List m_services = Collections.synchronizedList(new ArrayList());
+    private List m_components = Collections.synchronizedList(new ArrayList());
 
     /**
      * Creates a new dependency manager. You need to supply the
@@ -73,10 +77,14 @@ public class DependencyManager {
     DependencyManager(BundleContext context, Logger logger) {
         m_context = createContext(context);
         m_logger = logger;
+        synchronized (m_dependencyManagers) {
+            m_dependencyManagers.add(new WeakReference(this));
+        }
     }
 
     // service registry cache
     private static ServiceRegistryCache m_serviceRegistryCache;
+    private static final Set /* WeakReference<DependencyManager> */ m_dependencyManagers = new HashSet();
     static {
         String index = System.getProperty(SERVICEREGISTRY_CACHE_INDICES);
         if (index != null) {
@@ -91,13 +99,26 @@ public class DependencyManager {
                     String[] propList = props[i].split(",");
                     m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
                 }
-//                System.out.println("DM: Creating index on " + props[i]);
             }
         }
-        else {
-//            System.out.println("DM: Property 'dm.index' not found, not setting indices.");
+    }
+    
+    public static List getDependencyManagers() {
+        List /* DependencyManager */ result = new ArrayList();
+        synchronized (m_dependencyManagers) {
+            Iterator iterator = m_dependencyManagers.iterator();
+            while (iterator.hasNext()) {
+                WeakReference reference = (WeakReference) iterator.next();
+                DependencyManager manager = (DependencyManager) reference.get();
+                if (manager != null) {
+                    result.add(manager);
+                }
+                else {
+                    iterator.remove();
+                }
+            }
         }
-
+        return result;
     }
     
     private BundleContext createContext(BundleContext context) {
@@ -109,40 +130,10 @@ public class DependencyManager {
             return context;
         }
     }
-
-//    private BundleContext createContextX(BundleContext context) {
-//        System.out.println("DM: Enabling bundle context interceptor for bundle #" + context.getBundle().getBundleId());
-//        BundleContextInterceptor result = new BundleContextInterceptor(context);
-//        if (BundleContextInterceptor.indices() == 0) {
-//            String index = System.getProperty("dm.index");
-//            if (index != null) {
-//                String[] props = index.split(";");
-//                for (int i = 0; i < props.length; i++) {
-//                    String[] propList = props[i].split(",");
-//                    MultiPropertyExactFilter filter;
-//                    try {
-//                        filter = new MultiPropertyExactFilter(result, propList);
-//                        m_filterIndices.add(filter);
-//                        System.out.println("DM: Creating index on " + props[i]);
-//                    }
-//                    catch (InvalidSyntaxException e) {
-//                        // TODO Auto-generated catch block
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//            else {
-//                System.out.println("DM: Property 'dm.index' not found, not setting indices.");
-//            }
-//        }
-//        System.out.println("DM: Indices created, setting them on the interceptor.");
-//        Iterator iterator = m_filterIndices.iterator();
-//        while (iterator.hasNext()) {
-//            FilterIndex filter = (FilterIndex) iterator.next();
-//            result.addFilterIndex(filter);
-//        }
-//        return result;
-//    }
+    
+    public BundleContext getBundleContext() {
+        return m_context;
+    }
 
     /**
      * Adds a new service to the dependency manager. After the service was added
@@ -151,7 +142,7 @@ public class DependencyManager {
      * @param service the service to add
      */
     public void add(Component service) {
-        m_services.add(service);
+        m_components.add(service);
         service.start();
     }
 
@@ -163,7 +154,7 @@ public class DependencyManager {
      */
     public void remove(Component service) {
         service.stop();
-        m_services.remove(service);
+        m_components.remove(service);
     }
 
     /**
@@ -538,7 +529,7 @@ public class DependencyManager {
      * 
      * @return a list of services
      */
-    public List getServices() {
-        return Collections.unmodifiableList(m_services);
+    public List getComponents() {
+        return Collections.unmodifiableList(m_components);
     }
 }
