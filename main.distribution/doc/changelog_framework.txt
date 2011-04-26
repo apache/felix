@@ -4,7 +4,7 @@ Changes from 3.2.0 to 3.2.1
 * Bug
     * [FELIX-2901] - [Framework] NPE from a host bundle during framework shutdown
     * [FELIX-2917] - Constructor of SecurityExceptino() which is incompatible to 1.4 is used  
-
+    * [FELIX-2924] - bundle stop hangs for http-2.2.0 in felix-3.2.0
 
 ** Improvement
     * [FELIX-2909] - [Framework] Resolver could be more efficient if it detected if fragments were present
