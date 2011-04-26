@@ -20,16 +20,18 @@ package org.apache.felix.dm.shell;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
 /**
  * Shell command for showing all services and dependencies that are managed
@@ -38,8 +40,8 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DMCommand {
-    private static final BundleIdSorter SORTER = new BundleIdSorter();
     private final BundleContext m_context;
+    private static final DependencyManagerSorter SORTER = new DependencyManagerSorter();
 
     public DMCommand(BundleContext context) {
         m_context = context;
@@ -49,6 +51,7 @@ public class DMCommand {
         boolean nodeps = false;
         boolean notavail = false;
         boolean compact = false;
+        boolean stats = false;
         ArrayList ids = new ArrayList();
 
         // parse the command line
@@ -66,6 +69,9 @@ public class DMCommand {
                 else if ("compact".equals(token)) {
                     compact = true;
                 }
+                else if ("stats".equals(token)) {
+                    stats = true;
+                }
                 else {
                     try {
                         ids.add(Long.valueOf(token));
@@ -77,77 +83,84 @@ public class DMCommand {
                     }
                 }
             }
+            
             // lookup all dependency manager service components
-            try {
-                ServiceReference[] references = m_context.getServiceReferences(ComponentDeclaration.class.getName(), null);
-                // show their state
-                if (references != null) {
-                    Arrays.sort(references, SORTER);
-                    long lastBundleId = -1;
-                    for (int i = 0; i < references.length; i++) {
-                        ServiceReference ref = references[i];
-                        ComponentDeclaration sc = (ComponentDeclaration) m_context.getService(ref);
-                        if (sc != null) {
-                            String name = sc.getName();
-                            int state = sc.getState();
-                            Bundle bundle = ref.getBundle();
-                            long bundleId = bundle.getBundleId();
-                            if (ids.size() == 0 || ids.contains(Long.valueOf(bundleId))) {
-                                if (!notavail || (notavail && sc.getState() == ComponentDeclaration.STATE_UNREGISTERED)) {
-                                    if (lastBundleId != bundleId) {
-                                        lastBundleId = bundleId;
+            List managers = DependencyManager.getDependencyManagers();
+            Collections.sort(managers, SORTER);
+            Iterator iterator = managers.iterator();
+            long numberOfComponents = 0;
+            long numberOfDependencies = 0;
+            long lastBundleId = -1;
+            while (iterator.hasNext()) {
+                DependencyManager manager = (DependencyManager) iterator.next();
+                List components = manager.getComponents();
+                Iterator componentIterator = components.iterator();
+                while (componentIterator.hasNext()) {
+                    Component component = (Component) componentIterator.next();
+                    ComponentDeclaration sc = (ComponentDeclaration) component;
+                    String name = sc.getName();
+                    int state = sc.getState();
+                    Bundle bundle = sc.getBundleContext().getBundle();
+                    long bundleId = bundle.getBundleId();
+                    if (ids.size() == 0 || ids.contains(Long.valueOf(bundleId))) {
+                        if (!notavail || (notavail && sc.getState() == ComponentDeclaration.STATE_UNREGISTERED)) {
+                            numberOfComponents++;
+                            if (lastBundleId != bundleId) {
+                                lastBundleId = bundleId;
+                                if (compact) {
+                                    out.println("[" + bundleId + "] " + compactName(bundle.getSymbolicName()));
+                                }
+                                else {
+                                    out.println("[" + bundleId + "] " + bundle.getSymbolicName());
+                                }
+                            }
+                            if (compact) {
+                                out.print(" " + compactName(name) + " " + compactState(ComponentDeclaration.STATE_NAMES[state]));
+                            }
+                            else {
+                                out.println("  " + name + " " + ComponentDeclaration.STATE_NAMES[state]);
+                            }
+                            if (!nodeps) {
+                                ComponentDependencyDeclaration[] dependencies = sc.getComponentDependencies();
+                                numberOfDependencies += dependencies.length;
+                                if (dependencies != null && dependencies.length > 0) {
+                                    if (compact) {
+                                        out.print('(');
+                                    }
+                                    for (int j = 0; j < dependencies.length; j++) {
+                                        ComponentDependencyDeclaration dep = dependencies[j];
+                                        String depName = dep.getName();
+                                        String depType = dep.getType();
+                                        int depState = dep.getState();
                                         if (compact) {
-                                            out.println("[" + bundleId + "] " + compactName(bundle.getSymbolicName()));
+                                            if (j > 0) {
+                                                out.print(' ');
+                                            }
+                                            out.print(compactName(depName) + " " + compactState(depType) + " " + compactState(ComponentDependencyDeclaration.STATE_NAMES[depState]));
                                         }
                                         else {
-                                            out.println("[" + bundleId + "] " + bundle.getSymbolicName());
+                                            out.println("    " + depName + " " + depType + " " + ComponentDependencyDeclaration.STATE_NAMES[depState]);
                                         }
                                     }
                                     if (compact) {
-                                        out.print(" " + compactName(name) + " " + compactState(ComponentDeclaration.STATE_NAMES[state]));
-                                    }
-                                    else {
-                                        out.println("  " + name + " " + ComponentDeclaration.STATE_NAMES[state]);
-                                    }
-                                    if (!nodeps) {
-                                        ComponentDependencyDeclaration[] dependencies = sc.getComponentDependencies();
-                                        if (dependencies != null && dependencies.length > 0) {
-                                            if (compact) {
-                                                out.print('(');
-                                            }
-                                            for (int j = 0; j < dependencies.length; j++) {
-                                                ComponentDependencyDeclaration dep = dependencies[j];
-                                                String depName = dep.getName();
-                                                String depType = dep.getType();
-                                                int depState = dep.getState();
-                                                if (compact) {
-                                                    if (j > 0) {
-                                                        out.print(' ');
-                                                    }
-                                                    out.print(compactName(depName) + " " + compactState(depType) + " " + compactState(ComponentDependencyDeclaration.STATE_NAMES[depState]));
-                                                }
-                                                else {
-                                                    out.println("    " + depName + " " + depType + " " + ComponentDependencyDeclaration.STATE_NAMES[depState]);
-                                                }
-                                            }
-                                            if (compact) {
-                                                out.print(')');
-                                            }
-                                        }
-                                    }
-                                    if (compact) {
-                                        out.println();
+                                        out.print(')');
                                     }
                                 }
                             }
-                            m_context.ungetService(ref);
+                            if (compact) {
+                                out.println();
+                            }
                         }
                     }
                 }
             }
-            catch (InvalidSyntaxException e) {
-                // very weird since I'm not specifying a filter
-                e.printStackTrace(err);
+            if (stats) {
+                out.println("Statistics:");
+                out.println(" - Dependency managers: " + managers.size());
+                out.println(" - Components: " + numberOfComponents);
+                if (!nodeps) {
+                    out.println(" - Dependencies: " + numberOfDependencies);
+                }
             }
         }
         else {
@@ -210,16 +223,16 @@ public class DMCommand {
     }
 
     public String getUsage() {
-        return "dm [nodeps] [notavail] [compact] [<bundleid> ...]";
+        return "dm [nodeps] [notavail] [compact] [stats] [<bundleid> ...]";
     }
-}
-
-final class BundleIdSorter implements Comparator {
-    public int compare(Object o1, Object o2) {
-        ServiceReference r1 = (ServiceReference) o1;
-        ServiceReference r2 = (ServiceReference) o2;
-        long id1 = r1.getBundle().getBundleId();
-        long id2 = r2.getBundle().getBundleId();
-        return id1 > id2 ? 1 : -1;
+    
+    public static class DependencyManagerSorter implements Comparator {
+        public int compare(Object o1, Object o2) {
+            DependencyManager dm1 = (DependencyManager) o1;
+            DependencyManager dm2 = (DependencyManager) o2;
+            long id1 = dm1.getBundleContext().getBundle().getBundleId();
+            long id2 = dm2.getBundleContext().getBundle().getBundleId();
+            return id1 > id2 ? 1 : -1;
+        }
     }
 }
