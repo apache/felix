@@ -39,6 +39,7 @@ import aQute.lib.osgi.Resource;
  * @phase package
  * @description Build DependencyManager component descriptors from class annotations.
  * @requiresDependencyResolution compile
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AnnotationMojo extends AbstractMojo
 {

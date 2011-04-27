@@ -36,6 +36,8 @@ import java.lang.annotation.Target;
  *   to dynamically create Services on behalf of <code>Factory Configuration Admin</code> 
  *   configuration dictionaries, whose metadata can be described using this <code>PropertyMetaData</code> annotation.
  * </ul>
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.ANNOTATION_TYPE)

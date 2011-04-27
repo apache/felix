@@ -2,6 +2,8 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 
 /**
  * The type of each entry (lines) stored in a component descriptor.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public enum EntryType
 {
