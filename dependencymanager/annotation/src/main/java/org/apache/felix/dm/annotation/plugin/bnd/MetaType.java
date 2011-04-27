@@ -26,6 +26,8 @@ import java.util.Map;
 
 /**
  * Helper class used to generate an XML representation of a MetaType data structure.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MetaType
 {

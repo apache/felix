@@ -56,6 +56,8 @@ import org.osgi.framework.Bundle;
  * }
  * </pre>
  * </blockquote>
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)

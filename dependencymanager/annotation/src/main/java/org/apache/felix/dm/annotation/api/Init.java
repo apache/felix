@@ -54,6 +54,8 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  * </blockquote>
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)

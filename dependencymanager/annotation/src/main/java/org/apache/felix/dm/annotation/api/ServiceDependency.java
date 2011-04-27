@@ -36,6 +36,8 @@ import java.lang.annotation.Target;
  *     &#64;ServiceDependency(timeout=15000)
  *     MyDependency dependency;
  * </pre></blockquote>
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD, ElementType.FIELD})

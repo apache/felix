@@ -48,12 +48,13 @@ import org.osgi.framework.Bundle;
 import aQute.lib.osgi.Annotation;
 import aQute.lib.osgi.ClassDataCollector;
 import aQute.lib.osgi.Verifier;
-import aQute.libg.reporter.Reporter;
 
 /**
  * This is the scanner which does all the annotation parsing on a given class.
  * To start the parsing, just invoke the parseClassFileWithCollector and finish methods.
  * Once parsed, the corresponding component descriptors can be built using the "writeTo" method.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AnnotationCollector extends ClassDataCollector
 {

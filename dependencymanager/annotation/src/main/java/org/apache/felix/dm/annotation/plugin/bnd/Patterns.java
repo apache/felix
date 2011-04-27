@@ -3,6 +3,11 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Class containings pattern matching helper methods.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class Patterns
 {
     // Pattern used to check if a method is void and does not take any params

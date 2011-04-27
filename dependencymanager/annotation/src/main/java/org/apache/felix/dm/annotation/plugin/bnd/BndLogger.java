@@ -21,6 +21,11 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Processor;
 
+/**
+ * Clas used to log messages into the bnd logger.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class BndLogger extends Logger
 {
     private Processor m_processor = new Processor();
