@@ -48,7 +48,7 @@ public class AdapterServiceImpl extends FilterService {
      */
     public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_service.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove))
+        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove))
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
@@ -92,7 +92,7 @@ public class AdapterServiceImpl extends FilterService {
                     props.put(key, m_serviceProperties.get(key));
                 }
             }
-            List dependencies = m_service.getDependencies();
+            List dependencies = m_component.getDependencies();
             dependencies.remove(0);
             ServiceDependency dependency = m_manager.createServiceDependency()
                  .setService(m_adapteeInterface, ref)
@@ -112,7 +112,7 @@ public class AdapterServiceImpl extends FilterService {
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
                 .add(dependency);
             
-            configureAutoConfigState(service, m_service);
+            configureAutoConfigState(service, m_component);
             
             for (int i = 0; i < dependencies.size(); i++) {
                 service.add(((Dependency) dependencies.get(i)).createCopy());

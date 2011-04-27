@@ -41,7 +41,7 @@ public class AspectServiceImpl extends FilterService {
     public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove)
     { 
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_service.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig, add, change, remove))
+        m_component.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig, add, change, remove))
              .add(dm.createServiceDependency()
                   .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
                   .setAutoConfig(false)
@@ -82,7 +82,7 @@ public class AspectServiceImpl extends FilterService {
         }
         
         public Component createService(Object[] params) {
-            List dependencies = m_service.getDependencies();
+            List dependencies = m_component.getDependencies();
             // remove our internal dependency
             dependencies.remove(0);
             // replace it with one that points to the specific service that just was passed in
@@ -104,7 +104,7 @@ public class AspectServiceImpl extends FilterService {
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
                 .add(dependency);
             
-            configureAutoConfigState(service, m_service);
+            configureAutoConfigState(service, m_component);
             
             for (int i = 0; i < dependencies.size(); i++) {
                 service.add(((Dependency) dependencies.get(i)).createCopy());

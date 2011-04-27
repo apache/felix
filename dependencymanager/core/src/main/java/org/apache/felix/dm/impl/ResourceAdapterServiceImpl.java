@@ -47,7 +47,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_callbackInstance = callbackInstance;
         m_callbackChanged = callbackChanged;
-        m_service.setImplementation(new ResourceAdapterImpl(resourceFilter, propagate))
+        m_component.setImplementation(new ResourceAdapterImpl(resourceFilter, propagate))
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
                  .setAutoConfig(false)
@@ -58,7 +58,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_callbackInstance = callbackInstance;
         m_callbackChanged = callbackChanged;
-        m_service.setImplementation(new ResourceAdapterImpl(resourceFilter, propagateCallbackInstance, propagateCallbackMethod))
+        m_component.setImplementation(new ResourceAdapterImpl(resourceFilter, propagateCallbackInstance, propagateCallbackMethod))
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
                  .setAutoConfig(false)
@@ -96,7 +96,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
                     props.put(key, m_serviceProperties.get(key));
                 }
             }
-            List dependencies = m_service.getDependencies();
+            List dependencies = m_component.getDependencies();
             // the first dependency is always the dependency on the resource, which
             // will be replaced with a more specific dependency below
             dependencies.remove(0);
