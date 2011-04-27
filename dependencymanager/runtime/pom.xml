@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <!--
+<!--
     Licensed to the Apache Software Foundation (ASF) under one or more
     contributor license agreements. See the NOTICE file distributed with
     this work for additional information regarding copyright ownership.
@@ -14,89 +14,81 @@
     License for the specific language governing permissions and
     limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-
-	<parent>
-	    <groupId>org.apache.felix</groupId>
-	    <artifactId>felix-parent</artifactId>
-	    <version>1.2.0</version>
-	    <relativePath>../../pom/pom.xml</relativePath>
-	</parent>
-
-	<properties>
-		<felix.dependencymanager.version>3.0.0-SNAPSHOT</felix.dependencymanager.version>
-		<osgi.version>4.2.0</osgi.version>
-		<pax.exam.version>1.2.0</pax.exam.version>
-	</properties>
-
-	<name>Apache Felix Dependency Manager Runtime</name>
-	<artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
-	<packaging>bundle</packaging>
-
-	<dependencies>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-			<version>${osgi.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
-			<version>${osgi.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${pom.groupId}</groupId>
-			<artifactId>org.apache.felix.dependencymanager</artifactId>
-			<version>${felix.dependencymanager.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<scope>provided</scope>
-			<version>20070829</version>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.felix</groupId>
-					<artifactId>maven-bundle-plugin</artifactId>
-					<version>1.4.0</version>
-					<extensions>true</extensions>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<configuration>
-					<instructions>
-						<Bundle-SymbolicName>org.apache.felix.dependencymanager.runtime</Bundle-SymbolicName>
-						<Bundle-Name>Apache Felix Dependency Manager Runtime</Bundle-Name>
-						<Bundle-Description>A bundle that loads components descriptors from started bundles</Bundle-Description>
-						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-						<Private-Package>org.apache.felix.dm.runtime.*</Private-Package>
-						<Import-Package>org.apache.felix.dm;version="[3.0.0,4.0.0)",*</Import-Package>
-						<Embed-Dependency>json</Embed-Dependency>
-						<Bundle-Activator>org.apache.felix.dm.runtime.Activator</Bundle-Activator>
-						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource> 
-					</instructions>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>1.2.0</version>
+        <relativePath>../../pom/pom.xml</relativePath>
+    </parent>
+    <properties>
+        <osgi.version>4.2.0</osgi.version>
+    </properties>
+    <name>Apache Felix Dependency Manager Runtime</name>
+    <artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>${osgi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>${osgi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.dependencymanager</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <scope>provided</scope>
+            <version>20070829</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.4</version>
+                    <extensions>true</extensions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>org.apache.felix.dependencymanager.runtime</Bundle-SymbolicName>
+                        <Bundle-Name>Apache Felix Dependency Manager Runtime</Bundle-Name>
+                        <Bundle-Description>A bundle that loads components descriptors from started bundles</Bundle-Description>
+                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+                        <Private-Package>org.apache.felix.dm.runtime,org.apache.felix.dm.runtime.*</Private-Package>
+                        <Import-Package>*</Import-Package>
+                        <Export-Package/>
+                        <Embed-Dependency>json</Embed-Dependency>
+                        <Bundle-Activator>org.apache.felix.dm.runtime.Activator</Bundle-Activator>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
