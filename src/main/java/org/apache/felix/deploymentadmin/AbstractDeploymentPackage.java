@@ -20,6 +20,8 @@ package org.apache.felix.deploymentadmin;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.Manifest;
@@ -39,7 +41,6 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
  * deployment package data is obtained, this should be handled by extending classes.
  */
 public abstract class AbstractDeploymentPackage implements DeploymentPackage {
-
     private final BundleContext m_bundleContext;
     private final DeploymentPackageManifest m_manifest;
     private final Map m_nameToBundleInfo = new HashMap();
@@ -70,6 +71,8 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
         public ResourceInfoImpl[] getOrderedResourceInfos() { return new ResourceInfoImpl[] {}; }
         public InputStream getCurrentEntryStream() { throw new UnsupportedOperationException(); }
         public AbstractInfo getNextEntry() throws IOException { throw new UnsupportedOperationException(); }
+        public String getDisplayName() { return ""; }
+        public URL getIcon() { return null; }
     };
 
     /* Constructor only for use by the emptyPackage static variable */
@@ -157,6 +160,27 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
 
     public String getName() {
         return m_manifest.getSymbolicName();
+    }
+    
+    public String getDisplayName() {
+        return getHeader("DeploymentPackage-Name");
+    }
+
+    public URL getIcon() {
+        String icon = getHeader("DeploymentPackage-Icon");
+        if (icon == null) {
+            return null;
+        }
+        else {
+            try {
+                // TODO spec states this must be a local resource, but we don't make
+                // sure of that yet
+                return new URL(icon);
+            }
+            catch (MalformedURLException e) {
+                return null;
+            }
+        }
     }
 
     public String getResourceHeader(String resource, String header) {
