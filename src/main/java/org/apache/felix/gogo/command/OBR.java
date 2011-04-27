@@ -272,7 +272,7 @@ public class OBR
                 targetVersion = args[argIdx].substring(idx + 1);
             }
             Resource[] resources = searchRepository(ra, targetName, targetVersion);
-            if (resources == null)
+            if ((resources == null) || (resources.length == 0))
             {
                 System.err.println("Unknown bundle and/or version: " + args[argIdx]);
             }
@@ -507,12 +507,20 @@ public class OBR
         try
         {
             Bundle bundle = m_bc.getBundle(Long.parseLong(targetId));
-            targetId = bundle.getSymbolicName();
+            if (bundle != null)
+            {
+                targetId = bundle.getSymbolicName();
+            }
+            else
+            {
+                return null;
+            }
         }
         catch (NumberFormatException ex)
         {
             // It was not a number, so ignore.
         }
+
 
         // The targetId may be a bundle name or a bundle symbolic name,
         // so create the appropriate LDAP query.
