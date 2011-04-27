@@ -27,6 +27,8 @@ import java.security.PrivilegedAction;
 
 /**
  * Java reflexion utility methods.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InvocationUtil
 {

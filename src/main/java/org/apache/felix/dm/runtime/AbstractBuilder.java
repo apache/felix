@@ -27,6 +27,8 @@ import org.osgi.framework.Bundle;
 
 /**
  * Base class for all kind of DM component builders (for Component, Aspect, Adapters ...).
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class AbstractBuilder
 {

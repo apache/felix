@@ -25,6 +25,12 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
+/**
+ * Class used to build a factory configuration adapter service using metadata found from DependencyManager runtime
+ * meta-inf descriptor.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
 {
     private final static String TYPE = "FactoryConfigurationAdapterService";

@@ -22,6 +22,8 @@ import org.osgi.service.log.LogService;
 
 /**
  * This class logs some formattable strings into the OSGi Log Service.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Log
 {
