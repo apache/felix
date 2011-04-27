@@ -73,7 +73,7 @@ import java.lang.annotation.Target;
  *     &#64;Stop
  *     public void stop() {
  *         // This method will be called after we invoke our "stop" Runnable, and our service will be
- *         // unregistered after our method returns, as in normal case. Notice that the service won't
+ *         // unregistered before our method is invoked, as in normal case. Notice that the service won't
  *         // be destroyed here, and the "starter" runnable can be re-invoked later.
  *     }
  * }
