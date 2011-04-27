@@ -521,7 +521,6 @@ public class OBR
             // It was not a number, so ignore.
         }
 
-
         // The targetId may be a bundle name or a bundle symbolic name,
         // so create the appropriate LDAP query.
         StringBuffer sb = new StringBuffer("(|(presentationname=");
