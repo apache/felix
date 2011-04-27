@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +34,8 @@ import aQute.lib.osgi.Clazz.QUERY;
 
 /**
  * This helper parses all classes which contain DM annotations, and generates the corresponding component descriptors.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DescriptorGenerator
 {

@@ -21,6 +21,11 @@ package org.apache.felix.dm.annotation.plugin.mvn;
 import org.apache.felix.dm.annotation.plugin.bnd.Logger;
 import org.apache.maven.plugin.logging.Log;
 
+/**
+ * Maven logger.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class MvnLogger extends Logger
 {
     private final Log m_log;

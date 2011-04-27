@@ -12,6 +12,8 @@ import aQute.lib.osgi.Annotation;
 
 /**
  * This class encodes a component descriptor entry line, using json.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class EntryWriter
 {

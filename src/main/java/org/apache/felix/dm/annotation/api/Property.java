@@ -26,6 +26,8 @@ import java.lang.annotation.Target;
 /**
  * Annotation used to describe a property key-value pair. It is used when
  * declaring {@link Component#properties()} attribute.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target( { ElementType.ANNOTATION_TYPE })

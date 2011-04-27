@@ -33,6 +33,8 @@ import aQute.libg.reporter.Reporter;
  * This class is a BND plugin. It scans the target bundle and look for DependencyManager annotations.
  * It can be directly used when using ant and can be referenced inside the ".bnd" descriptor, using
  * the "-plugin" parameter.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AnnotationPlugin implements AnalyzerPlugin, Plugin
 {

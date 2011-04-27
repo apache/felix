@@ -18,6 +18,11 @@
  */
 package org.apache.felix.dm.annotation.plugin.bnd;
 
+/**
+ * Base class for our logger. Under Maven, we log into the Maven logger. Under bnd, we log into the Bnd logger.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public abstract class Logger
 {    
     protected final static int ERROR = 1;
