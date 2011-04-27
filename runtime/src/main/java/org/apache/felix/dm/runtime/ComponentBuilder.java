@@ -29,6 +29,8 @@ import org.osgi.framework.Bundle;
 
 /**
  * Builds a DependencyManager Component.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ComponentBuilder extends AbstractBuilder
 {

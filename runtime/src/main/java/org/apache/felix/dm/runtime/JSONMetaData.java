@@ -28,7 +28,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * A JSON MetaData.
+ * Thsi class represents the parsed data found from meta-inf dependencymanager descriptors.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class JSONMetaData implements MetaData, Cloneable
 {

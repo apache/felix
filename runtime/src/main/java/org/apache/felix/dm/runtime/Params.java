@@ -20,6 +20,8 @@ package org.apache.felix.dm.runtime;
 
 /**
  * List of descriptor parameters.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public enum Params
 {

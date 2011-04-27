@@ -39,6 +39,8 @@ import org.osgi.framework.Bundle;
  * may be injected with this Set. And each time a Dictionary configuration is registered in the Set,
  * then a new Service instance will be instantiated, and will be provided with the Dictionary passed to the
  * Service instance.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @SuppressWarnings( { "unchecked" })
 public class FactorySet extends AbstractSet<Dictionary>

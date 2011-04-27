@@ -29,6 +29,8 @@ import org.osgi.framework.Bundle;
 
 /**
  * Class used to build a concrete dependency from meta data.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DependencyBuilder
 {

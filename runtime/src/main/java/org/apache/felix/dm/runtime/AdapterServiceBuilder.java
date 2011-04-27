@@ -27,6 +27,8 @@ import org.osgi.framework.Bundle;
 
 /**
  * Builded called when the JSON parser find an adapter service descriptor.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AdapterServiceBuilder extends AbstractBuilder
 {
