@@ -42,7 +42,7 @@ public class BundleAdapterServiceImpl extends FilterService
     public BundleAdapterServiceImpl(DependencyManager dm, int bundleStateMask, String bundleFilter, boolean propagate)
     {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_service.setImplementation(new BundleAdapterImpl(bundleStateMask, bundleFilter, propagate))
+        m_component.setImplementation(new BundleAdapterImpl(bundleStateMask, bundleFilter, propagate))
                  .add(dm.createBundleDependency()
                       .setFilter(bundleFilter)
                       .setStateMask(bundleStateMask)
@@ -70,7 +70,7 @@ public class BundleAdapterServiceImpl extends FilterService
                     props.put(key, m_serviceProperties.get(key));
                 }
             }
-            List dependencies = m_service.getDependencies();
+            List dependencies = m_component.getDependencies();
             // the first dependency is always the dependency on the bundle, which
             // will be replaced with a more specific dependency below
             dependencies.remove(0);
