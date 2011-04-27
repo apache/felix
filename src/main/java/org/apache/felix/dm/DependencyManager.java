@@ -38,10 +38,10 @@ import org.apache.felix.dm.impl.dependencies.ConfigurationDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.TemporalServiceDependencyImpl;
+import org.apache.felix.dm.impl.index.AspectFilterIndex;
+import org.apache.felix.dm.impl.index.MultiPropertyExactFilter;
+import org.apache.felix.dm.impl.index.ServiceRegistryCache;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
-import org.apache.felix.dm.index.AspectFilterIndex;
-import org.apache.felix.dm.index.MultiPropertyExactFilter;
-import org.apache.felix.dm.index.ServiceRegistryCache;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 

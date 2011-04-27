@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.index;
+package org.apache.felix.dm.impl.index;
 
 import java.util.List;
 
