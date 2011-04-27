@@ -17,192 +17,45 @@
  specific language governing permissions and limitations
  under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-
-	<packaging>pom</packaging>
-
-	<parent>
-		<groupId>org.apache.felix</groupId>
-		<artifactId>felix</artifactId>
-		<version>1.0.4</version>
-		<relativePath>../pom/pom.xml</relativePath>
-	</parent>
-
-	<name>Apache Felix Dependency Manager Projects</name>
-	<artifactId>dependencymanager-reactor</artifactId>
-	<version>3.0.0-SNAPSHOT</version>
-
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<modules>
-		<module>core</module>
-		<module>shell</module>
-		<module>compat</module>
-		<module>annotation</module>
-		<module>runtime</module>
-		<module>samples</module>
-		<module>samples.annotation</module>
-		<module>test</module>
-	</modules>
-
-	<properties>
-		<felix.dependencymanager.version>3.0.0-SNAPSHOT</felix.dependencymanager.version>
-		<osgi.version>4.1.0</osgi.version>
-		<pax.exam.version>1.2.0</pax.exam.version>
-	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>${pom.groupId}</groupId>
-				<artifactId>org.apache.felix.dependencymanager</artifactId>
-				<version>${felix.dependencymanager.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${pom.groupId}</groupId>
-				<artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
-				<version>${felix.dependencymanager.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${pom.groupId}</groupId>
-				<artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
-				<version>${felix.dependencymanager.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>${pom.groupId}</groupId>
-				<artifactId>org.apache.felix.gogo.runtime</artifactId>
-				<version>0.6.0</version>
-			</dependency>
-			<dependency>
-				<groupId>${pom.groupId}</groupId>
-				<artifactId>org.apache.felix.shell</artifactId>
-				<version>1.4.1</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.equinox</groupId>
-				<artifactId>osgi</artifactId>
-				<version>3.1.1</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.osgi</groupId>
-				<artifactId>org.osgi.core</artifactId>
-				<version>${osgi.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.osgi</groupId>
-				<artifactId>org.osgi.compendium</artifactId>
-				<version>${osgi.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>biz.aQute</groupId>
-				<artifactId>bndlib</artifactId>
-				<version>1.15.0</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.ops4j.pax.exam</groupId>
-				<artifactId>pax-exam</artifactId>
-				<version>${pax.exam.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.ops4j.pax.exam</groupId>
-				<artifactId>pax-exam-container-default</artifactId>
-				<version>${pax.exam.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.ops4j.pax.exam</groupId>
-				<artifactId>pax-exam-junit</artifactId>
-				<version>${pax.exam.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-project</artifactId>
-				<version>2.0.7</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-artifact</artifactId>
-				<version>2.0.7</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-plugin-api</artifactId>
-				<version>2.0</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.json</groupId>
-				<artifactId>json</artifactId>
-				<version>20070829</version>
-			</dependency>
-
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.7</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.felix</groupId>
-					<artifactId>maven-bundle-plugin</artifactId>
-					<version>1.4.0</version>
-					<extensions>true</extensions>
-				</plugin>
-
-				<plugin>
-					<groupId>${pom.groupId}</groupId>
-					<artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
-					<version>${felix.dependencymanager.version}</version>
-				</plugin>
-				
-				<plugin>
-					<groupId>org.ops4j.pax.exam</groupId>
-					<artifactId>maven-paxexam-plugin</artifactId>
-					<version>${pax.exam.version}</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-
-		<plugins>
-			<!-- by default the dependency manager will run on any OSGi execution environment -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<target>1.3</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
-	<repositories>
-		<repository>
-			<id>maven2-repository.dev.java.net</id>
-			<name>Java.net Maven 2 Repository</name>
-			<url>http://download.java.net/maven/2</url>
-		</repository>
-	</repositories>
-
-	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/</developerConnection>
-		<url>http://svn.apache.org/viewvc/felix/trunk/dependencymanager/</url>
-	</scm>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>1.2.0</version>
+        <relativePath>../pom/pom.xml</relativePath>
+    </parent>
+    <name>Apache Felix Dependency Manager Projects</name>
+    <artifactId>dependencymanager-reactor</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <modules>
+        <module>core</module>
+        <module>shell</module>
+        <module>compat</module>
+        <module>annotation</module>
+        <module>runtime</module>
+        <module>samples</module>
+        <module>samples.annotation</module>
+        <module>test</module>
+    </modules>
+    <repositories>
+        <repository>
+            <id>maven2-repository.dev.java.net</id>
+            <name>Java.net Maven 2 Repository</name>
+            <url>http://download.java.net/maven/2</url>
+        </repository>
+    </repositories>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/dependencymanager/</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/dependencymanager/</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/dependencymanager/</url>
+    </scm>
 </project>
