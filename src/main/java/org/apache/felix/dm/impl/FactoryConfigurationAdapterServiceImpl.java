@@ -48,7 +48,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
-        m_service
+        m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
             .setImplementation(new AdapterImpl(factoryPid, update, propagate));
     }
@@ -58,7 +58,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
-        m_service
+        m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
             .setImplementation(new MetaTypeAdapterImpl(factoryPid, update, propagate,
                 bctx, logger, heading, description,
@@ -132,7 +132,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
             Dictionary serviceProperties = m_propagate ? mergeSettings(m_serviceProperties, settings) : m_serviceProperties;
             newService.setInterface(m_serviceInterfaces, serviceProperties);
             newService.setImplementation(impl);
-            List dependencies = m_service.getDependencies();
+            List dependencies = m_component.getDependencies();
             newService.add(dependencies);
             newService.setComposition(m_compositionInstance, m_compositionMethod); // if not set, no effect
             newService.setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy); // if not set, no effect

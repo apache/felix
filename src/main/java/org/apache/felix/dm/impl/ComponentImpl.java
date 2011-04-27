@@ -1108,11 +1108,11 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         if (properties != null) {
             Enumeration enumeration = properties.keys();
             while (enumeration.hasMoreElements()) {
-                String key = (String) enumeration.nextElement();
+                Object key = enumeration.nextElement();
                 if (result.length() > 0) {
                     result.append(',');
                 }
-                result.append(key);
+                result.append(key.toString());
                 result.append('=');
                 Object value = properties.get(key);
                 if (value instanceof String[]) {
