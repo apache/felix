@@ -30,6 +30,8 @@ import org.apache.felix.dm.DependencyService;
  * This is a custom DependencyManager Dependency, allowing to take control of when the dependency
  * is available or not. It's used in the context of the LifecycleController class, in order to 
  * activate/deactivate a Component on demand.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ToggleServiceDependency implements Dependency, DependencyActivation
 {

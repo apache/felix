@@ -25,6 +25,12 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
+/**
+ * Class used to build a resource adapter service using metadata found from DependencyManager runtime
+ * meta-inf descriptor.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class ResourceAdapterServiceBuilder extends AbstractBuilder
 {
     private final static String TYPE = "ResourceAdapterService";

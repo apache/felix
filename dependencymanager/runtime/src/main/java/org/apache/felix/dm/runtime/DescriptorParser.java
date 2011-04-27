@@ -29,9 +29,11 @@ import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 
 /**
- * This class parses files generated in OSGI-INF/*.dm by the DependencyManager bnd plugin.
+ * This class parses files generated in META-INF/*.dm by the DependencyManager bnd plugin.
  * Each descriptor contains a JSON definition of a Service, along with its corresponding  
  * dependencies.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DescriptorParser
 {

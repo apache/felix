@@ -22,6 +22,8 @@ import java.util.Dictionary;
 
 /**
  * This class represents the meta data parsed from a descriptor entry (json) line.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface MetaData extends Cloneable
 {
