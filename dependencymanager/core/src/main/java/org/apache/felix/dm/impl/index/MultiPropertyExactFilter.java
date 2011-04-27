@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.felix.dm.FilterIndex;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
 import org.osgi.framework.BundleContext;

@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.FilterIndex;
 import org.apache.felix.dm.ServiceUtil;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.apache.felix.dm.tracker.ServiceTrackerCustomizer;
