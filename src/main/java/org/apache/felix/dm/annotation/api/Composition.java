@@ -26,14 +26,15 @@ import java.lang.annotation.Target;
 /**
  * Annotates a method returning the list of objects which are part of a Component implementation.
  * When implementing complex Components, you often need to use more than one object instances. 
- * Moreover, several of these instances might want to have dependencies injected, as was as lifecycle
+ * Moreover, several of these instances might want to have dependencies injected, as well as lifecycle
  * callbacks invoked, like the methods annotated with {@link Init}, {@link Start}, {@link Stop}, 
  * {@link Destroy} annotations. In such cases you can tell the dependency manager which instances to 
  * consider, by annotating a method in your Component, returning a list of objects which are part 
  * of the implementation.
  * <p>
  * This annotation may be applied on a method which is part of class annotated with either a {@link Component},
- * {@link AspectService}, {@link AdapterService}, or {@link ResourceAdapterService} annotation.
+ * {@link AspectService}, {@link AdapterService}, {@link FactoryConfigurationAdapterService} or 
+ * {@link ResourceAdapterService} annotation.
  * 
  * <h3>Usage Examples</h3>
  * 
