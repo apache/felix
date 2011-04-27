@@ -81,7 +81,7 @@
                         <Bundle-Name>Apache Felix Dependency Manager Runtime</Bundle-Name>
                         <Bundle-Description>A bundle that loads components descriptors from started bundles</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Private-Package>org.apache.felix.dm.runtime,org.apache.felix.dm.runtime.*</Private-Package>
+                        <Private-Package>org.apache.felix.dm.runtime</Private-Package>
                         <Import-Package>*</Import-Package>
                         <Export-Package/>
                         <Embed-Dependency>json</Embed-Dependency>
