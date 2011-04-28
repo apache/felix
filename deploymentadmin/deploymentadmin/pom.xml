@@ -66,6 +66,7 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.deploymentadmin.*</Private-Package>
                         <Export-Package>org.osgi.service.deploymentadmin.*;version="1.0"</Export-Package>
+                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
