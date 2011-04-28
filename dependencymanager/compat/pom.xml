@@ -64,11 +64,12 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.felix.dependencymanager.compat</Bundle-SymbolicName>
                         <Bundle-Name>Apache Felix Dependency Manager Compatibility</Bundle-Name>
-                        <Bundle-Description>A bundle that provides compatibility with old 2.x.x dependencymanager.</Bundle-Description>
+                        <Bundle-Description>Provides compatibility with the dependency manager version 2.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Export-Package>org.apache.felix.dependencymanager"</Export-Package>
                         <Import-Package>!org.apache.felix.dependencymanager,org.apache.felix.dm;version="[3,4)",*</Import-Package>
                         <Private-Package>org.apache.felix.dependencymanager.impl</Private-Package>
+                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>

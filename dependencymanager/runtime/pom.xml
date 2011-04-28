@@ -79,13 +79,14 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.felix.dependencymanager.runtime</Bundle-SymbolicName>
                         <Bundle-Name>Apache Felix Dependency Manager Runtime</Bundle-Name>
-                        <Bundle-Description>A bundle that loads components descriptors from started bundles</Bundle-Description>
+                        <Bundle-Description>Loads component descriptors from active bundles.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.dm.runtime</Private-Package>
                         <Import-Package>*</Import-Package>
                         <Export-Package/>
                         <Embed-Dependency>json</Embed-Dependency>
                         <Bundle-Activator>org.apache.felix.dm.runtime.Activator</Bundle-Activator>
+                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
