@@ -1395,11 +1395,11 @@ public class ModuleImpl implements Module
         }
         else if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_EXT))
         {
-            parent = m_secureAction.getSystemClassLoader().getParent();
+            parent = m_secureAction.getParentClassLoader(m_secureAction.getSystemClassLoader());
         }
         else if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_FRAMEWORK))
         {
-            parent = ModuleImpl.class.getClassLoader();
+            parent = m_secureAction.getClassLoader(ModuleImpl.class);
         }
         // On Android we cannot set the parent class loader to be null, so
         // we special case that situation here and set it to the system
@@ -1569,8 +1569,8 @@ public class ModuleImpl implements Module
                 {
                     // Return the class or resource from the parent class loader.
                     return (isClass)
-                        ? (Object) this.getClass().getClassLoader().loadClass(name)
-                        : (Object) this.getClass().getClassLoader().getResource(name);
+                        ? (Object) m_secureAction.getClassLoader(this.getClass()).loadClass(name)
+                        : (Object) m_secureAction.getClassLoader(this.getClass()).getResource(name);
                 }
                 catch (NoClassDefFoundError ex)
                 {
@@ -1587,7 +1587,7 @@ public class ModuleImpl implements Module
     {
         // The target class is loaded by a module class loader,
         // then return true.
-        if (ModuleClassLoader.class.isInstance(clazz.getClassLoader()))
+        if (ModuleClassLoader.class.isInstance(m_secureAction.getClassLoader(clazz)))
         {
             return true;
         }
@@ -1595,9 +1595,9 @@ public class ModuleImpl implements Module
         // If the target class was loaded from a class loader that
         // came from a module, then return true.
         ClassLoader last = null;
-        for (ClassLoader cl = clazz.getClassLoader();
+        for (ClassLoader cl = m_secureAction.getClassLoader(clazz);
             (cl != null) && (last != cl);
-            cl = cl.getClass().getClassLoader())
+            cl = m_secureAction.getClassLoader(cl.getClass()))
         {
             last = cl;
             if (ModuleClassLoader.class.isInstance(cl))
@@ -1688,7 +1688,7 @@ public class ModuleImpl implements Module
     {
         // Get the appropriate class loader for delegation.
         ClassLoader parent = (m_classLoader == null)
-            ? determineParentClassLoader() : m_classLoader.getParent();
+            ? determineParentClassLoader() : m_secureAction.getParentClassLoader(m_classLoader);
         return (parent == null) ? m_bootClassLoader : parent;
     }
 
@@ -2354,7 +2354,7 @@ public class ModuleImpl implements Module
             boolean classpath = false;
             try
             {
-                ModuleClassLoader.class.getClassLoader().loadClass(name);
+                m_secureAction.getClassLoader(ModuleClassLoader.class).loadClass(name);
                 classpath = true;
             }
             catch (NoClassDefFoundError err)
@@ -2407,7 +2407,7 @@ public class ModuleImpl implements Module
         // class loader.
         try
         {
-            ModuleClassLoader.class.getClassLoader().loadClass(name);
+            m_secureAction.getClassLoader(ModuleClassLoader.class).loadClass(name);
 
             StringBuffer sb = new StringBuffer("*** Package '");
             sb.append(pkgName);
