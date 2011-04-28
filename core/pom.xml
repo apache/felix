@@ -71,11 +71,12 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.felix.dependencymanager</Bundle-SymbolicName>
                         <Bundle-Name>Apache Felix Dependency Manager</Bundle-Name>
-                        <Bundle-Description>A bundle that provides a run-time service dependency manager.</Bundle-Description>
+                        <Bundle-Description>Provides dynamic service and component dependency management.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Export-Package>org.apache.felix.dm;version="3.0.0";provide:=true,org.apache.felix.dm.tracker;version="3.0.0";provide:=true</Export-Package>
                         <Import-Package>*</Import-Package>
                         <Private-Package>org.apache.felix.dm.impl, org.apache.felix.dm.impl.*</Private-Package>
+                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                         <!-- Uncomment this next line to include source code in the bundle.
                         <Include-Resource>src/main/java</Include-Resource>
                         -->
