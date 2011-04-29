@@ -66,6 +66,17 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE*</include>
+                    <include>NOTICE*</include>
+                    <include>DEPENDENCIES*</include>
+                </includes>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -97,7 +108,6 @@
                         <Export-Package/>
                         <Private-Package>org.apache.felix.dm.shell</Private-Package>
                         <Import-Package>org.apache.felix.shell;resolution:=optional, org.eclipse.osgi.framework.console;resolution:=optional, org.apache.felix.service.command;resolution:=optional, *</Import-Package>
-                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
