@@ -45,6 +45,17 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE*</include>
+                    <include>NOTICE*</include>
+                    <include>DEPENDENCIES*</include>
+                </includes>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -76,7 +87,6 @@
                         <Export-Package>org.apache.felix.dm;version="3.0.0";provide:=true,org.apache.felix.dm.tracker;version="3.0.0";provide:=true</Export-Package>
                         <Import-Package>*</Import-Package>
                         <Private-Package>org.apache.felix.dm.impl, org.apache.felix.dm.impl.*</Private-Package>
-                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                         <!-- Uncomment this next line to include source code in the bundle.
                         <Include-Resource>src/main/java</Include-Resource>
                         -->
