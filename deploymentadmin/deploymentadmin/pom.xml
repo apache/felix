@@ -51,6 +51,17 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE*</include>
+                    <include>NOTICE*</include>
+                    <include>DEPENDENCIES*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -66,7 +77,6 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.deploymentadmin.*</Private-Package>
                         <Export-Package>org.osgi.service.deploymentadmin.*;version="1.0"</Export-Package>
-                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>

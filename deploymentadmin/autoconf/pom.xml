@@ -61,6 +61,17 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE*</include>
+                    <include>NOTICE*</include>
+                    <include>DEPENDENCIES*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -78,7 +89,6 @@
                         <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0"</Export-Package>
                         <DeploymentPackage-Customizer>true</DeploymentPackage-Customizer>
                         <Deployment-ProvidesResourceProcessor>org.osgi.deployment.rp.autoconf</Deployment-ProvidesResourceProcessor>
-                        <Include-Resource>{maven-resources}, META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
