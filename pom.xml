@@ -27,7 +27,7 @@
     </properties>
     <name>Apache Felix Dependency Manager Runtime</name>
     <artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0</version>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
@@ -94,7 +94,7 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.dm.runtime</Private-Package>
                         <Import-Package>*</Import-Package>
-                        <Export-Package/>
+                        <Export-Package />
                         <Embed-Dependency>json</Embed-Dependency>
                         <Bundle-Activator>org.apache.felix.dm.runtime.Activator</Bundle-Activator>
                     </instructions>
@@ -102,4 +102,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.runtime-3.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.runtime-3.0.0</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.runtime-3.0.0</url>
+  </scm>
 </project>
