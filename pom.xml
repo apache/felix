@@ -30,7 +30,7 @@
     </properties>
     <name>Apache Felix Dependency Manager Shell</name>
     <artifactId>org.apache.felix.dependencymanager.shell</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0</version>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
@@ -105,7 +105,7 @@
                         <Bundle-Name>Apache Felix Dependency Manager Shell</Bundle-Name>
                         <Bundle-Description>Shell command for the dependency manager.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Export-Package/>
+                        <Export-Package />
                         <Private-Package>org.apache.felix.dm.shell</Private-Package>
                         <Import-Package>org.apache.felix.shell;resolution:=optional, org.eclipse.osgi.framework.console;resolution:=optional, org.apache.felix.service.command;resolution:=optional, *</Import-Package>
                     </instructions>
@@ -113,4 +113,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.shell-3.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.shell-3.0.0</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.shell-3.0.0</url>
+  </scm>
 </project>
