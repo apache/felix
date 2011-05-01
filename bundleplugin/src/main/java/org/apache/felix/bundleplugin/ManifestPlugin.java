@@ -90,6 +90,7 @@ public class ManifestPlugin extends BundlePlugin
 
         try
         {
+            getLog().info( "Writting manifest for " + project.getArtifact() + " to " + outputFile + " ..." );
             writeManifest( manifest, outputFile );
         }
         catch ( IOException e )
