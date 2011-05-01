@@ -323,11 +323,7 @@ public class BundlePlugin extends AbstractMojo
 
                 try
                 {
-<<<<<<< HEAD
                     getLog().info( "Writting MANIFEST.MF to " + outputFile + " ..." );
-=======
-                    getLog().info( "Writting manifest for " + project.getArtifact() + " to " + outputFile + " ..." );
->>>>>>> b879c0b4174586538a406665532c62abc18d57ee
                     Manifest manifest = builder.getJar().getManifest();
                     ManifestPlugin.writeManifest( manifest, outputFile );
                 }
