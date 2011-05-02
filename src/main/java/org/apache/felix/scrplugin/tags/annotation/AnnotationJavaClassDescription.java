@@ -43,6 +43,10 @@ public class AnnotationJavaClassDescription extends QDoxJavaClassDescription {
         super(clazz, javaClass, manager);
     }
 
+    public ClassLoader getClassLoader() {
+        return this.manager.getClassLoader();
+    }
+
     /**
      * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getTagByName(String)
      */
