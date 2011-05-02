@@ -516,6 +516,10 @@ public abstract class JavaClassDescriptorManager
 
     private Manifest getManifest( File artifact ) throws IOException
     {
+        if ( artifact.isDirectory() )
+        {
+            return null;
+        }
         JarFile file = null;
         try
         {
