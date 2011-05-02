@@ -1,6 +1,10 @@
 Changes from 1.1.0 to 1.1.2
 ---------------------------
 
+** Bug
+    * [FELIX-2878] - scr- and bundle-plugin in multimodule project fails with goal "test"
+
+
 ** Improvement
     * [FELIX-2939] - Maven SCR Plugin is not (marked as) thread-safe for parallel builds
 
