@@ -293,13 +293,13 @@ public abstract class Util {
         }
     }
 
-    public static Class<?> getClassValue(Annotation annotation, String name, final Class<?> clazz) {
+    public static Class<?> getClassValue(Annotation annotation, String name, final Class<?> clazz, final ClassLoader classLoader) {
         final Object obj = annotation.getNamedParameter(name);
         if ( obj != null ) {
             if ( obj instanceof Class<?> ) {
                 return (Class<?>)obj;
             }
-            return ClassUtil.getClass(obj.toString());
+            return ClassUtil.getClass(classLoader, obj.toString());
         }
         try {
             return (Class<?>) clazz.getMethod(name).getDefaultValue();
@@ -309,7 +309,7 @@ public abstract class Util {
         }
     }
 
-    public static Class<?>[] getClassArrayValue(Annotation annotation, String name, final Class<?> clazz) {
+    public static Class<?>[] getClassArrayValue(Annotation annotation, String name, final Class<?> clazz, final ClassLoader classLoader) {
         Object obj = annotation.getNamedParameter(name);
         if ( obj != null ) {
             if ( obj instanceof Class<?> ) {
@@ -325,12 +325,12 @@ public abstract class Util {
                     if ( objArray[i] instanceof Class<?>) {
                         result[i] = (Class<?>)objArray[i];
                     } else {
-                        result[i] = ClassUtil.getClass(objArray[i].toString());
+                        result[i] = ClassUtil.getClass(classLoader, objArray[i].toString());
                     }
                 }
                 return result;
             }
-            return new Class<?>[] {ClassUtil.getClass(obj.toString())};
+            return new Class<?>[] {ClassUtil.getClass(classLoader, obj.toString())};
         }
         try {
             final Object val = clazz.getMethod(name).getDefaultValue();

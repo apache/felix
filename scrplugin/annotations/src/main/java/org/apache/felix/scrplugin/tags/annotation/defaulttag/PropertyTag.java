@@ -24,8 +24,7 @@ import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.scrplugin.tags.JavaField;
-import org.apache.felix.scrplugin.tags.annotation.AbstractTag;
-import org.apache.felix.scrplugin.tags.annotation.Util;
+import org.apache.felix.scrplugin.tags.annotation.*;
 
 import com.thoughtworks.qdox.model.Annotation;
 
@@ -40,7 +39,7 @@ public class PropertyTag extends AbstractTag {
      * @param annotation Annotation
      * @param desc Description
      */
-    public PropertyTag(final Annotation annotation, final JavaClassDescription desc, JavaField field) {
+    public PropertyTag(final Annotation annotation, final AnnotationJavaClassDescription desc, JavaField field) {
         super(annotation, desc, field);
         this.annotation = new Property() {
 
@@ -94,7 +93,7 @@ public class PropertyTag extends AbstractTag {
             }
 
             public Class<?>[] classValue() {
-                return Util.getClassArrayValue(annotation, "classValue", Property.class);
+                return Util.getClassArrayValue(annotation, "classValue", Property.class, desc.getClassLoader());
             }
 
             public boolean[] boolValue() {

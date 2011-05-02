@@ -26,8 +26,6 @@ import java.lang.reflect.Field;
  */
 public class ClassUtil {
 
-    public static ClassLoader classLoader;
-
     /**
      * Try to get the initial value of a static field
      * @param clazz     The class.
@@ -59,7 +57,7 @@ public class ClassUtil {
     /**
      * Get the compiled class.
      */
-    public static Class<?> getClass(String name) {
+    public static Class<?> getClass(final ClassLoader classLoader, String name) {
         if ( classLoader == null ) {
             return null;
         }

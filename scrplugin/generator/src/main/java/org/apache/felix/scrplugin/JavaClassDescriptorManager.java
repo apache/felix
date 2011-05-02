@@ -20,7 +20,8 @@ import java.util.jar.*;
 
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.tags.*;
+import org.apache.felix.scrplugin.tags.JavaClassDescription;
+import org.apache.felix.scrplugin.tags.JavaTag;
 import org.apache.felix.scrplugin.tags.annotation.AnnotationJavaClassDescription;
 import org.apache.felix.scrplugin.tags.annotation.AnnotationTagProviderManager;
 import org.apache.felix.scrplugin.tags.cl.ClassLoaderJavaClassDescription;
@@ -84,8 +85,6 @@ public abstract class JavaClassDescriptorManager
         this.log = log;
         this.annotationTagProviderManager = new AnnotationTagProviderManager( annotationTagProviders, classLoader );
         this.classloader = classLoader;
-
-        ClassUtil.classLoader = this.classloader;
     }
 
 
