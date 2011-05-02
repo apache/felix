@@ -1,3 +1,10 @@
+Changes from 1.1.0 to 1.1.2
+---------------------------
+
+** Improvement
+    * [FELIX-2939] - Maven SCR Plugin is not (marked as) thread-safe for parallel builds
+
+
 Changes from 1.0.0 to 1.1.0
 ---------------------------
 
