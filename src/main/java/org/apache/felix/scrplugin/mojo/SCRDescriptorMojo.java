@@ -67,7 +67,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      *
      * @see #checkAnnotationArtifact(Artifact)
      */
-    private static final ArtifactVersion SCR_ANN_MIN_VERSION = new DefaultArtifactVersion("1.4.0");
+    private static final ArtifactVersion SCR_ANN_MIN_VERSION = new DefaultArtifactVersion("1.5.1");
 
     /**
      * @parameter expression="${project.build.directory}/scr-plugin-generated"
