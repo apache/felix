@@ -23,10 +23,8 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scrplugin.Constants;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
 import org.apache.felix.scrplugin.tags.JavaField;
-import org.apache.felix.scrplugin.tags.annotation.AbstractTag;
-import org.apache.felix.scrplugin.tags.annotation.Util;
+import org.apache.felix.scrplugin.tags.annotation.*;
 
 import com.thoughtworks.qdox.model.Annotation;
 
@@ -41,7 +39,7 @@ public class ReferenceTag extends AbstractTag {
      * @param annotation Annotation
      * @param desc Description
      */
-    public ReferenceTag(final Annotation annotation, final JavaClassDescription desc, JavaField field) {
+    public ReferenceTag(final Annotation annotation, final AnnotationJavaClassDescription desc, JavaField field) {
         super(annotation, desc, field);
 
         this.annotation = new Reference() {
@@ -63,7 +61,7 @@ public class ReferenceTag extends AbstractTag {
             }
 
             public Class<?> referenceInterface() {
-                return Util.getClassValue(annotation, "referenceInterface", Reference.class);
+                return Util.getClassValue(annotation, "referenceInterface", Reference.class, desc.getClassLoader());
             }
 
             public ReferenceStrategy strategy() {
