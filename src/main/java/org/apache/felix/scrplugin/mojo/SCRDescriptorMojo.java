@@ -39,6 +39,7 @@ import org.codehaus.plexus.util.StringUtils;
  *
  * @goal scr
  * @phase process-classes
+ * @threadSafe
  * @description Build Service Descriptors from Java Source
  * @requiresDependencyResolution compile
  */
