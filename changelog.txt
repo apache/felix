@@ -1,3 +1,14 @@
+Changes from 1.2.8 to 1.2.10
+----------------------------
+
+** Bug
+    * [FELIX-2766] - Calling update() on a newly created factory configuration causes FileNotFoundException
+    * [FELIX-2771] - Configuration Admin does not work on Foundation 1.2 and Mika
+    * [FELIX-2813] - NPE in UpdateThread when updating a configuration right after ConfigurationAdmin service starts
+    * [FELIX-2847] - NPE in ConfigurationManager.java:1003 (static String toString( ServiceReference ref ))
+    * [FELIX-2885] - The config admin bundle does not indicate its provided and required services dependencies
+
+
 Changes from 1.2.4 to 1.2.8
 ---------------------------
 
