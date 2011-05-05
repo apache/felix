@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scrplugin.tags.annotation.sling;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scrplugin.Constants;
@@ -32,11 +32,25 @@ import com.thoughtworks.qdox.model.Annotation;
  */
 public class SlingServletComponentTag extends AbstractTag {
 
+    private final boolean createMetatype;
+    private final String name;
+    private final String label;
+    private final String description;
+
     /**
      * @param desc Description
      */
-    public SlingServletComponentTag(Annotation annotation, JavaClassDescription desc) {
+    public SlingServletComponentTag(final Annotation annotation,
+            final JavaClassDescription desc,
+            final boolean createMetatype,
+            final String name,
+            final String label,
+            final String description) {
         super(annotation, desc, null);
+        this.createMetatype = createMetatype;
+        this.name = name;
+        this.label = label;
+        this.description = description;
     }
 
     @Override
@@ -51,7 +65,17 @@ public class SlingServletComponentTag extends AbstractTag {
 
     @Override
     public Map<String, String> createNamedParameterMap() {
-        return Collections.emptyMap();
+        final Map<String, String> params = new HashMap<String, String>();
+        if ( this.name != null ) {
+            params.put(Constants.COMPONENT_NAME, this.name);
+        }
+        if ( this.label != null ) {
+            params.put(Constants.COMPONENT_LABEL, this.label);
+        }
+        if ( this.description != null ) {
+            params.put(Constants.COMPONENT_DESCRIPTION, this.description);
+        }
+        params.put(Constants.COMPONENT_METATYPE, String.valueOf(this.createMetatype));
+        return params;
     }
-
 }

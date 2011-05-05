@@ -49,7 +49,20 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
             boolean generateComponent = Util.getBooleanValue(annotation, "generateComponent", SlingServlet.class);
             if (generateComponent)
             {
-                tags.add(new SlingServletComponentTag(annotation, description));
+                String name = Util.getStringValue(annotation, description, "name", SlingServlet.class);
+                if ( name != null && name.trim().length() == 0 ) {
+                    name = null;
+                }
+                String label = Util.getStringValue(annotation, description, "label", SlingServlet.class);
+                if ( label != null && label.trim().length() == 0 ) {
+                    label = null;
+                }
+                String desc = Util.getStringValue(annotation, description, "description", SlingServlet.class);
+                if ( desc != null && desc.trim().length() == 0 ) {
+                    desc = null;
+                }
+                final boolean createMetatype = Util.getBooleanValue(annotation, "metatype", SlingServlet.class);
+                tags.add(new SlingServletComponentTag(annotation, description, createMetatype, name, label, desc));
             }
 
             // generate @Service tag if required
