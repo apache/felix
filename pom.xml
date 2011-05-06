@@ -23,14 +23,14 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>9</version>
-        <relativePath />
+        <relativePath></relativePath>
     </parent>
 
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
     <packaging>pom</packaging>
     <name>Apache Felix</name>
-    <version>2</version>
+    <version>2-SNAPSHOT</version>
     <url>http://felix.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is an OSGi implementation.</description>
@@ -58,9 +58,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/felix-parent-2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/felix-parent-2</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/felix-parent-2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk</connection>
+        <developerConnection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/?root=Apache-SVN</url>
     </scm>
 
     <distributionManagement>
