@@ -28,24 +28,24 @@
     </properties>
     <name>Apache Felix Dependency Manager Integration Tests</name>
     <artifactId>org.apache.felix.dependencymanager.test</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.dependencymanager.runtime</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
