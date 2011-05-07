@@ -37,7 +37,7 @@ import org.osgi.service.log.LogService;
  * Service is available.
  */
 @FactoryConfigurationAdapterService(
-    factoryPid="DictionaryServiceFactory", 
+    factoryPid="DictionaryImplFactoryPid", 
     propagate=true, 
     updated="updated",
     heading="Dictionary Services",
