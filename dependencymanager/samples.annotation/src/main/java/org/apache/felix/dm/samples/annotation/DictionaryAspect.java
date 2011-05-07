@@ -51,6 +51,7 @@ public class DictionaryAspect implements DictionaryService
      * our PID is our full class name).
      */
     @ConfigurationDependency(
+        pid="DictionaryAspectPID",
         propagate = false, 
         heading = "Aspect Dictionary",
         description = "Declare here some additional english words", 
