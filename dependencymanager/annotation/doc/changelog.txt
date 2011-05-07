@@ -4,3 +4,6 @@ Initial Release 3.0.0
 ** Bug
 
 ** Improvement
+
+    * removed LICENSE.json 
+    * removed changelog.txt from root of project
