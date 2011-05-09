@@ -90,12 +90,12 @@ class EntryFilterEnumeration implements Enumeration
 
     public synchronized boolean hasMoreElements()
     {
-        return (m_nextEntries.size() != 0);
+        return !m_nextEntries.isEmpty();
     }
 
     public synchronized Object nextElement()
     {
-        if (m_nextEntries.size() == 0)
+        if (m_nextEntries.isEmpty())
         {
             throw new NoSuchElementException("No more entries.");
         }
@@ -114,11 +114,11 @@ class EntryFilterEnumeration implements Enumeration
         {
             return;
         }
-        while ((m_moduleIndex < m_enumerations.size()) && (m_nextEntries.size() == 0))
+        while ((m_moduleIndex < m_enumerations.size()) && m_nextEntries.isEmpty())
         {
             while (m_enumerations.get(m_moduleIndex) != null
                 && m_enumerations.get(m_moduleIndex).hasMoreElements()
-                && m_nextEntries.size() == 0)
+                && m_nextEntries.isEmpty())
             {
                 // Get the current entry to determine if it should be filtered or not.
                 String entryName = (String) m_enumerations.get(m_moduleIndex).nextElement();
@@ -198,7 +198,9 @@ class EntryFilterEnumeration implements Enumeration
                     // be filtered or not. If we are recursive or the current entry
                     // is a child (not a grandchild) of the initial path, then we need
                     // to check if it matches the file pattern.
-                    if (m_recurse || (dirSlashIdx < 0) || (dirSlashIdx == entryName.length() - 1))
+                    if (!m_dirEntries.contains(entryName)
+                        && (m_recurse || (dirSlashIdx < 0)
+                            || (dirSlashIdx == entryName.length() - 1)))
                     {
                         // See if the file pattern matches the last element of the path.
                         if (SimpleFilter.compareSubstring(
@@ -219,7 +221,7 @@ class EntryFilterEnumeration implements Enumeration
                     }
                 }
             }
-            if (m_nextEntries.size() == 0)
+            if (m_nextEntries.isEmpty())
             {
                 m_moduleIndex++;
             }
