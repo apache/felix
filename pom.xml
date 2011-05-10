@@ -30,7 +30,7 @@
     </properties>
     <name>Apache Felix Dependency Manager</name>
     <artifactId>org.apache.felix.dependencymanager</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
@@ -85,7 +85,7 @@
                         <Bundle-Name>Apache Felix Dependency Manager</Bundle-Name>
                         <Bundle-Description>Provides dynamic service and component dependency management.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Export-Package>org.apache.felix.dm;version="3.0.0";provide:=true,org.apache.felix.dm.tracker;version="3.0.0";provide:=true</Export-Package>
+                        <Export-Package>org.apache.felix.dm;version="3.0.0";provide:=true,org.apache.felix.dm.tracker;version="3.1.0";provide:=true</Export-Package>
                         <Import-Package>*</Import-Package>
                         <Private-Package>org.apache.felix.dm.impl, org.apache.felix.dm.impl.*</Private-Package>
                         <!-- Uncomment this next line to include source code in the bundle.
