@@ -71,7 +71,7 @@ public class AspectFilterIndex implements FilterIndex, ServiceTrackerCustomizer 
             }
             m_context = context;
         }
-        m_tracker.open(true);
+        m_tracker.open(true, true);
     }
 
     public void close() {
