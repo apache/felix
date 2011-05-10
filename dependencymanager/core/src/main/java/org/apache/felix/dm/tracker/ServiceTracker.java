@@ -133,6 +133,12 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	private static final Version		endMatchVersion	= new Version(1, 5, 0);
 
 	/**
+	 * Flag that gets set when opening the tracker, determines if the tracker should
+	 * track all aspects or just the highest ranked ones.
+	 */
+    public boolean m_trackAllAspects;
+
+	/**
 	 * Create a <code>ServiceTracker</code> on the specified
 	 * <code>ServiceReference</code>.
 	 * 
@@ -300,7 +306,35 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	 *         longer valid.
 	 * @since 1.3
 	 */
-	public void open(boolean trackAllServices) {
+    public void open(boolean trackAllServices) {
+        open(trackAllServices, false);
+    }
+	
+    /**
+     * Open this <code>ServiceTracker</code> and begin tracking services.
+     * 
+     * <p>
+     * Services which match the search criteria specified when this
+     * <code>ServiceTracker</code> was created are now tracked by this
+     * <code>ServiceTracker</code>.
+     * 
+     * @param trackAllServices If <code>true</code>, then this
+     *        <code>ServiceTracker</code> will track all matching services
+     *        regardless of class loader accessibility. If <code>false</code>,
+     *        then this <code>ServiceTracker</code> will only track matching
+     *        services which are class loader accessible to the bundle whose
+     *        <code>BundleContext</code> is used by this
+     *        <code>ServiceTracker</code>.
+     * @param trackAllAspects If <code>true</code> then this
+     *        <code>ServiceTracker</code> will track all aspects regardless
+     *        of their rank. If <code>false</code> only the highest ranked
+     *        aspects (or the original service if there are no aspects) will
+     *        be tracked. The latter is the default.
+     * @throws java.lang.IllegalStateException If the <code>BundleContext</code>
+     *         with which this <code>ServiceTracker</code> was created is no
+     *         longer valid.
+     */
+	public void open(boolean trackAllServices, boolean trackAllAspects) {
 		final Tracked t;
 		synchronized (this) {
 			if (tracked != null) {
@@ -309,6 +343,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			if (DEBUG) {
 				System.out.println("ServiceTracker.open: " + filter); 
 			}
+			m_trackAllAspects = trackAllAspects;
 			t = trackAllServices ? new AllTracked() : new Tracked();
 			synchronized (t) {
 				try {
@@ -1051,6 +1086,69 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		 * @param event <code>ServiceEvent</code> object from the framework.
 		 */
 		public void serviceChanged(final ServiceEvent event) {
+		    if (m_trackAllAspects) {
+		        serviceChangedIncludeAspects(event);
+		    }
+		    else {
+		        serviceChangedHideAspects(event);
+		    }
+		}
+		
+        public void serviceChangedIncludeAspects(final ServiceEvent event) {
+            /*
+             * Check if we had a delayed call (which could happen when we
+             * close).
+             */
+            if (closed) {
+                return;
+            }
+            final ServiceReference reference = event.getServiceReference();
+            if (DEBUG) {
+                System.out
+                        .println("ServiceTracker.Tracked.serviceChanged["
+                        + event.getType() + "]: " + reference);  
+            }
+
+            switch (event.getType()) {
+                case ServiceEvent.REGISTERED :
+                case ServiceEvent.MODIFIED :
+                    if (listenerFilter != null) { // service listener added with
+                        // filter
+                        track(reference, event);
+                        /*
+                         * If the customizer throws an unchecked exception, it
+                         * is safe to let it propagate
+                         */
+                    }
+                    else { // service listener added without filter
+                        if (filter.match(reference)) {
+                            track(reference, event);
+                            /*
+                             * If the customizer throws an unchecked exception,
+                             * it is safe to let it propagate
+                             */
+                        }
+                        else {
+                            untrack(reference, event);
+                            /*
+                             * If the customizer throws an unchecked exception,
+                             * it is safe to let it propagate
+                             */
+                        }
+                    }
+                    break;
+                case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ :
+                case ServiceEvent.UNREGISTERING :
+                    untrack(reference, event);
+                    /*
+                     * If the customizer throws an unchecked exception, it is
+                     * safe to let it propagate
+                     */
+                    break;
+            }
+        }
+		
+		public void serviceChangedHideAspects(final ServiceEvent event) {
 			/*
 			 * Check if we had a delayed call (which could happen when we
 			 * close).
