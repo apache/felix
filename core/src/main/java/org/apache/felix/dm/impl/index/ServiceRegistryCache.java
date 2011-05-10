@@ -80,10 +80,8 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
                 m_arrayVersion = m_currentVersion;
             }
         }
-        for (int i = 0; i < m_interceptors.length; i++) {
-            BundleContextInterceptor bundleContextInterceptor = m_interceptors[i];
-            bundleContextInterceptor.serviceChanged(event);
-        }
+        
+        serviceChangedForFilterIndices(event);
     }
     
     /** Creates an interceptor for a bundle context that uses our cache. */
