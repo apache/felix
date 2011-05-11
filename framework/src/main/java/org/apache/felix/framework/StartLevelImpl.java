@@ -31,6 +31,8 @@ import org.osgi.service.startlevel.StartLevel;
 **/
 public class StartLevelImpl implements StartLevel, Runnable
 {
+    static final String THREAD_NAME = "FelixStartLevel";
+
     private static final int BUNDLE_IDX = 0;
     private static final int STARTLEVEL_IDX = 1;
 
