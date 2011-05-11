@@ -1,3 +1,12 @@
+Changes from 3.2.1 to 3.2.2
+---------------------------
+
+** Bug
+    * [FELIX-2935] - Bundle.getEntryPaths and findEntries are returning META-INF/ multiple times
+    * [FELIX-2941] - Felix Framework 3.2.0 and Framework Security 1.4.2 fails OSGI Conditional Permission Admin CT when running on IBM JVM 5 and 6.
+    * [FELIX-2942] - Bundles with higher start level get activated even before framework reaches that start level
+
+
 Changes from 3.2.0 to 3.2.1
 ---------------------------
 
