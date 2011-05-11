@@ -48,7 +48,7 @@
     <ipojo.composite.snapshot>1.9.0-SNAPSHOT</ipojo.composite.snapshot>
 
     <ipojo.eah.release>1.6.0</ipojo.eah.release>
-    <ipojo.eah.snapshot>1.7.0-SNAPSHOT</ipojo.eah.snapshot>
+    <ipojo.eah.snapshot>1.9.0-SNAPSHOT</ipojo.eah.snapshot>
     <ipojo.temporal.snapshot>1.7.0-SNAPSHOT</ipojo.temporal.snapshot>
     <ipojo.wbp.snapshot>1.5.0-SNAPSHOT</ipojo.wbp.snapshot>
   </properties>
