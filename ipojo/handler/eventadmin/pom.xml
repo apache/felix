@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix iPOJO Event Admin Handler</name>
   <artifactId>org.apache.felix.ipojo.handler.eventadmin</artifactId>
-  <version>1.8.0</version>
+  <version>1.9.0-SNAPSHOT</version>
   
   <description>
   iPOJO extension to easily interact with the OSGi Event Admin.
@@ -120,10 +120,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.handler.eventadmin-1.8.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.handler.eventadmin-1.8.0</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.handler.eventadmin-1.8.0</url>
-  </scm>
 </project>
