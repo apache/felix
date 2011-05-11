@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -176,12 +176,14 @@ public class FileUtil
         bos.close();
     }
 
-    public static void setProxyAuth(URLConnection conn) throws IOException {
+    public static void setProxyAuth(URLConnection conn) throws IOException
+    {
         // Support for http proxy authentication
         String auth = System.getProperty("http.proxyAuth");
         if ((auth != null) && (auth.length() > 0))
         {
-            if ("http".equals(conn.getURL().getProtocol()) || "https".equals(conn.getURL().getProtocol()))
+            if ("http".equals(conn.getURL().getProtocol())
+                || "https".equals(conn.getURL().getProtocol()))
             {
                 String base64 = Base64Encoder.base64Encode(auth);
                 conn.setRequestProperty("Proxy-Authorization", "Basic " + base64);
@@ -190,17 +192,31 @@ public class FileUtil
 
     }
 
-    public static InputStream openURL(final URL url) throws IOException {
+    public static InputStream openURL(final URL url) throws IOException
+    {
         // Do it the manual way to have a chance to
         // set request properties as proxy auth (EW).
         return openURL(url.openConnection());
     }
 
-    public static InputStream openURL(final URLConnection conn) throws IOException {
+    public static InputStream openURL(final URLConnection conn) throws IOException
+    {
         // Do it the manual way to have a chance to
         // set request properties as proxy auth (EW).
         setProxyAuth(conn);
-        return conn.getInputStream();
+        try
+        {
+            return conn.getInputStream();
+        }
+        catch (IOException e)
+        {
+            // Rather than just throwing the original exception, we wrap it
+            // because in some cases the original exception doesn't include
+            // the full URL (see FELIX-2912).
+            URL url = conn.getURL();
+            IOException newException = new IOException("Error accessing " + url);
+            newException.initCause(e);
+            throw newException;
+        }
     }
-
 }
