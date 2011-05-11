@@ -133,11 +133,11 @@ public class Felix extends BundleImpl implements Framework
     // whem the start level is changing, in which case the target start level
     // will report the new start level while the active start level will report
     // the old start level. Once the start level change is complete, the two
-    // will become equal again. This is necessary because the spec says the old
-    // start level should be reported until the start level change is complete,
-    // but we need to effectively enact the target start level immediately to
-    // avoid race conditions to restart stopped bundles.
+    // will become equal again.
     private volatile int m_targetStartLevel = FelixConstants.FRAMEWORK_INACTIVE_STARTLEVEL;
+    // Keep track of bundles currently being processed by start level thread.
+    private final SortedSet<StartLevelTuple> m_startLevelBundles =
+        new TreeSet<StartLevelTuple>();
 
     // Local bundle cache.
     private BundleCache m_cache = null;
@@ -1070,22 +1070,16 @@ public class Felix extends BundleImpl implements Framework
         {
             // Synchronization for changing the start level is rather loose.
             // The framework's active start level is volatile, so no lock is
-            // needed to access it. The install lock is acquired to attain a
-            // sorted snapshot of the currently installed bundles, but then this
-            // lock is freed immediately. No locks are held while processing the
+            // needed to access it. No locks are held while processing the
             // currently installed bundles for starting/stopping based on the new
             // active start level. The only locking that occurs is for individual
             // bundles when startBundle()/stopBundle() is called, but this locking
             // is done in the respective method.
             //
             // This approach does mean that it is possible for a for individual
-            // bundle states to change during this operation. For example, bundle
-            // start levels can be changed or bundles can be uninstalled. If a
-            // bundle's start level changes, then it is possible for it to be
-            // processed out of order. Uninstalled bundles are just logged and
-            // ignored. I had a bit of discussion with Peter Kriens about these
-            // issues and he felt they were consistent with the spec, which
-            // intended Start Level to have some leeway.
+            // bundle states to change during this operation. If a bundle's start
+            // level changes, then it is possible for it to be processed out of
+            // order. Uninstalled bundles are just logged andignored.
             //
             // Calls to this method are only made by the start level thread, which
             // serializes framework start level changes. Thus, it is not possible
@@ -1105,125 +1099,142 @@ public class Felix extends BundleImpl implements Framework
                 throw new IllegalStateException(
                     "Unable to acquire global lock to create bundle snapshot.");
             }
+
+            boolean bundlesRemaining;
             try
             {
-                // Get a snapshot of all installed bundles.
-                bundles = getBundles();
-                // Sort the bundles according to sort level for processing.
-                Arrays.sort(bundles, new BundleComparator(lowering));
+                synchronized (m_startLevelBundles)
+                {
+                    // Get a sorted snapshot of all installed bundles
+                    // to be processed during the start level change.
+                    // We also snapshot the start level here, since it
+                    // may change and we don't want to consider any
+                    // changes since they will be queued for the start
+                    // level thread.
+                    bundles = getBundles();
+                    for (Bundle b : bundles)
+                    {
+                        m_startLevelBundles.add(
+                            new StartLevelTuple(
+                                (BundleImpl) b,
+                                ((BundleImpl) b).getStartLevel(
+                                    getInitialBundleStartLevel())));
+                    }
+                    bundlesRemaining = !m_startLevelBundles.isEmpty();
+                }
             }
             finally
             {
                 releaseGlobalLock();
             }
 
-            // Stop or start the bundles according to the start level.
-            for (int i = 0; (bundles != null) && (i < bundles.length); i++)
+            // Process bundles and stop or start them accordingly.
+            while (bundlesRemaining)
             {
-                BundleImpl impl = (BundleImpl) bundles[i];
+                StartLevelTuple tuple;
+                synchronized (m_startLevelBundles)
+                {
+                    if (lowering)
+                    {
+                        tuple = m_startLevelBundles.last();
+                    }
+                    else
+                    {
+                        tuple = m_startLevelBundles.first();
+                    }
+                }
 
                 // Ignore the system bundle, since its start() and
                 // stop() methods get called explicitly in Felix.start()
                 // and Felix.stop(), respectively.
-                if (impl.getBundleId() == 0)
+                if (tuple.m_bundle.getBundleId() != 0)
                 {
-                    continue;
-                }
-
-                // Lock the current bundle.
-                try
-                {
-                    acquireBundleLock(impl,
-                        Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE
-                        | Bundle.STARTING | Bundle.STOPPING);
-                }
-                catch (IllegalStateException ex)
-                {
-                    // Ignore if the bundle has been uninstalled.
-                    if (impl.getState() != Bundle.UNINSTALLED)
+                    // Lock the current bundle.
+                    try
                     {
-                        fireFrameworkEvent(FrameworkEvent.ERROR, impl, ex);
-                        m_logger.log(impl,
-                            Logger.LOG_ERROR,
-                            "Error locking " + impl._getLocation(), ex);
+                        acquireBundleLock(tuple.m_bundle,
+                            Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE
+                            | Bundle.STARTING | Bundle.STOPPING);
                     }
-                    continue;
-                }
-
-                try
-                {
-                    // Start the bundle if necessary.
-                    if (((impl.getPersistentState() == Bundle.ACTIVE)
-                        || (impl.getPersistentState() == Bundle.STARTING))
-                        && (impl.getStartLevel(getInitialBundleStartLevel())
-                            <= m_targetStartLevel))
+                    catch (IllegalStateException ex)
                     {
-                        // Count up the active start level.
-// TODO: STARTLEVEL - This isn't entirely accurate since a bundle's start
-//       level is written synchronously, if someone were to change a bundle's
-//       start level in the middle of a framework start level change then you
-//       could potentially see the active start level jump around. We really
-//       need to snapshot the existing bundle start levels too.
-                        if (m_activeStartLevel != impl.getStartLevel(getInitialBundleStartLevel()))
+                        // Ignore if the bundle has been uninstalled.
+                        if (tuple.m_bundle.getState() != Bundle.UNINSTALLED)
                         {
-                            m_activeStartLevel = impl.getStartLevel(getInitialBundleStartLevel());
+                            fireFrameworkEvent(FrameworkEvent.ERROR, tuple.m_bundle, ex);
+                            m_logger.log(tuple.m_bundle,
+                                Logger.LOG_ERROR,
+                                "Error locking " + tuple.m_bundle._getLocation(), ex);
                         }
+                        continue;
+                    }
 
-                        try
+                    try
+                    {
+                        // Start the bundle if necessary.
+                        if (((tuple.m_bundle.getPersistentState() == Bundle.ACTIVE)
+                            || (tuple.m_bundle.getPersistentState() == Bundle.STARTING))
+                            && (tuple.m_level <= m_targetStartLevel))
                         {
+                            // Count up the active start level.
+                            if (m_activeStartLevel != tuple.m_level)
+                            {
+                                m_activeStartLevel = tuple.m_level;
+                            }
+
+                            try
+                            {
 // TODO: LAZY - Not sure if this is the best way...
-                            int options = Bundle.START_TRANSIENT;
-                            options = (impl.getPersistentState() == Bundle.STARTING)
-                                ? options | Bundle.START_ACTIVATION_POLICY
-                                : options;
-                            startBundle(impl, options);
+                                int options = Bundle.START_TRANSIENT;
+                                options = (tuple.m_bundle.getPersistentState() == Bundle.STARTING)
+                                    ? options | Bundle.START_ACTIVATION_POLICY
+                                    : options;
+                                startBundle(tuple.m_bundle, options);
+                            }
+                            catch (Throwable th)
+                            {
+                                fireFrameworkEvent(FrameworkEvent.ERROR, tuple.m_bundle, th);
+                                m_logger.log(tuple.m_bundle,
+                                    Logger.LOG_ERROR,
+                                    "Error starting " + tuple.m_bundle._getLocation(), th);
+                            }
                         }
-                        catch (Throwable th)
+                        // Stop the bundle if necessary.
+                        else if (((tuple.m_bundle.getState() == Bundle.ACTIVE)
+                            || (tuple.m_bundle.getState() == Bundle.STARTING))
+                            && (tuple.m_level > m_targetStartLevel))
                         {
-                            fireFrameworkEvent(FrameworkEvent.ERROR, impl, th);
-                            m_logger.log(impl,
-                                Logger.LOG_ERROR,
-                                "Error starting " + impl._getLocation(), th);
-                        }
-                    }
-                    // Stop the bundle if necessary.
-                    else if (((impl.getState() == Bundle.ACTIVE)
-                        || (impl.getState() == Bundle.STARTING))
-                        && (impl.getStartLevel(getInitialBundleStartLevel())
-                            > m_targetStartLevel))
-                    {
-                        // Count down the active start level.
-// TODO: STARTLEVEL - This isn't entirely accurate since a bundle's start
-//       level is written synchronously, if someone were to change a bundle's
-//       start level in the middle of a framework start level change then you
-//       could potentially see the active start level jump around. We really
-//       need to snapshot the existing bundle start levels too.
-                        if (m_activeStartLevel != impl.getStartLevel(getInitialBundleStartLevel()))
-                        {
-                            m_activeStartLevel = impl.getStartLevel(getInitialBundleStartLevel());
-                        }
+                            // Count down the active start level.
+                            if (m_activeStartLevel != tuple.m_level)
+                            {
+                                m_activeStartLevel = tuple.m_level;
+                            }
 
-                        try
-                        {
-                            stopBundle(impl, false);
-                        }
-                        catch (Throwable th)
-                        {
-                            fireFrameworkEvent(FrameworkEvent.ERROR, impl, th);
-                            m_logger.log(impl,
-                                Logger.LOG_ERROR,
-                                "Error stopping " + impl._getLocation(), th);
+                            try
+                            {
+                                stopBundle(tuple.m_bundle, false);
+                            }
+                            catch (Throwable th)
+                            {
+                                fireFrameworkEvent(FrameworkEvent.ERROR, tuple.m_bundle, th);
+                                m_logger.log(tuple.m_bundle,
+                                    Logger.LOG_ERROR,
+                                    "Error stopping " + tuple.m_bundle._getLocation(), th);
+                            }
                         }
                     }
+                    finally
+                    {
+                        // Always release bundle lock.
+                        releaseBundleLock(tuple.m_bundle);
+                    }
                 }
-                finally
+
+                synchronized (m_startLevelBundles)
                 {
-                    // Always release bundle lock.
-                    releaseBundleLock(impl);
+                    m_startLevelBundles.remove(tuple);
+                    bundlesRemaining = !m_startLevelBundles.isEmpty();
                 }
-                // Hint to GC to collect bundle; not sure why this
-                // is necessary, but it appears to help.
-                bundles[i] = null;
             }
 
             m_activeStartLevel = m_targetStartLevel;
@@ -1344,9 +1355,13 @@ public class Felix extends BundleImpl implements Framework
                 try
                 {
                     // Start the bundle if necessary.
+                    // We don't need to be concerned about the target
+                    // start level here, since this method is only executed
+                    // by the start level thread, so no start level change
+                    // can be occurring concurrently.
                     if (((impl.getPersistentState() == Bundle.ACTIVE)
                         || (impl.getPersistentState() == Bundle.STARTING))
-                        && (startLevel <= m_targetStartLevel))
+                        && (startLevel <= m_activeStartLevel))
                     {
 // TODO: LAZY - Not sure if this is the best way...
                         int options = Bundle.START_TRANSIENT;
@@ -1356,9 +1371,13 @@ public class Felix extends BundleImpl implements Framework
                         startBundle(impl, options);
                     }
                     // Stop the bundle if necessary.
+                    // We don't need to be concerned about the target
+                    // start level here, since this method is only executed
+                    // by the start level thread, so no start level change
+                    // can be occurring concurrently.
                     else if (((impl.getState() == Bundle.ACTIVE)
                         || (impl.getState() == Bundle.STARTING))
-                        && (startLevel > m_targetStartLevel))
+                        && (startLevel > m_activeStartLevel))
                     {
                         stopBundle(impl, false);
                     }
@@ -1708,24 +1727,52 @@ public class Felix extends BundleImpl implements Framework
 
             // Check to see if the bundle's start level is greater than the
             // the framework's active start level.
-// TODO: STARTLEVEL - Technically, this is not correct since we could be in the
-//       middle of a framework start level change and we might not have yet
-//       reached the target start level, but we will activate the bundle anyway.
-//       This means the bundle will be running in a higher start level temporarily
-//       until the start level thread catches up.
-            if (bundle.getStartLevel(getInitialBundleStartLevel()) > m_targetStartLevel)
+            int bundleLevel = bundle.getStartLevel(getInitialBundleStartLevel());
+            if (bundleLevel > m_targetStartLevel)
             {
                 // Throw an exception for transient starts.
                 if ((options & Bundle.START_TRANSIENT) != 0)
                 {
                     throw new BundleException(
                         "Cannot start bundle " + bundle + " because its start level is "
-                        + bundle.getStartLevel(getInitialBundleStartLevel())
+                        + bundleLevel
                         + ", which is greater than the framework's start level of "
                         + m_targetStartLevel + ".");
                 }
                 // Ignore persistent starts.
                 return;
+            }
+
+            // Check to see if there is a start level change in progress and if so
+            // add this bundle to the bundles being processed by the start level
+            // thread and return.
+            if (!Thread.currentThread().getName().equals(StartLevelImpl.THREAD_NAME))
+            {
+                synchronized (m_startLevelBundles)
+                {
+                    if (!m_startLevelBundles.isEmpty())
+                    {
+                        // Only add the bundle to the start level bundles
+                        // being process if it is not already there.
+                        boolean found = false;
+                        for (StartLevelTuple tuple : m_startLevelBundles)
+                        {
+                            if (tuple.m_bundle == bundle)
+                            {
+                                found = true;
+                            }
+                        }
+                        if (!found)
+                        {
+// TODO: STARTLEVEL - Technically, if a bundle is installed and started during a
+//       start level operation, then it will end up being queued for the start level
+//       thread even if its start level is met, when it potentially could have been
+//       started immediately.
+                            m_startLevelBundles.add(new StartLevelTuple(bundle, bundleLevel));
+                        }
+                        return;
+                    }
+                }
             }
 
             switch (bundle.getState())
@@ -1813,10 +1860,8 @@ public class Felix extends BundleImpl implements Framework
     {
         // CONCURRENCY NOTE:
         // We will first acquire the bundle lock for the specific bundle
-        // as long as the bundle is INSTALLED, RESOLVED, or ACTIVE. If this
-        // bundle is not yet resolved, then it will be resolved too. In
-        // that case, the global lock will be acquired to make sure no
-        // bundles can be installed or uninstalled during the resolve.
+        // as long as the bundle is STARTING or ACTIVE, shich is necessary
+        // because we may change the bundle state.
 
         // Acquire bundle lock.
         try
@@ -1832,12 +1877,13 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             // If the bundle is already active or its start level is not met,
-            // simply return.
-// TODO: STARTLEVEL - Technically, this is not correct since we could be in the
-//       middle of a framework start level change and we might not have yet
-//       reached the target start level, but we will activate the bundle anyway.
-//       This means the bundle will be running in a higher start level temporarily
-//       until the start level thread catches up.
+            // simply return. Generally, the bundle start level should always
+            // be less than or equal to the active start level since the bundle
+            // must be in the STARTING state to activate it. One potential corner
+            // case is if the bundle is being lazily activated at the same time
+            // there is a start level change going on to lower the start level.
+            // In that case, we test here and avoid activating the bundle since
+            // it will be stopped by the start level thread.
             if ((bundle.getState() == Bundle.ACTIVE) ||
                 (bundle.getStartLevel(getInitialBundleStartLevel()) > m_targetStartLevel))
             {
@@ -4689,42 +4735,38 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    // Compares bundles by start level either ascending or
-    // descending depending on whether the start level is being
-    // lowered or raised. Within a start level sort by bundle ID.
-    private class BundleComparator implements Comparator
+    // Compares bundles by start level. Within a start level,
+    // bundles are sorted by bundle ID.
+    private static class StartLevelTuple implements Comparable<StartLevelTuple>
     {
-        private final boolean m_lowering;
+        private final BundleImpl m_bundle;
+        private int m_level;
 
-        BundleComparator(boolean lowering)
+        StartLevelTuple(BundleImpl bundle, int level)
         {
-            m_lowering = lowering;
+            m_bundle = bundle;
+            m_level = level;
         }
 
-        public int compare(Object o1, Object o2)
+        public int compareTo(StartLevelTuple t)
         {
-            int result = -1;
+            int result = 1;
 
-            BundleImpl b1 = (BundleImpl) o1;
-            BundleImpl b2 = (BundleImpl) o2;
-            if (b1.getStartLevel(getInitialBundleStartLevel())
-                < b2.getStartLevel(getInitialBundleStartLevel()))
-            {
-                result = 1;
-            }
-            else if (b1.getStartLevel(getInitialBundleStartLevel())
-                > b2.getStartLevel(getInitialBundleStartLevel()))
+            if (m_level < t.m_level)
             {
                 result = -1;
             }
-            else if (b1.getBundleId() < b2.getBundleId())
+            else if (m_level > t.m_level)
             {
                 result = 1;
             }
-
-            if (!m_lowering)
+            else if (m_bundle.getBundleId() < t.m_bundle.getBundleId())
             {
-                result = result * -1;
+                result = -1;
+            }
+            else if (m_bundle.getBundleId() == t.m_bundle.getBundleId())
+            {
+                result = 0;
             }
 
             return result;
