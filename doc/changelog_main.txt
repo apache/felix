@@ -1,3 +1,9 @@
+Changes from 3.2.1 to 3.2.2
+---------------------------
+
+** Improvement
+    * Update to latest framework version 3.2.2
+
 Changes from 3.2.0 to 3.2.1
 ---------------------------
 

@@ -1,3 +1,9 @@
+Changes from 3.2.1 to 3.2.2
+---------------------------
+
+** Improvement
+    * Update to framework and main 3.2.2 
+
 Changes from 3.2.0 to 3.2.1
 ---------------------------
 
