@@ -171,12 +171,24 @@ public class PropertyHandler {
                 } else if (options != null) {
                     final String option = parameters[j];
                     final int pos = option.indexOf('=');
-                    if ( pos != -1 ) {
+                    if ( pos != -1 )
+                    {
+                        // handle options from javadoc comments
                         String optionLabel = option.substring(0, pos);
                         String optionValue = option.substring(pos + 1);
                         if (optionValue != null && optionValue.length() > 0 ) {
                             options.put(optionLabel, optionValue);
                         }
+                    }
+                    else
+                    {
+                        // handle options from java annotations
+                        String optionLabel = parameters[j];
+                        String optionValue = (j < parameters.length-2) ? parameters[j+2] : null;
+                        if (optionValue != null && "=".equals(parameters[j+1]) ) {
+                            options.put(optionLabel, optionValue);
+                        }
+                        j += 2;
                     }
                 }
             }
