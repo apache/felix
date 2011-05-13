@@ -329,17 +329,20 @@ public class Util
 
     public static BundleWire getWire(BundleRevision br, String name)
     {
-        List<BundleWire> wires = ((BundleRevisionImpl) br).getWires();
-        if (wires != null)
+        if (br.getWiring() != null)
         {
-            for (BundleWire w : wires)
+            List<BundleWire> wires = br.getWiring().getRequiredWires(null);
+            if (wires != null)
             {
-                if (w.getCapability().getNamespace()
-                        .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
-                    w.getCapability().getAttributes()
-                        .get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+                for (BundleWire w : wires)
                 {
-                    return w;
+                    if (w.getCapability().getNamespace()
+                            .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                        w.getCapability().getAttributes()
+                            .get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+                    {
+                        return w;
+                    }
                 }
             }
         }
