@@ -43,11 +43,13 @@ class EntryFilterEnumeration implements Enumeration
     {
         m_bundle = bundle;
         BundleRevision br = m_bundle.getCurrentRevision();
-        List<BundleRevision> fragments = ((BundleWiringImpl) br.getWiring()).getFragments();
-        if (includeFragments && (fragments != null))
+        if (includeFragments
+            && (br.getWiring() != null)
+            && (((BundleWiringImpl) br.getWiring()).getFragments() != null))
         {
-            m_revisions = new ArrayList(fragments.size() + 1);
-            m_revisions.addAll(fragments);
+            m_revisions = new ArrayList(
+                ((BundleWiringImpl) br.getWiring()).getFragments().size() + 1);
+            m_revisions.addAll(((BundleWiringImpl) br.getWiring()).getFragments());
         }
         else
         {

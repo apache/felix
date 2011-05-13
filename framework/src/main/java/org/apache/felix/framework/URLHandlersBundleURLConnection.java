@@ -123,6 +123,7 @@ class URLHandlersBundleURLConnection extends URLConnection
         {
             m_classPathIdx = 0;
         }
+// TODO: OSGi R4.3 - This is messed up. We need to fix resource lookup.
         if (!((BundleRevisionImpl) m_targetRevision)
             .hasInputStream(m_classPathIdx, url.getPath()))
         {

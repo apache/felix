@@ -20,52 +20,29 @@ package org.apache.felix.framework;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLStreamHandler;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.security.ProtectionDomain;
-import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.apache.felix.framework.Felix.StatefulResolver;
-import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.resolver.Content;
-import org.apache.felix.framework.resolver.ResolveException;
-import org.apache.felix.framework.resolver.ResolverWire;
-import org.apache.felix.framework.resolver.ResourceNotFoundException;
-import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
-import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 public class BundleRevisionImpl implements BundleRevision
@@ -95,9 +72,6 @@ public class BundleRevisionImpl implements BundleRevision
     private final List<String> m_activationExcludes;
 
     private final Bundle m_bundle;
-
-    private List<BundleRevision> m_dependentImporters = new ArrayList<BundleRevision>(0);
-    private List<BundleRevision> m_dependentRequirers = new ArrayList<BundleRevision>(0);
 
     private Content[] m_contentPath;
     private boolean m_isActivationTriggered = false;
@@ -362,28 +336,17 @@ public class BundleRevisionImpl implements BundleRevision
         return m_id;
     }
 
-    public synchronized void resolve(
-        List<BundleRevision> fragments,
-        List<ResolverWire> rws,
-        Map<ResolverWire, Set<String>> requiredPkgWires)
-        throws Exception
+    public synchronized void resolve(BundleWiringImpl wiring)
     {
-        // This not only sets the wires for the module, but it also records
-        // the dependencies this module has on other modules (i.e., the provider
-        // end of the wire) to simplify bookkeeping.
-
-        // If there is an existing wiring, then dispose of it, which will
-        // remove any dependencies on other wirings.
         if (m_wiring != null)
         {
             m_wiring.dispose();
             m_wiring = null;
         }
 
-        if (rws != null)
+        if (wiring != null)
         {
-            m_wiring = new BundleWiringImpl(
-                m_logger, m_configMap, m_resolver, this, fragments, rws, requiredPkgWires);
+            m_wiring = wiring;
         }
     }
 
@@ -684,70 +647,11 @@ public class BundleRevisionImpl implements BundleRevision
         return null;
     }
 
-    public synchronized List<BundleRevision> getDependentImporters()
-    {
-        return m_dependentImporters;
-    }
-
-    public synchronized void addDependentImporter(BundleRevision br)
-    {
-        if (!m_dependentImporters.contains(br))
-        {
-            m_dependentImporters.add(br);
-        }
-    }
-
-    public synchronized void removeDependentImporter(BundleRevision br)
-    {
-        m_dependentImporters.remove(br);
-    }
-
-    public synchronized List<BundleRevision> getDependentRequirers()
-    {
-        return m_dependentRequirers;
-    }
-
-    public synchronized void addDependentRequirer(BundleRevision br)
-    {
-        if (!m_dependentRequirers.contains(br))
-        {
-            m_dependentRequirers.add(br);
-        }
-    }
-
-    public synchronized void removeDependentRequirer(BundleRevision br)
-    {
-        m_dependentRequirers.remove(br);
-    }
-
-    public synchronized List<BundleRevision> getDependents()
-    {
-        List<BundleRevision> dependents;
-        if (Util.isFragment(this))
-        {
-            dependents = new ArrayList<BundleRevision>();
-            List<BundleWire> wires = (m_wiring == null)
-                ? null : m_wiring.getRequiredWires(null);
-            for (int i = 0; (wires != null) && (i < wires.size()); i++)
-            {
-                dependents.add(wires.get(i).getProviderWiring().getRevision());
-            }
-        }
-        else
-        {
-            dependents = new ArrayList<BundleRevision>
-                (m_dependentImporters.size() + m_dependentRequirers.size());
-            dependents.addAll(m_dependentImporters);
-            dependents.addAll(m_dependentRequirers);
-        }
-        return dependents;
-    }
-
-    public synchronized void close()
+    synchronized void close()
     {
         try
         {
-            resolve(null, null, null);
+            resolve(null);
         }
         catch (Exception ex)
         {

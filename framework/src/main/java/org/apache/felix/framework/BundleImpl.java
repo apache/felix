@@ -96,6 +96,7 @@ class BundleImpl implements Bundle
         return m_archive;
     }
 
+// Only called when the framework is stopping. Don't need to clean up dependencies.
     synchronized void close()
     {
         closeRevisions();
@@ -112,6 +113,9 @@ class BundleImpl implements Bundle
         }
     }
 
+// Called when install fails, when stopping framework with uninstalled bundles,
+// and when refreshing an uninstalled bundle. Only need to clear up dependencies
+// for last case.
     synchronized void closeAndDelete() throws Exception
     {
         // Mark the bundle as stale, since it is being deleted.
@@ -122,6 +126,7 @@ class BundleImpl implements Bundle
         m_archive.closeAndDelete();
     }
 
+// Called from BundleImpl.close(), BundleImpl.closeAndDelete(), and BundleImpl.refresh()
     private void closeRevisions()
     {
         // Remove the bundle's associated revisions from the resolver state
@@ -136,6 +141,7 @@ class BundleImpl implements Bundle
         }
     }
 
+// Called when refreshing a bundle. Must clean up dependencies beforehand.
     synchronized void refresh() throws Exception
     {
         if (isExtension() && (getFramework().getState() != Bundle.STOPPING))
@@ -1046,35 +1052,6 @@ class BundleImpl implements Bundle
     synchronized BundleRevision getCurrentRevision()
     {
         return m_revisions.get(m_revisions.size() - 1);
-    }
-
-    synchronized boolean isUsed()
-    {
-        boolean unresolved = true;
-        for (int i = 0; unresolved && (i < m_revisions.size()); i++)
-        {
-            if (m_revisions.get(i).getWiring() != null)
-            {
-                unresolved = false;
-            }
-        }
-        boolean used = false;
-        for (int i = 0; !unresolved && !used && (i < m_revisions.size()); i++)
-        {
-            if (m_revisions.get(i).getWiring() != null)
-            {
-                List<BundleRevision> dependents =
-                    ((BundleRevisionImpl) m_revisions.get(i)).getDependents();
-                for (int j = 0; (dependents != null) && (j < dependents.size()) && !used; j++)
-                {
-                    if (dependents.get(j) != m_revisions.get(i))
-                    {
-                        used = true;
-                    }
-                }
-            }
-        }
-        return used;
     }
 
     synchronized void revise(String location, InputStream is)
