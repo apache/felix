@@ -20,24 +20,24 @@ package org.apache.felix.framework.resolver;
 
 import java.net.URL;
 import java.util.Enumeration;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.CapabilityImpl;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 class WireImpl implements Wire
 {
     private final Module m_importer;
-    private final Requirement m_req;
+    private final BundleRequirementImpl m_req;
     private final Module m_exporter;
-    private final Capability m_cap;
+    private final BundleCapabilityImpl m_cap;
 
-    public WireImpl(Module importer, Requirement ip, Module exporter, Capability ep)
+    public WireImpl(Module importer, BundleRequirementImpl ip,
+        Module exporter, BundleCapabilityImpl cap)
     {
         m_importer = importer;
         m_req = ip;
         m_exporter = exporter;
-        m_cap = ep;
+        m_cap = cap;
     }
 
     public Module getImporter()
@@ -45,7 +45,7 @@ class WireImpl implements Wire
         return m_importer;
     }
 
-    public Requirement getRequirement()
+    public BundleRequirementImpl getRequirement()
     {
         return m_req;
     }
@@ -55,7 +55,7 @@ class WireImpl implements Wire
         return m_exporter;
     }
 
-    public Capability getCapability()
+    public BundleCapabilityImpl getCapability()
     {
         return m_cap;
     }
@@ -73,8 +73,8 @@ class WireImpl implements Wire
      */
     public boolean hasPackage(String pkgName)
     {
-        return (m_cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-            m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName));
+        return (m_cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+            m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName));
     }
 
     /* (non-Javadoc)
@@ -89,15 +89,15 @@ class WireImpl implements Wire
 
         // Only check when the package of the target class is
         // the same as the package for the wire.
-        if (m_cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-            m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+        if (m_cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+            m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
         {
             // Check the include/exclude filters from the target package
             // to make sure that the class is actually visible. We delegate
             // to the exporting module, rather than its content, so it can
             // it can follow any internal wires it may have (e.g., if the
             // package has multiple sources).
-            if (((CapabilityImpl) m_cap).isIncluded(name))
+            if (m_cap.isIncluded(name))
             {
                 clazz = m_exporter.getClassByDelegation(name);
             }
@@ -126,8 +126,8 @@ class WireImpl implements Wire
 
         // Only check when the package of the target resource is
         // the same as the package for the wire.
-        if (m_cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-            m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+        if (m_cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+            m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
         {
             // Delegate to the exporting module, rather than its
             // content, so that it can follow any internal wires it may have
@@ -158,8 +158,8 @@ class WireImpl implements Wire
 
         // Only check when the package of the target resource is
         // the same as the package for the wire.
-        if (m_cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-            m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+        if (m_cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+            m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
         {
             urls = m_exporter.getResourcesByDelegation(name);
 

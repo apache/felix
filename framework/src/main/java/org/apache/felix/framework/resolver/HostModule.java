@@ -26,9 +26,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
@@ -36,8 +36,8 @@ class HostModule implements Module
 {
     private final Module m_host;
     private final List<Module> m_fragments;
-    private List<Capability> m_cachedCapabilities = null;
-    private List<Requirement> m_cachedRequirements = null;
+    private List<BundleCapabilityImpl> m_cachedCapabilities = null;
+    private List<BundleRequirementImpl> m_cachedRequirements = null;
 
     public HostModule(Module module, List<Module> fragments)
     {
@@ -60,14 +60,14 @@ class HostModule implements Module
         return m_host.getId();
     }
 
-    public List<Capability> getCapabilities()
+    public List<BundleCapabilityImpl> getCapabilities()
     {
         if (m_cachedCapabilities == null)
         {
-            List<Capability> capList = new ArrayList<Capability>();
+            List<BundleCapabilityImpl> capList = new ArrayList<BundleCapabilityImpl>();
 
             // Wrap host capabilities.
-            List<Capability> caps = m_host.getCapabilities();
+            List<BundleCapabilityImpl> caps = m_host.getCapabilities();
             for (int capIdx = 0;
                 (caps != null) && (capIdx < caps.size());
                 capIdx++)
@@ -86,7 +86,7 @@ class HostModule implements Module
                     (caps != null) && (capIdx < caps.size());
                     capIdx++)
                 {
-                    if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                    if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         capList.add(
                             new HostedCapability(this, caps.get(capIdx)));
@@ -98,14 +98,14 @@ class HostModule implements Module
         return m_cachedCapabilities;
     }
 
-    public List<Requirement> getRequirements()
+    public List<BundleRequirementImpl> getRequirements()
     {
         if (m_cachedRequirements == null)
         {
-            List<Requirement> reqList = new ArrayList<Requirement>();
+            List<BundleRequirementImpl> reqList = new ArrayList<BundleRequirementImpl>();
 
             // Wrap host requirements.
-            List<Requirement> reqs = m_host.getRequirements();
+            List<BundleRequirementImpl> reqs = m_host.getRequirements();
             for (int reqIdx = 0;
                 (reqs != null) && (reqIdx < reqs.size());
                 reqIdx++)
@@ -124,8 +124,8 @@ class HostModule implements Module
                     (reqs != null) && (reqIdx < reqs.size());
                     reqIdx++)
                 {
-                    if (reqs.get(reqIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                        || reqs.get(reqIdx).getNamespace().equals(Capability.MODULE_NAMESPACE))
+                    if (reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                        || reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
                     {
                         reqList.add(
                             new HostedRequirement(this, reqs.get(reqIdx)));
@@ -162,7 +162,7 @@ class HostModule implements Module
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public List<Requirement> getDynamicRequirements()
+    public List<BundleRequirementImpl> getDynamicRequirements()
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }

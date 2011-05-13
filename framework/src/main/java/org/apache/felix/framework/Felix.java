@@ -27,12 +27,8 @@ import java.util.Map.Entry;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.cache.BundleCache;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
-import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.ext.SecurityProvider;
@@ -49,7 +45,8 @@ import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.ThreadGate;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4LibraryClause;
-import org.apache.felix.framework.util.manifestparser.RequirementImpl;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -3249,14 +3246,17 @@ public class Felix extends BundleImpl implements Framework
     ExportedPackage[] getExportedPackages(String pkgName)
     {
         // First, get all exporters of the package.
-        List<Directive> dirs = new ArrayList<Directive>(0);
-        List<Attribute> attrs = new ArrayList<Attribute>(1);
-        attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
-        Requirement req = new RequirementImpl(null, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<Capability> exports = m_resolver.getCandidates(req, false);
+        Map<String, Object> attrs = new HashMap<String, Object>(1);
+        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        BundleRequirementImpl req = new BundleRequirementImpl(
+            null,
+            BundleCapabilityImpl.PACKAGE_NAMESPACE,
+            Collections.EMPTY_MAP,
+            attrs);
+        Set<BundleCapabilityImpl> exports = m_resolver.getCandidates(req, false);
 
         // We only want resolved capabilities.
-        for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
+        for (Iterator<BundleCapabilityImpl> it = exports.iterator(); it.hasNext(); )
         {
             if (!it.next().getModule().isResolved())
             {
@@ -3268,7 +3268,7 @@ public class Felix extends BundleImpl implements Framework
         {
             List pkgs = new ArrayList();
 
-            for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
+            for (Iterator<BundleCapabilityImpl> it = exports.iterator(); it.hasNext(); )
             {
                 // Get the bundle associated with the current exporting module.
                 BundleImpl bundle = (BundleImpl) it.next().getModule().getBundle();
@@ -3286,7 +3286,7 @@ public class Felix extends BundleImpl implements Framework
                 List<Module> modules = bundle.getModules();
                 for (int modIdx = 0; modIdx < modules.size(); modIdx++)
                 {
-                    List<Capability> ec = modules.get(modIdx).getCapabilities();
+                    List<BundleCapabilityImpl> ec = modules.get(modIdx).getCapabilities();
                     for (int i = 0; (ec != null) && (i < ec.size()); i++)
                     {
                         if (ec.get(i).getNamespace().equals(req.getNamespace())
@@ -3384,25 +3384,28 @@ public class Felix extends BundleImpl implements Framework
         List<Module> modules = bundle.getModules();
         for (int modIdx = 0; modIdx < modules.size(); modIdx++)
         {
-            List<Capability> caps = modules.get(modIdx).getCapabilities();
+            List<BundleCapabilityImpl> caps = modules.get(modIdx).getCapabilities();
             if ((caps != null) && (caps.size() > 0))
             {
                 for (int capIdx = 0; capIdx < caps.size(); capIdx++)
                 {
                     // See if the target bundle's module is one of the
                     // resolved exporters of the package.
-                    if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                    if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         String pkgName = (String)
-                            caps.get(capIdx).getAttribute(Capability.PACKAGE_ATTR).getValue();
-                        List<Directive> dirs = new ArrayList<Directive>(0);
-                        List<Attribute> attrs = new ArrayList<Attribute>(1);
-                        attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
-                        Requirement req =
-                            new RequirementImpl(null, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-                        Set<Capability> exports = m_resolver.getCandidates(req, false);
+                            caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                        Map<String, Object> attrs = new HashMap<String, Object>(1);
+                        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+                        BundleRequirementImpl req =
+                            new BundleRequirementImpl(
+                            null,
+                            BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                            Collections.EMPTY_MAP,
+                            attrs);
+                        Set<BundleCapabilityImpl> exports = m_resolver.getCandidates(req, false);
                         // We only want resolved capabilities.
-                        for (Iterator<Capability> it = exports.iterator(); it.hasNext(); )
+                        for (Iterator<BundleCapabilityImpl> it = exports.iterator(); it.hasNext(); )
                         {
                             if (!it.next().getModule().isResolved())
                             {
@@ -3412,7 +3415,7 @@ public class Felix extends BundleImpl implements Framework
 
 
                         // Search through the current providers to find the target module.
-                        for (Capability cap : exports)
+                        for (BundleCapabilityImpl cap : exports)
                         {
                             if (cap == caps.get(capIdx))
                             {
@@ -4113,7 +4116,7 @@ public class Felix extends BundleImpl implements Framework
             m_resolverState.removeModule(m);
         }
 
-        Set<Capability> getCandidates(Requirement req, boolean obeyMandatory)
+        Set<BundleCapabilityImpl> getCandidates(BundleRequirementImpl req, boolean obeyMandatory)
         {
             return m_resolverState.getCandidates(req, obeyMandatory);
         }
@@ -4246,7 +4249,7 @@ public class Felix extends BundleImpl implements Framework
 
             // If the module doesn't have dynamic imports, then just return
             // immediately.
-            List<Requirement> dynamics = module.getDynamicRequirements();
+            List<BundleRequirementImpl> dynamics = module.getDynamicRequirements();
             if ((dynamics == null) || dynamics.isEmpty())
             {
                 return false;
@@ -4254,11 +4257,11 @@ public class Felix extends BundleImpl implements Framework
 
             // If any of the module exports this package, then we cannot
             // attempt to dynamically import it.
-            List<Capability> caps = module.getCapabilities();
+            List<BundleCapabilityImpl> caps = module.getCapabilities();
             for (int i = 0; (caps != null) && (i < caps.size()); i++)
             {
-                if (caps.get(i).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                    && caps.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+                if (caps.get(i).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                    && caps.get(i).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
                 {
                     return false;
                 }
@@ -4277,12 +4280,14 @@ public class Felix extends BundleImpl implements Framework
             // Loop through the importer's dynamic requirements to determine if
             // there is a matching one for the package from which we want to
             // load a class.
-            List<Directive> dirs = Collections.EMPTY_LIST;
-            List<Attribute> attrs = new ArrayList(1);
-            attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
-            Requirement req = new RequirementImpl(
-                module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-            Set<Capability> candidates = m_resolverState.getCandidates(req, false);
+            Map<String, Object> attrs = new HashMap(1);
+            attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+            BundleRequirementImpl req = new BundleRequirementImpl(
+                module,
+                BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                Collections.EMPTY_MAP,
+                attrs);
+            Set<BundleCapabilityImpl> candidates = m_resolverState.getCandidates(req, false);
 
             return !candidates.isEmpty();
         }

@@ -30,11 +30,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
@@ -45,14 +44,15 @@ class Candidates
     // Set of all candidate modules.
     private final Set<Module> m_candidateModules;
     // Maps a capability to requirements that match it.
-    private final Map<Capability, Set<Requirement>> m_dependentMap;
+    private final Map<BundleCapabilityImpl, Set<BundleRequirementImpl>> m_dependentMap;
     // Maps a requirement to the capability it matches.
-    private final Map<Requirement, SortedSet<Capability>> m_candidateMap;
+    private final Map<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> m_candidateMap;
     // Maps a host capability to a map containing its potential fragments;
     // the fragment map maps a fragment symbolic name to a map that maps
     // a version to a list of fragments requirements matching that symbolic
     // name and version.
-    private final Map<Capability, Map<String, Map<Version, List<Requirement>>>> m_hostFragments;
+    private final Map<BundleCapabilityImpl,
+        Map<String, Map<Version, List<BundleRequirementImpl>>>> m_hostFragments;
     // Maps a module to its associated wrapped module; this only happens
     // when a module being resolved has fragments to attach to it.
     private final Map<Module, HostModule> m_allWrappedHosts;
@@ -73,9 +73,9 @@ class Candidates
     private Candidates(
         Module root,
         Set<Module> candidateModules,
-        Map<Capability, Set<Requirement>> dependentMap,
-        Map<Requirement, SortedSet<Capability>> candidateMap,
-        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
+        Map<BundleCapabilityImpl, Set<BundleRequirementImpl>> dependentMap,
+        Map<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> candidateMap,
+        Map<BundleCapabilityImpl, Map<String, Map<Version, List<BundleRequirementImpl>>>> hostFragments,
         Map<Module, HostModule> wrappedHosts, Map<Module, Object> populateResultCache,
         boolean fragmentsPresent)
     {
@@ -98,10 +98,10 @@ class Candidates
     {
         m_root = root;
         m_candidateModules = new HashSet<Module>();
-        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
-        m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
+        m_dependentMap = new HashMap<BundleCapabilityImpl, Set<BundleRequirementImpl>>();
+        m_candidateMap = new HashMap<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>>();
         m_hostFragments =
-            new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
+            new HashMap<BundleCapabilityImpl, Map<String, Map<Version, List<BundleRequirementImpl>>>>();
         m_allWrappedHosts = new HashMap<Module, HostModule>();
         m_populateResultCache = new HashMap<Module, Object>();
 
@@ -119,14 +119,14 @@ class Candidates
      * @param candidates the potential candidates matching the requirement.
     **/
     public Candidates(ResolverState state, Module root,
-        Requirement req, SortedSet<Capability> candidates)
+        BundleRequirementImpl req, SortedSet<BundleCapabilityImpl> candidates)
     {
         m_root = root;
         m_candidateModules = new HashSet<Module>();
-        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
-        m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
+        m_dependentMap = new HashMap<BundleCapabilityImpl, Set<BundleRequirementImpl>>();
+        m_candidateMap = new HashMap<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>>();
         m_hostFragments =
-            new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
+            new HashMap<BundleCapabilityImpl, Map<String, Map<Version, List<BundleRequirementImpl>>>>();
         m_allWrappedHosts = new HashMap<Module, HostModule>();
         m_populateResultCache = new HashMap<Module, Object>();
 
@@ -163,11 +163,11 @@ class Candidates
 
         // Keeps track of the candidates we've already calculated for the
         // current module's requirements.
-        Map<Requirement, SortedSet<Capability>> localCandidateMap = null;
+        Map<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> localCandidateMap = null;
 
         // Keeps track of the current module's requirements for which we
         // haven't yet found candidates.
-        List<Requirement> remainingReqs = null;
+        List<BundleRequirementImpl> remainingReqs = null;
 
         // Get the cache value for the current module.
         Object cacheValue = m_populateResultCache.get(module);
@@ -226,14 +226,15 @@ class Candidates
         // If we have requirements remaining, then find candidates for them.
         while (remainingReqs.size() > 0)
         {
-            Requirement req = remainingReqs.remove(0);
+            BundleRequirementImpl req = remainingReqs.remove(0);
 
             // Get satisfying candidates and populate their candidates if necessary.
             ResolveException rethrow = null;
-            SortedSet<Capability> candidates = state.getCandidates(req, true);
-            for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
+            SortedSet<BundleCapabilityImpl> candidates = state.getCandidates(req, true);
+            for (Iterator<BundleCapabilityImpl> itCandCap = candidates.iterator();
+                itCandCap.hasNext(); )
             {
-                Capability candCap = itCandCap.next();
+                BundleCapabilityImpl candCap = itCandCap.next();
 
                 // If the candidate module is a fragment, then always attempt
                 // to populate candidates for its dependency, since it must be
@@ -328,14 +329,14 @@ class Candidates
                 if (cacheValue == null)
                 {
                     // Create a modifiable list of the module's requirements.
-                    List<Requirement> remainingReqs = new ArrayList(module.getRequirements());
+                    List<BundleRequirementImpl> remainingReqs = new ArrayList(module.getRequirements());
 
                     // Find the host requirement.
-                    Requirement hostReq = null;
-                    for (Iterator<Requirement> it = remainingReqs.iterator(); it.hasNext(); )
+                    BundleRequirementImpl hostReq = null;
+                    for (Iterator<BundleRequirementImpl> it = remainingReqs.iterator(); it.hasNext(); )
                     {
-                        Requirement r = it.next();
-                        if (r.getNamespace().equals(Capability.HOST_NAMESPACE))
+                        BundleRequirementImpl r = it.next();
+                        if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
                         {
                             hostReq = r;
                             it.remove();
@@ -343,10 +344,10 @@ class Candidates
                     }
 
                     // Get candidates hosts and keep any that have been populated.
-                    SortedSet<Capability> hosts = state.getCandidates(hostReq, false);
-                    for (Iterator<Capability> it = hosts.iterator(); it.hasNext(); )
+                    SortedSet<BundleCapabilityImpl> hosts = state.getCandidates(hostReq, false);
+                    for (Iterator<BundleCapabilityImpl> it = hosts.iterator(); it.hasNext(); )
                     {
-                        Capability host = it.next();
+                        BundleCapabilityImpl host = it.next();
                         if (!isPopulated(host.getModule()))
                         {
                             it.remove();
@@ -376,7 +377,8 @@ class Candidates
 
                     // Create a local map for populating candidates first, just in case
                     // the module is not resolvable.
-                    Map<Requirement, SortedSet<Capability>> localCandidateMap = new HashMap();
+                    Map<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> localCandidateMap =
+                        new HashMap<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>>();
 
                     // Add the discovered host candidates to the local candidate map.
                     localCandidateMap.put(hostReq, hosts);
@@ -410,13 +412,14 @@ class Candidates
         // the candidates for the matching dynamic requirement. Get the
         // matching candidates and populate their candidates if necessary.
         ResolveException rethrow = null;
-        Entry<Requirement, SortedSet<Capability>> entry =
+        Entry<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> entry =
             m_candidateMap.entrySet().iterator().next();
-        Requirement dynReq = entry.getKey();
-        SortedSet<Capability> candidates = entry.getValue();
-        for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
+        BundleRequirementImpl dynReq = entry.getKey();
+        SortedSet<BundleCapabilityImpl> candidates = entry.getValue();
+        for (Iterator<BundleCapabilityImpl> itCandCap = candidates.iterator();
+            itCandCap.hasNext(); )
         {
-            Capability candCap = itCandCap.next();
+            BundleCapabilityImpl candCap = itCandCap.next();
             if (!candCap.getModule().isResolved())
             {
                 try
@@ -453,9 +456,9 @@ class Candidates
      * @param req the requirement to add.
      * @param candidates the candidates matching the requirement.
     **/
-    private void add(Requirement req, SortedSet<Capability> candidates)
+    private void add(BundleRequirementImpl req, SortedSet<BundleCapabilityImpl> candidates)
     {
-        if (req.getNamespace().equals(Capability.HOST_NAMESPACE))
+        if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
         {
             m_fragmentsPresent = true;
         }
@@ -466,7 +469,7 @@ class Candidates
         // Make a list of all candidate modules for determining singetons.
         // Add the requirement as a dependent on the candidates. Keep track
         // of fragments for hosts.
-        for (Capability cap : candidates)
+        for (BundleCapabilityImpl cap : candidates)
         {
             // Remember the module for all capabilities so we can
             // determine which ones are singletons.
@@ -480,9 +483,9 @@ class Candidates
      * be further modified by the caller.
      * @param candidates the bulk requirements and candidates to add.
     **/
-    private void add(Map<Requirement, SortedSet<Capability>> candidates)
+    private void add(Map<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> candidates)
     {
-        for (Entry<Requirement, SortedSet<Capability>> entry : candidates.entrySet())
+        for (Entry<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> entry : candidates.entrySet())
         {
             add(entry.getKey(), entry.getValue());
         }
@@ -506,7 +509,7 @@ class Candidates
      * @param req the requirement whose candidates are desired.
      * @return the matching candidates or null.
     **/
-    public SortedSet<Capability> getCandidates(Requirement req)
+    public SortedSet<BundleCapabilityImpl> getCandidates(BundleRequirementImpl req)
     {
         return m_candidateMap.get(req);
     }
@@ -626,22 +629,24 @@ class Candidates
         //      with host's attached fragment capabilities.
 
         // Steps 1 and 2
-        List<HostModule> wrappedHosts = new ArrayList<HostModule>();
+        List<HostModule> hostModules = new ArrayList<HostModule>();
         List<Module> unselectedFragments = new ArrayList<Module>();
-        for (Entry<Capability, Map<String, Map<Version, List<Requirement>>>> hostEntry :
-            m_hostFragments.entrySet())
+        for (Entry<BundleCapabilityImpl, Map<String, Map<Version, List<BundleRequirementImpl>>>>
+            hostEntry : m_hostFragments.entrySet())
         {
             // Step 1
-            Capability hostCap = hostEntry.getKey();
-            Map<String, Map<Version, List<Requirement>>> fragments = hostEntry.getValue();
+            BundleCapabilityImpl hostCap = hostEntry.getKey();
+            Map<String, Map<Version, List<BundleRequirementImpl>>> fragments
+                = hostEntry.getValue();
             List<Module> selectedFragments = new ArrayList<Module>();
-            for (Entry<String, Map<Version, List<Requirement>>> fragEntry : fragments.entrySet())
+            for (Entry<String, Map<Version, List<BundleRequirementImpl>>> fragEntry
+                : fragments.entrySet())
             {
                 boolean isFirst = true;
-                for (Entry<Version, List<Requirement>> versionEntry
+                for (Entry<Version, List<BundleRequirementImpl>> versionEntry
                     : fragEntry.getValue().entrySet())
                 {
-                    for (Requirement hostReq : versionEntry.getValue())
+                    for (BundleRequirementImpl hostReq : versionEntry.getValue())
                     {
                         // Select the highest version of the fragment that
                         // is not removal pending.
@@ -658,7 +663,7 @@ class Candidates
                         else
                         {
                             m_dependentMap.get(hostCap).remove(hostReq);
-                            SortedSet<Capability> hosts = m_candidateMap.get(hostReq);
+                            SortedSet<BundleCapabilityImpl> hosts = m_candidateMap.get(hostReq);
                             hosts.remove(hostCap);
                             if (hosts.isEmpty())
                             {
@@ -671,7 +676,7 @@ class Candidates
 
             // Step 2
             HostModule wrappedHost = new HostModule(hostCap.getModule(), selectedFragments);
-            wrappedHosts.add(wrappedHost);
+            hostModules.add(wrappedHost);
             m_allWrappedHosts.put(hostCap.getModule(), wrappedHost);
         }
 
@@ -682,19 +687,19 @@ class Candidates
         }
 
         // Step 4
-        for (HostModule wrappedHost : wrappedHosts)
+        for (HostModule hostModule : hostModules)
         {
             // Replaces capabilities from fragments with the capabilities
             // from the merged host.
-            for (Capability c : wrappedHost.getCapabilities())
+            for (BundleCapabilityImpl c : hostModule.getCapabilities())
             {
-                Set<Requirement> dependents =
+                Set<BundleRequirementImpl> dependents =
                     m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
                 if (dependents != null)
                 {
-                    for (Requirement r : dependents)
+                    for (BundleRequirementImpl r : dependents)
                     {
-                        Set<Capability> cands = m_candidateMap.get(r);
+                        Set<BundleCapabilityImpl> cands = m_candidateMap.get(r);
                         cands.remove(((HostedCapability) c).getDeclaredCapability());
                         cands.add(c);
                     }
@@ -704,13 +709,13 @@ class Candidates
             // Copies candidates for fragment requirements to the host.
             // This doesn't record the reverse dependency, but that
             // information should not be needed at this point anymore.
-            for (Requirement r : wrappedHost.getRequirements())
+            for (BundleRequirementImpl r : hostModule.getRequirements())
             {
-                SortedSet<Capability> cands =
+                SortedSet<BundleCapabilityImpl> cands =
                     m_candidateMap.get(((HostedRequirement) r).getDeclaredRequirement());
                 if (cands != null)
                 {
-                    m_candidateMap.put(r, new TreeSet<Capability>(cands));
+                    m_candidateMap.put(r, new TreeSet<BundleCapabilityImpl>(cands));
                 }
             }
         }
@@ -718,43 +723,44 @@ class Candidates
 
     private void populateDependents()
     {
-        for (Entry<Requirement, SortedSet<Capability>> entry : m_candidateMap.entrySet())
+        for (Entry<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> entry
+            : m_candidateMap.entrySet())
         {
-            Requirement req = entry.getKey();
-            SortedSet<Capability> caps = entry.getValue();
-            for (Capability cap : caps)
+            BundleRequirementImpl req = entry.getKey();
+            SortedSet<BundleCapabilityImpl> caps = entry.getValue();
+            for (BundleCapabilityImpl cap : caps)
             {
                 // Record the requirement as dependent on the capability.
-                Set<Requirement> dependents = m_dependentMap.get(cap);
+                Set<BundleRequirementImpl> dependents = m_dependentMap.get(cap);
                 if (dependents == null)
                 {
-                    dependents = new HashSet<Requirement>();
+                    dependents = new HashSet<BundleRequirementImpl>();
                     m_dependentMap.put(cap, dependents);
                 }
                 dependents.add(req);
 
                 // Keep track of hosts and associated fragments.
-                if (req.getNamespace().equals(Capability.HOST_NAMESPACE))
+                if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
                 {
-                    Map<String, Map<Version, List<Requirement>>>
+                    Map<String, Map<Version, List<BundleRequirementImpl>>>
                         fragments = m_hostFragments.get(cap);
                     if (fragments == null)
                     {
-                        fragments = new HashMap<String, Map<Version, List<Requirement>>>();
+                        fragments = new HashMap<String, Map<Version, List<BundleRequirementImpl>>>();
                         m_hostFragments.put(cap, fragments);
                     }
-                    Map<Version, List<Requirement>> fragmentVersions =
+                    Map<Version, List<BundleRequirementImpl>> fragmentVersions =
                         fragments.get(req.getModule().getSymbolicName());
                     if (fragmentVersions == null)
                     {
                         fragmentVersions =
-                            new TreeMap<Version, List<Requirement>>(Collections.reverseOrder());
+                            new TreeMap<Version, List<BundleRequirementImpl>>(Collections.reverseOrder());
                         fragments.put(req.getModule().getSymbolicName(), fragmentVersions);
                     }
-                    List<Requirement> actual = fragmentVersions.get(req.getModule().getVersion());
+                    List<BundleRequirementImpl> actual = fragmentVersions.get(req.getModule().getVersion());
                     if (actual == null)
                     {
-                        actual = new ArrayList<Requirement>();
+                        actual = new ArrayList<BundleRequirementImpl>();
                         fragmentVersions.put(req.getModule().getVersion(), actual);
                     }
                     actual.add(req);
@@ -803,12 +809,12 @@ class Candidates
     **/
     private void remove(Module m, Set<Module> unresolvedModules) throws ResolveException
     {
-        for (Requirement r : m.getRequirements())
+        for (BundleRequirementImpl r : m.getRequirements())
         {
             remove(r);
         }
 
-        for (Capability c : m.getCapabilities())
+        for (BundleCapabilityImpl c : m.getCapabilities())
         {
             remove(c, unresolvedModules);
         }
@@ -818,16 +824,16 @@ class Candidates
      * Removes a requirement from the internal data structures.
      * @param req the requirement to remove.
     **/
-    private void remove(Requirement req)
+    private void remove(BundleRequirementImpl req)
     {
-        boolean isFragment = req.getNamespace().equals(Capability.HOST_NAMESPACE);
+        boolean isFragment = req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE);
 
-        SortedSet<Capability> candidates = m_candidateMap.remove(req);
+        SortedSet<BundleCapabilityImpl> candidates = m_candidateMap.remove(req);
         if (candidates != null)
         {
-            for (Capability cap : candidates)
+            for (BundleCapabilityImpl cap : candidates)
             {
-                Set<Requirement> dependents = m_dependentMap.get(cap);
+                Set<BundleRequirementImpl> dependents = m_dependentMap.get(cap);
                 if (dependents != null)
                 {
                     dependents.remove(req);
@@ -835,15 +841,15 @@ class Candidates
 
                 if (isFragment)
                 {
-                    Map<String, Map<Version, List<Requirement>>>
+                    Map<String, Map<Version, List<BundleRequirementImpl>>>
                         fragments = m_hostFragments.get(cap);
                     if (fragments != null)
                     {
-                        Map<Version, List<Requirement>> fragmentVersions =
+                        Map<Version, List<BundleRequirementImpl>> fragmentVersions =
                             fragments.get(req.getModule().getSymbolicName());
                         if (fragmentVersions != null)
                         {
-                            List<Requirement> actual =
+                            List<BundleRequirementImpl> actual =
                                 fragmentVersions.get(req.getModule().getVersion());
                             if (actual != null)
                             {
@@ -877,14 +883,15 @@ class Candidates
      *        also need to be removed.
      * @throws ResolveException if removing the module caused the resolve to fail.
     **/
-    private void remove(Capability c, Set<Module> unresolvedModules) throws ResolveException
+    private void remove(BundleCapabilityImpl c, Set<Module> unresolvedModules)
+        throws ResolveException
     {
-        Set<Requirement> dependents = m_dependentMap.remove(c);
+        Set<BundleRequirementImpl> dependents = m_dependentMap.remove(c);
         if (dependents != null)
         {
-            for (Requirement r : dependents)
+            for (BundleRequirementImpl r : dependents)
             {
-                SortedSet<Capability> candidates = m_candidateMap.get(r);
+                SortedSet<BundleCapabilityImpl> candidates = m_candidateMap.get(r);
                 candidates.remove(c);
                 if (candidates.isEmpty())
                 {
@@ -912,19 +919,21 @@ class Candidates
     **/
     public Candidates copy()
     {
-        Map<Capability, Set<Requirement>> dependentMap =
-            new HashMap<Capability, Set<Requirement>>();
-        for (Entry<Capability, Set<Requirement>> entry : m_dependentMap.entrySet())
+        Map<BundleCapabilityImpl, Set<BundleRequirementImpl>> dependentMap =
+            new HashMap<BundleCapabilityImpl, Set<BundleRequirementImpl>>();
+        for (Entry<BundleCapabilityImpl, Set<BundleRequirementImpl>> entry : m_dependentMap.entrySet())
         {
-            Set<Requirement> dependents = new HashSet<Requirement>(entry.getValue());
+            Set<BundleRequirementImpl> dependents = new HashSet<BundleRequirementImpl>(entry.getValue());
             dependentMap.put(entry.getKey(), dependents);
         }
 
-        Map<Requirement, SortedSet<Capability>> candidateMap =
-            new HashMap<Requirement, SortedSet<Capability>>();
-        for (Entry<Requirement, SortedSet<Capability>> entry : m_candidateMap.entrySet())
+        Map<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> candidateMap =
+            new HashMap<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>>();
+        for (Entry<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> entry
+            : m_candidateMap.entrySet())
         {
-            SortedSet<Capability> candidates = new TreeSet<Capability>(entry.getValue());
+            SortedSet<BundleCapabilityImpl> candidates =
+                new TreeSet<BundleCapabilityImpl>(entry.getValue());
             candidateMap.put(entry.getKey(), candidates);
         }
 
@@ -938,7 +947,7 @@ class Candidates
     {
         // Create set of all modules from requirements.
         Set<Module> modules = new HashSet();
-        for (Entry<Requirement, SortedSet<Capability>> entry
+        for (Entry<BundleRequirementImpl, SortedSet<BundleCapabilityImpl>> entry
             : m_candidateMap.entrySet())
         {
             modules.add(entry.getKey().getModule());
@@ -949,17 +958,17 @@ class Candidates
         {
             System.out.println("  " + module
                  + " (" + (module.isResolved() ? "RESOLVED)" : "UNRESOLVED)"));
-            for (Requirement req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getRequirements())
             {
-                Set<Capability> candidates = m_candidateMap.get(req);
+                Set<BundleCapabilityImpl> candidates = m_candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
                 {
                     System.out.println("    " + req + ": " + candidates);
                 }
             }
-            for (Requirement req : module.getDynamicRequirements())
+            for (BundleRequirementImpl req : module.getDynamicRequirements())
             {
-                Set<Capability> candidates = m_candidateMap.get(req);
+                Set<BundleCapabilityImpl> candidates = m_candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
                 {
                     System.out.println("    " + req + ": " + candidates);
@@ -978,21 +987,17 @@ class Candidates
     **/
     private static boolean isSingleton(Module module)
     {
-        final List<Capability> modCaps =
+        final List<BundleCapabilityImpl> modCaps =
             Util.getCapabilityByNamespace(
-                module, Capability.MODULE_NAMESPACE);
+                module, BundleCapabilityImpl.MODULE_NAMESPACE);
         if (modCaps == null || modCaps.isEmpty())
         {
             return false;
         }
-        final List<Directive> dirs = modCaps.get(0).getDirectives();
-        for (int dirIdx = 0; (dirs != null) && (dirIdx < dirs.size()); dirIdx++)
+        String value = modCaps.get(0).getDirectives().get(Constants.SINGLETON_DIRECTIVE);
+        if (value != null)
         {
-            if (dirs.get(dirIdx).getName().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE)
-                && Boolean.valueOf((String) dirs.get(dirIdx).getValue()))
-            {
-                return true;
-            }
+            return Boolean.valueOf(value);
         }
         return false;
     }

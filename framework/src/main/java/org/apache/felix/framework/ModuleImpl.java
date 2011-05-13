@@ -44,10 +44,6 @@ import java.util.TreeMap;
 
 import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.cache.JarContent;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.resolver.Content;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.HostedRequirement;
@@ -62,7 +58,8 @@ import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.util.manifestparser.RequirementImpl;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
@@ -84,12 +81,12 @@ public class ModuleImpl implements Module
     private final String m_symbolicName;
     private final Version m_version;
 
-    private final List<Capability> m_capabilities;
-    private List<Capability> m_cachedCapabilities = null;
-    private final List<Requirement> m_requirements;
-    private List<Requirement> m_cachedRequirements = null;
-    private final List<Requirement> m_dynamicRequirements;
-    private List<Requirement> m_cachedDynamicRequirements = null;
+    private final List<BundleCapabilityImpl> m_capabilities;
+    private List<BundleCapabilityImpl> m_cachedCapabilities = null;
+    private final List<BundleRequirementImpl> m_requirements;
+    private List<BundleRequirementImpl> m_cachedRequirements = null;
+    private final List<BundleRequirementImpl> m_dynamicRequirements;
+    private List<BundleRequirementImpl> m_cachedDynamicRequirements = null;
     private final List<R4Library> m_nativeLibraries;
     private final int m_declaredActivationPolicy;
     private final List<String> m_activationIncludes;
@@ -291,23 +288,23 @@ public class ModuleImpl implements Module
         return m_version;
     }
 
-    public synchronized List<Capability> getCapabilities()
+    public synchronized List<BundleCapabilityImpl> getCapabilities()
     {
         if (m_cachedCapabilities == null)
         {
             List capList = (m_capabilities == null)
-                ? new ArrayList<Capability>()
-                : new ArrayList<Capability>(m_capabilities);
+                ? new ArrayList<BundleCapabilityImpl>()
+                : new ArrayList<BundleCapabilityImpl>(m_capabilities);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<Capability> caps = m_fragments.get(fragIdx).getCapabilities();
+                List<BundleCapabilityImpl> caps = m_fragments.get(fragIdx).getCapabilities();
                 for (int capIdx = 0;
                     (caps != null) && (capIdx < caps.size());
                     capIdx++)
                 {
-                    if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                    if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         capList.add(
                             new HostedCapability(this, caps.get(capIdx)));
@@ -319,23 +316,23 @@ public class ModuleImpl implements Module
         return m_cachedCapabilities;
     }
 
-    public synchronized List<Requirement> getRequirements()
+    public synchronized List<BundleRequirementImpl> getRequirements()
     {
         if (m_cachedRequirements == null)
         {
-            List<Requirement> reqList = (m_requirements == null)
+            List<BundleRequirementImpl> reqList = (m_requirements == null)
                 ? new ArrayList() : new ArrayList(m_requirements);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<Requirement> reqs = m_fragments.get(fragIdx).getRequirements();
+                List<BundleRequirementImpl> reqs = m_fragments.get(fragIdx).getRequirements();
                 for (int reqIdx = 0;
                     (reqs != null) && (reqIdx < reqs.size());
                     reqIdx++)
                 {
-                    if (reqs.get(reqIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                        || reqs.get(reqIdx).getNamespace().equals(Capability.MODULE_NAMESPACE))
+                    if (reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                        || reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
                     {
                         reqList.add(
                             new HostedRequirement(this, reqs.get(reqIdx)));
@@ -347,22 +344,22 @@ public class ModuleImpl implements Module
         return m_cachedRequirements;
     }
 
-    public synchronized List<Requirement> getDynamicRequirements()
+    public synchronized List<BundleRequirementImpl> getDynamicRequirements()
     {
         if (m_cachedDynamicRequirements == null)
         {
-            List<Requirement> reqList = (m_dynamicRequirements == null)
+            List<BundleRequirementImpl> reqList = (m_dynamicRequirements == null)
                 ? new ArrayList() : new ArrayList(m_dynamicRequirements);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<Requirement> reqs = m_fragments.get(fragIdx).getDynamicRequirements();
+                List<BundleRequirementImpl> reqs = m_fragments.get(fragIdx).getDynamicRequirements();
                 for (int reqIdx = 0;
                     (reqs != null) && (reqIdx < reqs.size());
                     reqIdx++)
                 {
-                    if (reqs.get(reqIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                    if (reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         reqList.add(reqs.get(reqIdx));
                     }
@@ -482,11 +479,11 @@ public class ModuleImpl implements Module
         // from the old wires.
         for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
-            if (m_wires.get(i).getCapability().getNamespace().equals(Capability.MODULE_NAMESPACE))
+            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
             {
                 ((ModuleImpl) m_wires.get(i).getExporter()).removeDependentRequirer(this);
             }
-            else if (m_wires.get(i).getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+            else if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
                 ((ModuleImpl) m_wires.get(i).getExporter()).removeDependentImporter(this);
             }
@@ -497,11 +494,11 @@ public class ModuleImpl implements Module
         // Add ourself as a dependent to the new wires' modules.
         for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
-            if (m_wires.get(i).getCapability().getNamespace().equals(Capability.MODULE_NAMESPACE))
+            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
             {
                 ((ModuleImpl) m_wires.get(i).getExporter()).addDependentRequirer(this);
             }
-            else if (m_wires.get(i).getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+            else if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
                 ((ModuleImpl) m_wires.get(i).getExporter()).addDependentImporter(this);
             }
@@ -936,7 +933,7 @@ public class ModuleImpl implements Module
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getRequirement().getNamespace()
-                .equals(Capability.PACKAGE_NAMESPACE))
+                .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
                 try
                 {
@@ -962,7 +959,7 @@ public class ModuleImpl implements Module
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getRequirement().getNamespace()
-                .equals(Capability.MODULE_NAMESPACE))
+                .equals(BundleCapabilityImpl.MODULE_NAMESPACE))
             {
                 try
                 {
@@ -2214,8 +2211,8 @@ public class ModuleImpl implements Module
         List<Wire> wires = module.getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
-            if (wires.get(i).getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-                wires.get(i).getCapability().getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+            if (wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                wires.get(i).getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
             {
                 String exporter = wires.get(i).getExporter().getBundle().toString();
 
@@ -2241,7 +2238,7 @@ public class ModuleImpl implements Module
 
         // Next, check to see if the package was optionally imported and
         // whether or not there is an exporter available.
-        List<Requirement> reqs = module.getRequirements();
+        List<BundleRequirementImpl> reqs = module.getRequirements();
 /*
 * TODO: RB - Fix diagnostic message for optional imports.
         for (int i = 0; (reqs != null) && (i < reqs.length); i++)
@@ -2304,12 +2301,12 @@ public class ModuleImpl implements Module
         if (resolver.isAllowedDynamicImport(module, pkgName))
         {
             // Try to see if there is an exporter available.
-            List<Directive> dirs = Collections.EMPTY_LIST;
-            List<Attribute> attrs = new ArrayList(1);
-            attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
-            Requirement req = new RequirementImpl(
-                module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-            Set<Capability> exporters = resolver.getCandidates(req, false);
+            Map<String, String> dirs = Collections.EMPTY_MAP;
+            Map<String, Object> attrs = new HashMap<String, Object>(1);
+            attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+            BundleRequirementImpl req = new BundleRequirementImpl(
+                module, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+            Set<BundleCapabilityImpl> exporters = resolver.getCandidates(req, false);
 
             Wire wire = null;
             try
@@ -2343,12 +2340,12 @@ public class ModuleImpl implements Module
         }
 
         // Next, check to see if there are any exporters for the package at all.
-        List<Directive> dirs = Collections.EMPTY_LIST;
-        List<Attribute> attrs = new ArrayList(1);
-        attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
-        Requirement req = new RequirementImpl(
-            module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<Capability> exports = resolver.getCandidates(req, false);
+        Map<String, String> dirs = Collections.EMPTY_MAP;
+        Map<String, Object> attrs = new HashMap<String, Object>(1);
+        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        BundleRequirementImpl req = new BundleRequirementImpl(
+            module, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+        Set<BundleCapabilityImpl> exports = resolver.getCandidates(req, false);
         if (exports.size() > 0)
         {
             boolean classpath = false;
