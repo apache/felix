@@ -834,11 +834,5 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             // Nothing needed here.
         }
-
-        @Override
-        public URL getLocalURL(int index, String urlPath)
-        {
-            return getClass().getClassLoader().getResource(urlPath);
-        }
     }
 }
