@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.BundleWiringImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.util.Util;
@@ -62,7 +63,7 @@ public class ResolverImpl implements Resolver
         Map<BundleRevision, List<ResolverWire>> wireMap = new HashMap<BundleRevision, List<ResolverWire>>();
         Map<BundleRevision, Packages> revisionPkgMap = new HashMap<BundleRevision, Packages>();
 
-        if (!((BundleRevisionImpl) revision).isResolved())
+        if (revision.getWiring() == null)
         {
             boolean retryFragments;
             do
@@ -360,7 +361,7 @@ public class ResolverImpl implements Resolver
         // If the revision doesn't have dynamic imports, then just return
         // immediately.
         List<BundleRequirement> dynamics =
-            ((BundleRevisionImpl) revision).getResolvedDynamicRequirements();
+            ((BundleWiringImpl) revision.getWiring()).getDynamicRequirements();
         if ((dynamics == null) || dynamics.isEmpty())
         {
             return null;
@@ -379,7 +380,7 @@ public class ResolverImpl implements Resolver
 
         // If this revision already imports or requires this package, then
         // we cannot dynamically import it.
-        if (((BundleRevisionImpl) revision).hasPackageSource(pkgName))
+        if (((BundleWiringImpl) revision.getWiring()).hasPackageSource(pkgName))
         {
             return null;
         }
@@ -466,7 +467,7 @@ public class ResolverImpl implements Resolver
         if (revision.getWiring() != null)
         {
             // Use wires to get actual requirements and satisfying capabilities.
-            for (BundleWire wire : ((BundleRevisionImpl) revision).getWires())
+            for (BundleWire wire : revision.getWiring().getRequiredWires(null))
             {
                 // Wrap the requirement as a hosted requirement
                 // if it comes from a fragment, since we will need
@@ -496,7 +497,7 @@ public class ResolverImpl implements Resolver
             // so check to see if there are candidates for any of its dynamic
             // imports.
             for (BundleRequirement req
-                : ((BundleRevisionImpl) revision).getResolvedDynamicRequirements())
+                : ((BundleWiringImpl) revision.getWiring()).getDynamicRequirements())
             {
                 // Get the candidates for the current requirement.
                 SortedSet<BundleCapability> candCaps =
@@ -1171,7 +1172,7 @@ public class ResolverImpl implements Resolver
         // exports are substitutable.
         if (revision.getWiring() != null)
         {
-            for (BundleWire wire : ((BundleRevisionImpl) revision).getWires())
+            for (BundleWire wire : revision.getWiring().getRequiredWires(null))
             {
                 if (wire.getRequirement().getNamespace().equals(
                     BundleCapabilityImpl.PACKAGE_NAMESPACE))

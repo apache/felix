@@ -126,8 +126,8 @@ class URLHandlersBundleURLConnection extends URLConnection
         if (!((BundleRevisionImpl) m_targetRevision)
             .hasInputStream(m_classPathIdx, url.getPath()))
         {
-            URL newurl = ((BundleRevisionImpl)
-                m_targetRevision).getResourceByDelegation(url.getPath());
+            URL newurl = ((BundleWiringImpl)
+                m_targetRevision.getWiring()).getResourceByDelegation(url.getPath());
             if (newurl == null)
             {
                 throw new IOException("Resource does not exist: " + url);

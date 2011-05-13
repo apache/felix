@@ -131,21 +131,6 @@ class BundleImpl implements Bundle
             // Remove the revision from the resolver state.
             getFramework().getResolver().removeRevision(br);
 
-            // Set fragments to null, which will remove the revision from all
-            // of its dependent fragment revisions.
-            try
-            {
-                ((BundleRevisionImpl) br).attachFragments(null);
-            }
-            catch (Exception ex)
-            {
-                getFramework().getLogger().log(
-                    br.getBundle(), Logger.LOG_ERROR, "Error detaching fragments.", ex);
-            }
-            // Set wires to null, which will remove the revision from all
-            // of its dependent revisions.
-            ((BundleRevisionImpl) br).setWires(null, null);
-
             // Close the revision's content.
             ((BundleRevisionImpl) br).close();
         }
@@ -467,8 +452,7 @@ class BundleImpl implements Bundle
         }
     }
 
-    private static List<BundleRevision> createLocalizationRevisionList(
-        BundleRevisionImpl bri)
+    private static List<BundleRevision> createLocalizationRevisionList(BundleRevision br)
     {
         // If the revision is a fragment, then we actually need
         // to search its host and associated fragments for its
@@ -477,19 +461,21 @@ class BundleImpl implements Bundle
         // version instead of the fragment itself. If there are
         // no hosts, but the revision is a fragment, then just
         // search the revision itself.
-        if (Util.isFragment(bri))
+        if (Util.isFragment(br))
         {
-            List<BundleWire> hostWires = bri.getWires();
-            if ((hostWires != null) && (hostWires.size() > 0))
+            if (br.getWiring() != null)
             {
-                bri = (BundleRevisionImpl) hostWires.get(0).getProviderWiring().getRevision();
-                for (int hostIdx = 1; hostIdx < hostWires.size(); hostIdx++)
+                List<BundleWire> hostWires = br.getWiring().getRequiredWires(null);
+                if ((hostWires != null) && (hostWires.size() > 0))
                 {
-                    if (bri.getVersion().compareTo(
-                        hostWires.get(hostIdx).getProviderWiring().getRevision().getVersion()) < 0)
+                    br = hostWires.get(0).getProviderWiring().getRevision();
+                    for (int hostIdx = 1; hostIdx < hostWires.size(); hostIdx++)
                     {
-                        bri = (BundleRevisionImpl)
-                            hostWires.get(hostIdx).getProviderWiring().getRevision();
+                        if (br.getVersion().compareTo(
+                            hostWires.get(hostIdx).getProviderWiring().getRevision().getVersion()) < 0)
+                        {
+                            br = hostWires.get(hostIdx).getProviderWiring().getRevision();
+                        }
                     }
                 }
             }
@@ -497,8 +483,8 @@ class BundleImpl implements Bundle
 
         // Create a list of the revision and any attached fragment revisions.
         List<BundleRevision> result = new ArrayList<BundleRevision>();
-        result.add(bri);
-        List<BundleRevision> fragments = bri.getFragments();
+        result.add(br);
+        List<BundleRevision> fragments = ((BundleWiringImpl) br.getWiring()).getFragments();
         if (fragments != null)
         {
             result.addAll(fragments);
@@ -1075,13 +1061,16 @@ class BundleImpl implements Bundle
         boolean used = false;
         for (int i = 0; !unresolved && !used && (i < m_revisions.size()); i++)
         {
-            List<BundleRevision> dependents =
-                ((BundleRevisionImpl) m_revisions.get(i)).getDependents();
-            for (int j = 0; (dependents != null) && (j < dependents.size()) && !used; j++)
+            if (m_revisions.get(i).getWiring() != null)
             {
-                if (dependents.get(j) != m_revisions.get(i))
+                List<BundleRevision> dependents =
+                    ((BundleRevisionImpl) m_revisions.get(i)).getDependents();
+                for (int j = 0; (dependents != null) && (j < dependents.size()) && !used; j++)
                 {
-                    used = true;
+                    if (dependents.get(j) != m_revisions.get(i))
+                    {
+                        used = true;
+                    }
                 }
             }
         }

@@ -27,6 +27,7 @@ import java.net.URLStreamHandler;
 import java.security.AccessControlException;
 import java.security.AllPermission;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,13 +37,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 import org.apache.felix.framework.Felix.StatefulResolver;
+
+import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.resolver.Content;
+import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
@@ -53,6 +56,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * The ExtensionManager class is used in several ways.
@@ -115,6 +119,7 @@ class ExtensionManager extends URLStreamHandler implements Content
     }
 
     private final Logger m_logger;
+    private final Map m_configMap;
     private final Map m_headerMap = new StringMap(false);
     private final BundleRevision m_systemBundleRevision;
     private List<BundleCapability> m_capabilities = null;
@@ -130,6 +135,7 @@ class ExtensionManager extends URLStreamHandler implements Content
     private ExtensionManager()
     {
         m_logger = null;
+        m_configMap = null;
         m_systemBundleRevision = null;
         m_extensions = new ArrayList();
         m_extensionsCache = new Bundle[0];
@@ -148,19 +154,20 @@ class ExtensionManager extends URLStreamHandler implements Content
      * @param config the configuration to read properties from.
      * @param systemBundleInfo the info to change if we need to add exports.
      */
-    ExtensionManager(Logger logger, Felix felix)
+    ExtensionManager(Logger logger, Map configMap, Felix felix)
     {
+        m_logger = logger;
+        m_configMap = configMap;
         m_systemBundleRevision = new ExtensionManagerRevision(felix);
         m_extensions = null;
         m_extensionsCache = null;
         m_names = null;
         m_sourceToExtensions = null;
-        m_logger = logger;
 
 // TODO: FRAMEWORK - Not all of this stuff really belongs here, probably only exports.
         // Populate system bundle header map.
         m_headerMap.put(FelixConstants.BUNDLE_VERSION,
-            felix.getConfig().get(FelixConstants.FELIX_VERSION_PROPERTY));
+            m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
         m_headerMap.put(FelixConstants.BUNDLE_SYMBOLICNAME,
             FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         m_headerMap.put(FelixConstants.BUNDLE_NAME, "System Bundle");
@@ -176,21 +183,21 @@ class ExtensionManager extends URLStreamHandler implements Content
         // We must construct the system bundle's export metadata.
         // Get configuration property that specifies which class path
         // packages should be exported by the system bundle.
-        String syspkgs = (String) felix.getConfig().get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
+        String syspkgs = (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
         // If no system packages were specified, load our default value.
         syspkgs = (syspkgs == null)
             ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMPACKAGES)
             : syspkgs;
         syspkgs = (syspkgs == null) ? "" : syspkgs;
         // If any extra packages are specified, then append them.
-        String extra = (String) felix.getConfig().get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+        String extra = (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
         syspkgs = (extra == null) ? syspkgs : syspkgs + "," + extra;
         m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
         m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
         try
         {
             ManifestParser mp = new ManifestParser(
-                m_logger, felix.getConfig(), m_systemBundleRevision, m_headerMap);
+                m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
             List<BundleCapability> caps = aliasSymbolicName(mp.getCapabilities());
             setCapabilities(caps);
         }
@@ -635,14 +642,17 @@ class ExtensionManager extends URLStreamHandler implements Content
     class ExtensionManagerRevision extends BundleRevisionImpl
     {
         private final Version m_version;
+        private volatile BundleWiring m_wiring;
+
         ExtensionManagerRevision(Felix felix)
         {
-            super(m_logger, felix.getConfig(), felix, "0",
+            super(m_logger, m_configMap, felix, "0",
                 felix.getBootPackages(), felix.getBootPackageWildcards());
             m_version = new Version((String)
-                felix.getConfig().get(FelixConstants.FELIX_VERSION_PROPERTY));
+                m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
         }
 
+        @Override
         public Map getHeaders()
         {
             synchronized (ExtensionManager.this)
@@ -651,6 +661,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
+        @Override
         public List<BundleCapability> getDeclaredCapabilities(String namespace)
         {
             synchronized (ExtensionManager.this)
@@ -659,6 +670,85 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
+        @Override
+        public String getSymbolicName()
+        {
+            return FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME;
+        }
+
+        @Override
+        public Version getVersion()
+        {
+            return m_version;
+        }
+
+        @Override
+        public void close()
+        {
+            // Nothing needed here.
+        }
+
+        @Override
+        public Content getContent()
+        {
+            return ExtensionManager.this;
+        }
+
+        @Override
+        public URL getEntry(String name)
+        {
+            // There is no content for the system bundle, so return null.
+            return null;
+        }
+
+        @Override
+        public boolean hasInputStream(int index, String urlPath)
+        {
+            return (getClass().getClassLoader().getResource(urlPath) != null);
+        }
+
+        @Override
+        public InputStream getInputStream(int index, String urlPath)
+        {
+            return getClass().getClassLoader().getResourceAsStream(urlPath);
+        }
+
+        @Override
+        public URL getLocalURL(int index, String urlPath)
+        {
+            return getClass().getClassLoader().getResource(urlPath);
+        }
+
+        @Override
+        public void resolve(
+            List<BundleRevision> fragments, List<ResolverWire> rws,
+            Map<ResolverWire, Set<String>> requiredPkgWires) throws Exception
+        {
+            m_wiring = new ExtensionManagerWiring(
+                m_logger, m_configMap, null, this, fragments, rws, requiredPkgWires);
+        }
+
+        @Override
+        public BundleWiring getWiring()
+        {
+            return m_wiring;
+        }
+    }
+
+    class ExtensionManagerWiring extends BundleWiringImpl
+    {
+        ExtensionManagerWiring(
+            Logger logger, Map configMap, StatefulResolver resolver,
+            BundleRevisionImpl revision, List<BundleRevision> fragments,
+            List<ResolverWire> resolverWires,
+            Map<ResolverWire, Set<String>> requiredPkgWires)
+            throws Exception
+        {
+            super(logger, configMap, resolver, revision,
+                fragments, resolverWires, requiredPkgWires);
+        }
+
+        @Override
         public List<BundleCapability> getCapabilities(String namespace)
         {
             synchronized (ExtensionManager.this)
@@ -667,16 +757,13 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
-        public String getSymbolicName()
+        @Override
+        public List<R4Library> getNativeLibraries()
         {
-            return FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME;
+            return Collections.EMPTY_LIST;
         }
 
-        public Version getVersion()
-        {
-            return m_version;
-        }
-
+        @Override
         public Class getClassByDelegation(String name) throws ClassNotFoundException
         {
             Class clazz = null;
@@ -720,11 +807,13 @@ class ExtensionManager extends URLStreamHandler implements Content
             return clazz;
         }
 
+        @Override
         public URL getResourceByDelegation(String name)
         {
             return getClass().getClassLoader().getResource(name);
         }
 
+        @Override
         public Enumeration getResourcesByDelegation(String name)
         {
            try
@@ -737,53 +826,13 @@ class ExtensionManager extends URLStreamHandler implements Content
            }
         }
 
-        public Logger getLogger()
-        {
-            return m_logger;
-        }
-
-        public Map getConfig()
-        {
-            return null;
-        }
-
-        public StatefulResolver getResolver()
-        {
-            return null;
-        }
-
-        public void attachFragmentContents(Content[] fragmentContents)
-            throws Exception
-        {
-            throw new UnsupportedOperationException("Should not be used!");
-        }
-
-        public void close()
+        @Override
+        public void dispose()
         {
             // Nothing needed here.
         }
 
-        public Content getContent()
-        {
-            return ExtensionManager.this;
-        }
-
-        public URL getEntry(String name)
-        {
-            // There is no content for the system bundle, so return null.
-            return null;
-        }
-
-        public boolean hasInputStream(int index, String urlPath)
-        {
-            return (getClass().getClassLoader().getResource(urlPath) != null);
-        }
-
-        public InputStream getInputStream(int index, String urlPath)
-        {
-            return getClass().getClassLoader().getResourceAsStream(urlPath);
-        }
-
+        @Override
         public URL getLocalURL(int index, String urlPath)
         {
             return getClass().getClassLoader().getResource(urlPath);

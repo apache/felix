@@ -31,6 +31,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.BundleWiringImpl;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
@@ -990,8 +991,11 @@ class Candidates
                     System.out.println("    " + req + ": " + candidates);
                 }
             }
+// TODO: OSGi R4.3 - We need to get dynamic requirements using public API
+//       then we might not need to make the BundleWiringImpl and BundleRevisionImpl
+//       classes public.
             reqs = (br.getWiring() != null)
-                ? ((BundleRevisionImpl) br).getResolvedDynamicRequirements()
+                ? ((BundleWiringImpl) br.getWiring()).getDynamicRequirements()
                 : ((BundleRevisionImpl) br).getDeclaredDynamicRequirements();
             for (BundleRequirement req : reqs)
             {

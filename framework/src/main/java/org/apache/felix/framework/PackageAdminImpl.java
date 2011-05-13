@@ -197,14 +197,13 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         {
             List<Bundle> list = new ArrayList<Bundle>();
             // Iterate through revisions
-            List<BundleRevision> revisions = ((BundleImpl) bundle).getRevisions();
-            for (int modIdx = 0; modIdx < revisions.size(); modIdx++)
+            for (BundleRevision revision : ((BundleImpl) bundle).getRevisions())
             {
                 // Get attached fragments.
-                BundleRevisionImpl revision = (BundleRevisionImpl) revisions.get(modIdx);
-                if (revision.isResolved())
+                if (revision.getWiring() != null)
                 {
-                    List<BundleRevision> fragments = revision.getFragments();
+                    List<BundleRevision> fragments =
+                        ((BundleWiringImpl) revision.getWiring()).getFragments();
                     for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
                     {
                         Bundle b = fragments.get(i).getBundle();
@@ -230,14 +229,12 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         {
             List<Bundle> list = new ArrayList<Bundle>();
             // Iterate through revisions
-            List<BundleRevision> revisions = ((BundleImpl) bundle).getRevisions();
-            for (int modIdx = 0; modIdx < revisions.size(); modIdx++)
+            for (BundleRevision revision : ((BundleImpl) bundle).getRevisions())
             {
                 // Get hosts
-                BundleRevisionImpl revision = (BundleRevisionImpl) revisions.get(modIdx);
-                if (revision.isResolved())
+                if (revision.getWiring() != null)
                 {
-                    List<BundleWire> hostWires = revision.getWires();
+                    List<BundleWire> hostWires = revision.getWiring().getRequiredWires(null);
                     for (int i = 0; (hostWires != null) && (i < hostWires.size()); i++)
                     {
                         Bundle b = hostWires.get(i).getProviderWiring().getBundle();
@@ -259,14 +256,12 @@ class PackageAdminImpl implements PackageAdmin, Runnable
     public RequiredBundle[] getRequiredBundles(String symbolicName)
     {
         List list = new ArrayList();
-        Bundle[] bundles = m_felix.getBundles();
-        for (int i = 0; i < bundles.length; i++)
+        for (Bundle bundle : m_felix.getBundles())
         {
-            BundleImpl impl = (BundleImpl) bundles[i];
             if ((symbolicName == null)
-                || (symbolicName.equals(impl.getCurrentRevision().getSymbolicName())))
+                || (symbolicName.equals(bundle.getSymbolicName())))
             {
-                list.add(new RequiredBundleImpl(m_felix, impl));
+                list.add(new RequiredBundleImpl(m_felix, (BundleImpl) bundle));
             }
         }
         return (list.isEmpty())

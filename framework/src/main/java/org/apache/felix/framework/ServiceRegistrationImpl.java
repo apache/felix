@@ -519,7 +519,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 try
                 {
                     Class requestClass =
-                        ((BundleRevisionImpl) requesterRevision).getClassByDelegation(className);
+                        ((BundleWiringImpl) requesterRevision.getWiring())
+                            .getClassByDelegation(className);
                     allow = getRegistration().isClassAccessible(requestClass);
                 }
                 catch (Exception ex)
@@ -544,14 +545,15 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Try to load class from requester.
-                        Class requestClass =((BundleRevisionImpl)
-                            requesterRevision).getClassByDelegation(className);
+                        Class requestClass =((BundleWiringImpl)
+                            requesterRevision.getWiring()).getClassByDelegation(className);
                         try
                         {
                             // If requester has access to the class, verify it is the
                             // same class as the provider.
-                            allow = (((BundleRevisionImpl) providerRevision)
-                                .getClassByDelegation(className) == requestClass);
+                            allow = (((BundleWiringImpl)
+                                providerRevision.getWiring())
+                                    .getClassByDelegation(className) == requestClass);
                         }
                         catch (Exception ex)
                         {
@@ -585,8 +587,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Load the class from the requesting bundle.
-                        Class requestClass = ((BundleRevisionImpl)
-                            requesterRevision).getClassByDelegation(className);
+                        Class requestClass = ((BundleWiringImpl)
+                            requesterRevision.getWiring())
+                                .getClassByDelegation(className);
                         // Get the service registration and ask it to check
                         // if the service object is assignable to the requesting
                         // bundle's class.
