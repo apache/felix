@@ -233,6 +233,14 @@ class Candidates
         {
             BundleRequirement req = remainingReqs.remove(0);
 
+            // Ignore dynamic requirements.
+            String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+// TODO: OSGi R4.3 - Use proper "dynamic" constant.
+            if ((resolution != null) && resolution.equals("dynamic"))
+            {
+                continue;
+            }
+
             // Get satisfying candidates and populate their candidates if necessary.
             ResolveException rethrow = null;
             SortedSet<BundleCapability> candidates =
@@ -727,7 +735,7 @@ class Candidates
                 }
             }
 
-            // Copies candidates for fragment requirements to the host.
+            // Copy candidates for fragment requirements to the host.
             // This doesn't record the reverse dependency, but that
             // information should not be needed at this point anymore.
             for (BundleRequirement r : hostRevision.getDeclaredRequirements(null))
@@ -991,12 +999,12 @@ class Candidates
                     System.out.println("    " + req + ": " + candidates);
                 }
             }
-// TODO: OSGi R4.3 - We need to get dynamic requirements using public API
-//       then we might not need to make the BundleWiringImpl and BundleRevisionImpl
-//       classes public.
+// TODO: OSGi R4.3 - Need to check what getWiring().getRequirements() returns
+//       with respect to dynamic imports; is it the union of all declared
+//       dynamic imports from fragments and host?
             reqs = (br.getWiring() != null)
-                ? ((BundleWiringImpl) br.getWiring()).getDynamicRequirements()
-                : ((BundleRevisionImpl) br).getDeclaredDynamicRequirements();
+                ? Util.getDynamicRequirements(br.getWiring().getRequirements(null))
+                : Util.getDynamicRequirements(br.getDeclaredRequirements(null));
             for (BundleRequirement req : reqs)
             {
                 Set<BundleCapability> candidates = m_candidateMap.get(req);
