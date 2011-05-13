@@ -51,7 +51,6 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
@@ -83,8 +82,7 @@ public class BundleWiringImpl implements BundleWiring
     private final List<BundleRequirement> m_resolvedReqs;
     private final List<BundleRequirement> m_resolvedDynamicReqs;
     private final List<R4Library> m_resolvedNativeLibs;
-    private final Content[] m_contentPath;
-    private final Content[] m_fragmentContents;
+    private final List<Content> m_fragmentContents;
 
     private BundleClassLoader m_classLoader;
     private boolean m_isActivationTriggered = false;
@@ -154,7 +152,7 @@ public class BundleWiringImpl implements BundleWiring
         // We need to sort the fragments and add ourself as a dependent of each one.
         // We also need to create an array of fragment contents to attach to our
         // content path.
-        Content[] fragmentContents = null;
+        List<Content> fragmentContents = null;
         if (fragments != null)
         {
             // Sort fragments according to ID order, if necessary.
@@ -170,19 +168,16 @@ public class BundleWiringImpl implements BundleWiring
                 }
                 fragments = new ArrayList(sorted.values());
             }
-            fragmentContents = new Content[fragments.size()];
+            fragmentContents = new ArrayList<Content>(fragments.size());
             for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
             {
-                fragmentContents[i] =
+                fragmentContents.add(
                     ((BundleRevisionImpl) fragments.get(i)).getContent()
-                        .getEntryAsContent(FelixConstants.CLASS_PATH_DOT);
+                        .getEntryAsContent(FelixConstants.CLASS_PATH_DOT));
             }
         }
         m_fragments = fragments;
         m_fragmentContents = fragmentContents;
-
-        // Recalculate the content path for the new fragments.
-        m_contentPath = initializeContentPath();
 
         List<BundleCapability> capList = (m_revision.getDeclaredCapabilities(null) == null)
             ? new ArrayList<BundleCapability>()
@@ -308,109 +303,14 @@ public class BundleWiringImpl implements BundleWiring
 
     public void dispose()
     {
-        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.length); i++)
+        if (m_fragmentContents != null)
         {
-            m_contentPath[i].close();
-        }
-        for (int i = 0; (m_fragmentContents != null) && (i < m_fragmentContents.length); i++)
-        {
-            m_fragmentContents[i].close();
+            for (Content content : m_fragmentContents)
+            {
+                content.close();
+            }
         }
         m_classLoader = null;
-    }
-
-    private Content[] initializeContentPath() throws Exception
-    {
-        List contentList = new ArrayList();
-        calculateContentPath(m_revision, m_revision.getContent(), contentList, true);
-        for (int i = 0; (m_fragmentContents != null) && (i < m_fragmentContents.length); i++)
-        {
-            calculateContentPath(m_fragments.get(i), m_fragmentContents[i], contentList, false);
-        }
-        return (Content[]) contentList.toArray(new Content[contentList.size()]);
-    }
-
-    private List calculateContentPath(
-        BundleRevision revision, Content content, List contentList, boolean searchFragments)
-        throws Exception
-    {
-        // Creating the content path entails examining the bundle's
-        // class path to determine whether the bundle JAR file itself
-        // is on the bundle's class path and then creating content
-        // objects for everything on the class path.
-
-        // Create a list to contain the content path for the specified content.
-        List localContentList = new ArrayList();
-
-        // Find class path meta-data.
-        String classPath = (String) ((BundleRevisionImpl) revision)
-            .getHeaders().get(FelixConstants.BUNDLE_CLASSPATH);
-        // Parse the class path into strings.
-        List<String> classPathStrings = ManifestParser.parseDelimitedString(
-            classPath, FelixConstants.CLASS_PATH_SEPARATOR);
-
-        if (classPathStrings == null)
-        {
-            classPathStrings = new ArrayList<String>(0);
-        }
-
-        // Create the bundles class path.
-        for (int i = 0; i < classPathStrings.size(); i++)
-        {
-            // Remove any leading slash, since all bundle class path
-            // entries are relative to the root of the bundle.
-            classPathStrings.set(i, (classPathStrings.get(i).startsWith("/"))
-                ? classPathStrings.get(i).substring(1)
-                : classPathStrings.get(i));
-
-            // Check for the bundle itself on the class path.
-            if (classPathStrings.get(i).equals(FelixConstants.CLASS_PATH_DOT))
-            {
-                localContentList.add(content);
-            }
-            else
-            {
-                // Try to find the embedded class path entry in the current
-                // content.
-                Content embeddedContent = content.getEntryAsContent(classPathStrings.get(i));
-                // If the embedded class path entry was not found, it might be
-                // in one of the fragments if the current content is the bundle,
-                // so try to search the fragments if necessary.
-                for (int fragIdx = 0;
-                    searchFragments && (embeddedContent == null)
-                        && (m_fragmentContents != null) && (fragIdx < m_fragmentContents.length);
-                    fragIdx++)
-                {
-                    embeddedContent =
-                        m_fragmentContents[fragIdx].getEntryAsContent(classPathStrings.get(i));
-                }
-                // If we found the embedded content, then add it to the
-                // class path content list.
-                if (embeddedContent != null)
-                {
-                    localContentList.add(embeddedContent);
-                }
-                else
-                {
-// TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
-//       need to create an "Eventer" class like "Logger" perhaps.
-                    m_logger.log(m_revision.getBundle(), Logger.LOG_INFO,
-                        "Class path entry not found: "
-                        + classPathStrings.get(i));
-                }
-            }
-        }
-
-        // If there is nothing on the class path, then include
-        // "." by default, as per the spec.
-        if (localContentList.isEmpty())
-        {
-            localContentList.add(content);
-        }
-
-        // Now add the local contents to the global content list and return it.
-        contentList.addAll(localContentList);
-        return contentList;
     }
 
 // TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
@@ -427,9 +327,14 @@ public class BundleWiringImpl implements BundleWiring
         return m_importedPkgs.get(pkgName);
     }
 
-    public List<BundleRevision> getFragments()
+    List<BundleRevision> getFragments()
     {
         return m_fragments;
+    }
+
+    List<Content> getFragmentContents()
+    {
+        return m_fragmentContents;
     }
 
     public boolean isCurrent()
@@ -576,19 +481,6 @@ public class BundleWiringImpl implements BundleWiring
     // Class loader implementation methods.
     //
 
-    public URL getLocalURL(int index, String urlPath)
-    {
-        if (urlPath.startsWith("/"))
-        {
-            urlPath = urlPath.substring(1);
-        }
-        if (index == 0)
-        {
-            return m_revision.getContent().getEntryAsURL(urlPath);
-        }
-        return m_contentPath[index - 1].getEntryAsURL(urlPath);
-    }
-
     private URL createURL(int port, String path)
     {
         // Add a slash if there is one already, otherwise
@@ -613,37 +505,6 @@ public class BundleWiringImpl implements BundleWiring
                 ex);
         }
         return null;
-    }
-
-    URL getResourceLocal(String name)
-    {
-        URL url = null;
-
-        // Remove leading slash, if present, but special case
-        // "/" so that it returns a root URL...this isn't very
-        // clean or meaninful, but the Spring guys want it.
-        if (name.equals("/"))
-        {
-            // Just pick a class path index since it doesn't really matter.
-            url = createURL(1, name);
-        }
-        else if (name.startsWith("/"))
-        {
-            name = name.substring(1);
-        }
-
-        // Check the module class path.
-        for (int i = 0;
-            (url == null) &&
-            (i < m_contentPath.length); i++)
-        {
-            if (m_contentPath[i].hasEntry(name))
-            {
-                url = createURL(i + 1, name);
-            }
-        }
-
-        return url;
     }
 
     public Enumeration getResourcesByDelegation(String name)
@@ -685,7 +546,7 @@ public class BundleWiringImpl implements BundleWiring
             // The spec states that if the bundle cannot be resolved, then
             // only the local bundle's resources should be searched. So we
             // will ask the module's own class path.
-            return getResourcesLocal(name);
+            return m_revision.getResourcesLocal(name);
         }
 
         // Get the package of the target class/resource.
@@ -762,7 +623,7 @@ public class BundleWiringImpl implements BundleWiring
         // Try the module's own class path. If we can find the resource then
         // return it together with the results from the other searches else
         // try to look into the dynamic imports.
-        urls = getResourcesLocal(name);
+        urls = m_revision.getResourcesLocal(name);
         if ((urls != null) && (urls.hasMoreElements()))
         {
             completeUrlList.add(urls);
@@ -796,45 +657,6 @@ public class BundleWiringImpl implements BundleWiring
 
         return new CompoundEnumeration((Enumeration[])
             completeUrlList.toArray(new Enumeration[completeUrlList.size()]));
-    }
-
-    private Enumeration getResourcesLocal(String name)
-    {
-        List l = new ArrayList();
-
-        // Special case "/" so that it returns a root URLs for
-        // each bundle class path entry...this isn't very
-        // clean or meaningful, but the Spring guys want it.
-        if (name.equals("/"))
-        {
-            for (int i = 0; i < m_contentPath.length; i++)
-            {
-                l.add(createURL(i + 1, name));
-            }
-        }
-        else
-        {
-            // Remove leading slash, if present.
-            if (name.startsWith("/"))
-            {
-                name = name.substring(1);
-            }
-
-            // Check the module class path.
-            for (int i = 0; i < m_contentPath.length; i++)
-            {
-                if (m_contentPath[i].hasEntry(name))
-                {
-                    // Use the class path index + 1 for creating the path so
-                    // that we can differentiate between module content URLs
-                    // (where the path will start with 0) and module class
-                    // path URLs.
-                    l.add(createURL(i + 1, name));
-                }
-            }
-        }
-
-        return Collections.enumeration(l);
     }
 
     private ClassLoader determineParentClassLoader()
@@ -1056,7 +878,7 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     result = (isClass)
                         ? (Object) ((BundleClassLoader) getClassLoader()).findClass(name)
-                        : (Object) getResourceLocal(name);
+                        : (Object) m_revision.getResourceLocal(name);
 
                     // If still not found, then try the revision's dynamic imports.
                     if (result == null)
@@ -1083,7 +905,7 @@ public class BundleWiringImpl implements BundleWiring
                     // The spec states that if the bundle cannot be resolved, then
                     // only the local bundle's resources should be searched. So we
                     // will ask the module's own class path.
-                    URL url = getResourceLocal(name);
+                    URL url = m_revision.getResourceLocal(name);
                     if (url != null)
                     {
                         return url;
@@ -1469,7 +1291,7 @@ public class BundleWiringImpl implements BundleWiring
         @Override
         protected Enumeration findResources(String name)
         {
-            return BundleWiringImpl.this.getResourcesLocal(name);
+            return m_revision.getResourcesLocal(name);
         }
     }
 
@@ -1557,13 +1379,14 @@ public class BundleWiringImpl implements BundleWiring
                 byte[] bytes = null;
 
                 // Check the bundle class path.
+                List<Content> contentPath = m_revision.getContentPath();
                 Content content = null;
                 for (int i = 0;
                     (bytes == null) &&
-                    (i < m_contentPath.length); i++)
+                    (i < contentPath.size()); i++)
                 {
-                    bytes = m_contentPath[i].getEntryAsBytes(actual);
-                    content = m_contentPath[i];
+                    bytes = contentPath.get(i).getEntryAsBytes(actual);
+                    content = contentPath.get(i);
                 }
 
                 if (bytes != null)
@@ -1780,7 +1603,7 @@ public class BundleWiringImpl implements BundleWiring
         @Override
         protected URL findResource(String name)
         {
-            return BundleWiringImpl.this.getResourceLocal(name);
+            return m_revision.getResourceLocal(name);
         }
 
         // The findResources() method should only look at the revision itself, but
@@ -1838,10 +1661,10 @@ public class BundleWiringImpl implements BundleWiring
                             // If not found, then search fragments in order.
                             for (int i = 0;
                                 (result == null) && (m_fragmentContents != null)
-                                    && (i < m_fragmentContents.length);
+                                    && (i < m_fragmentContents.size());
                                 i++)
                             {
-                                result = m_fragmentContents[i].getEntryAsNativeLibrary(
+                                result = m_fragmentContents.get(i).getEntryAsNativeLibrary(
                                     libs.get(libIdx).getEntryName());
                             }
                         }

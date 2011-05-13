@@ -33,7 +33,6 @@ import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.resolver.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
-import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.osgi.framework.Bundle;
@@ -73,7 +72,7 @@ public class BundleRevisionImpl implements BundleRevision
 
     private final Bundle m_bundle;
 
-    private Content[] m_contentPath;
+    private List<Content> m_contentPath;
     private boolean m_isActivationTriggered = false;
     private ProtectionDomain m_protectionDomain = null;
     private final static SecureAction m_secureAction = new SecureAction();
@@ -84,9 +83,6 @@ public class BundleRevisionImpl implements BundleRevision
     // Boot delegation packages.
     private final String[] m_bootPkgs;
     private final boolean[] m_bootPkgWildcards;
-
-    // Re-usable security manager for accessing class context.
-    private static SecurityManagerEx m_sm = new SecurityManagerEx();
 
     /**
      * This constructor is used by the extension manager, since it needs
@@ -346,6 +342,21 @@ public class BundleRevisionImpl implements BundleRevision
 
         if (wiring != null)
         {
+            // If the wiring has fragments, then close the old content path,
+            // since it'll need to be recalculated to include fragments.
+            if (wiring.getFragments() != null)
+            {
+                for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
+                {
+                    // Don't close this module's content, if it is on the content path.
+                    if (m_content != m_contentPath.get(i))
+                    {
+                        m_contentPath.get(i).close();
+                    }
+                }
+                m_contentPath = null;
+            }
+
             m_wiring = wiring;
         }
     }
@@ -379,7 +390,7 @@ public class BundleRevisionImpl implements BundleRevision
         return m_content;
     }
 
-    private synchronized Content[] getContentPath()
+    synchronized List<Content> getContentPath()
     {
         if (m_contentPath == null)
         {
@@ -396,15 +407,32 @@ public class BundleRevisionImpl implements BundleRevision
         return m_contentPath;
     }
 
-    private Content[] initializeContentPath() throws Exception
+    private List<Content> initializeContentPath() throws Exception
     {
-        List contentList = new ArrayList();
-        calculateContentPath(this, m_content, contentList, true);
-        return (Content[]) contentList.toArray(new Content[contentList.size()]);
+        List<Content> contentList = new ArrayList();
+        calculateContentPath(this, getContent(), contentList, true);
+        
+        List<BundleRevision> fragments = null;
+        List<Content> fragmentContents = null;
+        if (m_wiring != null)
+        {
+            fragments = m_wiring.getFragments();
+            fragmentContents = m_wiring.getFragmentContents();
+        }
+        if (fragments != null)
+        {
+            for (int i = 0; i < fragments.size(); i++)
+            {
+                calculateContentPath(
+                    fragments.get(i), fragmentContents.get(i), contentList, false);
+            }
+        }
+        return contentList;
     }
 
     private List calculateContentPath(
-        BundleRevision revision, Content content, List contentList, boolean searchFragments)
+        BundleRevision revision, Content content, List<Content> contentList,
+        boolean searchFragments)
         throws Exception
     {
         // Creating the content path entails examining the bundle's
@@ -446,6 +474,19 @@ public class BundleRevisionImpl implements BundleRevision
                 // Try to find the embedded class path entry in the current
                 // content.
                 Content embeddedContent = content.getEntryAsContent(classPathStrings.get(i));
+                // If the embedded class path entry was not found, it might be
+                // in one of the fragments if the current content is the bundle,
+                // so try to search the fragments if necessary.
+                List<Content> fragmentContents = (m_wiring == null)
+                    ? null : m_wiring.getFragmentContents();
+                for (int fragIdx = 0;
+                    searchFragments && (embeddedContent == null)
+                        && (fragmentContents != null) && (fragIdx < fragmentContents.size());
+                    fragIdx++)
+                {
+                    embeddedContent =
+                        fragmentContents.get(fragIdx).getEntryAsContent(classPathStrings.get(i));
+                }
                 // If we found the embedded content, then add it to the
                 // class path content list.
                 if (embeddedContent != null)
@@ -456,7 +497,7 @@ public class BundleRevisionImpl implements BundleRevision
                 {
 // TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
 //       need to create an "Eventer" class like "Logger" perhaps.
-                    m_logger.log(m_bundle, Logger.LOG_INFO,
+                    m_logger.log(getBundle(), Logger.LOG_INFO,
                         "Class path entry not found: "
                         + classPathStrings.get(i));
                 }
@@ -493,12 +534,12 @@ public class BundleRevisionImpl implements BundleRevision
         }
 
         // Check the module class path.
-        Content[] contentPath = getContentPath();
+        List<Content> contentPath = getContentPath();
         for (int i = 0;
             (url == null) &&
-            (i < contentPath.length); i++)
+            (i < contentPath.size()); i++)
         {
-            if (contentPath[i].hasEntry(name))
+            if (contentPath.get(i).hasEntry(name))
             {
                 url = createURL(i + 1, name);
             }
@@ -514,10 +555,10 @@ public class BundleRevisionImpl implements BundleRevision
         // Special case "/" so that it returns a root URLs for
         // each bundle class path entry...this isn't very
         // clean or meaningful, but the Spring guys want it.
-        final Content[] contentPath = getContentPath();
+        final List<Content> contentPath = getContentPath();
         if (name.equals("/"))
         {
-            for (int i = 0; i < contentPath.length; i++)
+            for (int i = 0; i < contentPath.size(); i++)
             {
                 l.add(createURL(i + 1, name));
             }
@@ -531,9 +572,9 @@ public class BundleRevisionImpl implements BundleRevision
             }
 
             // Check the module class path.
-            for (int i = 0; i < contentPath.length; i++)
+            for (int i = 0; i < contentPath.size(); i++)
             {
-                if (contentPath[i].hasEntry(name))
+                if (contentPath.get(i).hasEntry(name))
                 {
                     // Use the class path index + 1 for creating the path so
                     // that we can differentiate between module content URLs
@@ -591,7 +632,7 @@ public class BundleRevisionImpl implements BundleRevision
         {
             return m_content.hasEntry(urlPath);
         }
-        return getContentPath()[index - 1].hasEntry(urlPath);
+        return getContentPath().get(index - 1).hasEntry(urlPath);
     }
 
     public InputStream getInputStream(int index, String urlPath)
@@ -605,7 +646,7 @@ public class BundleRevisionImpl implements BundleRevision
         {
             return m_content.getEntryAsStream(urlPath);
         }
-        return getContentPath()[index - 1].getEntryAsStream(urlPath);
+        return getContentPath().get(index - 1).getEntryAsStream(urlPath);
     }
 
     public URL getLocalURL(int index, String urlPath)
@@ -618,7 +659,7 @@ public class BundleRevisionImpl implements BundleRevision
         {
             return m_content.getEntryAsURL(urlPath);
         }
-        return getContentPath()[index - 1].getEntryAsURL(urlPath);
+        return getContentPath().get(index - 1).getEntryAsURL(urlPath);
     }
 
     private URL createURL(int port, String path)
@@ -658,9 +699,9 @@ public class BundleRevisionImpl implements BundleRevision
             m_logger.log(Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
         m_content.close();
-        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.length); i++)
+        for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
         {
-            m_contentPath[i].close();
+            m_contentPath.get(i).close();
         }
         m_contentPath = null;
     }
@@ -669,22 +710,5 @@ public class BundleRevisionImpl implements BundleRevision
     public String toString()
     {
         return m_id;
-    }
-
-    static URL convertToLocalUrl(URL url)
-    {
-        if (url.getProtocol().equals("bundle"))
-        {
-            try
-            {
-                url = ((URLHandlersBundleURLConnection)
-                    url.openConnection()).getLocalURL();
-            }
-            catch (IOException ex)
-            {
-                // Ignore and add original url.
-            }
-        }
-        return url;
     }
 }

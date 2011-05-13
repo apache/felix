@@ -876,24 +876,27 @@ public class Felix extends BundleImpl implements Framework
                 AdminPermission.EXECUTE));
         }
 
-        // Spec says stop() on SystemBundle should return immediately and
-        // shutdown framework on another thread.
-        new Thread(new Runnable() {
-            public void run()
-            {
-                try
+        if ((getState() & (Bundle.INSTALLED | Bundle.RESOLVED)) == 0)
+        {
+            // Spec says stop() on SystemBundle should return immediately and
+            // shutdown framework on another thread.
+            new Thread(new Runnable() {
+                public void run()
                 {
-                    stopBundle(Felix.this, true);
+                    try
+                    {
+                        stopBundle(Felix.this, true);
+                    }
+                    catch (BundleException ex)
+                    {
+                        m_logger.log(
+                            Logger.LOG_ERROR,
+                            "Exception trying to stop framework.",
+                            ex);
+                    }
                 }
-                catch (BundleException ex)
-                {
-                    m_logger.log(
-                        Logger.LOG_ERROR,
-                        "Exception trying to stop framework.",
-                        ex);
-                }
-            }
-        }, "FelixShutdown").start();
+            }, "FelixShutdown").start();
+        }
     }
 
     public void stop(int options) throws BundleException
