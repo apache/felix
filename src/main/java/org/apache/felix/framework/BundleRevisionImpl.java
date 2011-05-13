@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,6 +31,7 @@ import java.security.PrivilegedExceptionAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -41,16 +42,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.resolver.Content;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.HostedRequirement;
-import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
-import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
@@ -60,14 +58,23 @@ import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
-public class ModuleImpl implements Module
+public class BundleRevisionImpl implements BundleRevision, BundleWiring
 {
+    public final static int EAGER_ACTIVATION = 0;
+    public final static int LAZY_ACTIVATION = 1;
+
     private final Logger m_logger;
     private final Map m_configMap;
     private final StatefulResolver m_resolver;
@@ -81,12 +88,12 @@ public class ModuleImpl implements Module
     private final String m_symbolicName;
     private final Version m_version;
 
-    private final List<BundleCapabilityImpl> m_declaredCaps;
-    private List<BundleCapabilityImpl> m_resolvedCaps = null;
-    private final List<BundleRequirementImpl> m_declaredReqs;
-    private List<BundleRequirementImpl> m_resolvedReqs = null;
-    private final List<BundleRequirementImpl> m_declaredDynReqs;
-    private List<BundleRequirementImpl> m_resolvedDynReqs = null;
+    private final List<BundleCapability> m_declaredCaps;
+    private List<BundleCapability> m_resolvedCaps = null;
+    private final List<BundleRequirement> m_declaredReqs;
+    private List<BundleRequirement> m_resolvedReqs = null;
+    private final List<BundleRequirement> m_declaredDynReqs;
+    private List<BundleRequirement> m_resolvedDynReqs = null;
     private final List<R4Library> m_nativeLibraries;
     private final int m_declaredActivationPolicy;
     private final List<String> m_activationIncludes;
@@ -94,15 +101,15 @@ public class ModuleImpl implements Module
 
     private final Bundle m_bundle;
 
-    private List<Module> m_fragments = null;
-    private List<Wire> m_wires = null;
-    private List<Module> m_dependentImporters = new ArrayList<Module>(0);
-    private List<Module> m_dependentRequirers = new ArrayList<Module>(0);
+    private List<BundleRevision> m_fragments = null;
+    private List<FelixBundleWire> m_wires = null;
+    private List<BundleRevision> m_dependentImporters = new ArrayList<BundleRevision>(0);
+    private List<BundleRevision> m_dependentRequirers = new ArrayList<BundleRevision>(0);
     private volatile boolean m_isResolved = false;
 
     private Content[] m_contentPath;
     private Content[] m_fragmentContents = null;
-    private ModuleClassLoader m_classLoader;
+    private BundleClassLoader m_classLoader;
     private boolean m_isActivationTriggered = false;
     private ProtectionDomain m_protectionDomain = null;
     private final static SecureAction m_secureAction = new SecureAction();
@@ -165,7 +172,7 @@ public class ModuleImpl implements Module
      * @param bootPkgWildcards
      * @throws org.osgi.framework.BundleException
      */
-    public ModuleImpl(
+    public BundleRevisionImpl(
         Logger logger, Map configMap, Bundle bundle, String id,
         String[] bootPkgs, boolean[] bootPkgWildcards)
     {
@@ -197,7 +204,7 @@ public class ModuleImpl implements Module
         m_bootClassLoader = m_defBootClassLoader;
     }
 
-    ModuleImpl(
+    BundleRevisionImpl(
         Logger logger, Map configMap, StatefulResolver resolver,
         Bundle bundle, String id, Map headerMap, Content content,
         URLStreamHandler streamHandler, String[] bootPkgs,
@@ -260,8 +267,258 @@ public class ModuleImpl implements Module
     }
 
     //
-    // Metadata access methods.
+    // BundleRevision methods.
     //
+
+    public String getSymbolicName()
+    {
+        return m_symbolicName;
+    }
+
+    public Version getVersion()
+    {
+        return m_version;
+    }
+
+    public synchronized List<BundleCapability> getDeclaredCapabilities(String namespace)
+    {
+        List<BundleCapability> result = m_declaredCaps;
+        if (namespace != null)
+        {
+            result = new ArrayList<BundleCapability>();
+            for (BundleCapability cap : m_declaredCaps)
+            {
+                if (cap.getNamespace().equals(namespace))
+                {
+                    result.add(cap);
+                }
+            }
+        }
+        return result;
+    }
+
+    public synchronized List<BundleRequirement> getDeclaredRequirements(String namespace)
+    {
+        List<BundleRequirement> result = m_declaredReqs;
+        if (namespace != null)
+        {
+            result = new ArrayList<BundleRequirement>();
+            for (BundleRequirement req : m_declaredReqs)
+            {
+                if (req.getNamespace().equals(namespace))
+                {
+                    result.add(req);
+                }
+            }
+        }
+        return result;
+    }
+
+    public synchronized List<BundleRequirement> getDeclaredDynamicRequirements()
+    {
+        return m_declaredDynReqs;
+    }
+
+    public int getTypes()
+    {
+        if (getHeaders().containsKey(Constants.FRAGMENT_HOST))
+        {
+            return BundleRevision.TYPE_FRAGMENT;
+        }
+        return 0;
+    }
+
+    public BundleWiring getWiring()
+    {
+        return (m_isResolved) ? this : null;
+    }
+
+    public Bundle getBundle()
+    {
+        return m_bundle;
+    }
+
+    //
+    // BundleWiring methods.
+    //
+
+    public boolean isCurrent()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean isInUse()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public synchronized List<BundleCapability> getCapabilities(String namespace)
+    {
+        if (m_isResolved && (m_resolvedCaps == null))
+        {
+            List capList = (m_declaredCaps == null)
+                ? new ArrayList<BundleCapability>()
+                : new ArrayList<BundleCapability>(m_declaredCaps);
+            for (int fragIdx = 0;
+                (m_fragments != null) && (fragIdx < m_fragments.size());
+                fragIdx++)
+            {
+                List<BundleCapability> caps =
+                    m_fragments.get(fragIdx).getDeclaredCapabilities(null);
+                for (int capIdx = 0;
+                    (caps != null) && (capIdx < caps.size());
+                    capIdx++)
+                {
+                    if (caps.get(capIdx).getNamespace().equals(
+                        BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    {
+                        capList.add(
+                            new HostedCapability(
+                                this, (BundleCapabilityImpl) caps.get(capIdx)));
+                    }
+                }
+            }
+            m_resolvedCaps = Collections.unmodifiableList(capList);
+        }
+        List<BundleCapability> result = m_resolvedCaps;
+        if (namespace != null)
+        {
+            result = new ArrayList<BundleCapability>();
+            for (BundleCapability cap : m_resolvedCaps)
+            {
+                if (cap.getNamespace().equals(namespace))
+                {
+                    result.add(cap);
+                }
+            }
+        }
+        return result;
+    }
+
+    public synchronized List<BundleRequirement> getRequirements(String namespace)
+    {
+        if (m_isResolved && (m_resolvedReqs == null))
+        {
+            List<BundleRequirement> reqList = (m_declaredReqs == null)
+                ? new ArrayList() : new ArrayList(m_declaredReqs);
+            for (int fragIdx = 0;
+                (m_fragments != null) && (fragIdx < m_fragments.size());
+                fragIdx++)
+            {
+                List<BundleRequirement> reqs =
+                    m_fragments.get(fragIdx).getDeclaredRequirements(null);
+                for (int reqIdx = 0;
+                    (reqs != null) && (reqIdx < reqs.size());
+                    reqIdx++)
+                {
+                    if (reqs.get(reqIdx).getNamespace().equals(
+                            BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                        || reqs.get(reqIdx).getNamespace().equals(
+                            BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                    {
+                        reqList.add(
+                            new HostedRequirement(
+                                this, (BundleRequirementImpl) reqs.get(reqIdx)));
+                    }
+                }
+            }
+            m_resolvedReqs = Collections.unmodifiableList(reqList);
+        }
+        List<BundleRequirement> result = m_resolvedReqs;
+        if (namespace != null)
+        {
+            result = new ArrayList<BundleRequirement>();
+            for (BundleRequirement req : m_resolvedReqs)
+            {
+                if (req.getNamespace().equals(namespace))
+                {
+                    result.add(req);
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<BundleWire> getProvidedWires(String namespace)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public List<BundleWire> getRequiredWires(String namespace)
+    {
+        return asBundleWires(m_wires);
+    }
+
+    private static List<BundleWire> asBundleWires(List<? extends BundleWire> l)
+    {
+        return (List<BundleWire>) l;
+    }
+
+    public BundleRevision getRevision()
+    {
+        return this;
+    }
+
+    public synchronized ClassLoader getClassLoader()
+    {
+        if (m_classLoader == null)
+        {
+            // Determine which class loader to use based on which
+            // Java platform we are running on.
+            Class clazz;
+            if (m_isPreJava5)
+            {
+                clazz = BundleClassLoader.class;
+            }
+            else
+            {
+                try
+                {
+                    clazz = BundleClassLoaderJava5.class;
+                }
+                catch (Throwable th)
+                {
+                    // If we are on pre-Java5 then we will get a verify error
+                    // here since we try to override a getResources() which is
+                    // a final method in pre-Java5.
+                    m_isPreJava5 = true;
+                    clazz = BundleClassLoader.class;
+                }
+            }
+
+            // Use SecureAction to create the class loader if security is
+            // enabled; otherwise, create it directly.
+            try
+            {
+                Constructor ctor = (Constructor) m_secureAction.getConstructor(
+                    clazz, new Class[] { BundleRevisionImpl.class, ClassLoader.class });
+                m_classLoader = (BundleClassLoader)
+                    m_secureAction.invoke(ctor,
+                    new Object[] { this, determineParentClassLoader() });
+            }
+            catch (Exception ex)
+            {
+                throw new RuntimeException("Unable to create module class loader: "
+                    + ex.getMessage() + " [" + ex.getClass().getName() + "]");
+            }
+        }
+        return m_classLoader;
+    }
+
+    public List<URL> findEntries(String path, String filePattern, int options)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Collection<String> listResources(String path, String filePattern, int options)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    //
+    // Implementating details.
+    //
+
 
     public Map getHeaders()
     {
@@ -273,109 +530,24 @@ public class ModuleImpl implements Module
         return m_isExtension;
     }
 
-    public String getSymbolicName()
-    {
-        return m_symbolicName;
-    }
-
     public String getManifestVersion()
     {
         return m_manifestVersion;
     }
 
-    public Version getVersion()
-    {
-        return m_version;
-    }
-
-    public synchronized List<BundleCapabilityImpl> getDeclaredCapabilities()
-    {
-        return m_declaredCaps;
-    }
-
-    public synchronized List<BundleCapabilityImpl> getResolvedCapabilities()
-    {
-        if (m_isResolved && (m_resolvedCaps == null))
-        {
-            List capList = (m_declaredCaps == null)
-                ? new ArrayList<BundleCapabilityImpl>()
-                : new ArrayList<BundleCapabilityImpl>(m_declaredCaps);
-            for (int fragIdx = 0;
-                (m_fragments != null) && (fragIdx < m_fragments.size());
-                fragIdx++)
-            {
-                List<BundleCapabilityImpl> caps =
-                    m_fragments.get(fragIdx).getDeclaredCapabilities();
-                for (int capIdx = 0;
-                    (caps != null) && (capIdx < caps.size());
-                    capIdx++)
-                {
-                    if (caps.get(capIdx).getNamespace().equals(
-                        BundleCapabilityImpl.PACKAGE_NAMESPACE))
-                    {
-                        capList.add(
-                            new HostedCapability(this, caps.get(capIdx)));
-                    }
-                }
-            }
-            m_resolvedCaps = Collections.unmodifiableList(capList);
-        }
-        return m_resolvedCaps;
-    }
-
-    public synchronized List<BundleRequirementImpl> getDeclaredRequirements()
-    {
-        return m_declaredReqs;
-    }
-
-    public synchronized List<BundleRequirementImpl> getResolvedRequirements()
-    {
-        if (m_isResolved && (m_resolvedReqs == null))
-        {
-            List<BundleRequirementImpl> reqList = (m_declaredReqs == null)
-                ? new ArrayList() : new ArrayList(m_declaredReqs);
-            for (int fragIdx = 0;
-                (m_fragments != null) && (fragIdx < m_fragments.size());
-                fragIdx++)
-            {
-                List<BundleRequirementImpl> reqs =
-                    m_fragments.get(fragIdx).getDeclaredRequirements();
-                for (int reqIdx = 0;
-                    (reqs != null) && (reqIdx < reqs.size());
-                    reqIdx++)
-                {
-                    if (reqs.get(reqIdx).getNamespace().equals(
-                            BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                        || reqs.get(reqIdx).getNamespace().equals(
-                            BundleCapabilityImpl.MODULE_NAMESPACE))
-                    {
-                        reqList.add(
-                            new HostedRequirement(this, reqs.get(reqIdx)));
-                    }
-                }
-            }
-            m_resolvedReqs = Collections.unmodifiableList(reqList);
-        }
-        return m_resolvedReqs;
-    }
-
-    public synchronized List<BundleRequirementImpl> getDeclaredDynamicRequirements()
-    {
-        return m_declaredDynReqs;
-    }
-
-    public synchronized List<BundleRequirementImpl> getResolvedDynamicRequirements()
+    public synchronized List<BundleRequirement> getResolvedDynamicRequirements()
     {
         if (m_isResolved && (m_resolvedDynReqs == null))
         {
-            List<BundleRequirementImpl> reqList = (m_declaredDynReqs == null)
+            List<BundleRequirement> reqList = (m_declaredDynReqs == null)
                 ? new ArrayList() : new ArrayList(m_declaredDynReqs);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<BundleRequirementImpl> reqs =
-                    m_fragments.get(fragIdx).getDeclaredDynamicRequirements();
+                List<BundleRequirement> reqs =
+                    ((BundleRevisionImpl) m_fragments.get(fragIdx))
+                        .getDeclaredDynamicRequirements();
                 for (int reqIdx = 0;
                     (reqs != null) && (reqIdx < reqs.size());
                     reqIdx++)
@@ -403,7 +575,9 @@ public class ModuleImpl implements Module
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<R4Library> libs = m_fragments.get(fragIdx).getNativeLibraries();
+                List<R4Library> libs =
+                    ((BundleRevisionImpl) m_fragments.get(fragIdx))
+                        .getNativeLibraries();
                 for (int reqIdx = 0;
                     (libs != null) && (reqIdx < libs.size());
                     reqIdx++)
@@ -466,26 +640,17 @@ public class ModuleImpl implements Module
         return included && !excluded;
     }
 
-    //
-    // Run-time data access.
-    //
-
-    public Bundle getBundle()
-    {
-        return m_bundle;
-    }
-
     public String getId()
     {
         return m_id;
     }
 
-    public synchronized List<Wire> getWires()
+    public synchronized List<FelixBundleWire> getWires()
     {
         return m_wires;
     }
 
-    public synchronized void setWires(List<Wire> wires)
+    public synchronized void setWires(List<FelixBundleWire> wires)
     {
         // This not only sets the wires for the module, but it also records
         // the dependencies this module has on other modules (i.e., the provider
@@ -501,13 +666,15 @@ public class ModuleImpl implements Module
         // from the old wires.
         for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
-            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
             {
-                ((ModuleImpl) m_wires.get(i).getExporter()).removeDependentRequirer(this);
+                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
+                    .removeDependentRequirer(this);
             }
             else if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
-                ((ModuleImpl) m_wires.get(i).getExporter()).removeDependentImporter(this);
+                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
+                    .removeDependentImporter(this);
             }
         }
 
@@ -516,13 +683,21 @@ public class ModuleImpl implements Module
         // Add ourself as a dependent to the new wires' modules.
         for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
-            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
             {
-                ((ModuleImpl) m_wires.get(i).getExporter()).addDependentRequirer(this);
+// TODO: OSGi R4.3 - What's the correct way to handle this?
+//                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
+//                    .addDependentRequirer(this);
+                ((BundleRevisionImpl) ((FelixBundleWire)
+                    m_wires.get(i)).getProvider()).addDependentRequirer(this);
             }
             else if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
-                ((ModuleImpl) m_wires.get(i).getExporter()).addDependentImporter(this);
+// TODO: OSGi R4.3 - What's the correct way to handle this?
+//                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
+//                    .addDependentImporter(this);
+                ((BundleRevisionImpl) ((FelixBundleWire)
+                    m_wires.get(i)).getProvider()).addDependentImporter(this);
             }
         }
     }
@@ -555,7 +730,7 @@ public class ModuleImpl implements Module
     public boolean isRemovalPending()
     {
         return (m_bundle.getState() == Bundle.UNINSTALLED)
-            || (this != ((BundleImpl) m_bundle).getCurrentModule());
+            || (this != ((BundleImpl) m_bundle).getCurrentRevision());
     }
 
     //
@@ -596,7 +771,7 @@ public class ModuleImpl implements Module
     }
 
     private List calculateContentPath(
-        Module module, Content content, List contentList, boolean searchFragments)
+        BundleRevision revision, Content content, List contentList, boolean searchFragments)
         throws Exception
     {
         // Creating the content path entails examining the bundle's
@@ -608,7 +783,8 @@ public class ModuleImpl implements Module
         List localContentList = new ArrayList();
 
         // Find class path meta-data.
-        String classPath = (String) module.getHeaders().get(FelixConstants.BUNDLE_CLASSPATH);
+        String classPath = (String) ((BundleRevisionImpl) revision)
+            .getHeaders().get(FelixConstants.BUNDLE_CLASSPATH);
         // Parse the class path into strings.
         List<String> classPathStrings = ManifestParser.parseDelimitedString(
             classPath, FelixConstants.CLASS_PATH_SEPARATOR);
@@ -723,7 +899,7 @@ public class ModuleImpl implements Module
         {
             try
             {
-                // First, try to resolve the originating module.
+                // First, try to resolve the originating revision.
                 m_resolver.resolve(this);
 
                 // Get the package of the target class/resource.
@@ -760,19 +936,19 @@ public class ModuleImpl implements Module
                     }
                 }
 
-                // Look in the module's imports. Note that the search may
+                // Look in the revision's imports. Note that the search may
                 // be aborted if this method throws an exception, otherwise
                 // it continues if a null is returned.
                 result = searchImports(name, isClass);
 
-                // If not found, try the module's own class path.
+                // If not found, try the revision's own class path.
                 if (result == null)
                 {
                     result = (isClass)
-                        ? (Object) getClassLoader().findClass(name)
+                        ? (Object) ((BundleClassLoader) getClassLoader()).findClass(name)
                         : (Object) getResourceLocal(name);
 
-                    // If still not found, then try the module's dynamic imports.
+                    // If still not found, then try the revision's dynamic imports.
                     if (result == null)
                     {
                         result = searchDynamicImports(name, pkgName, isClass);
@@ -951,7 +1127,7 @@ public class ModuleImpl implements Module
 
         // Note that the search may be aborted if this method throws an
         // exception, otherwise it continues if a null is returned.
-        List<Wire> wires = getWires();
+        List<FelixBundleWire> wires = getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getRequirement().getNamespace()
@@ -981,7 +1157,7 @@ public class ModuleImpl implements Module
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getRequirement().getNamespace()
-                .equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+                .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
             {
                 try
                 {
@@ -1013,7 +1189,7 @@ public class ModuleImpl implements Module
             // At this point, the module's imports were searched and so was the
             // the module's content. Now we make an attempt to load the
             // class/resource via a dynamic import, if possible.
-            Wire wire = null;
+            FelixBundleWire wire = null;
             try
             {
                 wire = m_resolver.resolve(this, pkgName);
@@ -1187,12 +1363,12 @@ public class ModuleImpl implements Module
     // Fragment and dependency management methods.
     //
 
-    public synchronized List<Module> getFragments()
+    public synchronized List<BundleRevision> getFragments()
     {
         return m_fragments;
     }
 
-    public synchronized void attachFragments(List<Module> fragments) throws Exception
+    public synchronized void attachFragments(List<BundleRevision> fragments) throws Exception
     {
         // Remove the host wires for this module from old fragments.
         // We will generally only remove host wires when we are uninstalling
@@ -1202,16 +1378,17 @@ public class ModuleImpl implements Module
             // If the fragment has no wires, then there is no reason to try to
             // remove ourself from its wires since it has apparently already
             // been refreshed.
-            if (m_fragments.get(i).getWires() != null)
+            if (((BundleRevisionImpl) m_fragments.get(i)).getWires() != null)
             {
-                List<Wire> hostWires = new ArrayList<Wire>(m_fragments.get(i).getWires());
-                for (Iterator<Wire> it = hostWires.iterator(); it.hasNext(); )
+                List<FelixBundleWire> hostWires = new ArrayList<FelixBundleWire>(
+                    ((BundleRevisionImpl) m_fragments.get(i)).getWires());
+                for (Iterator<FelixBundleWire> it = hostWires.iterator(); it.hasNext(); )
                 {
-                    Wire hostWire = it.next();
-                    if (hostWire.getExporter().equals(this))
+                    FelixBundleWire hostWire = it.next();
+                    if (hostWire.getProviderWiring().getRevision().equals(this))
                     {
                         it.remove();
-                        ((ModuleImpl) m_fragments.get(i)).setWires(hostWires);
+                        ((BundleRevisionImpl) m_fragments.get(i)).setWires(hostWires);
                         break;
                     }
                 }
@@ -1256,10 +1433,10 @@ public class ModuleImpl implements Module
             // avoids having to create more objects.
             if (m_fragments.size() > 1)
             {
-                SortedMap<String, Module> sorted = new TreeMap<String, Module>();
-                for (Module f : m_fragments)
+                SortedMap<String, BundleRevision> sorted = new TreeMap<String, BundleRevision>();
+                for (BundleRevision f : m_fragments)
                 {
-                    sorted.put(f.getId(), f);
+                    sorted.put(((BundleRevisionImpl) f).getId(), f);
                 }
                 m_fragments = new ArrayList(sorted.values());
             }
@@ -1267,7 +1444,7 @@ public class ModuleImpl implements Module
             for (int i = 0; (m_fragments != null) && (i < m_fragments.size()); i++)
             {
                 m_fragmentContents[i] =
-                    m_fragments.get(i).getContent()
+                    ((BundleRevisionImpl) m_fragments.get(i)).getContent()
                         .getEntryAsContent(FelixConstants.CLASS_PATH_DOT);
             }
             // Recalculate the content path for the new fragments.
@@ -1275,56 +1452,56 @@ public class ModuleImpl implements Module
         }
     }
 
-    public synchronized List<Module> getDependentImporters()
+    public synchronized List<BundleRevision> getDependentImporters()
     {
         return m_dependentImporters;
     }
 
-    public synchronized void addDependentImporter(Module module)
+    public synchronized void addDependentImporter(BundleRevision br)
     {
-        if (!m_dependentImporters.contains(module))
+        if (!m_dependentImporters.contains(br))
         {
-            m_dependentImporters.add(module);
+            m_dependentImporters.add(br);
         }
     }
 
-    public synchronized void removeDependentImporter(Module module)
+    public synchronized void removeDependentImporter(BundleRevision br)
     {
-        m_dependentImporters.remove(module);
+        m_dependentImporters.remove(br);
     }
 
-    public synchronized List<Module> getDependentRequirers()
+    public synchronized List<BundleRevision> getDependentRequirers()
     {
         return m_dependentRequirers;
     }
 
-    public synchronized void addDependentRequirer(Module module)
+    public synchronized void addDependentRequirer(BundleRevision br)
     {
-        if (!m_dependentRequirers.contains(module))
+        if (!m_dependentRequirers.contains(br))
         {
-            m_dependentRequirers.add(module);
+            m_dependentRequirers.add(br);
         }
     }
 
-    public synchronized void removeDependentRequirer(Module module)
+    public synchronized void removeDependentRequirer(BundleRevision br)
     {
-        m_dependentRequirers.remove(module);
+        m_dependentRequirers.remove(br);
     }
 
-    public synchronized List<Module> getDependents()
+    public synchronized List<BundleRevision> getDependents()
     {
-        List<Module> dependents;
+        List<BundleRevision> dependents;
         if (Util.isFragment(this))
         {
-            dependents = new ArrayList<Module>();
+            dependents = new ArrayList<BundleRevision>();
             for (int i = 0; (m_wires != null) && (i < m_wires.size()); i++)
             {
-                dependents.add(m_wires.get(i).getExporter());
+                dependents.add(m_wires.get(i).getCapability().getRevision());
             }
         }
         else
         {
-            dependents = new ArrayList<Module>
+            dependents = new ArrayList<BundleRevision>
                 (m_dependentImporters.size() + m_dependentRequirers.size());
             dependents.addAll(m_dependentImporters);
             dependents.addAll(m_dependentRequirers);
@@ -1354,52 +1531,6 @@ public class ModuleImpl implements Module
         return m_id;
     }
 
-    private synchronized ModuleClassLoader getClassLoader()
-    {
-        if (m_classLoader == null)
-        {
-            // Determine which class loader to use based on which
-            // Java platform we are running on.
-            Class clazz;
-            if (m_isPreJava5)
-            {
-                clazz = ModuleClassLoader.class;
-            }
-            else
-            {
-                try
-                {
-                    clazz = ModuleClassLoaderJava5.class;
-                }
-                catch (Throwable th)
-                {
-                    // If we are on pre-Java5 then we will get a verify error
-                    // here since we try to override a getResources() which is
-                    // a final method in pre-Java5.
-                    m_isPreJava5 = true;
-                    clazz = ModuleClassLoader.class;
-                }
-            }
-
-            // Use SecureAction to create the class loader if security is
-            // enabled; otherwise, create it directly.
-            try
-            {
-                Constructor ctor = (Constructor) m_secureAction.getConstructor(
-                    clazz, new Class[] { ModuleImpl.class, ClassLoader.class });
-                m_classLoader = (ModuleClassLoader)
-                    m_secureAction.invoke(ctor,
-                    new Object[] { this, determineParentClassLoader() });
-            }
-            catch (Exception ex)
-            {
-                throw new RuntimeException("Unable to create module class loader: "
-                    + ex.getMessage() + " [" + ex.getClass().getName() + "]");
-            }
-        }
-        return m_classLoader;
-    }
-
     private ClassLoader determineParentClassLoader()
     {
         // Determine the class loader's parent based on the
@@ -1418,7 +1549,7 @@ public class ModuleImpl implements Module
         }
         else if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_FRAMEWORK))
         {
-            parent = m_secureAction.getClassLoader(ModuleImpl.class);
+            parent = m_secureAction.getClassLoader(BundleRevisionImpl.class);
         }
         // On Android we cannot set the parent class loader to be null, so
         // we special case that situation here and set it to the system
@@ -1438,7 +1569,7 @@ public class ModuleImpl implements Module
         throws ClassNotFoundException, ResourceNotFoundException
     {
         // We delegate to the module's wires to find the class or resource.
-        List<Wire> wires = getWires();
+        List<FelixBundleWire> wires = getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             // If we find the class or resource, then return it.
@@ -1461,7 +1592,7 @@ public class ModuleImpl implements Module
         // At this point, the module's imports were searched and so was the
         // the module's content. Now we make an attempt to load the
         // class/resource via a dynamic import, if possible.
-        Wire wire = null;
+        FelixBundleWire wire = null;
         try
         {
             wire = m_resolver.resolve(this, pkgName);
@@ -1560,11 +1691,11 @@ public class ModuleImpl implements Module
             // TODO: FRAMEWORK - This check is a hack and we should see if we can think
             // of another way to do it, since it won't necessarily work in all situations.
             // Since Felix uses threads for changing the start level
-            // and refreshing packages, it is possible that there is no
-            // module classes on the call stack; therefore, as soon as we
+            // and refreshing packages, it is possible that there are no
+            // bundle classes on the call stack; therefore, as soon as we
             // see Thread on the call stack we exit this loop. Other cases
-            // where modules actually use threads are not an issue because
-            // the module classes will be on the call stack before the
+            // where bundles actually use threads are not an issue because
+            // the bundle classes will be on the call stack before the
             // Thread class.
             if (Thread.class.equals(classes[i]))
             {
@@ -1572,7 +1703,7 @@ public class ModuleImpl implements Module
             }
             // Break if the current class came from a bundle, since we should
             // not implicitly boot delegate in that case.
-            else if (isClassLoadedFromModule(classes[i]))
+            else if (isClassLoadedFromBundleRevision(classes[i]))
             {
                 break;
             }
@@ -1602,24 +1733,24 @@ public class ModuleImpl implements Module
         return null;
     }
 
-    private boolean isClassLoadedFromModule(Class clazz)
+    private boolean isClassLoadedFromBundleRevision(Class clazz)
     {
-        // The target class is loaded by a module class loader,
+        // The target class is loaded by a bundle class loader,
         // then return true.
-        if (ModuleClassLoader.class.isInstance(m_secureAction.getClassLoader(clazz)))
+        if (BundleClassLoader.class.isInstance(m_secureAction.getClassLoader(clazz)))
         {
             return true;
         }
 
         // If the target class was loaded from a class loader that
-        // came from a module, then return true.
+        // came from a bundle, then return true.
         ClassLoader last = null;
         for (ClassLoader cl = m_secureAction.getClassLoader(clazz);
             (cl != null) && (last != cl);
             cl = m_secureAction.getClassLoader(cl.getClass()))
         {
             last = cl;
-            if (ModuleClassLoader.class.isInstance(cl))
+            if (BundleClassLoader.class.isInstance(cl))
             {
                 return true;
             }
@@ -1757,9 +1888,9 @@ public class ModuleImpl implements Module
         m_dexFileClassLoadClass = dexFileClassLoadClass;
     }
 
-    public class ModuleClassLoaderJava5 extends ModuleClassLoader
+    public class BundleClassLoaderJava5 extends BundleClassLoader
     {
-        public ModuleClassLoaderJava5(ClassLoader parent)
+        public BundleClassLoaderJava5(ClassLoader parent)
         {
             super(parent);
         }
@@ -1767,7 +1898,7 @@ public class ModuleImpl implements Module
         @Override
         public Enumeration getResources(String name)
         {
-            Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
+            Enumeration urls = BundleRevisionImpl.this.getResourcesByDelegation(name);
             if (m_useLocalURLs)
             {
                 urls = new ToLocalUrlEnumeration(urls);
@@ -1778,18 +1909,18 @@ public class ModuleImpl implements Module
         @Override
         protected Enumeration findResources(String name)
         {
-            return ModuleImpl.this.getResourcesLocal(name);
+            return BundleRevisionImpl.this.getResourcesLocal(name);
         }
     }
 
-    public class ModuleClassLoader extends SecureClassLoader implements BundleReference
+    public class BundleClassLoader extends SecureClassLoader implements BundleReference
     {
         private final Map m_jarContentToDexFile;
         private Object[][] m_cachedLibs = new Object[0][];
         private static final int LIBNAME_IDX = 0;
         private static final int LIBPATH_IDX = 1;
 
-        public ModuleClassLoader(ClassLoader parent)
+        public BundleClassLoader(ClassLoader parent)
         {
             super(parent);
             if (m_dexFileClassLoadClass != null)
@@ -1804,7 +1935,7 @@ public class ModuleImpl implements Module
 
         public Bundle getBundle()
         {
-            return ModuleImpl.this.getBundle();
+            return BundleRevisionImpl.this.getBundle();
         }
 
         @Override
@@ -1836,7 +1967,7 @@ public class ModuleImpl implements Module
                     String msg = name;
                     if (m_logger.getLogLevel() >= Logger.LOG_DEBUG)
                     {
-                        msg = diagnoseClassLoadError(m_resolver, ModuleImpl.this, name);
+                        msg = diagnoseClassLoadError(m_resolver, BundleRevisionImpl.this, name);
                         ex = (msg != null)
                             ? new ClassNotFoundException(msg, cnfe)
                             : ex;
@@ -1858,14 +1989,14 @@ public class ModuleImpl implements Module
         {
             Class clazz = null;
 
-            // Search for class in module.
+            // Search for class in bundle revision.
             if (clazz == null)
             {
                 String actual = name.replace('.', '/') + ".class";
 
                 byte[] bytes = null;
 
-                // Check the module class path.
+                // Check the bundle class path.
                 Content[] contentPath = getContentPath();
                 Content content = null;
                 for (int i = 0;
@@ -1892,19 +2023,20 @@ public class ModuleImpl implements Module
                         {
                             int activationPolicy = 
                                 ((BundleImpl) getBundle()).isDeclaredActivationPolicyUsed()
-                                ? ((BundleImpl) getBundle()).getCurrentModule().getDeclaredActivationPolicy()
-                                : Module.EAGER_ACTIVATION;
+                                ? ((BundleRevisionImpl) ((BundleImpl) getBundle())
+                                    .getCurrentRevision()).getDeclaredActivationPolicy()
+                                : EAGER_ACTIVATION;
 
-                            // If the module is using deferred activation, then if
-                            // we load this class from this module we need to activate
-                            // the module before returning the class. We will short
+                            // If the revision is using deferred activation, then if
+                            // we load this class from this revision we need to activate
+                            // the bundle before returning the class. We will short
                             // circuit the trigger matching if the trigger is already
                             // tripped.
                             boolean isTriggerClass = m_isActivationTriggered
                                 ? false : isActivationTrigger(pkgName);
                             if (!m_isActivationTriggered
                                 && isTriggerClass
-                                && (activationPolicy == Module.LAZY_ACTIVATION)
+                                && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
                                 && (getBundle().getState() == Bundle.STARTING))
                             {
                                 List deferredList = (List) m_deferredActivation.get();
@@ -2077,7 +2209,7 @@ public class ModuleImpl implements Module
         @Override
         public URL getResource(String name)
         {
-            URL url = ModuleImpl.this.getResourceByDelegation(name);
+            URL url = BundleRevisionImpl.this.getResourceByDelegation(name);
             if (m_useLocalURLs)
             {
                 url = convertToLocalUrl(url);
@@ -2088,10 +2220,10 @@ public class ModuleImpl implements Module
         @Override
         protected URL findResource(String name)
         {
-            return ModuleImpl.this.getResourceLocal(name);
+            return BundleRevisionImpl.this.getResourceLocal(name);
         }
 
-        // The findResources() method should only look at the module itself, but
+        // The findResources() method should only look at the revision itself, but
         // instead it tries to delegate because in Java version prior to 1.5 the
         // getResources() method was final and could not be overridden. We should
         // override getResources() like getResource() to make it delegate, but we
@@ -2099,7 +2231,7 @@ public class ModuleImpl implements Module
         @Override
         protected Enumeration findResources(String name)
         {
-            Enumeration urls = ModuleImpl.this.getResourcesByDelegation(name);
+            Enumeration urls = BundleRevisionImpl.this.getResourcesByDelegation(name);
             if (m_useLocalURLs)
             {
                 urls = new ToLocalUrlEnumeration(urls);
@@ -2172,7 +2304,7 @@ public class ModuleImpl implements Module
         @Override
         public String toString()
         {
-            return ModuleImpl.this.toString();
+            return BundleRevisionImpl.this.toString();
         }
     }
 
@@ -2214,7 +2346,7 @@ public class ModuleImpl implements Module
     }
 
     private static String diagnoseClassLoadError(
-        StatefulResolver resolver, ModuleImpl module, String name)
+        StatefulResolver resolver, BundleRevisionImpl revision, String name)
     {
         // We will try to do some diagnostics here to help the developer
         // deal with this exception.
@@ -2226,17 +2358,17 @@ public class ModuleImpl implements Module
             return null;
         }
 
-        // First, get the bundle string of the module doing the class loader.
-        String importer = module.getBundle().toString();
+        // First, get the bundle string of the revision doing the class loader.
+        String importer = revision.getBundle().toString();
 
-        // Next, check to see if the module imports the package.
-        List<Wire> wires = module.getWires();
+        // Next, check to see if the revision imports the package.
+        List<FelixBundleWire> wires = revision.getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
                 wires.get(i).getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
             {
-                String exporter = wires.get(i).getExporter().getBundle().toString();
+                String exporter = wires.get(i).getProviderWiring().getBundle().toString();
 
                 StringBuffer sb = new StringBuffer("*** Package '");
                 sb.append(pkgName);
@@ -2260,7 +2392,7 @@ public class ModuleImpl implements Module
 
         // Next, check to see if the package was optionally imported and
         // whether or not there is an exporter available.
-        List<BundleRequirementImpl> reqs = module.getResolvedRequirements();
+        List<BundleRequirement> reqs = revision.getWiring().getRequirements(null);
 /*
 * TODO: RB - Fix diagnostic message for optional imports.
         for (int i = 0; (reqs != null) && (i < reqs.length); i++)
@@ -2319,21 +2451,21 @@ public class ModuleImpl implements Module
             }
         }
 */
-        // Next, check to see if the package is dynamically imported by the module.
-        if (resolver.isAllowedDynamicImport(module, pkgName))
+        // Next, check to see if the package is dynamically imported by the revision.
+        if (resolver.isAllowedDynamicImport(revision, pkgName))
         {
             // Try to see if there is an exporter available.
             Map<String, String> dirs = Collections.EMPTY_MAP;
             Map<String, Object> attrs = new HashMap<String, Object>(1);
             attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
-                module, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
-            Set<BundleCapabilityImpl> exporters = resolver.getCandidates(req, false);
+                revision, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+            Set<BundleCapability> exporters = resolver.getCandidates(req, false);
 
-            Wire wire = null;
+            FelixBundleWire wire = null;
             try
             {
-                wire = resolver.resolve(module, pkgName);
+                wire = resolver.resolve(revision, pkgName);
             }
             catch (Exception ex)
             {
@@ -2341,7 +2473,7 @@ public class ModuleImpl implements Module
             }
 
             String exporter = (exporters.isEmpty())
-                ? null : exporters.iterator().next().getModule().getBundle().toString();
+                ? null : exporters.iterator().next().getRevision().getBundle().toString();
 
             StringBuffer sb = new StringBuffer("*** Class '");
             sb.append(name);
@@ -2366,14 +2498,14 @@ public class ModuleImpl implements Module
         Map<String, Object> attrs = new HashMap<String, Object>(1);
         attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
-            module, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<BundleCapabilityImpl> exports = resolver.getCandidates(req, false);
+            revision, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+        Set<BundleCapability> exports = resolver.getCandidates(req, false);
         if (exports.size() > 0)
         {
             boolean classpath = false;
             try
             {
-                m_secureAction.getClassLoader(ModuleClassLoader.class).loadClass(name);
+                m_secureAction.getClassLoader(BundleClassLoader.class).loadClass(name);
                 classpath = true;
             }
             catch (NoClassDefFoundError err)
@@ -2385,7 +2517,7 @@ public class ModuleImpl implements Module
                 // Ignore
             }
 
-            String exporter = exports.iterator().next().getModule().getBundle().toString();
+            String exporter = exports.iterator().next().getRevision().getBundle().toString();
 
             StringBuffer sb = new StringBuffer("*** Class '");
             sb.append(name);
@@ -2426,7 +2558,7 @@ public class ModuleImpl implements Module
         // class loader.
         try
         {
-            m_secureAction.getClassLoader(ModuleClassLoader.class).loadClass(name);
+            m_secureAction.getClassLoader(BundleClassLoader.class).loadClass(name);
 
             StringBuffer sb = new StringBuffer("*** Package '");
             sb.append(pkgName);
