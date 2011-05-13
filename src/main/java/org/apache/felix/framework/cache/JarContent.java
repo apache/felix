@@ -34,7 +34,6 @@ import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ZipFileX;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.resolver.Content;
 import org.osgi.framework.Constants;
 
 public class JarContent implements Content
