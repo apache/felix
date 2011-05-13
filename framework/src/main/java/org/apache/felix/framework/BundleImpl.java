@@ -18,7 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import com.sun.xml.internal.ws.api.server.Module;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -29,9 +28,9 @@ import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.ext.SecurityProvider;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.*;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 class BundleImpl implements Bundle
 {
@@ -145,7 +144,7 @@ class BundleImpl implements Bundle
             }
             // Set wires to null, which will remove the revision from all
             // of its dependent revisions.
-            ((BundleRevisionImpl) br).setWires(null);
+            ((BundleRevisionImpl) br).setWires(null, null);
 
             // Close the revision's content.
             ((BundleRevisionImpl) br).close();
@@ -480,7 +479,7 @@ class BundleImpl implements Bundle
         // search the revision itself.
         if (Util.isFragment(bri))
         {
-            List<FelixBundleWire> hostWires = bri.getWires();
+            List<BundleWire> hostWires = bri.getWires();
             if ((hostWires != null) && (hostWires.size() > 0))
             {
                 bri = (BundleRevisionImpl) hostWires.get(0).getProviderWiring().getRevision();
