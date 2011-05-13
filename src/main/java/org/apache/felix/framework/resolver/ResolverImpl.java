@@ -29,13 +29,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.util.manifestparser.RequirementImpl;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Constants;
 
 public class ResolverImpl implements Resolver
@@ -88,7 +85,7 @@ public class ResolverImpl implements Resolver
 
                     // If the requested module is a fragment, then
                     // ultimately we will verify the host.
-                    Requirement hostReq = getHostRequirement(module);
+                    BundleRequirementImpl hostReq = getHostRequirement(module);
                     Module target = module;
 
                     do
@@ -301,14 +298,14 @@ public class ResolverImpl implements Resolver
 
     private static List<Module> getResolvedSingletons(ResolverState state)
     {
-        Requirement req = new RequirementImpl(
+        BundleRequirementImpl req = new BundleRequirementImpl(
             null,
-            Capability.SINGLETON_NAMESPACE,
-            Collections.EMPTY_LIST,
-            Collections.EMPTY_LIST);
-        SortedSet<Capability> caps = state.getCandidates(req, true);
+            BundleCapabilityImpl.SINGLETON_NAMESPACE,
+            Collections.EMPTY_MAP,
+            Collections.EMPTY_MAP);
+        SortedSet<BundleCapabilityImpl> caps = state.getCandidates(req, true);
         List<Module> singletons = new ArrayList();
-        for (Capability cap : caps)
+        for (BundleCapabilityImpl cap : caps)
         {
             if (cap.getModule().isResolved())
             {
@@ -318,11 +315,11 @@ public class ResolverImpl implements Resolver
         return singletons;
     }
 
-    private static Capability getHostCapability(Module m)
+    private static BundleCapabilityImpl getHostCapability(Module m)
     {
-        for (Capability c : m.getCapabilities())
+        for (BundleCapabilityImpl c : m.getCapabilities())
         {
-            if (c.getNamespace().equals(Capability.HOST_NAMESPACE))
+            if (c.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
             {
                 return c;
             }
@@ -330,11 +327,11 @@ public class ResolverImpl implements Resolver
         return null;
     }
 
-    private static Requirement getHostRequirement(Module m)
+    private static BundleRequirementImpl getHostRequirement(Module m)
     {
-        for (Requirement r : m.getRequirements())
+        for (BundleRequirementImpl r : m.getRequirements())
         {
-            if (r.getNamespace().equals(Capability.HOST_NAMESPACE))
+            if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
             {
                 return r;
             }
@@ -354,7 +351,7 @@ public class ResolverImpl implements Resolver
 
         // If the module doesn't have dynamic imports, then just return
         // immediately.
-        List<Requirement> dynamics = module.getDynamicRequirements();
+        List<BundleRequirementImpl> dynamics = module.getDynamicRequirements();
         if ((dynamics == null) || dynamics.isEmpty())
         {
             return null;
@@ -362,11 +359,11 @@ public class ResolverImpl implements Resolver
 
         // If any of the module exports this package, then we cannot
         // attempt to dynamically import it.
-        List<Capability> caps = module.getCapabilities();
+        List<BundleCapabilityImpl> caps = module.getCapabilities();
         for (int i = 0; (caps != null) && (i < caps.size()); i++)
         {
-            if (caps.get(i).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                && caps.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+            if (caps.get(i).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                && caps.get(i).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
             {
                 return null;
             }
@@ -385,23 +382,23 @@ public class ResolverImpl implements Resolver
         // Loop through the importer's dynamic requirements to determine if
         // there is a matching one for the package from which we want to
         // load a class.
-        List<Directive> dirs = Collections.EMPTY_LIST;
-        List<Attribute> attrs = new ArrayList(1);
-        attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
-        Requirement req = new RequirementImpl(
-            module, Capability.PACKAGE_NAMESPACE, dirs, attrs);
-        SortedSet<Capability> candidates = state.getCandidates(req, false);
+        Map<String, String> dirs = Collections.EMPTY_MAP;
+        Map<String, Object> attrs = new HashMap(1);
+        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        BundleRequirementImpl req = new BundleRequirementImpl(
+            module, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+        SortedSet<BundleCapabilityImpl> candidates = state.getCandidates(req, false);
 
         // First find a dynamic requirement that matches the capabilities.
-        Requirement dynReq = null;
+        BundleRequirementImpl dynReq = null;
         for (int dynIdx = 0;
             (candidates.size() > 0) && (dynReq == null) && (dynIdx < dynamics.size());
             dynIdx++)
         {
-            for (Iterator<Capability> itCand = candidates.iterator();
+            for (Iterator<BundleCapabilityImpl> itCand = candidates.iterator();
                 (dynReq == null) && itCand.hasNext(); )
             {
-                Capability cap = itCand.next();
+                BundleCapabilityImpl cap = itCand.next();
                 if (CapabilitySet.matches(cap, dynamics.get(dynIdx).getFilter()))
                 {
                     dynReq = dynamics.get(dynIdx);
@@ -413,9 +410,9 @@ public class ResolverImpl implements Resolver
         // any candidates that do not match it.
         if (dynReq != null)
         {
-            for (Iterator<Capability> itCand = candidates.iterator(); itCand.hasNext(); )
+            for (Iterator<BundleCapabilityImpl> itCand = candidates.iterator(); itCand.hasNext(); )
             {
-                Capability cap = itCand.next();
+                BundleCapabilityImpl cap = itCand.next();
                 if (!CapabilitySet.matches(cap, dynReq.getFilter()))
                 {
                     itCand.remove();
@@ -441,7 +438,7 @@ public class ResolverImpl implements Resolver
         Module module,
         Candidates allCandidates,
         Map<Module, Packages> modulePkgMap,
-        Map<Capability, List<Module>> usesCycleMap,
+        Map<BundleCapabilityImpl, List<Module>> usesCycleMap,
         Set<Module> cycle)
     {
         if (cycle.contains(module))
@@ -452,8 +449,8 @@ public class ResolverImpl implements Resolver
 
         // Create parallel arrays for requirement and proposed candidate
         // capability or actual capability if module is resolved or not.
-        List<Requirement> reqs = new ArrayList();
-        List<Capability> caps = new ArrayList();
+        List<BundleRequirementImpl> reqs = new ArrayList();
+        List<BundleCapabilityImpl> caps = new ArrayList();
         boolean isDynamicImport = false;
         if (module.isResolved())
         {
@@ -463,7 +460,7 @@ public class ResolverImpl implements Resolver
                 // Wrap the requirement as a hosted requirement
                 // if it comes from a fragment, since we will need
                 // to know the host.
-                Requirement r = wire.getRequirement();
+                BundleRequirementImpl r = wire.getRequirement();
                 if (!r.getModule().equals(wire.getImporter()))
                 {
                     r = new HostedRequirement(wire.getImporter(), r);
@@ -471,7 +468,7 @@ public class ResolverImpl implements Resolver
                 // Wrap the capability as a hosted capability
                 // if it comes from a fragment, since we will need
                 // to know the host.
-                Capability c = wire.getCapability();
+                BundleCapabilityImpl c = wire.getCapability();
                 if (!c.getModule().equals(wire.getExporter()))
                 {
                     c = new HostedCapability(wire.getExporter(), c);
@@ -483,17 +480,17 @@ public class ResolverImpl implements Resolver
             // Since the module is resolved, it could be dynamically importing,
             // so check to see if there are candidates for any of its dynamic
             // imports.
-            for (Requirement req : module.getDynamicRequirements())
+            for (BundleRequirementImpl req : module.getDynamicRequirements())
             {
                 // Get the candidates for the current requirement.
-                SortedSet<Capability> candCaps = allCandidates.getCandidates(req);
+                SortedSet<BundleCapabilityImpl> candCaps = allCandidates.getCandidates(req);
                 // Optional requirements may not have any candidates.
                 if (candCaps == null)
                 {
                     continue;
                 }
 
-                Capability cap = candCaps.iterator().next();
+                BundleCapabilityImpl cap = candCaps.iterator().next();
                 reqs.add(req);
                 caps.add(cap);
                 isDynamicImport = true;
@@ -504,17 +501,17 @@ public class ResolverImpl implements Resolver
         }
         else
         {
-            for (Requirement req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getRequirements())
             {
                 // Get the candidates for the current requirement.
-                SortedSet<Capability> candCaps = allCandidates.getCandidates(req);
+                SortedSet<BundleCapabilityImpl> candCaps = allCandidates.getCandidates(req);
                 // Optional requirements may not have any candidates.
                 if (candCaps == null)
                 {
                     continue;
                 }
 
-                Capability cap = candCaps.iterator().next();
+                BundleCapabilityImpl cap = candCaps.iterator().next();
                 reqs.add(req);
                 caps.add(cap);
             }
@@ -527,8 +524,8 @@ public class ResolverImpl implements Resolver
         // Second, add all imported packages to the target module's package space.
         for (int i = 0; i < reqs.size(); i++)
         {
-            Requirement req = reqs.get(i);
-            Capability cap = caps.get(i);
+            BundleRequirementImpl req = reqs.get(i);
+            BundleCapabilityImpl cap = caps.get(i);
             calculateExportedPackages(cap.getModule(), allCandidates, modulePkgMap);
             mergeCandidatePackages(module, req, cap, modulePkgMap, allCandidates);
         }
@@ -559,7 +556,7 @@ public class ResolverImpl implements Resolver
                     // Ignore modules that import from themselves.
                     if (!blame.m_cap.getModule().equals(module))
                     {
-                        List<Requirement> blameReqs = new ArrayList();
+                        List<BundleRequirementImpl> blameReqs = new ArrayList();
                         blameReqs.add(blame.m_reqs.get(0));
 
                         mergeUses(
@@ -577,7 +574,7 @@ public class ResolverImpl implements Resolver
             {
                 for (Blame blame : entry.getValue())
                 {
-                    List<Requirement> blameReqs = new ArrayList();
+                    List<BundleRequirementImpl> blameReqs = new ArrayList();
                     blameReqs.add(blame.m_reqs.get(0));
 
                     mergeUses(
@@ -594,16 +591,16 @@ public class ResolverImpl implements Resolver
     }
 
     private void mergeCandidatePackages(
-        Module current, Requirement currentReq, Capability candCap,
+        Module current, BundleRequirementImpl currentReq, BundleCapabilityImpl candCap,
         Map<Module, Packages> modulePkgMap,
         Candidates allCandidates)
     {
-        if (candCap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+        if (candCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
         {
             mergeCandidatePackage(
                 current, false, currentReq, candCap, modulePkgMap);
         }
-        else if (candCap.getNamespace().equals(Capability.MODULE_NAMESPACE))
+        else if (candCap.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
         {
 // TODO: FELIX3 - THIS NEXT LINE IS A HACK. IMPROVE HOW/WHEN WE CALCULATE EXPORTS.
             calculateExportedPackages(
@@ -627,12 +624,12 @@ public class ResolverImpl implements Resolver
 
             // If the candidate requires any other bundles with reexport visibility,
             // then we also need to merge their packages too.
-            for (Requirement req : candCap.getModule().getRequirements())
+            for (BundleRequirementImpl req : candCap.getModule().getRequirements())
             {
-                if (req.getNamespace().equals(Capability.MODULE_NAMESPACE))
+                if (req.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
                 {
-                    Directive dir = req.getDirective(Constants.VISIBILITY_DIRECTIVE);
-                    if ((dir != null) && dir.getValue().equals(Constants.VISIBILITY_REEXPORT)
+                    String value = req.getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
+                    if ((value != null) && value.equals(Constants.VISIBILITY_REEXPORT)
                         && (allCandidates.getCandidates(req) != null))
                     {
                         mergeCandidatePackages(
@@ -649,13 +646,13 @@ public class ResolverImpl implements Resolver
 
     private void mergeCandidatePackage(
         Module current, boolean requires,
-        Requirement currentReq, Capability candCap,
+        BundleRequirementImpl currentReq, BundleCapabilityImpl candCap,
         Map<Module, Packages> modulePkgMap)
     {
-        if (candCap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+        if (candCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
         {
             String pkgName = (String)
-                candCap.getAttribute(Capability.PACKAGE_ATTR).getValue();
+                candCap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
 
             // Since this capability represents a package, it will become
             // a hard constraint on the module's package space, so we need
@@ -699,12 +696,12 @@ public class ResolverImpl implements Resolver
 
     private void mergeUses(
         Module current, Packages currentPkgs,
-        Capability mergeCap, List<Requirement> blameReqs,
+        BundleCapabilityImpl mergeCap, List<BundleRequirementImpl> blameReqs,
         Map<Module, Packages> modulePkgMap,
         Candidates allCandidates,
-        Map<Capability, List<Module>> cycleMap)
+        Map<BundleCapabilityImpl, List<Module>> cycleMap)
     {
-        if (!mergeCap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+        if (!mergeCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
         {
             return;
         }
@@ -726,7 +723,7 @@ public class ResolverImpl implements Resolver
         list.add(current);
         cycleMap.put(mergeCap, list);
 
-        for (Capability candSourceCap : getPackageSources(mergeCap, modulePkgMap))
+        for (BundleCapabilityImpl candSourceCap : getPackageSources(mergeCap, modulePkgMap))
         {
             for (String usedPkgName : candSourceCap.getUses())
             {
@@ -758,7 +755,7 @@ public class ResolverImpl implements Resolver
                 {
                     if (blame.m_reqs != null)
                     {
-                        List<Requirement> blameReqs2 = new ArrayList(blameReqs);
+                        List<BundleRequirementImpl> blameReqs2 = new ArrayList(blameReqs);
                         blameReqs2.add(blame.m_reqs.get(blame.m_reqs.size() - 1));
                         usedCaps.add(new Blame(blame.m_cap, blameReqs2));
                         mergeUses(current, currentPkgs, blame.m_cap, blameReqs2,
@@ -795,7 +792,7 @@ public class ResolverImpl implements Resolver
 
         ResolveException rethrow = null;
         Candidates permutation = null;
-        Set<Requirement> mutated = null;
+        Set<BundleRequirementImpl> mutated = null;
 
         // Check for conflicting imports from fragments.
         for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.entrySet())
@@ -884,7 +881,7 @@ public class ResolverImpl implements Resolver
 
                     for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
                     {
-                        Requirement req = usedBlame.m_reqs.get(reqIdx);
+                        BundleRequirementImpl req = usedBlame.m_reqs.get(reqIdx);
 
                         // If we've already permutated this requirement in another
                         // uses constraint, don't permutate it again just continue
@@ -897,7 +894,8 @@ public class ResolverImpl implements Resolver
                         // See if we can permutate the candidates for blamed
                         // requirement; there may be no candidates if the module
                         // associated with the requirement is already resolved.
-                        SortedSet<Capability> candidates = permutation.getCandidates(req);
+                        SortedSet<BundleCapabilityImpl> candidates =
+                            permutation.getCandidates(req);
                         if ((candidates != null) && (candidates.size() > 1))
                         {
                             mutated.add(req);
@@ -972,7 +970,7 @@ public class ResolverImpl implements Resolver
 
                         for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
                         {
-                            Requirement req = usedBlame.m_reqs.get(reqIdx);
+                            BundleRequirementImpl req = usedBlame.m_reqs.get(reqIdx);
 
                             // If we've already permutated this requirement in another
                             // uses constraint, don't permutate it again just continue
@@ -985,7 +983,8 @@ public class ResolverImpl implements Resolver
                             // See if we can permutate the candidates for blamed
                             // requirement; there may be no candidates if the module
                             // associated with the requirement is already resolved.
-                            SortedSet<Capability> candidates = permutation.getCandidates(req);
+                            SortedSet<BundleCapabilityImpl> candidates =
+                                permutation.getCandidates(req);
                             if ((candidates != null) && (candidates.size() > 1))
                             {
                                 mutated.add(req);
@@ -1016,7 +1015,7 @@ public class ResolverImpl implements Resolver
                     // Try to permutate the candidate for the original
                     // import requirement; only permutate it if we haven't
                     // done so already.
-                    Requirement req = importBlame.m_reqs.get(0);
+                    BundleRequirementImpl req = importBlame.m_reqs.get(0);
                     if (!mutated.contains(req))
                     {
                         // Since there may be lots of uses constraint violations
@@ -1063,7 +1062,7 @@ public class ResolverImpl implements Resolver
                         // to backtrack on our current candidate selection.
                         if (permCount == (m_usesPermutations.size() + m_importPermutations.size()))
                         {
-                            Requirement req = importBlame.m_reqs.get(0);
+                            BundleRequirementImpl req = importBlame.m_reqs.get(0);
                             permutate(allCandidates, req, m_importPermutations);
                         }
                         throw ex;
@@ -1074,9 +1073,9 @@ public class ResolverImpl implements Resolver
     }
 
     private static void permutate(
-        Candidates allCandidates, Requirement req, List<Candidates> permutations)
+        Candidates allCandidates, BundleRequirementImpl req, List<Candidates> permutations)
     {
-        SortedSet<Capability> candidates = allCandidates.getCandidates(req);
+        SortedSet<BundleCapabilityImpl> candidates = allCandidates.getCandidates(req);
         if (candidates.size() > 1)
         {
             Candidates perm = allCandidates.copy();
@@ -1089,9 +1088,9 @@ public class ResolverImpl implements Resolver
     }
 
     private static void permutateIfNeeded(
-        Candidates allCandidates, Requirement req, List<Candidates> permutations)
+        Candidates allCandidates, BundleRequirementImpl req, List<Candidates> permutations)
     {
-        SortedSet<Capability> candidates = allCandidates.getCandidates(req);
+        SortedSet<BundleCapabilityImpl> candidates = allCandidates.getCandidates(req);
         if (candidates.size() > 1)
         {
             // Check existing permutations to make sure we haven't
@@ -1103,7 +1102,7 @@ public class ResolverImpl implements Resolver
             boolean permutated = false;
             for (Candidates existingPerm : permutations)
             {
-                Set<Capability> existingPermCands = existingPerm.getCandidates(req);
+                Set<BundleCapabilityImpl> existingPermCands = existingPerm.getCandidates(req);
                 if (!existingPermCands.iterator().next().equals(candidates.iterator().next()))
                 {
                     permutated = true;
@@ -1131,14 +1130,14 @@ public class ResolverImpl implements Resolver
         packages = new Packages(module);
 
         // Get all exported packages.
-        Map<String, Capability> exports =
-            new HashMap<String, Capability>(module.getCapabilities().size());
-        for (Capability cap : module.getCapabilities())
+        Map<String, BundleCapabilityImpl> exports =
+            new HashMap<String, BundleCapabilityImpl>(module.getCapabilities().size());
+        for (BundleCapabilityImpl cap : module.getCapabilities())
         {
-            if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+            if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
                 exports.put(
-                    (String) cap.getAttribute(Capability.PACKAGE_ATTR).getValue(),
+                    (String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
                     cap);
             }
         }
@@ -1150,32 +1149,32 @@ public class ResolverImpl implements Resolver
         {
             for (Wire wire : module.getWires())
             {
-                if (wire.getRequirement().getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                if (wire.getRequirement().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
                     String pkgName = (String) wire.getCapability()
-                        .getAttribute(Capability.PACKAGE_ATTR).getValue();
+                        .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
                     exports.remove(pkgName);
                 }
             }
         }
         else
         {
-            for (Requirement req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getRequirements())
             {
-                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
-                    Set<Capability> cands = allCandidates.getCandidates(req);
+                    Set<BundleCapabilityImpl> cands = allCandidates.getCandidates(req);
                     if ((cands != null) && !cands.isEmpty())
                     {
                         String pkgName = (String) cands.iterator().next()
-                            .getAttribute(Capability.PACKAGE_ATTR).getValue();
+                            .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
                         exports.remove(pkgName);
                     }
                 }
             }
         }
         // Add all non-substituted exports to the module's package space.
-        for (Entry<String, Capability> entry : exports.entrySet())
+        for (Entry<String, BundleCapabilityImpl> entry : exports.entrySet())
         {
             packages.m_exportedPkgs.put(
                 entry.getKey(), new Blame(entry.getValue(), null));
@@ -1185,7 +1184,8 @@ public class ResolverImpl implements Resolver
     }
 
     private boolean isCompatible(
-        Capability currentCap, Capability candCap, Map<Module, Packages> modulePkgMap)
+        BundleCapabilityImpl currentCap, BundleCapabilityImpl candCap,
+        Map<Module, Packages> modulePkgMap)
     {
         if ((currentCap != null) && (candCap != null))
         {
@@ -1194,28 +1194,30 @@ public class ResolverImpl implements Resolver
                 return true;
             }
 
-            List<Capability> currentSources =
+            List<BundleCapabilityImpl> currentSources =
                 getPackageSources(
                     currentCap,
                     modulePkgMap);
-            List<Capability> candSources =
+            List<BundleCapabilityImpl> candSources =
                 getPackageSources(
                     candCap,
                     modulePkgMap);
 
-            return currentSources.containsAll(candSources) || candSources.containsAll(currentSources);
+            return currentSources.containsAll(candSources)
+                || candSources.containsAll(currentSources);
         }
         return true;
     }
 
-    private Map<Capability, List<Capability>> m_packageSourcesCache = new HashMap();
+    private Map<BundleCapabilityImpl, List<BundleCapabilityImpl>> m_packageSourcesCache
+        = new HashMap();
 
-    private List<Capability> getPackageSources(
-        Capability cap, Map<Module, Packages> modulePkgMap)
+    private List<BundleCapabilityImpl> getPackageSources(
+        BundleCapabilityImpl cap, Map<Module, Packages> modulePkgMap)
     {
-        if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
         {
-            List<Capability> sources = m_packageSourcesCache.get(cap);
+            List<BundleCapabilityImpl> sources = m_packageSourcesCache.get(cap);
             if (sources == null)
             {
                 sources = getPackageSourcesInternal(
@@ -1228,11 +1230,11 @@ public class ResolverImpl implements Resolver
         return Collections.EMPTY_LIST;
     }
 
-    private static List<Capability> getPackageSourcesInternal(
-        Capability cap, Map<Module, Packages> modulePkgMap, List<Capability> sources,
-        Set<Capability> cycleMap)
+    private static List<BundleCapabilityImpl> getPackageSourcesInternal(
+        BundleCapabilityImpl cap, Map<Module, Packages> modulePkgMap,
+        List<BundleCapabilityImpl> sources, Set<BundleCapabilityImpl> cycleMap)
     {
-        if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
         {
             if (cycleMap.contains(cap))
             {
@@ -1241,15 +1243,16 @@ public class ResolverImpl implements Resolver
             cycleMap.add(cap);
 
             // Get the package name associated with the capability.
-            String pkgName = cap.getAttribute(Capability.PACKAGE_ATTR).getValue().toString();
+            String pkgName = cap.getAttributes()
+                .get(BundleCapabilityImpl.PACKAGE_ATTR).toString();
 
             // Since a module can export the same package more than once, get
             // all package capabilities for the specified package name.
-            List<Capability> caps = cap.getModule().getCapabilities();
+            List<BundleCapabilityImpl> caps = cap.getModule().getCapabilities();
             for (int capIdx = 0; capIdx < caps.size(); capIdx++)
             {
-                if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                    && caps.get(capIdx).getAttribute(Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+                if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                    && caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
                 {
                     sources.add(caps.get(capIdx));
                 }
@@ -1279,7 +1282,7 @@ public class ResolverImpl implements Resolver
         return m;
     }
 
-    private static Capability getActualCapability(Capability c)
+    private static BundleCapabilityImpl getActualCapability(BundleCapabilityImpl c)
     {
         if (c instanceof HostedCapability)
         {
@@ -1288,7 +1291,7 @@ public class ResolverImpl implements Resolver
         return c;
     }
 
-    private static Requirement getActualRequirement(Requirement r)
+    private static BundleRequirementImpl getActualRequirement(BundleRequirementImpl r)
     {
         if (r instanceof HostedRequirement)
         {
@@ -1310,19 +1313,19 @@ public class ResolverImpl implements Resolver
             List<Wire> packageWires = new ArrayList<Wire>();
             List<Wire> moduleWires = new ArrayList<Wire>();
 
-            for (Requirement req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getRequirements())
             {
-                SortedSet<Capability> cands = allCandidates.getCandidates(req);
+                SortedSet<BundleCapabilityImpl> cands = allCandidates.getCandidates(req);
                 if ((cands != null) && (cands.size() > 0))
                 {
-                    Capability cand = cands.iterator().next();
+                    BundleCapabilityImpl cand = cands.iterator().next();
                     if (!cand.getModule().isResolved())
                     {
                         populateWireMap(cand.getModule(),
                             modulePkgMap, wireMap, allCandidates);
                     }
                     // Ignore modules that import themselves.
-                    if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE)
+                    if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
                         && !module.equals(cand.getModule()))
                     {
                         packageWires.add(
@@ -1332,7 +1335,7 @@ public class ResolverImpl implements Resolver
                                 getActualModule(cand.getModule()),
                                 getActualCapability(cand)));
                     }
-                    else if (req.getNamespace().equals(Capability.MODULE_NAMESPACE))
+                    else if (req.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
                     {
                         Packages candPkgs = modulePkgMap.get(cand.getModule());
                         moduleWires.add(
@@ -1390,8 +1393,7 @@ public class ResolverImpl implements Resolver
             {
                 // Ignore modules that import themselves.
                 if (!module.equals(blame.m_cap.getModule())
-                    && blame.m_cap.getAttribute(
-                        Capability.PACKAGE_ATTR).getValue().equals(pkgName))
+                    && blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
                 {
                     if (!blame.m_cap.getModule().isResolved())
                     {
@@ -1399,18 +1401,18 @@ public class ResolverImpl implements Resolver
                             allCandidates);
                     }
 
-                    List<Attribute> attrs = new ArrayList();
-                    attrs.add(new Attribute(Capability.PACKAGE_ATTR, pkgName, false));
+                    Map<String, Object> attrs = new HashMap(1);
+                    attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
                     packageWires.add(
                         new WireImpl(
                             module,
                             // We need an unique requirement here or else subsequent
                             // dynamic imports for the same dynamic requirement will
                             // conflict with previous ones.
-                            new RequirementImpl(
+                            new BundleRequirementImpl(
                                 module,
-                                Capability.PACKAGE_NAMESPACE,
-                                new ArrayList(0),
+                                BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                                Collections.EMPTY_MAP,
                                 attrs),
                             getActualModule(blame.m_cap.getModule()),
                             getActualCapability(blame.m_cap)));
@@ -1464,13 +1466,13 @@ public class ResolverImpl implements Resolver
         {
             for (int i = 0; i < blame.m_reqs.size(); i++)
             {
-                Requirement req = blame.m_reqs.get(i);
+                BundleRequirementImpl req = blame.m_reqs.get(i);
                 sb.append("  ");
                 sb.append(req.getModule().getSymbolicName());
                 sb.append(" [");
                 sb.append(req.getModule().toString());
                 sb.append("]\n");
-                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
                     sb.append("    import: ");
                 }
@@ -1480,7 +1482,7 @@ public class ResolverImpl implements Resolver
                 }
                 sb.append(req.getFilter().toString());
                 sb.append("\n     |");
-                if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
                     sb.append("\n    export: ");
                 }
@@ -1490,13 +1492,15 @@ public class ResolverImpl implements Resolver
                 }
                 if ((i + 1) < blame.m_reqs.size())
                 {
-                    Capability cap = Util.getSatisfyingCapability(
+                    BundleCapabilityImpl cap = Util.getSatisfyingCapability(
                         blame.m_reqs.get(i + 1).getModule(),
                         blame.m_reqs.get(i));
-                    if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                    if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
-                        sb.append(cap.getAttribute(Capability.PACKAGE_ATTR).toString());
-                        Capability usedCap;
+                        sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
+                        sb.append("=");
+                        sb.append(cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).toString());
+                        BundleCapabilityImpl usedCap;
                         if ((i + 2) < blame.m_reqs.size())
                         {
                             usedCap = Util.getSatisfyingCapability(
@@ -1510,7 +1514,7 @@ public class ResolverImpl implements Resolver
                                 blame.m_reqs.get(i + 1));
                         }
                         sb.append("; uses:=");
-                        sb.append(usedCap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                        sb.append(usedCap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
                     }
                     else
                     {
@@ -1520,17 +1524,21 @@ public class ResolverImpl implements Resolver
                 }
                 else
                 {
-                    Capability export = Util.getSatisfyingCapability(
+                    BundleCapabilityImpl export = Util.getSatisfyingCapability(
                         blame.m_cap.getModule(),
                         blame.m_reqs.get(i));
-                    sb.append(export.getAttribute(Capability.PACKAGE_ATTR).toString());
-                    if (!export.getAttribute(Capability.PACKAGE_ATTR).getValue()
-                        .equals(blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue()))
+                    sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
+                    sb.append("=");
+                    sb.append(export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).toString());
+                    if (!export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                        .equals(blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
                     {
                         sb.append("; uses:=");
-                        sb.append(blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                        sb.append(blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
                         sb.append("\n    export: ");
-                        sb.append(blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).toString());
+                        sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
+                        sb.append("=");
+                        sb.append(blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).toString());
                     }
                     sb.append("\n  ");
                     sb.append(blame.m_cap.getModule().getSymbolicName());
@@ -1568,12 +1576,12 @@ public class ResolverImpl implements Resolver
             // because bundles that import their own exports still continue
             // to provide access to their exports when they are required; i.e.,
             // the implicitly reexport the packages if wired to another provider.
-            for (Capability cap : m_module.getCapabilities())
+            for (BundleCapabilityImpl cap : m_module.getCapabilities())
             {
-                if (cap.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
                     pkgs.add((String)
-                        cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                        cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
                 }
             }
             // Grab all required and reexported required packages.
@@ -1581,13 +1589,13 @@ public class ResolverImpl implements Resolver
             {
                 for (Blame blame : entry.getValue())
                 {
-                    Directive dir = blame.m_reqs.get(
-                        blame.m_reqs.size() - 1).getDirective(Constants.VISIBILITY_DIRECTIVE);
-                    if ((dir != null)
-                        && dir.getValue().equals(Constants.VISIBILITY_REEXPORT))
+                    String value = blame.m_reqs.get(
+                        blame.m_reqs.size() - 1).getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
+                    if ((value != null)
+                        && value.equals(Constants.VISIBILITY_REEXPORT))
                     {
                         pkgs.add((String)
-                            blame.m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue());
+                            blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
                         break;
                     }
                 }
@@ -1598,24 +1606,26 @@ public class ResolverImpl implements Resolver
 
     private static class Blame
     {
-        public final Capability m_cap;
-        public final List<Requirement> m_reqs;
+        public final BundleCapabilityImpl m_cap;
+        public final List<BundleRequirementImpl> m_reqs;
 
-        public Blame(Capability cap, List<Requirement> reqs)
+        public Blame(BundleCapabilityImpl cap, List<BundleRequirementImpl> reqs)
         {
             m_cap = cap;
             m_reqs = reqs;
         }
 
+        @Override
         public String toString()
         {
             return m_cap.getModule()
-                + "." + m_cap.getAttribute(Capability.PACKAGE_ATTR).getValue()
-                + (((m_reqs == null) || (m_reqs.size() == 0))
+                + "." + m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                + (((m_reqs == null) || m_reqs.isEmpty())
                     ? " NO BLAME"
                     : " BLAMED ON " + m_reqs);
         }
 
+        @Override
         public boolean equals(Object o)
         {
             return (o instanceof Blame) && m_reqs.equals(((Blame) o).m_reqs)

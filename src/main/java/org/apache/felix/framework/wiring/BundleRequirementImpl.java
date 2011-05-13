@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,53 +16,50 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.util.manifestparser;
+package org.apache.felix.framework.wiring;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.capabilityset.Requirement;
+import java.util.Map;
+import java.util.Map.Entry;
+import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Constants;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 
-public class RequirementImpl implements Requirement
+public class BundleRequirementImpl implements BundleRequirement
 {
     private final Module m_module;
     private final String m_namespace;
     private final SimpleFilter m_filter;
     private final boolean m_optional;
-    private final List<Directive> m_dirs;
-    private final List<Directive> m_dirsConst;
+    private final Map<String, String> m_dirs;
+    private final Map<String, Object> m_attrs;
 
-    public RequirementImpl(
+    public BundleRequirementImpl(
         Module module, String namespace,
-        List<Directive> dirs, List<Attribute> attrs)
+        Map<String, String> dirs, Map<String, Object> attrs)
     {
         m_module = module;
         m_namespace = namespace;
-        m_dirs = dirs;
-        m_dirsConst = Collections.unmodifiableList(m_dirs);
+        m_dirs = Collections.unmodifiableMap(dirs);
+        m_attrs = Collections.unmodifiableMap(attrs);
         m_filter = convertToFilter(attrs);
 
         // Find resolution import directives.
         boolean optional = false;
-        for (int dirIdx = 0; dirIdx < m_dirs.size(); dirIdx++)
+        if (m_dirs.containsKey(Constants.RESOLUTION_DIRECTIVE)
+            && m_dirs.get(Constants.RESOLUTION_DIRECTIVE).equals(Constants.RESOLUTION_OPTIONAL))
         {
-            if (m_dirs.get(dirIdx).getName().equals(Constants.RESOLUTION_DIRECTIVE))
-            {
-                optional = m_dirs.get(dirIdx).getValue().equals(Constants.RESOLUTION_OPTIONAL);
-            }
+            optional = true;
         }
         m_optional = optional;
-    }
-
-    public Module getModule()
-    {
-        return m_module;
     }
 
     public String getNamespace()
@@ -70,9 +67,29 @@ public class RequirementImpl implements Requirement
         return m_namespace;
     }
 
-    public SimpleFilter getFilter()
+    public Map<String, String> getDirectives()
     {
-        return m_filter;
+        return m_dirs;
+    }
+
+    public Map<String, Object> getAttributes()
+    {
+        return m_attrs;
+    }
+
+    public Module getModule()
+    {
+        return m_module;
+    }
+
+    public BundleRevision getRevision()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean matches(BundleCapability cap)
+    {
+        return CapabilitySet.matches((BundleCapabilityImpl) cap, getFilter());
     }
 
     public boolean isOptional()
@@ -80,21 +97,9 @@ public class RequirementImpl implements Requirement
         return m_optional;
     }
 
-    public Directive getDirective(String name)
+    public SimpleFilter getFilter()
     {
-        for (int i = 0; i < m_dirs.size(); i++)
-        {
-            if (m_dirs.get(i).getName().equals(name))
-            {
-                return m_dirs.get(i);
-            }
-        }
-        return null;
-    }
-
-    public List<Directive> getDirectives()
-    {
-        return m_dirsConst;
+        return m_filter;
     }
 
     public String toString()
@@ -102,23 +107,23 @@ public class RequirementImpl implements Requirement
         return "[" + m_module + "] " + m_namespace + "; " + getFilter().toString();
     }
 
-    private static SimpleFilter convertToFilter(List<Attribute> attrs)
+    private static SimpleFilter convertToFilter(Map<String, Object> attrs)
     {
         // Rather than building a filter string to be parsed into a SimpleFilter,
         // we will just create the parsed SimpleFilter directly.
 
         List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
 
-        for (Attribute attr : attrs)
+        for (Entry<String, Object> entry : attrs.entrySet())
         {
-            if (attr.getValue() instanceof VersionRange)
+            if (entry.getValue() instanceof VersionRange)
             {
-                VersionRange vr = (VersionRange) attr.getValue();
+                VersionRange vr = (VersionRange) entry.getValue();
                 if (vr.isFloorInclusive())
                 {
                     filters.add(
                         new SimpleFilter(
-                            attr.getName(),
+                            entry.getKey(),
                             vr.getFloor().toString(),
                             SimpleFilter.GTE));
                 }
@@ -128,7 +133,7 @@ public class RequirementImpl implements Requirement
                         new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
                     ((List) not.getValue()).add(
                         new SimpleFilter(
-                            attr.getName(),
+                            entry.getKey(),
                             vr.getFloor().toString(),
                             SimpleFilter.LTE));
                     filters.add(not);
@@ -140,7 +145,7 @@ public class RequirementImpl implements Requirement
                     {
                         filters.add(
                             new SimpleFilter(
-                                attr.getName(),
+                                entry.getKey(),
                                 vr.getCeiling().toString(),
                                 SimpleFilter.LTE));
                     }
@@ -150,7 +155,7 @@ public class RequirementImpl implements Requirement
                             new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
                         ((List) not.getValue()).add(
                             new SimpleFilter(
-                                attr.getName(),
+                                entry.getKey(),
                                 vr.getCeiling().toString(),
                                 SimpleFilter.GTE));
                         filters.add(not);
@@ -159,12 +164,12 @@ public class RequirementImpl implements Requirement
             }
             else
             {
-                List<String> values = SimpleFilter.parseSubstring(attr.getValue().toString());
+                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
                 if (values.size() > 1)
                 {
                     filters.add(
                         new SimpleFilter(
-                            attr.getName(),
+                            entry.getKey(),
                             values,
                             SimpleFilter.SUBSTRING));
                 }
@@ -172,7 +177,7 @@ public class RequirementImpl implements Requirement
                 {
                     filters.add(
                         new SimpleFilter(
-                            attr.getName(),
+                            entry.getKey(),
                             values.get(0),
                             SimpleFilter.EQ));
                 }

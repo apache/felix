@@ -21,25 +21,25 @@ package org.apache.felix.framework.resolver;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 class WireModuleImpl implements Wire
 {
     private final Module m_importer;
-    private final Requirement m_req;
+    private final BundleRequirementImpl m_req;
     private final Module m_exporter;
-    private final Capability m_cap;
+    private final BundleCapabilityImpl m_cap;
     private final List<String> m_packages;
 
-    public WireModuleImpl(Module importer, Requirement requirement,
-        Module exporter, Capability capability, List<String> packages)
+    public WireModuleImpl(Module importer, BundleRequirementImpl requirement,
+        Module exporter, BundleCapabilityImpl cap, List<String> packages)
     {
         m_importer = importer;
         m_req = requirement;
         m_exporter = exporter;
-        m_cap = capability;
+        m_cap = cap;
         m_packages = packages;
     }
 
@@ -54,7 +54,7 @@ class WireModuleImpl implements Wire
     /* (non-Javadoc)
      * @see org.apache.felix.framework.searchpolicy.IWire#getRequirement()
      */
-    public Requirement getRequirement()
+    public BundleRequirementImpl getRequirement()
     {
         return m_req;
     }
@@ -70,7 +70,7 @@ class WireModuleImpl implements Wire
     /* (non-Javadoc)
      * @see org.apache.felix.framework.searchpolicy.IWire#getCapability()
      */
-    public Capability getCapability()
+    public BundleCapabilityImpl getCapability()
     {
         return m_cap;
     }

@@ -18,18 +18,18 @@
  */
 package org.apache.felix.framework.resolver;
 
-import org.apache.felix.framework.capabilityset.Requirement;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 public class ResolveException extends RuntimeException
 {
     private final Module m_module;
-    private final Requirement m_req;
+    private final BundleRequirementImpl m_req;
 
     /**
      * Constructs an instance of <code>ResolveException</code> with the specified detail message.
      * @param msg the detail message.
      */
-    public ResolveException(String msg, Module module, Requirement req)
+    public ResolveException(String msg, Module module, BundleRequirementImpl req)
     {
         super(msg);
         m_module = module;
@@ -41,7 +41,7 @@ public class ResolveException extends RuntimeException
         return m_module;
     }
 
-    public Requirement getRequirement()
+    public BundleRequirementImpl getRequirement()
     {
         return m_req;
     }

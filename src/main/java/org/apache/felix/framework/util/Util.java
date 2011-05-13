@@ -22,17 +22,16 @@ import java.io.*;
 import java.net.URL;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.resolver.Wire;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -280,9 +279,9 @@ public class Util
         return allow;
     }
 
-    public static Capability getSatisfyingCapability(Module m, Requirement req)
+    public static BundleCapabilityImpl getSatisfyingCapability(Module m, BundleRequirementImpl req)
     {
-        List<Capability> caps = m.getCapabilities();
+        List<BundleCapabilityImpl> caps = m.getCapabilities();
         for (int i = 0; (caps != null) && (i < caps.size()); i++)
         {
             if (caps.get(i).getNamespace().equals(req.getNamespace())
@@ -301,10 +300,10 @@ public class Util
      * @param namespace capability namespace
      * @return array of matching capabilities or empty if none found
      */
-    public static List<Capability> getCapabilityByNamespace(Module module, String namespace)
+    public static List<BundleCapabilityImpl> getCapabilityByNamespace(Module module, String namespace)
     {
-        final List<Capability> matching = new ArrayList();
-        final List<Capability> caps = module.getCapabilities();
+        final List<BundleCapabilityImpl> matching = new ArrayList();
+        final List<BundleCapabilityImpl> caps = module.getCapabilities();
         for (int capIdx = 0; (caps != null) && (capIdx < caps.size()); capIdx++)
         {
             if (caps.get(capIdx).getNamespace().equals(namespace))
@@ -320,8 +319,8 @@ public class Util
         List<Wire> wires = m.getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
-            if (wires.get(i).getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-                wires.get(i).getCapability().getAttribute(Capability.PACKAGE_ATTR).getValue().equals(name))
+            if (wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                wires.get(i).getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
             {
                 return wires.get(i);
             }

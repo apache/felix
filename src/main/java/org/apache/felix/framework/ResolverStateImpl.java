@@ -27,9 +27,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.resolver.ResolveException;
@@ -37,6 +35,8 @@ import org.apache.felix.framework.resolver.Resolver;
 import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.BundlePermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
@@ -67,24 +67,24 @@ class ResolverStateImpl implements Resolver.ResolverState
 
         List<String> indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(Capability.MODULE_NAMESPACE, new CapabilitySet(indices, true));
+        m_capSets.put(BundleCapabilityImpl.MODULE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
-        indices.add(Capability.PACKAGE_ATTR);
-        m_capSets.put(Capability.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
+        indices.add(BundleCapabilityImpl.PACKAGE_ATTR);
+        m_capSets.put(BundleCapabilityImpl.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(Capability.HOST_NAMESPACE,  new CapabilitySet(indices, true));
+        m_capSets.put(BundleCapabilityImpl.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
 
     synchronized void addModule(Module m)
     {
         m_modules.add(m);
-        List<Capability> caps = m.getCapabilities();
+        List<BundleCapabilityImpl> caps = m.getCapabilities();
         if (caps != null)
         {
-            for (Capability cap : caps)
+            for (BundleCapabilityImpl cap : caps)
             {
                 CapabilitySet capSet = m_capSets.get(cap.getNamespace());
                 if (capSet == null)
@@ -105,10 +105,10 @@ class ResolverStateImpl implements Resolver.ResolverState
     synchronized void removeModule(Module m)
     {
         m_modules.remove(m);
-        List<Capability> caps = m.getCapabilities();
+        List<BundleCapabilityImpl> caps = m.getCapabilities();
         if (caps != null)
         {
-            for (Capability cap : caps)
+            for (BundleCapabilityImpl cap : caps)
             {
                 CapabilitySet capSet = m_capSets.get(cap.getNamespace());
                 if (capSet != null)
@@ -139,21 +139,21 @@ class ResolverStateImpl implements Resolver.ResolverState
             // import rather than export the package, so we need to remove the
             // corresponding package capability from the package capability set.
             List<Wire> wires = module.getWires();
-            List<Capability> caps = module.getCapabilities();
+            List<BundleCapabilityImpl> caps = module.getCapabilities();
             for (int wireIdx = 0; (wires != null) && (wireIdx < wires.size()); wireIdx++)
             {
                 Wire wire = wires.get(wireIdx);
-                if (wire.getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE))
+                if (wire.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
                     for (int capIdx = 0;
                         (caps != null) && (capIdx < caps.size());
                         capIdx++)
                     {
-                        if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
-                            && wire.getCapability().getAttribute(Capability.PACKAGE_ATTR).getValue()
-                                .equals(caps.get(capIdx).getAttribute(Capability.PACKAGE_ATTR).getValue()))
+                        if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                            && wire.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                                .equals(caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
                         {
-                            m_capSets.get(Capability.PACKAGE_NAMESPACE).removeCapability(caps.get(capIdx));
+                            m_capSets.get(BundleCapabilityImpl.PACKAGE_NAMESPACE).removeCapability(caps.get(capIdx));
                             break;
                         }
                     }
@@ -166,27 +166,27 @@ class ResolverStateImpl implements Resolver.ResolverState
     // ResolverState methods.
     //
 
-    public synchronized SortedSet<Capability> getCandidates(
-        Requirement req, boolean obeyMandatory)
+    public synchronized SortedSet<BundleCapabilityImpl> getCandidates(
+        BundleRequirementImpl req, boolean obeyMandatory)
     {
         Module module = req.getModule();
-        SortedSet<Capability> result = new TreeSet<Capability>(new CandidateComparator());
+        SortedSet<BundleCapabilityImpl> result = new TreeSet<BundleCapabilityImpl>(new CandidateComparator());
 
         CapabilitySet capSet = m_capSets.get(req.getNamespace());
         if (capSet != null)
         {
-            Set<Capability> matches = capSet.match(req.getFilter(), obeyMandatory);
-            for (Capability cap : matches)
+            Set<BundleCapabilityImpl> matches = capSet.match(req.getFilter(), obeyMandatory);
+            for (BundleCapabilityImpl cap : matches)
             {
                 if (System.getSecurityManager() != null)
                 {
-                    if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE) && (
+                    if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) && (
                         !((BundleProtectionDomain) cap.getModule().getSecurityContext()).impliesDirect(
-                            new PackagePermission((String) cap.getAttribute(Capability.PACKAGE_ATTR).getValue(),
+                            new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
                             PackagePermission.EXPORTONLY)) ||
                             !((module == null) ||
                                 ((BundleProtectionDomain) module.getSecurityContext()).impliesDirect(
-                                    new PackagePermission((String) cap.getAttribute(Capability.PACKAGE_ATTR).getValue(),
+                                    new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
                                     cap.getModule().getBundle(),PackagePermission.IMPORT))
                             )))
                     {
@@ -195,7 +195,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                             continue;
                         }
                     }
-                    else if (req.getNamespace().equals(Capability.MODULE_NAMESPACE) && (
+                    else if (req.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE) && (
                         !((BundleProtectionDomain) cap.getModule().getSecurityContext()).impliesDirect(
                             new BundlePermission(cap.getModule().getSymbolicName(), BundlePermission.PROVIDE)) ||
                             !((module == null) ||
@@ -205,7 +205,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                     {
                         continue;
                     }
-                    else if (req.getNamespace().equals(Capability.HOST_NAMESPACE) &&
+                    else if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE) &&
                         (!((BundleProtectionDomain) req.getModule().getSecurityContext())
                             .impliesDirect(new BundlePermission(
                                 req.getModule().getSymbolicName(),
@@ -219,7 +219,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                     }
                 }
 
-                if (req.getNamespace().equals(Capability.HOST_NAMESPACE)
+                if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE)
                     && cap.getModule().isResolved())
                 {
                     continue;

@@ -18,18 +18,18 @@
  */
 package org.apache.felix.framework.resolver;
 
-import java.util.List;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.capabilityset.Requirement;
+import java.util.Map;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
-public class HostedRequirement implements Requirement
+public class HostedRequirement extends BundleRequirementImpl
 {
     private final Module m_host;
-    private final Requirement m_req;
+    private final BundleRequirementImpl m_req;
 
-    public HostedRequirement(Module module, Requirement req)
+    public HostedRequirement(Module module, BundleRequirementImpl req)
     {
+        super(module, req.getNamespace(), req.getDirectives(), req.getAttributes());
         m_host = module;
         m_req = req;
     }
@@ -66,41 +66,48 @@ public class HostedRequirement implements Requirement
         return hash;
     }
 
-    public Requirement getDeclaredRequirement()
+    public BundleRequirementImpl getDeclaredRequirement()
     {
         return m_req;
     }
 
+    @Override
     public Module getModule()
     {
         return m_host;
     }
 
+    @Override
     public String getNamespace()
     {
         return m_req.getNamespace();
     }
 
+    @Override
     public SimpleFilter getFilter()
     {
         return m_req.getFilter();
     }
 
+    @Override
     public boolean isOptional()
     {
         return m_req.isOptional();
     }
 
-    public Directive getDirective(String name)
-    {
-        return m_req.getDirective(name);
-    }
-
-    public List<Directive> getDirectives()
+    @Override
+    public Map<String, String> getDirectives()
     {
         return m_req.getDirectives();
     }
 
+    @Override
+    public Map<String, Object> getAttributes()
+    {
+        return m_req.getAttributes();
+    }
+
+    @Override
     public String toString()
     {
         return "[" + m_host + "] " + getNamespace() + "; " + getFilter().toString();
