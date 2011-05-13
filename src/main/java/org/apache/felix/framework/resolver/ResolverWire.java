@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework.resolver;
 
+import java.util.Set;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;

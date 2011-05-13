@@ -27,10 +27,10 @@ import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.*;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 class ServiceRegistrationImpl implements ServiceRegistration
 {
@@ -487,10 +487,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 Util.getClassPackage(className);
             BundleRevision requesterRevision = ((BundleImpl) requester).getCurrentRevision();
             // Get package wiring from service requester.
-            FelixBundleWire requesterWire = Util.getWire(requesterRevision, pkgName);
+            BundleWire requesterWire = Util.getWire(requesterRevision, pkgName);
             // Get package wiring from service provider.
             BundleRevision providerRevision = ((BundleImpl) m_bundle).getCurrentRevision();
-            FelixBundleWire providerWire = Util.getWire(providerRevision, pkgName);
+            BundleWire providerWire = Util.getWire(providerRevision, pkgName);
 
             // There are four situations that may occur here:
             //   1. Neither the requester, nor provider have wires for the package.
@@ -550,7 +550,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
                         {
                             // If requester has access to the class, verify it is the
                             // same class as the provider.
-                            allow = (providerWire.getClass(className) == requestClass);
+                            allow = (((BundleRevisionImpl) providerRevision)
+                                .getClassByDelegation(className) == requestClass);
                         }
                         catch (Exception ex)
                         {

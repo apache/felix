@@ -34,11 +34,11 @@ import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 public class ResolverImpl implements Resolver
 {
@@ -376,14 +376,12 @@ public class ResolverImpl implements Resolver
                 return null;
             }
         }
-        // If any of our wires have this package, then we cannot
-        // attempt to dynamically import it.
-        for (FelixBundleWire w : ((BundleRevisionImpl) revision).getWires())
+
+        // If this revision already imports or requires this package, then
+        // we cannot dynamically import it.
+        if (((BundleRevisionImpl) revision).hasPackageSource(pkgName))
         {
-            if (w.hasPackage(pkgName))
-            {
-                return null;
-            }
+            return null;
         }
 
         // Loop through the importer's dynamic requirements to determine if
@@ -468,7 +466,7 @@ public class ResolverImpl implements Resolver
         if (revision.getWiring() != null)
         {
             // Use wires to get actual requirements and satisfying capabilities.
-            for (FelixBundleWire wire : ((BundleRevisionImpl) revision).getWires())
+            for (BundleWire wire : ((BundleRevisionImpl) revision).getWires())
             {
                 // Wrap the requirement as a hosted requirement
                 // if it comes from a fragment, since we will need
@@ -1173,7 +1171,7 @@ public class ResolverImpl implements Resolver
         // exports are substitutable.
         if (revision.getWiring() != null)
         {
-            for (FelixBundleWire wire : ((BundleRevisionImpl) revision).getWires())
+            for (BundleWire wire : ((BundleRevisionImpl) revision).getWires())
             {
                 if (wire.getRequirement().getNamespace().equals(
                     BundleCapabilityImpl.PACKAGE_NAMESPACE))
@@ -1350,14 +1348,15 @@ public class ResolverImpl implements Resolver
                 if ((cands != null) && (cands.size() > 0))
                 {
                     BundleCapability cand = cands.iterator().next();
-                    if (cand.getRevision().getWiring() == null)
-                    {
-                        populateWireMap(cand.getRevision(),
-                            revisionPkgMap, wireMap, allCandidates);
-                    }
                     // Ignore revisions that import themselves.
                     if (!revision.equals(cand.getRevision()))
                     {
+                        if (cand.getRevision().getWiring() == null)
+                        {
+                            populateWireMap(cand.getRevision(),
+                                revisionPkgMap, wireMap, allCandidates);
+                        }
+                        Packages candPkgs = revisionPkgMap.get(cand.getRevision());
                         ResolverWire wire = new ResolverWireImpl(
                             unwrappedRevision,
                             (BundleRequirementImpl) getActualRequirement(req),
@@ -1428,6 +1427,7 @@ public class ResolverImpl implements Resolver
                             allCandidates);
                     }
 
+                    Packages candPkgs = revisionPkgMap.get(blame.m_cap.getRevision());
                     Map<String, Object> attrs = new HashMap(1);
                     attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
                     packageWires.add(
@@ -1594,44 +1594,6 @@ public class ResolverImpl implements Resolver
         public Packages(BundleRevision revision)
         {
             m_revision = revision;
-        }
-
-        public List<String> getExportedAndReexportedPackages()
-        {
-            List<String> pkgs = new ArrayList();
-            // Grab the revision's actual exported packages.
-            // Note that we ignore the calculated exported packages here,
-            // because bundles that import their own exports still continue
-            // to provide access to their exports when they are required; i.e.,
-            // the implicitly reexport the packages if wired to another provider.
-            List<BundleCapability> caps = (m_revision.getWiring() != null)
-                ? m_revision.getWiring().getCapabilities(null)
-                : m_revision.getDeclaredCapabilities(null);
-            for (BundleCapability cap : caps)
-            {
-                if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
-                {
-                    pkgs.add((String)
-                        cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
-                }
-            }
-            // Grab all required and reexported required packages.
-            for (Entry<String, List<Blame>> entry : m_requiredPkgs.entrySet())
-            {
-                for (Blame blame : entry.getValue())
-                {
-                    String value = blame.m_reqs.get(
-                        blame.m_reqs.size() - 1).getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
-                    if ((value != null)
-                        && value.equals(Constants.VISIBILITY_REEXPORT))
-                    {
-                        pkgs.add((String)
-                            blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
-                        break;
-                    }
-                }
-            }
-            return pkgs;
         }
     }
 

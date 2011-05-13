@@ -20,13 +20,13 @@ package org.apache.felix.framework;
 
 import java.util.*;
 import org.apache.felix.framework.util.VersionRange;
-import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
@@ -237,7 +237,7 @@ class PackageAdminImpl implements PackageAdmin, Runnable
                 BundleRevisionImpl revision = (BundleRevisionImpl) revisions.get(modIdx);
                 if (revision.isResolved())
                 {
-                    List<FelixBundleWire> hostWires = revision.getWires();
+                    List<BundleWire> hostWires = revision.getWires();
                     for (int i = 0; (hostWires != null) && (i < hostWires.size()); i++)
                     {
                         Bundle b = hostWires.get(i).getProviderWiring().getBundle();

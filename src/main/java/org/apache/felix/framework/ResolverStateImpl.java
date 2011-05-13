@@ -35,12 +35,12 @@ import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.BundlePermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 class ResolverStateImpl implements Resolver.ResolverState
 {
@@ -145,7 +145,7 @@ class ResolverStateImpl implements Resolver.ResolverState
             // If so, then the framework must have chosen to have the revision
             // import rather than export the package, so we need to remove the
             // corresponding package capability from the package capability set.
-            for (FelixBundleWire w : ((BundleRevisionImpl) br).getWires())
+            for (BundleWire w : ((BundleRevisionImpl) br).getWires())
             {
                 if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {

@@ -48,6 +48,7 @@ import org.apache.felix.framework.resolver.Content;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.HostedRequirement;
 import org.apache.felix.framework.resolver.ResolveException;
+import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
@@ -58,7 +59,7 @@ import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.FelixBundleWire;
+import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
@@ -102,7 +103,9 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
     private final Bundle m_bundle;
 
     private List<BundleRevision> m_fragments = null;
-    private List<FelixBundleWire> m_wires = null;
+    private List<BundleWire> m_wires = null;
+    private Map<String, BundleRevision> m_importedPkgs = null;
+    private Map<String, List<BundleRevision>> m_requiredPkgs = null;
     private List<BundleRevision> m_dependentImporters = new ArrayList<BundleRevision>(0);
     private List<BundleRevision> m_dependentRequirers = new ArrayList<BundleRevision>(0);
     private volatile boolean m_isResolved = false;
@@ -446,12 +449,7 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
 
     public List<BundleWire> getRequiredWires(String namespace)
     {
-        return asBundleWires(m_wires);
-    }
-
-    private static List<BundleWire> asBundleWires(List<? extends BundleWire> l)
-    {
-        return (List<BundleWire>) l;
+        return m_wires;
     }
 
     public BundleRevision getRevision()
@@ -645,12 +643,55 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
         return m_id;
     }
 
-    public synchronized List<FelixBundleWire> getWires()
+// TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
+//       resolver to determine if a bundle can dynamically import.
+    public synchronized boolean hasPackageSource(String pkgName)
+    {
+        return (m_importedPkgs.containsKey(pkgName) || m_requiredPkgs.containsKey(pkgName));
+    }
+
+// TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
+//       to implement dynamic imports.
+    public synchronized BundleRevision getImportedPackageSource(String pkgName)
+    {
+        return m_importedPkgs.get(pkgName);
+    }
+
+    private synchronized List<BundleRevision> getRequiredPackageSources(String pkgName)
+    {
+        return m_requiredPkgs.get(pkgName);
+    }
+
+    public synchronized List<BundleWire> getWires()
     {
         return m_wires;
     }
 
-    public synchronized void setWires(List<FelixBundleWire> wires)
+    public synchronized void addDynamicWire(ResolverWire rw)
+    {
+        // This not only sets the wires for the module, but it also records
+        // the dependencies this module has on other modules (i.e., the provider
+        // end of the wire) to simplify bookkeeping.
+
+        BundleWire wire = new BundleWireImpl(
+            rw.getRequirer(),
+            rw.getRequirement(),
+            rw.getProvider(),
+            rw.getCapability());
+        m_wires.add(wire);
+        m_importedPkgs.put(
+            (String) wire.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
+            rw.getProvider());
+        
+// TODO: OSGi R4.3 - What's the correct way to handle this?
+//                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
+//                    .addDependentImporter(this);
+        ((BundleRevisionImpl) rw.getProvider()).addDependentImporter(this);
+    }
+
+    public synchronized void setWires(
+        List<ResolverWire> rws,
+        Map<ResolverWire, Set<String>> requiredPkgWires)
     {
         // This not only sets the wires for the module, but it also records
         // the dependencies this module has on other modules (i.e., the provider
@@ -661,43 +702,122 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
         // new wires. The wires are to the hosts to which the fragment is attached.
         boolean isFragment = Util.isFragment(this);
 
+        // Fragments are allowed to add new wires to existing wires, but
+        // normal bundles should never be wired again if they already 
+        // have wires.
+        if (!isFragment && (m_wires != null) && (rws != null))
+        {
+            throw new IllegalStateException("The revision already has wires.");
+        }
+
+        // Convert resolver wires to bundle wires and aggregate all imported
+        // or required packages.
+        List<BundleWire> wires = null;
+        Map<String, BundleRevision> importedPkgs = null;
+        Map<String, List<BundleRevision>> requiredPkgs = null;
+        if (rws != null)
+        {
+            wires = new ArrayList<BundleWire>(rws.size());
+            importedPkgs = new HashMap<String, BundleRevision>();
+            requiredPkgs = new HashMap<String, List<BundleRevision>>();
+
+            for (ResolverWire rw : rws)
+            {
+                wires.add(
+                    new BundleWireImpl(
+                        rw.getRequirer(),
+                        rw.getRequirement(),
+                        rw.getProvider(),
+                        rw.getCapability()));
+
+                if (isFragment)
+                {
+                    m_logger.log(
+                        Logger.LOG_DEBUG,
+                        "FRAGMENT WIRE: "
+                        + this + " -> hosted by -> " + rw.getProvider());
+                }
+                else
+                {
+                    m_logger.log(Logger.LOG_DEBUG, "WIRE: " + rw);
+
+                    if (rw.getCapability().getNamespace()
+                        .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    {
+                        importedPkgs.put(
+                            (String) rw.getCapability().getAttributes()
+                                .get(BundleCapabilityImpl.PACKAGE_ATTR),
+                            rw.getProvider());
+                    }
+                    else if (rw.getCapability().getNamespace()
+                        .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                    {
+                        for (String pkgName : requiredPkgWires.get(rw))
+                        {
+                            List<BundleRevision> revs = requiredPkgs.get(pkgName);
+                            if (revs != null)
+                            {
+                                revs.add(rw.getProvider());
+                            }
+                            else
+                            {
+                                revs = new ArrayList<BundleRevision>();
+                                revs.add(rw.getProvider());
+                                requiredPkgs.put(pkgName, revs);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Remove module from old wire modules' dependencies,
         // since we are no longer dependent on any the moduels
         // from the old wires.
         for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
         {
-            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+            if (m_wires.get(i).getCapability().getNamespace()
+                .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
             {
                 ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
                     .removeDependentRequirer(this);
             }
-            else if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+            else if (m_wires.get(i).getCapability().getNamespace()
+                .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
                 ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
                     .removeDependentImporter(this);
             }
         }
 
-        m_wires = wires;
+        // If we already have wires, then add new wires to existing list (this
+        // should only happen for fragments). Otherwise, simply set wires value.
+        if ((m_wires != null) && (wires != null))
+        {
+            m_wires.addAll(wires);
+        }
+        else
+        {
+            m_wires = wires;
+        }
+        m_importedPkgs = importedPkgs;
+        m_requiredPkgs = requiredPkgs;
 
         // Add ourself as a dependent to the new wires' modules.
-        for (int i = 0; !isFragment && (m_wires != null) && (i < m_wires.size()); i++)
+        if (!isFragment && (rws != null))
         {
-            if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+            for (ResolverWire rw : rws)
             {
-// TODO: OSGi R4.3 - What's the correct way to handle this?
-//                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
-//                    .addDependentRequirer(this);
-                ((BundleRevisionImpl) ((FelixBundleWire)
-                    m_wires.get(i)).getProvider()).addDependentRequirer(this);
-            }
-            else if (m_wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
-            {
-// TODO: OSGi R4.3 - What's the correct way to handle this?
-//                ((BundleRevisionImpl) m_wires.get(i).getProviderWiring().getRevision())
-//                    .addDependentImporter(this);
-                ((BundleRevisionImpl) ((FelixBundleWire)
-                    m_wires.get(i)).getProvider()).addDependentImporter(this);
+                if (rw.getCapability().getNamespace()
+                    .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                {
+                    ((BundleRevisionImpl) rw.getProvider()).addDependentRequirer(this);
+                }
+                else if (rw.getCapability().getNamespace()
+                    .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                {
+                    ((BundleRevisionImpl) rw.getProvider()).addDependentImporter(this);
+                }
             }
         }
     }
@@ -939,7 +1059,7 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
                 // Look in the revision's imports. Note that the search may
                 // be aborted if this method throws an exception, otherwise
                 // it continues if a null is returned.
-                result = searchImports(name, isClass);
+                result = searchImports(pkgName, name, isClass);
 
                 // If not found, try the revision's own class path.
                 if (result == null)
@@ -951,7 +1071,7 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
                     // If still not found, then try the revision's dynamic imports.
                     if (result == null)
                     {
-                        result = searchDynamicImports(name, pkgName, isClass);
+                        result = searchDynamicImports(pkgName, name, isClass);
                     }
                 }
             }
@@ -1119,59 +1239,46 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
             completeUrlList.add(urls);
         }
 
-        // Look in the module's imports.
-        // We delegate to the module's wires for the resources.
-        // If any resources are found, this means that the package of these
-        // resources is imported, we must not keep looking since we do not
-        // support split-packages.
-
-        // Note that the search may be aborted if this method throws an
-        // exception, otherwise it continues if a null is returned.
-        List<FelixBundleWire> wires = getWires();
-        for (int i = 0; (wires != null) && (i < wires.size()); i++)
+        // Look in the revisions's imported packages. If the package is
+        // imported, then we stop searching no matter the result since
+        // imported packages cannot be split.
+        BundleRevision provider = getImportedPackageSource(pkgName);
+        if (provider != null)
         {
-            if (wires.get(i).getRequirement().getNamespace()
-                .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+            // Delegate to the provider revision.
+            urls = ((BundleRevisionImpl) provider).getResourcesByDelegation(name);
+
+            // If we find any resources, then add them.
+            if ((urls != null) && (urls.hasMoreElements()))
             {
-                try
-                {
-                    // If we find the class or resource, then return it.
-                    urls = wires.get(i).getResources(name);
-                }
-                catch (ResourceNotFoundException ex)
-                {
-                    urls = null;
-                }
-                if (urls != null)
-                {
-                    completeUrlList.add(urls);
-                    return new CompoundEnumeration((Enumeration[])
-                        completeUrlList.toArray(new Enumeration[completeUrlList.size()]));
-                }
+                completeUrlList.add(urls);
             }
+
+            // Always return here since imported packages cannot be split
+            // across required bundles or the revision's content.
+            return new CompoundEnumeration((Enumeration[])
+                completeUrlList.toArray(new Enumeration[completeUrlList.size()]));
         }
 
         // See whether we can get the resource from the required bundles and
         // regardless of whether or not this is the case continue to the next
         // step potentially passing on the result of this search (if any).
-        for (int i = 0; (wires != null) && (i < wires.size()); i++)
+        List<BundleRevision> providers = getRequiredPackageSources(pkgName);
+        if (providers != null)
         {
-            if (wires.get(i).getRequirement().getNamespace()
-                .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+            for (BundleRevision p : providers)
             {
-                try
-                {
-                    // If we find the class or resource, then add it.
-                    urls = wires.get(i).getResources(name);
-                }
-                catch (ResourceNotFoundException ex)
-                {
-                    urls = null;
-                }
-                if (urls != null)
+                // Delegate to the provider revision.
+                urls = ((BundleRevisionImpl) p).getResourcesByDelegation(name);
+
+                // If we find any resources, then add them.
+                if ((urls != null) && (urls.hasMoreElements()))
                 {
                     completeUrlList.add(urls);
                 }
+
+                // Do not return here, since required packages can be split
+                // across the revision's content.
             }
         }
 
@@ -1189,26 +1296,21 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
             // At this point, the module's imports were searched and so was the
             // the module's content. Now we make an attempt to load the
             // class/resource via a dynamic import, if possible.
-            FelixBundleWire wire = null;
             try
             {
-                wire = m_resolver.resolve(this, pkgName);
+                provider = m_resolver.resolve(this, pkgName);
             }
             catch (ResolveException ex)
             {
                 // Ignore this since it is likely normal.
             }
-            if (wire != null)
+            if (provider != null)
             {
-                try
-                {
-                    urls = wire.getResources(name);
-                }
-                catch (ResourceNotFoundException ex)
-                {
-                    urls = null;
-                }
-                if (urls != null)
+                // Delegate to the provider revision.
+                urls = ((BundleRevisionImpl) provider).getResourcesByDelegation(name);
+
+                // If we find any resources, then add them.
+                if ((urls != null) && (urls.hasMoreElements()))
                 {
                     completeUrlList.add(urls);
                 }
@@ -1368,30 +1470,33 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
         return m_fragments;
     }
 
+    private synchronized void detachHost(BundleRevision host)
+    {
+        if (m_wires != null)
+        {
+            for (Iterator<BundleWire> it = m_wires.iterator(); it.hasNext(); )
+            {
+                BundleWire wire = it.next();
+                if (wire.getCapability().getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE)
+                    && wire.getProviderWiring().getRevision().equals(host))
+                {
+                    it.remove();
+                    break;
+                }
+            }
+        }
+    }
+
     public synchronized void attachFragments(List<BundleRevision> fragments) throws Exception
     {
         // Remove the host wires for this module from old fragments.
         // We will generally only remove host wires when we are uninstalling
         // the module.
-        for (int i = 0; (m_fragments != null) && (i < m_fragments.size()); i++)
+        if (m_fragments != null)
         {
-            // If the fragment has no wires, then there is no reason to try to
-            // remove ourself from its wires since it has apparently already
-            // been refreshed.
-            if (((BundleRevisionImpl) m_fragments.get(i)).getWires() != null)
+            for (BundleRevision fragment : m_fragments)
             {
-                List<FelixBundleWire> hostWires = new ArrayList<FelixBundleWire>(
-                    ((BundleRevisionImpl) m_fragments.get(i)).getWires());
-                for (Iterator<FelixBundleWire> it = hostWires.iterator(); it.hasNext(); )
-                {
-                    FelixBundleWire hostWire = it.next();
-                    if (hostWire.getProviderWiring().getRevision().equals(this))
-                    {
-                        it.remove();
-                        ((BundleRevisionImpl) m_fragments.get(i)).setWires(hostWires);
-                        break;
-                    }
-                }
+                ((BundleRevisionImpl) fragment).detachHost(this);
             }
         }
 
@@ -1565,20 +1670,52 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
         return parent;
     }
 
-    private Object searchImports(String name, boolean isClass)
+    private Object searchImports(String pkgName, String name, boolean isClass)
         throws ClassNotFoundException, ResourceNotFoundException
     {
-        // We delegate to the module's wires to find the class or resource.
-        List<FelixBundleWire> wires = getWires();
-        for (int i = 0; (wires != null) && (i < wires.size()); i++)
+        // Check if the package is imported.
+        BundleRevision provider = getImportedPackageSource(pkgName);
+        if (provider != null)
         {
             // If we find the class or resource, then return it.
             Object result = (isClass)
-                ? (Object) wires.get(i).getClass(name)
-                : (Object) wires.get(i).getResource(name);
+                ? (Object) ((BundleRevisionImpl) provider).getClassByDelegation(name)
+                : (Object) ((BundleRevisionImpl) provider).getResourceByDelegation(name);
             if (result != null)
             {
                 return result;
+            }
+
+            // If no class was found, then we must throw an exception
+            // since the provider of this package did not contain the
+            // requested class and imported packages are atomic.
+            throw new ClassNotFoundException(name);
+        }
+
+        // Check if the package is required.
+        List<BundleRevision> providers = getRequiredPackageSources(pkgName);
+        if (providers != null)
+        {
+            for (BundleRevision p : providers)
+            {
+                // If we find the class or resource, then return it.
+                try
+                {
+                    Object result = (isClass)
+                        ? (Object) ((BundleRevisionImpl) p).getClassByDelegation(name)
+                        : (Object) ((BundleRevisionImpl) p).getResourceByDelegation(name);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+                catch (ClassNotFoundException ex)
+                {
+                    // Since required packages can be split, don't throw an
+                    // exception here if it is not found. Instead, we'll just
+                    // continue searching other required bundles and the
+                    // revision's local content.
+                }
             }
         }
 
@@ -1586,16 +1723,16 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
     }
 
     private Object searchDynamicImports(
-        final String name, String pkgName, final boolean isClass)
+        final String pkgName, final String name, final boolean isClass)
         throws ClassNotFoundException, ResourceNotFoundException
     {
         // At this point, the module's imports were searched and so was the
         // the module's content. Now we make an attempt to load the
         // class/resource via a dynamic import, if possible.
-        FelixBundleWire wire = null;
+        BundleRevision provider = null;
         try
         {
-            wire = m_resolver.resolve(this, pkgName);
+            provider = m_resolver.resolve(this, pkgName);
         }
         catch (ResolveException ex)
         {
@@ -1604,15 +1741,15 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
 
         // If the dynamic import was successful, then this initial
         // time we must directly return the result from dynamically
-        // created wire, but subsequent requests for classes/resources
-        // in the associated package will be processed as part of
-        // normal static imports.
-        if (wire != null)
+        // created package sources, but subsequent requests for
+        // classes/resources in the associated package will be
+        // processed as part of normal static imports.
+        if (provider != null)
         {
             // Return the class or resource.
             return (isClass)
-                ? (Object) wire.getClass(name)
-                : (Object) wire.getResource(name);
+                ? (Object) ((BundleRevisionImpl) provider).getClassByDelegation(name)
+                : (Object) ((BundleRevisionImpl) provider).getResourceByDelegation(name);
         }
 
         // If implicit boot delegation is enabled, then try to guess whether
@@ -2362,7 +2499,7 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
         String importer = revision.getBundle().toString();
 
         // Next, check to see if the revision imports the package.
-        List<FelixBundleWire> wires = revision.getWires();
+        List<BundleWire> wires = revision.getWires();
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
@@ -2462,14 +2599,14 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
                 revision, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
             Set<BundleCapability> exporters = resolver.getCandidates(req, false);
 
-            FelixBundleWire wire = null;
+            BundleRevision provider = null;
             try
             {
-                wire = resolver.resolve(revision, pkgName);
+                provider = resolver.resolve(revision, pkgName);
             }
             catch (Exception ex)
             {
-                wire = null;
+                provider = null;
             }
 
             String exporter = (exporters.isEmpty())
@@ -2482,7 +2619,7 @@ public class BundleRevisionImpl implements BundleRevision, BundleWiring
             sb.append("' is dynamically imported by bundle ");
             sb.append(importer);
             sb.append(".");
-            if ((exporters.size() > 0) && (wire == null))
+            if ((exporters.size() > 0) && (provider == null))
             {
                 sb.append(" However, bundle ");
                 sb.append(exporter);
