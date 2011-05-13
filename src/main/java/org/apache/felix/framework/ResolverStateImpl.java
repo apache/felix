@@ -81,7 +81,9 @@ class ResolverStateImpl implements Resolver.ResolverState
     synchronized void addModule(Module m)
     {
         m_modules.add(m);
-        List<BundleCapabilityImpl> caps = m.getCapabilities();
+        List<BundleCapabilityImpl> caps = (m.isResolved())
+            ? m.getResolvedCapabilities()
+            : m.getDeclaredCapabilities();
         if (caps != null)
         {
             for (BundleCapabilityImpl cap : caps)
@@ -105,7 +107,9 @@ class ResolverStateImpl implements Resolver.ResolverState
     synchronized void removeModule(Module m)
     {
         m_modules.remove(m);
-        List<BundleCapabilityImpl> caps = m.getCapabilities();
+        List<BundleCapabilityImpl> caps = (m.isResolved())
+            ? m.getResolvedCapabilities()
+            : m.getDeclaredCapabilities();
         if (caps != null)
         {
             for (BundleCapabilityImpl cap : caps)
@@ -129,31 +133,26 @@ class ResolverStateImpl implements Resolver.ResolverState
         return new HashSet(m_fragments);
     }
 
-    synchronized void removeSubstitutedCapabilities(Module module)
+    synchronized void removeSubstitutedCapabilities(Module m)
     {
-        if (module.isResolved())
+        if (m.isResolved())
         {
             // Loop through the module's package wires and determine if any
             // of them overlap any of the packages exported by the module.
             // If so, then the framework must have chosen to have the module
             // import rather than export the package, so we need to remove the
             // corresponding package capability from the package capability set.
-            List<Wire> wires = module.getWires();
-            List<BundleCapabilityImpl> caps = module.getCapabilities();
-            for (int wireIdx = 0; (wires != null) && (wireIdx < wires.size()); wireIdx++)
+            for (Wire w : m.getWires())
             {
-                Wire wire = wires.get(wireIdx);
-                if (wire.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
-                    for (int capIdx = 0;
-                        (caps != null) && (capIdx < caps.size());
-                        capIdx++)
+                    for (BundleCapabilityImpl cap : m.getResolvedCapabilities())
                     {
-                        if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                            && wire.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
-                                .equals(caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
+                        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                            && w.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                                .equals(cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
                         {
-                            m_capSets.get(BundleCapabilityImpl.PACKAGE_NAMESPACE).removeCapability(caps.get(capIdx));
+                            m_capSets.get(BundleCapabilityImpl.PACKAGE_NAMESPACE).removeCapability(cap);
                             break;
                         }
                     }

@@ -40,15 +40,18 @@ public interface Module
     boolean isExtension();
     String getSymbolicName();
     Version getVersion();
-    List<BundleCapabilityImpl> getCapabilities();
-    List<BundleRequirementImpl> getRequirements();
-    List<BundleRequirementImpl> getDynamicRequirements();
+    List<BundleCapabilityImpl> getDeclaredCapabilities();
+    List<BundleRequirementImpl> getDeclaredRequirements();
+    List<BundleRequirementImpl> getDeclaredDynamicRequirements();
     List<R4Library> getNativeLibraries();
     int getDeclaredActivationPolicy();
 
     // Run-time data access methods.
     Bundle getBundle();
     String getId();
+    List<BundleCapabilityImpl> getResolvedCapabilities();
+    List<BundleRequirementImpl> getResolvedRequirements();
+    List<BundleRequirementImpl> getResolvedDynamicRequirements();
     List<Wire> getWires();
     boolean isResolved();
     Object getSecurityContext();

@@ -81,12 +81,12 @@ public class ModuleImpl implements Module
     private final String m_symbolicName;
     private final Version m_version;
 
-    private final List<BundleCapabilityImpl> m_capabilities;
-    private List<BundleCapabilityImpl> m_cachedCapabilities = null;
-    private final List<BundleRequirementImpl> m_requirements;
-    private List<BundleRequirementImpl> m_cachedRequirements = null;
-    private final List<BundleRequirementImpl> m_dynamicRequirements;
-    private List<BundleRequirementImpl> m_cachedDynamicRequirements = null;
+    private final List<BundleCapabilityImpl> m_declaredCaps;
+    private List<BundleCapabilityImpl> m_resolvedCaps = null;
+    private final List<BundleRequirementImpl> m_declaredReqs;
+    private List<BundleRequirementImpl> m_resolvedReqs = null;
+    private final List<BundleRequirementImpl> m_declaredDynReqs;
+    private List<BundleRequirementImpl> m_resolvedDynReqs = null;
     private final List<R4Library> m_nativeLibraries;
     private final int m_declaredActivationPolicy;
     private final List<String> m_activationIncludes;
@@ -183,9 +183,9 @@ public class ModuleImpl implements Module
         m_symbolicName = null;
         m_isExtension = false;
         m_version = null;
-        m_capabilities = null;
-        m_requirements = null;
-        m_dynamicRequirements = null;
+        m_declaredCaps = Collections.EMPTY_LIST;
+        m_declaredReqs = Collections.EMPTY_LIST;
+        m_declaredDynReqs = Collections.EMPTY_LIST;
         m_nativeLibraries = null;
         m_declaredActivationPolicy = EAGER_ACTIVATION;
         m_activationExcludes = null;
@@ -244,9 +244,9 @@ public class ModuleImpl implements Module
         // system bundle directly later on.
         m_manifestVersion = mp.getManifestVersion();
         m_version = mp.getBundleVersion();
-        m_capabilities = mp.isExtension() ? null : mp.getCapabilities();
-        m_requirements = mp.getRequirements();
-        m_dynamicRequirements = mp.getDynamicRequirements();
+        m_declaredCaps = mp.isExtension() ? null : mp.getCapabilities();
+        m_declaredReqs = mp.getRequirements();
+        m_declaredDynReqs = mp.getDynamicRequirements();
         m_nativeLibraries = mp.getLibraries();
         m_declaredActivationPolicy = mp.getActivationPolicy();
         m_activationExcludes = (mp.getActivationExcludeDirective() == null)
@@ -288,86 +288,108 @@ public class ModuleImpl implements Module
         return m_version;
     }
 
-    public synchronized List<BundleCapabilityImpl> getCapabilities()
+    public synchronized List<BundleCapabilityImpl> getDeclaredCapabilities()
     {
-        if (m_cachedCapabilities == null)
+        return m_declaredCaps;
+    }
+
+    public synchronized List<BundleCapabilityImpl> getResolvedCapabilities()
+    {
+        if (m_isResolved && (m_resolvedCaps == null))
         {
-            List capList = (m_capabilities == null)
+            List capList = (m_declaredCaps == null)
                 ? new ArrayList<BundleCapabilityImpl>()
-                : new ArrayList<BundleCapabilityImpl>(m_capabilities);
+                : new ArrayList<BundleCapabilityImpl>(m_declaredCaps);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<BundleCapabilityImpl> caps = m_fragments.get(fragIdx).getCapabilities();
+                List<BundleCapabilityImpl> caps =
+                    m_fragments.get(fragIdx).getDeclaredCapabilities();
                 for (int capIdx = 0;
                     (caps != null) && (capIdx < caps.size());
                     capIdx++)
                 {
-                    if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    if (caps.get(capIdx).getNamespace().equals(
+                        BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         capList.add(
                             new HostedCapability(this, caps.get(capIdx)));
                     }
                 }
             }
-            m_cachedCapabilities = Collections.unmodifiableList(capList);
+            m_resolvedCaps = Collections.unmodifiableList(capList);
         }
-        return m_cachedCapabilities;
+        return m_resolvedCaps;
     }
 
-    public synchronized List<BundleRequirementImpl> getRequirements()
+    public synchronized List<BundleRequirementImpl> getDeclaredRequirements()
     {
-        if (m_cachedRequirements == null)
+        return m_declaredReqs;
+    }
+
+    public synchronized List<BundleRequirementImpl> getResolvedRequirements()
+    {
+        if (m_isResolved && (m_resolvedReqs == null))
         {
-            List<BundleRequirementImpl> reqList = (m_requirements == null)
-                ? new ArrayList() : new ArrayList(m_requirements);
+            List<BundleRequirementImpl> reqList = (m_declaredReqs == null)
+                ? new ArrayList() : new ArrayList(m_declaredReqs);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<BundleRequirementImpl> reqs = m_fragments.get(fragIdx).getRequirements();
+                List<BundleRequirementImpl> reqs =
+                    m_fragments.get(fragIdx).getDeclaredRequirements();
                 for (int reqIdx = 0;
                     (reqs != null) && (reqIdx < reqs.size());
                     reqIdx++)
                 {
-                    if (reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                        || reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+                    if (reqs.get(reqIdx).getNamespace().equals(
+                            BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                        || reqs.get(reqIdx).getNamespace().equals(
+                            BundleCapabilityImpl.MODULE_NAMESPACE))
                     {
                         reqList.add(
                             new HostedRequirement(this, reqs.get(reqIdx)));
                     }
                 }
             }
-            m_cachedRequirements = Collections.unmodifiableList(reqList);
+            m_resolvedReqs = Collections.unmodifiableList(reqList);
         }
-        return m_cachedRequirements;
+        return m_resolvedReqs;
     }
 
-    public synchronized List<BundleRequirementImpl> getDynamicRequirements()
+    public synchronized List<BundleRequirementImpl> getDeclaredDynamicRequirements()
     {
-        if (m_cachedDynamicRequirements == null)
+        return m_declaredDynReqs;
+    }
+
+    public synchronized List<BundleRequirementImpl> getResolvedDynamicRequirements()
+    {
+        if (m_isResolved && (m_resolvedDynReqs == null))
         {
-            List<BundleRequirementImpl> reqList = (m_dynamicRequirements == null)
-                ? new ArrayList() : new ArrayList(m_dynamicRequirements);
+            List<BundleRequirementImpl> reqList = (m_declaredDynReqs == null)
+                ? new ArrayList() : new ArrayList(m_declaredDynReqs);
             for (int fragIdx = 0;
                 (m_fragments != null) && (fragIdx < m_fragments.size());
                 fragIdx++)
             {
-                List<BundleRequirementImpl> reqs = m_fragments.get(fragIdx).getDynamicRequirements();
+                List<BundleRequirementImpl> reqs =
+                    m_fragments.get(fragIdx).getDeclaredDynamicRequirements();
                 for (int reqIdx = 0;
                     (reqs != null) && (reqIdx < reqs.size());
                     reqIdx++)
                 {
-                    if (reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    if (reqs.get(reqIdx).getNamespace().equals(
+                        BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         reqList.add(reqs.get(reqIdx));
                     }
                 }
             }
-            m_cachedDynamicRequirements = Collections.unmodifiableList(reqList);
+            m_resolvedDynReqs = Collections.unmodifiableList(reqList);
         }
-        return m_cachedDynamicRequirements;
+        return m_resolvedDynReqs;
     }
 
     public synchronized List<R4Library> getNativeLibraries()
@@ -1216,9 +1238,9 @@ public class ModuleImpl implements Module
         m_contentPath = null;
 
         // Remove cached capabilities and requirements.
-        m_cachedCapabilities = null;
-        m_cachedRequirements = null;
-        m_cachedDynamicRequirements = null;
+        m_resolvedCaps = null;
+        m_resolvedReqs = null;
+        m_resolvedDynReqs = null;
 
         // Update the dependencies on the new fragments.
         m_fragments = fragments;
@@ -2238,7 +2260,7 @@ public class ModuleImpl implements Module
 
         // Next, check to see if the package was optionally imported and
         // whether or not there is an exporter available.
-        List<BundleRequirementImpl> reqs = module.getRequirements();
+        List<BundleRequirementImpl> reqs = module.getResolvedRequirements();
 /*
 * TODO: RB - Fix diagnostic message for optional imports.
         for (int i = 0; (reqs != null) && (i < reqs.length); i++)

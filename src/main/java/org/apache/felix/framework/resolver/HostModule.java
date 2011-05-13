@@ -60,81 +60,77 @@ class HostModule implements Module
         return m_host.getId();
     }
 
-    public List<BundleCapabilityImpl> getCapabilities()
+    public List<BundleCapabilityImpl> getDeclaredCapabilities()
     {
         if (m_cachedCapabilities == null)
         {
-            List<BundleCapabilityImpl> capList = new ArrayList<BundleCapabilityImpl>();
+            List<BundleCapabilityImpl> caps = new ArrayList<BundleCapabilityImpl>();
 
             // Wrap host capabilities.
-            List<BundleCapabilityImpl> caps = m_host.getCapabilities();
-            for (int capIdx = 0;
-                (caps != null) && (capIdx < caps.size());
-                capIdx++)
+            for (BundleCapabilityImpl cap : m_host.getDeclaredCapabilities())
             {
-                capList.add(
-                    new HostedCapability(this, caps.get(capIdx)));
+                caps.add(new HostedCapability(this, cap));
             }
 
             // Wrap fragment capabilities.
-            for (int fragIdx = 0;
-                (m_fragments != null) && (fragIdx < m_fragments.size());
-                fragIdx++)
+            if (m_fragments != null)
             {
-                caps = m_fragments.get(fragIdx).getCapabilities();
-                for (int capIdx = 0;
-                    (caps != null) && (capIdx < caps.size());
-                    capIdx++)
+                for (Module fragment : m_fragments)
                 {
-                    if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    for (BundleCapabilityImpl cap : fragment.getDeclaredCapabilities())
                     {
-                        capList.add(
-                            new HostedCapability(this, caps.get(capIdx)));
+                        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                        {
+                            caps.add(new HostedCapability(this, cap));
+                        }
                     }
                 }
             }
-            m_cachedCapabilities = Collections.unmodifiableList(capList);
+            m_cachedCapabilities = Collections.unmodifiableList(caps);
         }
         return m_cachedCapabilities;
     }
 
-    public List<BundleRequirementImpl> getRequirements()
+    public List<BundleCapabilityImpl> getResolvedCapabilities()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public List<BundleRequirementImpl> getDeclaredRequirements()
     {
         if (m_cachedRequirements == null)
         {
-            List<BundleRequirementImpl> reqList = new ArrayList<BundleRequirementImpl>();
+            List<BundleRequirementImpl> reqs = new ArrayList<BundleRequirementImpl>();
 
             // Wrap host requirements.
-            List<BundleRequirementImpl> reqs = m_host.getRequirements();
-            for (int reqIdx = 0;
-                (reqs != null) && (reqIdx < reqs.size());
-                reqIdx++)
+            for (BundleRequirementImpl req : m_host.getDeclaredRequirements())
             {
-                reqList.add(
-                    new HostedRequirement(this, reqs.get(reqIdx)));
+                reqs.add(new HostedRequirement(this, req));
             }
 
             // Wrap fragment requirements.
-            for (int fragIdx = 0;
-                (m_fragments != null) && (fragIdx < m_fragments.size());
-                fragIdx++)
+            if (m_fragments != null)
             {
-                reqs = m_fragments.get(fragIdx).getRequirements();
-                for (int reqIdx = 0;
-                    (reqs != null) && (reqIdx < reqs.size());
-                    reqIdx++)
+                for (Module fragment : m_fragments)
                 {
-                    if (reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                        || reqs.get(reqIdx).getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+                    for (BundleRequirementImpl req : fragment.getDeclaredRequirements())
                     {
-                        reqList.add(
-                            new HostedRequirement(this, reqs.get(reqIdx)));
+                        if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                            || req.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+                        {
+                            reqs.add(new HostedRequirement(this, req));
+                        }
                     }
                 }
             }
-            m_cachedRequirements = Collections.unmodifiableList(reqList);
+            m_cachedRequirements = Collections.unmodifiableList(reqs);
         }
         return m_cachedRequirements;
+    }
+
+    public List<BundleRequirementImpl> getResolvedRequirements()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public String toString()
@@ -162,7 +158,12 @@ class HostModule implements Module
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public List<BundleRequirementImpl> getDynamicRequirements()
+    public List<BundleRequirementImpl> getDeclaredDynamicRequirements()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public List<BundleRequirementImpl> getResolvedDynamicRequirements()
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }

@@ -214,7 +214,7 @@ class Candidates
             localCandidateMap = new HashMap();
 
             // Create a modifiable list of the module's requirements.
-            remainingReqs = new ArrayList(module.getRequirements());
+            remainingReqs = new ArrayList(module.getDeclaredRequirements());
 
             // Add these value to the result cache so we know we are
             // in the middle of populating candidates for the current
@@ -313,6 +313,16 @@ class Candidates
 
     public final void populateOptional(ResolverState state, Module module)
     {
+        // We will always attempt to populate optional fragments, since this
+        // is necessary for greedy resolving of fragment. Howevere, we'll only
+        // attempt to populate optional non-fragment modules if they aren't
+        // already resolved.
+        boolean isFragment = Util.isFragment(module);
+        if (!isFragment && module.isResolved())
+        {
+            return;
+        }
+
         try
         {
             // If the optional module is a fragment, then we only want to populate
@@ -320,7 +330,6 @@ class Candidates
             // modules. We do this to avoid unnecessary work in prepare(). If the
             // fragment has a host, we'll prepopulate the result cache here to avoid
             // having to do the host lookup again in populate().
-            boolean isFragment = Util.isFragment(module);
             if (isFragment)
             {
                 // Get the current result cache value, to make sure the module
@@ -329,11 +338,13 @@ class Candidates
                 if (cacheValue == null)
                 {
                     // Create a modifiable list of the module's requirements.
-                    List<BundleRequirementImpl> remainingReqs = new ArrayList(module.getRequirements());
+                    List<BundleRequirementImpl> remainingReqs =
+                        new ArrayList(module.getDeclaredRequirements());
 
                     // Find the host requirement.
                     BundleRequirementImpl hostReq = null;
-                    for (Iterator<BundleRequirementImpl> it = remainingReqs.iterator(); it.hasNext(); )
+                    for (Iterator<BundleRequirementImpl> it = remainingReqs.iterator();
+                        it.hasNext(); )
                     {
                         BundleRequirementImpl r = it.next();
                         if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
@@ -691,7 +702,7 @@ class Candidates
         {
             // Replaces capabilities from fragments with the capabilities
             // from the merged host.
-            for (BundleCapabilityImpl c : hostModule.getCapabilities())
+            for (BundleCapabilityImpl c : hostModule.getDeclaredCapabilities())
             {
                 Set<BundleRequirementImpl> dependents =
                     m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
@@ -709,7 +720,7 @@ class Candidates
             // Copies candidates for fragment requirements to the host.
             // This doesn't record the reverse dependency, but that
             // information should not be needed at this point anymore.
-            for (BundleRequirementImpl r : hostModule.getRequirements())
+            for (BundleRequirementImpl r : hostModule.getDeclaredRequirements())
             {
                 SortedSet<BundleCapabilityImpl> cands =
                     m_candidateMap.get(((HostedRequirement) r).getDeclaredRequirement());
@@ -809,12 +820,12 @@ class Candidates
     **/
     private void remove(Module m, Set<Module> unresolvedModules) throws ResolveException
     {
-        for (BundleRequirementImpl r : m.getRequirements())
+        for (BundleRequirementImpl r : m.getDeclaredRequirements())
         {
             remove(r);
         }
 
-        for (BundleCapabilityImpl c : m.getCapabilities())
+        for (BundleCapabilityImpl c : m.getDeclaredCapabilities())
         {
             remove(c, unresolvedModules);
         }
@@ -958,7 +969,10 @@ class Candidates
         {
             System.out.println("  " + module
                  + " (" + (module.isResolved() ? "RESOLVED)" : "UNRESOLVED)"));
-            for (BundleRequirementImpl req : module.getRequirements())
+            List<BundleRequirementImpl> reqs = (module.isResolved())
+                ? module.getResolvedRequirements()
+                : module.getDeclaredRequirements();
+            for (BundleRequirementImpl req : reqs)
             {
                 Set<BundleCapabilityImpl> candidates = m_candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
@@ -966,7 +980,10 @@ class Candidates
                     System.out.println("    " + req + ": " + candidates);
                 }
             }
-            for (BundleRequirementImpl req : module.getDynamicRequirements())
+            reqs = (module.isResolved())
+                ? module.getResolvedDynamicRequirements()
+                : module.getDeclaredDynamicRequirements();
+            for (BundleRequirementImpl req : reqs)
             {
                 Set<BundleCapabilityImpl> candidates = m_candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
