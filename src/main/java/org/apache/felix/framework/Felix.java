@@ -4579,20 +4579,15 @@ public class Felix extends BundleImpl implements Framework
             // visibility, since we need to include those packages too.
             if (br.getWiring() == null)
             {
-System.out.println("+++ br.getWiring() = " + br.getWiring());
                 for (ResolverWire rw : wireMap.get(br))
                 {
-System.out.println("+++ rw.getCapability() = " + rw.getCapability());
-System.out.println("+++ rw.getRequirement() = " + rw.getRequirement());
                     if (rw.getCapability().getNamespace().equals(
                         BundleCapabilityImpl.BUNDLE_NAMESPACE))
                     {
                         String dir = rw.getRequirement()
                             .getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
-System.out.println("+++ dir = " + dir);
                         if ((dir != null) && (dir.equals(Constants.VISIBILITY_REEXPORT)))
                         {
-System.out.println("+++ rw.getProvider() = " + rw.getProvider());
                             calculateExportedAndReexportedPackages(
                                 rw.getProvider(),
                                 wireMap,

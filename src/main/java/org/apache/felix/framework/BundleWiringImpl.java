@@ -41,7 +41,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.cache.JarContent;
-import org.apache.felix.framework.resolver.Content;
+import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.HostedRequirement;
 import org.apache.felix.framework.resolver.ResolveException;
@@ -54,7 +54,6 @@ import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
@@ -403,7 +402,7 @@ public class BundleWiringImpl implements BundleWiring
         return m_wires;
     }
 
-    public synchronized void addDynamicWire(BundleWireImpl wire)
+    public synchronized void addDynamicWire(BundleWire wire)
     {
         m_wires.add(wire);
         m_importedPkgs.put(

@@ -32,7 +32,6 @@ import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.ZipFileX;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.resolver.Content;
 
 /**
  * <p>

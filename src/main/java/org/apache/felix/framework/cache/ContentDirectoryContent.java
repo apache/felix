@@ -18,7 +18,6 @@
  */
 package org.apache.felix.framework.cache;
 
-import org.apache.felix.framework.resolver.Content;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
