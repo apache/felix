@@ -18,12 +18,9 @@
  */
 package org.apache.felix.framework;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
-import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.packageadmin.RequiredBundle;
 
 class RequiredBundleImpl implements RequiredBundle

@@ -18,7 +18,6 @@
  */
 package org.apache.felix.framework.cache;
 
-import org.apache.felix.framework.resolver.Content;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;

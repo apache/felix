@@ -28,7 +28,15 @@ import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.ext.SecurityProvider;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
-import org.osgi.framework.*;
+import org.osgi.framework.AdminPermission;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServicePermission;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
