@@ -19,14 +19,14 @@
 package org.apache.felix.framework;
 
 import java.util.*;
-import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.VersionRange;
+import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
@@ -114,7 +114,7 @@ class PackageAdminImpl implements PackageAdmin, Runnable
             String sym = bundles[i].getSymbolicName();
             if ((sym != null) && sym.equals(symbolicName))
             {
-                Version v = ((BundleImpl) bundles[i]).getCurrentModule().getVersion();
+                Version v = ((BundleImpl) bundles[i]).getCurrentRevision().getVersion();
                 if ((vr == null) || vr.isInRange(v))
                 {
                     list.add(bundles[i]);
@@ -129,8 +129,8 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         Arrays.sort(bundles,new Comparator() {
             public int compare(Object o1, Object o2)
             {
-                Version v1 = ((BundleImpl) o1).getCurrentModule().getVersion();
-                Version v2 = ((BundleImpl) o2).getCurrentModule().getVersion();
+                Version v1 = ((BundleImpl) o1).getCurrentRevision().getVersion();
+                Version v2 = ((BundleImpl) o2).getCurrentRevision().getVersion();
                 // Compare in reverse order to get descending sort.
                 return v2.compareTo(v1);
             }
@@ -140,7 +140,8 @@ class PackageAdminImpl implements PackageAdmin, Runnable
 
     public int getBundleType(Bundle bundle)
     {
-        Map headerMap = ((BundleImpl) bundle).getCurrentModule().getHeaders();
+        Map headerMap = ((BundleRevisionImpl)
+            ((BundleImpl) bundle).getCurrentRevision()).getHeaders();
         if (headerMap.containsKey(Constants.FRAGMENT_HOST))
         {
             return PackageAdmin.BUNDLE_TYPE_FRAGMENT;
@@ -195,15 +196,15 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) == 0)
         {
             List<Bundle> list = new ArrayList<Bundle>();
-            // Iterate through modules
-            List<Module> modules = ((BundleImpl) bundle).getModules();
-            for (int modIdx = 0; modIdx < modules.size(); modIdx++)
+            // Iterate through revisions
+            List<BundleRevision> revisions = ((BundleImpl) bundle).getRevisions();
+            for (int modIdx = 0; modIdx < revisions.size(); modIdx++)
             {
                 // Get attached fragments.
-                ModuleImpl module = (ModuleImpl) modules.get(modIdx);
-                if (module.isResolved())
+                BundleRevisionImpl revision = (BundleRevisionImpl) revisions.get(modIdx);
+                if (revision.isResolved())
                 {
-                    List<Module> fragments = module.getFragments();
+                    List<BundleRevision> fragments = revision.getFragments();
                     for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
                     {
                         Bundle b = fragments.get(i).getBundle();
@@ -215,7 +216,7 @@ class PackageAdminImpl implements PackageAdmin, Runnable
                 }
             }
             // Convert list to an array.
-            return (list.size() == 0)
+            return (list.isEmpty())
                 ? null
                 : (Bundle[]) list.toArray(new Bundle[list.size()]);
         }
@@ -228,18 +229,18 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) != 0)
         {
             List<Bundle> list = new ArrayList<Bundle>();
-            // Iterate through modules
-            List<Module> modules = ((BundleImpl) bundle).getModules();
-            for (int modIdx = 0; modIdx < modules.size(); modIdx++)
+            // Iterate through revisions
+            List<BundleRevision> revisions = ((BundleImpl) bundle).getRevisions();
+            for (int modIdx = 0; modIdx < revisions.size(); modIdx++)
             {
                 // Get hosts
-                ModuleImpl module = (ModuleImpl) modules.get(modIdx);
-                if (module.isResolved())
+                BundleRevisionImpl revision = (BundleRevisionImpl) revisions.get(modIdx);
+                if (revision.isResolved())
                 {
-                    List<Wire> hostWires = module.getWires();
+                    List<FelixBundleWire> hostWires = revision.getWires();
                     for (int i = 0; (hostWires != null) && (i < hostWires.size()); i++)
                     {
-                        Bundle b = hostWires.get(i).getExporter().getBundle();
+                        Bundle b = hostWires.get(i).getProviderWiring().getBundle();
                         if (b != null)
                         {
                             list.add(b);
@@ -263,12 +264,12 @@ class PackageAdminImpl implements PackageAdmin, Runnable
         {
             BundleImpl impl = (BundleImpl) bundles[i];
             if ((symbolicName == null)
-                || (symbolicName.equals(impl.getCurrentModule().getSymbolicName())))
+                || (symbolicName.equals(impl.getCurrentRevision().getSymbolicName())))
             {
                 list.add(new RequiredBundleImpl(m_felix, impl));
             }
         }
-        return (list.size() == 0)
+        return (list.isEmpty())
             ? null
             : (RequiredBundle[]) list.toArray(new RequiredBundle[list.size()]);
     }

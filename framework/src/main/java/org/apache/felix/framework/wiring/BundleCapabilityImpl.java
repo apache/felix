@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.List;
 import java.util.StringTokenizer;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
@@ -35,7 +34,7 @@ import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleCapabilityImpl implements BundleCapability
 {
-    public static final String MODULE_NAMESPACE = "module";
+    public static final String BUNDLE_NAMESPACE = "module";
     public static final String HOST_NAMESPACE = "host";
     public static final String PACKAGE_NAMESPACE = "package";
     public static final String SINGLETON_NAMESPACE = "singleton";
@@ -43,7 +42,7 @@ public class BundleCapabilityImpl implements BundleCapability
     public static final String PACKAGE_ATTR = "package";
     public static final String VERSION_ATTR = "version";
 
-    private final Module m_module;
+    private final BundleRevision m_revision;
     private final String m_namespace;
     private final Map<String, String> m_dirs;
     private final Map<String, Object> m_attrs;
@@ -52,11 +51,11 @@ public class BundleCapabilityImpl implements BundleCapability
     private final List<List<String>> m_excludeFilter;
     private final Set<String> m_mandatory;
 
-    public BundleCapabilityImpl(Module module, String namespace,
+    public BundleCapabilityImpl(BundleRevision revision, String namespace,
         Map<String, String> dirs, Map<String, Object> attrs)
     {
         m_namespace = namespace;
-        m_module = module;
+        m_revision = revision;
         m_dirs = Collections.unmodifiableMap(dirs);
         m_attrs = Collections.unmodifiableMap(attrs);
 
@@ -128,14 +127,9 @@ public class BundleCapabilityImpl implements BundleCapability
         }
     }
 
-    public Module getModule()
-    {
-        return m_module;
-    }
-
     public BundleRevision getRevision()
     {
-        return null;
+        return m_revision;
     }
 
     public String getNamespace()
@@ -197,15 +191,15 @@ public class BundleCapabilityImpl implements BundleCapability
 
     public String toString()
     {
-        if (m_module == null)
+        if (m_revision == null)
         {
             return m_attrs.toString();
         }
         if (m_namespace.equals(PACKAGE_NAMESPACE))
         {
-            return "[" + m_module + "] "
+            return "[" + m_revision + "] "
                 + m_namespace + "; " + m_attrs.get(PACKAGE_ATTR);
         }
-        return "[" + m_module + "] " + m_namespace + "; " + m_attrs;
+        return "[" + m_revision + "] " + m_namespace + "; " + m_attrs;
     }
 }

@@ -26,16 +26,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
-import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.apache.felix.framework.wiring.FelixBundleWire;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class Util
 {
@@ -85,11 +86,11 @@ public class Util
     }
 
     /**
-     * Converts a module identifier to a bundle identifier. Module IDs
+     * Converts a revision identifier to a bundle identifier. Revision IDs
      * are typically <tt>&lt;bundle-id&gt;.&lt;revision&gt;</tt>; this
      * method returns only the portion corresponding to the bundle ID.
     **/
-    public static long getBundleIdFromModuleId(String id)
+    public static long getBundleIdFromRevisionId(String id)
     {
         try
         {
@@ -279,17 +280,18 @@ public class Util
         return allow;
     }
 
-    public static BundleCapabilityImpl getSatisfyingCapability(Module m, BundleRequirementImpl req)
+    public static BundleCapability getSatisfyingCapability(
+        BundleRevision br, BundleRequirementImpl req)
     {
-        List<BundleCapabilityImpl> caps = (m.isResolved())
-            ? m.getResolvedCapabilities()
-            : m.getDeclaredCapabilities();
+        List<BundleCapability> caps = (br.getWiring() != null)
+            ? br.getWiring().getCapabilities(null)
+            : br.getDeclaredCapabilities(null);
         if (caps != null)
         {
-            for (BundleCapabilityImpl cap : caps)
+            for (BundleCapability cap : caps)
             {
                 if (cap.getNamespace().equals(req.getNamespace())
-                    && CapabilitySet.matches(cap, req.getFilter()))
+                    && CapabilitySet.matches((BundleCapabilityImpl) cap, req.getFilter()))
                 {
                     return cap;
                 }
@@ -301,19 +303,20 @@ public class Util
     /**
      * Returns all the capabilities from a module that has a specified namespace.
      *
-     * @param m    module providing capabilities
+     * @param br    module providing capabilities
      * @param namespace capability namespace
      * @return array of matching capabilities or empty if none found
      */
-    public static List<BundleCapabilityImpl> getCapabilityByNamespace(Module m, String namespace)
+    public static List<BundleCapability> getCapabilityByNamespace(
+        BundleRevision br, String namespace)
     {
-        final List<BundleCapabilityImpl> matching = new ArrayList();
-        final List<BundleCapabilityImpl> caps = (m.isResolved())
-            ? m.getResolvedCapabilities()
-            : m.getDeclaredCapabilities();
+        final List<BundleCapability> matching = new ArrayList();
+        final List<BundleCapability> caps = (br.getWiring() != null)
+            ? br.getWiring().getCapabilities(null)
+            : br.getDeclaredCapabilities(null);
         if (caps != null)
         {
-            for (BundleCapabilityImpl cap : caps)
+            for (BundleCapability cap : caps)
             {
                 if (cap.getNamespace().equals(namespace))
                 {
@@ -324,12 +327,12 @@ public class Util
         return matching;
     }
 
-    public static Wire getWire(Module m, String name)
+    public static FelixBundleWire getWire(BundleRevision br, String name)
     {
-        List<Wire> wires = m.getWires();
+        List<FelixBundleWire> wires = ((BundleRevisionImpl) br).getWires();
         if (wires != null)
         {
-            for (Wire w : wires)
+            for (FelixBundleWire w : wires)
             {
                 if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
                     w.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
@@ -587,9 +590,8 @@ public class Util
      * @return <code>true</code> if the module declares a fragment host, <code>false</code>
      *      otherwise.
      */
-    public static boolean isFragment(Module module)
+    public static boolean isFragment(BundleRevision revision)
     {
-        Map headerMap = module.getHeaders();
-        return headerMap.containsKey(Constants.FRAGMENT_HOST);
+        return ((revision.getTypes() & BundleRevision.TYPE_FRAGMENT) > 0);
     }
 }

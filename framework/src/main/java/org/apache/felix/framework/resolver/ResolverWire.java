@@ -18,27 +18,32 @@
  */
 package org.apache.felix.framework.resolver;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
-public interface Resolver
+public interface ResolverWire
 {
-    Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, Set<BundleRevision> optional);
-    Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, String pkgName,
-        Set<BundleRevision> fragments);
-
-    public static interface ResolverState
-    {
-        SortedSet<BundleCapability> getCandidates(
-            BundleRequirementImpl req, boolean obeyMandatory);
-        void checkExecutionEnvironment(BundleRevision revision) throws ResolveException;
-        void checkNativeLibraries(BundleRevision revision) throws ResolveException;
-    }
+    /**
+     * Returns the importing bundle revision.
+     * @return The importing bundle revision.
+    **/
+    public BundleRevision getRequirer();
+    /**
+     * Returns the associated requirement from the importing bundle revision
+     * that resulted in the creation of this wire.
+     * @return
+    **/
+    public BundleRequirement getRequirement();
+    /**
+     * Returns the exporting bundle revision.
+     * @return The exporting bundle revision.
+    **/
+    public BundleRevision getProvider();
+    /**
+     * Returns the associated capability from the exporting bundle revision
+     * that satisfies the requirement of the importing bundle revision.
+     * @return
+    **/
+    public BundleCapability getCapability();
 }

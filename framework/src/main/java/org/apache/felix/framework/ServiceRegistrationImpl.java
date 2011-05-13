@@ -22,15 +22,15 @@ import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
-import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.resolver.Wire;
 
 import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.FelixBundleWire;
 import org.osgi.framework.*;
 import org.osgi.framework.BundleReference;
+import org.osgi.framework.wiring.BundleRevision;
 
 class ServiceRegistrationImpl implements ServiceRegistration
 {
@@ -403,7 +403,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         //
 
         @Override
-        public Module getModule()
+        public BundleRevision getRevision()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -485,12 +485,12 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // Get the package.
             String pkgName =
                 Util.getClassPackage(className);
-            Module requesterModule = ((BundleImpl) requester).getCurrentModule();
+            BundleRevision requesterRevision = ((BundleImpl) requester).getCurrentRevision();
             // Get package wiring from service requester.
-            Wire requesterWire = Util.getWire(requesterModule, pkgName);
+            FelixBundleWire requesterWire = Util.getWire(requesterRevision, pkgName);
             // Get package wiring from service provider.
-            Module providerModule = ((BundleImpl) m_bundle).getCurrentModule();
-            Wire providerWire = Util.getWire(providerModule, pkgName);
+            BundleRevision providerRevision = ((BundleImpl) m_bundle).getCurrentRevision();
+            FelixBundleWire providerWire = Util.getWire(providerRevision, pkgName);
 
             // There are four situations that may occur here:
             //   1. Neither the requester, nor provider have wires for the package.
@@ -505,10 +505,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // the service is wired. Otherwise, as in case 1, if the requester
             // does not have access to the class at all, we do not filter, but if
             // it does have access we check if it is the same class accessible to
-            // the providing module. For case 3, the provider will not have a wire
+            // the providing revision. For case 3, the provider will not have a wire
             // if it is exporting the package, so we determine if the requester
             // is wired to it or somehow using the same class. For case 4, we
-            // simply compare the exporting modules from the package wiring to
+            // simply compare the exporting revisions from the package wiring to
             // determine if we need to filter the service reference.
 
             // Case 1: Both requester and provider have no wire.
@@ -518,7 +518,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 // registration must have same class as requester.
                 try
                 {
-                    Class requestClass = requesterModule.getClassByDelegation(className);
+                    Class requestClass =
+                        ((BundleRevisionImpl) requesterRevision).getClassByDelegation(className);
                     allow = getRegistration().isClassAccessible(requestClass);
                 }
                 catch (Exception ex)
@@ -532,7 +533,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             else if ((requesterWire == null) && (providerWire != null))
             {
                 // Allow if the requester is the exporter of the provider's wire.
-                if (providerWire.getExporter().equals(requesterModule))
+                if (providerWire.getProviderWiring().getRevision().equals(requesterRevision))
                 {
                     allow = true;
                 }
@@ -543,7 +544,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Try to load class from requester.
-                        Class requestClass = requesterModule.getClassByDelegation(className);
+                        Class requestClass =((BundleRevisionImpl)
+                            requesterRevision).getClassByDelegation(className);
                         try
                         {
                             // If requester has access to the class, verify it is the
@@ -569,9 +571,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 // If the provider is the exporter of the requester's package, then check
                 // if the requester is wired to the latest version of the provider, if so
                 // then allow else don't (the provider has been updated but not refreshed).
-                if (((BundleImpl) m_bundle).hasModule(requesterWire.getExporter()))
+                if (((BundleImpl) m_bundle).hasRevision(
+                    requesterWire.getProviderWiring().getRevision()))
                 {
-                    allow = providerModule.equals(requesterWire.getExporter());
+                    allow = providerRevision.equals(requesterWire.getProviderWiring().getRevision());
                 }
                 // If the provider is not the exporter of the requester's package,
                 // then try to use the service registration to see if the requester's
@@ -581,7 +584,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Load the class from the requesting bundle.
-                        Class requestClass = requesterModule.getClassByDelegation(className);
+                        Class requestClass = ((BundleRevisionImpl)
+                            requesterRevision).getClassByDelegation(className);
                         // Get the service registration and ask it to check
                         // if the service object is assignable to the requesting
                         // bundle's class.
@@ -598,8 +602,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
             else
             {
                 // Include service reference if the wires have the
-                // same source module.
-                allow = providerWire.getExporter().equals(requesterWire.getExporter());
+                // same source revision.
+                allow = providerWire.getProviderWiring().getRevision()
+                    .equals(requesterWire.getProviderWiring().getRevision());
             }
 
             return allow;

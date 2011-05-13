@@ -29,12 +29,12 @@ import java.util.Set;
 import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class FilterImpl implements Filter
 {
@@ -93,7 +93,7 @@ public class FilterImpl implements Filter
         }
 
         @Override
-        public Module getModule()
+        public BundleRevision getRevision()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }

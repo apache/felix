@@ -21,16 +21,18 @@ package org.apache.felix.framework.resolver;
 import java.util.List;
 import java.util.Map;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class HostedCapability extends BundleCapabilityImpl
 {
-    private final Module m_host;
+    private final BundleRevision m_host;
     private final BundleCapabilityImpl m_cap;
 
-    public HostedCapability(Module module, BundleCapabilityImpl cap)
+    public HostedCapability(BundleRevision host, BundleCapabilityImpl cap)
     {
-        super(module, cap.getNamespace(), cap.getDirectives(), cap.getAttributes());
-        m_host = module;
+        super(host, cap.getNamespace(), cap.getDirectives(), cap.getAttributes());
+        m_host = host;
         m_cap = cap;
     }
 
@@ -72,7 +74,7 @@ public class HostedCapability extends BundleCapabilityImpl
     }
 
     @Override
-    public Module getModule()
+    public BundleRevision getRevision()
     {
         return m_host;
     }

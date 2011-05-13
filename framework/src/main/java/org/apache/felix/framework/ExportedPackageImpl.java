@@ -19,27 +19,28 @@
 package org.apache.felix.framework;
 
 import java.util.List;
-import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.packageadmin.ExportedPackage;
 
 class ExportedPackageImpl implements ExportedPackage
 {
     private final Felix m_felix;
     private final BundleImpl m_exportingBundle;
-    private final Module m_exportingModule;
-    private final BundleCapabilityImpl m_export;
+    private final BundleRevision m_exportingRevision;
+    private final BundleCapability m_export;
     private final String m_pkgName;
     private final Version m_version;
 
     public ExportedPackageImpl(
-        Felix felix, BundleImpl exporter, Module module, BundleCapabilityImpl export)
+        Felix felix, BundleImpl exporter, BundleRevision revision, BundleCapability export)
     {
         m_felix = felix;
         m_exportingBundle = exporter;
-        m_exportingModule = module;
+        m_exportingRevision = revision;
         m_export = export;
         m_pkgName = (String) m_export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
         m_version = (!m_export.getAttributes().containsKey(BundleCapabilityImpl.VERSION_ATTR))

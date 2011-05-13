@@ -18,32 +18,53 @@
  */
 package org.apache.felix.framework.resolver;
 
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
-public class ResolveException extends RuntimeException
+class ResolverWireImpl implements ResolverWire
 {
-    private final BundleRevision m_revision;
+    private final BundleRevision m_requirer;
     private final BundleRequirement m_req;
+    private final BundleRevision m_provider;
+    private final BundleCapability m_cap;
 
-    /**
-     * Constructs an instance of <code>ResolveException</code> with the specified detail message.
-     * @param msg the detail message.
-     */
-    public ResolveException(String msg, BundleRevision revision, BundleRequirement req)
+    public ResolverWireImpl(BundleRevision requirer, BundleRequirement req,
+        BundleRevision provider, BundleCapability cap)
     {
-        super(msg);
-        m_revision = revision;
+        m_requirer = requirer;
         m_req = req;
+        m_provider = provider;
+        m_cap = cap;
     }
 
-    public BundleRevision getRevision()
+    public BundleRevision getRequirer()
     {
-        return m_revision;
+        return m_requirer;
     }
 
     public BundleRequirement getRequirement()
     {
         return m_req;
+    }
+
+    public BundleRevision getProvider()
+    {
+        return m_provider;
+    }
+
+    public BundleCapability getCapability()
+    {
+        return m_cap;
+    }
+
+    public String toString()
+    {
+        return "[" + m_requirer + "] "
+            + m_req
+            + " -> "
+            + "[" + m_provider + "]";
     }
 }
