@@ -317,7 +317,7 @@ public class ResolverImpl implements Resolver
 
     private static BundleCapabilityImpl getHostCapability(Module m)
     {
-        for (BundleCapabilityImpl c : m.getCapabilities())
+        for (BundleCapabilityImpl c : m.getDeclaredCapabilities())
         {
             if (c.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
             {
@@ -329,7 +329,7 @@ public class ResolverImpl implements Resolver
 
     private static BundleRequirementImpl getHostRequirement(Module m)
     {
-        for (BundleRequirementImpl r : m.getRequirements())
+        for (BundleRequirementImpl r : m.getDeclaredRequirements())
         {
             if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
             {
@@ -351,7 +351,7 @@ public class ResolverImpl implements Resolver
 
         // If the module doesn't have dynamic imports, then just return
         // immediately.
-        List<BundleRequirementImpl> dynamics = module.getDynamicRequirements();
+        List<BundleRequirementImpl> dynamics = module.getResolvedDynamicRequirements();
         if ((dynamics == null) || dynamics.isEmpty())
         {
             return null;
@@ -359,21 +359,19 @@ public class ResolverImpl implements Resolver
 
         // If any of the module exports this package, then we cannot
         // attempt to dynamically import it.
-        List<BundleCapabilityImpl> caps = module.getCapabilities();
-        for (int i = 0; (caps != null) && (i < caps.size()); i++)
+        for (BundleCapabilityImpl cap : module.getResolvedCapabilities())
         {
-            if (caps.get(i).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                && caps.get(i).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
+            if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
             {
                 return null;
             }
         }
         // If any of our wires have this package, then we cannot
         // attempt to dynamically import it.
-        List<Wire> wires = module.getWires();
-        for (int i = 0; (wires != null) && (i < wires.size()); i++)
+        for (Wire w : module.getWires())
         {
-            if (wires.get(i).hasPackage(pkgName))
+            if (w.hasPackage(pkgName))
             {
                 return null;
             }
@@ -382,11 +380,13 @@ public class ResolverImpl implements Resolver
         // Loop through the importer's dynamic requirements to determine if
         // there is a matching one for the package from which we want to
         // load a class.
-        Map<String, String> dirs = Collections.EMPTY_MAP;
         Map<String, Object> attrs = new HashMap(1);
         attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
-            module, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+            module,
+            BundleCapabilityImpl.PACKAGE_NAMESPACE,
+            Collections.EMPTY_MAP,
+            attrs);
         SortedSet<BundleCapabilityImpl> candidates = state.getCandidates(req, false);
 
         // First find a dynamic requirement that matches the capabilities.
@@ -480,7 +480,7 @@ public class ResolverImpl implements Resolver
             // Since the module is resolved, it could be dynamically importing,
             // so check to see if there are candidates for any of its dynamic
             // imports.
-            for (BundleRequirementImpl req : module.getDynamicRequirements())
+            for (BundleRequirementImpl req : module.getResolvedDynamicRequirements())
             {
                 // Get the candidates for the current requirement.
                 SortedSet<BundleCapabilityImpl> candCaps = allCandidates.getCandidates(req);
@@ -501,7 +501,7 @@ public class ResolverImpl implements Resolver
         }
         else
         {
-            for (BundleRequirementImpl req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getDeclaredRequirements())
             {
                 // Get the candidates for the current requirement.
                 SortedSet<BundleCapabilityImpl> candCaps = allCandidates.getCandidates(req);
@@ -624,7 +624,10 @@ public class ResolverImpl implements Resolver
 
             // If the candidate requires any other bundles with reexport visibility,
             // then we also need to merge their packages too.
-            for (BundleRequirementImpl req : candCap.getModule().getRequirements())
+            List<BundleRequirementImpl> reqs = (candCap.getModule().isResolved())
+                ? candCap.getModule().getResolvedRequirements()
+                : candCap.getModule().getDeclaredRequirements();
+            for (BundleRequirementImpl req : reqs)
             {
                 if (req.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
                 {
@@ -1130,9 +1133,12 @@ public class ResolverImpl implements Resolver
         packages = new Packages(module);
 
         // Get all exported packages.
+        List<BundleCapabilityImpl> caps = (module.isResolved())
+            ? module.getResolvedCapabilities()
+            : module.getDeclaredCapabilities();
         Map<String, BundleCapabilityImpl> exports =
-            new HashMap<String, BundleCapabilityImpl>(module.getCapabilities().size());
-        for (BundleCapabilityImpl cap : module.getCapabilities())
+            new HashMap<String, BundleCapabilityImpl>(caps.size());
+        for (BundleCapabilityImpl cap : caps)
         {
             if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
             {
@@ -1149,7 +1155,8 @@ public class ResolverImpl implements Resolver
         {
             for (Wire wire : module.getWires())
             {
-                if (wire.getRequirement().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                if (wire.getRequirement().getNamespace().equals(
+                    BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
                     String pkgName = (String) wire.getCapability()
                         .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
@@ -1159,7 +1166,7 @@ public class ResolverImpl implements Resolver
         }
         else
         {
-            for (BundleRequirementImpl req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getDeclaredRequirements())
             {
                 if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
@@ -1248,7 +1255,9 @@ public class ResolverImpl implements Resolver
 
             // Since a module can export the same package more than once, get
             // all package capabilities for the specified package name.
-            List<BundleCapabilityImpl> caps = cap.getModule().getCapabilities();
+            List<BundleCapabilityImpl> caps = (cap.getModule().isResolved())
+                ? cap.getModule().getResolvedCapabilities()
+                : cap.getModule().getDeclaredCapabilities();
             for (int capIdx = 0; capIdx < caps.size(); capIdx++)
             {
                 if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
@@ -1313,7 +1322,7 @@ public class ResolverImpl implements Resolver
             List<Wire> packageWires = new ArrayList<Wire>();
             List<Wire> moduleWires = new ArrayList<Wire>();
 
-            for (BundleRequirementImpl req : module.getRequirements())
+            for (BundleRequirementImpl req : module.getDeclaredRequirements())
             {
                 SortedSet<BundleCapabilityImpl> cands = allCandidates.getCandidates(req);
                 if ((cands != null) && (cands.size() > 0))
@@ -1576,7 +1585,10 @@ public class ResolverImpl implements Resolver
             // because bundles that import their own exports still continue
             // to provide access to their exports when they are required; i.e.,
             // the implicitly reexport the packages if wired to another provider.
-            for (BundleCapabilityImpl cap : m_module.getCapabilities())
+            List<BundleCapabilityImpl> caps = (m_module.isResolved())
+                ? m_module.getResolvedCapabilities()
+                : m_module.getDeclaredCapabilities();
+            for (BundleCapabilityImpl cap : caps)
             {
                 if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {

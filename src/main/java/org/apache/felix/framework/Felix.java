@@ -3283,24 +3283,27 @@ public class Felix extends BundleImpl implements Framework
                 // that the first module found to be exporting the package is the
                 // provider of the package, which makes sense since it must have
                 // been resolved first.
-                List<Module> modules = bundle.getModules();
-                for (int modIdx = 0; modIdx < modules.size(); modIdx++)
+                for (Module m : bundle.getModules())
                 {
-                    List<BundleCapabilityImpl> ec = modules.get(modIdx).getCapabilities();
-                    for (int i = 0; (ec != null) && (i < ec.size()); i++)
+                    List<BundleCapabilityImpl> caps = (m.isResolved())
+                        ? m.getResolvedCapabilities()
+                        : m.getDeclaredCapabilities();
+                    for (BundleCapabilityImpl cap : caps)
                     {
-                        if (ec.get(i).getNamespace().equals(req.getNamespace())
-                            && CapabilitySet.matches(ec.get(i), req.getFilter()))
+                        if (cap.getNamespace().equals(req.getNamespace())
+                            && CapabilitySet.matches(cap, req.getFilter()))
                         {
                             pkgs.add(
                                 new ExportedPackageImpl(
-                                    this, bundle, modules.get(modIdx), ec.get(i)));
+                                    this, bundle, m, cap));
                         }
                     }
                 }
             }
 
-            return (pkgs.isEmpty()) ? null : (ExportedPackage[]) pkgs.toArray(new ExportedPackage[pkgs.size()]);
+            return (pkgs.isEmpty())
+                ? null
+                : (ExportedPackage[]) pkgs.toArray(new ExportedPackage[pkgs.size()]);
         }
 
         return null;
@@ -3381,20 +3384,21 @@ public class Felix extends BundleImpl implements Framework
         // Since a bundle may have many modules associated with it,
         // one for each revision in the cache, search each module
         // for each revision to get all exports.
-        List<Module> modules = bundle.getModules();
-        for (int modIdx = 0; modIdx < modules.size(); modIdx++)
+        for (Module m : bundle.getModules())
         {
-            List<BundleCapabilityImpl> caps = modules.get(modIdx).getCapabilities();
+            List<BundleCapabilityImpl> caps = (m.isResolved())
+                ? m.getResolvedCapabilities()
+                : m.getDeclaredCapabilities();
             if ((caps != null) && (caps.size() > 0))
             {
-                for (int capIdx = 0; capIdx < caps.size(); capIdx++)
+                for (BundleCapabilityImpl cap : caps)
                 {
                     // See if the target bundle's module is one of the
                     // resolved exporters of the package.
-                    if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
                         String pkgName = (String)
-                            caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                            cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
                         Map<String, Object> attrs = new HashMap<String, Object>(1);
                         attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
                         BundleRequirementImpl req =
@@ -3403,9 +3407,11 @@ public class Felix extends BundleImpl implements Framework
                             BundleCapabilityImpl.PACKAGE_NAMESPACE,
                             Collections.EMPTY_MAP,
                             attrs);
-                        Set<BundleCapabilityImpl> exports = m_resolver.getCandidates(req, false);
+                        Set<BundleCapabilityImpl> providers =
+                            m_resolver.getCandidates(req, false);
                         // We only want resolved capabilities.
-                        for (Iterator<BundleCapabilityImpl> it = exports.iterator(); it.hasNext(); )
+                        for (Iterator<BundleCapabilityImpl> it = providers.iterator();
+                            it.hasNext(); )
                         {
                             if (!it.next().getModule().isResolved())
                             {
@@ -3413,14 +3419,12 @@ public class Felix extends BundleImpl implements Framework
                             }
                         }
 
-
                         // Search through the current providers to find the target module.
-                        for (BundleCapabilityImpl cap : exports)
+                        for (BundleCapabilityImpl provider : providers)
                         {
-                            if (cap == caps.get(capIdx))
+                            if (provider == cap)
                             {
-                                list.add(new ExportedPackageImpl(
-                                    this, bundle, modules.get(modIdx), caps.get(capIdx)));
+                                list.add(new ExportedPackageImpl(this, bundle, m, cap));
                             }
                         }
                     }
@@ -4249,7 +4253,7 @@ public class Felix extends BundleImpl implements Framework
 
             // If the module doesn't have dynamic imports, then just return
             // immediately.
-            List<BundleRequirementImpl> dynamics = module.getDynamicRequirements();
+            List<BundleRequirementImpl> dynamics = module.getResolvedDynamicRequirements();
             if ((dynamics == null) || dynamics.isEmpty())
             {
                 return false;
@@ -4257,21 +4261,19 @@ public class Felix extends BundleImpl implements Framework
 
             // If any of the module exports this package, then we cannot
             // attempt to dynamically import it.
-            List<BundleCapabilityImpl> caps = module.getCapabilities();
-            for (int i = 0; (caps != null) && (i < caps.size()); i++)
+            for (BundleCapabilityImpl cap : module.getResolvedCapabilities())
             {
-                if (caps.get(i).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                    && caps.get(i).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
+                if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                    && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
                 {
                     return false;
                 }
             }
             // If any of our wires have this package, then we cannot
             // attempt to dynamically import it.
-            List<Wire> wires = module.getWires();
-            for (int i = 0; (wires != null) && (i < wires.size()); i++)
+            for (Wire w : module.getWires())
             {
-                if (wires.get(i).hasPackage(pkgName))
+                if (w.hasPackage(pkgName))
                 {
                     return false;
                 }

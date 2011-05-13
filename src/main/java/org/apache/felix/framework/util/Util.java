@@ -281,13 +281,18 @@ public class Util
 
     public static BundleCapabilityImpl getSatisfyingCapability(Module m, BundleRequirementImpl req)
     {
-        List<BundleCapabilityImpl> caps = m.getCapabilities();
-        for (int i = 0; (caps != null) && (i < caps.size()); i++)
+        List<BundleCapabilityImpl> caps = (m.isResolved())
+            ? m.getResolvedCapabilities()
+            : m.getDeclaredCapabilities();
+        if (caps != null)
         {
-            if (caps.get(i).getNamespace().equals(req.getNamespace())
-                && CapabilitySet.matches(caps.get(i), req.getFilter()))
+            for (BundleCapabilityImpl cap : caps)
             {
-                return caps.get(i);
+                if (cap.getNamespace().equals(req.getNamespace())
+                    && CapabilitySet.matches(cap, req.getFilter()))
+                {
+                    return cap;
+                }
             }
         }
         return null;
@@ -296,19 +301,24 @@ public class Util
     /**
      * Returns all the capabilities from a module that has a specified namespace.
      *
-     * @param module    module providing capabilities
+     * @param m    module providing capabilities
      * @param namespace capability namespace
      * @return array of matching capabilities or empty if none found
      */
-    public static List<BundleCapabilityImpl> getCapabilityByNamespace(Module module, String namespace)
+    public static List<BundleCapabilityImpl> getCapabilityByNamespace(Module m, String namespace)
     {
         final List<BundleCapabilityImpl> matching = new ArrayList();
-        final List<BundleCapabilityImpl> caps = module.getCapabilities();
-        for (int capIdx = 0; (caps != null) && (capIdx < caps.size()); capIdx++)
+        final List<BundleCapabilityImpl> caps = (m.isResolved())
+            ? m.getResolvedCapabilities()
+            : m.getDeclaredCapabilities();
+        if (caps != null)
         {
-            if (caps.get(capIdx).getNamespace().equals(namespace))
+            for (BundleCapabilityImpl cap : caps)
             {
-                matching.add(caps.get(capIdx));
+                if (cap.getNamespace().equals(namespace))
+                {
+                    matching.add(cap);
+                }
             }
         }
         return matching;
@@ -317,12 +327,15 @@ public class Util
     public static Wire getWire(Module m, String name)
     {
         List<Wire> wires = m.getWires();
-        for (int i = 0; (wires != null) && (i < wires.size()); i++)
+        if (wires != null)
         {
-            if (wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
-                wires.get(i).getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+            for (Wire w : wires)
             {
-                return wires.get(i);
+                if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                    w.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+                {
+                    return w;
+                }
             }
         }
         return null;

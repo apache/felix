@@ -646,7 +646,15 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
-        public List<BundleCapabilityImpl> getCapabilities()
+        public List<BundleCapabilityImpl> getDeclaredCapabilities()
+        {
+            synchronized (ExtensionManager.this)
+            {
+                return m_capabilities;
+            }
+        }
+
+        public List<BundleCapabilityImpl> getResolvedCapabilities()
         {
             synchronized (ExtensionManager.this)
             {
