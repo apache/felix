@@ -18,7 +18,7 @@
  */
 package org.apache.felix.framework;
 
-import java.util.List;
+import java.util.Set;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
@@ -65,8 +65,8 @@ class ExportedPackageImpl implements ExportedPackage
         {
             return null;
         }
-        List<Bundle> list = m_felix.getImportingBundles(this);
-        return list.toArray(new Bundle[list.size()]);
+        Set<Bundle> set = m_felix.getImportingBundles(m_exportingBundle, m_export);
+        return set.toArray(new Bundle[set.size()]);
     }
 
     public String getName()

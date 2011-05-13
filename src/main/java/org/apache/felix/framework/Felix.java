@@ -46,6 +46,7 @@ import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4LibraryClause;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -125,6 +126,9 @@ public class Felix extends BundleImpl implements Framework
     // CONCURRENCY: Access guarded by the global lock for writes,
     // but no lock for reads since it is copy on write.
     private volatile List<BundleImpl> m_uninstalledBundles;
+    // Object to keep track of dependencies among bundle revisions.
+    private final BundleRevisionDependencies m_dependencies =
+        new BundleRevisionDependencies();
 
     // Framework's active start level.
     private volatile int m_activeStartLevel = FelixConstants.FRAMEWORK_INACTIVE_STARTLEVEL;
@@ -2146,7 +2150,8 @@ public class Felix extends BundleImpl implements Framework
                 {
                     try
                     {
-                        if (!bundle.isUsed() && !bundle.isExtension())
+                        if (!m_dependencies.hasDependents(bundle)
+                            && !bundle.isExtension())
                         {
                             try
                             {
@@ -2486,7 +2491,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 // If the bundle is not used by anyone, then garbage
                 // collect it now.
-                if (!bundle.isUsed())
+                if (!m_dependencies.hasDependents(bundle))
                 {
                     try
                     {
@@ -3462,72 +3467,16 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    List<Bundle> getDependentBundles(BundleImpl exporter)
+    // Needed by ExportedPackageImpl.
+    Set<Bundle> getImportingBundles(BundleImpl exporter, BundleCapability cap)
     {
-        // Create list for storing importing bundles.
-        List<Bundle> list = new ArrayList();
-
-        // Get all dependent revisions from all exporter revisions.
-        List<BundleRevision> revisions = exporter.getRevisions();
-        for (int revIdx = 0; revIdx < revisions.size(); revIdx++)
-        {
-            List<BundleRevision> dependents =
-                ((BundleRevisionImpl) revisions.get(revIdx)).getDependents();
-            for (int depIdx = 0;
-                (dependents != null) && (depIdx < dependents.size());
-                depIdx++)
-            {
-                list.add(dependents.get(depIdx).getBundle());
-            }
-        }
-
-        return list;
+        return m_dependencies.getImportingBundles(exporter, cap);
     }
 
-    List<Bundle> getImportingBundles(ExportedPackage ep)
+    // Needed by RequiredBundleImpl.
+    Set<Bundle> getRequiringBundles(BundleImpl bundle)
     {
-        // Create list for storing importing bundles.
-        List<Bundle> list = new ArrayList();
-
-        // Get exporting bundle information.
-        BundleImpl exporter = (BundleImpl) ep.getExportingBundle();
-
-        // Get all importers and requirers for all revisions of the bundle.
-        // The spec says that require-bundle should be returned with importers.
-        List<BundleRevision> expRevisions = exporter.getRevisions();
-        for (int expIdx = 0; (expRevisions != null) && (expIdx < expRevisions.size()); expIdx++)
-        {
-            // Include any importers that have wires to the specific
-            // exported package.
-            if (expRevisions.get(expIdx).getWiring() != null)
-            {
-                List<BundleRevision> dependents = ((BundleRevisionImpl)
-                    expRevisions.get(expIdx)).getDependentImporters();
-                for (int depIdx = 0; (dependents != null) && (depIdx < dependents.size()); depIdx++)
-                {
-                    if (dependents.get(depIdx).getWiring() != null)
-                    {
-                        BundleRevision providerRevision =
-                            ((BundleWiringImpl) dependents.get(depIdx).getWiring())
-                                .getImportedPackageSource(ep.getName());                
-                        if ((providerRevision != null)
-                            && (providerRevision == expRevisions.get(expIdx)))
-                        {
-                            list.add(dependents.get(depIdx).getBundle());
-                        }
-                    }
-                }
-                dependents = ((BundleRevisionImpl)
-                    expRevisions.get(expIdx)).getDependentRequirers();
-                for (int depIdx = 0; (dependents != null) && (depIdx < dependents.size()); depIdx++)
-                {
-                    list.add(dependents.get(depIdx).getBundle());
-                }
-            }
-        }
-
-        // Return the results.
-        return list;
+        return m_dependencies.getRequiringBundles(bundle);
     }
 
     boolean resolveBundles(Bundle[] targets)
@@ -3671,18 +3620,18 @@ public class Felix extends BundleImpl implements Framework
         {
             // Create map of bundles that import the packages
             // from the target bundles.
-            Map map = new HashMap();
+            Set<Bundle> set = new HashSet<Bundle>();
             for (int targetIdx = 0; targetIdx < newTargets.length; targetIdx++)
             {
                 // Add the current target bundle to the map of
                 // bundles to be refreshed.
                 BundleImpl target = (BundleImpl) newTargets[targetIdx];
-                map.put(target, target);
+                set.add(target);
                 // Add all importing bundles to map.
-                populateDependentGraph(target, map);
+                populateDependentGraph(target, set);
             }
 
-            bundles = (BundleImpl[]) map.values().toArray(new BundleImpl[map.size()]);
+            bundles = (BundleImpl[]) set.toArray(new BundleImpl[set.size()]);
         }
 
         // Now refresh each bundle.
@@ -3776,23 +3725,23 @@ public class Felix extends BundleImpl implements Framework
         fireFrameworkEvent(FrameworkEvent.PACKAGES_REFRESHED, this, null);
     }
 
-    private void populateDependentGraph(BundleImpl exporter, Map map)
+    private void populateDependentGraph(BundleImpl exporter, Set<Bundle> set)
     {
         // Get all dependent bundles of this bundle.
-        List<Bundle> dependents = getDependentBundles(exporter);
+        Set<Bundle> dependents = m_dependencies.getDependentBundles(exporter);
 
-        for (int depIdx = 0;
-            (dependents != null) && (depIdx < dependents.size());
-            depIdx++)
+        if (dependents != null)
         {
-            // Avoid cycles if the bundle is already in map.
-            if (!map.containsKey(dependents.get(depIdx)))
+            for (Bundle b : dependents)
             {
-                // Add each importing bundle to map.
-                map.put(dependents.get(depIdx), dependents.get(depIdx));
-                // Now recurse into each bundle to get its importers.
-                populateDependentGraph(
-                    (BundleImpl) dependents.get(depIdx), map);
+                // Avoid cycles if the bundle is already in set.
+                if (!set.contains(b))
+                {
+                    // Add each dependent bundle to set.
+                    set.add(b);
+                    // Now recurse into each bundle to get its dependents.
+                    populateDependentGraph((BundleImpl) b, set);
+                }
             }
         }
     }
@@ -3879,6 +3828,8 @@ public class Felix extends BundleImpl implements Framework
         {
             // See if we need to fire UNRESOLVED event.
             boolean fire = (bundle.getState() != Bundle.INSTALLED);
+            // Remove dependencies.
+            m_dependencies.removeDependencies(bundle);
             // Reset the bundle object.
             ((BundleImpl) bundle).refresh();
             // Fire UNRESOLVED event if necessary
@@ -4256,8 +4207,19 @@ public class Felix extends BundleImpl implements Framework
                             // Dynamically add new wire to importing revision.
                             if (dynamicWire != null)
                             {
+                                m_dependencies.addDependent(
+                                    dynamicWire.getProvider(),
+                                    dynamicWire.getCapability(),
+                                    revision);
+
                                 ((BundleWiringImpl) revision.getWiring())
-                                    .addDynamicWire(dynamicWire);
+                                    .addDynamicWire(
+                                        new BundleWireImpl(
+                                            dynamicWire.getRequirer(),
+                                            dynamicWire.getRequirement(),
+                                            dynamicWire.getProvider(),
+                                            dynamicWire.getCapability()));
+
                                 m_logger.log(
                                     Logger.LOG_DEBUG,
                                     "DYNAMIC WIRE: " + dynamicWire);
@@ -4369,50 +4331,109 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
 
-                // Second pass: Loop through the wire map to set wires and attach
-                // fragments, if any.
+                // Second pass: Loop through the wire map to do three things:
+                // 1) convert resolver wires to bundle wires 2) create wiring
+                // objects for revisions and 3) record dependencies among
+                // revisions. We don't actually set the wirings here because
+                // that indicates that a revision is resolved and we don't want
+                // to mark anything as resolved unless we succussfully create
+                // all wirings.
+                Map<BundleRevision, BundleWiringImpl> wirings =
+                    new HashMap<BundleRevision, BundleWiringImpl>(wireMap.size());
                 for (Entry<BundleRevision, List<ResolverWire>> entry : wireMap.entrySet())
                 {
                     BundleRevision revision = entry.getKey();
                     List<ResolverWire> resolverWires = entry.getValue();
 
-                    Map<ResolverWire, Set<String>> requiredPkgWires =
-                        new HashMap<ResolverWire, Set<String>>();
+                    List<BundleWire> bundleWires =
+                        new ArrayList<BundleWire>(resolverWires.size());
+
+                    // Loop through resolver wires to calculate the package
+                    // space implied by the wires as well as to record the
+                    // dependencies.
+                    Map<String, BundleRevision> importedPkgs =
+                        new HashMap<String, BundleRevision>();
+                    Map<String, List<BundleRevision>> requiredPkgs =
+                        new HashMap<String, List<BundleRevision>>();
                     for (ResolverWire rw : resolverWires)
                     {
-                        if (rw.getCapability().getNamespace()
-                            .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        bundleWires.add(
+                            new BundleWireImpl(
+                                rw.getRequirer(),
+                                rw.getRequirement(),
+                                rw.getProvider(),
+                                rw.getCapability()));
+
+                        m_dependencies.addDependent(
+                            rw.getProvider(), rw.getCapability(), rw.getRequirer());
+
+                        if (Util.isFragment(revision))
                         {
-                            Set<String> pkgs =
-                                calculateExportedAndReexportedPackages(
-                                    rw.getProvider(),
-                                    wireMap,
-                                    new HashSet<String>(),
-                                    new HashSet<BundleRevision>());
-                            requiredPkgWires.put(rw, pkgs);
+                            m_logger.log(
+                                Logger.LOG_DEBUG,
+                                "FRAGMENT WIRE: "
+                                + this + " -> hosted by -> " + rw.getProvider());
+                        }
+                        else
+                        {
+                            m_logger.log(Logger.LOG_DEBUG, "WIRE: " + rw);
+
+                            if (rw.getCapability().getNamespace()
+                                .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                            {
+                                importedPkgs.put(
+                                    (String) rw.getCapability().getAttributes()
+                                        .get(BundleCapabilityImpl.PACKAGE_ATTR),
+                                    rw.getProvider());
+                            }
+                            else if (rw.getCapability().getNamespace()
+                                .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                            {
+                                Set<String> pkgs = calculateExportedAndReexportedPackages(
+                                        rw.getProvider(),
+                                        wireMap,
+                                        new HashSet<String>(),
+                                        new HashSet<BundleRevision>());
+                                for (String pkg : pkgs)
+                                {
+                                    List<BundleRevision> revs = requiredPkgs.get(pkg);
+                                    if (revs == null)
+                                    {
+                                        revs = new ArrayList<BundleRevision>();
+                                        requiredPkgs.put(pkg, revs);
+                                    }
+                                    revs.add(rw.getProvider());
+                                }
+                            }
                         }
                     }
 
                     List<BundleRevision> fragments = hosts.get(revision);
                     try
                     {
-// TODO: OSGi R4.3 - Technically, this is where the revision becomes resolved,
-//       but we used to wait and mark it as resolved in the third phase below. 
-                        ((BundleRevisionImpl) revision).resolve(
-                            fragments, resolverWires, requiredPkgWires);
+                        wirings.put(
+                            revision,
+                            new BundleWiringImpl(
+                                m_logger,
+                                m_configMap,
+                                this,
+                                (BundleRevisionImpl) revision,
+                                fragments,
+                                bundleWires,
+                                importedPkgs,
+                                requiredPkgs));
                     }
                     catch (Exception ex)
                     {
                         // This is a fatal error, so undo everything and
                         // throw an exception.
-                        for (Entry<BundleRevision, List<ResolverWire>> reentry : wireMap.entrySet())
+                        for (Entry<BundleRevision, BundleWiringImpl> wiringEntry
+                            : wirings.entrySet())
                         {
-                            revision = reentry.getKey();
-
-                            // Undo wires.
+                            // Dispose of wiring.
                             try
                             {
-                                ((BundleRevisionImpl) revision).resolve(null, null, null);
+                                wiringEntry.getValue().dispose();
                             }
                             catch (Exception ex2)
                             {
@@ -4438,24 +4459,28 @@ public class Felix extends BundleImpl implements Framework
                             re.getMessage(), ex);
                         throw re;
                     }
-
-                    // Reindex host with attached fragments.
-                    m_resolverState.addRevision(revision);
                 }
 
                 // Third pass: Loop through the wire map to mark revision as resolved
                 // and update the resolver state.
-                for (Entry<BundleRevision, List<ResolverWire>> entry : wireMap.entrySet())
+                for (Entry<BundleRevision, BundleWiringImpl> entry : wirings.entrySet())
                 {
-                    BundleRevision revision = entry.getKey();
+                    BundleRevisionImpl revision = (BundleRevisionImpl) entry.getKey();
+
                     // Mark revision as resolved.
-// TODO: OSGi R4.3 - See message above when we call BundleRevisionImpl.resolve().
-//                    ((BundleRevisionImpl) revision).setResolved();
+                    revision.resolve(entry.getValue());
+                    
                     // Update resolver state to remove substituted capabilities.
                     if (!Util.isFragment(revision))
                     {
+                        // Update resolver state by reindexing host with attached
+                        // fragments and removing any substituted exports.
+// TODO: OSGi R4.3 - We could avoid reindexing for fragments if we check it
+//       the revision has fragments or not.
+                        m_resolverState.addRevision(revision);
                         m_resolverState.removeSubstitutedCapabilities(revision);
                     }
+
                     // Update the state of the revision's bundle to resolved as well.
                     markBundleResolved(revision);
                 }
@@ -4551,15 +4576,20 @@ public class Felix extends BundleImpl implements Framework
             // visibility, since we need to include those packages too.
             if (br.getWiring() == null)
             {
+System.out.println("+++ br.getWiring() = " + br.getWiring());
                 for (ResolverWire rw : wireMap.get(br))
                 {
+System.out.println("+++ rw.getCapability() = " + rw.getCapability());
+System.out.println("+++ rw.getRequirement() = " + rw.getRequirement());
                     if (rw.getCapability().getNamespace().equals(
                         BundleCapabilityImpl.BUNDLE_NAMESPACE))
                     {
                         String dir = rw.getRequirement()
                             .getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
+System.out.println("+++ dir = " + dir);
                         if ((dir != null) && (dir.equals(Constants.VISIBILITY_REEXPORT)))
                         {
+System.out.println("+++ rw.getProvider() = " + rw.getProvider());
                             calculateExportedAndReexportedPackages(
                                 rw.getProvider(),
                                 wireMap,
@@ -4782,6 +4812,8 @@ public class Felix extends BundleImpl implements Framework
                 // current state.
                 if (m_bundle.getState() == Bundle.UNINSTALLED)
                 {
+                    // Remove dependencies.
+                    m_dependencies.removeDependencies(m_bundle);
                     m_bundle.closeAndDelete();
                     m_bundle = null;
                 }
