@@ -4259,7 +4259,7 @@ public class Felix extends BundleImpl implements Framework
             // If the revision doesn't have dynamic imports, then just return
             // immediately.
             List<BundleRequirement> dynamics =
-                ((BundleWiringImpl) revision.getWiring()).getDynamicRequirements();
+                Util.getDynamicRequirements(revision.getWiring().getRequirements(null));
             if ((dynamics == null) || dynamics.isEmpty())
             {
                 return false;

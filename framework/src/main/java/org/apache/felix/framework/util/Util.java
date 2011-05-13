@@ -26,15 +26,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
@@ -325,6 +326,24 @@ public class Util
             }
         }
         return matching;
+    }
+
+    public static List<BundleRequirement> getDynamicRequirements(
+        List<BundleRequirement> reqs)
+    {
+        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        if (reqs != null)
+        {
+            for (BundleRequirement req : reqs)
+            {
+                String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+                if ((resolution != null) && resolution.equals("dynamic"))
+                {
+                    result.add(req);
+                }
+            }
+        }
+        return result;
     }
 
     public static BundleWire getWire(BundleRevision br, String name)

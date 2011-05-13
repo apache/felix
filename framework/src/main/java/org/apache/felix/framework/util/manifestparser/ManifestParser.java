@@ -46,7 +46,6 @@ public class ManifestParser
     private volatile Version m_bundleVersion;
     private volatile List<BundleCapability> m_capabilities;
     private volatile List<BundleRequirement> m_requirements;
-    private volatile List<BundleRequirement> m_dynamicRequirements;
     private volatile List<R4LibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
 
@@ -171,7 +170,7 @@ public class ManifestParser
         List<ParsedHeaderClause> dynamicClauses =
             parseStandardHeader((String) headerMap.get(Constants.DYNAMICIMPORT_PACKAGE));
         dynamicClauses = normalizeDynamicImportClauses(m_logger, dynamicClauses, getManifestVersion());
-        m_dynamicRequirements = convertImports(dynamicClauses, owner);
+        List<BundleRequirement> dynamicReqs = convertImports(dynamicClauses, owner);
 
         //
         // Parse Export-Package.
@@ -210,10 +209,11 @@ public class ManifestParser
 
         // Combine all requirements.
         m_requirements = new ArrayList(
-             importReqs.size() + requireReqs.size() + hostReqs.size());
+             importReqs.size() + requireReqs.size() + hostReqs.size() + dynamicReqs.size());
         m_requirements.addAll(importReqs);
         m_requirements.addAll(requireReqs);
         m_requirements.addAll(hostReqs);
+        m_requirements.addAll(dynamicReqs);
 
         //
         // Parse Bundle-NativeCode.
@@ -264,12 +264,13 @@ public class ManifestParser
     {
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+        Set dupeSet = new HashSet();
+        for (ParsedHeaderClause clause : clauses)
         {
             // Check for "version" and "specification-version" attributes
             // and verify they are the same if both are specified.
-            Object v = clauses.get(clauseIdx).m_attrs.get(Constants.VERSION_ATTRIBUTE);
-            Object sv = clauses.get(clauseIdx).m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
+            Object v = clause.m_attrs.get(Constants.VERSION_ATTRIBUTE);
+            Object sv = clause.m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
             if ((v != null) && (sv != null))
             {
                 // Verify they are equal.
@@ -284,32 +285,26 @@ public class ManifestParser
             // it to the VersionRange type.
             if ((v != null) || (sv != null))
             {
-                clauses.get(clauseIdx).m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
+                clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
                 v = (v == null) ? sv : v;
-                clauses.get(clauseIdx).m_attrs.put(
+                clause.m_attrs.put(
                     Constants.VERSION_ATTRIBUTE,
                     VersionRange.parse(v.toString()));
             }
 
             // If bundle version is specified, then convert its type to VersionRange.
-            v = clauses.get(clauseIdx).m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
+            v = clause.m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
             if (v != null)
             {
-                clauses.get(clauseIdx).m_attrs.put(
+                clause.m_attrs.put(
                     Constants.BUNDLE_VERSION_ATTRIBUTE,
                     VersionRange.parse(v.toString()));
             }
-        }
 
-        // Verify java.* is not imported, nor any duplicate imports.
-        Set dupeSet = new HashSet();
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
-        {
-            // Verify that the named package has not already been declared.
-            List<String> paths = clauses.get(clauseIdx).m_paths;
-            for (int pathIdx = 0; pathIdx < paths.size(); pathIdx++)
+            // Verify java.* is not imported, nor any duplicate imports.
+            for (int pathIdx = 0; pathIdx < clause.m_paths.size(); pathIdx++)
             {
-                String pkgName = paths.get(pathIdx);
+                String pkgName = clause.m_paths.get(pathIdx);
                 if (!dupeSet.contains(pkgName))
                 {
                     // Verify that java.* packages are not imported.
@@ -319,7 +314,7 @@ public class ManifestParser
                             "Importing java.* packages not allowed: " + pkgName);
                     }
                     // Make sure a package name was specified.
-                    else if (clauses.get(clauseIdx).m_paths.get(pathIdx).length() == 0)
+                    else if (clause.m_paths.get(pathIdx).length() == 0)
                     {
                         throw new BundleException(
                             "Imported package names cannot be zero length.");
@@ -331,17 +326,11 @@ public class ManifestParser
                     throw new BundleException("Duplicate import: " + pkgName);
                 }
             }
-        }
 
-        if (!mv.equals("2"))
-        {
-            // Check to make sure that R3 bundles have only specified
-            // the 'specification-version' attribute and no directives
-            // on their imports; ignore all unknown attributes.
-            for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+            if (!mv.equals("2"))
             {
                 // R3 bundles cannot have directives on their imports.
-                if (!clauses.get(clauseIdx).m_dirs.isEmpty())
+                if (!clause.m_dirs.isEmpty())
                 {
                     throw new BundleException("R3 imports cannot contain directives.");
                 }
@@ -351,17 +340,16 @@ public class ManifestParser
                 // because the package class normalizes to "version" to avoid having
                 // future special cases. This could be changed if more strict behavior
                 // is required.
-                if (!clauses.get(clauseIdx).m_attrs.isEmpty())
+                if (!clause.m_attrs.isEmpty())
                 {
                     // R3 package requirements should only have version attributes.
-                    Object pkgVersion = new VersionRange(Version.emptyVersion, true, null, true);
-                    for (Entry<String, Object> entry : clauses.get(clauseIdx).m_attrs.entrySet())
+                    Object pkgVersion = clause.m_attrs.get(BundleCapabilityImpl.VERSION_ATTR);
+                    pkgVersion = (pkgVersion == null)
+                        ? new VersionRange(Version.emptyVersion, true, null, true)
+                        : pkgVersion;
+                    for (Entry<String, Object> entry : clause.m_attrs.entrySet())
                     {
-                        if (entry.getKey().equals(BundleCapabilityImpl.VERSION_ATTR))
-                        {
-                            pkgVersion = entry.getValue();
-                        }
-                        else
+                        if (!entry.getKey().equals(BundleCapabilityImpl.VERSION_ATTR))
                         {
                             logger.log(Logger.LOG_WARNING,
                                 "Unknown R3 import attribute: "
@@ -369,15 +357,9 @@ public class ManifestParser
                         }
                     }
 
-                    // Recreate the import to remove any other attributes
-                    // and add version if missing.
-                    Map<String, Object> attrs = new HashMap<String, Object>(1);
-                    attrs.put(
-                        BundleCapabilityImpl.VERSION_ATTR, pkgVersion);
-                    clauses.set(clauseIdx, new ParsedHeaderClause(
-                        clauses.get(clauseIdx).m_paths,
-                        clauses.get(clauseIdx).m_dirs,
-                        attrs));
+                    // Remove all other attributes except package version.
+                    clause.m_attrs.clear();
+                    clause.m_attrs.put(BundleCapabilityImpl.VERSION_ATTR, pkgVersion);
                 }
             }
         }
@@ -428,12 +410,26 @@ public class ManifestParser
     {
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+        for (ParsedHeaderClause clause : clauses)
         {
+            if (!mv.equals("2"))
+            {
+                // R3 bundles cannot have directives on their imports.
+                if (!clause.m_dirs.isEmpty())
+                {
+                    throw new BundleException("R3 imports cannot contain directives.");
+                }
+            }
+
+            // Add the resolution directive to indicate that these are
+            // dynamic imports.
+// TODO: OSGi R4.3 - Use real constant value for "dynamic".
+            clause.m_dirs.put(Constants.RESOLUTION_DIRECTIVE, "dynamic");
+
             // Check for "version" and "specification-version" attributes
             // and verify they are the same if both are specified.
-            Object v = clauses.get(clauseIdx).m_attrs.get(Constants.VERSION_ATTRIBUTE);
-            Object sv = clauses.get(clauseIdx).m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
+            Object v = clause.m_attrs.get(Constants.VERSION_ATTRIBUTE);
+            Object sv = clause.m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
             if ((v != null) && (sv != null))
             {
                 // Verify they are equal.
@@ -448,32 +444,27 @@ public class ManifestParser
             // it to the VersionRange type.
             if ((v != null) || (sv != null))
             {
-                clauses.get(clauseIdx).m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
+                clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
                 v = (v == null) ? sv : v;
-                clauses.get(clauseIdx).m_attrs.put(
+                clause.m_attrs.put(
                     Constants.VERSION_ATTRIBUTE,
                     VersionRange.parse(v.toString()));
             }
 
             // If bundle version is specified, then convert its type to VersionRange.
-            v = clauses.get(clauseIdx).m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
+            v = clause.m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
             if (v != null)
             {
-                clauses.get(clauseIdx).m_attrs.put(
+                clause.m_attrs.put(
                     Constants.BUNDLE_VERSION_ATTRIBUTE,
                     VersionRange.parse(v.toString()));
             }
-        }
 
-        // Dynamic imports can have duplicates, so just check for import
-        // of java.*.
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
-        {
-            // Verify that java.* packages are not imported.
-            List<String> paths = clauses.get(clauseIdx).m_paths;
-            for (int pathIdx = 0; pathIdx < paths.size(); pathIdx++)
+            // Dynamic imports can have duplicates, so verify that java.*
+            // packages are not imported.
+            for (int pathIdx = 0; pathIdx < clause.m_paths.size(); pathIdx++)
             {
-                String pkgName = paths.get(pathIdx);
+                String pkgName = clause.m_paths.get(pathIdx);
                 if (pkgName.startsWith("java."))
                 {
                     throw new BundleException(
@@ -487,21 +478,6 @@ public class ManifestParser
             }
         }
 
-        if (!mv.equals("2"))
-        {
-            // Check to make sure that R3 bundles have only specified
-            // the 'specification-version' attribute and no directives
-            // on their imports; ignore all unknown attributes.
-            for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
-            {
-                // R3 bundles cannot have directives on their imports.
-                if (!clauses.get(clauseIdx).m_dirs.isEmpty())
-                {
-                    throw new BundleException("R3 imports cannot contain directives.");
-                }
-            }
-        }
-
         return clauses;
     }
 
@@ -511,34 +487,29 @@ public class ManifestParser
         throws BundleException
     {
         // Verify that "java.*" packages are not exported.
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+        for (ParsedHeaderClause clause : clauses)
         {
             // Verify that the named package has not already been declared.
-            for (int pathIdx = 0; pathIdx < clauses.get(clauseIdx).m_paths.size(); pathIdx++)
+            for (int pathIdx = 0; pathIdx < clause.m_paths.size(); pathIdx++)
             {
                 // Verify that java.* packages are not exported.
-                if (clauses.get(clauseIdx).m_paths.get(pathIdx).startsWith("java."))
+                if (clause.m_paths.get(pathIdx).startsWith("java."))
                 {
                     throw new BundleException(
                         "Exporting java.* packages not allowed: "
-                        + clauses.get(clauseIdx).m_paths.get(pathIdx));
+                        + clause.m_paths.get(pathIdx));
                 }
-                else if (clauses.get(clauseIdx).m_paths.get(pathIdx).length() == 0)
+                else if (clause.m_paths.get(pathIdx).length() == 0)
                 {
                     throw new BundleException(
                         "Exported package names cannot be zero length.");
                 }
             }
-        }
 
-        // If both version and specification-version attributes are specified,
-        // then verify that the values are equal.
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
-        {
             // Check for "version" and "specification-version" attributes
             // and verify they are the same if both are specified.
-            Object v = clauses.get(clauseIdx).m_attrs.get(Constants.VERSION_ATTRIBUTE);
-            Object sv = clauses.get(clauseIdx).m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
+            Object v = clause.m_attrs.get(Constants.VERSION_ATTRIBUTE);
+            Object sv = clause.m_attrs.get(Constants.PACKAGE_SPECIFICATION_VERSION);
             if ((v != null) && (sv != null))
             {
                 // Verify they are equal.
@@ -560,23 +531,20 @@ public class ManifestParser
             if ((v != null) || (sv != null))
             {
                 // Convert version attribute to type Version.
-                clauses.get(clauseIdx).m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
+                clause.m_attrs.remove(Constants.PACKAGE_SPECIFICATION_VERSION);
                 v = (v == null) ? sv : v;
-                clauses.get(clauseIdx).m_attrs.put(
+                clause.m_attrs.put(
                     Constants.VERSION_ATTRIBUTE,
                     Version.parseVersion(v.toString()));
             }
-        }
 
-        // If this is an R4 bundle, then make sure it doesn't specify
-        // bundle symbolic name or bundle version attributes.
-        if (mv.equals("2"))
-        {
-            for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+            // If this is an R4 bundle, then make sure it doesn't specify
+            // bundle symbolic name or bundle version attributes.
+            if (mv.equals("2"))
             {
                 // Find symbolic name and version attribute, if present.
-                if (clauses.get(clauseIdx).m_attrs.containsKey(Constants.BUNDLE_VERSION_ATTRIBUTE)
-                    || clauses.get(clauseIdx).m_attrs.containsKey(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
+                if (clause.m_attrs.containsKey(Constants.BUNDLE_VERSION_ATTRIBUTE)
+                    || clause.m_attrs.containsKey(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
                 {
                     throw new BundleException(
                         "Exports must not specify bundle symbolic name or bundle version.");
@@ -584,21 +552,13 @@ public class ManifestParser
 
                 // Now that we know that there are no bundle symbolic name and version
                 // attributes, add them since the spec says they are there implicitly.
-                clauses.get(clauseIdx).m_attrs.put(
-                    Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, bsn);
-                clauses.get(clauseIdx).m_attrs.put(
-                    Constants.BUNDLE_VERSION_ATTRIBUTE, bv);
+                clause.m_attrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, bsn);
+                clause.m_attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bv);
             }
-        }
-        else if (!mv.equals("2"))
-        {
-            // Check to make sure that R3 bundles have only specified
-            // the 'specification-version' attribute and no directives
-            // on their exports; ignore all unknown attributes.
-            for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+            else if (!mv.equals("2"))
             {
                 // R3 bundles cannot have directives on their exports.
-                if (!clauses.get(clauseIdx).m_dirs.isEmpty())
+                if (!clause.m_dirs.isEmpty())
                 {
                     throw new BundleException("R3 exports cannot contain directives.");
                 }
@@ -608,19 +568,16 @@ public class ManifestParser
                 // because the package class normalizes to "version" to avoid having
                 // future special cases. This could be changed if more strict behavior
                 // is required.
-                if (!clauses.get(clauseIdx).m_attrs.isEmpty())
+                if (!clause.m_attrs.isEmpty())
                 {
                     // R3 package capabilities should only have a version attribute.
-                    Map<String, Object> attrs = clauses.get(clauseIdx).m_attrs;
-                    Object pkgVersion = clauses.get(clauseIdx).m_attrs
-                        .get(BundleCapabilityImpl.VERSION_ATTR);
+                    Object pkgVersion = clause.m_attrs.get(BundleCapabilityImpl.VERSION_ATTR);
                     pkgVersion = (pkgVersion == null)
                         ? Version.emptyVersion
                         : pkgVersion;
-                    for (Entry<String, Object> entry : clauses.get(clauseIdx).m_attrs.entrySet())
+                    for (Entry<String, Object> entry : clause.m_attrs.entrySet())
                     {
-                        if (!entry.getKey().equals(
-                            BundleCapabilityImpl.VERSION_ATTR))
+                        if (!entry.getKey().equals(BundleCapabilityImpl.VERSION_ATTR))
                         {
                             logger.log(
                                 Logger.LOG_WARNING,
@@ -629,17 +586,13 @@ public class ManifestParser
                         }
                     }
 
-                    // Recreate the export to remove any other attributes
-                    // and add version if missing.
-                    Map<String, Object> newAttrs = new HashMap<String, Object>(1);
-                    newAttrs.put(BundleCapabilityImpl.VERSION_ATTR, pkgVersion);
-                    clauses.set(clauseIdx, new ParsedHeaderClause(
-                        clauses.get(clauseIdx).m_paths,
-                        clauses.get(clauseIdx).m_dirs,
-                        newAttrs));
+                    // Remove all other attributes except package version.
+                    clause.m_attrs.clear();
+                    clause.m_attrs.put(BundleCapabilityImpl.VERSION_ATTR, pkgVersion);
                 }
             }
         }
+
         return clauses;
     }
 
@@ -693,11 +646,6 @@ public class ManifestParser
     public List<BundleRequirement> getRequirements()
     {
         return m_requirements;
-    }
-
-    public List<BundleRequirement> getDynamicRequirements()
-    {
-        return m_dynamicRequirements;
     }
 
     public List<R4LibraryClause> getLibraryClauses()
