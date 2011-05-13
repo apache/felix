@@ -21,16 +21,17 @@ package org.apache.felix.framework.resolver;
 import java.util.Map;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class HostedRequirement extends BundleRequirementImpl
 {
-    private final Module m_host;
+    private final BundleRevision m_host;
     private final BundleRequirementImpl m_req;
 
-    public HostedRequirement(Module module, BundleRequirementImpl req)
+    public HostedRequirement(BundleRevision host, BundleRequirementImpl req)
     {
-        super(module, req.getNamespace(), req.getDirectives(), req.getAttributes());
-        m_host = module;
+        super(host, req.getNamespace(), req.getDirectives(), req.getAttributes());
+        m_host = host;
         m_req = req;
     }
 
@@ -72,7 +73,7 @@ public class HostedRequirement extends BundleRequirementImpl
     }
 
     @Override
-    public Module getModule()
+    public BundleRevision getRevision()
     {
         return m_host;
     }

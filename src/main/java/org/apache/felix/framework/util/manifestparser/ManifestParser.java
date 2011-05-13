@@ -21,33 +21,36 @@ package org.apache.felix.framework.util.manifestparser;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Map.Entry;
+import org.apache.felix.framework.BundleRevisionImpl;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.*;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class ManifestParser
 {
     private final Logger m_logger;
     private final Map m_configMap;
     private final Map m_headerMap;
-    private volatile int m_activationPolicy = Module.EAGER_ACTIVATION;
+    private volatile int m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
     private volatile String m_activationIncludeDir;
     private volatile String m_activationExcludeDir;
     private volatile boolean m_isExtension = false;
     private volatile String m_bundleSymbolicName;
     private volatile Version m_bundleVersion;
-    private volatile List<BundleCapabilityImpl> m_capabilities;
-    private volatile List<BundleRequirementImpl> m_requirements;
-    private volatile List<BundleRequirementImpl> m_dynamicRequirements;
+    private volatile List<BundleCapability> m_capabilities;
+    private volatile List<BundleRequirement> m_requirements;
+    private volatile List<BundleRequirement> m_dynamicRequirements;
     private volatile List<R4LibraryClause> m_libraryClauses;
     private volatile boolean m_libraryHeadersOptional = false;
 
-    public ManifestParser(Logger logger, Map configMap, Module owner, Map headerMap)
+    public ManifestParser(Logger logger, Map configMap, BundleRevision owner, Map headerMap)
         throws BundleException
     {
         m_logger = logger;
@@ -92,41 +95,41 @@ public class ManifestParser
         // Parse bundle symbolic name.
         //
 
-        BundleCapabilityImpl moduleCap = parseBundleSymbolicName(owner, m_headerMap);
-        if (moduleCap != null)
+        BundleCapabilityImpl requireCap = parseBundleSymbolicName(owner, m_headerMap);
+        if (requireCap != null)
         {
             m_bundleSymbolicName = (String)
-                moduleCap.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
+                requireCap.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
 
-            // Add a module capability and a host capability to all
+            // Add a bundle capability and a host capability to all
             // non-fragment bundles. A host capability is the same
-            // as a module capability, but with a different capability
-            // namespace. Module capabilities resolve required-bundle
+            // as a require capability, but with a different capability
+            // namespace. Bundle capabilities resolve required-bundle
             // dependencies, while host capabilities resolve fragment-host
             // dependencies.
             if (headerMap.get(Constants.FRAGMENT_HOST) == null)
             {
-                capList.add(moduleCap);
+                capList.add(requireCap);
                 capList.add(new BundleCapabilityImpl(
                     owner, BundleCapabilityImpl.HOST_NAMESPACE,
                     Collections.EMPTY_MAP,
 // TODO: OSGi R4.3 - Wraps map as unmodifiable twice.
-                    moduleCap.getAttributes()));
+                    requireCap.getAttributes()));
             }
 
             // Add a singleton capability if the bundle is a singleton.
             // This is sort of a hack, but we need this for the resolver
             // to be able to resolve singletons. It is not possible to
-            // attach this information to the module or host capabilities
+            // attach this information to the bundle or host capabilities
             // because fragments don't have those capabilities, but fragments
             // can be singletons too.
-            if (isSingleton(moduleCap))
+            if (isSingleton(requireCap))
             {
                 capList.add(new BundleCapabilityImpl(
                     owner, BundleCapabilityImpl.SINGLETON_NAMESPACE,
                     Collections.EMPTY_MAP,
 // TODO: OSGi R4.3 - Wraps map as unmodifiable twice.
-                    moduleCap.getAttributes()));
+                    requireCap.getAttributes()));
             }
         }
 
@@ -159,7 +162,7 @@ public class ManifestParser
         List<ParsedHeaderClause> importClauses =
             parseStandardHeader((String) headerMap.get(Constants.IMPORT_PACKAGE));
         importClauses = normalizeImportClauses(m_logger, importClauses, getManifestVersion());
-        List<BundleRequirementImpl> importReqs = convertImports(importClauses, owner);
+        List<BundleRequirement> importReqs = convertImports(importClauses, owner);
 
         //
         // Parse DynamicImport-Package.
@@ -179,7 +182,7 @@ public class ManifestParser
             parseStandardHeader((String) headerMap.get(Constants.EXPORT_PACKAGE));
         exportClauses = normalizeExportClauses(logger, exportClauses,
             getManifestVersion(), m_bundleSymbolicName, m_bundleVersion);
-        List<BundleCapabilityImpl> exportCaps = convertExports(exportClauses, owner);
+        List<BundleCapability> exportCaps = convertExports(exportClauses, owner);
 
         //
         // Calculate implicit imports.
@@ -216,7 +219,7 @@ public class ManifestParser
         // Parse Bundle-NativeCode.
         //
 
-        // Get native library entry names for module library sources.
+        // Parse native library clauses.
         m_libraryClauses =
             parseLibraryStrings(
                 m_logger,
@@ -244,7 +247,7 @@ public class ManifestParser
 
     private static boolean isSingleton(BundleCapabilityImpl cap)
     {
-        if (cap.getNamespace().equals(BundleCapabilityImpl.MODULE_NAMESPACE))
+        if (cap.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
         {
             String value = cap.getDirectives().get(Constants.SINGLETON_DIRECTIVE);
             if ((value != null) && Boolean.valueOf(value))
@@ -382,8 +385,8 @@ public class ManifestParser
         return clauses;
     }
 
-    private static List<BundleRequirementImpl> convertImports(
-        List<ParsedHeaderClause> clauses, Module owner)
+    private static List<BundleRequirement> convertImports(
+        List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
         // Now convert generic header clauses into requirements.
         List reqList = new ArrayList();
@@ -682,17 +685,17 @@ public class ManifestParser
         return m_bundleVersion;
     }
 
-    public List<BundleCapabilityImpl> getCapabilities()
+    public List<BundleCapability> getCapabilities()
     {
         return m_capabilities;
     }
 
-    public List<BundleRequirementImpl> getRequirements()
+    public List<BundleRequirement> getRequirements()
     {
         return m_requirements;
     }
 
-    public List<BundleRequirementImpl> getDynamicRequirements()
+    public List<BundleRequirement> getDynamicRequirements()
     {
         return m_dynamicRequirements;
     }
@@ -917,7 +920,7 @@ public class ManifestParser
     }
 
     private static List<ParsedHeaderClause> calculateImplicitImports(
-        List<BundleCapabilityImpl> exports, List<ParsedHeaderClause> imports)
+        List<BundleCapability> exports, List<ParsedHeaderClause> imports)
         throws BundleException
     {
         List<ParsedHeaderClause> clauseList = new ArrayList();
@@ -963,8 +966,8 @@ public class ManifestParser
         return clauseList;
     }
 
-    private static List<BundleCapabilityImpl> calculateImplicitUses(
-        List<BundleCapabilityImpl> exports, List<ParsedHeaderClause> imports)
+    private static List<BundleCapability> calculateImplicitUses(
+        List<BundleCapability> exports, List<ParsedHeaderClause> imports)
         throws BundleException
     {
         // Add a "uses" directive onto each export of R3 bundles
@@ -987,7 +990,7 @@ public class ManifestParser
             Map<String, String> dirs = new HashMap<String, String>(1);
             dirs.put(Constants.USES_DIRECTIVE, usesValue);
             exports.set(i, new BundleCapabilityImpl(
-                exports.get(i).getModule(),
+                exports.get(i).getRevision(),
                 BundleCapabilityImpl.PACKAGE_NAMESPACE,
                 dirs,
                 exports.get(i).getAttributes()));
@@ -1022,7 +1025,8 @@ public class ManifestParser
         return false;
     }
 
-    private static BundleCapabilityImpl parseBundleSymbolicName(Module owner, Map headerMap)
+    private static BundleCapabilityImpl parseBundleSymbolicName(
+        BundleRevision owner, Map headerMap)
         throws BundleException
     {
         List<ParsedHeaderClause> clauses = parseStandardHeader(
@@ -1063,14 +1067,14 @@ public class ManifestParser
                 }
             }
 
-            // Create a module capability and return it.
+            // Create a require capability and return it.
             String symName = (String) clauses.get(0).m_paths.get(0);
             Map<String, Object> attrs = new HashMap<String, Object>(2);
             attrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, symName);
             attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
             return new BundleCapabilityImpl(
                 owner,
-                BundleCapabilityImpl.MODULE_NAMESPACE,
+                BundleCapabilityImpl.BUNDLE_NAMESPACE,
                 clauses.get(0).m_dirs,
                 attrs);
         }
@@ -1079,7 +1083,7 @@ public class ManifestParser
     }
 
     private static List<BundleRequirementImpl> parseFragmentHost(
-        Logger logger, Module owner, Map headerMap)
+        Logger logger, BundleRevision owner, Map headerMap)
         throws BundleException
     {
         List<BundleRequirementImpl> reqs = new ArrayList();
@@ -1155,11 +1159,11 @@ public class ManifestParser
         return reqs;
     }
 
-    public static List<BundleCapabilityImpl> parseExportHeader(
-        Logger logger, Module owner, String header, String bsn, Version bv)
+    public static List<BundleCapability> parseExportHeader(
+        Logger logger, BundleRevision owner, String header, String bsn, Version bv)
     {
 
-        List<BundleCapabilityImpl> caps = null;
+        List<BundleCapability> caps = null;
         try
         {
             List<ParsedHeaderClause> exportClauses = parseStandardHeader(header);
@@ -1173,10 +1177,10 @@ public class ManifestParser
         return caps;
     }
 
-    private static List<BundleCapabilityImpl> convertExports(
-        List<ParsedHeaderClause> clauses, Module owner)
+    private static List<BundleCapability> convertExports(
+        List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
-        List<BundleCapabilityImpl> capList = new ArrayList();
+        List<BundleCapability> capList = new ArrayList();
         for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
         {
             for (int pathIdx = 0;
@@ -1232,7 +1236,7 @@ public class ManifestParser
     }
 
     private static List<BundleRequirementImpl> convertRequires(
-        List<ParsedHeaderClause> clauses, Module owner)
+        List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
         List<BundleRequirementImpl> reqList = new ArrayList();
         for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
@@ -1259,7 +1263,7 @@ public class ManifestParser
                 reqList.add(
                     new BundleRequirementImpl(
                         owner,
-                        BundleCapabilityImpl.MODULE_NAMESPACE,
+                        BundleCapabilityImpl.BUNDLE_NAMESPACE,
                         clauses.get(clauseIdx).m_dirs,
                         newAttrs));
             }
@@ -1303,7 +1307,7 @@ public class ManifestParser
 
     private void parseActivationPolicy(Map headerMap)
     {
-        m_activationPolicy = Module.EAGER_ACTIVATION;
+        m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
 
         List<ParsedHeaderClause> clauses = parseStandardHeader(
             (String) headerMap.get(Constants.BUNDLE_ACTIVATIONPOLICY));
@@ -1316,7 +1320,7 @@ public class ManifestParser
             {
                 if (clauses.get(0).m_paths.get(clauseIdx).equals(Constants.ACTIVATION_LAZY))
                 {
-                    m_activationPolicy = Module.LAZY_ACTIVATION;
+                    m_activationPolicy = BundleRevisionImpl.LAZY_ACTIVATION;
                     for (Entry<String, String> entry : clauses.get(0).m_dirs.entrySet())
                     {
                         if (entry.getKey().equalsIgnoreCase(Constants.INCLUDE_DIRECTIVE))

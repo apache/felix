@@ -26,6 +26,7 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.*;
 import org.osgi.framework.hooks.service.*;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.wiring.BundleCapability;
 
 public class ServiceRegistry
 {
@@ -208,7 +209,7 @@ public class ServiceRegistry
         }
         // else just use the specified filter.
 
-        Set<BundleCapabilityImpl> matches = m_regCapSet.match(filter, false);
+        Set<BundleCapability> matches = m_regCapSet.match(filter, false);
 
         return new ArrayList(matches);
     }

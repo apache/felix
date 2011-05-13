@@ -21,9 +21,9 @@ package org.apache.felix.framework;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.felix.framework.resolver.Module;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.packageadmin.RequiredBundle;
 
 class RequiredBundleImpl implements RequiredBundle
@@ -57,17 +57,18 @@ class RequiredBundleImpl implements RequiredBundle
             return null;
         }
 
-        // We need to find all modules that require any of the modules
+        // We need to find all revisions that require any of the revisions
         // associated with this bundle and save the associated bundle
-        // of the dependent modules.
+        // of the dependent revisions.
         Set bundleSet = new HashSet();
-        // Loop through all of this bundle's modules.
-        List<Module> modules = m_bundle.getModules();
-        for (int modIdx = 0; (modules != null) && (modIdx < modules.size()); modIdx++)
+        // Loop through all of this bundle's revisions.
+        List<BundleRevision> revisions = m_bundle.getRevisions();
+        for (int modIdx = 0; (revisions != null) && (modIdx < revisions.size()); modIdx++)
         {
-            // For each of this bundle's modules, loop through all of the
-            // modules that require it and add them to the module list.
-            List<Module> dependents = ((ModuleImpl) modules.get(modIdx)).getDependentRequirers();
+            // For each of this bundle's revisions, loop through all of the
+            // revisions that require it and add them to the dependents list.
+            List<BundleRevision> dependents =
+                ((BundleRevisionImpl) revisions.get(modIdx)).getDependentRequirers();
             for (int depIdx = 0; (dependents != null) && (depIdx < dependents.size()); depIdx++)
             {
                 if (dependents.get(depIdx).getBundle() != null)
@@ -82,7 +83,7 @@ class RequiredBundleImpl implements RequiredBundle
 
     public Version getVersion()
     {
-        return m_bundle.getCurrentModule().getVersion();
+        return m_bundle.getVersion();
     }
 
     public boolean isRemovalPending()
@@ -95,7 +96,7 @@ class RequiredBundleImpl implements RequiredBundle
         if (m_toString == null)
         {
             m_toString = m_bundle.getSymbolicName()
-                + "; version=" + m_bundle.getCurrentModule().getVersion();
+                + "; version=" + m_bundle.getVersion();
         }
         return m_toString;
     }

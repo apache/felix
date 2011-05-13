@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,37 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.resolver;
+package org.apache.felix.framework.wiring;
 
 import java.net.URL;
 import java.util.Enumeration;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
+import org.apache.felix.framework.resolver.ResourceNotFoundException;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
-public interface Wire
+public interface FelixBundleWire extends BundleWire
 {
-    /**
-     * Returns the importing module.
-     * @return The importing module.
-    **/
-    public Module getImporter();
-    /**
-     * Returns the associated requirement from the importing module that
-     * resulted in the creation of this wire.
-     * @return
-    **/
-    public BundleRequirementImpl getRequirement();
-    /**
-     * Returns the exporting module.
-     * @return The exporting module.
-    **/
-    public Module getExporter();
-    /**
-     * Returns the associated capability from the exporting module that
-     * satisfies the requirement of the importing module.
-     * @return
-    **/
-    public BundleCapabilityImpl getCapability();
+    public BundleRevision getRequirer();
+
+    public BundleRevision getProvider();
+
     /**
      * Returns whether or not the wire has a given package name. For some
      * wires, such as ones for Require-Bundle, there may be many packages.
@@ -57,7 +40,7 @@ public interface Wire
      * @return <tt>true</tt> if the package name is attainable from this wire,
      *         <tt>false</tt> otherwise.
     **/
-    public boolean hasPackage(String pkgName);
+    boolean hasPackage(String pkgName);
     /**
      * Requests a class from the exporting module. If the class is found, then
      * it is returned. If the class is not found, then this method may or may
@@ -70,7 +53,7 @@ public interface Wire
      * @throws java.lang.ClassNotFoundException If the class was not found and
      *         the search should be aborted.
     **/
-    public Class getClass(String name) throws ClassNotFoundException;
+    Class getClass(String name) throws ClassNotFoundException;
     /**
      * Requests a resource from the exporting module. If the resource is found,
      * then an URL is returned. If the resource is not found, then this method may
@@ -83,7 +66,7 @@ public interface Wire
      * @throws ResourceNotFoundException If the resource was not found and
      *         the search should be aborted.
     **/
-    public URL getResource(String name) throws ResourceNotFoundException;
+    URL getResource(String name) throws ResourceNotFoundException;
     /**
      * Requests resources from the exporting module. If the resources are found,
      * then an enumeration of URLs is returned. If the resources are not found,
@@ -96,5 +79,5 @@ public interface Wire
      * @throws ResourceNotFoundException If the resource was not found and
      *         the search should be aborted.
     **/
-    public Enumeration getResources(String name) throws ResourceNotFoundException;
+    Enumeration getResources(String name) throws ResourceNotFoundException;
 }

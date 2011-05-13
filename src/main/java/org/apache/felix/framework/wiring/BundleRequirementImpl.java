@@ -20,13 +20,11 @@ package org.apache.felix.framework.wiring;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
@@ -35,7 +33,7 @@ import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleRequirementImpl implements BundleRequirement
 {
-    private final Module m_module;
+    private final BundleRevision m_revision;
     private final String m_namespace;
     private final SimpleFilter m_filter;
     private final boolean m_optional;
@@ -43,10 +41,10 @@ public class BundleRequirementImpl implements BundleRequirement
     private final Map<String, Object> m_attrs;
 
     public BundleRequirementImpl(
-        Module module, String namespace,
+        BundleRevision revision, String namespace,
         Map<String, String> dirs, Map<String, Object> attrs)
     {
-        m_module = module;
+        m_revision = revision;
         m_namespace = namespace;
         m_dirs = Collections.unmodifiableMap(dirs);
         m_attrs = Collections.unmodifiableMap(attrs);
@@ -77,14 +75,9 @@ public class BundleRequirementImpl implements BundleRequirement
         return m_attrs;
     }
 
-    public Module getModule()
-    {
-        return m_module;
-    }
-
     public BundleRevision getRevision()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return m_revision;
     }
 
     public boolean matches(BundleCapability cap)
@@ -104,7 +97,7 @@ public class BundleRequirementImpl implements BundleRequirement
 
     public String toString()
     {
-        return "[" + m_module + "] " + m_namespace + "; " + getFilter().toString();
+        return "[" + m_revision + "] " + m_namespace + "; " + getFilter().toString();
     }
 
     private static SimpleFilter convertToFilter(Map<String, Object> attrs)
