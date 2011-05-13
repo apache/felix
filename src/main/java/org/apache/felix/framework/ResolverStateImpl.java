@@ -145,7 +145,7 @@ class ResolverStateImpl implements Resolver.ResolverState
             // If so, then the framework must have chosen to have the revision
             // import rather than export the package, so we need to remove the
             // corresponding package capability from the package capability set.
-            for (BundleWire w : ((BundleRevisionImpl) br).getWires())
+            for (BundleWire w : br.getWiring().getRequiredWires(null))
             {
                 if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
                 {
@@ -274,7 +274,9 @@ class ResolverStateImpl implements Resolver.ResolverState
     {
         // Next, try to resolve any native code, since the revision is
         // not resolvable if its native code cannot be loaded.
-        List<R4Library> libs = ((BundleRevisionImpl) revision).getNativeLibraries();
+// TODO: OSGi R4.3 - Is it sufficient to just check declared native libs here?
+//        List<R4Library> libs = ((BundleWiringImpl) revision.getWiring()).getNativeLibraries();
+        List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
         if (libs != null)
         {
             String msg = null;
