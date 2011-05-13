@@ -31,12 +31,12 @@ import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.FelixBundleWire;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 public class Util
 {
@@ -327,15 +327,17 @@ public class Util
         return matching;
     }
 
-    public static FelixBundleWire getWire(BundleRevision br, String name)
+    public static BundleWire getWire(BundleRevision br, String name)
     {
-        List<FelixBundleWire> wires = ((BundleRevisionImpl) br).getWires();
+        List<BundleWire> wires = ((BundleRevisionImpl) br).getWires();
         if (wires != null)
         {
-            for (FelixBundleWire w : wires)
+            for (BundleWire w : wires)
             {
-                if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
-                    w.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+                if (w.getCapability().getNamespace()
+                        .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                    w.getCapability().getAttributes()
+                        .get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
                 {
                     return w;
                 }

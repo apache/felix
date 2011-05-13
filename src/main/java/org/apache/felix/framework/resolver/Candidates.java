@@ -356,6 +356,7 @@ class Candidates
                         {
                             hostReq = r;
                             it.remove();
+                            break;
                         }
                     }
 

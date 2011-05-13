@@ -16,21 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.resolver;
+package org.apache.felix.framework.wiring;
 
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
-class ResolverWireImpl implements ResolverWire
+// TODO: OSGi R4.3 - Should this be in framework package?
+public class BundleWireImpl implements BundleWire
 {
     private final BundleRevision m_requirer;
     private final BundleRequirement m_req;
     private final BundleRevision m_provider;
     private final BundleCapability m_cap;
 
-    public ResolverWireImpl(
-        BundleRevision requirer, BundleRequirement req,
+    public BundleWireImpl(BundleRevision requirer, BundleRequirement req,
         BundleRevision provider, BundleCapability cap)
     {
         m_requirer = requirer;
@@ -39,9 +41,9 @@ class ResolverWireImpl implements ResolverWire
         m_cap = cap;
     }
 
-    public BundleRevision getRequirer()
+    public BundleWiring getRequirerWiring()
     {
-        return m_requirer;
+        return m_requirer.getWiring();
     }
 
     public BundleRequirement getRequirement()
@@ -49,9 +51,9 @@ class ResolverWireImpl implements ResolverWire
         return m_req;
     }
 
-    public BundleRevision getProvider()
+    public BundleWiring getProviderWiring()
     {
-        return m_provider;
+        return m_provider.getWiring();
     }
 
     public BundleCapability getCapability()
