@@ -64,7 +64,6 @@ public class BundleRevisionImpl implements BundleRevision
 
     private final List<BundleCapability> m_declaredCaps;
     private final List<BundleRequirement> m_declaredReqs;
-    private final List<BundleRequirement> m_declaredDynamicReqs;
     private final List<R4Library> m_declaredNativeLibs;
     private final int m_declaredActivationPolicy;
     private final List<String> m_activationIncludes;
@@ -114,7 +113,6 @@ public class BundleRevisionImpl implements BundleRevision
         m_version = null;
         m_declaredCaps = Collections.EMPTY_LIST;
         m_declaredReqs = Collections.EMPTY_LIST;
-        m_declaredDynamicReqs = Collections.EMPTY_LIST;
         m_declaredNativeLibs = null;
         m_declaredActivationPolicy = EAGER_ACTIVATION;
         m_activationExcludes = null;
@@ -148,7 +146,6 @@ public class BundleRevisionImpl implements BundleRevision
         m_version = mp.getBundleVersion();
         m_declaredCaps = mp.isExtension() ? null : mp.getCapabilities();
         m_declaredReqs = mp.getRequirements();
-        m_declaredDynamicReqs = mp.getDynamicRequirements();
         m_declaredNativeLibs = mp.getLibraries();
         m_declaredActivationPolicy = mp.getActivationPolicy();
         m_activationExcludes = (mp.getActivationExcludeDirective() == null)
@@ -281,11 +278,6 @@ public class BundleRevisionImpl implements BundleRevision
     public String getManifestVersion()
     {
         return m_manifestVersion;
-    }
-
-    public List<BundleRequirement> getDeclaredDynamicRequirements()
-    {
-        return m_declaredDynamicReqs;
     }
 
     public List<R4Library> getDeclaredNativeLibraries()

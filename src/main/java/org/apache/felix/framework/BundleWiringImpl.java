@@ -79,7 +79,6 @@ public class BundleWiringImpl implements BundleWiring
     private final Map<String, List<BundleRevision>> m_requiredPkgs;
     private final List<BundleCapability> m_resolvedCaps;
     private final List<BundleRequirement> m_resolvedReqs;
-    private final List<BundleRequirement> m_resolvedDynamicReqs;
     private final List<R4Library> m_resolvedNativeLibs;
     private final List<Content> m_fragmentContents;
 
@@ -227,29 +226,6 @@ public class BundleWiringImpl implements BundleWiring
         }
         m_resolvedReqs = Collections.unmodifiableList(reqList);
 
-        List<BundleRequirement> dynReqList = (m_revision.getDeclaredDynamicRequirements() == null)
-            ? new ArrayList()
-            : new ArrayList(m_revision.getDeclaredDynamicRequirements());
-        for (int fragIdx = 0;
-            (m_fragments != null) && (fragIdx < m_fragments.size());
-            fragIdx++)
-        {
-            List<BundleRequirement> reqs =
-                ((BundleRevisionImpl) m_fragments.get(fragIdx))
-                    .getDeclaredDynamicRequirements();
-            for (int reqIdx = 0;
-                (reqs != null) && (reqIdx < reqs.size());
-                reqIdx++)
-            {
-                if (reqs.get(reqIdx).getNamespace().equals(
-                    BundleCapabilityImpl.PACKAGE_NAMESPACE))
-                {
-                    dynReqList.add(reqs.get(reqIdx));
-                }
-            }
-        }
-        m_resolvedDynamicReqs = Collections.unmodifiableList(dynReqList);
-
         List<R4Library> libList = (m_revision.getDeclaredNativeLibraries() == null)
             ? new ArrayList<R4Library>()
             : new ArrayList<R4Library>(m_revision.getDeclaredNativeLibraries());
@@ -379,11 +355,6 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
         return result;
-    }
-
-    public List<BundleRequirement> getDynamicRequirements()
-    {
-        return m_resolvedDynamicReqs;
     }
 
     public List<R4Library> getNativeLibraries()

@@ -90,7 +90,9 @@ public class ResolverImpl implements Resolver
 
                     // If the requested revision is a fragment, then
                     // ultimately we will verify the host.
-                    BundleRequirement hostReq = getHostRequirement(revision);
+                    List<BundleRequirement> hostReqs =
+                        revision.getDeclaredRequirements(BundleCapabilityImpl.HOST_NAMESPACE);
+
                     BundleRevision target = revision;
 
                     do
@@ -107,9 +109,9 @@ public class ResolverImpl implements Resolver
 
                         // If we are resolving a fragment, then we
                         // actually want to verify its host.
-                        if (hostReq != null)
+                        if (!hostReqs.isEmpty())
                         {
-                            target = allCandidates.getCandidates(hostReq)
+                            target = allCandidates.getCandidates(hostReqs.get(0))
                                 .iterator().next().getRevision();
                         }
 
@@ -323,30 +325,6 @@ public class ResolverImpl implements Resolver
         return singletons;
     }
 
-    private static BundleCapability getHostCapability(BundleRevision br)
-    {
-        for (BundleCapability c : br.getDeclaredCapabilities(null))
-        {
-            if (c.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
-            {
-                return c;
-            }
-        }
-        return null;
-    }
-
-    private static BundleRequirement getHostRequirement(BundleRevision br)
-    {
-        for (BundleRequirement r : br.getDeclaredRequirements(null))
-        {
-            if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
-            {
-                return r;
-            }
-        }
-        return null;
-    }
-
     private static Candidates getDynamicImportCandidates(
         ResolverState state, BundleRevision revision, String pkgName)
     {
@@ -360,7 +338,7 @@ public class ResolverImpl implements Resolver
         // If the revision doesn't have dynamic imports, then just return
         // immediately.
         List<BundleRequirement> dynamics =
-            ((BundleWiringImpl) revision.getWiring()).getDynamicRequirements();
+            Util.getDynamicRequirements(revision.getWiring().getRequirements(null));
         if ((dynamics == null) || dynamics.isEmpty())
         {
             return null;
@@ -496,7 +474,7 @@ public class ResolverImpl implements Resolver
             // so check to see if there are candidates for any of its dynamic
             // imports.
             for (BundleRequirement req
-                : ((BundleWiringImpl) revision.getWiring()).getDynamicRequirements())
+                : Util.getDynamicRequirements(revision.getWiring().getRequirements(null)))
             {
                 // Get the candidates for the current requirement.
                 SortedSet<BundleCapability> candCaps =
@@ -520,18 +498,23 @@ public class ResolverImpl implements Resolver
         {
             for (BundleRequirement req : revision.getDeclaredRequirements(null))
             {
-                // Get the candidates for the current requirement.
-                SortedSet<BundleCapability> candCaps =
-                    allCandidates.getCandidates((BundleRequirementImpl) req);
-                // Optional requirements may not have any candidates.
-                if (candCaps == null)
+                String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+// TODO: OSGi R4.3 - Use proper "dynamic" constant.
+                if ((resolution == null) || !resolution.equals("dynamic"))
                 {
-                    continue;
-                }
+                    // Get the candidates for the current requirement.
+                    SortedSet<BundleCapability> candCaps =
+                        allCandidates.getCandidates((BundleRequirementImpl) req);
+                    // Optional requirements may not have any candidates.
+                    if (candCaps == null)
+                    {
+                        continue;
+                    }
 
-                BundleCapability cap = candCaps.iterator().next();
-                reqs.add(req);
-                caps.add(cap);
+                    BundleCapability cap = candCaps.iterator().next();
+                    reqs.add(req);
+                    caps.add(cap);
+                }
             }
         }
 
@@ -1393,9 +1376,11 @@ public class ResolverImpl implements Resolver
                     hostWires.add(
                         new ResolverWireImpl(
                             getActualBundleRevision(fragment),
-                            getHostRequirement(fragment),
+                            fragment.getDeclaredRequirements(
+                                BundleCapabilityImpl.HOST_NAMESPACE).get(0),
                             unwrappedRevision,
-                            getHostCapability(unwrappedRevision)));
+                            unwrappedRevision.getDeclaredCapabilities(
+                                BundleCapabilityImpl.HOST_NAMESPACE).get(0)));
                 }
             }
         }
