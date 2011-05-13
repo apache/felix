@@ -56,6 +56,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
@@ -720,12 +721,17 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
 
         @Override
-        public void resolve(
-            List<BundleRevision> fragments, List<ResolverWire> rws,
-            Map<ResolverWire, Set<String>> requiredPkgWires) throws Exception
+        public void resolve(BundleWiringImpl wire)
         {
-            m_wiring = new ExtensionManagerWiring(
-                m_logger, m_configMap, null, this, fragments, rws, requiredPkgWires);
+            try
+            {
+                m_wiring = new ExtensionManagerWiring(
+                    m_logger, m_configMap, this);
+            }
+            catch (Exception ex)
+            {
+                // This should never happen.
+            }
         }
 
         @Override
@@ -738,14 +744,11 @@ class ExtensionManager extends URLStreamHandler implements Content
     class ExtensionManagerWiring extends BundleWiringImpl
     {
         ExtensionManagerWiring(
-            Logger logger, Map configMap, StatefulResolver resolver,
-            BundleRevisionImpl revision, List<BundleRevision> fragments,
-            List<ResolverWire> resolverWires,
-            Map<ResolverWire, Set<String>> requiredPkgWires)
+            Logger logger, Map configMap, BundleRevisionImpl revision)
             throws Exception
         {
-            super(logger, configMap, resolver, revision,
-                fragments, resolverWires, requiredPkgWires);
+            super(logger, configMap, null, revision,
+                null, Collections.EMPTY_LIST, null, null);
         }
 
         @Override

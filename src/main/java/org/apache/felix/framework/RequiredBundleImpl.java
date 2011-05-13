@@ -51,34 +51,13 @@ class RequiredBundleImpl implements RequiredBundle
 
     public Bundle[] getRequiringBundles()
     {
-        // Spec says to return null for stale bundles.
+        // If the package is stale, then return null per the spec.
         if (m_bundle.isStale())
         {
             return null;
         }
-
-        // We need to find all revisions that require any of the revisions
-        // associated with this bundle and save the associated bundle
-        // of the dependent revisions.
-        Set bundleSet = new HashSet();
-        // Loop through all of this bundle's revisions.
-        List<BundleRevision> revisions = m_bundle.getRevisions();
-        for (int modIdx = 0; (revisions != null) && (modIdx < revisions.size()); modIdx++)
-        {
-            // For each of this bundle's revisions, loop through all of the
-            // revisions that require it and add them to the dependents list.
-            List<BundleRevision> dependents =
-                ((BundleRevisionImpl) revisions.get(modIdx)).getDependentRequirers();
-            for (int depIdx = 0; (dependents != null) && (depIdx < dependents.size()); depIdx++)
-            {
-                if (dependents.get(depIdx).getBundle() != null)
-                {
-                    bundleSet.add(dependents.get(depIdx).getBundle());
-                }
-            }
-        }
-        // Convert to an array.
-        return (Bundle[]) bundleSet.toArray(new Bundle[bundleSet.size()]);
+        Set<Bundle> set = m_felix.getRequiringBundles(m_bundle);
+        return set.toArray(new Bundle[set.size()]);
     }
 
     public Version getVersion()

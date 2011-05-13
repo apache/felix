@@ -45,7 +45,6 @@ import org.apache.felix.framework.resolver.Content;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.HostedRequirement;
 import org.apache.felix.framework.resolver.ResolveException;
-import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.util.CompoundEnumeration;
 import org.apache.felix.framework.util.FelixConstants;
@@ -139,76 +138,18 @@ public class BundleWiringImpl implements BundleWiring
     BundleWiringImpl(
         Logger logger, Map configMap, StatefulResolver resolver,
         BundleRevisionImpl revision, List<BundleRevision> fragments,
-        List<ResolverWire> resolverWires,
-        Map<ResolverWire, Set<String>> requiredPkgWires)
+        List<BundleWire> wires,
+        Map<String, BundleRevision> importedPkgs,
+        Map<String, List<BundleRevision>> requiredPkgs)
         throws Exception
     {
         m_logger = logger;
         m_configMap = configMap;
         m_resolver = resolver;
         m_revision = revision;
-
-        List<BundleWire> wires = new ArrayList<BundleWire>(resolverWires.size());
-        Map<String, BundleRevision> importedPkgs =
-            new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs =
-            new HashMap<String, List<BundleRevision>>();
-
-        for (ResolverWire rw : resolverWires)
-        {
-            wires.add(
-                new BundleWireImpl(
-                    rw.getRequirer(),
-                    rw.getRequirement(),
-                    rw.getProvider(),
-                    rw.getCapability()));
-
-            if (Util.isFragment(m_revision))
-            {
-                m_logger.log(
-                    Logger.LOG_DEBUG,
-                    "FRAGMENT WIRE: "
-                    + this + " -> hosted by -> " + rw.getProvider());
-            }
-            else
-            {
-                m_logger.log(Logger.LOG_DEBUG, "WIRE: " + rw);
-
-                if (rw.getCapability().getNamespace()
-                    .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
-                {
-                    ((BundleRevisionImpl) rw.getProvider()).addDependentImporter(m_revision);
-
-                    importedPkgs.put(
-                        (String) rw.getCapability().getAttributes()
-                            .get(BundleCapabilityImpl.PACKAGE_ATTR),
-                        rw.getProvider());
-                }
-                else if (rw.getCapability().getNamespace()
-                    .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
-                {
-                    ((BundleRevisionImpl) rw.getProvider()).addDependentRequirer(m_revision);
-
-                    for (String pkgName : requiredPkgWires.get(rw))
-                    {
-                        List<BundleRevision> revs = requiredPkgs.get(pkgName);
-                        if (revs != null)
-                        {
-                            revs.add(rw.getProvider());
-                        }
-                        else
-                        {
-                            revs = new ArrayList<BundleRevision>();
-                            revs.add(rw.getProvider());
-                            requiredPkgs.put(pkgName, revs);
-                        }
-                    }
-                }
-            }
-        }
-        m_wires = wires;
-        m_requiredPkgs = requiredPkgs;
         m_importedPkgs = importedPkgs;
+        m_requiredPkgs = requiredPkgs;
+        m_wires = wires;
 
         // We need to sort the fragments and add ourself as a dependent of each one.
         // We also need to create an array of fragment contents to attach to our
@@ -367,28 +308,6 @@ public class BundleWiringImpl implements BundleWiring
 
     public void dispose()
     {
-        if (!Util.isFragment(m_revision) && (m_wires != null))
-        {
-            for (BundleWire bw : m_wires)
-            {
-                if (bw.getProviderWiring() != null)
-                {
-                    if (bw.getCapability().getNamespace()
-                        .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
-                    {
-                        ((BundleRevisionImpl) bw.getProviderWiring().getRevision())
-                            .removeDependentImporter(m_revision);
-                    }
-                    else if (bw.getCapability().getNamespace()
-                        .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
-                    {
-                        ((BundleRevisionImpl) bw.getProviderWiring().getRevision())
-                            .removeDependentRequirer(m_revision);
-                    }
-                }
-            }
-        }
-
         for (int i = 0; (m_contentPath != null) && (i < m_contentPath.length); i++)
         {
             m_contentPath[i].close();
@@ -579,21 +498,12 @@ public class BundleWiringImpl implements BundleWiring
         return m_wires;
     }
 
-    public synchronized void addDynamicWire(ResolverWire rw)
+    public synchronized void addDynamicWire(BundleWireImpl wire)
     {
-        // This not only sets the wires for the module, but it also records
-        // the dependencies this module has on other modules (i.e., the provider
-        // end of the wire) to simplify bookkeeping.
-
-        BundleWire wire = new BundleWireImpl(
-            rw.getRequirer(),
-            rw.getRequirement(),
-            rw.getProvider(),
-            rw.getCapability());
         m_wires.add(wire);
         m_importedPkgs.put(
             (String) wire.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
-            rw.getProvider());
+            wire.getProviderWiring().getRevision());
     }
 
     public BundleRevision getRevision()

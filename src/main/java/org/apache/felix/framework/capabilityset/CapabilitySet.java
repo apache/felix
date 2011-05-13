@@ -41,6 +41,35 @@ public class CapabilitySet
     private final Set<BundleCapability> m_capSet = new HashSet<BundleCapability>();
     private final static SecureAction m_secureAction = new SecureAction();
 
+public void dump()
+{
+    for (Entry<String, Map<Object, Set<BundleCapability>>> entry : m_indices.entrySet())
+    {
+        boolean header1 = false;
+        for (Entry<Object, Set<BundleCapability>> entry2 : entry.getValue().entrySet())
+        {
+            boolean header2 = false;
+            for (BundleCapability cap : entry2.getValue())
+            {
+                if (cap.getRevision().getBundle().getBundleId() != 0)
+                {
+                    if (!header1)
+                    {
+                        System.out.println(entry.getKey() + ":");
+                        header1 = true;
+                    }
+                    if (!header2)
+                    {
+                        System.out.println("   " + entry2.getKey());
+                        header2 = true;
+                    }
+                    System.out.println("      " + cap);
+                }
+            }
+        }
+    }
+}
+
     public CapabilitySet(List<String> indexProps, boolean caseSensitive)
     {
         m_indices = (caseSensitive)

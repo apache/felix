@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
@@ -55,6 +56,16 @@ class ResolverStateImpl implements Resolver.ResolverState
     private final String m_fwkExecEnvStr;
     // Parsed framework environments
     private final Set<String> m_fwkExecEnvSet;
+
+//    void dump()
+//    {
+//        for (Entry<String, CapabilitySet> entry : m_capSets.entrySet())
+//        {
+//            System.out.println("+++ START CAPSET " + entry.getKey());
+//            entry.getValue().dump();
+//            System.out.println("+++ END CAPSET " + entry.getKey());
+//        }
+//    }
 
     ResolverStateImpl(Logger logger, String fwkExecEnvStr)
     {
@@ -135,7 +146,7 @@ class ResolverStateImpl implements Resolver.ResolverState
     }
 
 // TODO: OSGi R4.3 - This will need to be changed once BundleWiring.getCapabilities()
-//       is correctly implemented, since they already has to remove substituted caps.
+//       is correctly implemented, since it already has to remove substituted caps.
     synchronized void removeSubstitutedCapabilities(BundleRevision br)
     {
         if (br.getWiring() != null)
