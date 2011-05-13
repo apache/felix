@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 public interface Resolver
 {
@@ -33,7 +33,8 @@ public interface Resolver
 
     public static interface ResolverState
     {
-        SortedSet<Capability> getCandidates(Requirement req, boolean obeyMandatory);
+        SortedSet<BundleCapabilityImpl> getCandidates(
+            BundleRequirementImpl req, boolean obeyMandatory);
         void checkExecutionEnvironment(Module module) throws ResolveException;
         void checkNativeLibraries(Module module) throws ResolveException;
     }

@@ -32,45 +32,47 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.StringComparator;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 
 public class CapabilitySet
 {
-    private final Map<String, Map<Object, Set<Capability>>> m_indices;
-    private final Set<Capability> m_capSet = new HashSet<Capability>();
+    private final Map<String, Map<Object, Set<BundleCapabilityImpl>>> m_indices;
+    private final Set<BundleCapabilityImpl> m_capSet = new HashSet<BundleCapabilityImpl>();
     private final static SecureAction m_secureAction = new SecureAction();
 
     public CapabilitySet(List<String> indexProps, boolean caseSensitive)
     {
         m_indices = (caseSensitive)
-            ? new TreeMap<String, Map<Object, Set<Capability>>>()
-            : new TreeMap<String, Map<Object, Set<Capability>>>(new StringComparator(false));
+            ? new TreeMap<String, Map<Object, Set<BundleCapabilityImpl>>>()
+            : new TreeMap<String, Map<Object, Set<BundleCapabilityImpl>>>(
+                new StringComparator(false));
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
-            m_indices.put(indexProps.get(i), new HashMap<Object, Set<Capability>>());
+            m_indices.put(
+                indexProps.get(i), new HashMap<Object, Set<BundleCapabilityImpl>>());
         }
     }
 
-    public void addCapability(Capability cap)
+    public void addCapability(BundleCapabilityImpl cap)
     {
         m_capSet.add(cap);
 
         // Index capability.
-        for (Entry<String, Map<Object, Set<Capability>>> entry : m_indices.entrySet())
+        for (Entry<String, Map<Object, Set<BundleCapabilityImpl>>> entry : m_indices.entrySet())
         {
-            Attribute capAttr = cap.getAttribute(entry.getKey());
-            if (capAttr != null)
+            Object value = cap.getAttributes().get(entry.getKey());
+            if (value != null)
             {
-                Object capValue = capAttr.getValue();
-                if (capValue.getClass().isArray())
+                if (value.getClass().isArray())
                 {
-                    capValue = convertArrayToList(capValue);
+                    value = convertArrayToList(value);
                 }
 
-                Map<Object, Set<Capability>> index = entry.getValue();
+                Map<Object, Set<BundleCapabilityImpl>> index = entry.getValue();
 
-                if (capValue instanceof Collection)
+                if (value instanceof Collection)
                 {
-                    Collection c = (Collection) capValue;
+                    Collection c = (Collection) value;
                     for (Object o : c)
                     {
                         indexCapability(index, cap, o);
@@ -78,44 +80,43 @@ public class CapabilitySet
                 }
                 else
                 {
-                    indexCapability(index, cap, capValue);
+                    indexCapability(index, cap, value);
                 }
             }
         }
     }
 
     private void indexCapability(
-        Map<Object, Set<Capability>> index, Capability cap, Object capValue)
+        Map<Object, Set<BundleCapabilityImpl>> index, BundleCapabilityImpl cap, Object capValue)
     {
-        Set<Capability> caps = index.get(capValue);
+        Set<BundleCapabilityImpl> caps = index.get(capValue);
         if (caps == null)
         {
-            caps = new HashSet<Capability>();
+            caps = new HashSet<BundleCapabilityImpl>();
             index.put(capValue, caps);
         }
         caps.add(cap);
     }
 
-    public void removeCapability(Capability cap)
+    public void removeCapability(BundleCapabilityImpl cap)
     {
         if (m_capSet.remove(cap))
         {
-            for (Entry<String, Map<Object, Set<Capability>>> entry : m_indices.entrySet())
+            for (Entry<String, Map<Object, Set<BundleCapabilityImpl>>> entry : m_indices.entrySet())
             {
-                Attribute capAttr = cap.getAttribute(entry.getKey());
-                if (capAttr != null)
+                Object value = cap.getAttributes().get(entry.getKey());
+                if (value != null)
                 {
-                    Object capValue = capAttr.getValue();
-                    if (capValue.getClass().isArray())
+                    if (value.getClass().isArray())
                     {
-                        capValue = convertArrayToList(capValue);
+                        value = convertArrayToList(value);
                     }
 
-                    Map<Object, Set<Capability>> index = entry.getValue();
+                    Map<Object, Set<BundleCapabilityImpl>> index = entry.getValue();
 
-                    if (capValue instanceof Collection)
+                    if (value instanceof Collection)
                     {
-                        Collection c = (Collection) capValue;
+                        Collection c = (Collection) value;
                         for (Object o : c)
                         {
                             deindexCapability(index, cap, o);
@@ -123,7 +124,7 @@ public class CapabilitySet
                     }
                     else
                     {
-                        deindexCapability(index, cap, capValue);
+                        deindexCapability(index, cap, value);
                     }
                 }
             }
@@ -131,30 +132,30 @@ public class CapabilitySet
     }
 
     private void deindexCapability(
-        Map<Object, Set<Capability>> index, Capability cap, Object capValue)
+        Map<Object, Set<BundleCapabilityImpl>> index, BundleCapabilityImpl cap, Object value)
     {
-        Set<Capability> caps = index.get(capValue);
+        Set<BundleCapabilityImpl> caps = index.get(value);
         if (caps != null)
         {
             caps.remove(cap);
             if (caps.isEmpty())
             {
-                index.remove(capValue);
+                index.remove(value);
             }
         }
     }
 
-    public Set<Capability> match(SimpleFilter sf, boolean obeyMandatory)
+    public Set<BundleCapabilityImpl> match(SimpleFilter sf, boolean obeyMandatory)
     {
-        Set<Capability> matches = match(m_capSet, sf);
+        Set<BundleCapabilityImpl> matches = match(m_capSet, sf);
         return (obeyMandatory)
             ? matchMandatory(matches, sf)
             : matches;
     }
 
-    private Set<Capability> match(Set<Capability> caps, SimpleFilter sf)
+    private Set<BundleCapabilityImpl> match(Set<BundleCapabilityImpl> caps, SimpleFilter sf)
     {
-        Set<Capability> matches = new HashSet<Capability>();
+        Set<BundleCapabilityImpl> matches = new HashSet<BundleCapabilityImpl>();
 
         if (sf.getOperation() == SimpleFilter.MATCH_ALL)
         {
@@ -196,10 +197,10 @@ public class CapabilitySet
         }
         else
         {
-            Map<Object, Set<Capability>> index = m_indices.get(sf.getName());
+            Map<Object, Set<BundleCapabilityImpl>> index = m_indices.get(sf.getName());
             if ((sf.getOperation() == SimpleFilter.EQ) && (index != null))
             {
-                Set<Capability> existingCaps = index.get(sf.getValue());
+                Set<BundleCapabilityImpl> existingCaps = index.get(sf.getValue());
                 if (existingCaps != null)
                 {
                     matches.addAll(existingCaps);
@@ -208,13 +209,12 @@ public class CapabilitySet
             }
             else
             {
-                for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
+                for (Iterator<BundleCapabilityImpl> it = caps.iterator(); it.hasNext(); )
                 {
-                    Capability cap = it.next();
-                    Attribute attr = cap.getAttribute(sf.getName());
-                    if (attr != null)
+                    BundleCapabilityImpl cap = it.next();
+                    Object lhs = cap.getAttributes().get(sf.getName());
+                    if (lhs != null)
                     {
-                        Object lhs = attr.getValue();
                         if (compare(lhs, sf.getValue(), sf.getOperation()))
                         {
                             matches.add(cap);
@@ -227,12 +227,12 @@ public class CapabilitySet
         return matches;
     }
 
-    public static boolean matches(Capability cap, SimpleFilter sf)
+    public static boolean matches(BundleCapabilityImpl cap, SimpleFilter sf)
     {
         return matchesInternal(cap, sf) && matchMandatory(cap, sf);
     }
 
-    private static boolean matchesInternal(Capability cap, SimpleFilter sf)
+    private static boolean matchesInternal(BundleCapabilityImpl cap, SimpleFilter sf)
     {
         boolean matched = true;
 
@@ -272,10 +272,9 @@ public class CapabilitySet
         else
         {
             matched = false;
-            Attribute attr = cap.getAttribute(sf.getName());
-            if (attr != null)
+            Object lhs = cap.getAttributes().get(sf.getName());
+            if (lhs != null)
             {
-                Object lhs = attr.getValue();
                 matched = compare(lhs, sf.getValue(), sf.getOperation());
             }
         }
@@ -283,11 +282,12 @@ public class CapabilitySet
         return matched;
     }
 
-    private static Set<Capability> matchMandatory(Set<Capability> caps, SimpleFilter sf)
+    private static Set<BundleCapabilityImpl> matchMandatory(
+        Set<BundleCapabilityImpl> caps, SimpleFilter sf)
     {
-        for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
+        for (Iterator<BundleCapabilityImpl> it = caps.iterator(); it.hasNext(); )
         {
-            Capability cap = it.next();
+            BundleCapabilityImpl cap = it.next();
             if (!matchMandatory(cap, sf))
             {
                 it.remove();
@@ -296,13 +296,13 @@ public class CapabilitySet
         return caps;
     }
 
-    private static boolean matchMandatory(Capability cap, SimpleFilter sf)
+    private static boolean matchMandatory(BundleCapabilityImpl cap, SimpleFilter sf)
     {
-        List<Attribute> attrs = cap.getAttributes();
-        for (int attrIdx = 0; attrIdx < attrs.size(); attrIdx++)
+        Map<String, Object> attrs = cap.getAttributes();
+        for (Entry<String, Object> entry : attrs.entrySet())
         {
-            if (attrs.get(attrIdx).isMandatory()
-                && !matchMandatory(attrs.get(attrIdx), sf))
+            if (cap.isAttributeMandatory(entry.getKey())
+                && !matchMandatoryAttrbute(entry.getKey(), sf))
             {
                 return false;
             }
@@ -310,9 +310,9 @@ public class CapabilitySet
         return true;
     }
 
-    private static boolean matchMandatory(Attribute attr, SimpleFilter sf)
+    private static boolean matchMandatoryAttrbute(String attrName, SimpleFilter sf)
     {
-        if ((sf.getName() != null) && sf.getName().equals(attr.getName()))
+        if ((sf.getName() != null) && sf.getName().equals(attrName))
         {
             return true;
         }
@@ -323,7 +323,7 @@ public class CapabilitySet
             {
                 SimpleFilter sf2 = (SimpleFilter) list.get(i);
                 if ((sf2.getName() != null)
-                    && sf2.getName().equals(attr.getName()))
+                    && sf2.getName().equals(attrName))
                 {
                     return true;
                 }

@@ -24,9 +24,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
@@ -40,9 +40,9 @@ public interface Module
     boolean isExtension();
     String getSymbolicName();
     Version getVersion();
-    List<Capability> getCapabilities();
-    List<Requirement> getRequirements();
-    List<Requirement> getDynamicRequirements();
+    List<BundleCapabilityImpl> getCapabilities();
+    List<BundleRequirementImpl> getRequirements();
+    List<BundleRequirementImpl> getDynamicRequirements();
     List<R4Library> getNativeLibraries();
     int getDeclaredActivationPolicy();
 

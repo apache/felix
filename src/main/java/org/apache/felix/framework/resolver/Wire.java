@@ -20,8 +20,8 @@ package org.apache.felix.framework.resolver;
 
 import java.net.URL;
 import java.util.Enumeration;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 public interface Wire
 {
@@ -35,7 +35,7 @@ public interface Wire
      * resulted in the creation of this wire.
      * @return
     **/
-    public Requirement getRequirement();
+    public BundleRequirementImpl getRequirement();
     /**
      * Returns the exporting module.
      * @return The exporting module.
@@ -46,7 +46,7 @@ public interface Wire
      * satisfies the requirement of the importing module.
      * @return
     **/
-    public Capability getCapability();
+    public BundleCapabilityImpl getCapability();
     /**
      * Returns whether or not the wire has a given package name. For some
      * wires, such as ones for Require-Bundle, there may be many packages.

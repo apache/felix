@@ -22,15 +22,13 @@ import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.resolver.Wire;
 
 import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.*;
 import org.osgi.framework.BundleReference;
 
@@ -385,9 +383,15 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // ServiceReference implementation
     //
 
-    class ServiceReferenceImpl implements ServiceReference, Capability
+    class ServiceReferenceImpl extends BundleCapabilityImpl implements ServiceReference
     {
-        private ServiceReferenceImpl() {}
+        private final ServiceReferenceMap m_map;
+
+        private ServiceReferenceImpl()
+        {
+            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            m_map = new ServiceReferenceMap();
+        }
 
         ServiceRegistrationImpl getRegistration()
         {
@@ -398,41 +402,39 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // Capability methods.
         //
 
+        @Override
         public Module getModule()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public String getNamespace()
         {
             return "service-reference";
         }
 
-        public Directive getDirective(String name)
+        @Override
+        public Map<String, String> getDirectives()
         {
-            return null;
+            return Collections.EMPTY_MAP;
         }
 
-        public List<Directive> getDirectives()
+        @Override
+        public Map<String, Object> getAttributes()
         {
-            return Collections.EMPTY_LIST;
+            return m_map;
         }
 
-        public Attribute getAttribute(String name)
-        {
-            Object value = ServiceRegistrationImpl.this.getProperty(name);
-            return (value == null) ? null : new Attribute(name, value, false);
-        }
-
-        public List<Attribute> getAttributes()
-        {
-            return Collections.EMPTY_LIST;
-        }
-
+        @Override
         public List<String> getUses()
         {
             return Collections.EMPTY_LIST;
         }
+
+        //
+        // ServiceReference methods.
+        //
 
         public Object getProperty(String s)
         {
@@ -640,6 +642,69 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
             // If ranks are equal, then sort by service id in descending order.
             return (id.compareTo(otherId) < 0) ? 1 : -1;
+        }
+    }
+
+    private class ServiceReferenceMap implements Map
+    {
+        public int size()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public boolean isEmpty()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public boolean containsKey(Object o)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public boolean containsValue(Object o)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Object get(Object o)
+        {
+            return ServiceRegistrationImpl.this.getProperty((String) o);
+        }
+
+        public Object put(Object k, Object v)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Object remove(Object o)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void putAll(Map map)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void clear()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Set<Object> keySet()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Collection<Object> values()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Set<Entry<Object, Object>> entrySet()
+        {
+            return Collections.EMPTY_SET;
         }
     }
 }
