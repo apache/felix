@@ -3172,11 +3172,11 @@ public class Felix extends BundleImpl implements Framework
 
     }
 
-    Object getService(Bundle bundle, ServiceReference ref)
+    <S> S getService(Bundle bundle, ServiceReference<S> ref)
     {
         try
         {
-            return m_registry.getService(bundle, ref);
+            return (S) m_registry.getService(bundle, ref);
         }
         catch (ServiceException ex)
         {
