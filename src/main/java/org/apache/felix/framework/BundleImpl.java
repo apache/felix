@@ -18,7 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -26,20 +25,12 @@ import java.security.ProtectionDomain;
 import java.util.*;
 
 import org.apache.felix.framework.cache.BundleArchive;
+import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.ext.SecurityProvider;
+import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
-import org.osgi.framework.AdminPermission;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServicePermission;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Version;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.*;
 
 class BundleImpl implements Bundle
 {
@@ -47,7 +38,7 @@ class BundleImpl implements Bundle
     private final Felix __m_felix;
 
     private final BundleArchive m_archive;
-    private final List<BundleRevision> m_revisions = new ArrayList<BundleRevision>(0);
+    private final List<Module> m_modules = new ArrayList<Module>(0);
     private volatile int m_state;
     private boolean m_useDeclaredActivationPolicy;
     private BundleActivator m_activator = null;
@@ -87,8 +78,8 @@ class BundleImpl implements Bundle
         m_activator = null;
         m_context = null;
 
-        BundleRevision revision = createRevision();
-        addRevision(revision);
+        Module module = createModule();
+        addModule(module);
     }
 
     // This method exists because the system bundle extends BundleImpl
@@ -105,10 +96,9 @@ class BundleImpl implements Bundle
         return m_archive;
     }
 
-// Only called when the framework is stopping. Don't need to clean up dependencies.
     synchronized void close()
     {
-        closeRevisions();
+        closeModules();
         try
         {
             m_archive.close();
@@ -122,35 +112,45 @@ class BundleImpl implements Bundle
         }
     }
 
-// Called when install fails, when stopping framework with uninstalled bundles,
-// and when refreshing an uninstalled bundle. Only need to clear up dependencies
-// for last case.
     synchronized void closeAndDelete() throws Exception
     {
         // Mark the bundle as stale, since it is being deleted.
         m_stale = true;
-        // Close all revisions.
-        closeRevisions();
+        // Close all modules.
+        closeModules();
         // Delete bundle archive, which will close revisions.
         m_archive.closeAndDelete();
     }
 
-// Called from BundleImpl.close(), BundleImpl.closeAndDelete(), and BundleImpl.refresh()
-    private void closeRevisions()
+    private void closeModules()
     {
-        // Remove the bundle's associated revisions from the resolver state
+        // Remove the bundle's associated modules from the resolver state
         // and close them.
-        for (BundleRevision br : m_revisions)
+        for (Module m : m_modules)
         {
-            // Remove the revision from the resolver state.
-            getFramework().getResolver().removeRevision(br);
+            // Remove the module from the resolver state.
+            getFramework().getResolver().removeModule(m);
 
-            // Close the revision's content.
-            ((BundleRevisionImpl) br).close();
+            // Set fragments to null, which will remove the module from all
+            // of its dependent fragment modules.
+            try
+            {
+                ((ModuleImpl) m).attachFragments(null);
+            }
+            catch (Exception ex)
+            {
+                getFramework().getLogger().log(
+                    m.getBundle(), Logger.LOG_ERROR, "Error detaching fragments.", ex);
+            }
+            // Set wires to null, which will remove the module from all
+            // of its dependent modules.
+            ((ModuleImpl) m).setWires(null);
+
+            // Close the module's content.
+            ((ModuleImpl) m).close();
         }
     }
 
-// Called when refreshing a bundle. Must clean up dependencies beforehand.
     synchronized void refresh() throws Exception
     {
         if (isExtension() && (getFramework().getState() != Bundle.STOPPING))
@@ -160,17 +160,17 @@ class BundleImpl implements Bundle
         }
         else
         {
-            // Dispose of the current revisions.
-            closeRevisions();
+            // Dispose of the current modules.
+            closeModules();
 
             // Now we will purge all old revisions, only keeping the newest one.
             m_archive.purge();
 
             // Lastly, we want to reset our bundle be reinitializing our state
-            // and recreating a revision object for the newest revision.
-            m_revisions.clear();
-            final BundleRevision br = createRevision();
-            addRevision(br);
+            // and recreating a module for the newest revision.
+            m_modules.clear();
+            final Module module = createModule();
+            addModule(module);
             m_state = Bundle.INSTALLED;
             m_stale = false;
             m_cachedHeaders.clear();
@@ -323,8 +323,7 @@ class BundleImpl implements Bundle
         // Spec says empty local returns raw headers.
         if (locale.length() == 0)
         {
-            result = new StringMap(
-                ((BundleRevisionImpl) getCurrentRevision()).getHeaders(), false);
+            result = new StringMap(getCurrentModule().getHeaders(), false);
         }
 
         // If we have no result, try to get it from the cached headers.
@@ -360,8 +359,7 @@ class BundleImpl implements Bundle
         if (result == null)
         {
             // Get a modifiable copy of the raw headers.
-            Map headers = new StringMap(
-                ((BundleRevisionImpl) getCurrentRevision()).getHeaders(), false);
+            Map headers = new StringMap(getCurrentModule().getHeaders(), false);
             // Assume for now that this will be the result.
             result = headers;
 
@@ -390,22 +388,23 @@ class BundleImpl implements Bundle
                     basename = Constants.BUNDLE_LOCALIZATION_DEFAULT_BASENAME;
                 }
 
-                // Create ordered list of revisions to search for localization
+                // Create ordered list of modules to search for localization
                 // property resources.
-                List<BundleRevision> revisionList = createLocalizationRevisionList(
-                    (BundleRevisionImpl) getCurrentRevision());
+                List moduleList = createLocalizationModuleList(
+                    (ModuleImpl) getCurrentModule());
 
                 // Create ordered list of files to load properties from
-                List<String> resourceList = createLocalizationResourceList(basename, locale);
+                List resourceList = createLocalizationResourceList(basename, locale);
 
                 // Create a merged props file with all available props for this locale
                 boolean found = false;
                 Properties mergedProperties = new Properties();
-                for (BundleRevision br : revisionList)
+                for (int modIdx = 0; modIdx < moduleList.size(); modIdx++)
                 {
-                    for (String res : resourceList)
+                    for (Iterator it = resourceList.iterator(); it.hasNext(); )
                     {
-                        URL temp = ((BundleRevisionImpl) br).getEntry(res + ".properties");
+                        URL temp = ((Module) moduleList.get(modIdx)).getEntry(
+                            it.next() + ".properties");
                         if (temp != null)
                         {
                             found = true;
@@ -467,39 +466,36 @@ class BundleImpl implements Bundle
         }
     }
 
-    private static List<BundleRevision> createLocalizationRevisionList(BundleRevision br)
+    private static List createLocalizationModuleList(ModuleImpl module)
     {
-        // If the revision is a fragment, then we actually need
+        // If the module is a fragment, then we actually need
         // to search its host and associated fragments for its
         // localization information. So, check to see if there
         // are any hosts and then use the one with the highest
         // version instead of the fragment itself. If there are
-        // no hosts, but the revision is a fragment, then just
-        // search the revision itself.
-        if (Util.isFragment(br))
+        // no hosts, but the module is a fragment, then just
+        // search the module itself.
+        if (Util.isFragment(module))
         {
-            if (br.getWiring() != null)
+            List<Wire> hostWires = module.getWires();
+            if ((hostWires != null) && (hostWires.size() > 0))
             {
-                List<BundleWire> hostWires = br.getWiring().getRequiredWires(null);
-                if ((hostWires != null) && (hostWires.size() > 0))
+                module = (ModuleImpl) hostWires.get(0).getExporter();
+                for (int hostIdx = 1; hostIdx < hostWires.size(); hostIdx++)
                 {
-                    br = hostWires.get(0).getProviderWiring().getRevision();
-                    for (int hostIdx = 1; hostIdx < hostWires.size(); hostIdx++)
+                    if (module.getVersion().compareTo(
+                        hostWires.get(hostIdx).getExporter().getVersion()) < 0)
                     {
-                        if (br.getVersion().compareTo(
-                            hostWires.get(hostIdx).getProviderWiring().getRevision().getVersion()) < 0)
-                        {
-                            br = hostWires.get(hostIdx).getProviderWiring().getRevision();
-                        }
+                        module = (ModuleImpl) hostWires.get(hostIdx).getExporter();
                     }
                 }
             }
         }
 
-        // Create a list of the revision and any attached fragment revisions.
-        List<BundleRevision> result = new ArrayList<BundleRevision>();
-        result.add(br);
-        List<BundleRevision> fragments = ((BundleWiringImpl) br.getWiring()).getFragments();
+        // Create a list of the module and any attached fragments.
+        List result = new ArrayList();
+        result.add(module);
+        List<Module> fragments = module.getFragments();
         if (fragments != null)
         {
             result.addAll(fragments);
@@ -507,9 +503,9 @@ class BundleImpl implements Bundle
         return result;
     }
 
-    private static List<String> createLocalizationResourceList(String basename, String locale)
+    private static List createLocalizationResourceList(String basename, String locale)
     {
-        List<String> result = new ArrayList(4);
+        List result = new ArrayList(4);
 
         StringTokenizer tokens;
         StringBuffer tempLocale = new StringBuffer(basename);
@@ -857,9 +853,9 @@ class BundleImpl implements Bundle
 
     synchronized boolean isExtension()
     {
-        for (int i = (m_revisions.size() - 1); i > -1; i--)
+        for (int i = (m_modules.size() - 1); i > -1; i--)
         {
-            if (((BundleRevisionImpl) m_revisions.get(i)).isExtension())
+            if (m_modules.get(i).isExtension())
             {
                 return true;
             }
@@ -869,12 +865,12 @@ class BundleImpl implements Bundle
 
     public String getSymbolicName()
     {
-        return getCurrentRevision().getSymbolicName();
+        return getCurrentModule().getSymbolicName();
     }
 
     public Version getVersion()
     {
-        return getCurrentRevision().getVersion();
+        return getCurrentModule().getVersion();
     }
 
     public boolean hasPermission(Object obj)
@@ -999,24 +995,9 @@ class BundleImpl implements Bundle
         getFramework().uninstallBundle(this);
     }
 
-    public <A> A adapt(Class<A> type)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public File getDataFile(String filename)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public int compareTo(Bundle t)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     public String toString()
     {
-        String sym = getCurrentRevision().getSymbolicName();
+        String sym = getCurrentModule().getSymbolicName();
         if (sym != null)
         {
             return sym + " [" + getBundleId() +"]";
@@ -1026,11 +1007,11 @@ class BundleImpl implements Bundle
 
     synchronized boolean isRemovalPending()
     {
-        return (m_state == Bundle.UNINSTALLED) || (m_revisions.size() > 1)  || m_stale;
+        return (m_state == Bundle.UNINSTALLED) || (m_modules.size() > 1)  || m_stale;
     }
 
     //
-    // Revision management.
+    // Module management.
     //
 
     /**
@@ -1045,22 +1026,22 @@ class BundleImpl implements Bundle
      * no limit on the potential number of bundle JAR file revisions.
      * @return array of modules corresponding to the bundle JAR file revisions.
     **/
-    synchronized List<BundleRevision> getRevisions()
+    synchronized List<Module> getModules()
     {
-        return m_revisions;
+        return m_modules;
     }
 
     /**
      * Determines if the specified module is associated with this bundle.
-     * @param revision the module to determine if it is associate with this bundle.
+     * @param module the module to determine if it is associate with this bundle.
      * @return <tt>true</tt> if the specified module is in the array of modules
      *         associated with this bundle, <tt>false</tt> otherwise.
     **/
-    synchronized boolean hasRevision(BundleRevision revision)
+    synchronized boolean hasModule(Module module)
     {
-        for (int i = 0; i < m_revisions.size(); i++)
+        for (int i = 0; i < m_modules.size(); i++)
         {
-            if (m_revisions.get(i) == revision)
+            if (m_modules.get(i) == module)
             {
                 return true;
             }
@@ -1073,9 +1054,34 @@ class BundleImpl implements Bundle
      * in the module array.
      * @return the newest module.
     **/
-    synchronized BundleRevision getCurrentRevision()
+    synchronized Module getCurrentModule()
     {
-        return m_revisions.get(m_revisions.size() - 1);
+        return m_modules.get(m_modules.size() - 1);
+    }
+
+    synchronized boolean isUsed()
+    {
+        boolean unresolved = true;
+        for (int i = 0; unresolved && (i < m_modules.size()); i++)
+        {
+            if (m_modules.get(i).isResolved())
+            {
+                unresolved = false;
+            }
+        }
+        boolean used = false;
+        for (int i = 0; !unresolved && !used && (i < m_modules.size()); i++)
+        {
+            List<Module> dependents = ((ModuleImpl) m_modules.get(i)).getDependents();
+            for (int j = 0; (dependents != null) && (j < dependents.size()) && !used; j++)
+            {
+                if (dependents.get(j) != m_modules.get(i))
+                {
+                    used = true;
+                }
+            }
+        }
+        return used;
     }
 
     synchronized void revise(String location, InputStream is)
@@ -1085,8 +1091,8 @@ class BundleImpl implements Bundle
         m_archive.revise(location, is);
         try
         {
-            BundleRevision revision = createRevision();
-            addRevision(revision);
+            Module module = createModule();
+            addModule(module);
         }
         catch (Exception ex)
         {
@@ -1098,27 +1104,27 @@ class BundleImpl implements Bundle
     synchronized boolean rollbackRevise() throws Exception
     {
         boolean isExtension = isExtension();
-        BundleRevision br = m_revisions.remove(m_revisions.size() - 1);
+        Module m = m_modules.remove(m_modules.size() - 1);
         if (!isExtension)
         {
-            // Since revising a bundle adds a revision to the global
+            // Since revising a module adds the module to the global
             // state, we must remove it from the global state on rollback.
-            getFramework().getResolver().removeRevision(br);
+            getFramework().getResolver().removeModule(m);
         }
         return m_archive.rollbackRevise();
     }
 
     // This method should be private, but is visible because the
-    // system bundle needs to add its revision directly to the bundle,
-    // since it doesn't have an archive from which it will be created,
-    // which is the normal case.
-    synchronized void addRevision(BundleRevision revision) throws Exception
+    // system bundle needs to add its module directly to the bundle,
+    // since it doesn't have an archive from which the module will
+    // be created, which is the normal case.
+    synchronized void addModule(Module module) throws Exception
     {
-        m_revisions.add(revision);
+        m_modules.add(module);
 
-        // Set protection domain after adding the revision to the bundle,
-        // since this requires that the bundle has a revision.
-        ((BundleRevisionImpl) revision).setSecurityContext(
+        // Set protection domain after adding the module to the bundle,
+        // since this requires that the bundle has a module.
+        ((ModuleImpl) module).setSecurityContext(
             new BundleProtectionDomain(getFramework(), this));
 
         SecurityProvider sp = getFramework().getSecurityProvider();
@@ -1130,29 +1136,30 @@ class BundleImpl implements Bundle
             }
             catch (Exception ex) 
             {
-                m_revisions.remove(m_revisions.size() - 1);
+                m_modules.remove(m_modules.size() - 1);
                 throw ex;
             }
         }
 
-        // TODO: REFACTOR - consider nulling capabilities for extension bundles
-        // so we don't need this check anymore.
+        // TODO: REFACTOR - consider moving ModuleImpl into the framework package
+        // so we can null module capabilities for extension bundles so we don't
+        // need this check anymore.
         if (!isExtension())
         {
-            // Now that the revision is added to the bundle, we can update
-            // the resolver's state to be aware of any new capabilities.
-            getFramework().getResolver().addRevision(revision);
+            // Now that the module is added to the bundle, we can update
+            // the resolver's module state.
+            getFramework().getResolver().addModule(module);
         }
     }
 
-    private BundleRevision createRevision() throws Exception
+    private Module createModule() throws Exception
     {
-        // Get and parse the manifest from the most recent revision and
-        // create an associated revision object for it.
+        // Get and parse the manifest from the most recent revision to
+        // create an associated module for it.
         Map headerMap = m_archive.getCurrentRevision().getManifestHeader();
 
-        // Create the bundle revision instance.
-        BundleRevisionImpl revision = new BundleRevisionImpl(
+        // Create the module instance.
+        ModuleImpl module = new ModuleImpl(
             getFramework().getLogger(),
             getFramework().getConfig(),
             getFramework().getResolver(),
@@ -1166,11 +1173,11 @@ class BundleImpl implements Bundle
             getFramework().getBootPackageWildcards());
 
         // Verify that the bundle symbolic name + version is unique.
-        if (revision.getManifestVersion().equals("2"))
+        if (module.getManifestVersion().equals("2"))
         {
-            Version bundleVersion = revision.getVersion();
+            Version bundleVersion = module.getVersion();
             bundleVersion = (bundleVersion == null) ? Version.emptyVersion : bundleVersion;
-            String symName = revision.getSymbolicName();
+            String symName = module.getSymbolicName();
 
             Bundle[] bundles = getFramework().getBundles();
             for (int i = 0; (bundles != null) && (i < bundles.length); i++)
@@ -1179,8 +1186,8 @@ class BundleImpl implements Bundle
                 if (id != getBundleId())
                 {
                     String sym = bundles[i].getSymbolicName();
-                    Version ver = ((BundleRevisionImpl)
-                        ((BundleImpl) bundles[i]).getCurrentRevision()).getVersion();
+                    Version ver = ((ModuleImpl)
+                        ((BundleImpl) bundles[i]).getCurrentModule()).getVersion();
                     if ((symName != null) && (sym != null) && symName.equals(sym) && bundleVersion.equals(ver))
                     {
                         throw new BundleException(
@@ -1191,17 +1198,16 @@ class BundleImpl implements Bundle
             }
         }
 
-        return revision;
+        return module;
     }
 
     synchronized ProtectionDomain getProtectionDomain()
     {
         ProtectionDomain pd = null;
 
-        for (int i = m_revisions.size() - 1; (i >= 0) && (pd == null); i--)
+        for (int i = m_modules.size() - 1; (i >= 0) && (pd == null); i--)
         {
-            pd = (ProtectionDomain)
-                ((BundleRevisionImpl) m_revisions.get(i)).getSecurityContext();
+            pd = (ProtectionDomain) m_modules.get(i).getSecurityContext();
         }
 
         return pd;

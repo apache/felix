@@ -20,23 +20,10 @@ package org.apache.felix.framework;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Dictionary;
 
 import org.apache.felix.framework.ext.FelixBundleContext;
-import org.osgi.framework.AdminPermission;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.FrameworkListener;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServicePermission;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.framework.*;
 
 class BundleContextImpl implements FelixBundleContext
 {
@@ -178,18 +165,6 @@ class BundleContextImpl implements FelixBundleContext
         return m_felix.getBundle(id);
     }
 
-    public Bundle getBundle(String location)
-    {
-        checkValidity();
-
-        // CONCURRENCY NOTE: This is a check-then-act situation,
-        // but we ignore it since the time window is small and
-        // the result is the same as if the calling thread had
-        // won the race condition.
-
-        return m_felix.getBundle(location);
-    }
-
     public Bundle[] getBundles()
     {
         checkValidity();
@@ -306,14 +281,14 @@ class BundleContextImpl implements FelixBundleContext
         m_felix.removeFrameworkListener(m_bundle, l);
     }
 
-    public ServiceRegistration<?> registerService(
-        String clazz, Object svcObj, Dictionary<String, ? > dict)
+    public ServiceRegistration registerService(
+        String clazz, Object svcObj, Dictionary dict)
     {
         return registerService(new String[] { clazz }, svcObj, dict);
     }
 
-    public ServiceRegistration<?> registerService(
-        String[] clazzes, Object svcObj, Dictionary<String, ? > dict)
+    public ServiceRegistration registerService(
+        String[] clazzes, Object svcObj, Dictionary dict)
     {
         checkValidity();
 
@@ -338,13 +313,7 @@ class BundleContextImpl implements FelixBundleContext
         return m_felix.registerService(m_bundle, clazzes, svcObj, dict);
     }
 
-    public <S> ServiceRegistration<S> registerService(
-        Class<S> clazz, S svcObj, Dictionary<String, ? > dict)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public ServiceReference<?> getServiceReference(String clazz)
+    public ServiceReference getServiceReference(String clazz)
     {
         checkValidity();
 
@@ -363,11 +332,6 @@ class BundleContextImpl implements FelixBundleContext
             m_logger.log(m_bundle, Logger.LOG_ERROR, "BundleContextImpl: " + ex);
         }
         return null;
-    }
-
-    public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     private ServiceReference getBestServiceReference(ServiceReference[] refs)
@@ -396,8 +360,7 @@ class BundleContextImpl implements FelixBundleContext
         return bestRef;
     }
 
-    public ServiceReference<?>[] getAllServiceReferences(String clazz, String filter)
-        throws InvalidSyntaxException
+    public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException
     {
         checkValidity();
 
@@ -410,7 +373,7 @@ class BundleContextImpl implements FelixBundleContext
 
     }
 
-    public ServiceReference<?>[] getServiceReferences(String clazz, String filter)
+    public ServiceReference[] getServiceReferences(String clazz, String filter)
         throws InvalidSyntaxException
     {
         checkValidity();
@@ -424,14 +387,7 @@ class BundleContextImpl implements FelixBundleContext
 
     }
 
-    public <S> Collection<ServiceReference<S>> getServiceReferences(
-        Class<S> clazz, String filter)
-        throws InvalidSyntaxException
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public <S> S getService(ServiceReference<S> ref)
+    public Object getService(ServiceReference ref)
     {
         checkValidity();
 
@@ -455,7 +411,7 @@ class BundleContextImpl implements FelixBundleContext
         return m_felix.getService(m_bundle, ref);
     }
 
-    public boolean ungetService(ServiceReference<?> ref)
+    public boolean ungetService(ServiceReference ref)
     {
         checkValidity();
 

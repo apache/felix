@@ -19,77 +19,75 @@
 package org.apache.felix.framework.resolver;
 
 import java.util.Comparator;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.capabilityset.Capability;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.framework.wiring.BundleCapability;
 
-public class CandidateComparator implements Comparator<BundleCapability>
+public class CandidateComparator implements Comparator<Capability>
 {
-    public int compare(BundleCapability cap1, BundleCapability cap2)
+    public int compare(Capability cap1, Capability cap2)
     {
         // First check resolved state, since resolved capabilities have priority
         // over unresolved ones. Compare in reverse order since we want to sort
         // in descending order.
         int c = 0;
-        if ((cap1.getRevision().getWiring() != null)
-            && (cap2.getRevision().getWiring() == null))
+        if (cap1.getModule().isResolved() && !cap2.getModule().isResolved())
         {
             c = -1;
         }
-        else if ((cap1.getRevision().getWiring() == null)
-            && (cap2.getRevision().getWiring() != null))
+        else if (!cap1.getModule().isResolved() && cap2.getModule().isResolved())
         {
             c = 1;
         }
 
-        // Compare revision capabilities.
-        if ((c == 0) && cap1.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+        // Compare module capabilities.
+        if ((c == 0) && cap1.getNamespace().equals(Capability.MODULE_NAMESPACE))
         {
-            c = ((Comparable) cap1.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
-                .compareTo(cap2.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE));
+            c = ((Comparable) cap1.getAttribute(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
+                .getValue()).compareTo(cap2.getAttribute(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
+                    .getValue());
             if (c == 0)
             {
-                Version v1 = (!cap1.getAttributes().containsKey(Constants.BUNDLE_VERSION_ATTRIBUTE))
+                Version v1 = (cap1.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE) == null)
                     ? Version.emptyVersion
-                    : (Version) cap1.getAttributes().get(Constants.BUNDLE_VERSION_ATTRIBUTE);
-                Version v2 = (!cap2.getAttributes().containsKey(Constants.BUNDLE_VERSION_ATTRIBUTE))
+                    : (Version) cap1.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE).getValue();
+                Version v2 = (cap2.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE) == null)
                     ? Version.emptyVersion
-                    : (Version) cap2.getAttributes().get(Constants.BUNDLE_VERSION_ATTRIBUTE);
+                    : (Version) cap2.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE).getValue();
                 // Compare these in reverse order, since we want
                 // highest version to have priority.
                 c = v2.compareTo(v1);
             }
         }
         // Compare package capabilities.
-        else if ((c == 0) && cap1.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        else if ((c == 0) && cap1.getNamespace().equals(Capability.PACKAGE_NAMESPACE))
         {
-            c = ((Comparable) cap1.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR))
-                .compareTo(cap2.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+            c = ((Comparable) cap1.getAttribute(Capability.PACKAGE_ATTR).getValue())
+                .compareTo(cap2.getAttribute(Capability.PACKAGE_ATTR).getValue());
             if (c == 0)
             {
-                Version v1 = (!cap1.getAttributes().containsKey(BundleCapabilityImpl.VERSION_ATTR))
+                Version v1 = (cap1.getAttribute(Capability.VERSION_ATTR) == null)
                     ? Version.emptyVersion
-                    : (Version) cap1.getAttributes().get(BundleCapabilityImpl.VERSION_ATTR);
-                Version v2 = (!cap2.getAttributes().containsKey(BundleCapabilityImpl.VERSION_ATTR))
+                    : (Version) cap1.getAttribute(Capability.VERSION_ATTR).getValue();
+                Version v2 = (cap2.getAttribute(Capability.VERSION_ATTR) == null)
                     ? Version.emptyVersion
-                    : (Version) cap2.getAttributes().get(BundleCapabilityImpl.VERSION_ATTR);
+                    : (Version) cap2.getAttribute(Capability.VERSION_ATTR).getValue();
                 // Compare these in reverse order, since we want
                 // highest version to have priority.
                 c = v2.compareTo(v1);
             }
         }
 
-        // Finally, compare bundle identity.
+        // Finally, compare module identity.
         if (c == 0)
         {
-            if (cap1.getRevision().getBundle().getBundleId() <
-                cap2.getRevision().getBundle().getBundleId())
+            if (cap1.getModule().getBundle().getBundleId() <
+                cap2.getModule().getBundle().getBundleId())
             {
                 c = -1;
             }
-            else if (cap1.getRevision().getBundle().getBundleId() >
-                cap2.getRevision().getBundle().getBundleId())
+            else if (cap1.getModule().getBundle().getBundleId() >
+                cap2.getModule().getBundle().getBundleId())
             {
                 c = 1;
             }
