@@ -135,11 +135,11 @@ class EntryFilterEnumeration implements Enumeration
                     int dirSlashIdx = entryName.indexOf('/', m_path.length());
 
                     // JAR files are supposed to contain entries for directories,
-                    // but not all do. So calculate the directory for this entry
-                    // and see if we've already seen an entry for the directory.
-                    // If not, synthesize an entry for the directory. If we are
-                    // doing a recursive match, we need to synthesize each matching
-                    // subdirectory of the entry.
+                    // but not all do. So determine the directory for this entry
+                    // and see if we've already seen an entry for for it. If not,
+                    // synthesize an entry for it. If we are doing a recursive
+                    // match, we need to synthesize each matching subdirectory
+                    // of the entry.
                     if (dirSlashIdx >= 0)
                     {
                         // Start synthesizing directories for the current entry
@@ -151,39 +151,37 @@ class EntryFilterEnumeration implements Enumeration
                             // Calculate the subdirectory name.
                             dir = entryName.substring(0, subDirSlashIdx + 1);
                             // If we have not seen this directory before, then record
-                            // it and potentially synthesize an entry for it.
+                            // it and add it to the list of available next entries. If
+                            // the original entry is actually a directory, then it will
+                            // be added to next entries like normal if it matches, but if
+                            // it is not a directory, its parent directory entries may be
+                            // synthesized depending on the matching filter and recursion.
                             if (!m_dirEntries.contains(dir))
                             {
-                                // Record it.
+                                // Record the directory entry.
                                 m_dirEntries.add(dir);
-                                // If the entry is actually a directory entry (i.e.,
-                                // it ends with a slash), then we don't need to
-                                // synthesize an entry since it exists; otherwise,
-                                // synthesize an entry if it matches the file pattern.
-                                if (entryName.length() != (subDirSlashIdx + 1))
+                                // Add the directory to the list of
+                                if (SimpleFilter.compareSubstring(
+                                    m_filePattern, getLastPathElement(dir)))
                                 {
-                                    // See if the file pattern matches the last
-                                    // element of the path.
-                                    if (SimpleFilter.compareSubstring(
-                                        m_filePattern, getLastPathElement(dir)))
+                                    // Add synthesized directory entry to the next
+                                    // entries list in the correct form.
+                                    if (m_isURLValues)
                                     {
-                                        if (m_isURLValues)
+                                        entryURL = (entryURL == null)
+                                            ? m_modules.get(m_moduleIndex).getEntry(entryName)
+                                            : entryURL;
+                                        try
                                         {
-                                            entryURL = (entryURL == null)
-                                                ? m_modules.get(m_moduleIndex).getEntry(entryName)
-                                                : entryURL;
-                                            try
-                                            {
-                                                m_nextEntries.add(new URL(entryURL, "/" + dir));
-                                            }
-                                            catch (MalformedURLException ex)
-                                            {
-                                            }
+                                            m_nextEntries.add(new URL(entryURL, "/" + dir));
                                         }
-                                        else
+                                        catch (MalformedURLException ex)
                                         {
-                                            m_nextEntries.add(dir);
                                         }
+                                    }
+                                    else
+                                    {
+                                        m_nextEntries.add(dir);
                                     }
                                 }
                             }
@@ -197,7 +195,8 @@ class EntryFilterEnumeration implements Enumeration
                     // Now we actually need to check if the current entry itself should
                     // be filtered or not. If we are recursive or the current entry
                     // is a child (not a grandchild) of the initial path, then we need
-                    // to check if it matches the file pattern.
+                    // to check if it matches the file pattern. If we've already added
+                    // or synthesized the directory entry, then we can ignore it.
                     if (!m_dirEntries.contains(entryName)
                         && (m_recurse || (dirSlashIdx < 0)
                             || (dirSlashIdx == entryName.length() - 1)))
@@ -224,6 +223,10 @@ class EntryFilterEnumeration implements Enumeration
             if (m_nextEntries.isEmpty())
             {
                 m_moduleIndex++;
+                // Reset directory entries, since fragments may
+                // have overlapping directory entries that need
+                // to be returned.
+                m_dirEntries.clear();
             }
         }
     }
