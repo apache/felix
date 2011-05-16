@@ -57,14 +57,19 @@ public class FilterImpl implements Filter
         return CapabilitySet.matches((ServiceReferenceImpl) sr, m_filter);
     }
 
-    public boolean match(Dictionary dctnr)
+    public boolean match(Dictionary<String, ? > dctnr)
     {
         return CapabilitySet.matches(new DictionaryCapability(dctnr, false), m_filter);
     }
 
-    public boolean matchCase(Dictionary dctnr)
+    public boolean matchCase(Dictionary<String, ? > dctnr)
     {
         return CapabilitySet.matches(new DictionaryCapability(dctnr, true), m_filter);
+    }
+
+    public boolean matches(Map<String, ?> map)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public boolean equals(Object o)
