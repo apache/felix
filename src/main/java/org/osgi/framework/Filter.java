@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2009). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 package org.osgi.framework;
 
 import java.util.Dictionary;
-import java.util.Map;
 
 /**
- * An <a href="http://www.ietf.org/rfc/rfc1960.txt">RFC 1960</a>-based Filter.
+ * An RFC 1960-based Filter.
  * <p>
- * {@code Filter}s can be created by calling {@link BundleContext#createFilter}
- * or {@link FrameworkUtil#createFilter} with a filter string.
+ * <code>Filter</code>s can be created by calling
+ * {@link BundleContext#createFilter} or {@link FrameworkUtil#createFilter} with
+ * a filter string.
  * <p>
- * A {@code Filter} can be used numerous times to determine if the match
- * argument matches the filter string that was used to create the {@code Filter}.
+ * A <code>Filter</code> can be used numerous times to determine if the match
+ * argument matches the filter string that was used to create the
+ * <code>Filter</code>.
  * <p>
  * Some examples of LDAP filters are:
  * 
@@ -37,100 +38,86 @@ import java.util.Map;
  * </pre>
  * 
  * @since 1.1
- * @see "Core Specification, Filters, for a description of the filter string syntax."
+ * @see "Core Specification, section 5.5, for a description of the filter string syntax."
  * @ThreadSafe
- * @noimplement
- * @version $Id: 4d21267f4b85d1912d73f7e2c049cc968c4237f9 $
+ * @version $Revision: 6860 $
  */
 public interface Filter {
 	/**
 	 * Filter using a service's properties.
 	 * <p>
-	 * This {@code Filter} is executed using the keys and values of the
-	 * referenced service's properties. The keys are looked up in a case
-	 * insensitive manner.
+	 * This <code>Filter</code> is executed using the keys and values of the
+	 * referenced service's properties. The keys are case insensitively matched
+	 * with this <code>Filter</code>.
 	 * 
 	 * @param reference The reference to the service whose properties are used
 	 *        in the match.
-	 * @return {@code true} if the service's properties match this
-	 *         {@code Filter}; {@code false} otherwise.
+	 * @return <code>true</code> if the service's properties match this
+	 *         <code>Filter</code>; <code>false</code> otherwise.
 	 */
-	boolean match(ServiceReference< ? > reference);
+	public boolean match(ServiceReference reference);
 
 	/**
-	 * Filter using a {@code Dictionary} with case insensitive key lookup. This
-	 * {@code Filter} is executed using the specified {@code Dictionary}'s keys
-	 * and values. The keys are looked up in a case insensitive manner.
+	 * Filter using a <code>Dictionary</code>. This <code>Filter</code> is
+	 * executed using the specified <code>Dictionary</code>'s keys and values.
+	 * The keys are case insensitively matched with this <code>Filter</code>.
 	 * 
-	 * @param dictionary The {@code Dictionary} whose key/value pairs are used
-	 *        in the match.
-	 * @return {@code true} if the {@code Dictionary}'s values match this
-	 *         filter; {@code false} otherwise.
-	 * @throws IllegalArgumentException If {@code dictionary} contains case
+	 * @param dictionary The <code>Dictionary</code> whose keys are used in the
+	 *        match.
+	 * @return <code>true</code> if the <code>Dictionary</code>'s keys and
+	 *         values match this filter; <code>false</code> otherwise.
+	 * @throws IllegalArgumentException If <code>dictionary</code> contains case
 	 *         variants of the same key name.
 	 */
-	boolean match(Dictionary<String, ? > dictionary);
+	public boolean match(Dictionary dictionary);
 
 	/**
-	 * Returns this {@code Filter}'s filter string.
+	 * Returns this <code>Filter</code>'s filter string.
 	 * <p>
 	 * The filter string is normalized by removing whitespace which does not
 	 * affect the meaning of the filter.
 	 * 
-	 * @return This {@code Filter}'s filter string.
+	 * @return This <code>Filter</code>'s filter string.
 	 */
-	String toString();
+	public String toString();
 
 	/**
-	 * Compares this {@code Filter} to another {@code Filter}.
+	 * Compares this <code>Filter</code> to another <code>Filter</code>.
 	 * 
 	 * <p>
-	 * This implementation returns the result of calling
-	 * {@code this.toString().equals(obj.toString())}.
+	 * This method returns the result of calling
+	 * <code>this.toString().equals(obj.toString())</code>.
 	 * 
-	 * @param obj The object to compare against this {@code Filter}.
-	 * @return If the other object is a {@code Filter} object, then returns
+	 * @param obj The object to compare against this <code>Filter</code>.
+	 * @return If the other object is a <code>Filter</code> object, then returns
 	 *         the result of calling
-	 *         {@code this.toString().equals(obj.toString())};
-	 *         {@code false} otherwise.
+	 *         <code>this.toString().equals(obj.toString())</code>;
+	 *         <code>false</code> otherwise.
 	 */
-	boolean equals(Object obj);
+	public boolean equals(Object obj);
 
 	/**
-	 * Returns the hashCode for this {@code Filter}.
+	 * Returns the hashCode for this <code>Filter</code>.
 	 * 
 	 * <p>
-	 * This implementation returns the result of calling
-	 * {@code this.toString().hashCode()}.
+	 * This method returns the result of calling
+	 * <code>this.toString().hashCode()</code>.
 	 * 
-	 * @return The hashCode of this {@code Filter}.
+	 * @return The hashCode of this <code>Filter</code>.
 	 */
-	int hashCode();
+	public int hashCode();
 
 	/**
-	 * Filter using a {@code Dictionary}. This {@code Filter} is executed using
-	 * the specified {@code Dictionary}'s keys and values. The keys are looked
-	 * up in a normal manner respecting case.
+	 * Filter with case sensitivity using a <code>Dictionary</code>. This
+	 * <code>Filter</code> is executed using the specified
+	 * <code>Dictionary</code>'s keys and values. The keys are case sensitively
+	 * matched with this <code>Filter</code>.
 	 * 
-	 * @param dictionary The {@code Dictionary} whose key/value pairs are used
-	 *        in the match.
-	 * @return {@code true} if the {@code Dictionary}'s values match this
-	 *         filter; {@code false} otherwise.
+	 * @param dictionary The <code>Dictionary</code> whose keys are used in the
+	 *        match.
+	 * @return <code>true</code> if the <code>Dictionary</code>'s keys and
+	 *         values match this filter; <code>false</code> otherwise.
 	 * @since 1.3
 	 */
-	boolean matchCase(Dictionary<String, ? > dictionary);
-
-	/**
-	 * Filter using a {@code Map}. This {@code Filter} is executed using the
-	 * specified {@code Map}'s keys and values. The keys are looked up in a
-	 * normal manner respecting case.
-	 * 
-	 * @param map The {@code Map} whose key/value pairs are used in the match.
-	 *        Maps with {@code null} key or values are not supported. A
-	 *        {@code null} value is considered not present to the filter.
-	 * @return {@code true} if the {@code Map}'s values match this filter;
-	 *         {@code false} otherwise.
-	 * @since 1.6
-	 */
-	boolean matches(Map<String, ? > map);
+	public boolean matchCase(Dictionary dictionary);
 }

@@ -26,6 +26,7 @@ import java.util.jar.Manifest;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.StringMap;
+import org.apache.felix.framework.resolver.Content;
 
 /**
  * <p>

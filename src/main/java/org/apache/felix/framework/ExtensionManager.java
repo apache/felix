@@ -27,26 +27,26 @@ import java.net.URLStreamHandler;
 import java.security.AccessControlException;
 import java.security.AllPermission;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import org.apache.felix.framework.Felix.StatefulResolver;
 
-import org.apache.felix.framework.resolver.ResolverWire;
+import org.apache.felix.framework.Felix.StatefulResolver;
+import org.apache.felix.framework.capabilityset.Attribute;
+import org.apache.felix.framework.capabilityset.Capability;
+import org.apache.felix.framework.capabilityset.Directive;
+import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.manifestparser.CapabilityImpl;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.apache.felix.framework.cache.Content;
-import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.resolver.Content;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -54,10 +54,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
-import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * The ExtensionManager class is used in several ways.
@@ -120,10 +116,9 @@ class ExtensionManager extends URLStreamHandler implements Content
     }
 
     private final Logger m_logger;
-    private final Map m_configMap;
     private final Map m_headerMap = new StringMap(false);
-    private final BundleRevision m_systemBundleRevision;
-    private List<BundleCapability> m_capabilities = null;
+    private final Module m_systemBundleModule;
+    private List<Capability> m_capabilities = null;
     private Set m_exportNames = null;
     private Object m_securityContext = null;
     private final List m_extensions;
@@ -136,8 +131,7 @@ class ExtensionManager extends URLStreamHandler implements Content
     private ExtensionManager()
     {
         m_logger = null;
-        m_configMap = null;
-        m_systemBundleRevision = null;
+        m_systemBundleModule = null;
         m_extensions = new ArrayList();
         m_extensionsCache = new Bundle[0];
         m_names = new HashSet();
@@ -155,20 +149,19 @@ class ExtensionManager extends URLStreamHandler implements Content
      * @param config the configuration to read properties from.
      * @param systemBundleInfo the info to change if we need to add exports.
      */
-    ExtensionManager(Logger logger, Map configMap, Felix felix)
+    ExtensionManager(Logger logger, Felix felix)
     {
-        m_logger = logger;
-        m_configMap = configMap;
-        m_systemBundleRevision = new ExtensionManagerRevision(felix);
+        m_systemBundleModule = new ExtensionManagerModule(felix);
         m_extensions = null;
         m_extensionsCache = null;
         m_names = null;
         m_sourceToExtensions = null;
+        m_logger = logger;
 
 // TODO: FRAMEWORK - Not all of this stuff really belongs here, probably only exports.
         // Populate system bundle header map.
         m_headerMap.put(FelixConstants.BUNDLE_VERSION,
-            m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
+            felix.getConfig().get(FelixConstants.FELIX_VERSION_PROPERTY));
         m_headerMap.put(FelixConstants.BUNDLE_SYMBOLICNAME,
             FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         m_headerMap.put(FelixConstants.BUNDLE_NAME, "System Bundle");
@@ -184,27 +177,27 @@ class ExtensionManager extends URLStreamHandler implements Content
         // We must construct the system bundle's export metadata.
         // Get configuration property that specifies which class path
         // packages should be exported by the system bundle.
-        String syspkgs = (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
+        String syspkgs = (String) felix.getConfig().get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
         // If no system packages were specified, load our default value.
         syspkgs = (syspkgs == null)
             ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMPACKAGES)
             : syspkgs;
         syspkgs = (syspkgs == null) ? "" : syspkgs;
         // If any extra packages are specified, then append them.
-        String extra = (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+        String extra = (String) felix.getConfig().get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
         syspkgs = (extra == null) ? syspkgs : syspkgs + "," + extra;
         m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
         m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
         try
         {
             ManifestParser mp = new ManifestParser(
-                m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
-            List<BundleCapability> caps = aliasSymbolicName(mp.getCapabilities());
+                m_logger, felix.getConfig(), m_systemBundleModule, m_headerMap);
+            List<Capability> caps = aliasSymbolicName(mp.getCapabilities());
             setCapabilities(caps);
         }
         catch (Exception ex)
         {
-            m_capabilities = new ArrayList<BundleCapability>(0);
+            m_capabilities = new ArrayList<Capability>(0);
             m_logger.log(
                 Logger.LOG_ERROR,
                 "Error parsing system bundle export statement: "
@@ -212,36 +205,36 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
     }
 
-    private static List<BundleCapability> aliasSymbolicName(List<BundleCapability> caps)
+    private static List<Capability> aliasSymbolicName(List<Capability> caps)
     {
         if (caps == null)
         {
-            return new ArrayList<BundleCapability>(0);
+            return new ArrayList<Capability>(0);
         }
 
-        List<BundleCapability> aliasCaps = new ArrayList<BundleCapability>(caps);
+        List<Capability> aliasCaps = new ArrayList<Capability>(caps);
 
         for (int capIdx = 0; capIdx < aliasCaps.size(); capIdx++)
         {
             // Get the attributes and search for bundle symbolic name.
-            for (Entry<String, Object> entry : aliasCaps.get(capIdx).getAttributes().entrySet())
+            List<Attribute> attrs = aliasCaps.get(capIdx).getAttributes();
+            for (int i = 0; i < attrs.size(); i++)
             {
                 // If there is a bundle symbolic name attribute, add the
                 // standard alias as a value.
-                if (entry.getKey().equalsIgnoreCase(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
+                if (attrs.get(i).getName().equalsIgnoreCase(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
                 {
                     // Make a copy of the attribute array.
-                    Map<String, Object> aliasAttrs =
-                        new HashMap<String, Object>(aliasCaps.get(capIdx).getAttributes());
+                    List<Attribute> aliasAttrs = new ArrayList<Attribute>(attrs);
                     // Add the aliased value.
-                    aliasAttrs.put(
+                    aliasAttrs.set(i, new Attribute(
                         Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE,
                         new String[] {
-                            (String) entry.getValue(),
-                            Constants.SYSTEM_BUNDLE_SYMBOLICNAME});
+                            (String) attrs.get(i).getValue(), Constants.SYSTEM_BUNDLE_SYMBOLICNAME},
+                        false));
                     // Create the aliased capability to replace the old capability.
-                    aliasCaps.set(capIdx, new BundleCapabilityImpl(
-                        caps.get(capIdx).getRevision(),
+                    aliasCaps.set(capIdx, new CapabilityImpl(
+                        caps.get(capIdx).getModule(),
                         caps.get(capIdx).getNamespace(),
                         caps.get(capIdx).getDirectives(),
                         aliasAttrs));
@@ -254,9 +247,9 @@ class ExtensionManager extends URLStreamHandler implements Content
         return aliasCaps;
     }
 
-    public BundleRevision getRevision()
+    public Module getModule()
     {
-        return m_systemBundleRevision;
+        return m_systemBundleModule;
     }
 
     public synchronized Object getSecurityContext()
@@ -306,29 +299,27 @@ class ExtensionManager extends URLStreamHandler implements Content
             throw new SecurityException("Extension Bundles must have AllPermission");
         }
 
-        String directive = ManifestParser.parseExtensionBundleHeader((String)
-            ((BundleRevisionImpl) bundle.getCurrentRevision())
-                .getHeaders().get(Constants.FRAGMENT_HOST));
+        Directive dir = ManifestParser.parseExtensionBundleHeader((String)
+            bundle.getCurrentModule().getHeaders().get(Constants.FRAGMENT_HOST));
 
         // We only support classpath extensions (not bootclasspath).
-        if (!Constants.EXTENSION_FRAMEWORK.equals(directive))
+        if (!Constants.EXTENSION_FRAMEWORK.equals(dir.getValue()))
         {
             throw new BundleException("Unsupported Extension Bundle type: " +
-                directive, new UnsupportedOperationException(
+                dir.getValue(), new UnsupportedOperationException(
                 "Unsupported Extension Bundle type!"));
         }
 
         try
         {
             // Merge the exported packages with the exported packages of the systembundle.
-            List<BundleCapability> exports = null;
+            List<Capability> exports = null;
             try
             {
                 exports = ManifestParser.parseExportHeader(
-                    m_logger, m_systemBundleRevision,
-                    (String) ((BundleRevisionImpl) bundle.getCurrentRevision())
-                        .getHeaders().get(Constants.EXPORT_PACKAGE),
-                    m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
+                    m_logger, m_systemBundleModule,
+                    (String) bundle.getCurrentModule().getHeaders().get(Constants.EXPORT_PACKAGE),
+                    m_systemBundleModule.getSymbolicName(), m_systemBundleModule.getVersion());
                 exports = aliasSymbolicName(exports);
             }
             catch (Exception ex)
@@ -337,8 +328,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                     bundle,
                     Logger.LOG_ERROR,
                     "Error parsing extension bundle export statement: "
-                    + ((BundleRevisionImpl) bundle.getCurrentRevision())
-                        .getHeaders().get(Constants.EXPORT_PACKAGE), ex);
+                    + bundle.getCurrentModule().getHeaders().get(Constants.EXPORT_PACKAGE), ex);
                 return;
             }
 
@@ -356,8 +346,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                 throw new UnsupportedOperationException(
                     "Unable to add extension bundle to FrameworkClassLoader - Maybe not an URLClassLoader?");
             }
-            List<BundleCapability> temp =
-                new ArrayList<BundleCapability>(m_capabilities.size() + exports.size());
+            List<Capability> temp = new ArrayList<Capability>(m_capabilities.size() + exports.size());
             temp.addAll(m_capabilities);
             temp.addAll(exports);
             setCapabilities(temp);
@@ -380,8 +369,8 @@ class ExtensionManager extends URLStreamHandler implements Content
     void startExtensionBundle(Felix felix, BundleImpl bundle)
     {
         String activatorClass = (String)
-            ((BundleRevisionImpl) bundle.getCurrentRevision())
-                .getHeaders().get(FelixConstants.FELIX_EXTENSION_ACTIVATOR);
+        bundle.getCurrentModule().getHeaders().get(
+            FelixConstants.FELIX_EXTENSION_ACTIVATOR);
 
         if (activatorClass != null)
         {
@@ -427,7 +416,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
     }
 
-    private void setCapabilities(List<BundleCapability> capabilities)
+    private void setCapabilities(List<Capability> capabilities)
     {
         m_capabilities = capabilities;
         m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(m_headerMap));
@@ -440,7 +429,7 @@ class ExtensionManager extends URLStreamHandler implements Content
 
         for (int i = 0; (m_capabilities != null) && (i < m_capabilities.size()); i++)
         {
-            if (m_capabilities.get(i).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+            if (m_capabilities.get(i).getNamespace().equals(Capability.PACKAGE_NAMESPACE))
             {
                 // Add a comma separate if there is an existing package.
                 if (exportSB.length() > 0)
@@ -449,35 +438,31 @@ class ExtensionManager extends URLStreamHandler implements Content
                 }
 
                 // Append exported package information.
-                exportSB.append(m_capabilities.get(i)
-                    .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
-                for (Entry<String, String> entry
-                    : m_capabilities.get(i).getDirectives().entrySet())
+                exportSB.append(m_capabilities.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue());
+                for (Directive dir : m_capabilities.get(i).getDirectives())
                 {
                     exportSB.append("; ");
-                    exportSB.append(entry.getKey());
+                    exportSB.append(dir.getName());
                     exportSB.append(":=\"");
-                    exportSB.append(entry.getValue());
+                    exportSB.append(dir.getValue());
                     exportSB.append("\"");
                 }
-                for (Entry<String, Object> entry
-                    : m_capabilities.get(i).getAttributes().entrySet())
+                for (Attribute attr : m_capabilities.get(i).getAttributes())
                 {
-                    if (!entry.getKey().equals(BundleCapabilityImpl.PACKAGE_ATTR)
-                        && !entry.getKey().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
-                        && !entry.getKey().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
+                    if (!attr.getName().equals(Capability.PACKAGE_ATTR)
+                        && !attr.getName().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
+                        && !attr.getName().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
                     {
                         exportSB.append("; ");
-                        exportSB.append(entry.getKey());
+                        exportSB.append(attr.getName());
                         exportSB.append("=\"");
-                        exportSB.append(entry.getValue());
+                        exportSB.append(attr.getValue());
                         exportSB.append("\"");
                     }
                 }
 
                 // Remember exported packages.
-                exportNames.add(m_capabilities.get(i)
-                    .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                exportNames.add(m_capabilities.get(i).getAttribute(Capability.PACKAGE_ATTR).getValue());
             }
         }
 
@@ -509,8 +494,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             try
             {
-                result = ((BundleRevisionImpl) ((BundleImpl)
-                    extBundle).getCurrentRevision()).getResourceLocal(path);
+                result = ((ModuleImpl) ((BundleImpl) extBundle).getCurrentModule()).getResourceLocal(path);
             }
             catch (Exception ex)
             {
@@ -640,20 +624,17 @@ class ExtensionManager extends URLStreamHandler implements Content
     // Utility methods.
     //
 
-    class ExtensionManagerRevision extends BundleRevisionImpl
+    class ExtensionManagerModule extends ModuleImpl
     {
         private final Version m_version;
-        private volatile BundleWiring m_wiring;
-
-        ExtensionManagerRevision(Felix felix)
+        ExtensionManagerModule(Felix felix)
         {
-            super(m_logger, m_configMap, felix, "0",
+            super(m_logger, felix.getConfig(), felix, "0",
                 felix.getBootPackages(), felix.getBootPackageWildcards());
             m_version = new Version((String)
-                m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
+                felix.getConfig().get(FelixConstants.FELIX_VERSION_PROPERTY));
         }
 
-        @Override
         public Map getHeaders()
         {
             synchronized (ExtensionManager.this)
@@ -662,8 +643,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
-        @Override
-        public List<BundleCapability> getDeclaredCapabilities(String namespace)
+        public List<Capability> getCapabilities()
         {
             synchronized (ExtensionManager.this)
             {
@@ -671,102 +651,16 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
         }
 
-        @Override
         public String getSymbolicName()
         {
             return FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME;
         }
 
-        @Override
         public Version getVersion()
         {
             return m_version;
         }
 
-        @Override
-        public void close()
-        {
-            // Nothing needed here.
-        }
-
-        @Override
-        public Content getContent()
-        {
-            return ExtensionManager.this;
-        }
-
-        @Override
-        public URL getEntry(String name)
-        {
-            // There is no content for the system bundle, so return null.
-            return null;
-        }
-
-        @Override
-        public boolean hasInputStream(int index, String urlPath)
-        {
-            return (getClass().getClassLoader().getResource(urlPath) != null);
-        }
-
-        @Override
-        public InputStream getInputStream(int index, String urlPath)
-        {
-            return getClass().getClassLoader().getResourceAsStream(urlPath);
-        }
-
-        @Override
-        public URL getLocalURL(int index, String urlPath)
-        {
-            return getClass().getClassLoader().getResource(urlPath);
-        }
-
-        @Override
-        public void resolve(BundleWiringImpl wire)
-        {
-            try
-            {
-                m_wiring = new ExtensionManagerWiring(
-                    m_logger, m_configMap, this);
-            }
-            catch (Exception ex)
-            {
-                // This should never happen.
-            }
-        }
-
-        @Override
-        public BundleWiring getWiring()
-        {
-            return m_wiring;
-        }
-    }
-
-    class ExtensionManagerWiring extends BundleWiringImpl
-    {
-        ExtensionManagerWiring(
-            Logger logger, Map configMap, BundleRevisionImpl revision)
-            throws Exception
-        {
-            super(logger, configMap, null, revision,
-                null, Collections.EMPTY_LIST, null, null);
-        }
-
-        @Override
-        public List<BundleCapability> getCapabilities(String namespace)
-        {
-            synchronized (ExtensionManager.this)
-            {
-                return m_capabilities;
-            }
-        }
-
-        @Override
-        public List<R4Library> getNativeLibraries()
-        {
-            return Collections.EMPTY_LIST;
-        }
-
-        @Override
         public Class getClassByDelegation(String name) throws ClassNotFoundException
         {
             Class clazz = null;
@@ -810,13 +704,11 @@ class ExtensionManager extends URLStreamHandler implements Content
             return clazz;
         }
 
-        @Override
         public URL getResourceByDelegation(String name)
         {
             return getClass().getClassLoader().getResource(name);
         }
 
-        @Override
         public Enumeration getResourcesByDelegation(String name)
         {
            try
@@ -829,10 +721,56 @@ class ExtensionManager extends URLStreamHandler implements Content
            }
         }
 
-        @Override
-        public void dispose()
+        public Logger getLogger()
+        {
+            return m_logger;
+        }
+
+        public Map getConfig()
+        {
+            return null;
+        }
+
+        public StatefulResolver getResolver()
+        {
+            return null;
+        }
+
+        public void attachFragmentContents(Content[] fragmentContents)
+            throws Exception
+        {
+            throw new UnsupportedOperationException("Should not be used!");
+        }
+
+        public void close()
         {
             // Nothing needed here.
+        }
+
+        public Content getContent()
+        {
+            return ExtensionManager.this;
+        }
+
+        public URL getEntry(String name)
+        {
+            // There is no content for the system bundle, so return null.
+            return null;
+        }
+
+        public boolean hasInputStream(int index, String urlPath)
+        {
+            return (getClass().getClassLoader().getResource(urlPath) != null);
+        }
+
+        public InputStream getInputStream(int index, String urlPath)
+        {
+            return getClass().getClassLoader().getResourceAsStream(urlPath);
+        }
+
+        public URL getLocalURL(int index, String urlPath)
+        {
+            return getClass().getClassLoader().getResource(urlPath);
         }
     }
 }

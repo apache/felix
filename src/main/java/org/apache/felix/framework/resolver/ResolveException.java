@@ -18,31 +18,30 @@
  */
 package org.apache.felix.framework.resolver;
 
-import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
+import org.apache.felix.framework.capabilityset.Requirement;
 
 public class ResolveException extends RuntimeException
 {
-    private final BundleRevision m_revision;
-    private final BundleRequirement m_req;
+    private final Module m_module;
+    private final Requirement m_req;
 
     /**
      * Constructs an instance of <code>ResolveException</code> with the specified detail message.
      * @param msg the detail message.
      */
-    public ResolveException(String msg, BundleRevision revision, BundleRequirement req)
+    public ResolveException(String msg, Module module, Requirement req)
     {
         super(msg);
-        m_revision = revision;
+        m_module = module;
         m_req = req;
     }
 
-    public BundleRevision getRevision()
+    public Module getModule()
     {
-        return m_revision;
+        return m_module;
     }
 
-    public BundleRequirement getRequirement()
+    public Requirement getRequirement()
     {
         return m_req;
     }

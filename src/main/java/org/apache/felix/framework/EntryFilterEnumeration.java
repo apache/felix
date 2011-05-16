@@ -22,14 +22,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.osgi.framework.wiring.BundleRevision;
+import org.apache.felix.framework.resolver.Module;
 
 class EntryFilterEnumeration implements Enumeration
 {
     private final BundleImpl m_bundle;
     private final List<Enumeration> m_enumerations;
-    private final List<BundleRevision> m_revisions;
-    private int m_revisionIndex = 0;
+    private final List<Module> m_modules;
+    private int m_moduleIndex = 0;
     private final String m_path;
     private final List<String> m_filePattern;
     private final boolean m_recurse;
@@ -42,25 +42,23 @@ class EntryFilterEnumeration implements Enumeration
         String filePattern, boolean recurse, boolean isURLValues)
     {
         m_bundle = bundle;
-        BundleRevision br = m_bundle.getCurrentRevision();
-        if (includeFragments
-            && (br.getWiring() != null)
-            && (((BundleWiringImpl) br.getWiring()).getFragments() != null))
+        Module bundleModule = m_bundle.getCurrentModule();
+        List<Module> fragmentModules = ((ModuleImpl) bundleModule).getFragments();
+        if (includeFragments && (fragmentModules != null))
         {
-            m_revisions = new ArrayList(
-                ((BundleWiringImpl) br.getWiring()).getFragments().size() + 1);
-            m_revisions.addAll(((BundleWiringImpl) br.getWiring()).getFragments());
+            m_modules = new ArrayList(fragmentModules.size() + 1);
+            m_modules.addAll(fragmentModules);
         }
         else
         {
-            m_revisions = new ArrayList(1);
+            m_modules = new ArrayList(1);
         }
-        m_revisions.add(0, br);
-        m_enumerations = new ArrayList(m_revisions.size());
-        for (int i = 0; i < m_revisions.size(); i++)
+        m_modules.add(0, bundleModule);
+        m_enumerations = new ArrayList(m_modules.size());
+        for (int i = 0; i < m_modules.size(); i++)
         {
-            m_enumerations.add(((BundleRevisionImpl) m_revisions.get(i)).getContent() != null ?
-                ((BundleRevisionImpl) m_revisions.get(i)).getContent().getEntries() : null);
+            m_enumerations.add(m_modules.get(i).getContent() != null ?
+                m_modules.get(i).getContent().getEntries() : null);
         }
         m_recurse = recurse;
         m_isURLValues = isURLValues;
@@ -116,19 +114,19 @@ class EntryFilterEnumeration implements Enumeration
         {
             return;
         }
-        while ((m_revisionIndex < m_enumerations.size()) && m_nextEntries.isEmpty())
+        while ((m_moduleIndex < m_enumerations.size()) && m_nextEntries.isEmpty())
         {
-            while (m_enumerations.get(m_revisionIndex) != null
-                && m_enumerations.get(m_revisionIndex).hasMoreElements()
+            while (m_enumerations.get(m_moduleIndex) != null
+                && m_enumerations.get(m_moduleIndex).hasMoreElements()
                 && m_nextEntries.isEmpty())
             {
                 // Get the current entry to determine if it should be filtered or not.
-                String entryName = (String) m_enumerations.get(m_revisionIndex).nextElement();
+                String entryName = (String) m_enumerations.get(m_moduleIndex).nextElement();
                 // Check to see if the current entry is a descendent of the specified path.
                 if (!entryName.equals(m_path) && entryName.startsWith(m_path))
                 {
                     // Cached entry URL. If we are returning URLs, we use this
-                    // cached URL to avoid doing multiple URL lookups from a revision
+                    // cached URL to avoid doing multiple URL lookups from a module
                     // when synthesizing directory URLs.
                     URL entryURL = null;
 
@@ -172,14 +170,11 @@ class EntryFilterEnumeration implements Enumeration
                                         if (m_isURLValues)
                                         {
                                             entryURL = (entryURL == null)
-                                                ? ((BundleRevisionImpl)
-                                                    m_revisions.get(m_revisionIndex))
-                                                        .getEntry(entryName)
+                                                ? m_modules.get(m_moduleIndex).getEntry(entryName)
                                                 : entryURL;
                                             try
                                             {
-                                                m_nextEntries.add(
-                                                    new URL(entryURL, "/" + dir));
+                                                m_nextEntries.add(new URL(entryURL, "/" + dir));
                                             }
                                             catch (MalformedURLException ex)
                                             {
@@ -214,8 +209,7 @@ class EntryFilterEnumeration implements Enumeration
                             if (m_isURLValues)
                             {
                                 entryURL = (entryURL == null)
-                                    ? ((BundleRevisionImpl)
-                                        m_revisions.get(m_revisionIndex)).getEntry(entryName)
+                                    ? m_modules.get(m_moduleIndex).getEntry(entryName)
                                     : entryURL;
                                 m_nextEntries.add(entryURL);
                             }
@@ -229,7 +223,7 @@ class EntryFilterEnumeration implements Enumeration
             }
             if (m_nextEntries.isEmpty())
             {
-                m_revisionIndex++;
+                m_moduleIndex++;
             }
         }
     }

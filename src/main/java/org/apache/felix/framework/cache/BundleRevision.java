@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.resolver.Content;
 
 /**
  * <p>

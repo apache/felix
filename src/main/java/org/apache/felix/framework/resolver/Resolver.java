@@ -22,23 +22,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRevision;
+import org.apache.felix.framework.capabilityset.Capability;
+import org.apache.felix.framework.capabilityset.Requirement;
 
 public interface Resolver
 {
-    Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, Set<BundleRevision> optional);
-    Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, String pkgName,
-        Set<BundleRevision> fragments);
+    Map<Module, List<Wire>> resolve(ResolverState state, Module module, Set<Module> fragments);
+    Map<Module, List<Wire>> resolve(
+        ResolverState state, Module module, String pkgName, Set<Module> fragments);
 
     public static interface ResolverState
     {
-        SortedSet<BundleCapability> getCandidates(
-            BundleRequirementImpl req, boolean obeyMandatory);
-        void checkExecutionEnvironment(BundleRevision revision) throws ResolveException;
-        void checkNativeLibraries(BundleRevision revision) throws ResolveException;
+        SortedSet<Capability> getCandidates(Requirement req, boolean obeyMandatory);
+        void checkExecutionEnvironment(Module module) throws ResolveException;
+        void checkNativeLibraries(Module module) throws ResolveException;
     }
 }

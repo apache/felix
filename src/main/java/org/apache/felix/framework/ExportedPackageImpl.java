@@ -18,34 +18,33 @@
  */
 package org.apache.felix.framework;
 
-import java.util.Set;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import java.util.List;
+import org.apache.felix.framework.capabilityset.Capability;
+import org.apache.felix.framework.resolver.Module;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.packageadmin.ExportedPackage;
 
 class ExportedPackageImpl implements ExportedPackage
 {
     private final Felix m_felix;
     private final BundleImpl m_exportingBundle;
-    private final BundleRevision m_exportingRevision;
-    private final BundleCapability m_export;
+    private final Module m_exportingModule;
+    private final Capability m_export;
     private final String m_pkgName;
     private final Version m_version;
 
     public ExportedPackageImpl(
-        Felix felix, BundleImpl exporter, BundleRevision revision, BundleCapability export)
+        Felix felix, BundleImpl exporter, Module module, Capability export)
     {
         m_felix = felix;
         m_exportingBundle = exporter;
-        m_exportingRevision = revision;
+        m_exportingModule = module;
         m_export = export;
-        m_pkgName = (String) m_export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
-        m_version = (!m_export.getAttributes().containsKey(BundleCapabilityImpl.VERSION_ATTR))
+        m_pkgName = (String) m_export.getAttribute(Capability.PACKAGE_ATTR).getValue();
+        m_version = (m_export.getAttribute(Capability.VERSION_ATTR) == null)
             ? Version.emptyVersion
-            : (Version) m_export.getAttributes().get(BundleCapabilityImpl.VERSION_ATTR);
+            : (Version) m_export.getAttribute(Capability.VERSION_ATTR).getValue();
     }
 
     public Bundle getExportingBundle()
@@ -65,8 +64,8 @@ class ExportedPackageImpl implements ExportedPackage
         {
             return null;
         }
-        Set<Bundle> set = m_felix.getImportingBundles(m_exportingBundle, m_export);
-        return set.toArray(new Bundle[set.size()]);
+        List<Bundle> list = m_felix.getImportingBundles(this);
+        return list.toArray(new Bundle[list.size()]);
     }
 
     public String getName()

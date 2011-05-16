@@ -18,23 +18,20 @@
  */
 package org.apache.felix.framework;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
+import org.apache.felix.framework.capabilityset.Attribute;
+import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.capabilityset.Directive;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
+import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.StringMap;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.wiring.BundleRevision;
 
 public class FilterImpl implements Filter
 {
@@ -54,22 +51,17 @@ public class FilterImpl implements Filter
 
     public boolean match(ServiceReference sr)
     {
-        return CapabilitySet.matches((ServiceReferenceImpl) sr, m_filter);
+        return CapabilitySet.matches(new ServiceReferenceCapability(sr), m_filter);
     }
 
-    public boolean match(Dictionary<String, ? > dctnr)
+    public boolean match(Dictionary dctnr)
     {
         return CapabilitySet.matches(new DictionaryCapability(dctnr, false), m_filter);
     }
 
-    public boolean matchCase(Dictionary<String, ? > dctnr)
+    public boolean matchCase(Dictionary dctnr)
     {
         return CapabilitySet.matches(new DictionaryCapability(dctnr, true), m_filter);
-    }
-
-    public boolean matches(Map<String, ?> map)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public boolean equals(Object o)
@@ -87,53 +79,12 @@ public class FilterImpl implements Filter
         return m_filter.toString();
     }
 
-    static class DictionaryCapability extends BundleCapabilityImpl
-    {
-        private final Map m_map;
-
-        public DictionaryCapability(Dictionary dict, boolean caseSensitive)
-        {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = new DictionaryMap(dict, caseSensitive);
-        }
-
-        @Override
-        public BundleRevision getRevision()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public String getNamespace()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Map<String, String> getDirectives()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Map<String, Object> getAttributes()
-        {
-            return m_map;
-        }
-
-        @Override
-        public List<String> getUses()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-    }
-
-    private static class DictionaryMap implements Map
+    static class DictionaryCapability implements Capability
     {
         private final StringMap m_map;
         private final Dictionary m_dict;
 
-        public DictionaryMap(Dictionary dict, boolean caseSensitive)
+        public DictionaryCapability(Dictionary dict, boolean caseSensitive)
         {
             m_dict = dict;
             if (!caseSensitive)
@@ -163,29 +114,29 @@ public class FilterImpl implements Filter
             }
         }
 
-        public int size()
+        public Module getModule()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean isEmpty()
+        public String getNamespace()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsKey(Object o)
+        public Directive getDirective(String name)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public boolean containsValue(Object o)
+        public List<Directive> getDirectives()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object get(Object o)
+        public Attribute getAttribute(String name)
         {
-            String key = (String) o;
+            String key = name;
             Object value = null;
             if (m_dict != null)
             {
@@ -194,7 +145,7 @@ public class FilterImpl implements Filter
                 // the key.
                 if (m_map != null)
                 {
-                    key = (String) m_map.get(o);
+                    key = (String) m_map.get(name);
                 }
                 // If the key could not be found in the case insensitive
                 // key map, then avoid doing the dictionary lookup on it.
@@ -203,42 +154,63 @@ public class FilterImpl implements Filter
                     value = m_dict.get(key);
                 }
             }
-            return value;
+            return (value == null) ? null : new Attribute(key, value, false);
         }
 
-        public Object put(Object k, Object v)
+        public List<Attribute> getAttributes()
+        {
+            return new ArrayList();
+        }
+
+        public List<String> getUses()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    static class ServiceReferenceCapability implements Capability
+    {
+        private final ServiceReference m_sr;
+
+        public ServiceReferenceCapability(ServiceReference sr)
+        {
+            m_sr = sr;
+        }
+
+        public Module getModule()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Object remove(Object o)
+        public String getNamespace()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void putAll(Map map)
+        public Directive getDirective(String name)
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void clear()
+        public List<Directive> getDirectives()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public Set<Object> keySet()
+        public Attribute getAttribute(String name)
         {
-            throw new UnsupportedOperationException("Not supported yet.");
+            Object value = m_sr.getProperty(name);
+            return (value == null) ? null : new Attribute(name, value, false);
         }
 
-        public Collection<Object> values()
+        public List<Attribute> getAttributes()
         {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new ArrayList();
         }
 
-        public Set<Entry<Object, Object>> entrySet()
+        public List<String> getUses()
         {
-            return Collections.EMPTY_SET;
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }

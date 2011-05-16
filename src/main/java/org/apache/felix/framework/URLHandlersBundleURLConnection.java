@@ -24,14 +24,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
 import java.util.List;
+import org.apache.felix.framework.resolver.Module;
 
 import org.apache.felix.framework.util.Util;
-import org.osgi.framework.wiring.BundleRevision;
 
 class URLHandlersBundleURLConnection extends URLConnection
 {
     private Felix m_framework;
-    private BundleRevision m_targetRevision;
+    private Module m_targetModule;
     private int m_classPathIdx = -1;
     private int m_contentLength;
     private long m_contentTime;
@@ -78,9 +78,9 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
         // Verify that the resource pointed to by the URL exists.
         // The URL is constructed like this:
-        //     bundle://<revision-id>:<bundle-classpath-index>/<resource-path>
-        // Where <revision-id> = <bundle-id>.<revision>
-        long bundleId = Util.getBundleIdFromRevisionId(url.getHost());
+        //     bundle://<module-id>:<bundle-classpath-index>/<resource-path>
+        // Where <module-id> = <bundle-id>.<revision>
+        long bundleId = Util.getBundleIdFromModuleId(url.getHost());
         BundleImpl bundle = (BundleImpl) m_framework.getBundle(bundleId);
         if (bundle == null)
         {
@@ -88,27 +88,27 @@ class URLHandlersBundleURLConnection extends URLConnection
         }
         m_contentTime = bundle.getLastModified();
 
-        // Get the bundle's revisions to find the target revision.
-        List<BundleRevision> revisions = bundle.getRevisions();
-        if ((revisions == null) || revisions.isEmpty())
+        // Get the bundle's modules to find the target module.
+        List<Module> modules = bundle.getModules();
+        if ((modules == null) || modules.isEmpty())
         {
             throw new IOException("Resource does not exist: " + url);
         }
 
-        // Search for matching revision name.
-        for (BundleRevision br : revisions)
+        // Search for matching module name.
+        for (Module m : modules)
         {
-            if (((BundleRevisionImpl) br).getId().equals(url.getHost()))
+            if (m.getId().equals(url.getHost()))
             {
-                m_targetRevision = br;
+                m_targetModule = m;
                 break;
             }
         }
 
-        // If not found, assume the current revision.
-        if (m_targetRevision == null)
+        // If not found, assume the current module.
+        if (m_targetModule == null)
         {
-            m_targetRevision = revisions.get(revisions.size() - 1);
+            m_targetModule = modules.get(modules.size() - 1);
         }
 
         // If the resource cannot be found at the current class path index,
@@ -123,12 +123,9 @@ class URLHandlersBundleURLConnection extends URLConnection
         {
             m_classPathIdx = 0;
         }
-// TODO: OSGi R4.3 - This is messed up. We need to fix resource lookup.
-        if (!((BundleRevisionImpl) m_targetRevision)
-            .hasInputStream(m_classPathIdx, url.getPath()))
+        if (!m_targetModule.hasInputStream(m_classPathIdx, url.getPath()))
         {
-            URL newurl = ((BundleWiringImpl)
-                m_targetRevision.getWiring()).getResourceByDelegation(url.getPath());
+            URL newurl = m_targetModule.getResourceByDelegation(url.getPath());
             if (newurl == null)
             {
                 throw new IOException("Resource does not exist: " + url);
@@ -141,12 +138,11 @@ class URLHandlersBundleURLConnection extends URLConnection
     {
         if (!connected)
         {
-            if ((m_targetRevision == null) || (m_classPathIdx < 0))
+            if ((m_targetModule == null) || (m_classPathIdx < 0))
             {
                 throw new IOException("Resource does not exist: " + url);
             }
-            m_is = ((BundleRevisionImpl)
-                m_targetRevision).getInputStream(m_classPathIdx, url.getPath());
+            m_is = m_targetModule.getInputStream(m_classPathIdx, url.getPath());
             m_contentLength = (m_is == null) ? 0 : m_is.available();
             m_contentType = URLConnection.guessContentTypeFromName(url.getFile());
             connected = true;
@@ -227,11 +223,10 @@ class URLHandlersBundleURLConnection extends URLConnection
      */
     URL getLocalURL()
     {
-        if ((m_targetRevision == null) || (m_classPathIdx < 0))
+        if ((m_targetModule == null) || (m_classPathIdx < 0))
         {
             return url;
         }
-        return ((BundleRevisionImpl)
-            m_targetRevision).getLocalURL(m_classPathIdx, url.getPath());
+        return m_targetModule.getLocalURL(m_classPathIdx, url.getPath());
     }
 }

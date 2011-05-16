@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,48 +16,53 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.wiring;
+package org.apache.felix.framework.util.manifestparser;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.capabilityset.Attribute;
+import org.apache.felix.framework.capabilityset.Directive;
+import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
+import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Constants;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
 
-public class BundleRequirementImpl implements BundleRequirement
+public class RequirementImpl implements Requirement
 {
-    private final BundleRevision m_revision;
+    private final Module m_module;
     private final String m_namespace;
     private final SimpleFilter m_filter;
     private final boolean m_optional;
-    private final Map<String, String> m_dirs;
-    private final Map<String, Object> m_attrs;
+    private final List<Directive> m_dirs;
+    private final List<Directive> m_dirsConst;
 
-    public BundleRequirementImpl(
-        BundleRevision revision, String namespace,
-        Map<String, String> dirs, Map<String, Object> attrs)
+    public RequirementImpl(
+        Module module, String namespace,
+        List<Directive> dirs, List<Attribute> attrs)
     {
-        m_revision = revision;
+        m_module = module;
         m_namespace = namespace;
-        m_dirs = Collections.unmodifiableMap(dirs);
-        m_attrs = Collections.unmodifiableMap(attrs);
+        m_dirs = dirs;
+        m_dirsConst = Collections.unmodifiableList(m_dirs);
         m_filter = convertToFilter(attrs);
 
         // Find resolution import directives.
         boolean optional = false;
-        if (m_dirs.containsKey(Constants.RESOLUTION_DIRECTIVE)
-            && m_dirs.get(Constants.RESOLUTION_DIRECTIVE).equals(Constants.RESOLUTION_OPTIONAL))
+        for (int dirIdx = 0; dirIdx < m_dirs.size(); dirIdx++)
         {
-            optional = true;
+            if (m_dirs.get(dirIdx).getName().equals(Constants.RESOLUTION_DIRECTIVE))
+            {
+                optional = m_dirs.get(dirIdx).getValue().equals(Constants.RESOLUTION_OPTIONAL);
+            }
         }
         m_optional = optional;
+    }
+
+    public Module getModule()
+    {
+        return m_module;
     }
 
     public String getNamespace()
@@ -65,24 +70,9 @@ public class BundleRequirementImpl implements BundleRequirement
         return m_namespace;
     }
 
-    public Map<String, String> getDirectives()
+    public SimpleFilter getFilter()
     {
-        return m_dirs;
-    }
-
-    public Map<String, Object> getAttributes()
-    {
-        return m_attrs;
-    }
-
-    public BundleRevision getRevision()
-    {
-        return m_revision;
-    }
-
-    public boolean matches(BundleCapability cap)
-    {
-        return CapabilitySet.matches((BundleCapabilityImpl) cap, getFilter());
+        return m_filter;
     }
 
     public boolean isOptional()
@@ -90,33 +80,45 @@ public class BundleRequirementImpl implements BundleRequirement
         return m_optional;
     }
 
-    public SimpleFilter getFilter()
+    public Directive getDirective(String name)
     {
-        return m_filter;
+        for (int i = 0; i < m_dirs.size(); i++)
+        {
+            if (m_dirs.get(i).getName().equals(name))
+            {
+                return m_dirs.get(i);
+            }
+        }
+        return null;
+    }
+
+    public List<Directive> getDirectives()
+    {
+        return m_dirsConst;
     }
 
     public String toString()
     {
-        return "[" + m_revision + "] " + m_namespace + "; " + getFilter().toString();
+        return "[" + m_module + "] " + m_namespace + "; " + getFilter().toString();
     }
 
-    private static SimpleFilter convertToFilter(Map<String, Object> attrs)
+    private static SimpleFilter convertToFilter(List<Attribute> attrs)
     {
         // Rather than building a filter string to be parsed into a SimpleFilter,
         // we will just create the parsed SimpleFilter directly.
 
         List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
 
-        for (Entry<String, Object> entry : attrs.entrySet())
+        for (Attribute attr : attrs)
         {
-            if (entry.getValue() instanceof VersionRange)
+            if (attr.getValue() instanceof VersionRange)
             {
-                VersionRange vr = (VersionRange) entry.getValue();
+                VersionRange vr = (VersionRange) attr.getValue();
                 if (vr.isFloorInclusive())
                 {
                     filters.add(
                         new SimpleFilter(
-                            entry.getKey(),
+                            attr.getName(),
                             vr.getFloor().toString(),
                             SimpleFilter.GTE));
                 }
@@ -126,7 +128,7 @@ public class BundleRequirementImpl implements BundleRequirement
                         new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
                     ((List) not.getValue()).add(
                         new SimpleFilter(
-                            entry.getKey(),
+                            attr.getName(),
                             vr.getFloor().toString(),
                             SimpleFilter.LTE));
                     filters.add(not);
@@ -138,7 +140,7 @@ public class BundleRequirementImpl implements BundleRequirement
                     {
                         filters.add(
                             new SimpleFilter(
-                                entry.getKey(),
+                                attr.getName(),
                                 vr.getCeiling().toString(),
                                 SimpleFilter.LTE));
                     }
@@ -148,7 +150,7 @@ public class BundleRequirementImpl implements BundleRequirement
                             new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
                         ((List) not.getValue()).add(
                             new SimpleFilter(
-                                entry.getKey(),
+                                attr.getName(),
                                 vr.getCeiling().toString(),
                                 SimpleFilter.GTE));
                         filters.add(not);
@@ -157,12 +159,12 @@ public class BundleRequirementImpl implements BundleRequirement
             }
             else
             {
-                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
+                List<String> values = SimpleFilter.parseSubstring(attr.getValue().toString());
                 if (values.size() > 1)
                 {
                     filters.add(
                         new SimpleFilter(
-                            entry.getKey(),
+                            attr.getName(),
                             values,
                             SimpleFilter.SUBSTRING));
                 }
@@ -170,7 +172,7 @@ public class BundleRequirementImpl implements BundleRequirement
                 {
                     filters.add(
                         new SimpleFilter(
-                            entry.getKey(),
+                            attr.getName(),
                             values.get(0),
                             SimpleFilter.EQ));
                 }
