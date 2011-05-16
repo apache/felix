@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2007, 2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2007, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,18 @@ package org.osgi.framework;
  * A service exception used to indicate that a service problem occurred.
  * 
  * <p>
- * A <code>ServiceException</code> object is created by the Framework or
+ * A {@code ServiceException} object is created by the Framework or
  * service implementation to denote an exception condition in the service. A
  * type code is used to identify the exception type for future extendability.
  * Service implementations may also create subclasses of
- * <code>ServiceException</code>. When subclassing, the subclass should set
+ * {@code ServiceException}. When subclassing, the subclass should set
  * the type to {@link #SUBCLASSED} to indicate that
- * <code>ServiceException</code> has been subclassed.
+ * {@code ServiceException} has been subclassed.
  * 
  * <p>
  * This exception conforms to the general purpose exception chaining mechanism.
  * 
- * @version $Revision: 6518 $
+ * @version $Id: 453b6021eed4543f754e20696b9f8b33a7e121ee $
  * @since 1.5
  */
 
@@ -68,9 +68,16 @@ public class ServiceException extends RuntimeException {
 	 * An error occurred invoking a remote service.
 	 */
 	public static final int REMOTE 				= 5;
+	/**
+	 * The service factory resulted in a recursive call to itself for the
+	 * requesting bundle.
+	 * 
+	 * @since 1.6
+	 */
+	public static final int	FACTORY_RECURSION	= 6;
 
 	/**
-	 * Creates a <code>ServiceException</code> with the specified message and
+	 * Creates a {@code ServiceException} with the specified message and
 	 * exception cause.
 	 * 
 	 * @param msg The associated message.
@@ -81,7 +88,7 @@ public class ServiceException extends RuntimeException {
 	}
 
 	/**
-	 * Creates a <code>ServiceException</code> with the specified message.
+	 * Creates a {@code ServiceException} with the specified message.
 	 * 
 	 * @param msg The message.
 	 */
@@ -90,7 +97,7 @@ public class ServiceException extends RuntimeException {
 	}
 
 	/**
-	 * Creates a <code>ServiceException</code> with the specified message,
+	 * Creates a {@code ServiceException} with the specified message,
 	 * type and exception cause.
 	 * 
 	 * @param msg The associated message.
@@ -103,7 +110,7 @@ public class ServiceException extends RuntimeException {
 	}
 
 	/**
-	 * Creates a <code>ServiceException</code> with the specified message and
+	 * Creates a {@code ServiceException} with the specified message and
 	 * type.
 	 * 
 	 * @param msg The message.
@@ -115,7 +122,7 @@ public class ServiceException extends RuntimeException {
 	}
 
 	/**
-	 * Returns the type for this exception or <code>UNSPECIFIED</code> if the
+	 * Returns the type for this exception or {@code UNSPECIFIED} if the
 	 * type was unspecified or unknown.
 	 * 
 	 * @return The type of this exception.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,33 +19,33 @@ package org.osgi.framework;
 /**
  * Customizes the starting and stopping of a bundle.
  * <p>
- * <code>BundleActivator</code> is an interface that may be implemented when a
+ * {@code BundleActivator} is an interface that may be implemented when a
  * bundle is started or stopped. The Framework can create instances of a
- * bundle's <code>BundleActivator</code> as required. If an instance's
- * <code>BundleActivator.start</code> method executes successfully, it is
- * guaranteed that the same instance's <code>BundleActivator.stop</code>
+ * bundle's {@code BundleActivator} as required. If an instance's
+ * {@code BundleActivator.start} method executes successfully, it is
+ * guaranteed that the same instance's {@code BundleActivator.stop}
  * method will be called when the bundle is to be stopped. The Framework must
- * not concurrently call a <code>BundleActivator</code> object.
+ * not concurrently call a {@code BundleActivator} object.
  * 
  * <p>
- * <code>BundleActivator</code> is specified through the
- * <code>Bundle-Activator</code> Manifest header. A bundle can only specify a
- * single <code>BundleActivator</code> in the Manifest file. Fragment bundles
- * must not have a <code>BundleActivator</code>. The form of the Manifest
+ * {@code BundleActivator} is specified through the
+ * {@code Bundle-Activator} Manifest header. A bundle can only specify a
+ * single {@code BundleActivator} in the Manifest file. Fragment bundles
+ * must not have a {@code BundleActivator}. The form of the Manifest
  * header is:
  * 
  * <p>
- * <code>Bundle-Activator: <i>class-name</i></code>
+ * {@code Bundle-Activator: <i>class-name</i>}
  * 
  * <p>
- * where <code><i>class-name</i></code> is a fully qualified Java classname.
+ * where {@code <i>class-name</i>} is a fully qualified Java classname.
  * <p>
- * The specified <code>BundleActivator</code> class must have a public
- * constructor that takes no parameters so that a <code>BundleActivator</code>
- * object can be created by <code>Class.newInstance()</code>.
+ * The specified {@code BundleActivator} class must have a public
+ * constructor that takes no parameters so that a {@code BundleActivator}
+ * object can be created by {@code Class.newInstance()}.
  * 
  * @NotThreadSafe
- * @version $Revision: 6361 $
+ * @version $Id: 1b73057bd270ab07f0a16430dba16e5132eea24f $
  */
 
 public interface BundleActivator {
@@ -69,7 +69,7 @@ public interface BundleActivator {
 	/**
 	 * Called when this bundle is stopped so the Framework can perform the
 	 * bundle-specific activities necessary to stop the bundle. In general, this
-	 * method should undo the work that the <code>BundleActivator.start</code>
+	 * method should undo the work that the {@code BundleActivator.start}
 	 * method started. There should be no active threads that were started by
 	 * this bundle when this bundle returns. A stopped bundle must not call any
 	 * Framework objects.

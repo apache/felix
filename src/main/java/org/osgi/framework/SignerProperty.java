@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2009, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.osgi.framework;
 
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -27,9 +26,9 @@ import java.util.Map;
  * during filter expression evaluation in the permission implies method.
  * 
  * @Immutable
- * @version $Revision: 6479 $
+ * @version $Id: 3589831a7594cf36e645a51ab9b9ae5ebfd80beb $
  */
-class SignerProperty {
+final class SignerProperty {
 	private final Bundle	bundle;
 	private final String	pattern;
 
@@ -71,19 +70,21 @@ class SignerProperty {
 		SignerProperty other = (SignerProperty) o;
 		Bundle matchBundle = bundle != null ? bundle : other.bundle;
 		String matchPattern = bundle != null ? other.pattern : pattern;
-		Map/* <X509Certificate, List<X509Certificate>> */signers = matchBundle
+		Map<X509Certificate, List<X509Certificate>> signers = matchBundle
 				.getSignerCertificates(Bundle.SIGNERS_TRUSTED);
-		for (Iterator iSigners = signers.values().iterator(); iSigners
-				.hasNext();) {
-			List/* <X509Certificate> */signerCerts = (List) iSigners.next();
-			List/* <String> */dnChain = new ArrayList(signerCerts.size());
-			for (Iterator iCerts = signerCerts.iterator(); iCerts.hasNext();) {
-				dnChain.add(((X509Certificate) iCerts.next()).getSubjectDN()
-						.getName());
+		for (List<X509Certificate> signerCerts : signers.values()) {
+			List<String> dnChain = new ArrayList<String>(signerCerts.size());
+			for (X509Certificate signerCert : signerCerts) {
+				dnChain.add(signerCert.getSubjectDN().getName());
 			}
-			if (FrameworkUtil
-					.matchDistinguishedNameChain(matchPattern, dnChain)) {
-				return true;
+			try {
+				if (FrameworkUtil.matchDistinguishedNameChain(matchPattern,
+						dnChain)) {
+					return true;
+				}
+			}
+			catch (IllegalArgumentException e) {
+				continue; // bad pattern
 			}
 		}
 		return false;
@@ -106,7 +107,7 @@ class SignerProperty {
 		if (bundle == null) {
 			return false;
 		}
-		Map/* <X509Certificate, List<X509Certificate>> */signers = bundle
+		Map<X509Certificate, List<X509Certificate>> signers = bundle
 				.getSignerCertificates(Bundle.SIGNERS_TRUSTED);
 		return !signers.isEmpty();
 	}

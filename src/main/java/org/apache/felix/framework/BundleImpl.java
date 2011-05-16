@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -996,6 +997,21 @@ class BundleImpl implements Bundle
 
         // Uninstall the bundle.
         getFramework().uninstallBundle(this);
+    }
+
+    public <A> A adapt(Class<A> type)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public File getDataFile(String filename)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public int compareTo(Bundle t)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public String toString()
