@@ -19,20 +19,18 @@
 package org.apache.felix.framework.resolver;
 
 import java.util.List;
-import java.util.Map;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRevision;
+import org.apache.felix.framework.capabilityset.Attribute;
+import org.apache.felix.framework.capabilityset.Capability;
+import org.apache.felix.framework.capabilityset.Directive;
 
-public class HostedCapability extends BundleCapabilityImpl
+public class HostedCapability implements Capability
 {
-    private final BundleRevision m_host;
-    private final BundleCapabilityImpl m_cap;
+    private final Module m_host;
+    private final Capability m_cap;
 
-    public HostedCapability(BundleRevision host, BundleCapabilityImpl cap)
+    public HostedCapability(Module module, Capability cap)
     {
-        super(host, cap.getNamespace(), cap.getDirectives(), cap.getAttributes());
-        m_host = host;
+        m_host = module;
         m_cap = cap;
     }
 
@@ -68,36 +66,41 @@ public class HostedCapability extends BundleCapabilityImpl
         return hash;
     }
 
-    public BundleCapabilityImpl getDeclaredCapability()
+    public Capability getDeclaredCapability()
     {
         return m_cap;
     }
 
-    @Override
-    public BundleRevision getRevision()
+    public Module getModule()
     {
         return m_host;
     }
 
-    @Override
     public String getNamespace()
     {
         return m_cap.getNamespace();
     }
 
-    @Override
-    public Map<String, String> getDirectives()
+    public Directive getDirective(String name)
+    {
+        return m_cap.getDirective(name);
+    }
+
+    public List<Directive> getDirectives()
     {
         return m_cap.getDirectives();
     }
 
-    @Override
-    public Map<String, Object> getAttributes()
+    public Attribute getAttribute(String name)
+    {
+        return m_cap.getAttribute(name);
+    }
+
+    public List<Attribute> getAttributes()
     {
         return m_cap.getAttributes();
     }
 
-    @Override
     public List<String> getUses()
     {
         return m_cap.getUses();
@@ -110,10 +113,10 @@ public class HostedCapability extends BundleCapabilityImpl
         {
             return getAttributes().toString();
         }
-        if (getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        if (getNamespace().equals(Capability.PACKAGE_NAMESPACE))
         {
             return "[" + m_host + "] "
-                + getNamespace() + "; " + getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                + getNamespace() + "; " + getAttribute(Capability.PACKAGE_ATTR);
         }
         return "[" + m_host + "] " + getNamespace() + "; " + getAttributes();
     }

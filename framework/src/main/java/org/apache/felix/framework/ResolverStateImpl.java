@@ -27,28 +27,27 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.resolver.CandidateComparator;
+import org.apache.felix.framework.resolver.Module;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.Resolver;
+import org.apache.felix.framework.resolver.Wire;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.BundlePermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
 
 class ResolverStateImpl implements Resolver.ResolverState
 {
     private final Logger m_logger;
-    // Set of all revisions.
-    private final Set<BundleRevision> m_revisions;
+    // Set of all modules.
+    private final Set<Module> m_modules;
     // Set of all fragments.
-    private final Set<BundleRevision> m_fragments;
+    private final Set<Module> m_fragments;
     // Capability sets.
     private final Map<String, CapabilitySet> m_capSets;
     // Execution environment.
@@ -56,21 +55,11 @@ class ResolverStateImpl implements Resolver.ResolverState
     // Parsed framework environments
     private final Set<String> m_fwkExecEnvSet;
 
-//    void dump()
-//    {
-//        for (Entry<String, CapabilitySet> entry : m_capSets.entrySet())
-//        {
-//            System.out.println("+++ START CAPSET " + entry.getKey());
-//            entry.getValue().dump();
-//            System.out.println("+++ END CAPSET " + entry.getKey());
-//        }
-//    }
-
     ResolverStateImpl(Logger logger, String fwkExecEnvStr)
     {
         m_logger = logger;
-        m_revisions = new HashSet<BundleRevision>();
-        m_fragments = new HashSet<BundleRevision>();
+        m_modules = new HashSet<Module>();
+        m_fragments = new HashSet<Module>();
         m_capSets = new HashMap<String, CapabilitySet>();
 
         m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
@@ -78,26 +67,24 @@ class ResolverStateImpl implements Resolver.ResolverState
 
         List<String> indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(BundleCapabilityImpl.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
+        m_capSets.put(Capability.MODULE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
-        indices.add(BundleCapabilityImpl.PACKAGE_ATTR);
-        m_capSets.put(BundleCapabilityImpl.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
+        indices.add(Capability.PACKAGE_ATTR);
+        m_capSets.put(Capability.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(BundleCapabilityImpl.HOST_NAMESPACE,  new CapabilitySet(indices, true));
+        m_capSets.put(Capability.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
 
-    synchronized void addRevision(BundleRevision br)
+    synchronized void addModule(Module m)
     {
-        m_revisions.add(br);
-        List<BundleCapability> caps = (br.getWiring() == null)
-            ? br.getDeclaredCapabilities(null)
-            : br.getWiring().getCapabilities(null);
+        m_modules.add(m);
+        List<Capability> caps = m.getCapabilities();
         if (caps != null)
         {
-            for (BundleCapability cap : caps)
+            for (Capability cap : caps)
             {
                 CapabilitySet capSet = m_capSets.get(cap.getNamespace());
                 if (capSet == null)
@@ -109,21 +96,19 @@ class ResolverStateImpl implements Resolver.ResolverState
             }
         }
 
-        if (Util.isFragment(br))
+        if (Util.isFragment(m))
         {
-            m_fragments.add(br);
+            m_fragments.add(m);
         }
     }
 
-    synchronized void removeRevision(BundleRevision br)
+    synchronized void removeModule(Module m)
     {
-        m_revisions.remove(br);
-        List<BundleCapability> caps = (br.getWiring() == null)
-            ? br.getDeclaredCapabilities(null)
-            : br.getWiring().getCapabilities(null);
+        m_modules.remove(m);
+        List<Capability> caps = m.getCapabilities();
         if (caps != null)
         {
-            for (BundleCapability cap : caps)
+            for (Capability cap : caps)
             {
                 CapabilitySet capSet = m_capSets.get(cap.getNamespace());
                 if (capSet != null)
@@ -133,39 +118,42 @@ class ResolverStateImpl implements Resolver.ResolverState
             }
         }
 
-        if (Util.isFragment(br))
+        if (Util.isFragment(m))
         {
-            m_fragments.remove(br);
+            m_fragments.remove(m);
         }
     }
 
-    synchronized Set<BundleRevision> getFragments()
+    synchronized Set<Module> getFragments()
     {
         return new HashSet(m_fragments);
     }
 
-// TODO: OSGi R4.3 - This will need to be changed once BundleWiring.getCapabilities()
-//       is correctly implemented, since it already has to remove substituted caps.
-    synchronized void removeSubstitutedCapabilities(BundleRevision br)
+    synchronized void removeSubstitutedCapabilities(Module module)
     {
-        if (br.getWiring() != null)
+        if (module.isResolved())
         {
-            // Loop through the revision's package wires and determine if any
-            // of them overlap any of the packages exported by the revision.
-            // If so, then the framework must have chosen to have the revision
+            // Loop through the module's package wires and determine if any
+            // of them overlap any of the packages exported by the module.
+            // If so, then the framework must have chosen to have the module
             // import rather than export the package, so we need to remove the
             // corresponding package capability from the package capability set.
-            for (BundleWire w : br.getWiring().getRequiredWires(null))
+            List<Wire> wires = module.getWires();
+            List<Capability> caps = module.getCapabilities();
+            for (int wireIdx = 0; (wires != null) && (wireIdx < wires.size()); wireIdx++)
             {
-                if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                Wire wire = wires.get(wireIdx);
+                if (wire.getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE))
                 {
-                    for (BundleCapability cap : br.getWiring().getCapabilities(null))
+                    for (int capIdx = 0;
+                        (caps != null) && (capIdx < caps.size());
+                        capIdx++)
                     {
-                        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                            && w.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
-                                .equals(cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
+                        if (caps.get(capIdx).getNamespace().equals(Capability.PACKAGE_NAMESPACE)
+                            && wire.getCapability().getAttribute(Capability.PACKAGE_ATTR).getValue()
+                                .equals(caps.get(capIdx).getAttribute(Capability.PACKAGE_ATTR).getValue()))
                         {
-                            m_capSets.get(BundleCapabilityImpl.PACKAGE_NAMESPACE).removeCapability(cap);
+                            m_capSets.get(Capability.PACKAGE_NAMESPACE).removeCapability(caps.get(capIdx));
                             break;
                         }
                     }
@@ -178,62 +166,61 @@ class ResolverStateImpl implements Resolver.ResolverState
     // ResolverState methods.
     //
 
-    public synchronized SortedSet<BundleCapability> getCandidates(
-        BundleRequirementImpl req, boolean obeyMandatory)
+    public synchronized SortedSet<Capability> getCandidates(
+        Requirement req, boolean obeyMandatory)
     {
-        BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
-        SortedSet<BundleCapability> result =
-            new TreeSet<BundleCapability>(new CandidateComparator());
+        Module module = req.getModule();
+        SortedSet<Capability> result = new TreeSet<Capability>(new CandidateComparator());
 
         CapabilitySet capSet = m_capSets.get(req.getNamespace());
         if (capSet != null)
         {
-            Set<BundleCapability> matches = capSet.match(req.getFilter(), obeyMandatory);
-            for (BundleCapability cap : matches)
+            Set<Capability> matches = capSet.match(req.getFilter(), obeyMandatory);
+            for (Capability cap : matches)
             {
                 if (System.getSecurityManager() != null)
                 {
-                    if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) && (
-                        !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getSecurityContext()).impliesDirect(
-                            new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
+                    if (req.getNamespace().equals(Capability.PACKAGE_NAMESPACE) && (
+                        !((BundleProtectionDomain) cap.getModule().getSecurityContext()).impliesDirect(
+                            new PackagePermission((String) cap.getAttribute(Capability.PACKAGE_ATTR).getValue(),
                             PackagePermission.EXPORTONLY)) ||
-                            !((reqRevision == null) ||
-                                ((BundleProtectionDomain) reqRevision.getSecurityContext()).impliesDirect(
-                                    new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
-                                    cap.getRevision().getBundle(),PackagePermission.IMPORT))
+                            !((module == null) ||
+                                ((BundleProtectionDomain) module.getSecurityContext()).impliesDirect(
+                                    new PackagePermission((String) cap.getAttribute(Capability.PACKAGE_ATTR).getValue(),
+                                    cap.getModule().getBundle(),PackagePermission.IMPORT))
                             )))
                     {
-                        if (reqRevision != cap.getRevision())
+                        if (module != cap.getModule())
                         {
                             continue;
                         }
                     }
-                    else if (req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE) && (
-                        !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getSecurityContext()).impliesDirect(
-                            new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
-                            !((reqRevision == null) ||
-                                ((BundleProtectionDomain) reqRevision.getSecurityContext()).impliesDirect(
-                                    new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
+                    else if (req.getNamespace().equals(Capability.MODULE_NAMESPACE) && (
+                        !((BundleProtectionDomain) cap.getModule().getSecurityContext()).impliesDirect(
+                            new BundlePermission(cap.getModule().getSymbolicName(), BundlePermission.PROVIDE)) ||
+                            !((module == null) ||
+                                ((BundleProtectionDomain) module.getSecurityContext()).impliesDirect(
+                                    new BundlePermission(module.getSymbolicName(), BundlePermission.REQUIRE))
                             )))
                     {
                         continue;
                     }
-                    else if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE) &&
-                        (!((BundleProtectionDomain) reqRevision.getSecurityContext())
+                    else if (req.getNamespace().equals(Capability.HOST_NAMESPACE) &&
+                        (!((BundleProtectionDomain) req.getModule().getSecurityContext())
                             .impliesDirect(new BundlePermission(
-                                reqRevision.getSymbolicName(),
+                                req.getModule().getSymbolicName(),
                                 BundlePermission.FRAGMENT))
-                        || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getSecurityContext())
+                        || !((BundleProtectionDomain) cap.getModule().getSecurityContext())
                             .impliesDirect(new BundlePermission(
-                                cap.getRevision().getSymbolicName(),
+                                cap.getModule().getSymbolicName(),
                                 BundlePermission.HOST))))
                     {
                         continue;
                     }
                 }
 
-                if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE)
-                    && (cap.getRevision().getWiring() != null))
+                if (req.getNamespace().equals(Capability.HOST_NAMESPACE)
+                    && cap.getModule().isResolved())
                 {
                     continue;
                 }
@@ -245,11 +232,10 @@ class ResolverStateImpl implements Resolver.ResolverState
         return result;
     }
 
-    public void checkExecutionEnvironment(BundleRevision revision) throws ResolveException
+    public void checkExecutionEnvironment(Module module) throws ResolveException
     {
         String bundleExecEnvStr = (String)
-            ((BundleRevisionImpl) revision).getHeaders().get(
-                Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
+            module.getHeaders().get(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
         if (bundleExecEnvStr != null)
         {
             bundleExecEnvStr = bundleExecEnvStr.trim();
@@ -274,19 +260,17 @@ class ResolverStateImpl implements Resolver.ResolverState
                 {
                     throw new ResolveException(
                         "Execution environment not supported: "
-                        + bundleExecEnvStr, revision, null);
+                        + bundleExecEnvStr, module, null);
                 }
             }
         }
     }
 
-    public void checkNativeLibraries(BundleRevision revision) throws ResolveException
+    public void checkNativeLibraries(Module module) throws ResolveException
     {
-        // Next, try to resolve any native code, since the revision is
+        // Next, try to resolve any native code, since the module is
         // not resolvable if its native code cannot be loaded.
-// TODO: OSGi R4.3 - Is it sufficient to just check declared native libs here?
-//        List<R4Library> libs = ((BundleWiringImpl) revision.getWiring()).getNativeLibraries();
-        List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
+        List<R4Library> libs = module.getNativeLibraries();
         if (libs != null)
         {
             String msg = null;
@@ -297,7 +281,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                 String entryName = libs.get(libIdx).getEntryName();
                 if (entryName != null)
                 {
-                    if (!((BundleRevisionImpl) revision).getContent().hasEntry(entryName))
+                    if (!module.getContent().hasEntry(entryName))
                     {
                         msg = "Native library does not exist: " + entryName;
                     }
@@ -312,7 +296,7 @@ class ResolverStateImpl implements Resolver.ResolverState
             }
             if (msg != null)
             {
-                throw new ResolveException(msg, revision, null);
+                throw new ResolveException(msg, module, null);
             }
         }
     }

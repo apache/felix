@@ -16,22 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.framework.util.manifestparser;
+package org.apache.felix.framework.capabilityset;
 
+import org.apache.felix.framework.resolver.Module;
 import java.util.List;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Directive;
 
-public class ParsedHeaderClause
+public interface Capability
 {
-    public final List<String> m_paths;
-    public final List<Directive> m_dirs;
-    public final List<Attribute> m_attrs;
+    static final String MODULE_NAMESPACE = "module";
+    static final String HOST_NAMESPACE = "host";
+    static final String PACKAGE_NAMESPACE = "package";
+    static final String SINGLETON_NAMESPACE = "singleton";
 
-    public ParsedHeaderClause(List<String> paths, List<Directive> dirs, List<Attribute> attrs)
-    {
-        m_paths = paths;
-        m_dirs = dirs;
-        m_attrs = attrs;
-    }
+    public static final String PACKAGE_ATTR = "package";
+    public static final String VERSION_ATTR = "version";
+
+    Module getModule();
+    String getNamespace();
+    Directive getDirective(String name);
+    List<Directive> getDirectives();
+    Attribute getAttribute(String name);
+    List<Attribute> getAttributes();
+    List<String> getUses();
 }

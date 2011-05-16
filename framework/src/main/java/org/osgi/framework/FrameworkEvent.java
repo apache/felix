@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2009). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,12 @@ package org.osgi.framework;
 
 import java.util.EventObject;
 
-import org.osgi.framework.startlevel.FrameworkStartLevel;
-import org.osgi.framework.wiring.FrameworkWiring;
-
 /**
  * A general event from the Framework.
  * 
  * <p>
- * {@code FrameworkEvent} objects are delivered to
- * {@code FrameworkListener}s when a general event occurs within the OSGi
+ * <code>FrameworkEvent</code> objects are delivered to
+ * <code>FrameworkListener</code>s when a general event occurs within the OSGi
  * environment. A type code is used to identify the event type for future
  * extendability.
  * 
@@ -35,7 +32,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @Immutable
  * @see FrameworkListener
- * @version $Id: e05c6ffd542fa432835961882bf6b15b0620ffb6 $
+ * @version $Revision: 6542 $
  */
 
 public class FrameworkEvent extends EventObject {
@@ -64,7 +61,7 @@ public class FrameworkEvent extends EventObject {
 	 * has reached the initial start level. The source of this event is the
 	 * System Bundle.
 	 * 
-	 * @see "The Start Level Specification"
+	 * @see "The Start Level Service"
 	 */
 	public final static int	STARTED							= 0x00000001;
 
@@ -77,21 +74,20 @@ public class FrameworkEvent extends EventObject {
 	public final static int	ERROR							= 0x00000002;
 
 	/**
-	 * A FrameworkWiring.refreshBundles operation has completed.
+	 * A PackageAdmin.refreshPackage operation has completed.
 	 * 
 	 * <p>
-	 * This event is fired when the Framework has completed the refresh bundles
-	 * operation initiated by a call to the FrameworkWiring.refreshBundles
-	 * method. The source of this event is the System Bundle.
+	 * This event is fired when the Framework has completed the refresh packages
+	 * operation initiated by a call to the PackageAdmin.refreshPackages method.
+	 * The source of this event is the System Bundle.
 	 * 
 	 * @since 1.2
-	 * @see FrameworkWiring#refreshBundles(java.util.Collection,
-	 *      FrameworkListener...)
+	 * @see "<code>PackageAdmin.refreshPackages</code>"
 	 */
 	public final static int	PACKAGES_REFRESHED				= 0x00000004;
 
 	/**
-	 * A FrameworkStartLevel.setStartLevel operation has completed.
+	 * A StartLevel.setStartLevel operation has completed.
 	 * 
 	 * <p>
 	 * This event is fired when the Framework has completed changing the active
@@ -99,7 +95,7 @@ public class FrameworkEvent extends EventObject {
 	 * The source of this event is the System Bundle.
 	 * 
 	 * @since 1.2
-	 * @see FrameworkStartLevel#setStartLevel(int, FrameworkListener...)
+	 * @see "The Start Level Service"
 	 */
 	public final static int	STARTLEVEL_CHANGED				= 0x00000008;
 
@@ -174,7 +170,7 @@ public class FrameworkEvent extends EventObject {
 	 * Creates a Framework event.
 	 * 
 	 * @param type The event type.
-	 * @param source The event source object. This may not be {@code null}.
+	 * @param source The event source object. This may not be <code>null</code>.
 	 * @deprecated As of 1.2. This constructor is deprecated in favor of using
 	 *             the other constructor with the System Bundle as the event
 	 *             source.
@@ -192,7 +188,7 @@ public class FrameworkEvent extends EventObject {
 	 * @param type The event type.
 	 * @param bundle The event source.
 	 * @param throwable The related exception. This argument may be
-	 *        {@code null} if there is no related exception.
+	 *        <code>null</code> if there is no related exception.
 	 */
 	public FrameworkEvent(int type, Bundle bundle, Throwable throwable) {
 		super(bundle);
@@ -204,7 +200,7 @@ public class FrameworkEvent extends EventObject {
 	/**
 	 * Returns the exception related to this event.
 	 * 
-	 * @return The related exception or {@code null} if none.
+	 * @return The related exception or <code>null</code> if none.
 	 */
 	public Throwable getThrowable() {
 		return throwable;

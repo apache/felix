@@ -18,20 +18,19 @@
  */
 package org.apache.felix.framework.resolver;
 
-import java.util.Map;
+import java.util.List;
+import org.apache.felix.framework.capabilityset.Directive;
+import org.apache.felix.framework.capabilityset.Requirement;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.osgi.framework.wiring.BundleRevision;
 
-public class HostedRequirement extends BundleRequirementImpl
+public class HostedRequirement implements Requirement
 {
-    private final BundleRevision m_host;
-    private final BundleRequirementImpl m_req;
+    private final Module m_host;
+    private final Requirement m_req;
 
-    public HostedRequirement(BundleRevision host, BundleRequirementImpl req)
+    public HostedRequirement(Module module, Requirement req)
     {
-        super(host, req.getNamespace(), req.getDirectives(), req.getAttributes());
-        m_host = host;
+        m_host = module;
         m_req = req;
     }
 
@@ -67,48 +66,41 @@ public class HostedRequirement extends BundleRequirementImpl
         return hash;
     }
 
-    public BundleRequirementImpl getDeclaredRequirement()
+    public Requirement getDeclaredRequirement()
     {
         return m_req;
     }
 
-    @Override
-    public BundleRevision getRevision()
+    public Module getModule()
     {
         return m_host;
     }
 
-    @Override
     public String getNamespace()
     {
         return m_req.getNamespace();
     }
 
-    @Override
     public SimpleFilter getFilter()
     {
         return m_req.getFilter();
     }
 
-    @Override
     public boolean isOptional()
     {
         return m_req.isOptional();
     }
 
-    @Override
-    public Map<String, String> getDirectives()
+    public Directive getDirective(String name)
+    {
+        return m_req.getDirective(name);
+    }
+
+    public List<Directive> getDirectives()
     {
         return m_req.getDirectives();
     }
 
-    @Override
-    public Map<String, Object> getAttributes()
-    {
-        return m_req.getAttributes();
-    }
-
-    @Override
     public String toString()
     {
         return "[" + m_host + "] " + getNamespace() + "; " + getFilter().toString();

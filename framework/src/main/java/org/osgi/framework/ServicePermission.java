@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2009). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,43 +26,42 @@ import java.security.BasicPermission;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.PrivilegedAction;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A bundle's authority to register or get a service.
  * <ul>
- * <li>The {@code register} action allows a bundle to register a service on
+ * <li>The <code>register</code> action allows a bundle to register a service on
  * the specified names.
- * <li>The {@code get} action allows a bundle to detect a service and get
+ * <li>The <code>get</code> action allows a bundle to detect a service and get
  * it.
  * </ul>
  * Permission to get a service is required in order to detect events regarding
  * the service. Untrusted bundles should not be able to detect the presence of
  * certain services unless they have the appropriate
- * {@code ServicePermission} to get the specific service.
+ * <code>ServicePermission</code> to get the specific service.
  * 
  * @ThreadSafe
- * @version $Id: 1b6ee9543f4cbc16add8dc8c40dfa9a6dfee7aa2 $
+ * @version $Revision: 7189 $
  */
 
 public final class ServicePermission extends BasicPermission {
 	static final long			serialVersionUID	= -7662148639076511574L;
 	/**
-	 * The action string {@code get}.
+	 * The action string <code>get</code>.
 	 */
 	public final static String	GET					= "get";
 	/**
-	 * The action string {@code register}.
+	 * The action string <code>register</code>.
 	 */
 	public final static String	REGISTER			= "register";
 
@@ -88,7 +87,7 @@ public final class ServicePermission extends BasicPermission {
 	 * The service used by this ServicePermission. Must be null if not
 	 * constructed with a service.
 	 */
-	transient final ServiceReference< ? >					service;
+	transient final ServiceReference		service;
 
 	/**
 	 * The object classes for this ServicePermission. Must be null if not
@@ -103,11 +102,11 @@ public final class ServicePermission extends BasicPermission {
 	transient Filter						filter;
 
 	/**
-	 * This map holds the properties of the permission, used to match a filter
-	 * in implies. This is not initialized until necessary, and then cached in
-	 * this object.
+	 * This dictionary holds the properties of the permission, used to match a
+	 * filter in implies. This is not initialized until necessary, and then
+	 * cached in this object.
 	 */
-	private transient volatile Map<String, Object>	properties;
+	private transient volatile Dictionary	properties;
 
 	/**
 	 * True if constructed with a name and the name is "*" or ends with ".*".
@@ -139,7 +138,7 @@ public final class ServicePermission extends BasicPermission {
 	 * *
 	 * </pre>
 	 * 
-	 * For the {@code get} action, the name can also be a filter
+	 * For the <code>get</code> action, the name can also be a filter
 	 * expression. The filter gives access to the service properties as well as
 	 * the following attributes:
 	 * <ul>
@@ -159,17 +158,17 @@ public final class ServicePermission extends BasicPermission {
 	 * Service properties names are case insensitive.
 	 * 
 	 * <p>
-	 * There are two possible actions: {@code get} and
-	 * {@code register}. The {@code get} permission allows the owner
+	 * There are two possible actions: <code>get</code> and
+	 * <code>register</code>. The <code>get</code> permission allows the owner
 	 * of this permission to obtain a service with this name. The
-	 * {@code register} permission allows the bundle to register a service
+	 * <code>register</code> permission allows the bundle to register a service
 	 * under that name.
 	 * 
 	 * @param name The service class name
-	 * @param actions {@code get},{@code register} (canonical order)
+	 * @param actions <code>get</code>,<code>register</code> (canonical order)
 	 * @throws IllegalArgumentException If the specified name is a filter
 	 *         expression and either the specified action is not
-	 *         {@code get} or the filter has an invalid syntax.
+	 *         <code>get</code> or the filter has an invalid syntax.
 	 */
 	public ServicePermission(String name, String actions) {
 		this(name, parseActions(actions));
@@ -181,19 +180,19 @@ public final class ServicePermission extends BasicPermission {
 	}
 
 	/**
-	 * Creates a new requested {@code ServicePermission} object to be used
-	 * by code that must perform {@code checkPermission} for the
-	 * {@code get} action. {@code ServicePermission} objects created
-	 * with this constructor cannot be added to a {@code ServicePermission}
+	 * Creates a new requested <code>ServicePermission</code> object to be used
+	 * by code that must perform <code>checkPermission</code> for the
+	 * <code>get</code> action. <code>ServicePermission</code> objects created
+	 * with this constructor cannot be added to a <code>ServicePermission</code>
 	 * permission collection.
 	 * 
 	 * @param reference The requested service.
-	 * @param actions The action {@code get}.
+	 * @param actions The action <code>get</code>.
 	 * @throws IllegalArgumentException If the specified action is not
-	 *         {@code get} or reference is {@code null}.
+	 *         <code>get</code> or reference is <code>null</code>.
 	 * @since 1.5
 	 */
-	public ServicePermission(ServiceReference< ? > reference, String actions) {
+	public ServicePermission(ServiceReference reference, String actions) {
 		super(createName(reference));
 		setTransients(null, parseActions(actions));
 		this.service = reference;
@@ -210,7 +209,7 @@ public final class ServicePermission extends BasicPermission {
 	 * @param reference ServiceReference to use to create permission name.
 	 * @return permission name.
 	 */
-	private static String createName(ServiceReference< ? > reference) {
+	private static String createName(ServiceReference reference) {
 		if (reference == null) {
 			throw new IllegalArgumentException("reference must not be null");
 		}
@@ -352,7 +351,7 @@ public final class ServicePermission extends BasicPermission {
 	 * 
 	 * @param filterString The filter string to parse.
 	 * @return a Filter for this bundle. If the specified filterString is not a
-	 *         filter expression, then {@code null} is returned.
+	 *         filter expression, then <code>null</code> is returned.
 	 * @throws IllegalArgumentException If the filter syntax is invalid.
 	 */
 	private static Filter parseFilter(String filterString) {
@@ -373,12 +372,12 @@ public final class ServicePermission extends BasicPermission {
 	}
 
 	/**
-	 * Determines if a {@code ServicePermission} object "implies" the
+	 * Determines if a <code>ServicePermission</code> object "implies" the
 	 * specified permission.
 	 * 
 	 * @param p The target permission to check.
-	 * @return {@code true} if the specified permission is implied by this
-	 *         object; {@code false} otherwise.
+	 * @return <code>true</code> if the specified permission is implied by this
+	 *         object; <code>false</code> otherwise.
 	 */
 	public boolean implies(Permission p) {
 		if (!(p instanceof ServicePermission)) {
@@ -403,8 +402,8 @@ public final class ServicePermission extends BasicPermission {
 	 *        validated as a proper argument. The requested ServicePermission
 	 *        must not have a filter expression.
 	 * @param effective The effective actions with which to start.
-	 * @return {@code true} if the specified permission is implied by this
-	 *         object; {@code false} otherwise.
+	 * @return <code>true</code> if the specified permission is implied by this
+	 *         object; <code>false</code> otherwise.
 	 */
 	boolean implies0(ServicePermission requested, int effective) {
 		/* check actions first - much faster */
@@ -420,7 +419,7 @@ public final class ServicePermission extends BasicPermission {
 		/* if we have a filter */
 		Filter f = filter;
 		if (f != null) {
-			return f.matches(requested.getProperties());
+			return f.matchCase(requested.getProperties());
 		}
 		/* if requested permission not created with ServiceReference */
 		String[] requestedNames = requested.objectClass;
@@ -451,8 +450,8 @@ public final class ServicePermission extends BasicPermission {
 
 	/**
 	 * Returns the canonical string representation of the actions. Always
-	 * returns present actions in the following order: {@code get},
-	 * {@code register}.
+	 * returns present actions in the following order: <code>get</code>,
+	 * <code>register</code>.
 	 * 
 	 * @return The canonical string representation of the actions.
 	 */
@@ -481,11 +480,11 @@ public final class ServicePermission extends BasicPermission {
 	}
 
 	/**
-	 * Returns a new {@code PermissionCollection} object for storing
-	 * {@code ServicePermission} objects.
-	 * 
-	 * @return A new {@code PermissionCollection} object suitable for storing
-	 *         {@code ServicePermission} objects.
+	 * Returns a new <code>PermissionCollection</code> object for storing
+	 * <code>ServicePermission<code> objects.
+	 *
+	 * @return A new <code>PermissionCollection</code> object suitable for storing
+	 * <code>ServicePermission</code> objects.
 	 */
 	public PermissionCollection newPermissionCollection() {
 		return new ServicePermissionCollection();
@@ -495,12 +494,12 @@ public final class ServicePermission extends BasicPermission {
 	 * Determines the equality of two ServicePermission objects.
 	 * 
 	 * Checks that specified object has the same class name and action as this
-	 * {@code ServicePermission}.
+	 * <code>ServicePermission</code>.
 	 * 
 	 * @param obj The object to test for equality.
-	 * @return true if obj is a {@code ServicePermission}, and has the same
-	 *         class name and actions as this {@code ServicePermission}
-	 *         object; {@code false} otherwise.
+	 * @return true if obj is a <code>ServicePermission</code>, and has the same
+	 *         class name and actions as this <code>ServicePermission</code>
+	 *         object; <code>false</code> otherwise.
 	 */
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -559,28 +558,27 @@ public final class ServicePermission extends BasicPermission {
 		s.defaultReadObject();
 		setTransients(parseFilter(getName()), parseActions(actions));
 	}
-
 	/**
-	 * Called by {@code <@link ServicePermission#implies(Permission)>}. This
-	 * method is only called on a requested permission which cannot have a
-	 * filter set.
+	 * Called by <code><@link ServicePermission#implies(Permission)></code>.
 	 * 
-	 * @return a map of properties for this permission.
+	 * @return a dictionary of properties for this permission.
 	 */
-	private Map<String, Object> getProperties() {
-		Map<String, Object> result = properties;
+	private Dictionary getProperties() {
+		Dictionary result = properties;
 		if (result != null) {
 			return result;
 		}
 		if (service == null) {
-			result = new HashMap<String, Object>(1);
-			result.put(Constants.OBJECTCLASS, new String[] {getName()});
+			result = new Hashtable(1);
+			if (filter == null) {
+				result.put(Constants.OBJECTCLASS, new String[] {getName()});
+			}
 			return properties = result;
 		}
-		final Map<String, Object> props = new HashMap<String, Object>(4);
+		final Map props = new HashMap(4);
 		final Bundle bundle = service.getBundle();
 		if (bundle != null) {
-			AccessController.doPrivileged(new PrivilegedAction<Object>() {
+			AccessController.doPrivileged(new PrivilegedAction() {
 				public Object run() {
 					props.put("id", new Long(bundle.getBundleId()));
 					props.put("location", bundle.getLocation());
@@ -599,15 +597,13 @@ public final class ServicePermission extends BasicPermission {
 		return properties = new Properties(props, service);
 	}
 	
-	static private final class Properties extends AbstractMap<String, Object> {
-		private final Map<String, Object>	properties;
-		private final ServiceReference< ? >	service;
-		private transient volatile Set<Map.Entry<String, Object>>	entries;
+	private static class Properties extends Dictionary {
+		private final Map				properties;
+		private final ServiceReference	service;
 
-		Properties(Map<String, Object> properties, ServiceReference< ? > service) {
+		Properties(Map properties, ServiceReference service) {
 			this.properties = properties;
 			this.service = service;
-			entries = null;
 		}
 
 		public Object get(Object k) {
@@ -625,64 +621,57 @@ public final class ServicePermission extends BasicPermission {
 			return service.getProperty(key);
 		}
 
-		public Set<Map.Entry<String, Object>> entrySet() {
-			if (entries != null) {
-				return entries;
-			}
-			Set<Map.Entry<String, Object>> all = new HashSet<Map.Entry<String, Object>>(
-					properties.entrySet());
-			add: for (String key : service.getPropertyKeys()) {
-				for (String k : properties.keySet()) {
-					if (key.equalsIgnoreCase(k)) {
+		public int size() {
+			return properties.size() + service.getPropertyKeys().length;
+		}
+
+		public boolean isEmpty() {
+			// we can return false because this must never be empty
+			return false;
+		}
+
+		public Enumeration keys() {
+			Collection pk = properties.keySet();
+			String spk[] = service.getPropertyKeys();
+			List all = new ArrayList(pk.size() + spk.length);
+			all.addAll(pk);
+			add:
+			for (int i = 0, length = spk.length; i < length; i++) {
+				String key = spk[i];
+				for (Iterator iter = pk.iterator(); iter.hasNext();) {
+					if (key.equalsIgnoreCase((String) iter.next())) {
 						continue add;
 					}
 				}
-				all.add(new Entry(key, service.getProperty(key)));
+				all.add(key);
 			}
-			return entries = Collections.unmodifiableSet(all);
+			return Collections.enumeration(all);
 		}
-		
-		static private final class Entry implements Map.Entry<String, Object> {
-			private final String	k;
-			private final Object	v;
 
-			Entry(String key, Object value) {
-				this.k = key;
-				this.v = value;
-			}
-			public String getKey() {
-				return k;
-			}
-			public Object getValue() {
-				return v;
-			}
-			public Object setValue(Object value) {
-				throw new UnsupportedOperationException();
-			}
-			public String toString() {
-				return k + "=" + v;
-			}
-			public int hashCode() {
-				return ((k == null) ? 0 : k.hashCode())
-						^ ((v == null) ? 0 : v.hashCode());
-			}
-			public boolean equals(Object obj) {
-				if (obj == this) {
-					return true;
-				}
-				if (!(obj instanceof Map.Entry)) {
-					return false;
-				}
-				Map.Entry< ? , ? > e = (Map.Entry< ? , ? >) obj;
-				final Object key = e.getKey();
-				if ((k == key) || ((k != null) && k.equals(key))) {
-					final Object value = e.getValue();
-					if ((v == value) || ((v != null) && v.equals(value))) {
-						return true;
+		public Enumeration elements() {
+			Collection pk = properties.keySet();
+			String spk[] = service.getPropertyKeys();
+			List all = new ArrayList(pk.size() + spk.length);
+			all.addAll(properties.values());
+			add:
+			for (int i = 0, length = spk.length; i < length; i++) {
+				String key = spk[i];
+				for (Iterator iter = pk.iterator(); iter.hasNext();) {
+					if (key.equalsIgnoreCase((String) iter.next())) {
+						continue add;
 					}
 				}
-				return false;
+				all.add(service.getProperty(key));
 			}
+			return Collections.enumeration(all);
+		}
+
+		public Object put(Object key, Object value) {
+			throw new UnsupportedOperationException();
+		}
+
+		public Object remove(Object key) {
+			throw new UnsupportedOperationException();
 		}
 	}
 }
@@ -701,7 +690,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * 
 	 * @GuardedBy this
 	 */
-	private transient Map<String, ServicePermission>	permissions;
+	private transient Map	permissions;
 
 	/**
 	 * Boolean saying if "*" is in the collection.
@@ -717,13 +706,13 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * @serial
 	 * @GuardedBy this
 	 */
-	private Map<String, ServicePermission>				filterPermissions;
+	private Map				filterPermissions;
 
 	/**
 	 * Creates an empty ServicePermissions object.
 	 */
 	public ServicePermissionCollection() {
-		permissions = new HashMap<String, ServicePermission>();
+		permissions = new HashMap();
 		all_allowed = false;
 	}
 
@@ -734,7 +723,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * @throws IllegalArgumentException If the specified permission is not a
 	 *         ServicePermission object.
 	 * @throws SecurityException If this
-	 *         {@code ServicePermissionCollection} object has been marked
+	 *         <code>ServicePermissionCollection</code> object has been marked
 	 *         read-only.
 	 */
 	public void add(final Permission permission) {
@@ -757,17 +746,17 @@ final class ServicePermissionCollection extends PermissionCollection {
 		final Filter f = sp.filter;
 		synchronized (this) {
 			/* select the bucket for the permission */
-			Map<String, ServicePermission> pc;
+			Map pc;
 			if (f != null) {
 				pc = filterPermissions;
 				if (pc == null) {
-					filterPermissions = pc = new HashMap<String, ServicePermission>();
+					filterPermissions = pc = new HashMap();
 				}
 			}
 			else {
 				pc = permissions;
 			}
-			final ServicePermission existing = pc.get(name);
+			final ServicePermission existing = (ServicePermission) pc.get(name);
 			
 			if (existing != null) {
 				final int oldMask = existing.action_mask;
@@ -792,11 +781,11 @@ final class ServicePermissionCollection extends PermissionCollection {
 
 	/**
 	 * Determines if a set of permissions implies the permissions expressed in
-	 * {@code permission}.
+	 * <code>permission</code>.
 	 * 
 	 * @param permission The Permission object to compare.
-	 * @return {@code true} if {@code permission} is a proper
-	 *         subset of a permission in the set; {@code false}
+	 * @return <code>true</code> if <code>permission</code> is a proper
+	 *         subset of a permission in the set; <code>false</code>
 	 *         otherwise.
 	 */
 	public boolean implies(final Permission permission) {
@@ -810,12 +799,12 @@ final class ServicePermissionCollection extends PermissionCollection {
 		}
 
 		int effective = ServicePermission.ACTION_NONE;
-		Collection<ServicePermission> perms;
+		Collection perms;
 		synchronized (this) {
 			final int desired = requested.action_mask;
 			/* short circuit if the "*" Permission was added */
 			if (all_allowed) {
-				ServicePermission sp = permissions.get("*");
+				ServicePermission sp = (ServicePermission) permissions.get("*");
 				if (sp != null) {
 					effective |= sp.action_mask;
 					if ((effective & desired) == desired) {
@@ -840,7 +829,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 					}
 				}
 			}
-			Map<String, ServicePermission> pc = filterPermissions;
+			Map pc = filterPermissions;
 			if (pc == null) {
 				return false;
 			}
@@ -848,8 +837,9 @@ final class ServicePermissionCollection extends PermissionCollection {
 		}
 		
 		/* iterate one by one over filteredPermissions */
-		for (ServicePermission perm : perms) {
-			if (perm.implies0(requested, effective)) {
+		for (Iterator iter = perms.iterator(); iter.hasNext();) {
+			if (((ServicePermission) iter.next())
+					.implies0(requested, effective)) {
 				return true;
 			}
 		}
@@ -867,8 +857,8 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 */
 	private int effective(String requestedName, final int desired,
 			int effective) {
-		final Map<String, ServicePermission> pc = permissions;
-		ServicePermission sp = pc.get(requestedName);
+		final Map pc = permissions;
+		ServicePermission sp = (ServicePermission) pc.get(requestedName);
 		// strategy:
 		// Check for full match first. Then work our way up the
 		// name looking for matches on a.b.*
@@ -884,7 +874,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 		int offset = requestedName.length() - 1;
 		while ((last = requestedName.lastIndexOf(".", offset)) != -1) {
 			requestedName = requestedName.substring(0, last + 1) + "*";
-			sp = pc.get(requestedName);
+			sp = (ServicePermission) pc.get(requestedName);
 			if (sp != null) {
 				effective |= sp.action_mask;
 				if ((effective & desired) == desired) {
@@ -901,14 +891,14 @@ final class ServicePermissionCollection extends PermissionCollection {
 	}
 	
 	/**
-	 * Returns an enumeration of all the {@code ServicePermission}
+	 * Returns an enumeration of all the <code>ServicePermission</code>
 	 * objects in the container.
 	 * 
 	 * @return Enumeration of all the ServicePermission objects.
 	 */
-	public synchronized Enumeration<Permission> elements() {
-		List<Permission> all = new ArrayList<Permission>(permissions.values());
-		Map<String, ServicePermission> pc = filterPermissions;
+	public synchronized Enumeration elements() {
+		List all = new ArrayList(permissions.values());
+		Map pc = filterPermissions;
 		if (pc != null) {
 			all.addAll(pc.values());
 		}
@@ -923,8 +913,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 
 	private synchronized void writeObject(ObjectOutputStream out)
 			throws IOException {
-		Hashtable<String, ServicePermission> hashtable = new Hashtable<String, ServicePermission>(
-				permissions);
+		Hashtable hashtable = new Hashtable(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
@@ -935,12 +924,9 @@ final class ServicePermissionCollection extends PermissionCollection {
 	private synchronized void readObject(java.io.ObjectInputStream in)
 			throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
-		Hashtable<String, ServicePermission> hashtable = (Hashtable<String, ServicePermission>) gfields
-				.get("permissions", null);
-		permissions = new HashMap<String, ServicePermission>(hashtable);
+		Hashtable hashtable = (Hashtable) gfields.get("permissions", null);
+		permissions = new HashMap(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
-		HashMap<String, ServicePermission> fp = (HashMap<String, ServicePermission>) gfields
-				.get("filterPermissions", null);
-		filterPermissions = fp;
+		filterPermissions = (HashMap) gfields.get("filterPermissions", null);
 	}
 }

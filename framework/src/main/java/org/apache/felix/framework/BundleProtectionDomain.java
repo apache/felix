@@ -25,7 +25,7 @@ import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 
-import org.osgi.framework.wiring.BundleRevision;
+import org.apache.felix.framework.resolver.Module;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
@@ -33,9 +33,9 @@ public class BundleProtectionDomain extends ProtectionDomain
     private final WeakReference m_bundle;
     private final int m_hashCode;
     private final String m_toString;
-    private final WeakReference m_revision;
+    private final WeakReference m_module;
 
-    // TODO: SECURITY - This should probably take a revision, not a bundle.
+    // TODO: SECURITY - This should probably take a module, not a bundle.
     BundleProtectionDomain(Felix felix, BundleImpl bundle)
         throws MalformedURLException
     {
@@ -50,14 +50,14 @@ public class BundleProtectionDomain extends ProtectionDomain
             null);
         m_felix = new WeakReference(felix);
         m_bundle = new WeakReference(bundle);
-        m_revision = new WeakReference(bundle.getCurrentRevision());
+        m_module = new WeakReference(bundle.getCurrentModule());
         m_hashCode = bundle.hashCode();
         m_toString = "[" + bundle + "]";
     }
 
-    BundleRevision getRevision() 
+    Module getModule() 
     {
-        return (BundleRevision) m_revision.get();
+        return (Module) m_module.get();
     }
 
     public boolean implies(Permission permission)
