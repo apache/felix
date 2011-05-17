@@ -19,16 +19,16 @@
 package org.apache.felix.framework.util.manifestparser;
 
 import java.util.List;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Directive;
+import java.util.Map;
 
 public class ParsedHeaderClause
 {
     public final List<String> m_paths;
-    public final List<Directive> m_dirs;
-    public final List<Attribute> m_attrs;
+    public final Map<String, String> m_dirs;
+    public final Map<String, Object> m_attrs;
 
-    public ParsedHeaderClause(List<String> paths, List<Directive> dirs, List<Attribute> attrs)
+    public ParsedHeaderClause(
+        List<String> paths, Map<String, String> dirs, Map<String, Object> attrs)
     {
         m_paths = paths;
         m_dirs = dirs;

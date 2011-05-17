@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import java.util.EventObject;
 /**
  * An event from the Framework describing a bundle lifecycle change.
  * <p>
- * <code>BundleEvent</code> objects are delivered to
- * <code>SynchronousBundleListener</code>s and <code>BundleListener</code>s
+ * {@code BundleEvent} objects are delivered to
+ * {@code SynchronousBundleListener}s and {@code BundleListener}s
  * when a change occurs in a bundle's lifecycle. A type code is used to identify
  * the event type for future extendability.
  * 
@@ -32,7 +32,7 @@ import java.util.EventObject;
  * @Immutable
  * @see BundleListener
  * @see SynchronousBundleListener
- * @version $Revision: 6542 $
+ * @version $Id: ed3c40cd707bed45681cadce114a6cc5db27a844 $
  */
 
 public class BundleEvent extends EventObject {
@@ -113,7 +113,7 @@ public class BundleEvent extends EventObject {
 	 * {@link BundleActivator#start(BundleContext) BundleActivator start} method
 	 * is about to be called if the bundle has a bundle activator class. This
 	 * event is only delivered to {@link SynchronousBundleListener}s. It is not
-	 * delivered to <code>BundleListener</code>s.
+	 * delivered to {@code BundleListener}s.
 	 * 
 	 * @see Bundle#start()
 	 * @since 1.3
@@ -127,7 +127,7 @@ public class BundleEvent extends EventObject {
 	 * {@link BundleActivator#stop(BundleContext) BundleActivator stop} method
 	 * is about to be called if the bundle has a bundle activator class. This
 	 * event is only delivered to {@link SynchronousBundleListener}s. It is not
-	 * delivered to <code>BundleListener</code>s.
+	 * delivered to {@code BundleListener}s.
 	 * 
 	 * @see Bundle#stop()
 	 * @since 1.3
@@ -140,25 +140,55 @@ public class BundleEvent extends EventObject {
 	 * The bundle has a {@link Constants#ACTIVATION_LAZY lazy activation policy}
 	 * and is waiting to be activated. It is now in the
 	 * {@link Bundle#STARTING STARTING} state and has a valid
-	 * <code>BundleContext</code>. This event is only delivered to
+	 * {@code BundleContext}. This event is only delivered to
 	 * {@link SynchronousBundleListener}s. It is not delivered to
-	 * <code>BundleListener</code>s.
+	 * {@code BundleListener}s.
 	 * 
 	 * @since 1.4
 	 */
 	public final static int	LAZY_ACTIVATION		= 0x00000200;
 
 	/**
+	 * Bundle that was the origin of the event. For install event type, this is
+	 * the bundle whose context was used to install the bundle. Otherwise it is
+	 * the bundle itself.
+	 * 
+	 * @since 1.6
+	 */
+	private final Bundle	origin;
+
+	/**
 	 * Creates a bundle event of the specified type.
 	 * 
 	 * @param type The event type.
 	 * @param bundle The bundle which had a lifecycle change.
+	 * @param origin The bundle which is the origin of the event. For the event
+	 *        type {@link #INSTALLED}, this is the bundle whose context was used
+	 *        to install the bundle. Otherwise it is the bundle itself.
+	 * @since 1.6
 	 */
+	public BundleEvent(int type, Bundle bundle, Bundle origin) {
+		super(bundle);
+		if (origin == null) {
+			throw new IllegalArgumentException("null origin");
+		}
+		this.bundle = bundle;
+		this.type = type;
+		this.origin = origin;
+	}
 
+	/**
+	 * Creates a bundle event of the specified type.
+	 * 
+	 * @param type The event type.
+	 * @param bundle The bundle which had a lifecycle change. This bundle is
+	 *        used as the origin of the event.
+	 */
 	public BundleEvent(int type, Bundle bundle) {
 		super(bundle);
 		this.bundle = bundle;
 		this.type = type;
+		this.origin = bundle;
 	}
 
 	/**
@@ -188,8 +218,21 @@ public class BundleEvent extends EventObject {
 	 * 
 	 * @return The type of lifecycle event.
 	 */
-
 	public int getType() {
 		return type;
+	}
+
+	/**
+	 * Returns the bundle that was the origin of the event.
+	 * 
+	 * <p>
+	 * For the event type {@link #INSTALLED}, this is the bundle whose context
+	 * was used to install the bundle. Otherwise it is the bundle itself.
+	 * 
+	 * @return The bundle that was the origin of the event.
+	 * @since 1.6
+	 */
+	public Bundle getOrigin() {
+		return origin;
 	}
 }

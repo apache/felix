@@ -22,21 +22,22 @@ import java.io.*;
 import java.net.URL;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
-import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.capabilityset.Requirement;
-import org.apache.felix.framework.resolver.Wire;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 public class Util
 {
@@ -86,11 +87,11 @@ public class Util
     }
 
     /**
-     * Converts a module identifier to a bundle identifier. Module IDs
+     * Converts a revision identifier to a bundle identifier. Revision IDs
      * are typically <tt>&lt;bundle-id&gt;.&lt;revision&gt;</tt>; this
      * method returns only the portion corresponding to the bundle ID.
     **/
-    public static long getBundleIdFromModuleId(String id)
+    public static long getBundleIdFromRevisionId(String id)
     {
         try
         {
@@ -280,15 +281,21 @@ public class Util
         return allow;
     }
 
-    public static Capability getSatisfyingCapability(Module m, Requirement req)
+    public static BundleCapability getSatisfyingCapability(
+        BundleRevision br, BundleRequirementImpl req)
     {
-        List<Capability> caps = m.getCapabilities();
-        for (int i = 0; (caps != null) && (i < caps.size()); i++)
+        List<BundleCapability> caps = (br.getWiring() != null)
+            ? br.getWiring().getCapabilities(null)
+            : br.getDeclaredCapabilities(null);
+        if (caps != null)
         {
-            if (caps.get(i).getNamespace().equals(req.getNamespace())
-                && CapabilitySet.matches(caps.get(i), req.getFilter()))
+            for (BundleCapability cap : caps)
             {
-                return caps.get(i);
+                if (cap.getNamespace().equals(req.getNamespace())
+                    && CapabilitySet.matches((BundleCapabilityImpl) cap, req.getFilter()))
+                {
+                    return cap;
+                }
             }
         }
         return null;
@@ -297,33 +304,65 @@ public class Util
     /**
      * Returns all the capabilities from a module that has a specified namespace.
      *
-     * @param module    module providing capabilities
+     * @param br    module providing capabilities
      * @param namespace capability namespace
      * @return array of matching capabilities or empty if none found
      */
-    public static List<Capability> getCapabilityByNamespace(Module module, String namespace)
+    public static List<BundleCapability> getCapabilityByNamespace(
+        BundleRevision br, String namespace)
     {
-        final List<Capability> matching = new ArrayList();
-        final List<Capability> caps = module.getCapabilities();
-        for (int capIdx = 0; (caps != null) && (capIdx < caps.size()); capIdx++)
+        final List<BundleCapability> matching = new ArrayList();
+        final List<BundleCapability> caps = (br.getWiring() != null)
+            ? br.getWiring().getCapabilities(null)
+            : br.getDeclaredCapabilities(null);
+        if (caps != null)
         {
-            if (caps.get(capIdx).getNamespace().equals(namespace))
+            for (BundleCapability cap : caps)
             {
-                matching.add(caps.get(capIdx));
+                if (cap.getNamespace().equals(namespace))
+                {
+                    matching.add(cap);
+                }
             }
         }
         return matching;
     }
 
-    public static Wire getWire(Module m, String name)
+    public static List<BundleRequirement> getDynamicRequirements(
+        List<BundleRequirement> reqs)
     {
-        List<Wire> wires = m.getWires();
-        for (int i = 0; (wires != null) && (i < wires.size()); i++)
+        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        if (reqs != null)
         {
-            if (wires.get(i).getCapability().getNamespace().equals(Capability.PACKAGE_NAMESPACE) &&
-                wires.get(i).getCapability().getAttribute(Capability.PACKAGE_ATTR).getValue().equals(name))
+            for (BundleRequirement req : reqs)
             {
-                return wires.get(i);
+                String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+                if ((resolution != null) && resolution.equals("dynamic"))
+                {
+                    result.add(req);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static BundleWire getWire(BundleRevision br, String name)
+    {
+        if (br.getWiring() != null)
+        {
+            List<BundleWire> wires = br.getWiring().getRequiredWires(null);
+            if (wires != null)
+            {
+                for (BundleWire w : wires)
+                {
+                    if (w.getCapability().getNamespace()
+                            .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                        w.getCapability().getAttributes()
+                            .get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+                    {
+                        return w;
+                    }
+                }
             }
         }
         return null;
@@ -575,9 +614,8 @@ public class Util
      * @return <code>true</code> if the module declares a fragment host, <code>false</code>
      *      otherwise.
      */
-    public static boolean isFragment(Module module)
+    public static boolean isFragment(BundleRevision revision)
     {
-        Map headerMap = module.getHeaders();
-        return headerMap.containsKey(Constants.FRAGMENT_HOST);
+        return ((revision.getTypes() & BundleRevision.TYPE_FRAGMENT) > 0);
     }
 }
