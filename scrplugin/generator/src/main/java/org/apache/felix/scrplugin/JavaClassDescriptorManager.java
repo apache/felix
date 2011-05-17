@@ -473,28 +473,28 @@ public abstract class JavaClassDescriptorManager
      * @throws IOException
      * @throws SCRDescriptorException
      */
-    private Components readServiceComponentDescriptor( File jarFile, String entry )
+    private Components readServiceComponentDescriptor( final File artifactFile, String entry )
     {
-        this.log.debug( "Reading " + entry + " from " + jarFile );
+        this.log.debug( "Reading " + entry + " from " + artifactFile );
         InputStream xml = null;
         try
         {
-            xml = this.getFile( jarFile, entry );
+            xml = this.getFile( artifactFile, entry );
             if ( xml == null )
             {
-                throw new SCRDescriptorException( "Entry " + entry + " not contained in JAR File ", jarFile.toString(),
+                throw new SCRDescriptorException( "Entry " + entry + " not contained in JAR File ", artifactFile.toString(),
                     0 );
             }
             return this.parseServiceComponentDescriptor( xml );
         }
         catch ( IOException mee )
         {
-            this.log.warn( "Unable to read SCR descriptor file from JAR File " + jarFile + " at " + entry );
+            this.log.warn( "Unable to read SCR descriptor file from JAR File " + artifactFile + " at " + entry );
             this.log.debug( "Exception occurred during reading: " + mee.getMessage(), mee );
         }
         catch ( SCRDescriptorException mee )
         {
-            this.log.warn( "Unable to read SCR descriptor file from JAR File " + jarFile + " at " + entry );
+            this.log.warn( "Unable to read SCR descriptor file from JAR File " + artifactFile + " at " + entry );
             this.log.debug( "Exception occurred during reading: " + mee.getMessage(), mee );
         }
         finally
@@ -518,7 +518,30 @@ public abstract class JavaClassDescriptorManager
     {
         if ( artifact.isDirectory() )
         {
-            return null;
+            // this is maybe a classes directory, try to read manifest file directly
+            final File dir = new File(artifact, "META-INF");
+            if ( !dir.exists() || !dir.isDirectory() )
+            {
+                return null;
+            }
+            final File mf = new File(dir, "MANIFEST.MF");
+            if ( !mf.exists() || !mf.isFile() )
+            {
+                return null;
+            }
+            final InputStream is = new FileInputStream(mf);
+            try
+            {
+                return new Manifest(is);
+            }
+            finally
+            {
+                try
+                {
+                    is.close();
+                }
+                catch (final IOException ignore) { }
+            }
         }
         JarFile file = null;
         try
@@ -542,12 +565,22 @@ public abstract class JavaClassDescriptorManager
     }
 
 
-    private InputStream getFile( File jarFile, String path ) throws IOException
+    private InputStream getFile( final File artifactFile, final String path ) throws IOException
     {
+        if ( artifactFile.isDirectory() )
+        {
+            final String filePath = path.replace('/', File.separatorChar).replace('\\', File.separatorChar);
+            final File file = new File(artifactFile, filePath);
+            if ( file.exists() && file.isFile() )
+            {
+                return new FileInputStream(file);
+            }
+            return null;
+        }
         JarFile file = null;
         try
         {
-            file = new JarFile( jarFile );
+            file = new JarFile( artifactFile );
             final JarEntry entry = file.getJarEntry( path );
             if ( entry != null )
             {
