@@ -30,8 +30,18 @@ import java.util.Map;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InvocationUtil {
-    public static final int CACHE_SIZE = 2048;
-    private static final Map /* <Key, Method> */ m_methodCache = new LRUMap(CACHE_SIZE);
+    private static final Map /* <Key, Method> */ m_methodCache;
+    static {
+        int size = 2048;
+        try {
+            String value = System.getProperty(DependencyManager.METHOD_CACHE_SIZE);
+            if (value != null) {
+                size = Integer.parseInt(value);
+            }
+        }
+        catch (Exception e) {}
+        m_methodCache = new LRUMap(Math.max(size, 64));
+    }
     
     public static Object invokeCallbackMethod(Object instance, String methodName, Class[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Class currentClazz = instance.getClass();
