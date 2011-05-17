@@ -22,17 +22,15 @@ import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
-import org.apache.felix.framework.capabilityset.Attribute;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.resolver.Wire;
 
 import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.*;
 import org.osgi.framework.BundleReference;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 
 class ServiceRegistrationImpl implements ServiceRegistration
 {
@@ -385,9 +383,15 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // ServiceReference implementation
     //
 
-    class ServiceReferenceImpl implements ServiceReference, Capability
+    class ServiceReferenceImpl extends BundleCapabilityImpl implements ServiceReference
     {
-        private ServiceReferenceImpl() {}
+        private final ServiceReferenceMap m_map;
+
+        private ServiceReferenceImpl()
+        {
+            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            m_map = new ServiceReferenceMap();
+        }
 
         ServiceRegistrationImpl getRegistration()
         {
@@ -398,41 +402,39 @@ class ServiceRegistrationImpl implements ServiceRegistration
         // Capability methods.
         //
 
-        public Module getModule()
+        @Override
+        public BundleRevision getRevision()
         {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
+        @Override
         public String getNamespace()
         {
             return "service-reference";
         }
 
-        public Directive getDirective(String name)
+        @Override
+        public Map<String, String> getDirectives()
         {
-            return null;
+            return Collections.EMPTY_MAP;
         }
 
-        public List<Directive> getDirectives()
+        @Override
+        public Map<String, Object> getAttributes()
         {
-            return Collections.EMPTY_LIST;
+            return m_map;
         }
 
-        public Attribute getAttribute(String name)
-        {
-            Object value = ServiceRegistrationImpl.this.getProperty(name);
-            return (value == null) ? null : new Attribute(name, value, false);
-        }
-
-        public List<Attribute> getAttributes()
-        {
-            return Collections.EMPTY_LIST;
-        }
-
+        @Override
         public List<String> getUses()
         {
             return Collections.EMPTY_LIST;
         }
+
+        //
+        // ServiceReference methods.
+        //
 
         public Object getProperty(String s)
         {
@@ -483,12 +485,12 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // Get the package.
             String pkgName =
                 Util.getClassPackage(className);
-            Module requesterModule = ((BundleImpl) requester).getCurrentModule();
+            BundleRevision requesterRevision = ((BundleImpl) requester).getCurrentRevision();
             // Get package wiring from service requester.
-            Wire requesterWire = Util.getWire(requesterModule, pkgName);
+            BundleWire requesterWire = Util.getWire(requesterRevision, pkgName);
             // Get package wiring from service provider.
-            Module providerModule = ((BundleImpl) m_bundle).getCurrentModule();
-            Wire providerWire = Util.getWire(providerModule, pkgName);
+            BundleRevision providerRevision = ((BundleImpl) m_bundle).getCurrentRevision();
+            BundleWire providerWire = Util.getWire(providerRevision, pkgName);
 
             // There are four situations that may occur here:
             //   1. Neither the requester, nor provider have wires for the package.
@@ -503,10 +505,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // the service is wired. Otherwise, as in case 1, if the requester
             // does not have access to the class at all, we do not filter, but if
             // it does have access we check if it is the same class accessible to
-            // the providing module. For case 3, the provider will not have a wire
+            // the providing revision. For case 3, the provider will not have a wire
             // if it is exporting the package, so we determine if the requester
             // is wired to it or somehow using the same class. For case 4, we
-            // simply compare the exporting modules from the package wiring to
+            // simply compare the exporting revisions from the package wiring to
             // determine if we need to filter the service reference.
 
             // Case 1: Both requester and provider have no wire.
@@ -516,7 +518,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 // registration must have same class as requester.
                 try
                 {
-                    Class requestClass = requesterModule.getClassByDelegation(className);
+                    Class requestClass =
+                        ((BundleWiringImpl) requesterRevision.getWiring())
+                            .getClassByDelegation(className);
                     allow = getRegistration().isClassAccessible(requestClass);
                 }
                 catch (Exception ex)
@@ -530,7 +534,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
             else if ((requesterWire == null) && (providerWire != null))
             {
                 // Allow if the requester is the exporter of the provider's wire.
-                if (providerWire.getExporter().equals(requesterModule))
+                if (providerWire.getProviderWiring().getRevision().equals(requesterRevision))
                 {
                     allow = true;
                 }
@@ -541,12 +545,15 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Try to load class from requester.
-                        Class requestClass = requesterModule.getClassByDelegation(className);
+                        Class requestClass =((BundleWiringImpl)
+                            requesterRevision.getWiring()).getClassByDelegation(className);
                         try
                         {
                             // If requester has access to the class, verify it is the
                             // same class as the provider.
-                            allow = (providerWire.getClass(className) == requestClass);
+                            allow = (((BundleWiringImpl)
+                                providerRevision.getWiring())
+                                    .getClassByDelegation(className) == requestClass);
                         }
                         catch (Exception ex)
                         {
@@ -567,9 +574,10 @@ class ServiceRegistrationImpl implements ServiceRegistration
                 // If the provider is the exporter of the requester's package, then check
                 // if the requester is wired to the latest version of the provider, if so
                 // then allow else don't (the provider has been updated but not refreshed).
-                if (((BundleImpl) m_bundle).hasModule(requesterWire.getExporter()))
+                if (((BundleImpl) m_bundle).hasRevision(
+                    requesterWire.getProviderWiring().getRevision()))
                 {
-                    allow = providerModule.equals(requesterWire.getExporter());
+                    allow = providerRevision.equals(requesterWire.getProviderWiring().getRevision());
                 }
                 // If the provider is not the exporter of the requester's package,
                 // then try to use the service registration to see if the requester's
@@ -579,7 +587,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
                     try
                     {
                         // Load the class from the requesting bundle.
-                        Class requestClass = requesterModule.getClassByDelegation(className);
+                        Class requestClass = ((BundleWiringImpl)
+                            requesterRevision.getWiring())
+                                .getClassByDelegation(className);
                         // Get the service registration and ask it to check
                         // if the service object is assignable to the requesting
                         // bundle's class.
@@ -596,8 +606,9 @@ class ServiceRegistrationImpl implements ServiceRegistration
             else
             {
                 // Include service reference if the wires have the
-                // same source module.
-                allow = providerWire.getExporter().equals(requesterWire.getExporter());
+                // same source revision.
+                allow = providerWire.getProviderWiring().getRevision()
+                    .equals(requesterWire.getProviderWiring().getRevision());
             }
 
             return allow;
@@ -640,6 +651,69 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
             // If ranks are equal, then sort by service id in descending order.
             return (id.compareTo(otherId) < 0) ? 1 : -1;
+        }
+    }
+
+    private class ServiceReferenceMap implements Map
+    {
+        public int size()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public boolean isEmpty()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public boolean containsKey(Object o)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public boolean containsValue(Object o)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Object get(Object o)
+        {
+            return ServiceRegistrationImpl.this.getProperty((String) o);
+        }
+
+        public Object put(Object k, Object v)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Object remove(Object o)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void putAll(Map map)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void clear()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Set<Object> keySet()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Collection<Object> values()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Set<Entry<Object, Object>> entrySet()
+        {
+            return Collections.EMPTY_SET;
         }
     }
 }

@@ -132,7 +132,7 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
                 }
             }
             Felix felix = (Felix) framework;
-            long bundleId = Util.getBundleIdFromModuleId(u.getHost());
+            long bundleId = Util.getBundleIdFromRevisionId(u.getHost());
             Bundle bundle = felix.getBundle(bundleId);
             if (bundle != null)
             {

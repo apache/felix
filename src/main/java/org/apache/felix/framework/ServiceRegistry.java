@@ -19,13 +19,14 @@
 package org.apache.felix.framework;
 
 import java.util.*;
-import org.apache.felix.framework.capabilityset.Capability;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 
 import org.osgi.framework.*;
 import org.osgi.framework.hooks.service.*;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.wiring.BundleCapability;
 
 public class ServiceRegistry
 {
@@ -98,7 +99,7 @@ public class ServiceRegistry
             // Get the bundles current registered services.
             ServiceRegistration[] regs = (ServiceRegistration[]) m_regsMap.get(bundle);
             m_regsMap.put(bundle, addServiceRegistration(regs, reg));
-            m_regCapSet.addCapability((Capability) reg.getReference());
+            m_regCapSet.addCapability((BundleCapabilityImpl) reg.getReference());
         }
 
         // Notify callback objects about registered service.
@@ -126,7 +127,7 @@ public class ServiceRegistry
             // Now remove the registered service.
             ServiceRegistration[] regs = (ServiceRegistration[]) m_regsMap.get(bundle);
             m_regsMap.put(bundle, removeServiceRegistration(regs, reg));
-            m_regCapSet.removeCapability((Capability) reg.getReference());
+            m_regCapSet.removeCapability((BundleCapabilityImpl) reg.getReference());
         }
 
         // Notify callback objects about unregistering service.
@@ -208,7 +209,7 @@ public class ServiceRegistry
         }
         // else just use the specified filter.
 
-        Set<Capability> matches = m_regCapSet.match(filter, false);
+        Set<BundleCapability> matches = m_regCapSet.match(filter, false);
 
         return new ArrayList(matches);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,20 @@ package org.osgi.framework;
  * Supports a configuration object.
  * 
  * <p>
- * <code>Configurable</code> is an interface that should be used by a bundle
+ * {@code Configurable} is an interface that should be used by a bundle
  * developer in support of a configurable service. Bundles that need to
  * configure a service may test to determine if the service object is an
- * <code>instanceof Configurable</code>.
+ * {@code instanceof Configurable}.
  * 
  * @deprecated As of 1.2. Please use Configuration Admin service.
- * @version $Revision: 6361 $
+ * @version $Id: 29705c0c238aa456cda1b1a13458079bf1542771 $
  */
 public interface Configurable {
 	/**
 	 * Returns this service's configuration object.
 	 * 
 	 * <p>
-	 * Services implementing <code>Configurable</code> should take care when
+	 * Services implementing {@code Configurable} should take care when
 	 * returning a service configuration object since this object is probably
 	 * sensitive.
 	 * <p>
