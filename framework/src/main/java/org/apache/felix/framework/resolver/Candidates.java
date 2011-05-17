@@ -30,34 +30,39 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Directive;
-import org.apache.felix.framework.capabilityset.Requirement;
+import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.BundleWiringImpl;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 
 class Candidates
 {
-    private final Module m_root;
+    private final BundleRevision m_root;
 
-    // Set of all candidate modules.
-    private final Set<Module> m_candidateModules;
+    // Set of all candidate bundle revisions.
+    private final Set<BundleRevision> m_candidateRevisions;
     // Maps a capability to requirements that match it.
-    private final Map<Capability, Set<Requirement>> m_dependentMap;
+    private final Map<BundleCapability, Set<BundleRequirement>> m_dependentMap;
     // Maps a requirement to the capability it matches.
-    private final Map<Requirement, SortedSet<Capability>> m_candidateMap;
+    private final Map<BundleRequirement, SortedSet<BundleCapability>> m_candidateMap;
     // Maps a host capability to a map containing its potential fragments;
     // the fragment map maps a fragment symbolic name to a map that maps
     // a version to a list of fragments requirements matching that symbolic
     // name and version.
-    private final Map<Capability, Map<String, Map<Version, List<Requirement>>>> m_hostFragments;
-    // Maps a module to its associated wrapped module; this only happens
-    // when a module being resolved has fragments to attach to it.
-    private final Map<Module, HostModule> m_allWrappedHosts;
+    private final Map<BundleCapability,
+        Map<String, Map<Version, List<BundleRequirement>>>> m_hostFragments;
+    // Maps a bundle revision to its associated wrapped revision; this only happens
+    // when a revision being resolved has fragments to attach to it.
+    private final Map<BundleRevision, HostBundleRevision> m_allWrappedHosts;
     // Map used when populating candidates to hold intermediate and final results.
-    private final Map<Module, Object> m_populateResultCache;
+    private final Map<BundleRevision, Object> m_populateResultCache;
 
     // Flag to signal if fragments are present in the candidate map.
     private boolean m_fragmentsPresent = false;
@@ -71,16 +76,16 @@ class Candidates
      * @param wrappedHosts the wrapped hosts map.
     **/
     private Candidates(
-        Module root,
-        Set<Module> candidateModules,
-        Map<Capability, Set<Requirement>> dependentMap,
-        Map<Requirement, SortedSet<Capability>> candidateMap,
-        Map<Capability, Map<String, Map<Version, List<Requirement>>>> hostFragments,
-        Map<Module, HostModule> wrappedHosts, Map<Module, Object> populateResultCache,
+        BundleRevision root,
+        Set<BundleRevision> candidateRevisions,
+        Map<BundleCapability, Set<BundleRequirement>> dependentMap,
+        Map<BundleRequirement, SortedSet<BundleCapability>> candidateMap,
+        Map<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>> hostFragments,
+        Map<BundleRevision, HostBundleRevision> wrappedHosts, Map<BundleRevision, Object> populateResultCache,
         boolean fragmentsPresent)
     {
         m_root = root;
-        m_candidateModules = candidateModules;
+        m_candidateRevisions = candidateRevisions;
         m_dependentMap = dependentMap;
         m_candidateMap = candidateMap;
         m_hostFragments = hostFragments;
@@ -94,16 +99,16 @@ class Candidates
      * @param state the resolver state used for populating the candidates.
      * @param root the root module for the resolve.
     **/
-    public Candidates(ResolverState state, Module root)
+    public Candidates(ResolverState state, BundleRevision root)
     {
         m_root = root;
-        m_candidateModules = new HashSet<Module>();
-        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
-        m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
+        m_candidateRevisions = new HashSet<BundleRevision>();
+        m_dependentMap = new HashMap<BundleCapability, Set<BundleRequirement>>();
+        m_candidateMap = new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
         m_hostFragments =
-            new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        m_allWrappedHosts = new HashMap<Module, HostModule>();
-        m_populateResultCache = new HashMap<Module, Object>();
+            new HashMap<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>();
+        m_allWrappedHosts = new HashMap<BundleRevision, HostBundleRevision>();
+        m_populateResultCache = new HashMap<BundleRevision, Object>();
 
         populate(state, m_root);
     }
@@ -118,17 +123,17 @@ class Candidates
      * @param req the requirement being resolved.
      * @param candidates the potential candidates matching the requirement.
     **/
-    public Candidates(ResolverState state, Module root,
-        Requirement req, SortedSet<Capability> candidates)
+    public Candidates(ResolverState state, BundleRevision root,
+        BundleRequirement req, SortedSet<BundleCapability> candidates)
     {
         m_root = root;
-        m_candidateModules = new HashSet<Module>();
-        m_dependentMap = new HashMap<Capability, Set<Requirement>>();
-        m_candidateMap = new HashMap<Requirement, SortedSet<Capability>>();
+        m_candidateRevisions = new HashSet<BundleRevision>();
+        m_dependentMap = new HashMap<BundleCapability, Set<BundleRequirement>>();
+        m_candidateMap = new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
         m_hostFragments =
-            new HashMap<Capability, Map<String, Map<Version, List<Requirement>>>>();
-        m_allWrappedHosts = new HashMap<Module, HostModule>();
-        m_populateResultCache = new HashMap<Module, Object>();
+            new HashMap<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>();
+        m_allWrappedHosts = new HashMap<BundleRevision, HostBundleRevision>();
+        m_populateResultCache = new HashMap<BundleRevision, Object>();
 
         add(req, candidates);
 
@@ -138,17 +143,17 @@ class Candidates
     /**
      * Populates additional candidates for the specified module.
      * @param state the resolver state used for populating the candidates.
-     * @param module the module whose candidates should be populated.
+     * @param revision the module whose candidates should be populated.
      */
 // TODO: FELIX3 - Modify to not be recursive.
-    public final void populate(ResolverState state, Module module)
+    public final void populate(ResolverState state, BundleRevision revision)
     {
-        // Determine if we've already calculated this module's candidates.
+        // Determine if we've already calculated this revision's candidates.
         // The result cache will have one of three values:
         //   1. A resolve exception if we've already attempted to populate the
-        //      module's candidates but were unsuccessful.
+        //      revision's candidates but were unsuccessful.
         //   2. Boolean.TRUE indicating we've already attempted to populate the
-        //      module's candidates and were successful.
+        //      revision's candidates and were successful.
         //   3. An array containing the cycle count, current map of candidates
         //      for already processed requirements, and a list of remaining
         //      requirements whose candidates still need to be calculated.
@@ -158,19 +163,19 @@ class Candidates
         // until we've popped completely out of the cycle.
 
         // Keeps track of the number of times we've reentered this method
-        // for the current module.
+        // for the current revision.
         Integer cycleCount = null;
 
         // Keeps track of the candidates we've already calculated for the
-        // current module's requirements.
-        Map<Requirement, SortedSet<Capability>> localCandidateMap = null;
+        // current revision's requirements.
+        Map<BundleRequirement, SortedSet<BundleCapability>> localCandidateMap = null;
 
-        // Keeps track of the current module's requirements for which we
+        // Keeps track of the current revision's requirements for which we
         // haven't yet found candidates.
-        List<Requirement> remainingReqs = null;
+        List<BundleRequirement> remainingReqs = null;
 
-        // Get the cache value for the current module.
-        Object cacheValue = m_populateResultCache.get(module);
+        // Get the cache value for the current revision.
+        Object cacheValue = m_populateResultCache.get(revision);
 
         // This is case 1.
         if (cacheValue instanceof ResolveException)
@@ -195,65 +200,75 @@ class Candidates
             remainingReqs = (List) ((Object[]) cacheValue)[2];
         }
 
-        // If there is no cache value for the current module, then this is
+        // If there is no cache value for the current revision, then this is
         // the first time we are attempting to populate its candidates, so
         // do some one-time checks and initialization.
         if ((remainingReqs == null) && (localCandidateMap == null))
         {
             // Verify that any required execution environment is satisfied.
-            state.checkExecutionEnvironment(module);
+            state.checkExecutionEnvironment(revision);
 
             // Verify that any native libraries match the current platform.
-            state.checkNativeLibraries(module);
+            state.checkNativeLibraries(revision);
 
             // Record cycle count.
             cycleCount = new Integer(0);
 
             // Create a local map for populating candidates first, just in case
-            // the module is not resolvable.
+            // the revision is not resolvable.
             localCandidateMap = new HashMap();
 
-            // Create a modifiable list of the module's requirements.
-            remainingReqs = new ArrayList(module.getRequirements());
+            // Create a modifiable list of the revision's requirements.
+            remainingReqs = new ArrayList(revision.getDeclaredRequirements(null));
 
             // Add these value to the result cache so we know we are
             // in the middle of populating candidates for the current
-            // module.
-            m_populateResultCache.put(module,
+            // revision.
+            m_populateResultCache.put(revision,
                 cacheValue = new Object[] { cycleCount, localCandidateMap, remainingReqs });
         }
 
         // If we have requirements remaining, then find candidates for them.
         while (remainingReqs.size() > 0)
         {
-            Requirement req = remainingReqs.remove(0);
+            BundleRequirement req = remainingReqs.remove(0);
+
+            // Ignore dynamic requirements.
+            String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+// TODO: OSGi R4.3 - Use proper "dynamic" constant.
+            if ((resolution != null) && resolution.equals("dynamic"))
+            {
+                continue;
+            }
 
             // Get satisfying candidates and populate their candidates if necessary.
             ResolveException rethrow = null;
-            SortedSet<Capability> candidates = state.getCandidates(req, true);
-            for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
+            SortedSet<BundleCapability> candidates =
+                state.getCandidates((BundleRequirementImpl) req, true);
+            for (Iterator<BundleCapability> itCandCap = candidates.iterator();
+                itCandCap.hasNext(); )
             {
-                Capability candCap = itCandCap.next();
+                BundleCapability candCap = itCandCap.next();
 
-                // If the candidate module is a fragment, then always attempt
+                // If the candidate revision is a fragment, then always attempt
                 // to populate candidates for its dependency, since it must be
                 // attached to a host to be used. Otherwise, if the candidate
-                // module is not already resolved and is not the current module
+                // revision is not already resolved and is not the current version
                 // we are trying to populate, then populate the candidates for
                 // its dependencies as well.
                 // NOTE: Technically, we don't have to check to see if the
-                // candidate module is equal to the current module, but this
+                // candidate revision is equal to the current revision, but this
                 // saves us from recursing and also simplifies exceptions messages
                 // since we effectively chain exception messages for each level
                 // of recursion; thus, any avoided recursion results in fewer
                 // exceptions to chain when an error does occur.
-                if (Util.isFragment(candCap.getModule())
-                    || (!candCap.getModule().isResolved()
-                        && !candCap.getModule().equals(module)))
+                if (Util.isFragment(candCap.getRevision())
+                    || ((candCap.getRevision().getWiring() == null)
+                        && !candCap.getRevision().equals(revision)))
                 {
                     try
                     {
-                        populate(state, candCap.getModule());
+                        populate(state, candCap.getRevision());
                     }
                     catch (ResolveException ex)
                     {
@@ -271,16 +286,16 @@ class Candidates
             // If there are no candidates for the current requirement
             // and it is not optional, then create, cache, and throw
             // a resolve exception.
-            if (candidates.isEmpty() && !req.isOptional())
+            if (candidates.isEmpty() && !((BundleRequirementImpl) req).isOptional())
             {
-                String msg = "Unable to resolve " + module
+                String msg = "Unable to resolve " + revision
                     + ": missing requirement " + req;
                 if (rethrow != null)
                 {
                     msg = msg + " [caused by: " + rethrow.getMessage() + "]";
                 }
-                rethrow = new ResolveException(msg, module, req);
-                m_populateResultCache.put(module, rethrow);
+                rethrow = new ResolveException(msg, revision, req);
+                m_populateResultCache.put(revision, rethrow);
                 throw rethrow;
             }
             // If we actually have candidates for the requirement, then
@@ -299,8 +314,8 @@ class Candidates
         }
         else if (cycleCount.intValue() == 0)
         {
-            // Record that the module was successfully populated.
-            m_populateResultCache.put(module, Boolean.TRUE);
+            // Record that the revision was successfully populated.
+            m_populateResultCache.put(revision, Boolean.TRUE);
 
             // Merge local candidate map into global candidate map.
             if (localCandidateMap.size() > 0)
@@ -310,44 +325,57 @@ class Candidates
         }
     }
 
-    public final void populateOptional(ResolverState state, Module module)
+    public final void populateOptional(ResolverState state, BundleRevision revision)
     {
+        // We will always attempt to populate optional fragments, since this
+        // is necessary for greedy resolving of fragment. Howevere, we'll only
+        // attempt to populate optional non-fragment revisions if they aren't
+        // already resolved.
+        boolean isFragment = Util.isFragment(revision);
+        if (!isFragment && (revision.getWiring() != null))
+        {
+            return;
+        }
+
         try
         {
-            // If the optional module is a fragment, then we only want to populate
+            // If the optional revision is a fragment, then we only want to populate
             // the fragment if it has a candidate host in the set of already populated
-            // modules. We do this to avoid unnecessary work in prepare(). If the
+            // revisions. We do this to avoid unnecessary work in prepare(). If the
             // fragment has a host, we'll prepopulate the result cache here to avoid
             // having to do the host lookup again in populate().
-            boolean isFragment = Util.isFragment(module);
             if (isFragment)
             {
-                // Get the current result cache value, to make sure the module
+                // Get the current result cache value, to make sure the revision
                 // hasn't already been populated.
-                Object cacheValue = m_populateResultCache.get(module);
+                Object cacheValue = m_populateResultCache.get(revision);
                 if (cacheValue == null)
                 {
-                    // Create a modifiable list of the module's requirements.
-                    List<Requirement> remainingReqs = new ArrayList(module.getRequirements());
+                    // Create a modifiable list of the revision's requirements.
+                    List<BundleRequirement> remainingReqs =
+                        new ArrayList(revision.getDeclaredRequirements(null));
 
                     // Find the host requirement.
-                    Requirement hostReq = null;
-                    for (Iterator<Requirement> it = remainingReqs.iterator(); it.hasNext(); )
+                    BundleRequirement hostReq = null;
+                    for (Iterator<BundleRequirement> it = remainingReqs.iterator();
+                        it.hasNext(); )
                     {
-                        Requirement r = it.next();
-                        if (r.getNamespace().equals(Capability.HOST_NAMESPACE))
+                        BundleRequirement r = it.next();
+                        if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
                         {
                             hostReq = r;
                             it.remove();
+                            break;
                         }
                     }
 
                     // Get candidates hosts and keep any that have been populated.
-                    SortedSet<Capability> hosts = state.getCandidates(hostReq, false);
-                    for (Iterator<Capability> it = hosts.iterator(); it.hasNext(); )
+                    SortedSet<BundleCapability> hosts =
+                        state.getCandidates((BundleRequirementImpl) hostReq, false);
+                    for (Iterator<BundleCapability> it = hosts.iterator(); it.hasNext(); )
                     {
-                        Capability host = it.next();
-                        if (!isPopulated(host.getModule()))
+                        BundleCapability host = it.next();
+                        if (!isPopulated(host.getRevision()))
                         {
                             it.remove();
                         }
@@ -365,63 +393,65 @@ class Candidates
                     // the work we've done so far.
                     
                     // Verify that any required execution environment is satisfied.
-                    state.checkExecutionEnvironment(module);
+                    state.checkExecutionEnvironment(revision);
 
                     // Verify that any native libraries match the current platform.
-                    state.checkNativeLibraries(module);
+                    state.checkNativeLibraries(revision);
 
                     // Record cycle count, but start at -1 since it will
                     // be incremented again in populate().
                     Integer cycleCount = new Integer(-1);
 
                     // Create a local map for populating candidates first, just in case
-                    // the module is not resolvable.
-                    Map<Requirement, SortedSet<Capability>> localCandidateMap = new HashMap();
+                    // the revision is not resolvable.
+                    Map<BundleRequirement, SortedSet<BundleCapability>> localCandidateMap =
+                        new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
 
                     // Add the discovered host candidates to the local candidate map.
                     localCandidateMap.put(hostReq, hosts);
 
                     // Add these value to the result cache so we know we are
                     // in the middle of populating candidates for the current
-                    // module.
-                    m_populateResultCache.put(module,
+                    // revision.
+                    m_populateResultCache.put(revision,
                         new Object[] { cycleCount, localCandidateMap, remainingReqs });
                 }
             }
 
-            // Try to populate candidates for the optional module.
-            populate(state, module);
+            // Try to populate candidates for the optional revision.
+            populate(state, revision);
         }
         catch (ResolveException ex)
         {
-            // Ignore since the module is optional.
+            // Ignore since the revision is optional.
         }
     }
 
-    private boolean isPopulated(Module module)
+    private boolean isPopulated(BundleRevision revision)
     {
-        Object value = m_populateResultCache.get(module);
+        Object value = m_populateResultCache.get(revision);
         return ((value != null) && (value instanceof Boolean));
     }
 
-    private void populateDynamic(ResolverState state, Module module)
+    private void populateDynamic(ResolverState state, BundleRevision revision)
     {
         // There should be one entry in the candidate map, which are the
         // the candidates for the matching dynamic requirement. Get the
         // matching candidates and populate their candidates if necessary.
         ResolveException rethrow = null;
-        Entry<Requirement, SortedSet<Capability>> entry =
+        Entry<BundleRequirement, SortedSet<BundleCapability>> entry =
             m_candidateMap.entrySet().iterator().next();
-        Requirement dynReq = entry.getKey();
-        SortedSet<Capability> candidates = entry.getValue();
-        for (Iterator<Capability> itCandCap = candidates.iterator(); itCandCap.hasNext(); )
+        BundleRequirement dynReq = entry.getKey();
+        SortedSet<BundleCapability> candidates = entry.getValue();
+        for (Iterator<BundleCapability> itCandCap = candidates.iterator();
+            itCandCap.hasNext(); )
         {
-            Capability candCap = itCandCap.next();
-            if (!candCap.getModule().isResolved())
+            BundleCapability candCap = itCandCap.next();
+            if (candCap.getRevision().getWiring() == null)
             {
                 try
                 {
-                    populate(state, candCap.getModule());
+                    populate(state, candCap.getRevision());
                 }
                 catch (ResolveException ex)
                 {
@@ -438,7 +468,7 @@ class Candidates
         {
             if (rethrow == null)
             {
-                rethrow = new ResolveException("Dynamic import failed.", module, dynReq);
+                rethrow = new ResolveException("Dynamic import failed.", revision, dynReq);
             }
             throw rethrow;
         }
@@ -453,9 +483,9 @@ class Candidates
      * @param req the requirement to add.
      * @param candidates the candidates matching the requirement.
     **/
-    private void add(Requirement req, SortedSet<Capability> candidates)
+    private void add(BundleRequirement req, SortedSet<BundleCapability> candidates)
     {
-        if (req.getNamespace().equals(Capability.HOST_NAMESPACE))
+        if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
         {
             m_fragmentsPresent = true;
         }
@@ -463,14 +493,14 @@ class Candidates
         // Record the candidates.
         m_candidateMap.put(req, candidates);
 
-        // Make a list of all candidate modules for determining singetons.
+        // Make a list of all candidate revisions for determining singetons.
         // Add the requirement as a dependent on the candidates. Keep track
         // of fragments for hosts.
-        for (Capability cap : candidates)
+        for (BundleCapability cap : candidates)
         {
-            // Remember the module for all capabilities so we can
+            // Remember the revision for all capabilities so we can
             // determine which ones are singletons.
-            m_candidateModules.add(cap.getModule());
+            m_candidateRevisions.add(cap.getRevision());
         }
     }
 
@@ -480,9 +510,9 @@ class Candidates
      * be further modified by the caller.
      * @param candidates the bulk requirements and candidates to add.
     **/
-    private void add(Map<Requirement, SortedSet<Capability>> candidates)
+    private void add(Map<BundleRequirement, SortedSet<BundleCapability>> candidates)
     {
-        for (Entry<Requirement, SortedSet<Capability>> entry : candidates.entrySet())
+        for (Entry<BundleRequirement, SortedSet<BundleCapability>> entry : candidates.entrySet())
         {
             add(entry.getKey(), entry.getValue());
         }
@@ -495,9 +525,9 @@ class Candidates
      * @param m the module whose wrapper is desired.
      * @return the wrapper module or the module itself if it was not wrapped.
     **/
-    public Module getWrappedHost(Module m)
+    public BundleRevision getWrappedHost(BundleRevision m)
     {
-        Module wrapped = m_allWrappedHosts.get(m);
+        BundleRevision wrapped = m_allWrappedHosts.get(m);
         return (wrapped == null) ? m : wrapped;
     }
 
@@ -506,7 +536,7 @@ class Candidates
      * @param req the requirement whose candidates are desired.
      * @return the matching candidates or null.
     **/
-    public SortedSet<Capability> getCandidates(Requirement req)
+    public SortedSet<BundleCapability> getCandidates(BundleRequirement req)
     {
         return m_candidateMap.get(req);
     }
@@ -527,7 +557,7 @@ class Candidates
      * @throws ResolveException if the removal of any unselected fragments result
      *         in the root module being unable to resolve.
     **/
-    public void prepare(List<Module> existingSingletons)
+    public void prepare(List<BundleRevision> existingSingletons)
     {
         boolean init = false;
 
@@ -537,12 +567,12 @@ class Candidates
             init = true;
         }
 
-        final Map<String, Module> singletons = new HashMap<String, Module>();
+        final Map<String, BundleRevision> singletons = new HashMap<String, BundleRevision>();
 
-        for (Iterator<Module> it = m_candidateModules.iterator(); it.hasNext(); )
+        for (Iterator<BundleRevision> it = m_candidateRevisions.iterator(); it.hasNext(); )
         {
-            Module m = it.next();
-            if (isSingleton(m))
+            BundleRevision br = it.next();
+            if (isSingleton(br))
             {
                 if (!init)
                 {
@@ -551,28 +581,28 @@ class Candidates
                 }
 
                 // See if there is an existing singleton for the
-                // module's symbolic name.
-                Module singleton = singletons.get(m.getSymbolicName());
-                // If there is no existing singleton or this module is
-                // a resolved singleton or this module has a higher version
+                // revision's symbolic name.
+                BundleRevision singleton = singletons.get(br.getSymbolicName());
+                // If there is no existing singleton or this revision is
+                // a resolved singleton or this revision has a higher version
                 // and the existing singleton is not resolved, then select
-                // this module as the singleton.
+                // this revision as the singleton.
                 if ((singleton == null)
-                    || m.isResolved()
-                    || ((m.getVersion().compareTo(singleton.getVersion()) > 0)
-                        && !singleton.isResolved()))
+                    || (br.getWiring() != null)
+                    || ((br.getVersion().compareTo(singleton.getVersion()) > 0)
+                        && (singleton.getWiring() == null)))
                 {
-                    singletons.put(m.getSymbolicName(), m);
-                    // Remove the singleton module from the candidates
+                    singletons.put(br.getSymbolicName(), br);
+                    // Remove the singleton revision from the candidates
                     // if it wasn't selected.
                     if (singleton != null)
                     {
-                        removeModule(singleton);
+                        removeRevision(singleton);
                     }
                 }
                 else
                 {
-                    removeModule(m);
+                    removeRevision(br);
                 }
             }
         }
@@ -580,11 +610,11 @@ class Candidates
         // If the root is a singleton, then prefer it over any other singleton.
         if (isSingleton(m_root))
         {
-            Module singleton = singletons.get(m_root.getSymbolicName());
+            BundleRevision singleton = singletons.get(m_root.getSymbolicName());
             singletons.put(m_root.getSymbolicName(), m_root);
             if ((singleton != null) && !singleton.equals(m_root))
             {
-                if (singleton.isResolved())
+                if (singleton.getWiring() != null)
                 {
                     throw new ResolveException(
                         "Cannot resolve singleton "
@@ -594,7 +624,7 @@ class Candidates
                         + " singleton is already resolved.",
                         m_root, null);
                 }
-                removeModule(singleton);
+                removeRevision(singleton);
             }
         }
 
@@ -602,12 +632,12 @@ class Candidates
         // singletons passed into this method.
         for (int i = 0; (existingSingletons != null) && (i < existingSingletons.size()); i++)
         {
-            Module existing = existingSingletons.get(i);
-            Module singleton = singletons.get(existing.getSymbolicName());
+            BundleRevision existing = existingSingletons.get(i);
+            BundleRevision singleton = singletons.get(existing.getSymbolicName());
             if ((singleton != null) && (singleton != existing))
             {
                 singletons.remove(singleton.getSymbolicName());
-                removeModule(singleton);
+                removeRevision(singleton);
             }
         }
 
@@ -615,9 +645,9 @@ class Candidates
         // 1. Select the fragments to attach to a given host.
         // 2. Wrap hosts and attach fragments.
         // 3. Remove any unselected fragments. This is necessary because
-        //    other modules may depend on the capabilities of unselected
+        //    other revisions may depend on the capabilities of unselected
         //    fragments, so we need to remove the unselected fragments and
-        //    any modules that depends on them, which could ultimately cause
+        //    any revisions that depends on them, which could ultimately cause
         //    the entire resolve to fail.
         // 4. Replace all fragments with any host it was merged into
         //    (effectively multiplying it).
@@ -626,28 +656,31 @@ class Candidates
         //      with host's attached fragment capabilities.
 
         // Steps 1 and 2
-        List<HostModule> wrappedHosts = new ArrayList<HostModule>();
-        List<Module> unselectedFragments = new ArrayList<Module>();
-        for (Entry<Capability, Map<String, Map<Version, List<Requirement>>>> hostEntry :
-            m_hostFragments.entrySet())
+        List<HostBundleRevision> hostRevisions = new ArrayList<HostBundleRevision>();
+        List<BundleRevision> unselectedFragments = new ArrayList<BundleRevision>();
+        for (Entry<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>
+            hostEntry : m_hostFragments.entrySet())
         {
             // Step 1
-            Capability hostCap = hostEntry.getKey();
-            Map<String, Map<Version, List<Requirement>>> fragments = hostEntry.getValue();
-            List<Module> selectedFragments = new ArrayList<Module>();
-            for (Entry<String, Map<Version, List<Requirement>>> fragEntry : fragments.entrySet())
+            BundleCapability hostCap = hostEntry.getKey();
+            Map<String, Map<Version, List<BundleRequirement>>> fragments
+                = hostEntry.getValue();
+            List<BundleRevision> selectedFragments = new ArrayList<BundleRevision>();
+            for (Entry<String, Map<Version, List<BundleRequirement>>> fragEntry
+                : fragments.entrySet())
             {
                 boolean isFirst = true;
-                for (Entry<Version, List<Requirement>> versionEntry
+                for (Entry<Version, List<BundleRequirement>> versionEntry
                     : fragEntry.getValue().entrySet())
                 {
-                    for (Requirement hostReq : versionEntry.getValue())
+                    for (BundleRequirement hostReq : versionEntry.getValue())
                     {
                         // Select the highest version of the fragment that
                         // is not removal pending.
-                        if (isFirst && !hostReq.getModule().isRemovalPending())
+                        if (isFirst
+                            && !((BundleRevisionImpl) hostReq.getRevision()).isRemovalPending())
                         {
-                            selectedFragments.add(hostReq.getModule());
+                            selectedFragments.add(hostReq.getRevision());
                             isFirst = false;
                         }
                         // For any fragment that wasn't selected, remove the
@@ -658,11 +691,11 @@ class Candidates
                         else
                         {
                             m_dependentMap.get(hostCap).remove(hostReq);
-                            SortedSet<Capability> hosts = m_candidateMap.get(hostReq);
+                            SortedSet<BundleCapability> hosts = m_candidateMap.get(hostReq);
                             hosts.remove(hostCap);
                             if (hosts.isEmpty())
                             {
-                                unselectedFragments.add(hostReq.getModule());
+                                unselectedFragments.add(hostReq.getRevision());
                             }
                         }
                     }
@@ -670,47 +703,48 @@ class Candidates
             }
 
             // Step 2
-            HostModule wrappedHost = new HostModule(hostCap.getModule(), selectedFragments);
-            wrappedHosts.add(wrappedHost);
-            m_allWrappedHosts.put(hostCap.getModule(), wrappedHost);
+            HostBundleRevision wrappedHost =
+                new HostBundleRevision(hostCap.getRevision(), selectedFragments);
+            hostRevisions.add(wrappedHost);
+            m_allWrappedHosts.put(hostCap.getRevision(), wrappedHost);
         }
 
         // Step 3
-        for (Module m : unselectedFragments)
+        for (BundleRevision br : unselectedFragments)
         {
-            removeModule(m);
+            removeRevision(br);
         }
 
         // Step 4
-        for (HostModule wrappedHost : wrappedHosts)
+        for (HostBundleRevision hostRevision : hostRevisions)
         {
             // Replaces capabilities from fragments with the capabilities
             // from the merged host.
-            for (Capability c : wrappedHost.getCapabilities())
+            for (BundleCapability c : hostRevision.getDeclaredCapabilities(null))
             {
-                Set<Requirement> dependents =
+                Set<BundleRequirement> dependents =
                     m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
                 if (dependents != null)
                 {
-                    for (Requirement r : dependents)
+                    for (BundleRequirement r : dependents)
                     {
-                        Set<Capability> cands = m_candidateMap.get(r);
+                        Set<BundleCapability> cands = m_candidateMap.get(r);
                         cands.remove(((HostedCapability) c).getDeclaredCapability());
                         cands.add(c);
                     }
                 }
             }
 
-            // Copies candidates for fragment requirements to the host.
+            // Copy candidates for fragment requirements to the host.
             // This doesn't record the reverse dependency, but that
             // information should not be needed at this point anymore.
-            for (Requirement r : wrappedHost.getRequirements())
+            for (BundleRequirement r : hostRevision.getDeclaredRequirements(null))
             {
-                SortedSet<Capability> cands =
+                SortedSet<BundleCapability> cands =
                     m_candidateMap.get(((HostedRequirement) r).getDeclaredRequirement());
                 if (cands != null)
                 {
-                    m_candidateMap.put(r, new TreeSet<Capability>(cands));
+                    m_candidateMap.put(r, new TreeSet<BundleCapability>(cands));
                 }
             }
         }
@@ -718,44 +752,45 @@ class Candidates
 
     private void populateDependents()
     {
-        for (Entry<Requirement, SortedSet<Capability>> entry : m_candidateMap.entrySet())
+        for (Entry<BundleRequirement, SortedSet<BundleCapability>> entry
+            : m_candidateMap.entrySet())
         {
-            Requirement req = entry.getKey();
-            SortedSet<Capability> caps = entry.getValue();
-            for (Capability cap : caps)
+            BundleRequirement req = entry.getKey();
+            SortedSet<BundleCapability> caps = entry.getValue();
+            for (BundleCapability cap : caps)
             {
                 // Record the requirement as dependent on the capability.
-                Set<Requirement> dependents = m_dependentMap.get(cap);
+                Set<BundleRequirement> dependents = m_dependentMap.get(cap);
                 if (dependents == null)
                 {
-                    dependents = new HashSet<Requirement>();
+                    dependents = new HashSet<BundleRequirement>();
                     m_dependentMap.put(cap, dependents);
                 }
                 dependents.add(req);
 
                 // Keep track of hosts and associated fragments.
-                if (req.getNamespace().equals(Capability.HOST_NAMESPACE))
+                if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
                 {
-                    Map<String, Map<Version, List<Requirement>>>
+                    Map<String, Map<Version, List<BundleRequirement>>>
                         fragments = m_hostFragments.get(cap);
                     if (fragments == null)
                     {
-                        fragments = new HashMap<String, Map<Version, List<Requirement>>>();
+                        fragments = new HashMap<String, Map<Version, List<BundleRequirement>>>();
                         m_hostFragments.put(cap, fragments);
                     }
-                    Map<Version, List<Requirement>> fragmentVersions =
-                        fragments.get(req.getModule().getSymbolicName());
+                    Map<Version, List<BundleRequirement>> fragmentVersions =
+                        fragments.get(req.getRevision().getSymbolicName());
                     if (fragmentVersions == null)
                     {
                         fragmentVersions =
-                            new TreeMap<Version, List<Requirement>>(Collections.reverseOrder());
-                        fragments.put(req.getModule().getSymbolicName(), fragmentVersions);
+                            new TreeMap<Version, List<BundleRequirement>>(Collections.reverseOrder());
+                        fragments.put(req.getRevision().getSymbolicName(), fragmentVersions);
                     }
-                    List<Requirement> actual = fragmentVersions.get(req.getModule().getVersion());
+                    List<BundleRequirement> actual = fragmentVersions.get(req.getRevision().getVersion());
                     if (actual == null)
                     {
-                        actual = new ArrayList<Requirement>();
-                        fragmentVersions.put(req.getModule().getVersion(), actual);
+                        actual = new ArrayList<BundleRequirement>();
+                        fragmentVersions.put(req.getRevision().getVersion(), actual);
                     }
                     actual.add(req);
                 }
@@ -768,26 +803,26 @@ class Candidates
      * as a fragment or a singleton. This process may cause other modules to
      * become unresolved if they depended on the module's capabilities and there
      * is no other candidate.
-     * @param module the module to remove.
+     * @param revision the module to remove.
      * @throws ResolveException if removing the module caused the resolve to fail.
     **/
-    private void removeModule(Module module) throws ResolveException
+    private void removeRevision(BundleRevision revision) throws ResolveException
     {
-        if (m_root.equals(module))
+        if (m_root.equals(revision))
         {
 // TODO: SINGLETON RESOLVER - Improve this message.
             String msg = "Unable to resolve " + m_root;
             ResolveException ex = new ResolveException(msg, m_root, null);
             throw ex;
         }
-        Set<Module> unresolvedModules = new HashSet<Module>();
-        remove(module, unresolvedModules);
-        while (!unresolvedModules.isEmpty())
+        Set<BundleRevision> unresolvedRevisions = new HashSet<BundleRevision>();
+        remove(revision, unresolvedRevisions);
+        while (!unresolvedRevisions.isEmpty())
         {
-            Iterator<Module> it = unresolvedModules.iterator();
-            module = it.next();
+            Iterator<BundleRevision> it = unresolvedRevisions.iterator();
+            revision = it.next();
             it.remove();
-            remove(module, unresolvedModules);
+            remove(revision, unresolvedRevisions);
         }
     }
 
@@ -795,22 +830,23 @@ class Candidates
      * Removes the specified module from the internal data structures, which
      * involves removing its requirements and its capabilities. This may cause
      * other modules to become unresolved as a result.
-     * @param m the module to remove.
-     * @param unresolvedModules a list to containing any additional modules that
+     * @param br the module to remove.
+     * @param unresolvedRevisions a list to containing any additional modules that
      *        that became unresolved as a result of removing this module and will
      *        also need to be removed.
      * @throws ResolveException if removing the module caused the resolve to fail.
     **/
-    private void remove(Module m, Set<Module> unresolvedModules) throws ResolveException
+    private void remove(BundleRevision br, Set<BundleRevision> unresolvedRevisions)
+        throws ResolveException
     {
-        for (Requirement r : m.getRequirements())
+        for (BundleRequirement r : br.getDeclaredRequirements(null))
         {
             remove(r);
         }
 
-        for (Capability c : m.getCapabilities())
+        for (BundleCapability c : br.getDeclaredCapabilities(null))
         {
-            remove(c, unresolvedModules);
+            remove(c, unresolvedRevisions);
         }
     }
 
@@ -818,16 +854,16 @@ class Candidates
      * Removes a requirement from the internal data structures.
      * @param req the requirement to remove.
     **/
-    private void remove(Requirement req)
+    private void remove(BundleRequirement req)
     {
-        boolean isFragment = req.getNamespace().equals(Capability.HOST_NAMESPACE);
+        boolean isFragment = req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE);
 
-        SortedSet<Capability> candidates = m_candidateMap.remove(req);
+        SortedSet<BundleCapability> candidates = m_candidateMap.remove(req);
         if (candidates != null)
         {
-            for (Capability cap : candidates)
+            for (BundleCapability cap : candidates)
             {
-                Set<Requirement> dependents = m_dependentMap.get(cap);
+                Set<BundleRequirement> dependents = m_dependentMap.get(cap);
                 if (dependents != null)
                 {
                     dependents.remove(req);
@@ -835,25 +871,25 @@ class Candidates
 
                 if (isFragment)
                 {
-                    Map<String, Map<Version, List<Requirement>>>
+                    Map<String, Map<Version, List<BundleRequirement>>>
                         fragments = m_hostFragments.get(cap);
                     if (fragments != null)
                     {
-                        Map<Version, List<Requirement>> fragmentVersions =
-                            fragments.get(req.getModule().getSymbolicName());
+                        Map<Version, List<BundleRequirement>> fragmentVersions =
+                            fragments.get(req.getRevision().getSymbolicName());
                         if (fragmentVersions != null)
                         {
-                            List<Requirement> actual =
-                                fragmentVersions.get(req.getModule().getVersion());
+                            List<BundleRequirement> actual =
+                                fragmentVersions.get(req.getRevision().getVersion());
                             if (actual != null)
                             {
                                 actual.remove(req);
                                 if (actual.isEmpty())
                                 {
-                                    fragmentVersions.remove(req.getModule().getVersion());
+                                    fragmentVersions.remove(req.getRevision().getVersion());
                                     if (fragmentVersions.isEmpty())
                                     {
-                                        fragments.remove(req.getModule().getSymbolicName());
+                                        fragments.remove(req.getRevision().getSymbolicName());
                                         if (fragments.isEmpty())
                                         {
                                             m_hostFragments.remove(cap);
@@ -872,33 +908,34 @@ class Candidates
      * Removes a capability from the internal data structures. This may cause
      * other modules to become unresolved as a result.
      * @param c the capability to remove.
-     * @param unresolvedModules a list to containing any additional modules that
+     * @param unresolvedRevisions a list to containing any additional modules that
      *        that became unresolved as a result of removing this module and will
      *        also need to be removed.
      * @throws ResolveException if removing the module caused the resolve to fail.
     **/
-    private void remove(Capability c, Set<Module> unresolvedModules) throws ResolveException
+    private void remove(BundleCapability c, Set<BundleRevision> unresolvedRevisions)
+        throws ResolveException
     {
-        Set<Requirement> dependents = m_dependentMap.remove(c);
+        Set<BundleRequirement> dependents = m_dependentMap.remove(c);
         if (dependents != null)
         {
-            for (Requirement r : dependents)
+            for (BundleRequirement r : dependents)
             {
-                SortedSet<Capability> candidates = m_candidateMap.get(r);
+                SortedSet<BundleCapability> candidates = m_candidateMap.get(r);
                 candidates.remove(c);
                 if (candidates.isEmpty())
                 {
                     m_candidateMap.remove(r);
-                    if (!r.isOptional())
+                    if (!((BundleRequirementImpl) r).isOptional())
                     {
-                        if (m_root.equals(r.getModule()))
+                        if (m_root.equals(r.getRevision()))
                         {
                             String msg = "Unable to resolve " + m_root
                                 + ": missing requirement " + r;
                             ResolveException ex = new ResolveException(msg, m_root, r);
                             throw ex;
                         }
-                        unresolvedModules.add(r.getModule());
+                        unresolvedRevisions.add(r.getRevision());
                     }
                 }
             }
@@ -912,54 +949,65 @@ class Candidates
     **/
     public Candidates copy()
     {
-        Map<Capability, Set<Requirement>> dependentMap =
-            new HashMap<Capability, Set<Requirement>>();
-        for (Entry<Capability, Set<Requirement>> entry : m_dependentMap.entrySet())
+        Map<BundleCapability, Set<BundleRequirement>> dependentMap =
+            new HashMap<BundleCapability, Set<BundleRequirement>>();
+        for (Entry<BundleCapability, Set<BundleRequirement>> entry : m_dependentMap.entrySet())
         {
-            Set<Requirement> dependents = new HashSet<Requirement>(entry.getValue());
+            Set<BundleRequirement> dependents = new HashSet<BundleRequirement>(entry.getValue());
             dependentMap.put(entry.getKey(), dependents);
         }
 
-        Map<Requirement, SortedSet<Capability>> candidateMap =
-            new HashMap<Requirement, SortedSet<Capability>>();
-        for (Entry<Requirement, SortedSet<Capability>> entry : m_candidateMap.entrySet())
+        Map<BundleRequirement, SortedSet<BundleCapability>> candidateMap =
+            new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
+        for (Entry<BundleRequirement, SortedSet<BundleCapability>> entry
+            : m_candidateMap.entrySet())
         {
-            SortedSet<Capability> candidates = new TreeSet<Capability>(entry.getValue());
+            SortedSet<BundleCapability> candidates =
+                new TreeSet<BundleCapability>(entry.getValue());
             candidateMap.put(entry.getKey(), candidates);
         }
 
         return new Candidates(
-            m_root, m_candidateModules, dependentMap, candidateMap,
+            m_root, m_candidateRevisions, dependentMap, candidateMap,
             m_hostFragments, m_allWrappedHosts, m_populateResultCache,
             m_fragmentsPresent);
     }
 
     public void dump()
     {
-        // Create set of all modules from requirements.
-        Set<Module> modules = new HashSet();
-        for (Entry<Requirement, SortedSet<Capability>> entry
+        // Create set of all revisions from requirements.
+        Set<BundleRevision> revisions = new HashSet<BundleRevision>();
+        for (Entry<BundleRequirement, SortedSet<BundleCapability>> entry
             : m_candidateMap.entrySet())
         {
-            modules.add(entry.getKey().getModule());
+            revisions.add(entry.getKey().getRevision());
         }
-        // Now dump the modules.
+        // Now dump the revisions.
         System.out.println("=== BEGIN CANDIDATE MAP ===");
-        for (Module module : modules)
+        for (BundleRevision br : revisions)
         {
-            System.out.println("  " + module
-                 + " (" + (module.isResolved() ? "RESOLVED)" : "UNRESOLVED)"));
-            for (Requirement req : module.getRequirements())
+            System.out.println("  " + br
+                 + " (" + ((br.getWiring() != null) ? "RESOLVED)" : "UNRESOLVED)"));
+            List<BundleRequirement> reqs = (br.getWiring() != null)
+                ? br.getWiring().getRequirements(null)
+                : br.getDeclaredRequirements(null);
+            for (BundleRequirement req : reqs)
             {
-                Set<Capability> candidates = m_candidateMap.get(req);
+                Set<BundleCapability> candidates = m_candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
                 {
                     System.out.println("    " + req + ": " + candidates);
                 }
             }
-            for (Requirement req : module.getDynamicRequirements())
+// TODO: OSGi R4.3 - Need to check what getWiring().getRequirements() returns
+//       with respect to dynamic imports; is it the union of all declared
+//       dynamic imports from fragments and host?
+            reqs = (br.getWiring() != null)
+                ? Util.getDynamicRequirements(br.getWiring().getRequirements(null))
+                : Util.getDynamicRequirements(br.getDeclaredRequirements(null));
+            for (BundleRequirement req : reqs)
             {
-                Set<Capability> candidates = m_candidateMap.get(req);
+                Set<BundleCapability> candidates = m_candidateMap.get(req);
                 if ((candidates != null) && (candidates.size() > 0))
                 {
                     System.out.println("    " + req + ": " + candidates);
@@ -973,26 +1021,22 @@ class Candidates
      * Returns true if the specified module is a singleton
      * (i.e., directive singleton:=true).
      *
-     * @param module the module to check for singleton status.
+     * @param revision the module to check for singleton status.
      * @return true if the module is a singleton, false otherwise.
     **/
-    private static boolean isSingleton(Module module)
+    private static boolean isSingleton(BundleRevision revision)
     {
-        final List<Capability> modCaps =
+        final List<BundleCapability> modCaps =
             Util.getCapabilityByNamespace(
-                module, Capability.MODULE_NAMESPACE);
+                revision, BundleCapabilityImpl.BUNDLE_NAMESPACE);
         if (modCaps == null || modCaps.isEmpty())
         {
             return false;
         }
-        final List<Directive> dirs = modCaps.get(0).getDirectives();
-        for (int dirIdx = 0; (dirs != null) && (dirIdx < dirs.size()); dirIdx++)
+        String value = modCaps.get(0).getDirectives().get(Constants.SINGLETON_DIRECTIVE);
+        if (value != null)
         {
-            if (dirs.get(dirIdx).getName().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE)
-                && Boolean.valueOf((String) dirs.get(dirIdx).getValue()))
-            {
-                return true;
-            }
+            return Boolean.valueOf(value);
         }
         return false;
     }

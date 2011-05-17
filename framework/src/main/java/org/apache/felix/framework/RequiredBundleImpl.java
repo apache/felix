@@ -18,10 +18,7 @@
  */
 package org.apache.felix.framework;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import org.apache.felix.framework.resolver.Module;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.RequiredBundle;
@@ -51,38 +48,18 @@ class RequiredBundleImpl implements RequiredBundle
 
     public Bundle[] getRequiringBundles()
     {
-        // Spec says to return null for stale bundles.
+        // If the package is stale, then return null per the spec.
         if (m_bundle.isStale())
         {
             return null;
         }
-
-        // We need to find all modules that require any of the modules
-        // associated with this bundle and save the associated bundle
-        // of the dependent modules.
-        Set bundleSet = new HashSet();
-        // Loop through all of this bundle's modules.
-        List<Module> modules = m_bundle.getModules();
-        for (int modIdx = 0; (modules != null) && (modIdx < modules.size()); modIdx++)
-        {
-            // For each of this bundle's modules, loop through all of the
-            // modules that require it and add them to the module list.
-            List<Module> dependents = ((ModuleImpl) modules.get(modIdx)).getDependentRequirers();
-            for (int depIdx = 0; (dependents != null) && (depIdx < dependents.size()); depIdx++)
-            {
-                if (dependents.get(depIdx).getBundle() != null)
-                {
-                    bundleSet.add(dependents.get(depIdx).getBundle());
-                }
-            }
-        }
-        // Convert to an array.
-        return (Bundle[]) bundleSet.toArray(new Bundle[bundleSet.size()]);
+        Set<Bundle> set = m_felix.getRequiringBundles(m_bundle);
+        return set.toArray(new Bundle[set.size()]);
     }
 
     public Version getVersion()
     {
-        return m_bundle.getCurrentModule().getVersion();
+        return m_bundle.getVersion();
     }
 
     public boolean isRemovalPending()
@@ -95,7 +72,7 @@ class RequiredBundleImpl implements RequiredBundle
         if (m_toString == null)
         {
             m_toString = m_bundle.getSymbolicName()
-                + "; version=" + m_bundle.getCurrentModule().getVersion();
+                + "; version=" + m_bundle.getVersion();
         }
         return m_toString;
     }
