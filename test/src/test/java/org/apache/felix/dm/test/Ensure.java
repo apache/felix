@@ -33,6 +33,7 @@ public class Ensure {
     private static final int RESOLUTION = 100;
     private static PrintStream STREAM = System.out;
     int step = 0;
+    private Throwable m_throwable;
     
     public Ensure() {
         if (DEBUG) {
@@ -143,6 +144,24 @@ public class Ensure {
          */
         public void next(Ensure ensure) {
             ensure.step(m_steps[m_stepIndex++]);
+        }
+    }
+
+    /**
+     * Saves a thrown exception that occurred in a different thread. You can only save one exception
+     * at a time this way.
+     */
+    public synchronized void throwable(Throwable throwable) {
+        m_throwable = throwable;
+    }
+
+    /**
+     * Throws a <code>Throwable</code> if one occurred in a different thread and that thread saved it
+     * using the <code>throwable()</code> method.
+     */
+    public synchronized void ensure() throws Throwable {
+        if (m_throwable != null) {
+            throw m_throwable;
         }
     }
 }
