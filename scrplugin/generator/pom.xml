@@ -40,7 +40,7 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/generator</connection>
-        <developerConnection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/generator</developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/generator</developerConnection>
         <url>http://svn.apache.org/repos/asf/felix/scrplugin/generator</url>
     </scm>
 

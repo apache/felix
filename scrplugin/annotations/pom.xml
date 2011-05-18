@@ -39,7 +39,7 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</connection>
-        <developerConnection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/annotations</developerConnection>
         <url>http://svn.apache.org/repos/asf/felix/scrplugin/annotations</url>
     </scm>
 

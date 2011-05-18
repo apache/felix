@@ -40,7 +40,7 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/scrtask</connection>
-        <developerConnection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/scrtask</developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/scrtask</developerConnection>
         <url>http://svn.apache.org/repos/asf/felix/scrplugin/scrtask</url>
     </scm>
 
