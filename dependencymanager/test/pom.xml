@@ -49,6 +49,18 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.dependencymanager.shell</artifactId>
+            <version>3.0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>org.apache.felix.shell</artifactId>
+            <version>1.4.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>${osgi.version}</version>
