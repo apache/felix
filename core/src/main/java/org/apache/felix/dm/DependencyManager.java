@@ -112,11 +112,15 @@ public class DependencyManager {
                 WeakReference reference = (WeakReference) iterator.next();
                 DependencyManager manager = (DependencyManager) reference.get();
                 if (manager != null) {
-                    result.add(manager);
+                    try {
+                        manager.getBundleContext().getBundle();
+                        result.add(manager);
+                        continue;
+                    }
+                    catch (IllegalStateException e) {
+                    }
                 }
-                else {
-                    iterator.remove();
-                }
+                iterator.remove();
             }
         }
         return result;
