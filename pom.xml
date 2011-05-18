@@ -33,7 +33,7 @@
     <artifactId>org.apache.felix.eventadmin</artifactId>
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/eventadmin/impl</connection>
-      <developerConnection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/eventadmin/impl</developerConnection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/eventadmin/impl</developerConnection>
       <url>http://svn.apache.org/repos/asf/felix/eventadmin/impl</url>
     </scm>
     <dependencies>
