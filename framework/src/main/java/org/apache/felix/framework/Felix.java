@@ -1850,7 +1850,8 @@ public class Felix extends BundleImpl implements Framework
             if (!bundle.isDeclaredActivationPolicyUsed()
                 || (((BundleRevisionImpl) bundle.getCurrentRevision())
                     .getDeclaredActivationPolicy() != BundleRevisionImpl.LAZY_ACTIVATION)
-                || ((BundleRevisionImpl) bundle.getCurrentRevision()).isActivationTriggered())
+                || ((BundleWiringImpl) bundle.getCurrentRevision().getWiring())
+                    .isActivationTriggered())
             {
                 // Record the event type for the final event and activate.
                 eventType = BundleEvent.STARTED;
