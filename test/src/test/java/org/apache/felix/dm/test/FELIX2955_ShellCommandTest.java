@@ -35,10 +35,14 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 @RunWith(JUnit4TestRunner.class)
 public class FELIX2955_ShellCommandTest extends Base {
+    private long m_testBundleId;
+    private Bundle m_deploymentAdmin;
+
     @Configuration
     public static Option[] configuration() {
         return options(
@@ -46,6 +50,7 @@ public class FELIX2955_ShellCommandTest extends Base {
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.4"),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.shell").version("1.4.2"),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.deploymentadmin").version("0.9.0").start(false),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager.shell").versionAsInProject()
             )
@@ -54,6 +59,13 @@ public class FELIX2955_ShellCommandTest extends Base {
     
     @Test
     public void testShellCommands(BundleContext context) throws Throwable {
+        m_testBundleId = context.getBundle().getBundleId();
+        for (Bundle b : context.getBundles()) {
+            if (b.getSymbolicName().equals("org.apache.felix.deploymentadmin")) {
+                m_deploymentAdmin = b;
+                break;
+            }
+        }
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -76,13 +88,20 @@ public class FELIX2955_ShellCommandTest extends Base {
         m.add(missing);
         e.step(4);
         e.waitForStep(5, 5000);
+        // now start/stop deploymentadmin, which we use here because it's a bundle that
+        // publishes a service that uses the dependency manager (saving us from having to
+        // create a bundle that does that on the fly)
+        m_deploymentAdmin.start();
+        m_deploymentAdmin.stop();
+        e.step(6);
+        e.waitForStep(7, 5000);
         e.ensure();
         m.remove(missing);
         m.remove(shellClient);
         
     }
     
-    public static class ShellClient {
+    public class ShellClient {
         volatile ShellService m_shell;
         private final Ensure m_ensure;
         
@@ -94,10 +113,8 @@ public class FELIX2955_ShellCommandTest extends Base {
             Thread t = new Thread("Shell Client") {
                 public void run() {
                     m_ensure.step(1);
-                    // this first part may be brittle, since I probably cannot guarantee the name and bundle ID of the
-                    // generated probe
                     execute("dm",
-                        "[11] pax-exam-probe\n" +
+                        "[" + m_testBundleId + "] pax-exam-probe\n" +
                         "  ShellClient registered\n" +
                         "    org.apache.felix.shell.ShellService service required available\n", 
                         "");
@@ -110,11 +127,17 @@ public class FELIX2955_ShellCommandTest extends Base {
                     // check again, now there should be something missing
                     m_ensure.waitForStep(4, 5000);
                     execute("dm notavail",
-                        "[11] pax-exam-probe\n" + 
+                        "[" + m_testBundleId + "] pax-exam-probe\n" + 
                         "  Object unregistered\n" + 
                         "    java.lang.Object service required unavailable\n", 
                         "");
                     m_ensure.step(5);
+                    m_ensure.waitForStep(6, 5000);
+                    // this next step actually triggers the bug in FELIX-2955
+                    execute("dm notavail",
+                        "", 
+                        "");
+                    m_ensure.step(7);
                 };
             };
             t.start();
@@ -128,10 +151,8 @@ public class FELIX2955_ShellCommandTest extends Base {
         public void execute(String command, String expectedOutput, String expectedError) {
             try {
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
-                PrintStream out = new PrintStream(output);
                 ByteArrayOutputStream error = new ByteArrayOutputStream();
-                PrintStream err = new PrintStream(error);
-                m_shell.executeCommand(command, out, err);
+                m_shell.executeCommand(command, new PrintStream(output), new PrintStream(error));
                 Assert.assertEquals(expectedOutput, output.toString());
                 Assert.assertEquals(expectedError, error.toString());
             }
