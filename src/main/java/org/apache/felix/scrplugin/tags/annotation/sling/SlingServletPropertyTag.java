@@ -52,6 +52,19 @@ public class SlingServletPropertyTag extends AbstractTag {
 
     /**
      * @param name Property name
+     * @param values Property values
+     * @param desc Description
+     */
+    public SlingServletPropertyTag(Annotation annotation, String name, String[] values, JavaClassDescription desc, final boolean isPrivate) {
+        super(annotation, desc, null);
+        this.name = name;
+        this.values = values;
+        this.type = null;
+        this.isPrivate = isPrivate;
+    }
+
+    /**
+     * @param name Property name
      * @param value Property value
      * @param desc Description
      */
