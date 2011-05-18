@@ -5,7 +5,6 @@ Changes from 3.0.0 to 3.0.1
 
 ** Improvement
 
-    * removed LICENSE.json 
     * removed changelog.txt from root of project
     * [FELIX-2954] - annotated component factory does not allow to provide a component instance explicitly
     * [FELIX-2956] - json should be embedded in the annotation scanner plugin
