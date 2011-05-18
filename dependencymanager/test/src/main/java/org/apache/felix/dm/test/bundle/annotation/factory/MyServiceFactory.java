@@ -34,7 +34,7 @@ import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 @Component
 public class MyServiceFactory
 {
-    @ServiceDependency(filter = "(dm.factory.name=MyServiceFactory)")
+    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=MyServiceFactory)")
     Set<Dictionary> m_myServiceFactory;
     
     @ServiceDependency
@@ -50,6 +50,7 @@ public class MyServiceFactory
         m_conf = new Hashtable();
         m_conf.put("instance.id", "instance");
         m_conf.put(".private.param", "private");
+        m_conf.put(Component.FACTORY_INSTANCE, new MyService()); // we explicitly provide the instance
         Assert.assertTrue(m_myServiceFactory.add(m_conf));
     }
 

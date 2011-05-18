@@ -1,5 +1,5 @@
-Initial Release 3.0.0
----------------------
+Changes from 3.0.0 to 3.0.1
+---------------------------
 
 ** Bug
 
@@ -7,3 +7,11 @@ Initial Release 3.0.0
 
     * removed LICENSE.json 
     * removed changelog.txt from root of project
+    * [FELIX-2954 ] - annotated component factory does not allow to provide a component instance explicitly
+
+Initial Release 3.0.0
+---------------------
+
+** Bug
+
+** Improvement

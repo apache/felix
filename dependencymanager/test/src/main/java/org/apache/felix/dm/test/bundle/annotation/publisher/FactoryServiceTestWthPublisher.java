@@ -105,7 +105,7 @@ public class FactoryServiceTestWthPublisher
     @Component
     public static class ProviderImplFactory 
     {
-        @ServiceDependency(filter="(dm.factory.name=MyFactory)")
+        @ServiceDependency(filter="(" + Component.FACTORY_NAME + "=MyFactory)")
         void bind(Set<Dictionary> m_providerImplFactory)
         {
             m_providerImplFactory.add(new Hashtable() {{ put("foo2", "bar2"); }});
