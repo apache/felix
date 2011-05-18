@@ -18,11 +18,7 @@
  */
 package org.apache.felix.scr.annotations.sling;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Marks servlet classes as SCR component, and allows to add a
@@ -46,12 +42,12 @@ public @interface SlingFilter {
     int order();
 
     /**
-     * The scope of a filter.
+     * The scopes of a filter.
      * If the filter has request scope, it is run once for a request.
      * If the filter has component scope, it is run once for every included
      * component (rendering).
      */
-    SlingFilterScope scope() default SlingFilterScope.REQUEST;
+    SlingFilterScope[] scope() default SlingFilterScope.REQUEST;
 
     /**
      * Whether to generate a default SCR component tag with. If

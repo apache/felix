@@ -45,4 +45,10 @@ public enum SlingFilterScope {
     public String getScope() {
         return this.scope;
     }
+
+    @Override
+    public String toString() {
+        return this.getScope();
+    }
+
 }

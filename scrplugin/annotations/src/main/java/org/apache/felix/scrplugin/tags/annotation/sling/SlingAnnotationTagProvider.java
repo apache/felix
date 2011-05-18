@@ -21,7 +21,8 @@ package org.apache.felix.scrplugin.tags.annotation.sling;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.sling.*;
+import org.apache.felix.scr.annotations.sling.SlingFilter;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.felix.scrplugin.tags.JavaField;
 import org.apache.felix.scrplugin.tags.JavaTag;
 import org.apache.felix.scrplugin.tags.annotation.*;
@@ -144,8 +145,8 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
             tags.add(new SlingServletPropertyTag(annotation, "service.ranking", String.valueOf(order), description, "Integer", true));
 
             // property scope
-            final SlingFilterScope scope = Util.getEnumValue(annotation, "scope", SlingFilterScope.class, SlingFilter.class);
-            tags.add(new SlingServletPropertyTag(annotation, "sling.filter.scope", scope.getScope(), description, null, true));
+            final String[] scopes = Util.getAnnotationValues(annotation, "scope", description);
+            tags.add(new SlingServletPropertyTag(annotation, "sling.filter.scope", scopes, description, true));
         }
 
         return tags;
