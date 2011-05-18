@@ -122,10 +122,15 @@ import java.lang.annotation.Target;
  *          // Update the first X component instance
  *          x1.put("foo", "bar1_modified");
  *          _XFactory.add(x1);
+ *          
+ *          // Instantiate a third X instance, by explicitly providing the implementation object
+ *          Dictionary x3 = new Hashtable() {{ put(Component.FACTORY_INSTANCE, new X()); }};
+ *          _XFactory.add(x3);
  *      
- *          // Destroy x1/x2 components (Notice that invoking XFactory.clear() will destroy all X component  instances).
+ *          // Destroy x1/x2/x3 components (Notice that invoking XFactory.clear() will destroy all X component  instances).
  *          _XFactory.remove(x1);
  *          _XFactory.remove(x2); 
+ *          _XFactory.remove(x3); 
  *      }
  *  }
  * </pre>
@@ -164,6 +169,9 @@ public @interface Component
      * <p>The dictionary registered in the Set will be provided to the created component instance using a callback method that you can 
      * optionally specify in the {@link Component#factoryConfigure()} attribute. Each public properties from that dictionary 
      * (which don't start with a dot) will be propagated along with the annotated component service properties.
+     * 
+     * <p>Optionally, the dictionary registered into the factory set may provide an implementation instance for the component to be created,
+     * using the {@value #FACTORY_INSTANCE} key. 
      */
     String factorySet() default "";
 
@@ -179,4 +187,16 @@ public @interface Component
      * Sets the static method used to create the components implementation instance.
      */
     String factoryMethod() default "";    
+    
+    /**
+     * Service property name used to match a given Factory Set.
+     * @see #factorySet() for more information about factory sets.
+     */
+    final static String FACTORY_NAME = "dm.factory.name";
+    
+    /**
+     * Key used when providing an implementation in a factory Set dictionary configuration.
+     * @see #factorySet()
+     */
+    final static String FACTORY_INSTANCE = "dm.factory.instance";
 }
