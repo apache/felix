@@ -163,14 +163,33 @@ public class BundleRevisionImpl implements BundleRevision
         return m_declaredActivationPolicy;
     }
 
-    List<String> getActivationExcludes()
+    boolean isActivationTrigger(String pkgName)
     {
-        return m_activationExcludes;
-    }
+        if ((m_activationIncludes == null) && (m_activationExcludes == null))
+        {
+            return true;
+        }
 
-    List<String> getActivationIncludes()
-    {
-        return m_activationIncludes;
+        // If there are no include filters then all classes are included
+        // by default, otherwise try to find one match.
+        boolean included = (m_activationIncludes == null);
+        for (int i = 0;
+            (!included) && (m_activationIncludes != null) && (i < m_activationIncludes.size());
+            i++)
+        {
+            included = m_activationIncludes.get(i).equals(pkgName);
+        }
+
+        // If there are no exclude filters then no classes are excluded
+        // by default, otherwise try to find one match.
+        boolean excluded = false;
+        for (int i = 0;
+            (!excluded) && (m_activationExcludes != null) && (i < m_activationExcludes.size());
+            i++)
+        {
+            excluded = m_activationExcludes.get(i).equals(pkgName);
+        }
+        return included && !excluded;
     }
 
     URLStreamHandler getURLStreamHandler()
@@ -283,40 +302,6 @@ public class BundleRevisionImpl implements BundleRevision
     public List<R4Library> getDeclaredNativeLibraries()
     {
         return m_declaredNativeLibs;
-    }
-
-    synchronized boolean isActivationTriggered()
-    {
-        return m_isActivationTriggered;
-    }
-
-    boolean isActivationTrigger(String pkgName)
-    {
-        if ((m_activationIncludes == null) && (m_activationExcludes == null))
-        {
-            return true;
-        }
-
-        // If there are no include filters then all classes are included
-        // by default, otherwise try to find one match.
-        boolean included = (m_activationIncludes == null);
-        for (int i = 0;
-            (!included) && (m_activationIncludes != null) && (i < m_activationIncludes.size());
-            i++)
-        {
-            included = m_activationIncludes.get(i).equals(pkgName);
-        }
-
-        // If there are no exclude filters then no classes are excluded
-        // by default, otherwise try to find one match.
-        boolean excluded = false;
-        for (int i = 0;
-            (!excluded) && (m_activationExcludes != null) && (i < m_activationExcludes.size());
-            i++)
-        {
-            excluded = m_activationExcludes.get(i).equals(pkgName);
-        }
-        return included && !excluded;
     }
 
     public String getId()

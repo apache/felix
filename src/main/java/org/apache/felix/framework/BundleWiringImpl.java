@@ -1188,38 +1188,6 @@ public class BundleWiringImpl implements BundleWiring
         return m_isActivationTriggered;
     }
 
-    boolean isActivationTrigger(String pkgName)
-    {
-        List<String> activationIncludes = m_revision.getActivationIncludes();
-        List<String> activationExcludes = m_revision.getActivationExcludes();
-
-        if ((activationIncludes == null) && (activationExcludes == null))
-        {
-            return true;
-        }
-
-        // If there are no include filters then all classes are included
-        // by default, otherwise try to find one match.
-        boolean included = (activationIncludes == null);
-        for (int i = 0;
-            (!included) && (activationIncludes != null) && (i < activationIncludes.size());
-            i++)
-        {
-            included = activationIncludes.get(i).equals(pkgName);
-        }
-
-        // If there are no exclude filters then no classes are excluded
-        // by default, otherwise try to find one match.
-        boolean excluded = false;
-        for (int i = 0;
-            (!excluded) && (activationExcludes != null) && (i < activationExcludes.size());
-            i++)
-        {
-            excluded = activationExcludes.get(i).equals(pkgName);
-        }
-        return included && !excluded;
-    }
-
     static class ToLocalUrlEnumeration implements Enumeration
     {
         final Enumeration m_enumeration;
@@ -1385,7 +1353,7 @@ public class BundleWiringImpl implements BundleWiring
                             // circuit the trigger matching if the trigger is already
                             // tripped.
                             boolean isTriggerClass = m_isActivationTriggered
-                                ? false : isActivationTrigger(pkgName);
+                                ? false : m_revision.isActivationTrigger(pkgName);
                             if (!m_isActivationTriggered
                                 && isTriggerClass
                                 && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
