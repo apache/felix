@@ -108,6 +108,13 @@ public class FactorySet extends AbstractSet<Dictionary>
     private final static Object SERVICE_CREATING = new Object();
 
     /**
+     * When a Dictionary is registered in a factory Set, we use this special 
+     * property key, whose value may provide the instance to use when
+     * creating a service.
+     */
+    private final static String DM_FACTORY_INSTANCE = "dm.factory.instance";
+
+    /**
      * This class wraps <tt>Dictionary</tt>, allowing to store the dictionary into a Map, using
      * reference-equality in place of object-equality when getting the Dictionary from the Map.
      */
@@ -344,19 +351,28 @@ public class FactorySet extends AbstractSet<Dictionary>
         {
             try
             {
-                // Create the Service / impl
+                // Create the Service / impl, unless it is explicitly provided from the
+                // configuration (using the specific key "dm.factory.instance").
                 Component s = m_dm.createComponent();
                 Class implClass = m_bundle.loadClass(m_srvMeta.getString(Params.impl));
-                String factoryMethod = m_srvMeta.getString(Params.factoryMethod, null);
-                if (factoryMethod == null)
+                Object impl = configuration.get(DM_FACTORY_INSTANCE);
+                if (impl == null)
                 {
-                    m_impl = implClass.newInstance();
+                    String factoryMethod = m_srvMeta.getString(Params.factoryMethod, null);
+                    if (factoryMethod == null)
+                    {
+                        m_impl = implClass.newInstance();
+                    }
+                    else
+                    {
+                        Method m = implClass.getDeclaredMethod(factoryMethod);
+                        m.setAccessible(true);
+                        m_impl = m.invoke(null);
+                    }
                 }
                 else
                 {
-                    Method m = implClass.getDeclaredMethod(factoryMethod);
-                    m.setAccessible(true);
-                    m_impl = m.invoke(null);
+                    m_impl = impl;
                 }
 
                 // Invoke "configure" callback
