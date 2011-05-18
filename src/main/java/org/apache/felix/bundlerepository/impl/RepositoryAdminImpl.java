@@ -18,6 +18,7 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
@@ -143,8 +144,16 @@ public class RepositoryAdminImpl implements RepositoryAdmin
     public synchronized boolean removeRepository(String uri)
     {
         initialize();
-
-        return m_repoMap.remove(uri) != null;
+        
+        try
+        {
+            URL url = new URL(uri);
+            return m_repoMap.remove(url.toExternalForm()) != null;
+        }
+        catch (MalformedURLException e)
+        {
+            return m_repoMap.remove(uri) != null;
+        }
     }
 
     public synchronized Repository[] listRepositories()
