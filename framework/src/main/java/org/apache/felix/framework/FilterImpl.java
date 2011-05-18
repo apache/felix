@@ -54,7 +54,14 @@ public class FilterImpl implements Filter
 
     public boolean match(ServiceReference sr)
     {
-        return CapabilitySet.matches((ServiceReferenceImpl) sr, m_filter);
+        if (sr instanceof ServiceReferenceImpl)
+        {
+            return CapabilitySet.matches((ServiceReferenceImpl) sr, m_filter);
+        }
+        else
+        {
+            return CapabilitySet.matches(new ServiceReferenceCapability(sr), m_filter);
+        }
     }
 
     public boolean match(Dictionary<String, ? > dctnr)
@@ -69,7 +76,7 @@ public class FilterImpl implements Filter
 
     public boolean matches(Map<String, ?> map)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return CapabilitySet.matches(new DictionaryCapability(map), m_filter);
     }
 
     public boolean equals(Object o)
@@ -90,6 +97,12 @@ public class FilterImpl implements Filter
     static class DictionaryCapability extends BundleCapabilityImpl
     {
         private final Map m_map;
+
+        public DictionaryCapability(Map map)
+        {
+            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            m_map = map;
+        }
 
         public DictionaryCapability(Dictionary dict, boolean caseSensitive)
         {
@@ -119,6 +132,53 @@ public class FilterImpl implements Filter
         public Map<String, Object> getAttributes()
         {
             return m_map;
+        }
+
+        @Override
+        public List<String> getUses()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    static class ServiceReferenceCapability extends BundleCapabilityImpl
+    {
+        private final ServiceReference m_sr;
+        private final Map<String, Object> m_attrs;
+
+        public ServiceReferenceCapability(ServiceReference sr)
+        {
+            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            m_sr = sr;
+            m_attrs = new StringMap(false);
+            for (String key : m_sr.getPropertyKeys())
+            {
+                m_attrs.put(key, m_sr.getProperty(key));
+            }
+        }
+
+        @Override
+        public BundleRevision getRevision()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public String getNamespace()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Map<String, String> getDirectives()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Map<String, Object> getAttributes()
+        {
+            return m_attrs;
         }
 
         @Override
