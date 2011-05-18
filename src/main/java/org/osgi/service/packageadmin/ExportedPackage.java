@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2008). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,18 +31,21 @@ import org.osgi.framework.Version;
  * 
  * <p>
  * The information about an exported package provided by this object may change.
- * An <code>ExportedPackage</code> object becomes stale if the package it
+ * An {@code ExportedPackage} object becomes stale if the package it
  * references has been updated or removed as a result of calling
- * <code>PackageAdmin.refreshPackages()</code>.
+ * {@code PackageAdmin.refreshPackages()}.
  * 
- * If this object becomes stale, its <code>getName()</code> and
- * <code>getVersion()</code> methods continue to return their original values,
- * <code>isRemovalPending()</code> returns <code>true</code>, and
- * <code>getExportingBundle()</code> and <code>getImportingBundles()</code>
- * return <code>null</code>.
+ * If this object becomes stale, its {@code getName()} and
+ * {@code getVersion()} methods continue to return their original values,
+ * {@code isRemovalPending()} returns {@code true}, and
+ * {@code getExportingBundle()} and {@code getImportingBundles()}
+ * return {@code null}.
  * 
  * @ThreadSafe
- * @version $Revision: 5673 $
+ * @noimplement
+ * @deprecated The PackageAdmin service has been replaced by the
+ *             <code>org.osgi.framework.wiring</code> package.
+ * @version $Id: c56b99465e3f62a9808297a47de8cb7edb802119 $
  */
 public interface ExportedPackage {
 	/**
@@ -56,8 +59,8 @@ public interface ExportedPackage {
 	 * Returns the bundle exporting the package associated with this exported
 	 * package.
 	 * 
-	 * @return The exporting bundle, or <code>null</code> if this
-	 *         <code>ExportedPackage</code> object has become stale.
+	 * @return The exporting bundle, or {@code null} if this
+	 *         {@code ExportedPackage} object has become stale.
 	 */
 	public Bundle getExportingBundle();
 
@@ -71,8 +74,8 @@ public interface ExportedPackage {
 	 * in the returned array. See {@link RequiredBundle#getRequiringBundles()}.
 	 * 
 	 * @return The array of resolved bundles currently wired to this exported
-	 *         package, or <code>null</code> if this
-	 *         <code>ExportedPackage</code> object has become stale. The array
+	 *         package, or {@code null} if this
+	 *         {@code ExportedPackage} object has become stale. The array
 	 *         will be empty if no bundles are wired to this exported package.
 	 */
 	public Bundle[] getImportingBundles();
@@ -80,7 +83,7 @@ public interface ExportedPackage {
 	/**
 	 * Returns the version of this exported package.
 	 * 
-	 * @return The version of this exported package, or <code>null</code> if
+	 * @return The version of this exported package, or {@code null} if
 	 *         no version information is available.
 	 * @deprecated As of 1.2, replaced by {@link #getVersion}.
 	 */
@@ -97,14 +100,14 @@ public interface ExportedPackage {
 	public Version getVersion();
 
 	/**
-	 * Returns <code>true</code> if the package associated with this
-	 * <code>ExportedPackage</code> object has been exported by a bundle that
+	 * Returns {@code true} if the package associated with this
+	 * {@code ExportedPackage} object has been exported by a bundle that
 	 * has been updated or uninstalled.
 	 * 
-	 * @return <code>true</code> if the associated package is being exported
+	 * @return {@code true} if the associated package is being exported
 	 *         by a bundle that has been updated or uninstalled, or if this
-	 *         <code>ExportedPackage</code> object has become stale;
-	 *         <code>false</code> otherwise.
+	 *         {@code ExportedPackage} object has become stale;
+	 *         {@code false} otherwise.
 	 */
 	public boolean isRemovalPending();
 }

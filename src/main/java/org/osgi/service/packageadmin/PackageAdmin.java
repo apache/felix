@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,10 @@ import org.osgi.framework.Bundle;
  * with the Framework.
  * 
  * @ThreadSafe
- * @version $Revision: 6779 $
+ * @noimplement
+ * @version $Id: a268c3bdc986080fa16bdb2f56ba1d3800d030dd $
+ * @deprecated This service has been replaced by the
+ *             <code>org.osgi.framework.wiring</code> package.
  * @see org.osgi.service.packageadmin.ExportedPackage
  * @see org.osgi.service.packageadmin.RequiredBundle
  */
@@ -37,19 +40,19 @@ public interface PackageAdmin {
 	 * Gets the exported packages for the specified bundle.
 	 * 
 	 * @param bundle The bundle whose exported packages are to be returned, or
-	 *        <code>null</code> if all exported packages are to be returned. If
+	 *        {@code null} if all exported packages are to be returned. If
 	 *        the specified bundle is the system bundle (that is, the bundle
 	 *        with id zero), this method returns all the packages known to be
 	 *        exported by the system bundle. This will include the package
-	 *        specified by the <code>org.osgi.framework.system.packages</code>
+	 *        specified by the {@code org.osgi.framework.system.packages}
 	 *        system property as well as any other package exported by the
 	 *        framework implementation.
 	 * 
-	 * @return An array of exported packages, or <code>null</code> if the
+	 * @return An array of exported packages, or {@code null} if the
 	 *         specified bundle has no exported packages.
-	 * @throws IllegalArgumentException If the specified <code>Bundle</code> was
+	 * @throws IllegalArgumentException If the specified {@code Bundle} was
 	 *         not created by the same framework instance that registered this
-	 *         <code>PackageAdmin</code> service.
+	 *         {@code PackageAdmin} service.
 	 */
 	public ExportedPackage[] getExportedPackages(Bundle bundle);
 
@@ -58,7 +61,7 @@ public interface PackageAdmin {
 	 * 
 	 * @param name The name of the exported packages to be returned.
 	 * 
-	 * @return An array of the exported packages, or <code>null</code> if no
+	 * @return An array of the exported packages, or {@code null} if no
 	 *         exported packages with the specified name exists.
 	 * @since 1.2
 	 */
@@ -73,7 +76,7 @@ public interface PackageAdmin {
 	 * 
 	 * @param name The name of the exported package to be returned.
 	 * 
-	 * @return The exported package, or <code>null</code> if no exported
+	 * @return The exported package, or {@code null} if no exported
 	 *         package with the specified name exists.
 	 * @see #getExportedPackages(String)
 	 */
@@ -101,49 +104,49 @@ public interface PackageAdmin {
 	 * graph any bundle that is wired to a package that is currently exported by
 	 * a bundle in the graph. The graph is fully constructed when there is no
 	 * bundle outside the graph that is wired to a bundle in the graph. The
-	 * graph may contain <code>UNINSTALLED</code> bundles that are currently
+	 * graph may contain {@code UNINSTALLED} bundles that are currently
 	 * still exporting packages.
 	 * 
-	 * <li>Each bundle in the graph that is in the <code>ACTIVE</code> state
-	 * will be stopped as described in the <code>Bundle.stop</code> method.
+	 * <li>Each bundle in the graph that is in the {@code ACTIVE} state
+	 * will be stopped as described in the {@code Bundle.stop} method.
 	 * 
-	 * <li>Each bundle in the graph that is in the <code>RESOLVED</code> state
-	 * is unresolved and thus moved to the <code>INSTALLED</code> state. The
+	 * <li>Each bundle in the graph that is in the {@code RESOLVED} state
+	 * is unresolved and thus moved to the {@code INSTALLED} state. The
 	 * effect of this step is that bundles in the graph are no longer
-	 * <code>RESOLVED</code>.
+	 * {@code RESOLVED}.
 	 * 
-	 * <li>Each bundle in the graph that is in the <code>UNINSTALLED</code>
+	 * <li>Each bundle in the graph that is in the {@code UNINSTALLED}
 	 * state is removed from the graph and is now completely removed from the
 	 * Framework.
 	 * 
-	 * <li>Each bundle in the graph that was in the <code>ACTIVE</code> state
-	 * prior to Step 2 is started as described in the <code>Bundle.start</code>
+	 * <li>Each bundle in the graph that was in the {@code ACTIVE} state
+	 * prior to Step 2 is started as described in the {@code Bundle.start}
 	 * method, causing all bundles required for the restart to be resolved. It
 	 * is possible that, as a result of the previous steps, packages that were
 	 * previously exported no longer are. Therefore, some bundles may be
 	 * unresolvable until another bundle offering a compatible package for
 	 * export has been installed in the Framework.
 	 * <li>A framework event of type
-	 * <code>FrameworkEvent.PACKAGES_REFRESHED</code> is fired.
+	 * {@code FrameworkEvent.PACKAGES_REFRESHED} is fired.
 	 * </ol>
 	 * 
 	 * <p>
 	 * For any exceptions that are thrown during any of these steps, a
-	 * <code>FrameworkEvent</code> of type <code>ERROR</code> is fired
+	 * {@code FrameworkEvent} of type {@code ERROR} is fired
 	 * containing the exception. The source bundle for these events should be
 	 * the specific bundle to which the exception is related. If no specific
 	 * bundle can be associated with the exception then the System Bundle must
 	 * be used as the source bundle for the event.
 	 * 
 	 * @param bundles The bundles whose exported packages are to be updated or
-	 *        removed, or <code>null</code> for all bundles updated or
+	 *        removed, or {@code null} for all bundles updated or
 	 *        uninstalled since the last call to this method.
 	 * @throws SecurityException If the caller does not have
-	 *         <code>AdminPermission[System Bundle,RESOLVE]</code> and the Java
+	 *         {@code AdminPermission[System Bundle,RESOLVE]} and the Java
 	 *         runtime environment supports permissions.
-	 * @throws IllegalArgumentException If the specified <code>Bundle</code>s
+	 * @throws IllegalArgumentException If the specified {@code Bundle}s
 	 *         were not created by the same framework instance that registered
-	 *         this <code>PackageAdmin</code> service.
+	 *         this {@code PackageAdmin} service.
 	 */
 	public void refreshPackages(Bundle[] bundles);
 
@@ -155,20 +158,20 @@ public interface PackageAdmin {
 	 * resolve all unresolved bundles installed in the framework.
 	 * 
 	 * <p>
-	 * If <code>null</code> is specified then the Framework will attempt to
+	 * If {@code null} is specified then the Framework will attempt to
 	 * resolve all unresolved bundles. This method must not cause any bundle to
 	 * be refreshed, stopped, or started. This method will not return until the
 	 * operation has completed.
 	 * 
-	 * @param bundles The bundles to resolve or <code>null</code> to resolve all
+	 * @param bundles The bundles to resolve or {@code null} to resolve all
 	 *        unresolved bundles installed in the Framework.
-	 * @return <code>true</code> if all specified bundles are resolved;
+	 * @return {@code true} if all specified bundles are resolved;
 	 * @throws SecurityException If the caller does not have
-	 *         <code>AdminPermission[System Bundle,RESOLVE]</code> and the Java
+	 *         {@code AdminPermission[System Bundle,RESOLVE]} and the Java
 	 *         runtime environment supports permissions.
-	 * @throws IllegalArgumentException If the specified <code>Bundle</code>s
+	 * @throws IllegalArgumentException If the specified {@code Bundle}s
 	 *         were not created by the same framework instance that registered
-	 *         this <code>PackageAdmin</code> service.
+	 *         this {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
 	public boolean resolveBundles(Bundle[] bundles);
@@ -177,12 +180,12 @@ public interface PackageAdmin {
 	 * Returns an array of required bundles having the specified symbolic name.
 	 * 
 	 * <p>
-	 * If <code>null</code> is specified, then all required bundles will be
+	 * If {@code null} is specified, then all required bundles will be
 	 * returned.
 	 * 
-	 * @param symbolicName The bundle symbolic name or <code>null</code> for
+	 * @param symbolicName The bundle symbolic name or {@code null} for
 	 *        all required bundles.
-	 * @return An array of required bundles or <code>null</code> if no
+	 * @return An array of required bundles or {@code null} if no
 	 *         required bundles exist for the specified symbolic name.
 	 * @since 1.2
 	 */
@@ -191,7 +194,7 @@ public interface PackageAdmin {
 	/**
 	 * Returns the bundles with the specified symbolic name whose bundle version
 	 * is within the specified version range. If no bundles are installed that
-	 * have the specified symbolic name, then <code>null</code> is returned.
+	 * have the specified symbolic name, then {@code null} is returned.
 	 * If a version range is specified, then only the bundles that have the
 	 * specified symbolic name and whose bundle versions belong to the specified
 	 * version range are returned. The returned bundles are ordered by version
@@ -201,31 +204,31 @@ public interface PackageAdmin {
 	 * @see org.osgi.framework.Constants#BUNDLE_VERSION_ATTRIBUTE
 	 * @param symbolicName The symbolic name of the desired bundles.
 	 * @param versionRange The version range of the desired bundles, or
-	 *        <code>null</code> if all versions are desired.
+	 *        {@code null} if all versions are desired.
 	 * @return An array of bundles with the specified name belonging to the
 	 *         specified version range ordered in descending version order, or
-	 *         <code>null</code> if no bundles are found.
+	 *         {@code null} if no bundles are found.
 	 * @since 1.2
 	 */
 	public Bundle[] getBundles(String symbolicName, String versionRange);
 
 	/**
 	 * Returns an array of attached fragment bundles for the specified bundle.
-	 * If the specified bundle is a fragment then <code>null</code> is returned.
+	 * If the specified bundle is a fragment then {@code null} is returned.
 	 * If no fragments are attached to the specified bundle then
-	 * <code>null</code> is returned.
+	 * {@code null} is returned.
 	 * <p>
 	 * This method does not attempt to resolve the specified bundle. If the
-	 * specified bundle is not resolved then <code>null</code> is returned.
+	 * specified bundle is not resolved then {@code null} is returned.
 	 * 
 	 * @param bundle The bundle whose attached fragment bundles are to be
 	 *        returned.
-	 * @return An array of fragment bundles or <code>null</code> if the bundle
+	 * @return An array of fragment bundles or {@code null} if the bundle
 	 *         does not have any attached fragment bundles or the bundle is not
 	 *         resolved.
-	 * @throws IllegalArgumentException If the specified <code>Bundle</code> was
+	 * @throws IllegalArgumentException If the specified {@code Bundle} was
 	 *         not created by the same framework instance that registered this
-	 *         <code>PackageAdmin</code> service.
+	 *         {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
 	public Bundle[] getFragments(Bundle bundle);
@@ -236,11 +239,11 @@ public interface PackageAdmin {
 	 * 
 	 * @param bundle The fragment bundle whose host bundles are to be returned.
 	 * @return An array containing the host bundles to which the specified
-	 *         fragment is attached or <code>null</code> if the specified bundle
+	 *         fragment is attached or {@code null} if the specified bundle
 	 *         is not a fragment or is not attached to any host bundles.
-	 * @throws IllegalArgumentException If the specified <code>Bundle</code> was
+	 * @throws IllegalArgumentException If the specified {@code Bundle} was
 	 *         not created by the same framework instance that registered this
-	 *         <code>PackageAdmin</code> service.
+	 *         {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
 	public Bundle[] getHosts(Bundle bundle);
@@ -249,13 +252,13 @@ public interface PackageAdmin {
 	 * Returns the bundle from which the specified class is loaded. The class
 	 * loader of the returned bundle must have been used to load the specified
 	 * class. If the class was not loaded by a bundle class loader then
-	 * <code>null</code> is returned.
+	 * {@code null} is returned.
 	 * 
 	 * @param clazz The class object from which to locate the bundle.
 	 * @return The bundle from which the specified class is loaded or
-	 *         <code>null</code> if the class was not loaded by a bundle class
+	 *         {@code null} if the class was not loaded by a bundle class
 	 *         loader created by the same framework instance that registered
-	 *         this <code>PackageAdmin</code> service.
+	 *         this {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
 	public Bundle getBundle(Class clazz);
@@ -264,7 +267,7 @@ public interface PackageAdmin {
 	 * Bundle type indicating the bundle is a fragment bundle.
 	 * 
 	 * <p>
-	 * The value of <code>BUNDLE_TYPE_FRAGMENT</code> is 0x00000001.
+	 * The value of {@code BUNDLE_TYPE_FRAGMENT} is 0x00000001.
 	 * 
 	 * @since 1.2
 	 */
@@ -286,9 +289,9 @@ public interface PackageAdmin {
 	 * 
 	 * @param bundle The bundle for which to return the special type.
 	 * @return The special type of the bundle.
-	 * @throws IllegalArgumentException If the specified <code>Bundle</code> was
+	 * @throws IllegalArgumentException If the specified {@code Bundle} was
 	 *         not created by the same framework instance that registered this
-	 *         <code>PackageAdmin</code> service.
+	 *         {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
 	public int getBundleType(Bundle bundle);

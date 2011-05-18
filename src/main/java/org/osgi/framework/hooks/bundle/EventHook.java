@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2008, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,32 +14,38 @@
  * limitations under the License.
  */
 
-package org.osgi.framework.hooks.service;
+package org.osgi.framework.hooks.bundle;
 
 import java.util.Collection;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.BundleEvent;
 
-/**
- * OSGi Framework Service Event Hook Service.
+/** 
+ * OSGi Framework Bundle Event Hook Service.
  * 
  * <p>
- * Bundles registering this service will be called during framework service
- * (register, modify, and unregister service) operations.
+ * Bundles registering this service will be called during framework lifecycle
+ * (install, start, stop, update, and uninstall bundle) operations.
  * 
  * @ThreadSafe
- * @deprecated As of 1.1. Replaced by {@link EventListenerHook}.
- * @version $Id: 8fb8cfa2c8847f99fd84711e12f02a57bf06932e $
+ * @version $Id: 18ea1ec1f14f47410a43e99be4da3b2583149722 $
  */
-
 public interface EventHook {
+
 	/**
-	 * Event hook method. This method is called prior to service event delivery
-	 * when a publishing bundle registers, modifies or unregisters a service.
-	 * This method can filter the bundles which receive the event.
+	 * Bundle event hook method.  This method is called prior to bundle event
+	 * delivery when a bundle is installed, resolved, started, stopped, unresolved, or
+	 * uninstalled.  This method can filter the bundles which receive the event.
+	 * <p>
+	 * This method must be called by the framework one and only one time for each bundle 
+	 * event generated, this included bundle events which are generated when there are no 
+	 * bundle listeners registered.  This method must be called on the same thread that is 
+	 * performing the action which generated the specified event.  The specified 
+	 * collection includes bundle contexts with synchronous and asynchronous bundle 
+	 * listeners registered with them.
 	 * 
-	 * @param event The service event to be delivered.
+	 * @param event The bundle event to be delivered
 	 * @param contexts A collection of Bundle Contexts for bundles which have
 	 *        listeners to which the specified event will be delivered. The
 	 *        implementation of this method may remove bundle contexts from the
@@ -50,5 +56,5 @@ public interface EventHook {
 	 *        result in an {@code UnsupportedOperationException}. The
 	 *        collection is not synchronized.
 	 */
-	void event(ServiceEvent event, Collection<BundleContext> contexts);
+	void event(BundleEvent event, Collection<BundleContext> contexts);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2008, 2009). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2008, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.osgi.framework.BundleContext;
  * addition and removal.
  * 
  * @ThreadSafe
- * @version $Revision: 6967 $
+ * @version $Id: c1687e95e568589cf3e6d927b7d372c9f88c5d16 $
  */
 
 public interface ListenerHook {
@@ -40,13 +40,13 @@ public interface ListenerHook {
 	 * method will be called to provide the current collection of service
 	 * listeners which had been added prior to the hook being registered.
 	 * 
-	 * @param listeners A <code>Collection</code> of {@link ListenerInfo}s for
-	 *        newly added service listeners which are now listening to service
-	 *        events. Attempting to add to or remove from the collection will
-	 *        result in an <code>UnsupportedOperationException</code>. The
-	 *        collection is not synchronized.
+	 * @param listeners A collection of {@link ListenerInfo}s for newly added
+	 *        service listeners which are now listening to service events.
+	 *        Attempting to add to or remove from the collection will result in
+	 *        an {@code UnsupportedOperationException}. The collection is
+	 *        not synchronized.
 	 */
-	void added(Collection/* <ListenerInfo> */listeners);
+	void added(Collection<ListenerInfo> listeners);
 
 	/**
 	 * Removed listeners hook method. This method is called to provide the hook
@@ -54,19 +54,20 @@ public interface ListenerHook {
 	 * method will be called as service listeners are removed while this hook is
 	 * registered.
 	 * 
-	 * @param listeners A <code>Collection</code> of {@link ListenerInfo}s for
-	 *        newly removed service listeners which are no longer listening to
-	 *        service events. Attempting to add to or remove from the collection
-	 *        will result in an <code>UnsupportedOperationException</code>. The
-	 *        collection is not synchronized.
+	 * @param listeners A collection of {@link ListenerInfo}s for newly removed
+	 *        service listeners which are no longer listening to service events.
+	 *        Attempting to add to or remove from the collection will result in
+	 *        an {@code UnsupportedOperationException}. The collection is
+	 *        not synchronized.
 	 */
-	void removed(Collection/* <ListenerInfo> */listeners);
+	void removed(Collection<ListenerInfo> listeners);
 
 	/**
 	 * Information about a Service Listener. This interface describes the bundle
 	 * which added the Service Listener and the filter with which it was added.
 	 * 
 	 * @ThreadSafe
+	 * @noimplement
 	 */
 	public interface ListenerInfo {
 		/**
@@ -80,17 +81,17 @@ public interface ListenerHook {
 		 * Return the filter string with which the listener was added.
 		 * 
 		 * @return The filter string with which the listener was added. This may
-		 *         be <code>null</code> if the listener was added without a
+		 *         be {@code null} if the listener was added without a
 		 *         filter.
 		 */
 		String getFilter();
 
 		/**
 		 * Return the state of the listener for this addition and removal life
-		 * cycle. Initially this method will return <code>false</code>
+		 * cycle. Initially this method will return {@code false}
 		 * indicating the listener has been added but has not been removed.
 		 * After the listener has been removed, this method must always return
-		 * <code>true</code>.
+		 * {@code true}.
 		 * 
 		 * <p>
 		 * There is an extremely rare case in which removed notification to
@@ -102,32 +103,32 @@ public interface ListenerHook {
 		 * service listener. This method can be used to detect this rare
 		 * occurrence.
 		 * 
-		 * @return <code>false</code> if the listener has not been been removed,
-		 *         <code>true</code> otherwise.
+		 * @return {@code false} if the listener has not been been removed,
+		 *         {@code true} otherwise.
 		 */
 		boolean isRemoved();
 
 		/**
-		 * Compares this <code>ListenerInfo</code> to another
-		 * <code>ListenerInfo</code>. Two <code>ListenerInfo</code>s are equals
+		 * Compares this {@code ListenerInfo} to another
+		 * {@code ListenerInfo}. Two {@code ListenerInfo}s are equals
 		 * if they refer to the same listener for a given addition and removal
 		 * life cycle. If the same listener is added again, it must have a
-		 * different <code>ListenerInfo</code> which is not equal to this
-		 * <code>ListenerInfo</code>.
+		 * different {@code ListenerInfo} which is not equal to this
+		 * {@code ListenerInfo}.
 		 * 
 		 * @param obj The object to compare against this
-		 *        <code>ListenerInfo</code>.
-		 * @return <code>true</code> if the other object is a
-		 *         <code>ListenerInfo</code> object and both objects refer to
+		 *        {@code ListenerInfo}.
+		 * @return {@code true} if the other object is a
+		 *         {@code ListenerInfo} object and both objects refer to
 		 *         the same listener for a given addition and removal life
 		 *         cycle.
 		 */
 		boolean equals(Object obj);
 
 		/**
-		 * Returns the hash code for this <code>ListenerInfo</code>.
+		 * Returns the hash code for this {@code ListenerInfo}.
 		 * 
-		 * @return The hash code of this <code>ListenerInfo</code>.
+		 * @return The hash code of this {@code ListenerInfo}.
 		 */
 		int hashCode();
 	}

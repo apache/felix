@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2008). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,76 +19,78 @@ package org.osgi.util.tracker;
 import org.osgi.framework.ServiceReference;
 
 /**
- * The <code>ServiceTrackerCustomizer</code> interface allows a
- * <code>ServiceTracker</code> to customize the service objects that are
- * tracked. A <code>ServiceTrackerCustomizer</code> is called when a service is
- * being added to a <code>ServiceTracker</code>. The
- * <code>ServiceTrackerCustomizer</code> can then return an object for the
- * tracked service. A <code>ServiceTrackerCustomizer</code> is also called when
+ * The {@code ServiceTrackerCustomizer} interface allows a
+ * {@code ServiceTracker} to customize the service objects that are
+ * tracked. A {@code ServiceTrackerCustomizer} is called when a service is
+ * being added to a {@code ServiceTracker}. The
+ * {@code ServiceTrackerCustomizer} can then return an object for the
+ * tracked service. A {@code ServiceTrackerCustomizer} is also called when
  * a tracked service is modified or has been removed from a
- * <code>ServiceTracker</code>.
+ * {@code ServiceTracker}.
  * 
  * <p>
  * The methods in this interface may be called as the result of a
- * <code>ServiceEvent</code> being received by a <code>ServiceTracker</code>.
- * Since <code>ServiceEvent</code>s are synchronously delivered by the
+ * {@code ServiceEvent} being received by a {@code ServiceTracker}.
+ * Since {@code ServiceEvent}s are synchronously delivered by the
  * Framework, it is highly recommended that implementations of these methods do
- * not register (<code>BundleContext.registerService</code>), modify (
- * <code>ServiceRegistration.setProperties</code>) or unregister (
- * <code>ServiceRegistration.unregister</code>) a service while being
+ * not register ({@code BundleContext.registerService}), modify (
+ * {@code ServiceRegistration.setProperties}) or unregister (
+ * {@code ServiceRegistration.unregister}) a service while being
  * synchronized on any object.
  * 
  * <p>
- * The <code>ServiceTracker</code> class is thread-safe. It does not call a
- * <code>ServiceTrackerCustomizer</code> while holding any locks.
- * <code>ServiceTrackerCustomizer</code> implementations must also be
+ * The {@code ServiceTracker} class is thread-safe. It does not call a
+ * {@code ServiceTrackerCustomizer} while holding any locks.
+ * {@code ServiceTrackerCustomizer} implementations must also be
  * thread-safe.
  * 
+ * @param <S> The type of the service being tracked.
+ * @param <T> The type of the tracked object.
  * @ThreadSafe
- * @version $Revision: 5874 $
+ * @version $Id: c654a963336cee74762b8f54c8cef8d5774f8b4d $
  */
-public interface ServiceTrackerCustomizer {
+public interface ServiceTrackerCustomizer<S, T> {
 	/**
-	 * A service is being added to the <code>ServiceTracker</code>.
+	 * A service is being added to the {@code ServiceTracker}.
 	 * 
 	 * <p>
 	 * This method is called before a service which matched the search
-	 * parameters of the <code>ServiceTracker</code> is added to the
-	 * <code>ServiceTracker</code>. This method should return the service object
-	 * to be tracked for the specified <code>ServiceReference</code>. The
-	 * returned service object is stored in the <code>ServiceTracker</code> and
-	 * is available from the <code>getService</code> and
-	 * <code>getServices</code> methods.
+	 * parameters of the {@code ServiceTracker} is added to the
+	 * {@code ServiceTracker}. This method should return the service object
+	 * to be tracked for the specified {@code ServiceReference}. The
+	 * returned service object is stored in the {@code ServiceTracker} and
+	 * is available from the {@code getService} and
+	 * {@code getServices} methods.
 	 * 
 	 * @param reference The reference to the service being added to the
-	 *        <code>ServiceTracker</code>.
+	 *        {@code ServiceTracker}.
 	 * @return The service object to be tracked for the specified referenced
-	 *         service or <code>null</code> if the specified referenced service
+	 *         service or {@code null} if the specified referenced service
 	 *         should not be tracked.
 	 */
-	public Object addingService(ServiceReference reference);
+	public T addingService(ServiceReference<S> reference);
 
 	/**
-	 * A service tracked by the <code>ServiceTracker</code> has been modified.
+	 * A service tracked by the {@code ServiceTracker} has been modified.
 	 * 
 	 * <p>
 	 * This method is called when a service being tracked by the
-	 * <code>ServiceTracker</code> has had it properties modified.
+	 * {@code ServiceTracker} has had it properties modified.
 	 * 
 	 * @param reference The reference to the service that has been modified.
 	 * @param service The service object for the specified referenced service.
 	 */
-	public void modifiedService(ServiceReference reference, Object service);
+	public void modifiedService(ServiceReference<S> reference, T service);
 
 	/**
-	 * A service tracked by the <code>ServiceTracker</code> has been removed.
+	 * A service tracked by the {@code ServiceTracker} has been removed.
 	 * 
 	 * <p>
 	 * This method is called after a service is no longer being tracked by the
-	 * <code>ServiceTracker</code>.
+	 * {@code ServiceTracker}.
 	 * 
 	 * @param reference The reference to the service that has been removed.
 	 * @param service The service object for the specified referenced service.
 	 */
-	public void removedService(ServiceReference reference, Object service);
+	public void removedService(ServiceReference<S> reference, T service);
 }
