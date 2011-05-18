@@ -88,6 +88,7 @@ public class FELIX2955_ShellCommandTest extends Base {
         m.add(missing);
         e.step(4);
         e.waitForStep(5, 5000);
+        m.remove(missing);
         // now start/stop deploymentadmin, which we use here because it's a bundle that
         // publishes a service that uses the dependency manager (saving us from having to
         // create a bundle that does that on the fly)
@@ -96,7 +97,6 @@ public class FELIX2955_ShellCommandTest extends Base {
         e.step(6);
         e.waitForStep(7, 5000);
         e.ensure();
-        m.remove(missing);
         m.remove(shellClient);
         
     }
