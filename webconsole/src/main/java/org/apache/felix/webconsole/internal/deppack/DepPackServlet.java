@@ -36,7 +36,6 @@ import org.apache.felix.webconsole.internal.Util;
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
-import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 
@@ -55,7 +54,7 @@ public class DepPackServlet extends SimpleWebConsolePlugin implements OsgiManage
     private static final String ACTION_UNINSTALL = "uninstalldp";
     private static final String PARAMETER_PCK_FILE = "pckfile";
 
-    private static final String DEPL_SERVICE = DeploymentAdmin.class.getName();
+    private static final String DEPL_SERVICE = "org.osgi.service.deploymentadmin.DeploymentAdmin";
 
     // templates
     private final String TEMPLATE;
@@ -94,7 +93,7 @@ public class DepPackServlet extends SimpleWebConsolePlugin implements OsgiManage
                         resp.sendRedirect( uri );
                         return;
                     }
-                    catch ( DeploymentException e )
+                    catch ( /*Deployment*/ Exception e )
                     {
                         throw new ServletException( "Unable to deploy package.", e );
                     }
@@ -118,7 +117,7 @@ public class DepPackServlet extends SimpleWebConsolePlugin implements OsgiManage
                             pck.uninstall();
                         }
                     }
-                    catch ( DeploymentException e )
+                    catch ( /*Deployment*/ Exception e )
                     {
                         throw new ServletException( "Unable to undeploy package.", e );
                     }

@@ -239,7 +239,10 @@ class PluginHolder implements ServiceListener
         for ( int i = 0; i < plugins.length; i++ )
         {
             final Plugin plugin = plugins[i];
-            if (!plugin.isEnabled() || null == plugin.getConsolePlugin()) continue;
+
+            if (!plugin.isEnabled()) {
+                continue;
+            }
 
             final String label = plugin.getLabel();
             String title = plugin.getTitle();
@@ -745,7 +748,7 @@ class PluginHolder implements ServiceListener
         protected AbstractWebConsolePlugin doGetConsolePlugin()
         {
             if (null == plugin) {
-                if (!isEnabled()) 
+                if (!isEnabled())
                 {
                     if (doLog)
                     {
@@ -759,7 +762,7 @@ class PluginHolder implements ServiceListener
                 {
                     Class pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
                     plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
-    
+
                     if (plugin instanceof OsgiManagerPlugin)
                     {
                         ((OsgiManagerPlugin) plugin).activate(getBundle().getBundleContext());
