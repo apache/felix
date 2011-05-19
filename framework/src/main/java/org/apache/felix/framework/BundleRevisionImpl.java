@@ -51,7 +51,6 @@ public class BundleRevisionImpl implements BundleRevision
 
     private final Logger m_logger;
     private final Map m_configMap;
-    private final StatefulResolver m_resolver;
     private final String m_id;
     private final Content m_content;
     private final Map m_headerMap;
@@ -72,7 +71,6 @@ public class BundleRevisionImpl implements BundleRevision
     private final Bundle m_bundle;
 
     private List<Content> m_contentPath;
-    private boolean m_isActivationTriggered = false;
     private ProtectionDomain m_protectionDomain = null;
     private final static SecureAction m_secureAction = new SecureAction();
 
@@ -99,7 +97,6 @@ public class BundleRevisionImpl implements BundleRevision
     {
         m_logger = logger;
         m_configMap = configMap;
-        m_resolver = null;
         m_bundle = bundle;
         m_id = id;
         m_headerMap = null;
@@ -128,7 +125,6 @@ public class BundleRevisionImpl implements BundleRevision
     {
         m_logger = logger;
         m_configMap = configMap;
-        m_resolver = resolver;
         m_bundle = bundle;
         m_id = id;
         m_headerMap = headerMap;
