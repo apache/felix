@@ -60,23 +60,23 @@ public class FilterImpl implements Filter
         }
         else
         {
-            return CapabilitySet.matches(new ServiceReferenceCapability(sr), m_filter);
+            return CapabilitySet.matches(new WrapperCapability(sr), m_filter);
         }
     }
 
     public boolean match(Dictionary<String, ? > dctnr)
     {
-        return CapabilitySet.matches(new DictionaryCapability(dctnr, false), m_filter);
+        return CapabilitySet.matches(new WrapperCapability(dctnr, false), m_filter);
     }
 
     public boolean matchCase(Dictionary<String, ? > dctnr)
     {
-        return CapabilitySet.matches(new DictionaryCapability(dctnr, true), m_filter);
+        return CapabilitySet.matches(new WrapperCapability(dctnr, true), m_filter);
     }
 
     public boolean matches(Map<String, ?> map)
     {
-        return CapabilitySet.matches(new DictionaryCapability(map), m_filter);
+        return CapabilitySet.matches(new WrapperCapability(map), m_filter);
     }
 
     public boolean equals(Object o)
@@ -94,20 +94,30 @@ public class FilterImpl implements Filter
         return m_filter.toString();
     }
 
-    static class DictionaryCapability extends BundleCapabilityImpl
+    static class WrapperCapability extends BundleCapabilityImpl
     {
         private final Map m_map;
 
-        public DictionaryCapability(Map map)
+        public WrapperCapability(Map map)
         {
             super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
             m_map = map;
         }
 
-        public DictionaryCapability(Dictionary dict, boolean caseSensitive)
+        public WrapperCapability(Dictionary dict, boolean caseSensitive)
         {
             super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = new DictionaryMap(dict, caseSensitive);
+            m_map = new DictionaryToMap(dict, caseSensitive);
+        }
+
+        public WrapperCapability(ServiceReference sr)
+        {
+            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            m_map = new StringMap(false);
+            for (String key : sr.getPropertyKeys())
+            {
+                m_map.put(key, sr.getProperty(key));
+            }
         }
 
         @Override
@@ -141,63 +151,16 @@ public class FilterImpl implements Filter
         }
     }
 
-    static class ServiceReferenceCapability extends BundleCapabilityImpl
+    private static class DictionaryToMap implements Map
     {
-        private final ServiceReference m_sr;
-        private final Map<String, Object> m_attrs;
-
-        public ServiceReferenceCapability(ServiceReference sr)
-        {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_sr = sr;
-            m_attrs = new StringMap(false);
-            for (String key : m_sr.getPropertyKeys())
-            {
-                m_attrs.put(key, m_sr.getProperty(key));
-            }
-        }
-
-        @Override
-        public BundleRevision getRevision()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public String getNamespace()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Map<String, String> getDirectives()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Map<String, Object> getAttributes()
-        {
-            return m_attrs;
-        }
-
-        @Override
-        public List<String> getUses()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-    }
-
-    private static class DictionaryMap implements Map
-    {
-        private final StringMap m_map;
+        private final Map m_map;
         private final Dictionary m_dict;
 
-        public DictionaryMap(Dictionary dict, boolean caseSensitive)
+        public DictionaryToMap(Dictionary dict, boolean caseSensitive)
         {
-            m_dict = dict;
             if (!caseSensitive)
             {
+                m_dict = null;
                 m_map = new StringMap(false);
                 if (dict != null)
                 {
@@ -207,7 +170,7 @@ public class FilterImpl implements Filter
                         Object key = keys.nextElement();
                         if (m_map.get(key) == null)
                         {
-                            m_map.put(key, key);
+                            m_map.put(key, dict.get(key));
                         }
                         else
                         {
@@ -219,6 +182,7 @@ public class FilterImpl implements Filter
             }
             else
             {
+                m_dict = dict;
                 m_map = null;
             }
         }
@@ -245,25 +209,15 @@ public class FilterImpl implements Filter
 
         public Object get(Object o)
         {
-            String key = (String) o;
-            Object value = null;
             if (m_dict != null)
             {
-                // If attribute names are case insensitive, then look in
-                // the case insensitive key map to find the actual case of
-                // the key.
-                if (m_map != null)
-                {
-                    key = (String) m_map.get(o);
-                }
-                // If the key could not be found in the case insensitive
-                // key map, then avoid doing the dictionary lookup on it.
-                if (key != null)
-                {
-                    value = m_dict.get(key);
-                }
+                return m_dict.get(o);
             }
-            return value;
+            else if (m_map != null)
+            {
+                return m_map.get(o);
+            }
+            return null;
         }
 
         public Object put(Object k, Object v)
