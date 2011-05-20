@@ -119,9 +119,9 @@ abstract class BaseMethod
         else if ( m_methodRequired )
         {
             m_state = NotFound.INSTANCE;
-            getComponentManager().log( LogService.LOG_DEBUG, "{0} method [{1}] not found, will not invoke",
+            getComponentManager().log(LogService.LOG_ERROR, "{0} method [{1}] not found; Component will fail",
                 new Object[]
-                    { getMethodNamePrefix(), getMethodName() }, null );
+                    { getMethodNamePrefix(), getMethodName() }, null);
         }
         else
         {
