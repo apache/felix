@@ -37,12 +37,15 @@ import org.apache.felix.dm.annotation.api.ConfigurationDependency;
 import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ResourceDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.Registered;
 import org.apache.felix.dm.annotation.api.Stop;
+import org.apache.felix.dm.annotation.api.Unregistered;
 import org.osgi.framework.Bundle;
 
 import aQute.lib.osgi.Annotation;
@@ -75,6 +78,9 @@ public class AnnotationCollector extends ClassDataCollector
     private final static String A_BUNDLE_ADAPTER_SERVICE = "L" + BundleAdapterService.class.getName().replace('.', '/') + ";";
     private final static String A_RESOURCE_ADAPTER_SERVICE = "L" + ResourceAdapterService.class.getName().replace('.', '/') + ";";
     private final static String A_FACTORYCONFIG_ADAPTER_SERVICE = "L" + FactoryConfigurationAdapterService.class.getName().replace('.', '/') + ";";
+    private final static String A_INJECT = "L" + Inject.class.getName().replace('.', '/') + ";";
+    private final static String A_REGISTERED = "L" + Registered.class.getName().replace('.', '/') + ";";
+    private final static String A_UNREGISTERED = "L" + Unregistered.class.getName().replace('.', '/') + ";";
 
     private Logger m_logger;
     private String m_className;
@@ -94,6 +100,13 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_compositionMethod;
     private String m_starter;
     private String m_stopper;
+    private Set<String> m_importService = new HashSet<String>();
+    private Set<String> m_exportService = new HashSet<String>();
+    private String m_bundleContextField;
+    private String m_dependencyManagerField;
+    private String m_componentField;
+    private String m_registeredMethod;
+    private String m_unregisteredMethod;
 
     /**
      * This class represents a DependencyManager component descriptor entry.
@@ -201,9 +214,17 @@ public class AnnotationCollector extends ClassDataCollector
         {
             m_startMethod = m_method;
         } 
+        else if (annotation.getName().equals(A_REGISTERED))
+        {
+            m_registeredMethod = m_method;
+        }
         else if (annotation.getName().equals(A_STOP))
         {
             m_stopMethod = m_method;
+        }
+        else if (annotation.getName().equals(A_UNREGISTERED))
+        {
+            m_unregisteredMethod = m_method;
         }
         else if (annotation.getName().equals(A_DESTROY))
         {
@@ -232,6 +253,10 @@ public class AnnotationCollector extends ClassDataCollector
         else if (annotation.getName().equals(A_RESOURCE_DEPENDENCY))
         {
             parseRersourceDependencyAnnotation(annotation);
+        } 
+        else if (annotation.getName().equals(A_INJECT))
+        {
+            parseInject(annotation);
         }
     }
 
@@ -276,12 +301,32 @@ public class AnnotationCollector extends ClassDataCollector
         }
     }
         
+    /**
+     * Returns list of all imported services. Imported services are deduced from every
+     * @ServiceDependency annotations.
+     * @return the list of imported services, or null
+     */
+    public Set<String> getImportService()
+    {
+        return m_importService;
+    }
+
+    /**
+     * Returns list of all exported services. Imported services are deduced from every
+     * annotations which provides a service (@Component, etc ...)
+     * @return the list of exported services, or null
+     */
+    public Set<String> getExportService()
+    {
+        return m_exportService;
+    }
+
     private void parseComponentAnnotation(Annotation annotation)
     {
         EntryWriter writer = new EntryWriter(EntryType.Component);
         m_writers.add(writer);
 
-        // Register previously parsed Init/Start/Stop/Destroy/Composition annotations
+        // Register previously parsed annotations common to services (Init/Start/...)
         addCommonServiceParams(writer);
 
         // impl attribute
@@ -291,10 +336,19 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // provides attribute
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
 
         // factorySet attribute
-        writer.putString(annotation, EntryParam.factorySet, null);
+        String factorySetName = writer.putString(annotation, EntryParam.factorySet, null);
+        if (factorySetName != null)
+        {
+            // When a component defines a factorySet, it means that a java.util.Set will 
+            // be provided into the OSGi registry, in order to let anoter component add
+            // some component instance configurations into it.
+            // So, we have to indicate that the Set is provided as a service, in the Export-Serviec
+            // header.
+            m_exportService.add("java.util.Set");
+        }
 
         // factoryConfigure attribute
         writer.putString(annotation, EntryParam.factoryConfigure, null);
@@ -314,10 +368,20 @@ public class AnnotationCollector extends ClassDataCollector
         {
             writer.put(EntryParam.start, m_startMethod);
         }
+        
+        if (m_registeredMethod != null)
+        {
+            writer.put(EntryParam.registered, m_registeredMethod);
+        }
 
         if (m_stopMethod != null)
         {
             writer.put(EntryParam.stop, m_stopMethod);
+        }
+        
+        if (m_unregisteredMethod != null)
+        {
+            writer.put(EntryParam.unregistered, m_unregisteredMethod);
         }
 
         if (m_destroyMethod != null)
@@ -344,6 +408,21 @@ public class AnnotationCollector extends ClassDataCollector
                                                    "@LifecycleController that starts the component in class " + m_className);
             }
         }   
+
+        if (m_bundleContextField != null)
+        {
+            writer.put(EntryParam.bundleContextField, m_bundleContextField);
+        }
+        
+        if (m_dependencyManagerField != null)
+        {
+            writer.put(EntryParam.dependencyManagerField, m_dependencyManagerField);
+        }
+        
+        if (m_componentField != null)
+        {
+            writer.put(EntryParam.componentField, m_componentField);
+        }
     }
 
     /**
@@ -374,6 +453,9 @@ public class AnnotationCollector extends ClassDataCollector
         }
         writer.put(EntryParam.service, service);
 
+        // Store this service in list of imported services.
+        m_importService.add(service);
+        
         // autoConfig attribute
         if (m_isField)
         {
@@ -562,7 +644,7 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the provided adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
         
         // Parse factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
@@ -602,7 +684,7 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the optional adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
@@ -638,7 +720,7 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the provided adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
@@ -672,7 +754,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
 
         // Parse the provided adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces);
+        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
 
         // Parse Adapter properties.
         parseProperties(annotation, EntryParam.properties, writer);
@@ -752,7 +834,7 @@ public class AnnotationCollector extends ClassDataCollector
     
     private void parseLifecycleAnnotation(Annotation annotation)
     {
-        Patterns.parseField(m_field, m_descriptor, Patterns.Runnable);
+        Patterns.parseField(m_field, m_descriptor, Patterns.RUNNABLE);
         if ("true".equals(get(annotation,EntryParam.start.name(), "true")))
         {
             if (m_starter != null) {
@@ -773,7 +855,6 @@ public class AnnotationCollector extends ClassDataCollector
      * Parse optional meta types annotation attributes
      * @param annotation
      */
-    @SuppressWarnings("null")
     private void parseMetaTypes(Annotation annotation, String pid, boolean factory)
     {
         if (annotation.get("metadata") != null)
@@ -870,7 +951,33 @@ public class AnnotationCollector extends ClassDataCollector
             writer.putProperties(attribute, properties);
         }
     }
-
+    
+    /**
+     * Parse Inject annotation, used to inject some special classes in some fields
+     * (BundleContext/DependencyManager etc ...)
+     * @param annotation the Inject annotation
+     */
+    private void parseInject(Annotation annotation)
+    {      
+        if (Patterns.BUNDLE_CONTEXT.matcher(m_descriptor).matches())
+        {
+            m_bundleContextField = m_field;
+        }
+        else if (Patterns.DEPENDENCY_MANAGER.matcher(m_descriptor).matches())
+        {
+            m_dependencyManagerField = m_field;
+        }
+        else if (Patterns.COMPONENT.matcher(m_descriptor).matches())
+        {
+            m_componentField = m_field;
+        }
+        else
+        {
+            throw new IllegalArgumentException("@Inject annotation can't be applied on the field \"" + m_field
+                                               + "\" in class " + m_className);
+        }
+    }
+    
     /**
      * Checks if the class is annotated with some given annotations. Notice that the Service
      * is always parsed at end of parsing, so, we have to check the last element of our m_writers
@@ -913,5 +1020,5 @@ public class AnnotationCollector extends ClassDataCollector
     {
         T value = (T) annotation.get(name);
         return value != null ? value : defaultValue;
-    }        
+    }
 }

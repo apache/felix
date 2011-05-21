@@ -5,9 +5,11 @@ Changes from 3.0.0 to 3.0.1
 
 ** Improvement
 
-    * removed changelog.txt from root of project
+    * Removed changelog.txt from root of project
     * [FELIX-2954] - annotated component factory does not allow to provide a component instance explicitly
     * [FELIX-2956] - json should be embedded in the annotation scanner plugin
+    * [FELIX-2966] - Annotations should automatically generate Import-Service/Export-Service headers
+    * [FELIX-2965] - Annotations should allow to enable or disable auto-configuration mode.
 
 Initial Release 3.0.0
 ---------------------

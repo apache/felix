@@ -186,8 +186,8 @@ public @interface Component
     /**
      * Sets the static method used to create the components implementation instance.
      */
-    String factoryMethod() default "";    
-    
+    String factoryMethod() default "";
+        
     /**
      * Service property name used to match a given Factory Set.
      * @see #factorySet() for more information about factory sets.

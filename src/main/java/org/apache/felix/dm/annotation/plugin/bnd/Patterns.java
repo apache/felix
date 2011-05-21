@@ -41,7 +41,16 @@ public class Patterns
     public final static Pattern CLASS = Pattern.compile("L([^;]+);");
     
     // Pattern used to parse the field on which a Publisher annotation may be applied on
-    public final static Pattern Runnable = Pattern.compile("Ljava/lang/Runnable;");
+    public final static Pattern RUNNABLE = Pattern.compile("Ljava/lang/Runnable;");
+    
+    // Pattern used to parse a field whose type is BundleContext
+    public final static Pattern BUNDLE_CONTEXT = Pattern.compile("Lorg/osgi/framework/BundleContext;");
+
+    // Pattern used to parse a field whose type is DependencyManager
+    public final static Pattern DEPENDENCY_MANAGER = Pattern.compile("Lorg.apache.felix.dm.DependencyManager;");
+    
+    // Pattern used to parse a field whose type is Component
+    public final static Pattern COMPONENT = Pattern.compile("Lorg.apache.felix.dm.Component;");
 
     /**
      * Parses a class.
