@@ -76,12 +76,13 @@ public class AdapterAnnotationTest extends AnnotationBase
      * Check if an adapter gets injected with its adaptee in a named class field.
      */
     @Test
-    public void testAnnotatedAdapterAutoConfigField(BundleContext context)
+    public void testAnnotatedAdapterAutoConfigField(BundleContext context) throws Throwable
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer to the org.apache.felix.dm.test.bundle.annotation.adapter.AdapterTest bundle 
         m.add(makeSequencer(m, "AdapterAutoConfigField"));
         m_ensure.waitForStep(3, 10000);
+        m_ensure.ensure();
     }
     
     /**

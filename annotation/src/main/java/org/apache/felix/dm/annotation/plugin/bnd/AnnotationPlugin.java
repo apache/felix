@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.bnd.service.Plugin;
@@ -38,8 +39,11 @@ import aQute.libg.reporter.Reporter;
  */
 public class AnnotationPlugin implements AnalyzerPlugin, Plugin
 {
+    private static final String IMPORT_SERVICE = "Import-Service";
+    private static final String EXPORT_SERVICE = "Export-Service";
     private BndLogger m_logger;
     private Reporter m_reporter;
+    private boolean m_buildImportExportService;
 
     /**
      * This plugin is called after analysis of the JAR but before manifest
@@ -62,6 +66,22 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin
             {
                 // We have parsed some annotations: set the OSGi "DependencyManager-Component" header in the target bundle.
                 analyzer.setProperty("DependencyManager-Component", generator.getDescriptorPaths());
+                
+                // Possibly set the Import-Service/Export-Service header
+                if (m_buildImportExportService)
+                {
+                    // Don't override Import-Service header, if it is found from the bnd directives.
+                    if (analyzer.getProperty(IMPORT_SERVICE) == null)
+                    {
+                        buildImportExportService(analyzer, IMPORT_SERVICE, generator.getImportService());
+                    }
+                    
+                    // Don't override Export-Service header, if already defined
+                    if (analyzer.getProperty(EXPORT_SERVICE) == null)
+                    {
+                        buildImportExportService(analyzer, EXPORT_SERVICE, generator.getExportService());
+                    }
+                }
 
                 // And insert the generated descriptors into the target bundle.
                 Map<String, Resource> resources = generator.getDescriptors();
@@ -112,10 +132,32 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin
         return false;
     }
 
+    private void buildImportExportService(Analyzer analyzer, String header, Set<String> services)
+    {
+        m_logger.info("building %s header with the following services: %s", header, services);
+        if (services.size() > 0)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (String service : services)
+            {
+                sb.append(service);
+                sb.append(",");
+            }
+            sb.setLength(sb.length() - 1); // skip last comma
+            analyzer.setProperty(header, sb.toString());
+        } 
+    }
+
     public void setProperties(Map<String, String> map)
     {
         String logLevel = map.get("log");
         m_logger = new BndLogger(logLevel == null ? "error" : logLevel);
+        String generateImportExportService = map.get("build-import-export-service");
+        if (generateImportExportService == null)
+        {
+            generateImportExportService = "true";
+        }
+        m_buildImportExportService = Boolean.parseBoolean(generateImportExportService);
     }
 
     public void setReporter(Reporter reporter)

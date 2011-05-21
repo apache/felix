@@ -51,23 +51,24 @@ public class FactoryConfigurationAdapterServiceBuilder extends AbstractBuilder
         String[] provides = srvMeta.getStrings(Params.provides, null);
         Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
         boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
-        Component srv = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate);
-        srv.setInterface(provides, properties);
+        Component c = dm.createFactoryConfigurationAdapterService(factoryPid, updated, propagate);
+        c.setInterface(provides, properties);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
-            srv.setImplementation(implClass);
+            c.setImplementation(implClass);
         } 
         else
         {
-            srv.setFactory(implClass, factoryMethod);
+            c.setFactory(implClass, factoryMethod);
         }
-        srv.setComposition(srvMeta.getString(Params.composition, null));
-        ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(srv, b, dm, srvMeta, depsMeta);
+        setCommonServiceParams(c, srvMeta);
+        c.setComposition(srvMeta.getString(Params.composition, null));
+        ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(c, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.
-        srv.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
+        c.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
         // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
-        addUnamedDependencies(b, dm, srv, srvMeta, depsMeta);
-        dm.add(srv);
+        addUnamedDependencies(b, dm, c, srvMeta, depsMeta);
+        dm.add(c);
     }    
 }

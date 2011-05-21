@@ -21,13 +21,16 @@ package org.apache.felix.dm.test.bundle.annotation.adapter;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.annotation.api.AdapterService;
 import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 public class AdapterTest
@@ -83,10 +86,60 @@ public class AdapterTest
         @ServiceDependency(filter="(name=AdapterAutoConfig)")
         protected Sequencer m_sequencer;
 
+        // Check auto config injections
+        @Inject
+        BundleContext m_bc;
+        BundleContext m_bcNotInjected;
+        
+        @Inject
+        DependencyManager m_dm;
+        DependencyManager m_dmNotInjected;
+        
+        @Inject
+        org.apache.felix.dm.Component m_component;
+        org.apache.felix.dm.Component m_componentNotInjected;
+        
         public void run3()
         {
+            checkInjectedFields();
             m_s1.run();
             m_sequencer.step(3);
+        }
+        
+        private void checkInjectedFields()
+        {
+            if (m_bc == null)
+            {
+                m_sequencer.throwable(new Exception("Bundle Context not injected"));
+                return;
+            }
+            if (m_bcNotInjected != null)
+            {
+                m_sequencer.throwable(new Exception("Bundle Context must not be injected"));
+                return;
+            }
+
+            if (m_dm == null)
+            {
+                m_sequencer.throwable(new Exception("DependencyManager not injected"));
+                return;
+            }
+            if (m_dmNotInjected != null)
+            {
+                m_sequencer.throwable(new Exception("DependencyManager must not be injected"));
+                return;
+            }
+
+            if (m_component == null)
+            {
+                m_sequencer.throwable(new Exception("Component not injected"));
+                return;
+            }
+            if (m_componentNotInjected != null)
+            {
+                m_sequencer.throwable(new Exception("Component must not be injected"));
+                return;
+            }
         }
     }
 

@@ -18,11 +18,14 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.simple;
 
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.framework.BundleContext;
 
 /**
  * Consumes a service which is provided by the {@link Producer} class.
@@ -35,15 +38,64 @@ public class Consumer
     
     @ServiceDependency
     Sequencer m_sequencer;
+    
+    @Inject
+    BundleContext m_bc;
+    BundleContext m_bcNotInjected;
+    
+    @Inject
+    DependencyManager m_dm;
+    DependencyManager m_dmNotInjected;
+    
+    @Inject
+    org.apache.felix.dm.Component m_component;
+    org.apache.felix.dm.Component m_componentNotInjected;
 
     @Start
     protected void start() {
-        m_sequencer.step(2);
+        checkInjectedFields();
+        m_sequencer.step(3);
         m_runnable.run();
     }
     
+    private void checkInjectedFields()
+    {
+        if (m_bc == null)
+        {
+            m_sequencer.throwable(new Exception("Bundle Context not injected"));
+            return;
+        }
+        if (m_bcNotInjected != null)
+        {
+            m_sequencer.throwable(new Exception("Bundle Context must not be injected"));
+            return;
+        }
+
+        if (m_dm == null)
+        {
+            m_sequencer.throwable(new Exception("DependencyManager not injected"));
+            return;
+        }
+        if (m_dmNotInjected != null)
+        {
+            m_sequencer.throwable(new Exception("DependencyManager must not be injected"));
+            return;
+        }
+
+        if (m_component == null)
+        {
+            m_sequencer.throwable(new Exception("Component not injected"));
+            return;
+        }
+        if (m_componentNotInjected != null)
+        {
+            m_sequencer.throwable(new Exception("Component must not be injected"));
+            return;
+        }
+    }
+
     @Stop
     protected void stop() {
-        m_sequencer.step(4);
+        m_sequencer.step(6);
     }
 }

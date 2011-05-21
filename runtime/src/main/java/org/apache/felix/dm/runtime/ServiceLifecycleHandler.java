@@ -332,17 +332,16 @@ public class ServiceLifecycleHandler
     /**
      * Invoke a callback on an Object instance.
      */
-    private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Component service)
+    private Object invokeMethod(Object serviceInstance, String method, DependencyManager dm, Component c)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         if (method != null)
         {
             try
             {
-                return InvocationUtil.invokeCallbackMethod(
-                                                           serviceInstance, method,
+                return InvocationUtil.invokeCallbackMethod(serviceInstance, method,
                                                            new Class[][] { { Component.class }, {} },
-                                                           new Object[][] { { service }, {} }
+                                                           new Object[][] { { c }, {} }
                     );
             }
 

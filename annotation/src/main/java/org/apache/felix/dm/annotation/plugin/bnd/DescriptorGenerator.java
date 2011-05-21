@@ -24,7 +24,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Clazz;
@@ -60,6 +62,16 @@ public class DescriptorGenerator
      * Object used to collect logs.
      */
     private final Logger m_logger;
+
+    /**
+     * List of imported services found from every ServiceDependency annotations.
+     */
+    private Set<String> m_importService = new HashSet<String>();
+
+    /**
+     * List of exported services found from every service providing components.
+     */
+    private Set<String> m_exportService = new HashSet<String>();
 
     /**
      * Creates a new descriptor generator.
@@ -103,6 +115,9 @@ public class DescriptorGenerator
                 Resource resource = createComponentResource(reader);
                 m_resources.put("META-INF/dependencymanager/" + name, resource);
                 annotationsFound = true;
+                
+                m_importService.addAll(reader.getImportService());
+                m_exportService.addAll(reader.getExportService());
             }
         }
 
@@ -148,6 +163,26 @@ public class DescriptorGenerator
     }
     
     /**
+     * Returns set of all imported services. Imported services are deduced from every
+     * @ServiceDependency annotations.
+     * @return the list of imported services
+     */
+    public Set<String> getImportService()
+    {
+        return m_importService;
+    }
+
+    /**
+     * Returns set of all exported services. Imported services are deduced from every
+     * annotations which provides a service (@Component, etc ...)
+     * @return the list of exported services
+     */
+    public Set<String> getExportService()
+    {
+        return m_exportService;
+    }    
+
+    /**
      * Creates a bnd resource that contains the generated dm descriptor.
      * @param collector 
      * @return
@@ -179,5 +214,5 @@ public class DescriptorGenerator
         byte[] data = out.toByteArray();
         out.close();
         return new EmbeddedResource(data, 0);    
-    }    
+    }
 }

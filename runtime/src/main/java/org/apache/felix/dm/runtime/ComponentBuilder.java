@@ -26,6 +26,8 @@ import java.util.Set;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * Builds a DependencyManager Component.
@@ -47,10 +49,13 @@ public class ComponentBuilder extends AbstractBuilder
     public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
-        Component service = dm.createComponent();
+        Component c = dm.createComponent();
         String factory = srvMeta.getString(Params.factorySet, null);
 
-        // Check if we must provide a Set Factory.
+        // Setup Component auto config fields
+        setCommonServiceParams(c, srvMeta);
+        
+        // Check if we must provide a Component factory set.
         if (factory == null)
         {
             Log.instance().info("ComponentBuilder: building service %s with dependencies %s",
@@ -62,26 +67,26 @@ public class ComponentBuilder extends AbstractBuilder
             String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
             if (factoryMethod == null)
             {
-                service.setImplementation(b.loadClass(impl));
+                c.setImplementation(b.loadClass(impl));
             }
             else
             {
-                service.setFactory(b.loadClass(impl), factoryMethod);
+                c.setFactory(b.loadClass(impl), factoryMethod);
             }
-            service.setComposition(composition);
+            c.setComposition(composition);
 
             // Adds dependencies (except named dependencies, which are managed by the lifecycle
             // handler).
-            addUnamedDependencies(b, dm, service, srvMeta, depsMeta);
+            addUnamedDependencies(b, dm, c, srvMeta, depsMeta);
             // Creates a ServiceHandler, which will filter all service lifecycle callbacks.
             ServiceLifecycleHandler lfcleHandler =
-                    new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
-            service.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
+                    new ServiceLifecycleHandler(c, b, dm, srvMeta, depsMeta);
+            c.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
 
             // Set the provided services
             Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
             String[] services = srvMeta.getStrings(Params.provides, null);
-            service.setInterface(services, properties);
+            c.setInterface(services, properties);
         }
         else
         {
@@ -94,13 +99,13 @@ public class ComponentBuilder extends AbstractBuilder
             // This Set will act as a factory and another component may registers some
             // service configurations into it in order to fire some service instantiations.
             FactorySet factorySet = new FactorySet(b, srvMeta, depsMeta);
-            service.setImplementation(factorySet);
-            service.setCallbacks(null, "start", "stop", null);
+            c.setImplementation(factorySet);
+            c.setCallbacks(null, "start", "stop", null);
             Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(DM_FACTORY_NAME, factory);
-            service.setInterface(Set.class.getName(), props);
+            c.setInterface(Set.class.getName(), props);
         }
 
-        dm.add(service);
+        dm.add(c);
     }
 }
