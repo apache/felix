@@ -45,6 +45,13 @@ public abstract class AbstractDecorator  {
     public abstract Component createService(Object[] properties);
     
     /**
+     * Catches our DependencyManager handle from our component init method.
+     */
+    public void init(Component c) {
+        m_manager = c.getDependencyManager();
+    }
+    
+    /**
      * Extra method, which may be used by sub-classes, when adaptee has changed.
      * For now, it's only used by the FactoryConfigurationAdapterImpl class, 
      * but it might also make sense to use this for Resource Adapters ...

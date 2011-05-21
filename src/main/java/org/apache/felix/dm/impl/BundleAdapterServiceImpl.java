@@ -95,6 +95,7 @@ public class BundleAdapterServiceImpl extends FilterService
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 service.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
+            configureAutoConfigState(service, m_component);
             return service;
         }
     }
