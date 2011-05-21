@@ -72,7 +72,7 @@ public class AnnotationMojo extends AbstractMojo
     /**
      * If set, configures if we must auto generate Import-Service/Export-Service headers.
      *
-     * @parameter alias="build-import-export-service"
+     * @parameter alias="build-import-export-service" default-value="true"
      */
     private boolean m_buildImportExportService;
 
