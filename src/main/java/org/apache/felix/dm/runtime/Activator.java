@@ -35,7 +35,17 @@ import org.osgi.service.log.LogService;
  */
 public class Activator extends DependencyActivatorBase
 {
-    private final static String CONF_LOG = "dm.runtime.log";
+    /**
+     * Name of bundle context property telling if log service is required or not.
+     * (default = false)
+     */
+    final static String CONF_LOG = "dm.runtime.log";
+    
+    /**
+     * Name of bundle context property telling if Components must be auto configured
+     * with BundleContext/ServiceRegistration etc .. (default = false) 
+     */
+    final static String CONF_ENABLE_AUTOCONFIG = "dm.runtime.autoconfig";
     
     /**
      * Initialize our DependencyManager Runtime service.

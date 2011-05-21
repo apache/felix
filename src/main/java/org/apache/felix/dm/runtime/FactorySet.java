@@ -81,9 +81,9 @@ public class FactorySet extends AbstractSet<Dictionary>
     private List<MetaData> m_depsMeta;
 
     /**
-     * The DependencyManager (injected by reflection), which is used to create Service instances.
+     * The DependencyManager which is used to create Service instances.
      */
-    private DependencyManager m_dm; // Injected
+    private DependencyManager m_dm;
 
     /**
      * This class is used to serialize concurrent method calls, and allow to leave our methods unsynchronized.
@@ -173,9 +173,10 @@ public class FactorySet extends AbstractSet<Dictionary>
     /**
      * Our Service is starting. 
      */
-    public void start()
+    public void start(Component c)
     {
         m_active = true;
+        m_dm = c.getDependencyManager();
     }
 
     /**
