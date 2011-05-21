@@ -68,10 +68,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
     /**
      * Creates, updates, or removes a service, when a ConfigAdmin factory configuration is created/updated or deleted.
      */
-    public class AdapterImpl extends AbstractDecorator implements ManagedServiceFactory {
-        // Our injected dependency manager
-        protected volatile DependencyManager m_dm;
-        
+    public class AdapterImpl extends AbstractDecorator implements ManagedServiceFactory {        
         // Our Managed Service Factory PID
         protected String m_factoryPid;
         
@@ -109,7 +106,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
          */
         public Component createService(Object[] properties) {
             Dictionary settings = (Dictionary) properties[0];     
-            Component newService = m_dm.createComponent();        
+            Component newService = m_manager.createComponent();        
             Object impl = null;
             
             try {
@@ -133,12 +130,13 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
             newService.setInterface(m_serviceInterfaces, serviceProperties);
             newService.setImplementation(impl);
             List dependencies = m_component.getDependencies();
-            newService.add(dependencies);
+            newService.add(dependencies); // TODO check if we should create a copy of dependencies ?
             newService.setComposition(m_compositionInstance, m_compositionMethod); // if not set, no effect
             newService.setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy); // if not set, no effect
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 newService.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
+            configureAutoConfigState(newService, m_component);
             return newService;
         }
 
