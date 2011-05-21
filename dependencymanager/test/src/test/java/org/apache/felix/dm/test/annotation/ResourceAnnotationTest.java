@@ -94,12 +94,13 @@ public class ResourceAnnotationTest extends AnnotationBase
      * @param context
      */
     @Test
-    public void testResourceAdapterAnnotation(BundleContext context)
+    public void testResourceAdapterAnnotation(BundleContext context) throws Throwable
     {
         DependencyManager m = new DependencyManager(context);
         Properties props = new Properties() {{ put("test", "adapter"); }};
         m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         super.stopBundle("ResourceTest", context);
         m_ensure.waitForStep(2, 10000);
+        m_ensure.ensure();
     }
 }

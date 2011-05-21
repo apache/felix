@@ -18,12 +18,16 @@
  */
 package org.apache.felix.dm.runtime;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * Base class for all kind of DM component builders (for Component, Aspect, Adapters ...).
@@ -49,18 +53,51 @@ public abstract class AbstractBuilder
     /**
      * Sets common Service parameters, if provided from our Component descriptor
      */
-    protected void setCommonServiceParams(Component service, MetaData serviceMetaData)
+    protected void setCommonServiceParams(Component c, MetaData srvMeta)
         throws Exception
     {
-        String init = serviceMetaData.getString(Params.init, null);
-        String start = serviceMetaData.getString(Params.start, null);
-        String stop = serviceMetaData.getString(Params.stop, null);
-        String destroy = serviceMetaData.getString(Params.destroy, null);
-        service.setCallbacks(init, start, stop, destroy);
-        String composition = serviceMetaData.getString(Params.composition, null);
-        if (composition != null)
+        // Set auto configured component fields.
+        DependencyManager dm = c.getDependencyManager();
+        boolean autoConfigureComponents =
+                "true".equals(dm.getBundleContext().getProperty(Activator.CONF_ENABLE_AUTOCONFIG));
+
+        if (!autoConfigureComponents)
         {
-            service.setComposition(composition);
+            c.setAutoConfig(BundleContext.class, Boolean.FALSE);
+            c.setAutoConfig(ServiceRegistration.class, Boolean.FALSE);
+            c.setAutoConfig(DependencyManager.class, Boolean.FALSE);
+            c.setAutoConfig(Component.class, Boolean.FALSE);
+        }
+
+        // See if BundleContext must be auto configured.
+        String bundleContextField = srvMeta.getString(Params.bundleContextField, null);
+        if (bundleContextField != null)
+        {
+            c.setAutoConfig(BundleContext.class, bundleContextField);
+        }
+
+        // See if DependencyManager must be auto configured.
+        String dependencyManagerField = srvMeta.getString(Params.dependencyManagerField, null);
+        if (dependencyManagerField != null)
+        {
+            c.setAutoConfig(DependencyManager.class, dependencyManagerField);
+        }
+
+        // See if Component must be auto configured.
+        String componentField = srvMeta.getString(Params.componentField, null);
+        if (componentField != null)
+        {
+            c.setAutoConfig(Component.class, componentField);
+        }
+        
+        // Now, if the component has a @Started annotation, then add our component state listener,
+        // which will callback the corresponding annotated method, once the component is started.
+        String registered = srvMeta.getString(Params.registered, null);
+        String unregistered = srvMeta.getString(Params.unregistered, null);
+
+        if (registered != null || unregistered != null)
+        {
+            c.addStateListener(new RegistrationListener(registered, unregistered));
         }
     }
     
@@ -82,6 +119,70 @@ public abstract class AbstractBuilder
                                    dependency, srvMeta);
                 Dependency d = depBuilder.build(b, dm, false);
                 s.add(d);
+            }
+        }
+    }
+    
+    static class RegistrationListener implements ComponentStateListener
+    {
+        private final String m_registered;
+        private String m_unregistered;
+
+        RegistrationListener(String registered, String unregistered)
+        {
+            m_registered = registered;
+            m_unregistered = unregistered;
+        }
+        
+        public void starting(Component c)
+        {
+            // No need to invoke any callback here, since it is the ServiceLifecycleHandler
+            // that will invoke the method annotated with @Start
+        }
+
+        public void started(Component c)
+        {
+            if (m_registered != null)
+            {
+                Object instance = c.getService();
+                try
+                {
+                    InvocationUtil
+                        .invokeCallbackMethod(instance,
+                                              m_registered, 
+                                              new Class[][]  {{ ServiceRegistration.class },  {}},
+                                              new Object[][] {{ c.getServiceRegistration() }, {}});
+                }
+                catch (Throwable t)
+                {
+                    Log.instance().error("Exception caught while invoking method %s on component %s", t, m_registered, instance);
+                }
+            }
+        }
+
+        public void stopping(Component c)
+        {
+            // No need to invoke any callback here, since it is the ServiceLifecycleHandler
+            // that will invoke the method annotated with @Stop
+        }
+
+        public void stopped(Component c)
+        {
+            if (m_unregistered != null)
+            {
+                Object instance = c.getService();
+                try
+                {
+                    InvocationUtil
+                        .invokeCallbackMethod(instance,
+                                              m_unregistered, 
+                                              new Class[][]  {{}},
+                                              new Object[][] {{}});
+                }
+                catch (Throwable t)
+                {
+                    Log.instance().error("Exception caught while invoking method %s on component %s", t, m_registered, instance);
+                }
             }
         }
     }

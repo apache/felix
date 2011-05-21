@@ -64,42 +64,43 @@ public class AdapterServiceBuilder extends AbstractBuilder
             throw new IllegalArgumentException("missing added callback");
         }
         
-        Component service;
+        Component c;
         
         if (field != null)
         {
-            service = dm.createAdapterService(adapteeService, adapteeFilter, field);
+            c = dm.createAdapterService(adapteeService, adapteeFilter, field);
         }
         else
         {
             if (added != null)
             {
-                service = dm.createAdapterService(adapteeService, adapteeFilter, added, changed, removed);
+                c = dm.createAdapterService(adapteeService, adapteeFilter, added, changed, removed);
 
             }
             else
             {
-                service = dm.createAdapterService(adapteeService, adapteeFilter);
+                c = dm.createAdapterService(adapteeService, adapteeFilter);
             }
         }
         
-        service.setInterface(provides, adapterProperties);
+        setCommonServiceParams(c, srvMeta);
+        c.setInterface(provides, adapterProperties);
         
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
-            service.setImplementation(adapterImplClass);
+            c.setImplementation(adapterImplClass);
         } 
         else
         {
-            service.setFactory(adapterImplClass, factoryMethod);
+            c.setFactory(adapterImplClass, factoryMethod);
         }
-        service.setComposition(srvMeta.getString(Params.composition, null));
-        ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
+        c.setComposition(srvMeta.getString(Params.composition, null));
+        ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(c, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.
-        service.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
+        c.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
         // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
-        addUnamedDependencies(b, dm, service, srvMeta, depsMeta);
-        dm.add(service);
+        addUnamedDependencies(b, dm, c, srvMeta, depsMeta);
+        dm.add(c);
     }
 }

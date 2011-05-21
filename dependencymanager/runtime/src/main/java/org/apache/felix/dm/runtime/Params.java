@@ -57,5 +57,10 @@ public enum Params
     name,
     field,
     starter,
-    stopper
+    stopper, 
+    bundleContextField, 
+    dependencyManagerField, 
+    componentField,
+    registered, 
+    unregistered
 }

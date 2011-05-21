@@ -40,4 +40,10 @@ public interface Sequencer
      * @param timeout max milliseconds to wait.
      */
     void waitForStep(int step, int timeout);
+    
+    /**
+     *  Saves a thrown exception that occurred in a different thread. You can only save one exception
+     * at a time this way.
+     */
+    void throwable(Throwable throwable);
 }

@@ -80,13 +80,15 @@ public class BundleDependencyAnnotationTest extends AnnotationBase
     /**
      * Tests a Bundle Adapter, which adapts the dependency manager bundle to a "ServiceInterface" service.
      * @param context
+     * @throws Throwable 
      */
     @Test
-    public void testBundleAdapterServiceAnnotation(BundleContext context)
+    public void testBundleAdapterServiceAnnotation(BundleContext context) throws Throwable
     {
         DependencyManager m = new DependencyManager(context);
         Properties props = new Properties() {{ put("test", "adapter"); }};
         m.add(m.createComponent().setImplementation(this).setInterface(Sequencer.class.getName(), props));
         m_ensure.waitForStep(3, 10000);
+        m_ensure.ensure();
     }    
 }

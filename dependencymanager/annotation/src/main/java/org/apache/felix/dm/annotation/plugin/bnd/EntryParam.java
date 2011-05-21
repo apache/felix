@@ -57,4 +57,9 @@ public enum EntryParam
     name, 
     starter,
     stopper,
+    bundleContextField, 
+    dependencyManagerField, 
+    componentField, 
+    registered, 
+    unregistered
 }

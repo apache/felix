@@ -30,6 +30,7 @@ import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.LifecycleController;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
@@ -89,6 +90,7 @@ public class ResourceAdapterServiceTestWithPublisher
     @Component
     public static class ResourceProvider
     {
+        @Inject
         private volatile BundleContext m_context;
         private final Map m_handlers = new HashMap();
         private URL[] m_resources;

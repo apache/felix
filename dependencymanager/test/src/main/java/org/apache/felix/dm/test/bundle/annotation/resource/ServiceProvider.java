@@ -22,10 +22,13 @@ import java.net.URL;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.framework.BundleContext;
 
 /**
  * Our ServiceInterface provider, which service is activated by a ResourceAdapter.
@@ -42,10 +45,60 @@ public class ServiceProvider implements ServiceInterface
     @ServiceDependency(filter="(test=adapter)")
     Sequencer m_sequencer;
     
+    // Check auto config injections
+    @Inject
+    BundleContext m_bc;
+    BundleContext m_bcNotInjected;
+    
+    @Inject
+    DependencyManager m_dm;
+    DependencyManager m_dmNotInjected;
+    
+    @Inject
+    org.apache.felix.dm.Component m_component;
+    org.apache.felix.dm.Component m_componentNotInjected;
+
     public void run()
     {
+        checkInjectedFields();
         Assert.assertNotNull("Resource has not been injected in the adapter", m_resource);
         Assert.assertEquals("ServiceProvider did not get expected resource", "file://localhost/path/to/test1.txt", m_resource.toString());
         m_sequencer.step(2);
+    }
+    
+    private void checkInjectedFields()
+    {
+        if (m_bc == null)
+        {
+            m_sequencer.throwable(new Exception("Bundle Context not injected"));
+            return;
+        }
+        if (m_bcNotInjected != null)
+        {
+            m_sequencer.throwable(new Exception("Bundle Context must not be injected"));
+            return;
+        }
+
+        if (m_dm == null)
+        {
+            m_sequencer.throwable(new Exception("DependencyManager not injected"));
+            return;
+        }
+        if (m_dmNotInjected != null)
+        {
+            m_sequencer.throwable(new Exception("DependencyManager must not be injected"));
+            return;
+        }
+
+        if (m_component == null)
+        {
+            m_sequencer.throwable(new Exception("Component not injected"));
+            return;
+        }
+        if (m_componentNotInjected != null)
+        {
+            m_sequencer.throwable(new Exception("Component must not be injected"));
+            return;
+        }
     }
 }

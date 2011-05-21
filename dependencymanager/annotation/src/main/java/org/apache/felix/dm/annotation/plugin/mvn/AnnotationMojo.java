@@ -19,7 +19,9 @@
 package org.apache.felix.dm.annotation.plugin.mvn;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.dm.annotation.plugin.bnd.DescriptorGenerator;
 import org.apache.maven.model.Build;
@@ -59,13 +61,30 @@ public class AnnotationMojo extends AbstractMojo
      * @required
      */
     private String m_artifactExtension;
-    
+
     /**
      * If set, configures the log level.
      *
      * @parameter alias="log"
      */
     private String m_log;
+
+    /**
+     * If set, configures if we must auto generate Import-Service/Export-Service headers.
+     *
+     * @parameter alias="build-import-export-service"
+     */
+    private boolean m_buildImportExportService;
+
+    /**
+     * "Import-Service" osgi header
+     */
+    private static final String IMPORT_SERVICE = "Import-Service";
+
+    /**
+     * "Export-Service" osgi header
+     */
+    private static final String EXPORT_SERVICE = "Export-Service";
 
     /**
      * Executes this mojo. We'll use the bnd library in order to scan classes from our target bundle.
@@ -96,7 +115,7 @@ public class AnnotationMojo extends AbstractMojo
                 // Add the list of generated component descriptors in our special header.
                 jar = analyzer.getJar();
                 jar.getManifest().getMainAttributes().putValue("DependencyManager-Component",
-                    generator.getDescriptorPaths());
+                                                               generator.getDescriptorPaths());
 
                 // Add generated descriptors into the target bundle (we'll use a temp file).
                 Map<String, Resource> resources = generator.getDescriptors();
@@ -104,11 +123,29 @@ public class AnnotationMojo extends AbstractMojo
                 {
                     jar.putResource(entry.getKey(), entry.getValue());
                 }
-                
+
                 Resource metaType = generator.getMetaTypeResource();
-                if (metaType != null) {
+                if (metaType != null)
+                {
                     jar.putResource("OSGI-INF/metatype/metatype.xml", metaType);
                 }
+
+                // Possibly set the Import-Service/Export-Service header
+                if (m_buildImportExportService)
+                {
+                    // Don't override Import-Service header, if it is found from the bnd directives.
+                    if (jar.getManifest().getMainAttributes().getValue(IMPORT_SERVICE) == null)
+                    {
+                        buildImportExportService(jar, IMPORT_SERVICE, generator.getImportService());
+                    }
+
+                    // Don't override Export-Service header, if already defined
+                    if (jar.getManifest().getMainAttributes().getValue(EXPORT_SERVICE) == null)
+                    {
+                        buildImportExportService(jar, EXPORT_SERVICE, generator.getExportService());
+                    }
+                }
+
                 copy(jar, target);
             }
         }
@@ -133,6 +170,23 @@ public class AnnotationMojo extends AbstractMojo
         }
     }
 
+    private void buildImportExportService(Jar jar, String header, Set<String> services) throws IOException
+    {
+        getLog().info("building " + header + " header with the following services: " + services);
+
+        if (services.size() > 0)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (String service : services)
+            {
+                sb.append(service);
+                sb.append(",");
+            }
+            sb.setLength(sb.length() - 1); // skip last comma
+            jar.getManifest().getMainAttributes().putValue(header, sb.toString());
+        }
+    }
+
     /**
      * Returns the target name of this maven project.
      * @return the target name of this maven project.
@@ -141,7 +195,7 @@ public class AnnotationMojo extends AbstractMojo
     {
         Build build = m_project.getBuild();
         return new File(build.getDirectory() + File.separator + build.getFinalName() + "."
-            + m_artifactExtension);
+                + m_artifactExtension);
     }
 
     /**
@@ -158,14 +212,15 @@ public class AnnotationMojo extends AbstractMojo
         {
             if (tmp.exists())
             {
-                if (! tmp.delete()) {
+                if (!tmp.delete())
+                {
                     throw new MojoExecutionException("Could not remove " + tmp);
                 }
             }
             jar.write(tmp);
             jar.close();
-            
-            if (target.exists() && ! target.delete())
+
+            if (target.exists() && !target.delete())
             {
                 throw new MojoExecutionException("Could not remove " + target);
             }
@@ -177,7 +232,8 @@ public class AnnotationMojo extends AbstractMojo
         finally
         {
             jar.close();
-            if (tmp.exists() && ! tmp.delete()) {
+            if (tmp.exists() && !tmp.delete())
+            {
                 throw new MojoExecutionException("Could not remove " + tmp);
             }
         }

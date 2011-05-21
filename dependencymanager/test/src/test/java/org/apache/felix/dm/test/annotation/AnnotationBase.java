@@ -113,4 +113,9 @@ public class AnnotationBase extends Base implements Sequencer
     {
         m_ensure.waitForStep(nr, timeout);
     }
+
+    public void throwable(Throwable throwable)
+    {
+        m_ensure.throwable(throwable);
+    }
 }

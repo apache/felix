@@ -61,7 +61,7 @@ public class SimpleAnnotationTest extends AnnotationBase
     }
 
     @Test
-    public void testSimpleAnnotations(BundleContext context)
+    public void testSimpleAnnotations(BundleContext context) throws Throwable
     {
         DependencyManager m = new DependencyManager(context);
         // We provide ourself as a "Sequencer" service to the annotated bundles. 
@@ -71,6 +71,7 @@ public class SimpleAnnotationTest extends AnnotationBase
         // Stop our annotation bundle.
         stopBundle("SimpleAnnotationTest", context);
         // And check if components have been deactivated orderly.
-        m_ensure.waitForStep(5, 10000);
+        m_ensure.waitForStep(9, 10000);
+        m_ensure.ensure();
     }        
 }

@@ -61,7 +61,7 @@ public class AspectAnnotationTest extends AnnotationBase
     }
 
     @Test
-    public void testAspectChain(BundleContext context)
+    public void testAspectChain(BundleContext context) throws Throwable
     {
         DependencyManager m = new DependencyManager(context);
         // Activate service consumer
@@ -87,5 +87,6 @@ public class AspectAnnotationTest extends AnnotationBase
         m.remove(spSequencer);
         // Make sure that service aspect 1 has been called in ts removed and stop callbacks 
         m_ensure.waitForStep(8, 10000);
+        m_ensure.ensure();
     }    
 }

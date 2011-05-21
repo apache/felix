@@ -69,7 +69,7 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
     }
 
     @Test
-    public void testFactoryConfigurationAdapterAnnotation(BundleContext context)
+    public void testFactoryConfigurationAdapterAnnotation(BundleContext context) throws Throwable
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer to the adapter bundle service (see main/src/.../factoryconfadapter/*.java). 
@@ -89,7 +89,8 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
             // Remove configuration.
             cf.delete();
             // Check if ServiceProvider has been stopped.
-            m_ensure.waitForStep(5, 1000);
+            m_ensure.waitForStep(6, 1000);
+            m_ensure.ensure();
         }
         catch (IOException e)
         {

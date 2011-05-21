@@ -20,6 +20,7 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
@@ -150,7 +151,7 @@ public class EntryWriter
     /**
      * Get a String attribute value from an annotation and write it into this descriptor entry.
      */
-    public void putString(Annotation annotation, EntryParam param, String def)
+    public String putString(Annotation annotation, EntryParam param, String def)
     {
         checkType(param.toString());
         Object value = annotation.get(param.toString());
@@ -162,6 +163,7 @@ public class EntryWriter
         {
             put(param, value.toString());
         }
+        return value == null ? null : value.toString();
     }
 
     /**
@@ -218,8 +220,9 @@ public class EntryWriter
 
     /**
      * Get a class array attribute value from an annotation and write it into this descriptor entry.
+     * Also collect classes found from the array into a given Set.
      */
-    public void putClassArray(Annotation annotation, EntryParam param, Object def)
+    public void putClassArray(Annotation annotation, EntryParam param, Object def, Set<String> collect)
     {
         checkType(param.toString());
 
@@ -247,6 +250,7 @@ public class EntryWriter
                 try
                 {
                     m_json.append(param.toString(), v.toString());
+                    collect.add(v.toString());
                 }
                 catch (JSONException e)
                 {

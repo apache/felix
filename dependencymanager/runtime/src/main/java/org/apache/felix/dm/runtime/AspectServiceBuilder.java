@@ -69,47 +69,45 @@ public class AspectServiceBuilder extends AbstractBuilder
             throw new IllegalArgumentException("missing added callback");
         }
 
-        Component service;
+        Component c;
         if (field != null)
         {
-            service =
-                    dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
-                            .setServiceProperties(aspectProperties);
+            c = dm.createAspectService(serviceInterface, serviceFilter, ranking, field)
+                  .setServiceProperties(aspectProperties);
         } 
         else
         {
             if (added != null)
             {
-                service =
-                    dm.createAspectService(serviceInterface, serviceFilter, ranking, added, changed, removed)
-                        .setServiceProperties(aspectProperties);
+                c = dm.createAspectService(serviceInterface, serviceFilter, ranking, added, changed, removed)
+                      .setServiceProperties(aspectProperties);
             } 
             else
             {
-                service =
-                    dm.createAspectService(serviceInterface, serviceFilter, ranking)
-                        .setServiceProperties(aspectProperties);
+                c = dm.createAspectService(serviceInterface, serviceFilter, ranking)
+                      .setServiceProperties(aspectProperties);
             }
  
         }
         
+        setCommonServiceParams(c, srvMeta);
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
-            service.setImplementation(implClass);
+            c.setImplementation(implClass);
         }
         else
         {
-            service.setFactory(implClass, factoryMethod);
+            c.setFactory(implClass, factoryMethod);
         }
 
-        service.setComposition(srvMeta.getString(Params.composition, null));
-        ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(service, b, dm, srvMeta, depsMeta);
+        c.setComposition(srvMeta.getString(Params.composition, null));
+        ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(c, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.
-        service.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
+        c.setCallbacks(lfcleHandler, "init", "start", "stop", "destroy");
         // Adds dependencies (except named dependencies, which are managed by the lifecycle
         // handler).
-        addUnamedDependencies(b, dm, service, srvMeta, depsMeta);
-        dm.add(service);
+        addUnamedDependencies(b, dm, c, srvMeta, depsMeta);
+        dm.add(c);
     }
 }

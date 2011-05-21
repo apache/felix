@@ -29,6 +29,7 @@ import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Destroy;
+import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -40,6 +41,7 @@ import org.osgi.framework.InvalidSyntaxException;
 @Component
 public class ResourceProvider
 {
+    @Inject
     private volatile BundleContext m_context;
     private final Map m_handlers = new HashMap();
     private URL[] m_resources;
