@@ -64,7 +64,7 @@ public class CompositeAnnotationsTest extends AnnotationBase
     {
         DependencyManager m = new DependencyManager(context);
         // Provide the Sequencer service to the "Component" service.
-        m.add(makeSequencer(m, "CompositeService"));
+        m.add(makeSequencer(m, "C1"));
         m.add(makeSequencer(m, "Dependency1"));
         m.add(makeSequencer(m, "Dependency2"));
         // Check if the components have been initialized orderly
@@ -72,6 +72,6 @@ public class CompositeAnnotationsTest extends AnnotationBase
         // Stop the bundle
         stopBundle("CompositeAnnotationsTest", context);
         // And check if the components lifecycle callbacks are called orderly
-        m_ensure.waitForStep(10, 10000);
+        m_ensure.waitForStep(12, 10000);
     }
 }
