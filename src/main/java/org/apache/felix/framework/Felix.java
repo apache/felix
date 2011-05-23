@@ -74,6 +74,7 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.startlevel.StartLevel;
 
@@ -84,6 +85,9 @@ public class Felix extends BundleImpl implements Framework
 
     // The extension manager to handle extension bundles
     private final ExtensionManager m_extensionManager;
+
+    // Framework wiring object.
+    private final FrameworkWiringImpl m_fwkWiring;
 
     // Logging related member variables.
     private final Logger m_logger;
@@ -168,7 +172,7 @@ public class Felix extends BundleImpl implements Framework
 
     // Shutdown gate.
     private volatile ThreadGate m_shutdownGate = null;
-    
+
     // Security Manager created by the framework
     private SecurityManager m_securityManager = null;
 
@@ -384,6 +388,9 @@ public class Felix extends BundleImpl implements Framework
             // a runtime exception.
             throw new RuntimeException(ex.getMessage());
         }
+
+        // Create framework wiring object.
+        m_fwkWiring = new FrameworkWiringImpl(this);
     }
 
     Logger getLogger()
@@ -448,6 +455,16 @@ public class Felix extends BundleImpl implements Framework
     Felix getFramework()
     {
         return this;
+    }
+
+    @Override
+    public <A> A adapt(Class<A> type)
+    {
+        if (type == FrameworkWiring.class)
+        {
+            return (A) m_fwkWiring;
+        }
+        return super.adapt(type);
     }
 
     public long getBundleId()
@@ -550,10 +567,10 @@ public class Felix extends BundleImpl implements Framework
                     if (Constants.FRAMEWORK_SECURITY_OSGI.equalsIgnoreCase(security) || (security.length() == 0))
                     {
                         // TODO: SECURITY - we only need our own security manager to convert the exceptions
-                        //       because the 4.2.0 ct does expect them like this in one case. 
+                        //       because the 4.2.0 ct does expect them like this in one case.
                         System.setSecurityManager(m_securityManager = new SecurityManager()
                         {
-                            public void checkPermission(Permission perm) 
+                            public void checkPermission(Permission perm)
                             {
                                 try
                                 {
@@ -570,11 +587,11 @@ public class Felix extends BundleImpl implements Framework
                     }
                     else
                     {
-                        try 
+                        try
                         {
-                            System.setSecurityManager(m_securityManager = 
+                            System.setSecurityManager(m_securityManager =
                                 (SecurityManager) Class.forName(security).newInstance());
-                        } 
+                        }
                         catch (Throwable t)
                         {
                             SecurityException se =
@@ -1595,7 +1612,9 @@ public class Felix extends BundleImpl implements Framework
         BundleImpl bundle, String path, String filePattern, boolean recurse)
     {
         // Try to resolve the bundle per the spec.
-        resolveBundles(new Bundle[] { bundle });
+        List<Bundle> list = new ArrayList<Bundle>(1);
+        list.add(bundle);
+        resolveBundles(list);
 
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
@@ -2159,7 +2178,9 @@ public class Felix extends BundleImpl implements Framework
                         {
                             try
                             {
-                                refreshPackages(new BundleImpl[] { bundle });
+                                List<Bundle> list = new ArrayList<Bundle>(1);
+                                list.add(bundle);
+                                refreshPackages(list, null);
                             }
                             catch (Exception ex)
                             {
@@ -2499,7 +2520,9 @@ public class Felix extends BundleImpl implements Framework
                 {
                     try
                     {
-                        refreshPackages(new BundleImpl[] { bundle });
+                        List<Bundle> list = new ArrayList<Bundle>(1);
+                        list.add(bundle);
+                        refreshPackages(list, null);
                     }
                     catch (Exception ex)
                     {
@@ -3483,7 +3506,7 @@ public class Felix extends BundleImpl implements Framework
         return m_dependencies.getRequiringBundles(bundle);
     }
 
-    boolean resolveBundles(Bundle[] targets)
+    boolean resolveBundles(Collection<Bundle> targets)
     {
         // Acquire global lock.
         boolean locked = acquireGlobalLock();
@@ -3502,7 +3525,7 @@ public class Felix extends BundleImpl implements Framework
             // specified bundles or all bundles if null.
             if (targets == null)
             {
-                List list = new ArrayList();
+                targets = new ArrayList<Bundle>();
 
                 // Add all unresolved bundles to the list.
                 Iterator iter = m_installedBundles[LOCATION_MAP_IDX].values().iterator();
@@ -3511,14 +3534,8 @@ public class Felix extends BundleImpl implements Framework
                     BundleImpl bundle = (BundleImpl) iter.next();
                     if (bundle.getState() == Bundle.INSTALLED)
                     {
-                        list.add(bundle);
+                        targets.add(bundle);
                     }
-                }
-
-                // Create an array.
-                if (list.size() > 0)
-                {
-                    targets = (Bundle[]) list.toArray(new BundleImpl[list.size()]);
                 }
             }
 
@@ -3526,15 +3543,18 @@ public class Felix extends BundleImpl implements Framework
             boolean result = true;
 
             // If there are targets, then resolve each one.
-            for (int i = 0; (targets != null) && (i < targets.length); i++)
+            if (!targets.isEmpty())
             {
-                try
+                for (Bundle b : targets)
                 {
-                    resolveBundle((BundleImpl) targets[i]);
-                }
-                catch (BundleException ex)
-                {
-                    result = false;
+                    try
+                    {
+                        resolveBundle((BundleImpl) b);
+                    }
+                    catch (BundleException ex)
+                    {
+                        result = false;
+                    }
                 }
             }
 
@@ -3569,7 +3589,7 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    void refreshPackages(Bundle[] targets)
+    void refreshPackages(Collection<Bundle> targets, FrameworkListener[] listeners)
     {
         // Acquire global lock.
         boolean locked = acquireGlobalLock();
@@ -3587,10 +3607,10 @@ public class Felix extends BundleImpl implements Framework
         // Determine set of bundles to refresh, which is all transitive
         // dependencies of specified set or all transitive dependencies
         // of all bundles if null is specified.
-        Bundle[] newTargets = targets;
+        Collection<Bundle> newTargets = targets;
         if (newTargets == null)
         {
-            List list = new ArrayList();
+            List<Bundle> list = new ArrayList<Bundle>();
 
             // First add all uninstalled bundles.
             for (int i = 0;
@@ -3611,31 +3631,27 @@ public class Felix extends BundleImpl implements Framework
                 }
             }
 
-            // Create an array.
-            if (list.size() > 0)
+            if (!list.isEmpty())
             {
-                newTargets = (Bundle[]) list.toArray(new Bundle[list.size()]);
+                newTargets = list;
             }
         }
 
         // If there are targets, then find all dependencies for each one.
-        BundleImpl[] bundles = null;
+        Set<Bundle> bundles = null;
         if (newTargets != null)
         {
             // Create map of bundles that import the packages
             // from the target bundles.
-            Set<Bundle> set = new HashSet<Bundle>();
-            for (int targetIdx = 0; targetIdx < newTargets.length; targetIdx++)
+            bundles = new HashSet<Bundle>();
+            for (Bundle target : newTargets)
             {
                 // Add the current target bundle to the map of
                 // bundles to be refreshed.
-                BundleImpl target = (BundleImpl) newTargets[targetIdx];
-                set.add(target);
+                bundles.add(target);
                 // Add all importing bundles to map.
-                populateDependentGraph(target, set);
+                populateDependentGraph((BundleImpl) target, bundles);
             }
-
-            bundles = (BundleImpl[]) set.toArray(new BundleImpl[set.size()]);
         }
 
         // Now refresh each bundle.
@@ -3648,62 +3664,61 @@ public class Felix extends BundleImpl implements Framework
             // We need to restart the framework if either an extension bundle is
             // refreshed or the system bundle is refreshed and any extension bundle
             // has been updated or uninstalled.
-            for (int i = 0; (bundles != null) && !restart && (i < bundles.length); i++)
-            {
-                if (systemBundle == bundles[i])
-                {
-                    Bundle[] allBundles = getBundles();
-                    for (int j = 0; !restart && j < allBundles.length; j++)
-                    {
-                        if (((BundleImpl) allBundles[j]).isExtension() &&
-                            (allBundles[j].getState() == Bundle.INSTALLED))
-                        {
-                            restart = true;
-                        }
-                    }
-                }
-            }
-
-            // Remove any targeted bundles from the uninstalled bundles
-            // array, since they will be removed from the system after
-            // the refresh.
-            // TODO: FRAMEWORK - Is this correct?
-            for (int i = 0; (bundles != null) && (i < bundles.length); i++)
-            {
-                forgetUninstalledBundle(bundles[i]);
-            }
-            // If there are targets, then refresh each one.
             if (bundles != null)
             {
-                // At this point the map contains every bundle that has been
-                // updated and/or removed as well as all bundles that import
+                for (Bundle b : bundles)
+                {
+                    if (systemBundle == b)
+                    {
+                        Bundle[] allBundles = getBundles();
+                        for (int j = 0; !restart && j < allBundles.length; j++)
+                        {
+                            if (((BundleImpl) allBundles[j]).isExtension() &&
+                                (allBundles[j].getState() == Bundle.INSTALLED))
+                            {
+                                restart = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Remove any targeted bundles from the uninstalled bundles
+                    // array, since they will be removed from the system after
+                    // the refresh.
+                    // TODO: FRAMEWORK - Is this correct?
+                    forgetUninstalledBundle((BundleImpl) b);
+                }
+
+                // Now we actually need to refresh the affected bundles.
+                // At this point the collection contains every bundle that has
+                // been updated and/or removed as well as all bundles that import
                 // packages from these bundles.
 
                 // Create refresh helpers for each bundle.
-                RefreshHelper[] helpers = new RefreshHelper[bundles.length];
-                for (int i = 0; i < bundles.length; i++)
+                List<RefreshHelper> helpers = new ArrayList<RefreshHelper>(bundles.size());
+                for (Bundle b : bundles)
                 {
-                    helpers[i] = new RefreshHelper(bundles[i]);
+                    helpers.add(new RefreshHelper(b));
                 }
 
                 // Stop, purge or remove, and reinitialize all bundles first.
                 // TODO: FRAMEWORK - this will stop the system bundle if
                 // somebody called refresh 0. Is this what we want?
-                for (int i = 0; i < helpers.length; i++)
+                for (RefreshHelper helper : helpers)
                 {
-                    if (helpers[i] != null)
+                    if (helper != null)
                     {
-                        helpers[i].stop();
-                        helpers[i].refreshOrRemove();
+                        helper.stop();
+                        helper.refreshOrRemove();
                     }
                 }
 
                 // Then restart all bundles that were previously running.
-                for (int i = 0; i < helpers.length; i++)
+                for (RefreshHelper helper : helpers)
                 {
-                    if (helpers[i] != null)
+                    if (helper != null)
                     {
-                        helpers[i].restart();
+                        helper.restart();
                     }
                 }
             }
@@ -3727,8 +3742,69 @@ public class Felix extends BundleImpl implements Framework
         }
 
         fireFrameworkEvent(FrameworkEvent.PACKAGES_REFRESHED, this, null);
+
+        if (listeners != null)
+        {
+            FrameworkEvent event = new FrameworkEvent(
+                FrameworkEvent.PACKAGES_REFRESHED, this, null);
+            for (FrameworkListener l : listeners)
+            {
+                try
+                {
+                    l.frameworkEvent(event);
+                }
+                catch (Throwable th)
+                {
+                    m_logger.log(Logger.LOG_ERROR,
+                        "Framework listener delivery error.", th);
+                }
+            }
+        }
     }
 
+    Collection<Bundle> getDependencyClosure(Collection<Bundle> targets)
+    {
+        // Acquire global lock.
+        boolean locked = acquireGlobalLock();
+        if (!locked)
+        {
+            // If the thread calling holds bundle locks, then we might not
+            // be able to get the global lock. However, in practice this
+            // should not happen since the calls to this method have either
+            // already acquired the global lock or it is PackageAdmin which
+            // doesn't hold bundle locks.
+            throw new IllegalStateException(
+                "Unable to acquire global lock for refresh.");
+        }
+
+        try
+        {
+            // If there are targets, then find all dependencies for each one.
+            Set<Bundle> bundles = Collections.EMPTY_SET;
+            if (targets != null)
+            {
+                // Create map of bundles that import the packages
+                // from the target bundles.
+                bundles = new HashSet<Bundle>();
+                for (Bundle target : targets)
+                {
+                    // Add the current target bundle to the map of
+                    // bundles to be refreshed.
+                    bundles.add(target);
+                    // Add all importing bundles to map.
+                    populateDependentGraph((BundleImpl) target, bundles);
+                }
+            }
+            return bundles;
+        }
+        finally
+        {
+            // Always release the global lock.
+            releaseGlobalLock();
+        }
+    }
+
+    // Calls to this method must have the global lock.
     private void populateDependentGraph(BundleImpl exporter, Set<Bundle> set)
     {
         // Get all dependent bundles of this bundle.
@@ -3747,6 +3823,47 @@ public class Felix extends BundleImpl implements Framework
                     populateDependentGraph((BundleImpl) b, set);
                 }
             }
+        }
+    }
+
+    Collection<Bundle> getRemovalPendingBundles()
+    {
+        // Acquire global lock.
+        boolean locked = acquireGlobalLock();
+        if (!locked)
+        {
+            // If the thread calling holds bundle locks, then we might not
+            // be able to get the global lock. However, in practice this
+            // should not happen since the calls to this method have either
+            // already acquired the global lock or it is PackageAdmin which
+            // doesn't hold bundle locks.
+            throw new IllegalStateException(
+                "Unable to acquire global lock for refresh.");
+        }
+
+        try
+        {
+            List<Bundle> bundles = new ArrayList<Bundle>();
+            if (m_uninstalledBundles != null)
+            {
+                for (Bundle b : m_uninstalledBundles)
+                {
+                    bundles.add(b);
+                }
+            }
+            for (Bundle b : getBundles())
+            {
+                if (((BundleImpl) b).isRemovalPending())
+                {
+                    bundles.add(b);
+                }
+            }
+            return bundles;
+        }
+        finally
+        {
+            // Always release the global lock.
+            releaseGlobalLock();
         }
     }
 
@@ -4473,7 +4590,7 @@ public class Felix extends BundleImpl implements Framework
 
                     // Mark revision as resolved.
                     revision.resolve(entry.getValue());
-                    
+
                     // Update resolver state to remove substituted capabilities.
                     if (!Util.isFragment(revision))
                     {
@@ -4665,6 +4782,9 @@ public class Felix extends BundleImpl implements Framework
             {
                 // Should never happen.
             }
+
+            // Stop framework wiring thread.
+            m_fwkWiring.stop();
 
             // Shutdown event dispatching queue.
             EventDispatcher.shutdown();
@@ -5181,17 +5301,17 @@ public class Felix extends BundleImpl implements Framework
     }
 
     private volatile URLHandlersActivator m_urlHandlersActivator;
-    
+
     void setURLHandlersActivator(URLHandlersActivator urlHandlersActivator)
     {
         m_urlHandlersActivator = urlHandlersActivator;
     }
-    
+
     Object getStreamHandlerService(String protocol)
     {
         return m_urlHandlersActivator.getStreamHandlerService(protocol);
     }
-    
+
     Object getContentHandlerService(String mimeType)
     {
         return m_urlHandlersActivator.getContentHandlerService(mimeType);
