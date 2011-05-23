@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -194,11 +194,11 @@ class ResolverStateImpl implements Resolver.ResolverState
                 if (System.getSecurityManager() != null)
                 {
                     if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) && (
-                        !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getSecurityContext()).impliesDirect(
+                        !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                             new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
                             PackagePermission.EXPORTONLY)) ||
                             !((reqRevision == null) ||
-                                ((BundleProtectionDomain) reqRevision.getSecurityContext()).impliesDirect(
+                                ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
                                     new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
                                     cap.getRevision().getBundle(),PackagePermission.IMPORT))
                             )))
@@ -209,21 +209,21 @@ class ResolverStateImpl implements Resolver.ResolverState
                         }
                     }
                     else if (req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE) && (
-                        !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getSecurityContext()).impliesDirect(
+                        !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                             new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
                             !((reqRevision == null) ||
-                                ((BundleProtectionDomain) reqRevision.getSecurityContext()).impliesDirect(
+                                ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
                                     new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
                             )))
                     {
                         continue;
                     }
                     else if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE) &&
-                        (!((BundleProtectionDomain) reqRevision.getSecurityContext())
+                        (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
                             .impliesDirect(new BundlePermission(
                                 reqRevision.getSymbolicName(),
                                 BundlePermission.FRAGMENT))
-                        || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getSecurityContext())
+                        || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
                             .impliesDirect(new BundlePermission(
                                 cap.getRevision().getSymbolicName(),
                                 BundlePermission.HOST))))
