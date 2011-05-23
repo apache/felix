@@ -144,18 +144,23 @@ public abstract class AbstractBuilder
         {
             if (m_registered != null)
             {
-                Object instance = c.getService();
-                try
+                // The component has registered a service: notify all component instances
+                Object[] componentInstances = c.getCompositionInstances();
+                for (Object instance : componentInstances)
                 {
-                    InvocationUtil
-                        .invokeCallbackMethod(instance,
-                                              m_registered, 
-                                              new Class[][]  {{ ServiceRegistration.class },  {}},
-                                              new Object[][] {{ c.getServiceRegistration() }, {}});
-                }
-                catch (Throwable t)
-                {
-                    Log.instance().error("Exception caught while invoking method %s on component %s", t, m_registered, instance);
+                    try
+                    {
+                        Class[][] signatures = new Class[][] { { ServiceRegistration.class }, {} };
+                        Object[][] params = new Object[][] { { c.getServiceRegistration() }, {} };
+                        InvocationUtil.invokeCallbackMethod(instance, m_registered, signatures, params);
+                    }
+                    catch (Throwable t)
+                    {
+                        Log.instance().error("Exception caught while invoking method %s on component %s",
+                                             t,
+                                             m_registered,
+                                             instance);
+                    }
                 }
             }
         }
