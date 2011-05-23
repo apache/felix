@@ -18,26 +18,28 @@ import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Composition;
 import org.apache.felix.dm.annotation.api.Destroy;
 import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.Registered;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * This service is also composed of the Component object.
  */
 @Component
-public class CompositeService
+public class C1 implements C1Service
 {
     /* We are composed of this object, which will also be injected with our dependencies */
-    private Composite m_composite = new Composite();
+    private C2 m_c2 = new C2();
 
     /* This dependency filter will be configured from our init method */
     @ServiceDependency(name = "D")
     public volatile Runnable m_runnable;
     
     /* Object used to check that methods are called in the proper sequence */
-    @ServiceDependency(filter="(name=CompositeService)")
+    @ServiceDependency(filter="(name=C1)")
     private volatile Sequencer m_sequencer;
 
     /**
@@ -60,7 +62,7 @@ public class CompositeService
     @Composition
     Object[] getComposition()
     {
-        return new Object[] { this, m_composite };
+        return new Object[] { this, m_c2 };
     }
 
     /** 
@@ -76,12 +78,21 @@ public class CompositeService
     }
 
     /**
+     * Our provided service has been registered into the OSGi service registry.
+     */
+    @Registered
+    void registered(ServiceRegistration sr)
+    {
+        m_sequencer.step(7);
+    }
+    
+    /**
      *  Our Service is stopping, and our Composites will also be 
      */
     @Stop
     void stop()
     {
-        m_sequencer.step(7);
+        m_sequencer.step(9);
         // Our Component.stop() method should be called once this method returns.
     }
 
@@ -91,7 +102,7 @@ public class CompositeService
     @Destroy
     void destroy()
     {
-        m_sequencer.step(9);
+        m_sequencer.step(11);
         // Our Component.destroy() method should be called once this method returns.
     }
 }

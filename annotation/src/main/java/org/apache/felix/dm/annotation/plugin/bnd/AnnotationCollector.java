@@ -335,8 +335,13 @@ public class AnnotationCollector extends ClassDataCollector
         // properties attribute
         parseProperties(annotation, EntryParam.properties, writer);
 
-        // provides attribute
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
+        // provides attribute.
+        if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
+        {
+            // no service provided: check if @Registered/@Unregistered annotation are used
+            // and raise an error if true.
+            checkRegisteredUnregisteredNotPresent();
+        }
 
         // factorySet attribute
         String factorySetName = writer.putString(annotation, EntryParam.factorySet, null);
@@ -644,7 +649,10 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the provided adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
+        if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
+        {
+            checkRegisteredUnregisteredNotPresent();
+        }
         
         // Parse factoryMethod attribute
         writer.putString(annotation, EntryParam.factoryMethod, null);
@@ -684,7 +692,10 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the optional adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
+        if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
+        {
+            checkRegisteredUnregisteredNotPresent();
+        }
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
@@ -720,7 +731,10 @@ public class AnnotationCollector extends ClassDataCollector
         parseProperties(annotation, EntryParam.properties, writer);
 
         // Parse the provided adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
+        if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
+        {
+            checkRegisteredUnregisteredNotPresent();
+        }
 
         // Parse propagate attribute
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
@@ -754,7 +768,10 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.propagate, Boolean.FALSE.toString());
 
         // Parse the provided adapter service (use directly implemented interface by default).
-        writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService);
+        if (writer.putClassArray(annotation, EntryParam.provides, m_interfaces, m_exportService) == 0)
+        {
+            checkRegisteredUnregisteredNotPresent();
+        }
 
         // Parse Adapter properties.
         parseProperties(annotation, EntryParam.properties, writer);
@@ -1004,6 +1021,27 @@ public class AnnotationCollector extends ClassDataCollector
             throw new IllegalStateException(
                 ": the class must be annotated with either one of the following types: "
                     + Arrays.toString(types));
+        }
+    }
+
+    /**
+     * This method checks if the @Registered and/or @Unregistered annotations have been defined
+     * while they should not, because the component does not provide a service.
+     */
+    private void checkRegisteredUnregisteredNotPresent()
+    {
+        if (m_registeredMethod != null)
+        {
+            throw new IllegalStateException("@Registered annotation can't be used on a Component " +
+                                            " which does not provide a service (class=" + m_className + ")");
+
+        }
+        
+        if (m_unregisteredMethod != null)
+        {
+            throw new IllegalStateException("@Unregistered annotation can't be used on a Component " +
+                                            " which does not provide a service (class=" + m_className + ")");
+
         }
     }
 

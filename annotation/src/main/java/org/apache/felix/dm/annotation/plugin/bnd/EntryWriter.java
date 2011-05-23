@@ -221,8 +221,9 @@ public class EntryWriter
     /**
      * Get a class array attribute value from an annotation and write it into this descriptor entry.
      * Also collect classes found from the array into a given Set.
+     * @return the class array size.
      */
-    public void putClassArray(Annotation annotation, EntryParam param, Object def, Set<String> collect)
+    public int putClassArray(Annotation annotation, EntryParam param, Object def, Set<String> collect)
     {
         checkType(param.toString());
 
@@ -258,7 +259,11 @@ public class EntryWriter
                             + value.toString(), e);
                 }
             }
+            
+            return ((Object[]) value).length;
         }
+        
+        return 0;
     }
 
     /**

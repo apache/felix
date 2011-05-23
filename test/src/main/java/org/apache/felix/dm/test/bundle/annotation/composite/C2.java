@@ -12,11 +12,12 @@
 package org.apache.felix.dm.test.bundle.annotation.composite;
 
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The CompositeService is also made up of this Class.
  */
-public class Composite
+public class C2
 {
     // Injected dependency (from CompositeService)
     private volatile Sequencer m_sequencer;
@@ -37,15 +38,24 @@ public class Composite
         m_runnable.run(); /* step 6 */
     }
 
+    void registered(ServiceRegistration sr)
+    {
+        if (sr == null)
+        {
+            m_sequencer.throwable(new Exception("null service registration"));
+        }
+        m_sequencer.step(8);
+    }
+
     // lifecycle callback (same method as the one from CompositeService)
     void stop()
     {
-        m_sequencer.step(8);
+        m_sequencer.step(10);
     }
 
     // lifecycle callback (same method as the one from CompositeService)
     void destroy()
     {
-        m_sequencer.step(10);
+        m_sequencer.step(12);
     }
 }
