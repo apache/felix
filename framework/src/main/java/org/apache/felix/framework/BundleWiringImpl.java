@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -84,8 +84,6 @@ public class BundleWiringImpl implements BundleWiring
 
     private BundleClassLoader m_classLoader;
     private boolean m_isActivationTriggered = false;
-    private ProtectionDomain m_protectionDomain = null;
-    private final static SecureAction m_secureAction = new SecureAction();
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -98,10 +96,11 @@ public class BundleWiringImpl implements BundleWiring
         ClassLoader cl = null;
         try
         {
-            Constructor ctor = m_secureAction.getDeclaredConstructor(
+            Constructor ctor = BundleRevisionImpl.getSecureAction().getDeclaredConstructor(
                 SecureClassLoader.class, new Class[] { ClassLoader.class });
-            m_secureAction.setAccesssible(ctor);
-            cl = (ClassLoader) m_secureAction.invoke(ctor, new Object[] { null });
+            BundleRevisionImpl.getSecureAction().setAccesssible(ctor);
+            cl = (ClassLoader) BundleRevisionImpl.getSecureAction().invoke(
+                ctor, new Object[] { null });
         }
         catch (Throwable ex)
         {
@@ -417,10 +416,10 @@ public class BundleWiringImpl implements BundleWiring
             // enabled; otherwise, create it directly.
             try
             {
-                Constructor ctor = (Constructor) m_secureAction.getConstructor(
-                    clazz, new Class[] { BundleWiringImpl.class, ClassLoader.class });
+                Constructor ctor = (Constructor) BundleRevisionImpl.getSecureAction()
+                    .getConstructor(clazz, new Class[] { BundleWiringImpl.class, ClassLoader.class });
                 m_classLoader = (BundleClassLoader)
-                    m_secureAction.invoke(ctor,
+                    BundleRevisionImpl.getSecureAction().invoke(ctor,
                     new Object[] { this, determineParentClassLoader() });
             }
             catch (Exception ex)
@@ -463,7 +462,7 @@ public class BundleWiringImpl implements BundleWiring
 
         try
         {
-            return m_secureAction.createURL(null,
+            return BundleRevisionImpl.getSecureAction().createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
                 m_revision.getId() + ":" + port + path, m_revision.getURLStreamHandler());
         }
@@ -639,22 +638,24 @@ public class BundleWiringImpl implements BundleWiring
         final ClassLoader parent;
         if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_APP))
         {
-            parent = m_secureAction.getSystemClassLoader();
+            parent = BundleRevisionImpl.getSecureAction().getSystemClassLoader();
         }
         else if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_EXT))
         {
-            parent = m_secureAction.getParentClassLoader(m_secureAction.getSystemClassLoader());
+            parent = BundleRevisionImpl.getSecureAction().getParentClassLoader(
+                BundleRevisionImpl.getSecureAction().getSystemClassLoader());
         }
         else if (cfg.equalsIgnoreCase(Constants.FRAMEWORK_BUNDLE_PARENT_FRAMEWORK))
         {
-            parent = m_secureAction.getClassLoader(BundleRevisionImpl.class);
+            parent = BundleRevisionImpl.getSecureAction()
+                .getClassLoader(BundleRevisionImpl.class);
         }
         // On Android we cannot set the parent class loader to be null, so
         // we special case that situation here and set it to the system
         // class loader by default instead, which is not really spec.
         else if (m_bootClassLoader == null)
         {
-            parent = m_secureAction.getSystemClassLoader();
+            parent = BundleRevisionImpl.getSecureAction().getSystemClassLoader();
         }
         else
         {
@@ -732,12 +733,12 @@ public class BundleWiringImpl implements BundleWiring
 
             try
             {
-                dexFileClassLoadDex = dexFileClass.getMethod("loadDex", 
+                dexFileClassLoadDex = dexFileClass.getMethod("loadDex",
                     new Class[]{String.class, String.class, Integer.TYPE});
             }
             catch (Exception ex)
             {
-                // Nothing we need to do 
+                // Nothing we need to do
             }
             dexFileClassConstructor = dexFileClass.getConstructor(
                 new Class[] { java.io.File.class });
@@ -1105,8 +1106,10 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     // Return the class or resource from the parent class loader.
                     return (isClass)
-                        ? (Object) m_secureAction.getClassLoader(this.getClass()).loadClass(name)
-                        : (Object) m_secureAction.getClassLoader(this.getClass()).getResource(name);
+                        ? (Object) BundleRevisionImpl.getSecureAction()
+                            .getClassLoader(this.getClass()).loadClass(name)
+                        : (Object) BundleRevisionImpl.getSecureAction()
+                            .getClassLoader(this.getClass()).getResource(name);
                 }
                 catch (NoClassDefFoundError ex)
                 {
@@ -1123,7 +1126,8 @@ public class BundleWiringImpl implements BundleWiring
     {
         // The target class is loaded by a bundle class loader,
         // then return true.
-        if (BundleClassLoader.class.isInstance(m_secureAction.getClassLoader(clazz)))
+        if (BundleClassLoader.class.isInstance(
+            BundleRevisionImpl.getSecureAction().getClassLoader(clazz)))
         {
             return true;
         }
@@ -1131,9 +1135,9 @@ public class BundleWiringImpl implements BundleWiring
         // If the target class was loaded from a class loader that
         // came from a bundle, then return true.
         ClassLoader last = null;
-        for (ClassLoader cl = m_secureAction.getClassLoader(clazz);
+        for (ClassLoader cl = BundleRevisionImpl.getSecureAction().getClassLoader(clazz);
             (cl != null) && (last != cl);
-            cl = m_secureAction.getClassLoader(cl.getClass()))
+            cl = BundleRevisionImpl.getSecureAction().getClassLoader(cl.getClass()))
         {
             last = cl;
             if (BundleClassLoader.class.isInstance(cl))
@@ -1341,7 +1345,7 @@ public class BundleWiringImpl implements BundleWiring
 
                         if (clazz == null)
                         {
-                            int activationPolicy = 
+                            int activationPolicy =
                                 ((BundleImpl) getBundle()).isDeclaredActivationPolicyUsed()
                                 ? ((BundleRevisionImpl) ((BundleImpl) getBundle())
                                     .getCurrentRevision()).getDeclaredActivationPolicy()
@@ -1413,10 +1417,10 @@ public class BundleWiringImpl implements BundleWiring
                                 // If we have a security context, then use it to
                                 // define the class with it for security purposes,
                                 // otherwise define the class without a protection domain.
-                                if (m_protectionDomain != null)
+                                if (m_revision.getProtectionDomain() != null)
                                 {
                                     clazz = defineClass(name, bytes, 0, bytes.length,
-                                        m_protectionDomain);
+                                        m_revision.getProtectionDomain());
                                 }
                                 else
                                 {
@@ -1499,8 +1503,8 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     if (m_dexFileClassLoadDex != null)
                     {
-                        dexFile = m_dexFileClassLoadDex.invoke(null, 
-                            new Object[]{content.getFile().getAbsolutePath(), 
+                        dexFile = m_dexFileClassLoadDex.invoke(null,
+                            new Object[]{content.getFile().getAbsolutePath(),
                                 content.getFile().getAbsolutePath() + ".dex", new Integer(0)});
                     }
                     else
@@ -1807,7 +1811,8 @@ public class BundleWiringImpl implements BundleWiring
             boolean classpath = false;
             try
             {
-                m_secureAction.getClassLoader(BundleClassLoader.class).loadClass(name);
+                BundleRevisionImpl.getSecureAction()
+                    .getClassLoader(BundleClassLoader.class).loadClass(name);
                 classpath = true;
             }
             catch (NoClassDefFoundError err)
@@ -1860,7 +1865,8 @@ public class BundleWiringImpl implements BundleWiring
         // class loader.
         try
         {
-            m_secureAction.getClassLoader(BundleClassLoader.class).loadClass(name);
+            BundleRevisionImpl.getSecureAction()
+                .getClassLoader(BundleClassLoader.class).loadClass(name);
 
             StringBuffer sb = new StringBuffer("*** Package '");
             sb.append(pkgName);

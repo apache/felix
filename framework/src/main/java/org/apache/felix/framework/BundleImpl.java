@@ -1118,7 +1118,7 @@ class BundleImpl implements Bundle
 
         // Set protection domain after adding the revision to the bundle,
         // since this requires that the bundle has a revision.
-        ((BundleRevisionImpl) revision).setSecurityContext(
+        ((BundleRevisionImpl) revision).setProtectionDomain(
             new BundleProtectionDomain(getFramework(), this));
 
         SecurityProvider sp = getFramework().getSecurityProvider();
@@ -1128,7 +1128,7 @@ class BundleImpl implements Bundle
             {
                 sp.checkBundle(this);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 m_revisions.remove(m_revisions.size() - 1);
                 throw ex;
@@ -1201,7 +1201,7 @@ class BundleImpl implements Bundle
         for (int i = m_revisions.size() - 1; (i >= 0) && (pd == null); i--)
         {
             pd = (ProtectionDomain)
-                ((BundleRevisionImpl) m_revisions.get(i)).getSecurityContext();
+                ((BundleRevisionImpl) m_revisions.get(i)).getProtectionDomain();
         }
 
         return pd;
@@ -1248,7 +1248,7 @@ class BundleImpl implements Bundle
         }
     }
 
-    BundleContext _getBundleContext() 
+    BundleContext _getBundleContext()
     {
         return m_context;
     }

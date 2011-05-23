@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -152,6 +152,11 @@ public class BundleRevisionImpl implements BundleRevision
             : ManifestParser.parseDelimitedString(mp.getActivationIncludeDirective(), ",");
         m_symbolicName = mp.getSymbolicName();
         m_isExtension = mp.isExtension();
+    }
+
+    static SecureAction getSecureAction()
+    {
+        return m_secureAction;
     }
 
     int getDeclaredActivationPolicy()
@@ -334,12 +339,12 @@ public class BundleRevisionImpl implements BundleRevision
         }
     }
 
-    public synchronized void setSecurityContext(Object securityContext)
+    public synchronized void setProtectionDomain(ProtectionDomain pd)
     {
-        m_protectionDomain = (ProtectionDomain) securityContext;
+        m_protectionDomain = pd;
     }
 
-    public synchronized Object getSecurityContext()
+    public synchronized ProtectionDomain getProtectionDomain()
     {
         return m_protectionDomain;
     }
@@ -384,7 +389,7 @@ public class BundleRevisionImpl implements BundleRevision
     {
         List<Content> contentList = new ArrayList();
         calculateContentPath(this, getContent(), contentList, true);
-        
+
         List<BundleRevision> fragments = null;
         List<Content> fragmentContents = null;
         if (m_wiring != null)
