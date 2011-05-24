@@ -367,6 +367,17 @@ public class ManifestParser
         return clauses;
     }
 
+    public static List<BundleRequirement> parseDynamicImportHeader(
+        Logger logger, BundleRevision owner, String header)
+        throws BundleException
+    {
+
+        List<ParsedHeaderClause> importClauses = parseStandardHeader(header);
+        importClauses = normalizeDynamicImportClauses(logger, importClauses, "2");
+        List<BundleRequirement> reqs = convertImports(importClauses, owner);
+        return reqs;
+    }
+
     private static List<BundleRequirement> convertImports(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {

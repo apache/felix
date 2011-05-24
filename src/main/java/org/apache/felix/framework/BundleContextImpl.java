@@ -341,7 +341,8 @@ class BundleContextImpl implements FelixBundleContext
     public <S> ServiceRegistration<S> registerService(
         Class<S> clazz, S svcObj, Dictionary<String, ? > dict)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (ServiceRegistration<S>)
+            registerService(new String[] { clazz.getName() }, svcObj, dict);
     }
 
     public ServiceReference<?> getServiceReference(String clazz)
