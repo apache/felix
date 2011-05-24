@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.felix.framework.InvokeHookCallback;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.ServiceRegistry;
 import org.osgi.framework.AllServiceListener;
@@ -60,7 +59,7 @@ public class EventDispatcher
     static final int LISTENER_ARRAY_INCREMENT = 5;
 
     private final Logger m_logger;
-    private volatile ServiceRegistry m_serviceRegistry = null;
+    private final ServiceRegistry m_registry;
 
     // Representation of an empty listener list.
     private static final Object[] m_emptyList = new Object[0];
@@ -81,14 +80,15 @@ public class EventDispatcher
     // Pooled requests to avoid memory allocation.
     private static final ArrayList m_requestPool = new ArrayList();
 
-    private EventDispatcher(Logger logger)
+    private EventDispatcher(Logger logger, ServiceRegistry registry)
     {
         m_logger = logger;
+        m_registry = registry;
     }
 
-    public static EventDispatcher start(Logger logger)
+    public static EventDispatcher start(Logger logger, ServiceRegistry registry)
     {
-        EventDispatcher eventDispatcher = new EventDispatcher(logger);
+        EventDispatcher eventDispatcher = new EventDispatcher(logger, registry);
 
         synchronized (m_threadLock)
         {
@@ -126,11 +126,6 @@ public class EventDispatcher
         }
 
         return eventDispatcher;
-    }
-
-    public void setServiceRegistry(ServiceRegistry sr)
-    {
-        m_serviceRegistry = sr;
     }
 
     public static void shutdown()
@@ -630,31 +625,36 @@ public class EventDispatcher
             listeners = m_serviceListeners;
         }
 
-        if (m_serviceRegistry != null)
+        Set<ServiceReference<EventHook>> eventHooks = m_registry.getHooks(EventHook.class);
+        if ((eventHooks != null) && !eventHooks.isEmpty())
         {
-            Set<ServiceReference<EventHook>> eventHooks =
-                m_serviceRegistry.getHooks(EventHook.class);
-            if ((eventHooks != null) && !eventHooks.isEmpty())
+            final ListenerBundleContextCollectionWrapper wrapper =
+                new ListenerBundleContextCollectionWrapper(listeners);
+            for (ServiceReference<EventHook> sr : eventHooks)
             {
-                final ListenerBundleContextCollectionWrapper wrapper =
-                    new ListenerBundleContextCollectionWrapper(listeners);
-                InvokeHookCallback callback = new InvokeHookCallback()
+                if (felix != null)
                 {
-                    public void invokeHook(Object hook)
+                    EventHook eh = m_registry.getServiceSafely(felix, sr);
+                    if (eh != null)
                     {
-                        ((EventHook) hook).event(event, wrapper);
-                    }
-                };
-                for (ServiceReference<EventHook> sr : eventHooks)
-                {
-                    if (felix != null)
-                    {
-                        m_serviceRegistry.invokeHook(sr, felix, callback);
+                        try
+                        {
+                            eh.event(event, wrapper);
+                        }
+                        catch (Throwable th)
+                        {
+                            m_logger.log(sr, Logger.LOG_WARNING,
+                                "Problem invoking service registry hook", th);
+                        }
+                        finally
+                        {
+                            m_registry.ungetService(felix, sr);
+                        }
                     }
                 }
-
-                listeners = wrapper.getListeners();
             }
+
+            listeners = wrapper.getListeners();
         }
 
         // Fire all service events immediately on the calling thread.

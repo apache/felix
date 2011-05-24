@@ -238,7 +238,20 @@ public class ServiceRegistry
         return null;
     }
 
-    public Object getService(Bundle bundle, ServiceReference ref)
+    public <S> S getServiceSafely(Bundle bundle, ServiceReference<S> ref)
+    {
+        try
+        {
+            return getService(bundle, ref);
+        }
+        catch (ServiceException ex)
+        {
+            // Just ignore and return null.
+        }
+        return null;
+    }
+
+    public <S> S getService(Bundle bundle, ServiceReference<S> ref)
     {
         UsageCount usage = null;
         Object svcObj = null;
@@ -331,7 +344,7 @@ public class ServiceRegistry
             }
         }
 
-        return svcObj;
+        return (S) svcObj;
     }
 
     public boolean ungetService(Bundle bundle, ServiceReference ref)
@@ -755,34 +768,6 @@ public class ServiceRegistry
         SortedSet<ServiceReference<?>> ss)
     {
         return (SortedSet<ServiceReference<S>>) (SortedSet) ss;
-    }
-
-    /**
-     * Invokes a Service Registry Hook
-     * @param ref The ServiceReference associated with the hook to be invoked, the hook
-     *        service object will be obtained through this object.
-     * @param framework The framework that is invoking the hook, typically the Felix object.
-     * @param callback This is a callback object that is invoked with the actual hook object to
-     *        be used, either the plain hook, or one obtained from the ServiceFactory.
-     */
-    public void invokeHook(
-        ServiceReference ref, Framework framework, InvokeHookCallback callback)
-    {
-        Object hook = getService(framework, ref);
-
-        try
-        {
-            callback.invokeHook(hook);
-        }
-        catch (Throwable th)
-        {
-            m_logger.log(ref, Logger.LOG_WARNING,
-                "Problem invoking Service Registry Hook", th);
-        }
-        finally
-        {
-            ungetService(framework, ref);
-        }
     }
 
     private static class UsageCount

@@ -83,9 +83,8 @@ public class EventDispatcherTest extends TestCase
         registry.registerService(null, new String [] {EventHook.class.getName()}, eh2, new Hashtable());
 
         // -- Set up event dispatcher
-        EventDispatcher ed = EventDispatcher.start(logger);
+        EventDispatcher ed = EventDispatcher.start(logger, registry);
         EventDispatcher.shutdown(); // stop the thread - would be nicer if we could create one without a thread for testing
-        ed.setServiceRegistry(registry);
 
         // -- Register some listeners
         final List fired = Collections.synchronizedList(new ArrayList());
