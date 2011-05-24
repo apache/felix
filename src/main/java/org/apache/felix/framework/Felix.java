@@ -2897,17 +2897,17 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Invoke ListenerHook.removed() if filter updated.
-        List listenerHooks = m_registry.getListenerHooks();
+        Set<ServiceReference<ListenerHook>> listenerHooks =
+            m_registry.getHooks(ListenerHook.class);
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
                 new ListenerHookInfoImpl(
                 ((BundleImpl) bundle)._getBundleContext(), l, oldFilter.toString(), true));
             InvokeHookCallback removedCallback = new ListenerHookRemovedCallback(removed);
-            for (int i = 0; i < listenerHooks.size(); i++)
+            for (ServiceReference<ListenerHook> sr : listenerHooks)
             {
-                m_registry.invokeHook(
-                    (ServiceReference) listenerHooks.get(i), this, removedCallback);
+                m_registry.invokeHook(sr, this, removedCallback);
             }
         }
 
@@ -2921,9 +2921,9 @@ public class Felix extends BundleImpl implements Framework
                 ((ListenerHook) hook).added(added);
             }
         };
-        for (int i = 0; i < listenerHooks.size(); i++)
+        for (ServiceReference<ListenerHook> sr : listenerHooks)
         {
-            m_registry.invokeHook((ServiceReference) listenerHooks.get(i), this, addedCallback);
+            m_registry.invokeHook(sr, this, addedCallback);
         }
     }
 
@@ -2942,12 +2942,13 @@ public class Felix extends BundleImpl implements Framework
         if (listener != null)
         {
             // Invoke the ListenerHook.removed() on all hooks.
-            List listenerHooks = m_registry.getListenerHooks();
+            Set<ServiceReference<ListenerHook>> listenerHooks =
+                m_registry.getHooks(ListenerHook.class);
             Collection c = Collections.singleton(listener);
             InvokeHookCallback callback = new ListenerHookRemovedCallback(c);
-            for (int i = 0; i < listenerHooks.size(); i++)
+            for (ServiceReference<ListenerHook> sr : listenerHooks)
             {
-                m_registry.invokeHook((ServiceReference) listenerHooks.get(i), this, callback);
+                m_registry.invokeHook(sr, this, callback);
             }
         }
     }
@@ -3122,7 +3123,8 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // activate findhooks
-        List findHooks = m_registry.getFindHooks();
+        Set<ServiceReference<FindHook>> findHooks =
+            m_registry.getHooks(FindHook.class);
         InvokeHookCallback callback = new InvokeHookCallback()
         {
             public void invokeHook(Object hook)
@@ -3134,9 +3136,9 @@ public class Felix extends BundleImpl implements Framework
                     new ShrinkableCollection(refList));
             }
         };
-        for (int i = 0; i < findHooks.size(); i++)
+        for (ServiceReference<FindHook> sr : findHooks)
         {
-            m_registry.invokeHook((ServiceReference) findHooks.get(i), this, callback);
+            m_registry.invokeHook(sr, this, callback);
         }
 
         if (refList.size() > 0)
@@ -3247,7 +3249,7 @@ public class Felix extends BundleImpl implements Framework
         m_registry.blackListHook(sr);
     }
 
-    public <S> SortedSet<ServiceReference<S>> getHooks(Class<S> hookClass)
+    public <S> Set<ServiceReference<S>> getHooks(Class<S> hookClass)
     {
         return m_registry.getHooks(hookClass);
     }
