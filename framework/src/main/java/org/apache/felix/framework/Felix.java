@@ -606,8 +606,16 @@ public class Felix extends BundleImpl implements Framework
                 m_activatorList = (List) m_configMutableMap.get(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
                 m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
 
+                // Create service registry.
+                m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
+                    public void serviceChanged(ServiceEvent event, Dictionary oldProps)
+                    {
+                        fireServiceEvent(event, oldProps);
+                    }
+                });
+
                 // Initialize event dispatcher.
-                m_dispatcher = EventDispatcher.start(m_logger);
+                m_dispatcher = EventDispatcher.start(m_logger, m_registry);
 
                 // Create the bundle cache, if necessary, so that we can reload any
                 // installed bundles.
@@ -741,15 +749,6 @@ public class Felix extends BundleImpl implements Framework
                 // bundle ID from persistent storage. In case of failure, we should
                 // keep the max value.
                 m_nextId = Math.max(m_nextId, loadNextId());
-
-                // Create service registry.
-                m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
-                    public void serviceChanged(ServiceEvent event, Dictionary oldProps)
-                    {
-                        fireServiceEvent(event, oldProps);
-                    }
-                });
-                m_dispatcher.setServiceRegistry(m_registry);
 
                 // The framework is now in its startup sequence.
                 setBundleStateAndNotify(this, Bundle.STARTING);
@@ -2904,26 +2903,50 @@ public class Felix extends BundleImpl implements Framework
             final Collection removed = Collections.singleton(
                 new ListenerHookInfoImpl(
                 ((BundleImpl) bundle)._getBundleContext(), l, oldFilter.toString(), true));
-            InvokeHookCallback removedCallback = new ListenerHookRemovedCallback(removed);
             for (ServiceReference<ListenerHook> sr : listenerHooks)
             {
-                m_registry.invokeHook(sr, this, removedCallback);
+                ListenerHook lh = m_registry.getServiceSafely(this, sr);
+                if (lh != null)
+                {
+                    try
+                    {
+                        lh.removed(removed);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.log(sr, Logger.LOG_WARNING,
+                            "Problem invoking service registry hook", th);
+                    }
+                    finally
+                    {
+                        m_registry.ungetService(this, sr);
+                    }
+                }
             }
         }
 
         // Invoke the ListenerHook.added() on all hooks.
         final Collection added = Collections.singleton(
             new ListenerHookInfoImpl(((BundleImpl) bundle)._getBundleContext(), l, f, false));
-        InvokeHookCallback addedCallback = new InvokeHookCallback()
-        {
-            public void invokeHook(Object hook)
-            {
-                ((ListenerHook) hook).added(added);
-            }
-        };
         for (ServiceReference<ListenerHook> sr : listenerHooks)
         {
-            m_registry.invokeHook(sr, this, addedCallback);
+            ListenerHook lh = m_registry.getServiceSafely(this, sr);
+            if (lh != null)
+            {
+                try
+                {
+                    lh.added(added);
+                }
+                catch (Throwable th)
+                {
+                    m_logger.log(sr, Logger.LOG_WARNING,
+                        "Problem invoking service registry hook", th);
+                }
+                finally
+                {
+                    m_registry.ungetService(this, sr);
+                }
+            }
         }
     }
 
@@ -2944,11 +2967,26 @@ public class Felix extends BundleImpl implements Framework
             // Invoke the ListenerHook.removed() on all hooks.
             Set<ServiceReference<ListenerHook>> listenerHooks =
                 m_registry.getHooks(ListenerHook.class);
-            Collection c = Collections.singleton(listener);
-            InvokeHookCallback callback = new ListenerHookRemovedCallback(c);
+            Collection removed = Collections.singleton(listener);
             for (ServiceReference<ListenerHook> sr : listenerHooks)
             {
-                m_registry.invokeHook(sr, this, callback);
+                ListenerHook lh = m_registry.getServiceSafely(this, sr);
+                if (lh != null)
+                {
+                    try
+                    {
+                        lh.removed(removed);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.log(sr, Logger.LOG_WARNING,
+                            "Problem invoking service registry hook", th);
+                    }
+                    finally
+                    {
+                        m_registry.ungetService(this, sr);
+                    }
+                }
             }
         }
     }
@@ -3053,14 +3091,23 @@ public class Felix extends BundleImpl implements Framework
         // to invoke the callback with all existing service listeners.
         if (ServiceRegistry.isHook(classNames, ListenerHook.class, svcObj))
         {
-            m_registry.invokeHook(reg.getReference(), this, new InvokeHookCallback()
+            ListenerHook lh = (ListenerHook) m_registry.getServiceSafely(this, reg.getReference());
+            if (lh != null)
             {
-                public void invokeHook(Object hook)
+                try
                 {
-                    ((ListenerHook) hook).
-                        added(m_dispatcher.wrapAllServiceListeners(false));
+                    lh.added(m_dispatcher.wrapAllServiceListeners(false));
                 }
-            });
+                catch (Throwable th)
+                {
+                    m_logger.log(reg.getReference(), Logger.LOG_WARNING,
+                        "Problem invoking service registry hook", th);
+                }
+                finally
+                {
+                    m_registry.ungetService(this, reg.getReference());
+                }
+            }
         }
 
         // TODO: CONCURRENCY - Reconsider firing event here, outside of the
@@ -3125,20 +3172,29 @@ public class Felix extends BundleImpl implements Framework
         // activate findhooks
         Set<ServiceReference<FindHook>> findHooks =
             m_registry.getHooks(FindHook.class);
-        InvokeHookCallback callback = new InvokeHookCallback()
-        {
-            public void invokeHook(Object hook)
-            {
-                ((FindHook) hook).find(bundle._getBundleContext(),
-                    className,
-                    expr,
-                    !checkAssignable,
-                    new ShrinkableCollection(refList));
-            }
-        };
         for (ServiceReference<FindHook> sr : findHooks)
         {
-            m_registry.invokeHook(sr, this, callback);
+            FindHook fh = m_registry.getServiceSafely(this, sr);
+            if (fh != null)
+            {
+                try
+                {
+                    fh.find(bundle._getBundleContext(),
+                        className,
+                        expr,
+                        !checkAssignable,
+                        new ShrinkableCollection(refList));
+                }
+                catch (Throwable th)
+                {
+                    m_logger.log(sr, Logger.LOG_WARNING,
+                        "Problem invoking service registry hook", th);
+                }
+                finally
+                {
+                    m_registry.ungetService(this, sr);
+                }
+            }
         }
 
         if (refList.size() > 0)
@@ -4989,21 +5045,6 @@ public class Felix extends BundleImpl implements Framework
                     fireFrameworkEvent(FrameworkEvent.ERROR, m_bundle, ex);
                 }
             }
-        }
-    }
-
-    private static class ListenerHookRemovedCallback implements InvokeHookCallback
-    {
-        private final Collection /* ListenerHookInfo */ m_removed;
-
-        ListenerHookRemovedCallback(Collection /* ListenerHookInfo */ removed)
-        {
-            m_removed = removed;
-        }
-
-        public void invokeHook(Object hook)
-        {
-            ((ListenerHook) hook).removed(m_removed);
         }
     }
 
