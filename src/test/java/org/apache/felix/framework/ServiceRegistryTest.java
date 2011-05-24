@@ -18,10 +18,8 @@
  */
 package org.apache.felix.framework;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -35,7 +33,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.service.EventHook;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
-import org.osgi.framework.launch.Framework;
 
 public class ServiceRegistryTest extends TestCase
 {
@@ -293,96 +290,5 @@ public class ServiceRegistryTest extends TestCase
         assertEquals("Unregistration should have no effect", 0, sr.getHooks(EventHook.class).size());
         assertEquals("Unregistration should have no effect", 0, sr.getHooks(FindHook.class).size());
         assertEquals("Unregistration should have no effect", 0, sr.getHooks(ListenerHook.class).size());
-    }
-
-    public void testInvokeHook()
-    {
-        ServiceRegistry sr = new ServiceRegistry(null, null);
-
-        final List result = new ArrayList();
-        InvokeHookCallback callback = new InvokeHookCallback()
-        {
-            public void invokeHook(Object hook)
-            {
-                result.add(hook);
-            }
-        };
-
-        MockControl control = MockControl.createNiceControl(Framework.class);
-        Framework fr = (Framework) control.getMock();
-        control.replay();
-
-        FindHook hook = new FindHook()
-        {
-            public void find(BundleContext context, String name, String filter,
-                    boolean allServices, Collection references)
-            {
-            }
-        };
-        ServiceRegistration reg = new ServiceRegistrationImpl(sr, null, null, null,
-            hook, new Hashtable());
-
-        assertEquals("Precondition failed", 0, result.size());
-        sr.invokeHook(reg.getReference(), fr, callback);
-        assertEquals(1, result.size());
-        assertSame(hook, result.iterator().next());
-    }
-
-    public void testInvokeHookFactory()
-    {
-        ServiceRegistry sr = new ServiceRegistry(null, null);
-
-        final List result = new ArrayList();
-        InvokeHookCallback callback = new InvokeHookCallback()
-        {
-            public void invokeHook(Object hook)
-            {
-                result.add(hook);
-            }
-        };
-
-        MockControl control = MockControl.createNiceControl(Framework.class);
-        Framework fr = (Framework) control.getMock();
-        control.replay();
-
-        final FindHook hook = new FindHook()
-        {
-            public void find(BundleContext context, String name, String filter,
-                    boolean allServices, Collection references)
-            {
-            }
-        };
-
-        final List sfGet = new ArrayList();
-        final List sfUnget = new ArrayList();
-        ServiceFactory sf = new ServiceFactory()
-        {
-            public Object getService(Bundle b, ServiceRegistration reg)
-            {
-                sfGet.add(reg);
-                return hook;
-            }
-
-            public void ungetService(Bundle b, ServiceRegistration reg, Object svcObj)
-            {
-                sfUnget.add(reg);
-                assertSame(svcObj, hook);
-            }
-        };
-
-        ServiceRegistration reg = new ServiceRegistrationImpl(sr, null,
-            new String[] {FindHook.class.getName()}, null,
-            sf, new Hashtable());
-
-        assertEquals("Precondition failed", 0, result.size());
-        assertEquals("Precondition failed", 0, sfGet.size());
-        assertEquals("Precondition failed", 0, sfUnget.size());
-        sr.invokeHook(reg.getReference(), fr, callback);
-        assertEquals(1, result.size());
-        assertSame(hook, result.iterator().next());
-        assertEquals(1, sfGet.size());
-        assertEquals(1, sfUnget.size());
-        assertSame(reg, sfGet.iterator().next());
-        assertSame(reg, sfUnget.iterator().next());
     }
 }

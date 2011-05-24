@@ -1366,7 +1366,7 @@ public class BundleWiringImpl implements BundleWiring
                     Set<ServiceReference<WeavingHook>> hooks =
                         felix.getHooks(WeavingHook.class);
                     WovenClassImpl wci = null;
-                    if ((hooks != null) && !hooks.isEmpty())
+                    if (!hooks.isEmpty())
                     {
                         // Create woven class to be used for hooks.
                         wci = new WovenClassImpl(name, BundleWiringImpl.this, bytes);
