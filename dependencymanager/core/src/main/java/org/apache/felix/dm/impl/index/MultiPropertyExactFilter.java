@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.dm.FilterIndex;
@@ -45,15 +46,15 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
     private final Object m_lock = new Object();
     private ServiceTracker m_tracker;
     private BundleContext m_context;
-    private final List /* <String> */ m_propertyKeys;
+    private final TreeSet /* <String> */ m_propertyKeys = new TreeSet(String.CASE_INSENSITIVE_ORDER);
     private final Map /* <String, List<ServiceReference>> */ m_keyToServiceReferencesMap = new HashMap();
     private final Map /* <String, List<ServiceListener>> */ m_keyToListenersMap = new HashMap();
     private final Map /* <ServiceListener, String> */ m_listenerToFilterMap = new HashMap();
 
     public MultiPropertyExactFilter(String[] propertyKeys) {
-        String[] keys = (String[]) Arrays.copyOf(propertyKeys, propertyKeys.length);
-        Arrays.sort(keys);
-        m_propertyKeys = Arrays.asList(keys);
+        for (int i = 0; i < propertyKeys.length; i++) {
+            m_propertyKeys.add(propertyKeys[i]);
+        }
     }
     
     public void open(BundleContext context) {
@@ -191,7 +192,10 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
     }
 
     public boolean isApplicable(String[] propertyKeys) {
-        List list = Arrays.asList(propertyKeys);
+        TreeSet list = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+        for (int i = 0; i < propertyKeys.length; i++) {
+            list.add(propertyKeys[i]);
+        }
         Iterator iterator = m_propertyKeys.iterator();
         while (iterator.hasNext()) {
             String item = (String) iterator.next();
@@ -215,14 +219,14 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
         // (&(objectClass=xyz)(&(a=x)(b=y)))
         
         Set /* <String> */found = new HashSet();
-        if (filter != null && filter.startsWith("(&(objectClass=") && filter.contains(")(&(") && filter.endsWith(")))")) {
+        if (filter != null && filter.startsWith("(&(") && filter.substring(3, 14).equalsIgnoreCase(Constants.OBJECTCLASS) && filter.substring(14, 15).equals("=") && filter.contains(")(&(") && filter.endsWith(")))")) {
             int i1 = filter.indexOf(")(&(");
-            String className = filter.substring("(&(objectClass=".length(), i1);
-            if (!m_propertyKeys.contains("objectClass")) {
+            String className = filter.substring(("(&(" + Constants.OBJECTCLASS + "=").length(), i1);
+            if (!m_propertyKeys.contains(Constants.OBJECTCLASS)) {
                 return false;
             }
             else {
-                found.add("objectClass");
+                found.add(Constants.OBJECTCLASS);
             }
             String[] parts = filter.substring(i1 + ")(&(".length(), filter.length() - ")))".length()).split("\\)\\(");
             for (int i = 0; i < parts.length; i++) {
@@ -263,7 +267,7 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
                 return true;
             }
         }
-        else if (clazz != null && filter == null && m_propertyKeys.size() == 1 && m_propertyKeys.get(0).equals(Constants.OBJECTCLASS)) {
+        else if (clazz != null && filter == null && m_propertyKeys.size() == 1 && Constants.OBJECTCLASS.equalsIgnoreCase((String) m_propertyKeys.first())) {
             return true;
         }
         return false;
@@ -272,13 +276,13 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
     private List /* <String> */ createKeys(ServiceReference reference) {
         List /* <String> */ results = new ArrayList();
         
-        results.add("");
+        results.add(""); // ???
         
         String[] keys = reference.getPropertyKeys();
-        Arrays.sort(keys);
+        Arrays.sort(keys, String.CASE_INSENSITIVE_ORDER);
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < keys.length; i++) {
-            String key = keys[i];
+            String key = keys[i].toLowerCase();
             if (m_propertyKeys.contains(key)) {
                 Object value = reference.getProperty(key);
                 if (value instanceof String[]) {
@@ -315,14 +319,14 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
         StringBuffer index = new StringBuffer();
         Iterator iterator = m_propertyKeys.iterator();
         while (iterator.hasNext()) {
-            String key = (String) iterator.next();
+            String key = ((String) iterator.next()).toLowerCase();
             if (index.length() > 0) {
                 index.append(';');
             }
             index.append(key);
             index.append('=');
             String value = null;
-            if (clazz != null && Constants.OBJECTCLASS.equals(key)) {
+            if (clazz != null && Constants.OBJECTCLASS.equalsIgnoreCase(key)) {
                 value = clazz;
             } // (&(obC=a)(&(a=b)(c=d)))
             if (filter != null) {
