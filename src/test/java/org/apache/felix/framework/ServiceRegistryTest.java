@@ -37,343 +37,343 @@ import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 import org.osgi.framework.launch.Framework;
 
-public class ServiceRegistryTest extends TestCase 
+public class ServiceRegistryTest extends TestCase
 {
-    public void testRegisterEventHookService() 
+    public void testRegisterEventHookService()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        EventHook hook = new EventHook() 
+        EventHook hook = new EventHook()
         {
-            public void event(ServiceEvent event, Collection contexts) 
+            public void event(ServiceEvent event, Collection contexts)
             {
-            }            
+            }
         };
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {EventHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getEventHooks().size());
-        assertTrue(sr.getEventHooks().iterator().next() instanceof ServiceReference);
-        assertSame(reg.getReference(), sr.getEventHooks().iterator().next());
+        assertEquals(1, sr.getHooks(EventHook.class).size());
+        assertTrue(sr.getHooks(EventHook.class).iterator().next() instanceof ServiceReference);
+        assertSame(reg.getReference(), sr.getHooks(EventHook.class).iterator().next());
         assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getListenerHooks().size());
-        
+        assertEquals("Postcondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(ListenerHook.class).size());
+
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
 
-    public void testRegisterEventHookServiceFactory() 
+    public void testRegisterEventHookServiceFactory()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         MockControl sfControl = MockControl.createNiceControl(ServiceFactory.class);
         sfControl.replay();
         ServiceFactory sf = (ServiceFactory) sfControl.getMock();
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {EventHook.class.getName()}, sf, new Hashtable());
-        assertEquals(1, sr.getEventHooks().size());
-        assertSame(reg.getReference(), sr.getEventHooks().iterator().next());
-        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());        
-        assertEquals("Postcondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getListenerHooks().size());
+        assertEquals(1, sr.getHooks(EventHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(EventHook.class).iterator().next());
+        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());
+        assertEquals("Postcondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(ListenerHook.class).size());
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
-    
-    public void testRegisterFindHookService() 
+
+    public void testRegisterFindHookService()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        FindHook hook = new FindHook() 
+        FindHook hook = new FindHook()
         {
             public void find(BundleContext context, String name, String filter,
-                boolean allServices, Collection references) 
+                boolean allServices, Collection references)
             {
             }
         };
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {FindHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getFindHooks().size());
-        assertSame(reg.getReference(), sr.getFindHooks().iterator().next());
+        assertEquals(1, sr.getHooks(FindHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(FindHook.class).iterator().next());
         assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getListenerHooks().size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(ListenerHook.class).size());
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
 
-    public void testRegisterFindHookServiceFactory() 
+    public void testRegisterFindHookServiceFactory()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         MockControl sfControl = MockControl.createNiceControl(ServiceFactory.class);
         sfControl.replay();
         ServiceFactory sf = (ServiceFactory) sfControl.getMock();
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {FindHook.class.getName()}, sf, new Hashtable());
-        assertEquals(1, sr.getFindHooks().size());
-        assertSame(reg.getReference(), sr.getFindHooks().iterator().next());
-        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());        
-        assertEquals("Postcondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getListenerHooks().size());
+        assertEquals(1, sr.getHooks(FindHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(FindHook.class).iterator().next());
+        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());
+        assertEquals("Postcondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(ListenerHook.class).size());
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
 
-    public void testRegisterListenerHookService() 
+    public void testRegisterListenerHookService()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        ListenerHook hook = new ListenerHook() 
+        ListenerHook hook = new ListenerHook()
         {
-            public void added(Collection listeners) 
+            public void added(Collection listeners)
             {
             }
 
-            public void removed(Collection listener) 
+            public void removed(Collection listener)
             {
             }
         };
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {ListenerHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getListenerHooks().size());
-        assertSame(reg.getReference(), sr.getListenerHooks().iterator().next());
+        assertEquals(1, sr.getHooks(ListenerHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(ListenerHook.class).iterator().next());
         assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals("Postcondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getFindHooks().size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(FindHook.class).size());
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
 
-    public void testRegisterListenerHookServiceFactory() 
+    public void testRegisterListenerHookServiceFactory()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         MockControl sfControl = MockControl.createNiceControl(ServiceFactory.class);
         sfControl.replay();
         ServiceFactory sf = (ServiceFactory) sfControl.getMock();
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {ListenerHook.class.getName()}, sf, new Hashtable());
-        assertEquals(1, sr.getListenerHooks().size());
-        assertSame(reg.getReference(), sr.getListenerHooks().iterator().next());
-        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());        
-        assertEquals("Postcondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getFindHooks().size());
+        assertEquals(1, sr.getHooks(ListenerHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(ListenerHook.class).iterator().next());
+        assertSame(sf, ((ServiceRegistrationImpl) reg).getService());
+        assertEquals("Postcondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(FindHook.class).size());
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
 
-    public void testRegisterCombinedService() 
+    public void testRegisterCombinedService()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
         class CombinedService implements ListenerHook, FindHook, EventHook, Runnable
         {
-            public void added(Collection listeners) 
+            public void added(Collection listeners)
             {
             }
 
-            public void removed(Collection listener) 
+            public void removed(Collection listener)
             {
             }
 
             public void find(BundleContext context, String name, String filter,
-                    boolean allServices, Collection references) 
+                    boolean allServices, Collection references)
             {
             }
 
-            public void event(ServiceEvent event, Collection contexts) 
+            public void event(ServiceEvent event, Collection contexts)
             {
             }
 
-            public void run() 
+            public void run()
             {
             }
-            
+
         }
         CombinedService hook = new CombinedService();
-        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {
             Runnable.class.getName(),
             ListenerHook.class.getName(),
             FindHook.class.getName(),
             EventHook.class.getName()}, hook, new Hashtable());
-        assertEquals(1, sr.getListenerHooks().size());
-        assertSame(reg.getReference(), sr.getListenerHooks().iterator().next());
+        assertEquals(1, sr.getHooks(ListenerHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(ListenerHook.class).iterator().next());
         assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals(1, sr.getEventHooks().size());
-        assertSame(reg.getReference(), sr.getEventHooks().iterator().next());
+        assertEquals(1, sr.getHooks(EventHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(EventHook.class).iterator().next());
         assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
-        assertEquals(1, sr.getFindHooks().size());
-        assertSame(reg.getReference(), sr.getFindHooks().iterator().next());
+        assertEquals(1, sr.getHooks(FindHook.class).size());
+        assertSame(reg.getReference(), sr.getHooks(FindHook.class).iterator().next());
         assertSame(hook, ((ServiceRegistrationImpl) reg).getService());
 
         sr.unregisterService(b, reg);
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getEventHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getFindHooks().size());
-        assertEquals("Should be no hooks left after unregistration", 0, sr.getListenerHooks().size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Should be no hooks left after unregistration", 0, sr.getHooks(ListenerHook.class).size());
     }
 
-    public void testRegisterPlainService() 
+    public void testRegisterPlainService()
     {
         MockControl control = MockControl.createNiceControl(Bundle.class);
         Bundle b = (Bundle) control.getMock();
         control.replay();
-        
+
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        String svcObj = "hello";        
-        assertEquals("Precondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Precondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Precondition failed", 0, sr.getListenerHooks().size());
+        String svcObj = "hello";
+        assertEquals("Precondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Precondition failed", 0, sr.getHooks(ListenerHook.class).size());
         ServiceRegistration reg = sr.registerService(b, new String [] {String.class.getName()}, svcObj, new Hashtable());
-        assertEquals("Postcondition failed", 0, sr.getEventHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getFindHooks().size());
-        assertEquals("Postcondition failed", 0, sr.getListenerHooks().size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Postcondition failed", 0, sr.getHooks(ListenerHook.class).size());
 
         sr.unregisterService(b, reg);
-        assertEquals("Unregistration should have no effect", 0, sr.getEventHooks().size());
-        assertEquals("Unregistration should have no effect", 0, sr.getFindHooks().size());
-        assertEquals("Unregistration should have no effect", 0, sr.getListenerHooks().size());
+        assertEquals("Unregistration should have no effect", 0, sr.getHooks(EventHook.class).size());
+        assertEquals("Unregistration should have no effect", 0, sr.getHooks(FindHook.class).size());
+        assertEquals("Unregistration should have no effect", 0, sr.getHooks(ListenerHook.class).size());
     }
-    
-    public void testInvokeHook() 
+
+    public void testInvokeHook()
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
-        
+
         final List result = new ArrayList();
-        InvokeHookCallback callback = new InvokeHookCallback() 
+        InvokeHookCallback callback = new InvokeHookCallback()
         {
-            public void invokeHook(Object hook) 
+            public void invokeHook(Object hook)
             {
                 result.add(hook);
-            }            
+            }
         };
-        
+
         MockControl control = MockControl.createNiceControl(Framework.class);
         Framework fr = (Framework) control.getMock();
         control.replay();
-        
-        FindHook hook = new FindHook() 
+
+        FindHook hook = new FindHook()
         {
             public void find(BundleContext context, String name, String filter,
-                    boolean allServices, Collection references) 
+                    boolean allServices, Collection references)
             {
-            }            
+            }
         };
-        ServiceRegistration reg = new ServiceRegistrationImpl(sr, null, null, null, 
+        ServiceRegistration reg = new ServiceRegistrationImpl(sr, null, null, null,
             hook, new Hashtable());
-        
+
         assertEquals("Precondition failed", 0, result.size());
         sr.invokeHook(reg.getReference(), fr, callback);
         assertEquals(1, result.size());
         assertSame(hook, result.iterator().next());
     }
-    
-    public void testInvokeHookFactory() 
+
+    public void testInvokeHookFactory()
     {
         ServiceRegistry sr = new ServiceRegistry(null, null);
 
         final List result = new ArrayList();
-        InvokeHookCallback callback = new InvokeHookCallback() 
+        InvokeHookCallback callback = new InvokeHookCallback()
         {
-            public void invokeHook(Object hook) 
+            public void invokeHook(Object hook)
             {
                 result.add(hook);
-            }            
+            }
         };
 
         MockControl control = MockControl.createNiceControl(Framework.class);
         Framework fr = (Framework) control.getMock();
         control.replay();
-        
-        final FindHook hook = new FindHook() 
+
+        final FindHook hook = new FindHook()
         {
             public void find(BundleContext context, String name, String filter,
-                    boolean allServices, Collection references) 
+                    boolean allServices, Collection references)
             {
-            }            
+            }
         };
-        
+
         final List sfGet = new ArrayList();
         final List sfUnget = new ArrayList();
-        ServiceFactory sf = new ServiceFactory() 
+        ServiceFactory sf = new ServiceFactory()
         {
-            public Object getService(Bundle b, ServiceRegistration reg) 
+            public Object getService(Bundle b, ServiceRegistration reg)
             {
                 sfGet.add(reg);
                 return hook;
             }
 
-            public void ungetService(Bundle b, ServiceRegistration reg, Object svcObj) 
+            public void ungetService(Bundle b, ServiceRegistration reg, Object svcObj)
             {
                 sfUnget.add(reg);
                 assertSame(svcObj, hook);
-            }            
+            }
         };
 
-        ServiceRegistration reg = new ServiceRegistrationImpl(sr, null, 
-            new String[] {FindHook.class.getName()}, null, 
-            sf, new Hashtable());       
-    
+        ServiceRegistration reg = new ServiceRegistrationImpl(sr, null,
+            new String[] {FindHook.class.getName()}, null,
+            sf, new Hashtable());
+
         assertEquals("Precondition failed", 0, result.size());
         assertEquals("Precondition failed", 0, sfGet.size());
         assertEquals("Precondition failed", 0, sfUnget.size());
@@ -382,7 +382,7 @@ public class ServiceRegistryTest extends TestCase
         assertSame(hook, result.iterator().next());
         assertEquals(1, sfGet.size());
         assertEquals(1, sfUnget.size());
-        assertSame(reg, sfGet.iterator().next());        
-        assertSame(reg, sfUnget.iterator().next());        
-    } 
+        assertSame(reg, sfGet.iterator().next());
+        assertSame(reg, sfUnget.iterator().next());
+    }
 }
