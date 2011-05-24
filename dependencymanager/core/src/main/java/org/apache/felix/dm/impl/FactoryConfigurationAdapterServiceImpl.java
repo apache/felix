@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.InvocationUtil;
 import org.apache.felix.dm.PropertyMetaData;
@@ -126,17 +127,22 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
             }
 
             // Merge adapter service properties, with CM settings 
-            Dictionary serviceProperties = m_propagate ? mergeSettings(m_serviceProperties, settings) : m_serviceProperties;
+            Dictionary serviceProperties = getServiceProperties(settings);
             newService.setInterface(m_serviceInterfaces, serviceProperties);
             newService.setImplementation(impl);
-            List dependencies = m_component.getDependencies();
-            newService.add(dependencies); // TODO check if we should create a copy of dependencies ?
             newService.setComposition(m_compositionInstance, m_compositionMethod); // if not set, no effect
             newService.setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy); // if not set, no effect
+            configureAutoConfigState(newService, m_component);
+            
+            List dependencies = m_component.getDependencies();
+            for (int i = 0; i < dependencies.size(); i++) {
+                newService.add(((Dependency) dependencies.get(i)).createCopy());
+            }
+            
             for (int i = 0; i < m_stateListeners.size(); i ++) {
                 newService.addStateListener((ComponentStateListener) m_stateListeners.get(i));
             }
-            configureAutoConfigState(newService, m_component);
+            
             return newService;
         }
 
@@ -145,17 +151,17 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
          * the configuration has changed.
          */
         public void updateService(Object[] properties) {
-            Dictionary settings = (Dictionary) properties[0];
+            Dictionary cmSettings = (Dictionary) properties[0];
             Component service = (Component) properties[1];
             Object impl = service.getService();
            
             try {
                 InvocationUtil.invokeCallbackMethod(impl, m_update, 
                     new Class[][] {{ Dictionary.class }, {}}, 
-                    new Object[][] {{ settings }, {}});
+                    new Object[][] {{ cmSettings }, {}});
                 if (m_serviceInterfaces != null && m_propagate == true) {
-                    settings = mergeSettings(m_serviceProperties, settings);
-                    service.setServiceProperties(settings);
+                    Dictionary serviceProperties = getServiceProperties(cmSettings);
+                    service.setServiceProperties(serviceProperties);
                 }
             }
             
@@ -172,27 +178,34 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
          * @param settings
          * @return
          */
-        private Dictionary mergeSettings(Dictionary adapterProperties, Dictionary settings) {
+        private Dictionary getServiceProperties(Dictionary settings) {
             Dictionary props = new Hashtable();
             
-            if (adapterProperties != null) {
-                Enumeration keys = adapterProperties.keys();
+            // Add adapter Service Properties
+            if (m_serviceProperties != null) {
+                Enumeration keys = m_serviceProperties.keys();
                 while (keys.hasMoreElements()) {
                     Object key = keys.nextElement();
-                    Object val = adapterProperties.get(key);
+                    Object val = m_serviceProperties.get(key);
                     props.put(key, val);
                 }
             }
+
+            if (m_propagate) {
+                // Add CM setting into adapter service properties.
+                // (CM setting will override existing adapter service properties).
+                Enumeration keys = settings.keys();
+                while (keys.hasMoreElements()) {
+                    Object key = keys.nextElement();
+                    if (! key.toString().startsWith(".")) {
+                        // public properties are propagated
+                        Object val = settings.get(key);
+                        props.put(key, val);
+                    }
+                }
+            }
+
             
-            Enumeration keys = settings.keys();
-            while (keys.hasMoreElements()) {
-                Object key = keys.nextElement();
-                if (! key.toString().startsWith(".")) {
-                    // public properties are propagated
-                    Object val = settings.get(key);
-                    props.put(key, val);
-                }
-            }
             return props;
         }
     

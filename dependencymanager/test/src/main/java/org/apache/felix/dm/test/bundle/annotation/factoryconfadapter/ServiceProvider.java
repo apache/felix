@@ -60,7 +60,20 @@ public class ServiceProvider implements ServiceInterface
     {
         if (m_started)
         {
+            // conf should contain foo2=bar2_modified
+            if (! "bar2_modified".equals(conf.get("foo2")))
+            {
+                m_sequencer.throwable(new Exception("configuration does not contain foo=bar"));
+            }
             m_sequencer.step(4);
+        }
+        else
+        {
+            // conf should contain foo2=bar2
+            if (! "bar2".equals(conf.get("foo2")))
+            {
+                throw new IllegalArgumentException("configuration does not contain foo2=bar2: " + conf);
+            }
         }
     }
 
