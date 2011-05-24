@@ -38,7 +38,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.jar.Manifest;
 import org.apache.felix.framework.Felix.StatefulResolver;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.cache.Content;
@@ -51,6 +54,7 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
@@ -58,6 +62,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.weaving.WeavingException;
+import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -81,6 +89,8 @@ public class BundleWiringImpl implements BundleWiring
     private final List<BundleRequirement> m_resolvedReqs;
     private final List<R4Library> m_resolvedNativeLibs;
     private final List<Content> m_fragmentContents;
+
+    private volatile List<BundleRequirement> m_wovenReqs = null;
 
     private BundleClassLoader m_classLoader;
     private boolean m_isActivationTriggered = false;
@@ -313,7 +323,7 @@ public class BundleWiringImpl implements BundleWiring
 
     public boolean isCurrent()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (((BundleImpl) m_revision.getBundle()).getCurrentRevision() == m_revision);
     }
 
     public boolean isInUse()
@@ -340,12 +350,21 @@ public class BundleWiringImpl implements BundleWiring
 
     public List<BundleRequirement> getRequirements(String namespace)
     {
-
+        List<BundleRequirement> searchReqs = m_resolvedReqs;
+        List<BundleRequirement> wovenReqs = m_wovenReqs;
         List<BundleRequirement> result = m_resolvedReqs;
+
+        if (wovenReqs != null)
+        {
+            searchReqs = new ArrayList<BundleRequirement>(m_resolvedReqs);
+            searchReqs.addAll(wovenReqs);
+            result = searchReqs;
+        }
+
         if (namespace != null)
         {
             result = new ArrayList<BundleRequirement>();
-            for (BundleRequirement req : m_resolvedReqs)
+            for (BundleRequirement req : searchReqs)
             {
                 if (req.getNamespace().equals(namespace))
                 {
@@ -1336,104 +1355,261 @@ public class BundleWiringImpl implements BundleWiring
                     // Get package name.
                     String pkgName = Util.getClassPackage(name);
 
+                    // Get weaving hooks and invoke them to give them a
+                    // chance to weave the class' byte code before we
+                    // define it.
+                    // NOTE: We don't try to dynamically track hook addition
+                    // or removal, we just get a snapshot and leave any changes
+                    // as a race condition, doing any necessary clean up in
+                    // the error handling.
+                    Felix felix = ((BundleImpl) m_revision.getBundle()).getFramework();
+                    SortedSet<ServiceReference<WeavingHook>> hooks =
+                        felix.getHooks(WeavingHook.class);
+                    WovenClassImpl wci = null;
+                    if ((hooks != null) && !hooks.isEmpty())
+                    {
+                        // Create woven class to be used for hooks.
+                        wci = new WovenClassImpl(name, BundleWiringImpl.this, bytes);
+                        // Loop through hooks in service ranking order.
+                        for (ServiceReference<WeavingHook> sr : hooks)
+                        {
+                            // Only use the hook if it is not black listed.
+                            if (!felix.isHookBlackListed(sr))
+                            {
+                                // Get the hook service object.
+                                // Note that we don't use the bundle context
+                                // to get the service object since that would
+                                // perform sercurity checks.
+                                WeavingHook wh = felix.getService(felix, sr);
+                                if (wh != null)
+                                {
+                                    try
+                                    {
+                                        wh.weave(wci);
+                                    }
+                                    catch (Throwable th)
+                                    {
+                                        if (!(th instanceof WeavingException))
+                                        {
+                                            felix.blackListHook(sr);
+                                        }
+                                        felix.fireFrameworkEvent(
+                                            FrameworkEvent.ERROR,
+                                            sr.getBundle(),
+                                            th);
+
+                                        // Mark the woven class as incomplete.
+                                        wci.complete(null, null, null);
+                                        // Throw class format exception per spec.
+                                        Error error = new ClassFormatError("Weaving hook failed.");
+                                        error.initCause(th);
+                                        throw error;
+                                    }
+                                    finally
+                                    {
+                                        felix.ungetService(felix, sr);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Before we actually attempt to define the class, grab
                     // the lock for this class loader and make sure than no
                     // other thread has defined this class in the meantime.
                     synchronized (this)
                     {
-                        clazz = findLoadedClass(name);
-
-                        if (clazz == null)
+                        byte[] wovenBytes = null;
+                        Class wovenClass = null;
+                        List<String> wovenImports = null;
+                        try
                         {
-                            int activationPolicy =
-                                ((BundleImpl) getBundle()).isDeclaredActivationPolicyUsed()
-                                ? ((BundleRevisionImpl) ((BundleImpl) getBundle())
-                                    .getCurrentRevision()).getDeclaredActivationPolicy()
-                                : EAGER_ACTIVATION;
+                            clazz = findLoadedClass(name);
+                            if (clazz == null)
+                            {
+                                // If we have a woven class then get the class bytes from
+                                // it since they may have changed.
+                                // NOTE: We are taking a snapshot of these values and
+                                // are not preventing a malbehaving weaving hook from
+                                // modifying them after the fact. The price of preventing
+                                // this isn't worth it, since they can already wreck
+                                // havoc via weaving anyway. However, we do pass the
+                                // snapshot values into the woven class when we mark it
+                                // as complete so that it will refect the actual values
+                                // we used to define the class.
+                                if (wci != null)
+                                {
+                                    bytes = wovenBytes = wci.getBytes();
+                                    wovenImports = wci.getDynamicImportsInternal();
 
-                            // If the revision is using deferred activation, then if
-                            // we load this class from this revision we need to activate
-                            // the bundle before returning the class. We will short
-                            // circuit the trigger matching if the trigger is already
-                            // tripped.
-                            boolean isTriggerClass = m_isActivationTriggered
-                                ? false : m_revision.isActivationTrigger(pkgName);
-                            if (!m_isActivationTriggered
-                                && isTriggerClass
-                                && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
-                                && (getBundle().getState() == Bundle.STARTING))
-                            {
-                                List deferredList = (List) m_deferredActivation.get();
-                                if (deferredList == null)
-                                {
-                                    deferredList = new ArrayList();
-                                    m_deferredActivation.set(deferredList);
-                                }
-                                deferredList.add(new Object[] { name, getBundle() });
-                            }
-                            // We need to try to define a Package object for the class
-                            // before we call defineClass() if we haven't already
-                            // created it.
-                            if (pkgName.length() > 0)
-                            {
-                                if (getPackage(pkgName) == null)
-                                {
-                                    Object[] params = definePackage(pkgName);
-                                    if (params != null)
+                                    // Try to add any woven dynamic imports, since they
+                                    // could potentially be needed when defining the class.
+                                    List<BundleRequirement> allWovenReqs =
+                                        new ArrayList<BundleRequirement>();
+                                    for (String s : wovenImports)
                                     {
-                                        definePackage(
-                                            pkgName,
-                                            (String) params[0],
-                                            (String) params[1],
-                                            (String) params[2],
-                                            (String) params[3],
-                                            (String) params[4],
-                                            (String) params[5],
-                                            null);
+                                        try
+                                        {
+                                            List<BundleRequirement> wovenReqs =
+                                                ManifestParser.parseDynamicImportHeader(
+                                                    m_logger, m_revision, s);
+                                            allWovenReqs.addAll(wovenReqs);
+                                        }
+                                        catch (BundleException ex)
+                                        {
+                                            // There should be no exception here
+                                            // since we checked syntax before adding
+                                            // dynamic import strings to list.
+                                        }
+                                     }
+                                    // Add the dynamic requirements.
+                                    if (!allWovenReqs.isEmpty())
+                                    {
+                                        // Check for duplicate woven imports.
+                                        // First grab existing woven imports, if any.
+                                        Set<String> filters = new HashSet<String>();
+                                        if (m_wovenReqs != null)
+                                        {
+                                            for (BundleRequirement req : m_wovenReqs)
+                                            {
+                                                filters.add(
+                                                    ((BundleRequirementImpl) req)
+                                                        .getFilter().toString());
+                                            }
+                                        }
+                                        // Then check new woven imports for duplicates
+                                        // against existing and self.
+                                        int idx = allWovenReqs.size();
+                                        while (idx < allWovenReqs.size())
+                                        {
+                                            BundleRequirement wovenReq = allWovenReqs.get(idx);
+                                            String filter = ((BundleRequirementImpl)
+                                                wovenReq).getFilter().toString();
+                                            if (!filters.contains(filter))
+                                            {
+                                                filters.add(filter);
+                                                idx++;
+                                            }
+                                            else
+                                            {
+                                                allWovenReqs.remove(idx);
+                                            }
+                                        }
+                                        // Merge existing with new imports, if any.
+                                        if (!allWovenReqs.isEmpty())
+                                        {
+                                            if (m_wovenReqs != null)
+                                            {
+                                                allWovenReqs.addAll(0, m_wovenReqs);
+                                            }
+                                            m_wovenReqs = allWovenReqs;
+                                        }
+                                    }
+                                }
+
+                                int activationPolicy =
+                                    ((BundleImpl) getBundle()).isDeclaredActivationPolicyUsed()
+                                    ? ((BundleRevisionImpl) ((BundleImpl) getBundle())
+                                        .getCurrentRevision()).getDeclaredActivationPolicy()
+                                    : EAGER_ACTIVATION;
+
+                                // If the revision is using deferred activation, then if
+                                // we load this class from this revision we need to activate
+                                // the bundle before returning the class. We will short
+                                // circuit the trigger matching if the trigger is already
+                                // tripped.
+                                boolean isTriggerClass = m_isActivationTriggered
+                                    ? false : m_revision.isActivationTrigger(pkgName);
+                                if (!m_isActivationTriggered
+                                    && isTriggerClass
+                                    && (activationPolicy == BundleRevisionImpl.LAZY_ACTIVATION)
+                                    && (getBundle().getState() == Bundle.STARTING))
+                                {
+                                    List deferredList = (List) m_deferredActivation.get();
+                                    if (deferredList == null)
+                                    {
+                                        deferredList = new ArrayList();
+                                        m_deferredActivation.set(deferredList);
+                                    }
+                                    deferredList.add(new Object[] { name, getBundle() });
+                                }
+                                // We need to try to define a Package object for the class
+                                // before we call defineClass() if we haven't already
+                                // created it.
+                                if (pkgName.length() > 0)
+                                {
+                                    if (getPackage(pkgName) == null)
+                                    {
+                                        Object[] params = definePackage(pkgName);
+                                        if (params != null)
+                                        {
+                                            definePackage(
+                                                pkgName,
+                                                (String) params[0],
+                                                (String) params[1],
+                                                (String) params[2],
+                                                (String) params[3],
+                                                (String) params[4],
+                                                (String) params[5],
+                                                null);
+                                        }
+                                        else
+                                        {
+                                            definePackage(pkgName, null, null,
+                                                null, null, null, null, null);
+                                        }
+                                    }
+                                }
+
+                                // If we can load the class from a dex file do so
+                                if (content instanceof JarContent)
+                                {
+                                    try
+                                    {
+                                        clazz = getDexFileClass((JarContent) content, name, this);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // Looks like we can't
+                                    }
+                                }
+
+                                if (clazz == null)
+                                {
+                                    // If we have a security context, then use it to
+                                    // define the class with it for security purposes,
+                                    // otherwise define the class without a protection domain.
+                                    if (m_revision.getProtectionDomain() != null)
+                                    {
+                                        clazz = defineClass(name, bytes, 0, bytes.length,
+                                            m_revision.getProtectionDomain());
                                     }
                                     else
                                     {
-                                        definePackage(pkgName, null, null,
-                                            null, null, null, null, null);
+                                        clazz = defineClass(name, bytes, 0, bytes.length);
                                     }
-                                }
-                            }
 
-                            // If we can load the class from a dex file do so
-                            if (content instanceof JarContent)
-                            {
-                                try
-                                {
-                                    clazz = getDexFileClass((JarContent) content, name, this);
+                                    wovenClass = clazz;
                                 }
-                                catch (Exception ex)
-                                {
-                                    // Looks like we can't
-                                }
-                            }
 
-                            if (clazz == null)
-                            {
-                                // If we have a security context, then use it to
-                                // define the class with it for security purposes,
-                                // otherwise define the class without a protection domain.
-                                if (m_revision.getProtectionDomain() != null)
+                                // At this point if we have a trigger class, then the deferred
+                                // activation trigger has tripped.
+                                if (!m_isActivationTriggered && isTriggerClass && (clazz != null))
                                 {
-                                    clazz = defineClass(name, bytes, 0, bytes.length,
-                                        m_revision.getProtectionDomain());
-                                }
-                                else
-                                {
-                                    clazz = defineClass(name, bytes, 0, bytes.length);
-                                }
-                            }
-
-                            // At this point if we have a trigger class, then the deferred
-                            // activation trigger has tripped.
-                            if (!m_isActivationTriggered && isTriggerClass && (clazz != null))
-                            {
 // TODO: OSGi R4.3 - This isn't protected by the correct lock.
-                                m_isActivationTriggered = true;
+                                    m_isActivationTriggered = true;
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            // If we have a woven class, mark it as complete.
+                            // Not exactly clear how we should deal with the
+                            // case where the weaving didn't happen because
+                            // someone else beat us in defining the class.
+                            if (wci != null)
+                            {
+                                wci.complete(wovenClass, wovenBytes, wovenImports);
                             }
                         }
                     }
@@ -1449,7 +1625,7 @@ public class BundleWiringImpl implements BundleWiring
                         {
                             try
                             {
-                                ((BundleImpl) ((Object[]) deferredList.get(i))[1]).getFramework().activateBundle(
+                                felix.getFramework().activateBundle(
                                     (BundleImpl) ((Object[]) deferredList.get(i))[1], true);
                             }
                             catch (BundleException ex)
