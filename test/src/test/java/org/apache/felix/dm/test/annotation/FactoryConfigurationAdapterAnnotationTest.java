@@ -79,11 +79,11 @@ public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase
         {
             // Create a factory configuration in order to instantiate the ServiceProvider
             org.osgi.service.cm.Configuration cf = cm.createFactoryConfiguration("FactoryPidTest", null);
-            cf.update(new Hashtable() {{ put("foo", "bar"); }});
+            cf.update(new Hashtable() {{ put("foo2", "bar2"); }});
             // Wait for the ServiceProvider activation.
             m_ensure.waitForStep(2, 10000);
             // Update conf
-            cf.update(new Hashtable() {{ put("foo", "bar2"); }});            
+            cf.update(new Hashtable() {{ put("foo2", "bar2_modified"); }});            
             // Wait for effective update
             m_ensure.waitForStep(4, 10000);
             // Remove configuration.

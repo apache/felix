@@ -27,12 +27,30 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 public class ServiceClient
 {
     @ServiceDependency(changed="changeServiceProvider")
-    void addServiceProvider(ServiceInterface si) {
+    void addServiceProvider(Map props, ServiceInterface si) {
+        // props should contain foo=bar, foo2=bar2
+        if (! "bar".equals(props.get("foo")))
+        {
+            throw new IllegalArgumentException("configuration does not contain foo=bar: " + props);
+        }
+        if (! "bar2".equals(props.get("foo2")))
+        {
+            throw new IllegalArgumentException("configuration does not contain foo2=bar2: " + props);
+        }
         si.doService();
     }
     
-    void changeServiceProvider(Map serviceProperties, ServiceInterface si) 
+    void changeServiceProvider(Map props, ServiceInterface si) 
     {
+        // props should contain foo=bar, foo2=bar2_modified
+        if (! "bar".equals(props.get("foo")))
+        {
+            throw new IllegalArgumentException("configuration does not contain foo=bar: " + props);
+        }
+        if (! "bar2_modified".equals(props.get("foo2")))
+        {
+            throw new IllegalArgumentException("configuration does not contain foo2=bar2: " + props);
+        }
         si.doService();
     }
 }
