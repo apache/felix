@@ -1363,7 +1363,7 @@ public class BundleWiringImpl implements BundleWiring
                     // as a race condition, doing any necessary clean up in
                     // the error handling.
                     Felix felix = ((BundleImpl) m_revision.getBundle()).getFramework();
-                    SortedSet<ServiceReference<WeavingHook>> hooks =
+                    Set<ServiceReference<WeavingHook>> hooks =
                         felix.getHooks(WeavingHook.class);
                     WovenClassImpl wci = null;
                     if ((hooks != null) && !hooks.isEmpty())

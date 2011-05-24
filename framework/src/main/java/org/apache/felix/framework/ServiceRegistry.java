@@ -50,18 +50,14 @@ public class ServiceRegistry
     private final WeakHashMap<ServiceReference, ServiceReference> m_blackList =
         new WeakHashMap<ServiceReference, ServiceReference>();
 
-    private final Class<?>[] m_hookClasses = {
+    private final static Class<?>[] m_hookClasses = {
+        EventHook.class,
+        FindHook.class,
+        ListenerHook.class,
         WeavingHook.class
     };
     private final Map<Class<?>, Set<ServiceReference<?>>> m_allHooks =
         new HashMap<Class<?>, Set<ServiceReference<?>>>();
-
-    private final Set<ServiceReference> m_eventHooks =
-        new TreeSet<ServiceReference>(Collections.reverseOrder());
-    private final Set<ServiceReference> m_findHooks =
-        new TreeSet<ServiceReference>(Collections.reverseOrder());
-    private final Set<ServiceReference> m_listenerHooks =
-        new TreeSet<ServiceReference>(Collections.reverseOrder());
 
     public ServiceRegistry(Logger logger, ServiceRegistryCallbacks callbacks)
     {
@@ -664,94 +660,28 @@ public class ServiceRegistry
         m_blackList.put(sr, sr);
     }
 
-    private void addHooks(String[] classNames, Object svcObj, ServiceReference<?> ref)
+    static boolean isHook(String[] classNames, Class<?> hookClass, Object svcObj)
     {
-        Class<?> hookClass = isHook(classNames, m_hookClasses, svcObj);
-        if (hookClass != null)
-        {
-            synchronized (m_allHooks)
-            {
-                Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
-                if (hooks == null)
-                {
-                    hooks = new HashSet<ServiceReference<?>>();
-                    m_allHooks.put(hookClass, hooks);
-                }
-                hooks.add(ref);
-            }
-        }
-
-        if (isHook(classNames, EventHook.class, svcObj))
-        {
-            synchronized (m_eventHooks)
-            {
-                m_eventHooks.add(ref);
-            }
-        }
-
-        if (isHook(classNames, FindHook.class, svcObj))
-        {
-            synchronized (m_findHooks)
-            {
-                m_findHooks.add(ref);
-            }
-        }
-
-        if (isHook(classNames, ListenerHook.class, svcObj))
-        {
-            synchronized (m_listenerHooks)
-            {
-                m_listenerHooks.add(ref);
-            }
-        }
-    }
-
-    static Class<?> isHook(String[] classNames, Class<?>[] hookClasses, Object svcObj)
-    {
-        for (Class<?> hookClass : hookClasses)
-        {
-            // For a service factory, we can only match names.
-            if (svcObj instanceof ServiceFactory)
-            {
-                for (String className : classNames)
-                {
-                    if (className.equals(hookClass.getName()))
-                    {
-                        return hookClass;
-                    }
-                }
-            }
-
-            // For a service object, check if its class matches.
-            if (hookClass.isAssignableFrom(svcObj.getClass()))
-            {
-                // But still only if it is registered under that interface.
-                String hookName = hookClass.getName();
-                for (String className : classNames)
-                {
-                    if (className.equals(hookName))
-                    {
-                        return hookClass;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    static boolean isHook(String[] classNames, Class hookClass, Object svcObj)
-    {
+        // For a service factory, we can only match names.
         if (svcObj instanceof ServiceFactory)
         {
-            return Arrays.asList(classNames).contains(hookClass.getName());
+            for (String className : classNames)
+            {
+                if (className.equals(hookClass.getName()))
+                {
+                    return true;
+                }
+            }
         }
 
+        // For a service object, check if its class matches.
         if (hookClass.isAssignableFrom(svcObj.getClass()))
         {
+            // But still only if it is registered under that interface.
             String hookName = hookClass.getName();
-            for (int i = 0; i < classNames.length; i++)
+            for (String className : classNames)
             {
-                if (classNames[i].equals(hookName))
+                if (className.equals(hookName))
                 {
                     return true;
                 }
@@ -760,55 +690,53 @@ public class ServiceRegistry
         return false;
     }
 
+    private void addHooks(String[] classNames, Object svcObj, ServiceReference<?> ref)
+    {
+        for (Class<?> hookClass : m_hookClasses)
+        {
+            if (isHook(classNames, hookClass, svcObj))
+            {
+                synchronized (m_allHooks)
+                {
+                    Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+                    if (hooks == null)
+                    {
+                        hooks = new HashSet<ServiceReference<?>>();
+                        m_allHooks.put(hookClass, hooks);
+                    }
+                    hooks.add(ref);
+                }
+            }
+        }
+    }
+
     private void removeHook(ServiceReference ref)
     {
         Object svcObj = ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
             .getRegistration().getService();
         String [] classNames = (String[]) ref.getProperty(Constants.OBJECTCLASS);
 
-        Class hookClass = isHook(classNames, m_hookClasses, svcObj);
-        if (hookClass != null)
+        for (Class<?> hookClass : m_hookClasses)
         {
-            synchronized (m_allHooks)
+            if (isHook(classNames, hookClass, svcObj))
             {
-                Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
-                if (hooks != null)
+                synchronized (m_allHooks)
                 {
-                    hooks.remove(ref);
-                    if (hooks.isEmpty())
+                    Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+                    if (hooks != null)
                     {
-                        m_allHooks.remove(hookClass);
+                        hooks.remove(ref);
+                        if (hooks.isEmpty())
+                        {
+                            m_allHooks.remove(hookClass);
+                        }
                     }
                 }
             }
         }
-
-        if (isHook(classNames, EventHook.class, svcObj))
-        {
-            synchronized (m_eventHooks)
-            {
-                m_eventHooks.remove(ref);
-            }
-        }
-
-        if (isHook(classNames, FindHook.class, svcObj))
-        {
-            synchronized (m_findHooks)
-            {
-                m_findHooks.remove(ref);
-            }
-        }
-
-        if (isHook(classNames, ListenerHook.class, svcObj))
-        {
-            synchronized (m_listenerHooks)
-            {
-                m_listenerHooks.remove(ref);
-            }
-        }
     }
 
-    public <S> SortedSet<ServiceReference<S>> getHooks(Class<S> hookClass)
+    public <S> Set<ServiceReference<S>> getHooks(Class<S> hookClass)
     {
         synchronized (m_allHooks)
         {
@@ -819,7 +747,7 @@ public class ServiceRegistry
                 sorted.addAll(hooks);
                 return asTypedSortedSet(sorted);
             }
-            return null;
+            return Collections.EMPTY_SET;
         }
     }
 
@@ -827,30 +755,6 @@ public class ServiceRegistry
         SortedSet<ServiceReference<?>> ss)
     {
         return (SortedSet<ServiceReference<S>>) (SortedSet) ss;
-    }
-
-    public List getEventHooks()
-    {
-        synchronized (m_eventHooks)
-        {
-            return new ArrayList(m_eventHooks);
-        }
-    }
-
-    List getFindHooks()
-    {
-        synchronized (m_findHooks)
-        {
-            return new ArrayList(m_findHooks);
-        }
-    }
-
-    List getListenerHooks()
-    {
-        synchronized (m_listenerHooks)
-        {
-            return new ArrayList(m_listenerHooks);
-        }
     }
 
     /**

@@ -28,6 +28,7 @@ import java.util.EventObject;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.felix.framework.InvokeHookCallback;
 import org.apache.felix.framework.Logger;
@@ -37,7 +38,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
@@ -45,7 +45,6 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.framework.hooks.service.EventHook;
 import org.osgi.framework.hooks.service.ListenerHook;
@@ -286,7 +285,7 @@ public class EventDispatcher
         }
         return null;
     }
-    
+
     public ListenerHook.ListenerInfo removeListener(
         Bundle bundle, Class clazz, EventListener l)
     {
@@ -577,7 +576,7 @@ public class EventDispatcher
 
         return new ListenerHookInfoImpl(
             ((Bundle)listeners[offset + LISTENER_BUNDLE_OFFSET]).getBundleContext(),
-            (ServiceListener) listeners[offset + LISTENER_OBJECT_OFFSET], 
+            (ServiceListener) listeners[offset + LISTENER_OBJECT_OFFSET],
             filter == null ? null : filter.toString(),
             removed);
     }
@@ -633,24 +632,24 @@ public class EventDispatcher
 
         if (m_serviceRegistry != null)
         {
-            List eventHooks = m_serviceRegistry.getEventHooks();
-            if ((eventHooks != null) && (eventHooks.size() > 0))
+            Set<ServiceReference<EventHook>> eventHooks =
+                m_serviceRegistry.getHooks(EventHook.class);
+            if ((eventHooks != null) && !eventHooks.isEmpty())
             {
                 final ListenerBundleContextCollectionWrapper wrapper =
                     new ListenerBundleContextCollectionWrapper(listeners);
-                InvokeHookCallback callback = new InvokeHookCallback() 
+                InvokeHookCallback callback = new InvokeHookCallback()
                 {
-                    public void invokeHook(Object hook) 
+                    public void invokeHook(Object hook)
                     {
-                        ((EventHook) hook).event(event, wrapper);                            
-                    }                        
-                }; 
-                for (int i = 0; i < eventHooks.size(); i++)
+                        ((EventHook) hook).event(event, wrapper);
+                    }
+                };
+                for (ServiceReference<EventHook> sr : eventHooks)
                 {
-                    if (felix != null) 
+                    if (felix != null)
                     {
-                        m_serviceRegistry.invokeHook(
-                            (ServiceReference) eventHooks.get(i), felix, callback);
+                        m_serviceRegistry.invokeHook(sr, felix, callback);
                     }
                 }
 
@@ -857,7 +856,7 @@ public class EventDispatcher
                 {
                     if (System.getSecurityManager() != null)
                     {
-                        AccessController.doPrivileged(new PrivilegedAction() 
+                        AccessController.doPrivileged(new PrivilegedAction()
                         {
                             public Object run()
                             {
@@ -883,7 +882,7 @@ public class EventDispatcher
                         ((ServiceEvent) event).getServiceReference());
                     if (System.getSecurityManager() != null)
                     {
-                        AccessController.doPrivileged(new PrivilegedAction() 
+                        AccessController.doPrivileged(new PrivilegedAction()
                         {
                             public Object run()
                             {
