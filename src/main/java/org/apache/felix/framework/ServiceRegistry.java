@@ -25,6 +25,7 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 
 import org.osgi.framework.*;
 import org.osgi.framework.hooks.service.*;
+import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.wiring.BundleCapability;
 
@@ -46,9 +47,21 @@ public class ServiceRegistry
 
     private final ServiceRegistryCallbacks m_callbacks;
 
-    private final Set m_eventHooks = new TreeSet(Collections.reverseOrder());
-    private final Set m_findHooks = new TreeSet(Collections.reverseOrder());
-    private final Set m_listenerHooks = new TreeSet(Collections.reverseOrder());
+    private final WeakHashMap<ServiceReference, ServiceReference> m_blackList =
+        new WeakHashMap<ServiceReference, ServiceReference>();
+
+    private final Class<?>[] m_hookClasses = {
+        WeavingHook.class
+    };
+    private final Map<Class<?>, Set<ServiceReference<?>>> m_allHooks =
+        new HashMap<Class<?>, Set<ServiceReference<?>>>();
+
+    private final Set<ServiceReference> m_eventHooks =
+        new TreeSet<ServiceReference>(Collections.reverseOrder());
+    private final Set<ServiceReference> m_findHooks =
+        new TreeSet<ServiceReference>(Collections.reverseOrder());
+    private final Set<ServiceReference> m_listenerHooks =
+        new TreeSet<ServiceReference>(Collections.reverseOrder());
 
     public ServiceRegistry(Logger logger, ServiceRegistryCallbacks callbacks)
     {
@@ -92,7 +105,7 @@ public class ServiceRegistry
             // Create the service registration.
             reg = new ServiceRegistrationImpl(
                 this, bundle, classNames, new Long(m_currentServiceId++), svcObj, dict);
-                        
+
             // Keep track of registered hooks.
             addHooks(classNames, svcObj, reg.getReference());
 
@@ -445,7 +458,7 @@ public class ServiceRegistry
     }
 
     public synchronized Bundle[] getUsingBundles(ServiceReference ref)
-    {        
+    {
         Bundle[] bundles = null;
         for (Iterator iter = m_inUseMap.entrySet().iterator(); iter.hasNext(); )
         {
@@ -637,8 +650,37 @@ public class ServiceRegistry
         }
     }
 
-    private void addHooks(String[] classNames, Object svcObj, ServiceReference ref)
+    //
+    // Hook-related methods.
+    //
+
+    boolean isHookBlackListed(ServiceReference sr)
     {
+        return m_blackList.containsKey(sr);
+    }
+
+    void blackListHook(ServiceReference sr)
+    {
+        m_blackList.put(sr, sr);
+    }
+
+    private void addHooks(String[] classNames, Object svcObj, ServiceReference<?> ref)
+    {
+        Class<?> hookClass = isHook(classNames, m_hookClasses, svcObj);
+        if (hookClass != null)
+        {
+            synchronized (m_allHooks)
+            {
+                Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+                if (hooks == null)
+                {
+                    hooks = new HashSet<ServiceReference<?>>();
+                    m_allHooks.put(hookClass, hooks);
+                }
+                hooks.add(ref);
+            }
+        }
+
         if (isHook(classNames, EventHook.class, svcObj))
         {
             synchronized (m_eventHooks)
@@ -663,14 +705,47 @@ public class ServiceRegistry
             }
         }
     }
-    
+
+    static Class<?> isHook(String[] classNames, Class<?>[] hookClasses, Object svcObj)
+    {
+        for (Class<?> hookClass : hookClasses)
+        {
+            // For a service factory, we can only match names.
+            if (svcObj instanceof ServiceFactory)
+            {
+                for (String className : classNames)
+                {
+                    if (className.equals(hookClass.getName()))
+                    {
+                        return hookClass;
+                    }
+                }
+            }
+
+            // For a service object, check if its class matches.
+            if (hookClass.isAssignableFrom(svcObj.getClass()))
+            {
+                // But still only if it is registered under that interface.
+                String hookName = hookClass.getName();
+                for (String className : classNames)
+                {
+                    if (className.equals(hookName))
+                    {
+                        return hookClass;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     static boolean isHook(String[] classNames, Class hookClass, Object svcObj)
     {
-        if (svcObj instanceof ServiceFactory) 
+        if (svcObj instanceof ServiceFactory)
         {
             return Arrays.asList(classNames).contains(hookClass.getName());
         }
-        
+
         if (hookClass.isAssignableFrom(svcObj.getClass()))
         {
             String hookName = hookClass.getName();
@@ -690,16 +765,33 @@ public class ServiceRegistry
         Object svcObj = ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
             .getRegistration().getService();
         String [] classNames = (String[]) ref.getProperty(Constants.OBJECTCLASS);
-        
-        if (isHook(classNames, EventHook.class, svcObj)) 
+
+        Class hookClass = isHook(classNames, m_hookClasses, svcObj);
+        if (hookClass != null)
         {
-            synchronized (m_eventHooks) 
+            synchronized (m_allHooks)
+            {
+                Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+                if (hooks != null)
+                {
+                    hooks.remove(ref);
+                    if (hooks.isEmpty())
+                    {
+                        m_allHooks.remove(hookClass);
+                    }
+                }
+            }
+        }
+
+        if (isHook(classNames, EventHook.class, svcObj))
+        {
+            synchronized (m_eventHooks)
             {
                 m_eventHooks.remove(ref);
             }
         }
-        
-        if (isHook(classNames, FindHook.class, svcObj)) 
+
+        if (isHook(classNames, FindHook.class, svcObj))
         {
             synchronized (m_findHooks)
             {
@@ -714,6 +806,27 @@ public class ServiceRegistry
                 m_listenerHooks.remove(ref);
             }
         }
+    }
+
+    public <S> SortedSet<ServiceReference<S>> getHooks(Class<S> hookClass)
+    {
+        synchronized (m_allHooks)
+        {
+            Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+            if (hooks != null)
+            {
+                SortedSet sorted = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
+                sorted.addAll(hooks);
+                return asTypedSortedSet(sorted);
+            }
+            return null;
+        }
+    }
+
+    private static <S> SortedSet<ServiceReference<S>> asTypedSortedSet(
+        SortedSet<ServiceReference<?>> ss)
+    {
+        return (SortedSet<ServiceReference<S>>) (SortedSet) ss;
     }
 
     public List getEventHooks()
@@ -739,21 +852,21 @@ public class ServiceRegistry
             return new ArrayList(m_listenerHooks);
         }
     }
-    
+
     /**
      * Invokes a Service Registry Hook
      * @param ref The ServiceReference associated with the hook to be invoked, the hook
      *        service object will be obtained through this object.
      * @param framework The framework that is invoking the hook, typically the Felix object.
-     * @param callback This is a callback object that is invoked with the actual hook object to 
+     * @param callback This is a callback object that is invoked with the actual hook object to
      *        be used, either the plain hook, or one obtained from the ServiceFactory.
      */
     public void invokeHook(
         ServiceReference ref, Framework framework, InvokeHookCallback callback)
     {
         Object hook = getService(framework, ref);
-        
-        try 
+
+        try
         {
             callback.invokeHook(hook);
         }
@@ -762,12 +875,12 @@ public class ServiceRegistry
             m_logger.log(ref, Logger.LOG_WARNING,
                 "Problem invoking Service Registry Hook", th);
         }
-        finally 
+        finally
         {
             ungetService(framework, ref);
         }
-    }    
-    
+    }
+
     private static class UsageCount
     {
         public int m_count = 0;

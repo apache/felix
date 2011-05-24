@@ -3234,6 +3234,25 @@ public class Felix extends BundleImpl implements Framework
     }
 
     //
+    // Hook service management methods.
+    //
+
+    boolean isHookBlackListed(ServiceReference sr)
+    {
+        return m_registry.isHookBlackListed(sr);
+    }
+
+    void blackListHook(ServiceReference sr)
+    {
+        m_registry.blackListHook(sr);
+    }
+
+    public <S> SortedSet<ServiceReference<S>> getHooks(Class<S> hookClass)
+    {
+        return m_registry.getHooks(hookClass);
+    }
+
+    //
     // PackageAdmin related methods.
     //
 
@@ -3979,7 +3998,7 @@ public class Felix extends BundleImpl implements Framework
     /**
      * Fires bundle events.
     **/
-    private void fireFrameworkEvent(
+    void fireFrameworkEvent(
         int type, Bundle bundle, Throwable throwable)
     {
         m_dispatcher.fireFrameworkEvent(new FrameworkEvent(type, bundle, throwable));
