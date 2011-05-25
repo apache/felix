@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +18,17 @@
  */
 package org.apache.felix.framework;
 
+import java.net.ContentHandler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.url.URLStreamHandlerService;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -63,10 +66,6 @@ class URLHandlersActivator implements BundleActivator
 
         if (enable)
         {
-            m_streamTracker = new ServiceTracker(context, "org.osgi.service.url.URLStreamHandlerService", null);
-            m_contentTracker= new ServiceTracker(context, "java.net.ContentHandler", null);
-            m_streamTracker.open();
-            m_contentTracker.open();
             m_framework.setURLHandlersActivator(this);
         }
         URLHandlers.registerFrameworkInstance(m_framework, enable);
@@ -76,66 +75,49 @@ class URLHandlersActivator implements BundleActivator
     {
         URLHandlers.unregisterFrameworkInstance(m_framework);
         m_framework.setURLHandlersActivator(null);
-        if (m_streamTracker != null)
-        {
-            m_streamTracker.close();
-        }
-        if (m_contentTracker != null)
-        {
-            m_contentTracker.close();
-        }
-        m_streamTracker = null;
-        m_contentTracker = null;
     }
 
-    private volatile ServiceTracker m_streamTracker;
-    private volatile ServiceTracker m_contentTracker;
-    
     protected Object getStreamHandlerService(String protocol)
     {
-        return get(m_streamTracker, "url.handler.protocol", protocol);
+        return get(
+            m_framework.getHooks(URLStreamHandlerService.class),
+            "url.handler.protocol", protocol);
     }
 
     protected Object getContentHandlerService(String mimeType)
     {
-        return get(m_contentTracker, "url.content.mimetype", mimeType);
+        return get(
+            m_framework.getHooks(ContentHandler.class),
+            "url.content.mimetype", mimeType);
     }
 
-    private Object get(ServiceTracker tracker, String key, String value)
+    private <S> S get(Set<ServiceReference<S>> hooks, String key, String value)
     {
     	Object service = null;
-        if (tracker != null)
+        if (!hooks.isEmpty())
         {
-            ServiceReference[] refs = tracker.getServiceReferences();
-
-            if (refs != null)
+            for (ServiceReference<S> ref : hooks)
             {
-                if (refs.length > 1)
+                Object values = ref.getProperty(key);
+                if (values instanceof String[])
                 {
-                    Arrays.sort(refs, Collections.reverseOrder());
-                }
-
-                for (int i = 0;(i < refs.length) && (service == null);i++)
-                {
-                    Object values = refs[i].getProperty(key);
-                    if (values instanceof String[])
+                    for (int valueIdx = 0;
+                        (valueIdx < ((String[]) values).length) && (service == null);
+                        valueIdx++)
                     {
-                        for (int j = 0;(j < ((String[]) values).length) && (service == null);j++)
+                        if (value.equals(((String[]) values)[valueIdx]))
                         {
-                            if (value.equals(((String[]) values)[j]))
-                            {
-                                service = tracker.getService(refs[i]);
-                            }
+                            return m_framework.getService(m_framework, ref);
                         }
                     }
-                    else if (value.equals(values))
-                    {
-                        service = tracker.getService(refs[i]);
-                    }
+                }
+                else if (value.equals(values))
+                {
+                    return m_framework.getService(m_framework, ref);
                 }
             }
         }
 
-        return service;
+        return null;
     }
 }
