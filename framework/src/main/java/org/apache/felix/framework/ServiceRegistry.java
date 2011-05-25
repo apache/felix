@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework;
 
+import java.net.ContentHandler;
 import java.util.*;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -26,8 +27,8 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.*;
 import org.osgi.framework.hooks.service.*;
 import org.osgi.framework.hooks.weaving.WeavingHook;
-import org.osgi.framework.launch.Framework;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.service.url.URLStreamHandlerService;
 
 public class ServiceRegistry
 {
@@ -54,7 +55,9 @@ public class ServiceRegistry
         EventHook.class,
         FindHook.class,
         ListenerHook.class,
-        WeavingHook.class
+        WeavingHook.class,
+        URLStreamHandlerService.class,
+        ContentHandler.class
     };
     private final Map<Class<?>, Set<ServiceReference<?>>> m_allHooks =
         new HashMap<Class<?>, Set<ServiceReference<?>>>();
