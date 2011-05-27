@@ -32,9 +32,11 @@ import org.osgi.framework.wiring.FrameworkWiring;
 class FrameworkWiringImpl implements FrameworkWiring, Runnable
 {
     private final Felix m_felix;
-    private List<Collection<Bundle>> m_requests = null;
-    private List<FrameworkListener[]> m_requestListeners = null;
+    private final List<Collection<Bundle>> m_requests = new ArrayList();
+    private final List<FrameworkListener[]> m_requestListeners
+        = new ArrayList<FrameworkListener[]>();
     private Thread m_thread = null;
+
 
     public FrameworkWiringImpl(Felix felix)
     {
@@ -50,17 +52,20 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
      * This method is called by the
      * {@link PackageAdminActivator#stop(BundleContext)} method.
      */
-    synchronized void stop()
+    void stop()
     {
-        if (m_thread != null)
+        synchronized (m_requests)
         {
-            // Null thread variable to signal to the thread that
-            // we want it to exit.
-            m_thread = null;
+            if (m_thread != null)
+            {
+                // Null thread variable to signal to the thread that
+                // we want it to exit.
+                m_thread = null;
 
-            // Wake up the thread, if it is currently in the wait() state
-            // for more work.
-            notifyAll();
+                // Wake up the thread, if it is currently in the wait() state
+                // for more work.
+                m_requests.notifyAll();
+            }
         }
     }
 
@@ -78,7 +83,7 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
             ((SecurityManager) sm).checkPermission(
                 new AdminPermission(m_felix, AdminPermission.RESOLVE));
         }
-        synchronized (this)
+        synchronized (m_requests)
         {
             // Start a thread to perform asynchronous package refreshes.
             if (m_thread == null)
@@ -88,22 +93,10 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
                 m_thread.start();
             }
 
-            // Save our request parameters and notify all.
-            if (m_requests == null)
-            {
-                List<Collection<Bundle>> requests = new ArrayList<Collection<Bundle>>();
-                requests.add(bundles);
-                m_requests = requests;
-                List<FrameworkListener[]> requestListeners =
-                    new ArrayList<FrameworkListener[]>();
-                requestListeners.add(listeners);
-                m_requestListeners = requestListeners;
-            }
-            else
-            {
-                m_requests.add(bundles);
-            }
-            notifyAll();
+            // Queue request and notify thread.
+            m_requests.add(bundles);
+            m_requestListeners.add(listeners);
+            m_requests.notifyAll();
         }
     }
 
@@ -143,10 +136,10 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
         {
             Collection<Bundle> bundles = null;
             FrameworkListener[] listeners = null;
-            synchronized (this)
+            synchronized (m_requests)
             {
                 // Wait for a refresh request.
-                while (m_requests == null)
+                while (m_requests.isEmpty())
                 {
                     // Terminate the thread if requested to do so (see stop()).
                     if (m_thread == null)
@@ -156,7 +149,7 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
 
                     try
                     {
-                        wait();
+                        m_requests.wait();
                     }
                     catch (InterruptedException ex)
                     {
@@ -175,15 +168,10 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
             m_felix.refreshPackages(bundles, listeners);
 
             // Remove the first request since it is now completed.
-            synchronized (this)
+            synchronized (m_requests)
             {
                 m_requests.remove(0);
                 m_requestListeners.remove(0);
-                if (m_requests.isEmpty())
-                {
-                    m_requests = null;
-                    m_requestListeners = null;
-                }
             }
         }
     }
