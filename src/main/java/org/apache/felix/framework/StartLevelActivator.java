@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,5 @@ class StartLevelActivator implements BundleActivator
     public void stop(BundleContext context) throws Exception
     {
         m_reg.unregister();
-        m_startLevel.stop();
     }
 }
