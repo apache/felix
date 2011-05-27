@@ -38,6 +38,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
@@ -999,9 +1000,14 @@ class BundleImpl implements Bundle
         getFramework().uninstallBundle(this);
     }
 
-    public <A> A adapt(Class<A> type)
+    public synchronized <A> A adapt(Class<A> type)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (type == BundleStartLevel.class)
+        {
+            return (A) getFramework().adapt(FrameworkStartLevelImpl.class)
+                .createBundleStartLevel(this);
+        }
+        return null;
     }
 
     public File getDataFile(String filename)
