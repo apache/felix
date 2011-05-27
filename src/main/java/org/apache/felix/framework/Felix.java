@@ -70,6 +70,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -88,6 +89,7 @@ public class Felix extends BundleImpl implements Framework
 
     // Framework wiring object.
     private final FrameworkWiringImpl m_fwkWiring;
+    private final FrameworkStartLevelImpl m_fwkStartLevel;
 
     // Logging related member variables.
     private final Logger m_logger;
@@ -391,6 +393,8 @@ public class Felix extends BundleImpl implements Framework
 
         // Create framework wiring object.
         m_fwkWiring = new FrameworkWiringImpl(this);
+        // Create framework start level object.
+        m_fwkStartLevel = new FrameworkStartLevelImpl(this);
     }
 
     Logger getLogger()
@@ -460,9 +464,15 @@ public class Felix extends BundleImpl implements Framework
     @Override
     public <A> A adapt(Class<A> type)
     {
-        if (type == FrameworkWiring.class)
+        if ((type == FrameworkWiring.class)
+            || (type == FrameworkWiringImpl.class))
         {
             return (A) m_fwkWiring;
+        }
+        else if ((type == FrameworkStartLevel.class)
+            || (type == FrameworkStartLevelImpl.class))
+        {
+            return (A) m_fwkStartLevel;
         }
         return super.adapt(type);
     }
@@ -848,7 +858,7 @@ public class Felix extends BundleImpl implements Framework
 
                 if (sl instanceof StartLevelImpl)
                 {
-                    ((StartLevelImpl) sl).setStartLevelAndWait(startLevel);
+                    m_fwkStartLevel.setStartLevelAndWait(startLevel);
                 }
                 else
                 {
@@ -1078,7 +1088,7 @@ public class Felix extends BundleImpl implements Framework
      * directly.
      * @param requestedLevel The new start level of the framework.
     **/
-    void setActiveStartLevel(int requestedLevel)
+    void setActiveStartLevel(int requestedLevel, FrameworkListener[] listeners)
     {
         Bundle[] bundles = null;
 
@@ -1266,6 +1276,24 @@ public class Felix extends BundleImpl implements Framework
         if (getState() == Bundle.ACTIVE)
         {
             fireFrameworkEvent(FrameworkEvent.STARTLEVEL_CHANGED, this, null);
+
+            if (listeners != null)
+            {
+                FrameworkEvent event = new FrameworkEvent(
+                    FrameworkEvent.STARTLEVEL_CHANGED, this, null);
+                for (FrameworkListener l : listeners)
+                {
+                    try
+                    {
+                        l.frameworkEvent(event);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.log(Logger.LOG_ERROR,
+                            "Framework listener delivery error.", th);
+                    }
+                }
+            }
         }
     }
 
@@ -1801,7 +1829,7 @@ public class Felix extends BundleImpl implements Framework
             // Check to see if there is a start level change in progress and if so
             // add this bundle to the bundles being processed by the start level
             // thread and return.
-            if (!Thread.currentThread().getName().equals(StartLevelImpl.THREAD_NAME))
+            if (!Thread.currentThread().getName().equals(FrameworkStartLevelImpl.THREAD_NAME))
             {
                 synchronized (m_startLevelBundles)
                 {
@@ -4848,20 +4876,12 @@ public class Felix extends BundleImpl implements Framework
             // shutdown happens on its own thread, we can wait for the start
             // level service to finish before proceeding by calling the
             // non-spec setStartLevelAndWait() method.
-            try
-            {
-                StartLevelImpl sl = (StartLevelImpl) getService(
-                    Felix.this,
-                    getServiceReferences(Felix.this, StartLevel.class.getName(), null, true)[0]);
-                sl.setStartLevelAndWait(0);
-            }
-            catch (InvalidSyntaxException ex)
-            {
-                // Should never happen.
-            }
+            m_fwkStartLevel.setStartLevelAndWait(0);
 
             // Stop framework wiring thread.
             m_fwkWiring.stop();
+            // Stop framework start level thread.
+            m_fwkStartLevel.stop();
 
             // Shutdown event dispatching queue.
             EventDispatcher.shutdown();
