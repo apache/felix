@@ -80,16 +80,14 @@ public class EventDispatcher
     // Pooled requests to avoid memory allocation.
     private static final ArrayList m_requestPool = new ArrayList();
 
-    private EventDispatcher(Logger logger, ServiceRegistry registry)
+    public EventDispatcher(Logger logger, ServiceRegistry registry)
     {
         m_logger = logger;
         m_registry = registry;
     }
 
-    public static EventDispatcher start(Logger logger, ServiceRegistry registry)
+    public void startDispatching()
     {
-        EventDispatcher eventDispatcher = new EventDispatcher(logger, registry);
-
         synchronized (m_threadLock)
         {
             // Start event dispatching thread if necessary.
@@ -124,11 +122,9 @@ public class EventDispatcher
             // reference counting and flags
             m_references++;
         }
-
-        return eventDispatcher;
     }
 
-    public static void shutdown()
+    public void stopDispatching()
     {
         synchronized (m_threadLock)
         {
