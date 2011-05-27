@@ -159,11 +159,11 @@ public class Felix extends BundleImpl implements Framework
     private long m_nextId = 1L;
     private final Object m_nextIdLock = new Object[0];
 
-    // List of event listeners.
-    private EventDispatcher m_dispatcher = null;
-
     // Service registry.
-    private ServiceRegistry m_registry = null;
+    private final ServiceRegistry m_registry;
+
+    // List of event listeners.
+    private final EventDispatcher m_dispatcher;
 
     // Reusable bundle URL stream handler.
     private final URLStreamHandler m_bundleStreamHandler;
@@ -391,10 +391,21 @@ public class Felix extends BundleImpl implements Framework
             throw new RuntimeException(ex.getMessage());
         }
 
+        // Create service registry.
+        m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
+            public void serviceChanged(ServiceEvent event, Dictionary oldProps)
+            {
+                fireServiceEvent(event, oldProps);
+            }
+        });
+
+        // Create event dispatcher.
+        m_dispatcher = new EventDispatcher(m_logger, m_registry);
+
         // Create framework wiring object.
-        m_fwkWiring = new FrameworkWiringImpl(this);
+        m_fwkWiring = new FrameworkWiringImpl(this, m_registry);
         // Create framework start level object.
-        m_fwkStartLevel = new FrameworkStartLevelImpl(this);
+        m_fwkStartLevel = new FrameworkStartLevelImpl(this, m_registry);
     }
 
     Logger getLogger()
@@ -616,16 +627,8 @@ public class Felix extends BundleImpl implements Framework
                 m_activatorList = (List) m_configMutableMap.get(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
                 m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
 
-                // Create service registry.
-                m_registry = new ServiceRegistry(m_logger, new ServiceRegistryCallbacks() {
-                    public void serviceChanged(ServiceEvent event, Dictionary oldProps)
-                    {
-                        fireServiceEvent(event, oldProps);
-                    }
-                });
-
                 // Initialize event dispatcher.
-                m_dispatcher = EventDispatcher.start(m_logger, m_registry);
+                m_dispatcher.startDispatching();
 
                 // Create the bundle cache, if necessary, so that we can reload any
                 // installed bundles.
@@ -777,7 +780,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable ex)
                 {
-                    EventDispatcher.shutdown();
+                    m_dispatcher.stopDispatching();
                     m_logger.log(Logger.LOG_ERROR, "Unable to start system bundle.", ex);
                     throw new RuntimeException("Unable to start system bundle.");
                 }
@@ -4849,10 +4852,6 @@ public class Felix extends BundleImpl implements Framework
     {
         public void start(BundleContext context) throws Exception
         {
-            // Add the bundle activator for the package admin service.
-            m_activatorList.add(0, new PackageAdminActivator(Felix.this));
-            // Add the bundle activator for the start level service.
-            m_activatorList.add(0, new StartLevelActivator(m_logger, Felix.this));
             // Add the bundle activator for the url handler service.
             m_activatorList.add(0, new URLHandlersActivator(m_configMap, Felix.this));
 
@@ -4884,7 +4883,7 @@ public class Felix extends BundleImpl implements Framework
             m_fwkStartLevel.stop();
 
             // Shutdown event dispatching queue.
-            EventDispatcher.shutdown();
+            m_dispatcher.stopDispatching();
 
             // Since there may be updated and uninstalled bundles that
             // have not been refreshed, we will take care of refreshing
