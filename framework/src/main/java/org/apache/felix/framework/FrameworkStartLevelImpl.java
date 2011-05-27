@@ -22,9 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
+import org.osgi.service.startlevel.StartLevel;
 
 class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 {
@@ -37,11 +40,16 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
     private final List m_requests = new ArrayList();
     private final List<FrameworkListener[]> m_requestListeners
         = new ArrayList<FrameworkListener[]>();
+    private final ServiceRegistration<StartLevel> m_slReg;
     private Thread m_thread = null;
 
-    FrameworkStartLevelImpl(Felix felix)
+    FrameworkStartLevelImpl(Felix felix, ServiceRegistry registry)
     {
         m_felix = felix;
+        m_slReg = registry.registerService(felix,
+            new String[] { StartLevel.class.getName() },
+            new StartLevelImpl(felix),
+            null);
     }
 
     // Should only be called hold requestList lock.

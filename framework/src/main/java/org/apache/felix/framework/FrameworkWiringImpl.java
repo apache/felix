@@ -20,14 +20,13 @@ package org.apache.felix.framework;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.FrameworkWiring;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 class FrameworkWiringImpl implements FrameworkWiring, Runnable
 {
@@ -35,12 +34,17 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     private final List<Collection<Bundle>> m_requests = new ArrayList();
     private final List<FrameworkListener[]> m_requestListeners
         = new ArrayList<FrameworkListener[]>();
+    private final ServiceRegistration<PackageAdmin> m_paReg;
     private Thread m_thread = null;
 
 
-    public FrameworkWiringImpl(Felix felix)
+    public FrameworkWiringImpl(Felix felix, ServiceRegistry registry)
     {
         m_felix = felix;
+        m_paReg = registry.registerService(felix,
+            new String[] { PackageAdmin.class.getName() },
+            new PackageAdminImpl(felix),
+            null);
     }
 
     /**
