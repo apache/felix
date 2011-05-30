@@ -329,7 +329,6 @@ public class XmlHandler implements KXml2SAXHandler
             }
             catch ( Exception ex )
             {
-                ex.printStackTrace();
                 throw new ParseException( "Exception during parsing", ex );
             }
         }
