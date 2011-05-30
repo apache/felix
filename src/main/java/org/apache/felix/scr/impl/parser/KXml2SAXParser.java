@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.parser;
 
 import java.io.Reader;
 import java.util.Properties;
+import java.util.Stack;
 
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
@@ -59,21 +60,33 @@ public class KXml2SAXParser extends KXmlParser
     public void parseXML( KXml2SAXHandler handler ) throws Exception
     {
 
+        final Stack openElements = new Stack();
+        XmlElement currentElement = null;
+
         while ( next() != XmlPullParser.END_DOCUMENT )
         {
             handler.setLineNumber( getLineNumber() );
             handler.setColumnNumber( getColumnNumber() );
+
             if ( getEventType() == XmlPullParser.START_TAG )
             {
+                currentElement = new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() );
+                openElements.push( currentElement );
+
                 Properties props = new Properties();
                 for ( int i = 0; i < getAttributeCount(); i++ )
                 {
                     props.put( getAttributeName( i ), getAttributeValue( i ) );
                 }
+
                 handler.startElement( getNamespace(), getName(), props );
             }
             else if ( getEventType() == XmlPullParser.END_TAG )
             {
+                ensureMatchingCurrentElement(currentElement);
+                openElements.pop();
+                currentElement = openElements.isEmpty() ? null : ( XmlElement ) openElements.peek();
+
                 handler.endElement( getNamespace(), getName() );
             }
             else if ( getEventType() == XmlPullParser.TEXT )
@@ -90,6 +103,58 @@ public class KXml2SAXParser extends KXmlParser
             {
                 // do nothing
             }
+        }
+
+        if ( !openElements.isEmpty() )
+        {
+            throw new ParseException( "Unclosed elements found: " + openElements, null );
+        }
+    }
+
+
+    private void ensureMatchingCurrentElement( final XmlElement currentElement ) throws Exception
+    {
+        if ( currentElement == null )
+        {
+            throw new ParseException( "Unexpected closing element "
+                + new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() ), null );
+        }
+
+        if ( !currentElement.match( getNamespace(), getName() ) )
+        {
+            throw new ParseException( "Unexpected closing element "
+                + new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() )
+                + ": Does not match opening element " + currentElement, null );
+        }
+    }
+
+    private static class XmlElement
+    {
+
+        final String namespaceUri;
+        final String name;
+        final int line;
+        final int col;
+
+
+        XmlElement( final String namespaceUri, final String name, final int line, final int col )
+        {
+            this.namespaceUri = namespaceUri;
+            this.name = name;
+            this.line = line;
+            this.col = col;
+        }
+
+
+        boolean match( final String namespaceUri, final String name )
+        {
+            return namespaceUri.equals( this.namespaceUri ) && name.equals( this.name );
+        }
+
+        @Override
+        public String toString()
+        {
+            return name + "@" + line + ":" + col;
         }
     }
 }

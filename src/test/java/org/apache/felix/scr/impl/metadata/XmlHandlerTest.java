@@ -22,6 +22,8 @@ package org.apache.felix.scr.impl.metadata;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,6 +32,7 @@ import junit.framework.TestCase;
 import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.MockLogger;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser;
+import org.apache.felix.scr.impl.parser.ParseException;
 import org.osgi.service.component.ComponentException;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -44,6 +47,48 @@ public class XmlHandlerTest extends TestCase
         super.setUp();
 
         logger = new MockLogger();
+    }
+
+
+    public void test_unclosed_elements() throws Exception
+    {
+        try
+        {
+            readMetadataFromString( "<component name=\"n\"><implementation class=\"n\" /><component name=\"x\">" );
+            fail( "ParseException expected for unclosed elements" );
+        }
+        catch ( ParseException pe )
+        {
+            // exptected
+        }
+    }
+
+
+    public void test_no_opening_element() throws Exception
+    {
+        try
+        {
+            readMetadataFromString( "</component>" );
+            fail( "Exception expected for element without opening element" );
+        }
+        catch ( Exception p )
+        {
+            // exptected
+        }
+    }
+
+
+    public void test_interleaved_elements() throws Exception
+    {
+        try
+        {
+            readMetadataFromString( "<component name=\"n\" ><implementation class=\"n\"></component></implementation>" );
+            fail( "Exception expected for interleaved elements" );
+        }
+        catch ( Exception p )
+        {
+            // exptected
+        }
     }
 
 
@@ -77,8 +122,8 @@ public class XmlHandlerTest extends TestCase
         assertEquals( "Expected Deactivate Method set", "mydeactivate", cm11.getDeactivate() );
         assertTrue( "Activate method expected to be declared", cm11.isDeactivateDeclared() );
         assertEquals( "Expected Modified Method set", "mymodified", cm11.getModified() );
-        assertEquals( "Expected Configuration Policy set", ComponentMetadata.CONFIGURATION_POLICY_IGNORE, cm11
-            .getConfigurationPolicy() );
+        assertEquals( "Expected Configuration Policy set", ComponentMetadata.CONFIGURATION_POLICY_IGNORE,
+            cm11.getConfigurationPolicy() );
     }
 
 
@@ -274,17 +319,45 @@ public class XmlHandlerTest extends TestCase
 
     //---------- helper
 
+    private List readMetadata( final Reader reader ) throws IOException, ComponentException, XmlPullParserException,
+        Exception
+    {
+
+        try
+        {
+            final KXml2SAXParser parser = new KXml2SAXParser( reader );
+
+            XmlHandler handler = new XmlHandler( new MockBundle(), logger );
+            parser.parseXML( handler );
+
+            return handler.getComponentMetadataList();
+        }
+        finally
+        {
+            try
+            {
+                reader.close();
+            }
+            catch ( IOException ignore )
+            {
+            }
+        }
+    }
+
+
     private List readMetadata( String filename ) throws IOException, ComponentException, XmlPullParserException,
         Exception
     {
         BufferedReader in = new BufferedReader( new InputStreamReader( getClass().getResourceAsStream( filename ),
             "UTF-8" ) );
-        final KXml2SAXParser parser = new KXml2SAXParser( in );
+        return readMetadata( in );
+    }
 
-        XmlHandler handler = new XmlHandler( new MockBundle(), logger );
-        parser.parseXML( handler );
 
-        return handler.getComponentMetadataList();
+    private List readMetadataFromString( final String source ) throws IOException, ComponentException,
+        XmlPullParserException, Exception
+    {
+        return readMetadata( new StringReader( source ) );
     }
 
 
