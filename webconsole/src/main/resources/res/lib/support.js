@@ -218,24 +218,39 @@ function Xdialog(text) {
 }
 
 /* Element */ function createElement( /* String */ name, /* String */ cssClass, /* Map */ attrs, /* Element[] */ children  ) {
-	var element = document.createElement( name );
+	var sb = ["<", name];
 
-	if (cssClass) {
-		$(element).addClass(cssClass);
+	if (attrs && attrs.name) {
+		sb.push(" name='", attrs.name, "'");
 	}
 
+	if (attrs && attrs.type) {
+		sb.push(" type='", attrs.type, "'");
+	}
+
+	sb.push(">");
+
+	var el = $(sb.join(""));
+
+	if (cssClass) {
+		el.addClass(cssClass);
+	}
 	if (attrs) {
 		for (var lab in attrs) {
 			if ("style" == lab) {
 				var styles = attrs[lab];
 				for (var styleName in styles) {
-					$(element).css(styleName, styles[styleName]);
+					el.css(styleName, styles[styleName]);
 				}
+			} else if ("name" == lab || "type" == lab) {
+				//skip
 			} else {
-				$(element).attr( lab, attrs[lab] );
+				el.attr( lab, attrs[lab] );
 			}
 		}
 	}
+
+	var element = el.get()[0];
 
 	if (children && children.length) {
 		for (var i=0; i < children.length; i++) {
