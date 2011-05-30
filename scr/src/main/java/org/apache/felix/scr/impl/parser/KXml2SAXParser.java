@@ -151,7 +151,6 @@ public class KXml2SAXParser extends KXmlParser
             return namespaceUri.equals( this.namespaceUri ) && name.equals( this.name );
         }
 
-        @Override
         public String toString()
         {
             return name + "@" + line + ":" + col;
