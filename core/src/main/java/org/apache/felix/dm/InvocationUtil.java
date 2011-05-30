@@ -92,6 +92,10 @@ public class InvocationUtil {
             if (m != null) {
                 return m;
             }
+            else if (m_methodCache.containsKey(key)) {
+                // the key is in our cache, it just happens to have a null value
+                return null;
+            }
         }
         // then do a lookup
         try {
