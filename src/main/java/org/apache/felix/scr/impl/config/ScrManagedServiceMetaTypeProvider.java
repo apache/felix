@@ -30,6 +30,15 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  * The <code>ScrManagedServiceMetaTypeProvider</code> receives the Declarative
  * Services Runtime configuration (by extending the {@link ScrManagedService}
  * class but also provides a MetaType Service ObjectClassDefinition.
+ * <p>
+ * This class is instantiated in a ServiceFactory manner by the
+ * {@link ScrManagedServiceServiceFactory} when the Configuration Admin service
+ * implementation and API is available and if the Metatype Service API is also
+ * available.
+ * <p>
+ * Requires OSGi Metatype Service API available
+ *
+ * @see ScrManagedServiceServiceFactory
  */
 class ScrManagedServiceMetaTypeProvider extends ScrManagedService
     implements MetaTypeProvider

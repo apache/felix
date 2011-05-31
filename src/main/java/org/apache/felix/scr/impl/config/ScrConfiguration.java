@@ -30,10 +30,25 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>ScrConfiguration</code> class conveys configuration for the
- * Felix DS implementation bundle. The basic configuration is retrieved from
- * bundle context properties. In addition, this class registers a ManagedService
- * service to receive configuration supplied from the Configuration Admin
- * service overlaying the static context properties.
+ * Felix DS implementation bundle.
+ * <p>
+ * <b>Configuration Source</b>
+ * <p>
+ * <ol>
+ * <li>Framework properties: These are read when the Declarative Services
+ * implementation is first started.</li>
+ * <li>Configuration Admin Service: Properties are provided by means of a
+ * <code>ManagedService</code> with Service PID
+ * <code>org.apache.felix.scr.ScrService</code>. This class uses an OSGi
+ * Service Factory ({@link ScrManagedServiceServiceFactory}) to register the
+ * managed service without requiring the Configuration Admin Service API to be
+ * required upfront.
+ * </li>
+ * </ol>
+ * <p>
+ * See the <i>Configuration</i> section of the
+ * <a href="http://felix.apache.org/site/apache-felix-service-component-runtime.html">Apache Felix Service Component Runtime</a>
+ * documentation page for detailed information.
  */
 public class ScrConfiguration
 {
@@ -83,6 +98,7 @@ public class ScrConfiguration
             props);
     }
 
+    // Called from the ScrManagedService.updated method to reconfigure
     void configure( Dictionary config )
     {
         if ( config == null )
@@ -97,6 +113,10 @@ public class ScrConfiguration
         }
     }
 
+    /**
+     * Returns the current log level.
+     * @return
+     */
     public int getLogLevel()
     {
         return logLevel;
