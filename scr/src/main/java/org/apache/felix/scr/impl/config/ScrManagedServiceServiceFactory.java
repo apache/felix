@@ -49,14 +49,19 @@ public class ScrManagedServiceServiceFactory implements ServiceFactory
     {
         try
         {
-            return ScrManagedServiceMetaTypeProvider.create(this.scrConfiguration);
+            return ScrManagedServiceMetaTypeProvider.create( this.scrConfiguration );
         }
-        catch (Throwable t)
+        catch ( Throwable t )
         {
             // assume MetaType Service API not available
-            Activator.log(LogService.LOG_ERROR, null, "Cannot create MetaType providing ManagedService", t);
+            Activator
+                .log(
+                    LogService.LOG_ERROR,
+                    null,
+                    "Cannot create MetaType providing ManagedService; not providing Metatype information but just accepting configuration",
+                    t );
         }
-        return new ScrManagedService(this.scrConfiguration);
+        return new ScrManagedService( this.scrConfiguration );
     }
 
     public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
