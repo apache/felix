@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.parser.KXml2SAXHandler;
 import org.apache.felix.scr.impl.parser.ParseException;
@@ -228,6 +227,14 @@ public class XmlHandler implements KXml2SAXHandler
 
                     // Add this component to the list
                     m_components.add( m_currentComponent );
+                }
+
+                // not inside a component element, ignore current element
+                else if ( !this.isComponent )
+                {
+                    m_logger.log( LogService.LOG_DEBUG,
+                        "Not currently parsing a component; ignoring element {0} (bundle {1})", new Object[]
+                            { localName, m_bundle.getLocation() }, null, null );
                 }
 
                 // 112.4.4 Implementation
