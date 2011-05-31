@@ -25,9 +25,15 @@ import org.osgi.service.cm.ManagedService;
 
 /**
  * The <code>ScrManagedService</code> receives configuration for the Declarative
- * Services Runtime itself. This class is instantiated in a ServiceFactory
- * manner by the {@link ScrManagedServiceServiceFactory} when the Configuration
- * Admin service implementation and API is available.
+ * Services Runtime itself.
+ * <p>
+ * This class is instantiated in a ServiceFactory manner by the
+ * {@link ScrManagedServiceServiceFactory} when the Configuration Admin service
+ * implementation and API is available.
+ * <p>
+ * Requires OSGi Configuration Admin Service API available
+ *
+ * @see ScrManagedServiceServiceFactory
  */
 public class ScrManagedService implements ManagedService
 {
