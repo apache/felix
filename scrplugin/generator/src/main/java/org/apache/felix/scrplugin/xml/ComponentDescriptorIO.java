@@ -55,7 +55,7 @@ public class ComponentDescriptorIO {
     public static final String NAMESPACE_URI_1_1 = "http://www.osgi.org/xmlns/scr/v1.1.0";
 
     /** The namespace for R4.2+FELIX-1893 - Version 1.1-felix */
-    public static final String NAMESPACE_URI_1_1_FELIX = "http://www.osgi.org/xmlns/scr/v1.1.0-felix";
+    public static final String NAMESPACE_URI_1_1_FELIX = "http://felix.apache.org/xmlns/scr/v1.1.0-felix";
 
     /** The inner namespace - used for all inner elements. */
     public static final String INNER_NAMESPACE_URI = "";
