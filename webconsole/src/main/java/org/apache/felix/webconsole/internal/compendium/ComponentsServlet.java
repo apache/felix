@@ -71,9 +71,9 @@ public class ComponentsServlet extends SimpleWebConsolePlugin implements OsgiMan
     //private static final String OPERATION_CONFIGURE = "configure";
 
     // needed services
-    private static final String SCR_SERVICE = ScrService.class.getName();
-    private static final String META_TYPE_NAME = MetaTypeService.class.getName();
-    private static final String CONFIGURATION_ADMIN_NAME = ConfigurationAdmin.class.getName();
+    private static final String SCR_SERVICE = "org.apache.felix.scr.ScrService";
+    private static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService";
+    private static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin";
 
     // templates
     private final String TEMPLATE;
