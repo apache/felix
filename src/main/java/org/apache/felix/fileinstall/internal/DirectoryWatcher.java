@@ -250,6 +250,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             } catch (InterruptedException e) {
                 log(Logger.LOG_DEBUG, "Watcher for " + watchedDirectory + " was interrupted while waiting "
                     + poll + " milliseconds for initial directory scan.", e);
+                return;
             }
             initializeCurrentManagedBundles();
         }
