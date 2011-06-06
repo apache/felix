@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -42,13 +42,13 @@ public class BundleRequirementImpl implements BundleRequirement
 
     public BundleRequirementImpl(
         BundleRevision revision, String namespace,
-        Map<String, String> dirs, Map<String, Object> attrs)
+        Map<String, String> dirs, Map<String, Object> attrs, SimpleFilter filter)
     {
         m_revision = revision;
         m_namespace = namespace;
         m_dirs = Collections.unmodifiableMap(dirs);
         m_attrs = Collections.unmodifiableMap(attrs);
-        m_filter = convertToFilter(attrs);
+        m_filter = filter;
 
         // Find resolution import directives.
         boolean optional = false;
@@ -58,6 +58,13 @@ public class BundleRequirementImpl implements BundleRequirement
             optional = true;
         }
         m_optional = optional;
+    }
+
+    public BundleRequirementImpl(
+        BundleRevision revision, String namespace,
+        Map<String, String> dirs, Map<String, Object> attrs)
+    {
+        this(revision, namespace, dirs, attrs, convertToFilter(attrs));
     }
 
     public String getNamespace()

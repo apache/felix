@@ -61,8 +61,7 @@ class ResolverWireImpl implements ResolverWire
 
     public String toString()
     {
-        return "[" + m_requirer + "] "
-            + m_req
+        return m_req
             + " -> "
             + "[" + m_provider + "]";
     }

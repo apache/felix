@@ -82,6 +82,8 @@ public class BundleWiringImpl implements BundleWiring
     private final StatefulResolver m_resolver;
     private final BundleRevisionImpl m_revision;
     private final List<BundleRevision> m_fragments;
+// TODO: OSGi R,4.3 - Perhaps we should make m_wires and m_importedPkgs volatile
+//       and copy-on-write instead of protecting them with object lock.
     private final List<BundleWire> m_wires;
     private final Map<String, BundleRevision> m_importedPkgs;
     private final Map<String, List<BundleRevision>> m_requiredPkgs;
@@ -386,9 +388,21 @@ public class BundleWiringImpl implements BundleWiring
         return Collections.EMPTY_LIST;
     }
 
-    public List<BundleWire> getRequiredWires(String namespace)
+    public synchronized List<BundleWire> getRequiredWires(String namespace)
     {
-        return m_wires;
+        List<BundleWire> result = m_wires;
+        if (namespace != null)
+        {
+            result = new ArrayList<BundleWire>();
+            for (BundleWire bw : m_wires)
+            {
+                if (bw.getRequirement().getNamespace().equals(namespace))
+                {
+                    result.add(bw);
+                }
+            }
+        }
+        return result;
     }
 
     public synchronized void addDynamicWire(BundleWire wire)
@@ -568,6 +582,7 @@ public class BundleWiringImpl implements BundleWiring
         // Look in the revisions's imported packages. If the package is
         // imported, then we stop searching no matter the result since
         // imported packages cannot be split.
+// TODO: OSGi R4.3 - Access should be guarded by object lock.
         BundleRevision provider = m_importedPkgs.get(pkgName);
         if (provider != null)
         {
@@ -943,6 +958,7 @@ public class BundleWiringImpl implements BundleWiring
         throws ClassNotFoundException, ResourceNotFoundException
     {
         // Check if the package is imported.
+// TODO: OSGi R4.3 - Access should be guarded by object lock.
         BundleRevision provider = m_importedPkgs.get(pkgName);
         if (provider != null)
         {
