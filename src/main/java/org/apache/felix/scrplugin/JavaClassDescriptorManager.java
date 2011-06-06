@@ -394,7 +394,8 @@ public abstract class JavaClassDescriptorManager
                         // QDox if none found
                         Class<?> clazz = this.classloader.loadClass( className );
                         if ( this.processAnnotations
-                            && getAnnotationTagProviderManager().hasScrPluginAnnotation( javaClass ) )
+                            && getAnnotationTagProviderManager().hasScrPluginAnnotation( javaClass,
+                                    new AnnotationJavaClassDescription( clazz, javaClasses[index], this )) )
                         {
                             this.log.debug( "Found java annotation description for: " + className );
                             result = new AnnotationJavaClassDescription( clazz, javaClasses[index], this );
