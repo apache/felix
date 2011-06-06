@@ -26,12 +26,15 @@ public class ParsedHeaderClause
     public final List<String> m_paths;
     public final Map<String, String> m_dirs;
     public final Map<String, Object> m_attrs;
+    public final Map<String, String> m_types;
 
     public ParsedHeaderClause(
-        List<String> paths, Map<String, String> dirs, Map<String, Object> attrs)
+        List<String> paths, Map<String, String> dirs, Map<String, Object> attrs,
+        Map<String, String> types)
     {
         m_paths = paths;
         m_dirs = dirs;
         m_attrs = attrs;
+        m_types = types;
     }
 }

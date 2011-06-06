@@ -4605,7 +4605,7 @@ public class Felix extends BundleImpl implements Framework
                         }
                         else
                         {
-                            m_logger.log(Logger.LOG_DEBUG, "WIRE: " + rw);
+                            m_logger.log(Logger.LOG_DEBUG, "WIRE: " + rw.toString());
 
                             if (rw.getCapability().getNamespace()
                                 .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))

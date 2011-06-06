@@ -41,6 +41,7 @@ import org.osgi.framework.Version;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 class BundleImpl implements Bundle
 {
@@ -1006,6 +1007,10 @@ class BundleImpl implements Bundle
         {
             return (A) getFramework().adapt(FrameworkStartLevelImpl.class)
                 .createBundleStartLevel(this);
+        }
+        else if (type == BundleWiring.class)
+        {
+            return (A) getCurrentRevision().getWiring();
         }
         return null;
     }

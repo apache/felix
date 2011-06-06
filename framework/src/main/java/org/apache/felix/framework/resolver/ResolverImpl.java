@@ -550,6 +550,28 @@ public class ResolverImpl implements Resolver
         // import is consistent with the existing package space.
         if ((revision.getWiring() == null) || isDynamicImporting)
         {
+            // Merge uses constraints from required capabilities.
+            for (int i = 0; i < reqs.size(); i++)
+            {
+                BundleRequirement req = reqs.get(i);
+                BundleCapability cap = caps.get(i);
+                // Ignore revisions that import from themselves.
+                if (!cap.getRevision().equals(revision))
+                {
+                    List<BundleRequirement> blameReqs = new ArrayList();
+                    blameReqs.add(req);
+
+                    mergeUses(
+                        revision,
+                        revisionPkgs,
+                        cap,
+                        blameReqs,
+                        revisionPkgMap,
+                        allCandidates,
+                        usesCycleMap);
+                }
+            }
+            // Merge uses constraints from imported packages.
             for (Entry<String, List<Blame>> entry : revisionPkgs.m_importedPkgs.entrySet())
             {
                 for (Blame blame : entry.getValue())
@@ -571,6 +593,7 @@ public class ResolverImpl implements Resolver
                     }
                 }
             }
+            // Merge uses constraints from required bundles.
             for (Entry<String, List<Blame>> entry : revisionPkgs.m_requiredPkgs.entrySet())
             {
                 for (Blame blame : entry.getValue())
@@ -655,44 +678,27 @@ public class ResolverImpl implements Resolver
     {
         if (candCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
         {
+            // Merge the candidate capability into the revision's package space
+            // for imported or required packages, appropriately.
+
             String pkgName = (String)
                 candCap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
-
-            // Since this capability represents a package, it will become
-            // a hard constraint on the revisions's package space, so we need
-            // to make sure it doesn't conflict with any other hard constraints
-            // or any other uses constraints.
 
             List blameReqs = new ArrayList();
             blameReqs.add(currentReq);
 
-            //
-            // First, check to see if the capability conflicts with
-            // any existing hard constraints.
-            //
-
             Packages currentPkgs = revisionPkgMap.get(current);
 
-            if (requires)
+            Map<String, List<Blame>> packages = (requires)
+                ? currentPkgs.m_requiredPkgs
+                : currentPkgs.m_importedPkgs;
+            List<Blame> blames = currentPkgs.m_requiredPkgs.get(pkgName);
+            if (blames == null)
             {
-                List<Blame> currentRequiredBlames = currentPkgs.m_requiredPkgs.get(pkgName);
-                if (currentRequiredBlames == null)
-                {
-                    currentRequiredBlames = new ArrayList<Blame>();
-                    currentPkgs.m_requiredPkgs.put(pkgName, currentRequiredBlames);
-                }
-                currentRequiredBlames.add(new Blame(candCap, blameReqs));
+                blames = new ArrayList<Blame>();
+                packages.put(pkgName, blames);
             }
-            else
-            {
-                List<Blame> currentImportedBlames = currentPkgs.m_importedPkgs.get(pkgName);
-                if (currentImportedBlames == null)
-                {
-                    currentImportedBlames = new ArrayList<Blame>();
-                    currentPkgs.m_importedPkgs.put(pkgName, currentImportedBlames);
-                }
-                currentImportedBlames.add(new Blame(candCap, blameReqs));
-            }
+            blames.add(new Blame(candCap, blameReqs));
 
 //dumpRevisionPkgs(current, currentPkgs);
         }
@@ -705,14 +711,11 @@ public class ResolverImpl implements Resolver
         Candidates allCandidates,
         Map<BundleCapability, List<BundleRevision>> cycleMap)
     {
-        if (!mergeCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
-        {
-            return;
-        }
+        // If there are no uses, then just return.
         // If the candidate revision is the same as the current revision,
         // then we don't need to verify and merge the uses constraints
         // since this will happen as we build up the package space.
-        else if (current.equals(mergeCap.getRevision()))
+        if (current.equals(mergeCap.getRevision()))
         {
             return;
         }
@@ -1236,6 +1239,13 @@ public class ResolverImpl implements Resolver
             return sources;
         }
 
+        if (!((BundleCapabilityImpl) cap).getUses().isEmpty())
+        {
+            List<BundleCapability> caps = new ArrayList<BundleCapability>(1);
+            caps.add(cap);
+            return caps;
+        }
+
         return Collections.EMPTY_LIST;
     }
 
@@ -1323,7 +1333,8 @@ public class ResolverImpl implements Resolver
             wireMap.put(unwrappedRevision, (List<ResolverWire>) Collections.EMPTY_LIST);
 
             List<ResolverWire> packageWires = new ArrayList<ResolverWire>();
-            List<ResolverWire> requireWires = new ArrayList<ResolverWire>();
+            List<ResolverWire> bundleWires = new ArrayList<ResolverWire>();
+            List<ResolverWire> capabilityWires = new ArrayList<ResolverWire>();
 
             for (BundleRequirement req : revision.getDeclaredRequirements(null))
             {
@@ -1351,14 +1362,19 @@ public class ResolverImpl implements Resolver
                         }
                         else if (req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
                         {
-                            requireWires.add(wire);
+                            bundleWires.add(wire);
+                        }
+                        else
+                        {
+                            capabilityWires.add(wire);
                         }
                     }
                 }
             }
 
             // Combine package wires with require wires last.
-            packageWires.addAll(requireWires);
+            packageWires.addAll(bundleWires);
+            packageWires.addAll(capabilityWires);
             wireMap.put(unwrappedRevision, packageWires);
 
             // Add host wire for any fragments.

@@ -92,6 +92,9 @@ public class SimpleFilter
             case APPROX:
                 s = "(" + m_name + "~=" + toEncodedString(m_value) + ")";
                 break;
+            case MATCH_ALL:
+                s = "(*)";
+                break;
         }
         return s;
     }
