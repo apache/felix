@@ -169,11 +169,11 @@ public class AnnotationTagProviderManager
      * @param pClass Class
      * @return true if SCR plugin java annotation found
      */
-    public boolean hasScrPluginAnnotation( JavaClass pClass )
+    public boolean hasScrPluginAnnotation( final JavaClass pClass, final AnnotationJavaClassDescription description )
     {
         for ( com.thoughtworks.qdox.model.Annotation annotation : pClass.getAnnotations() )
         {
-            if ( getTags( annotation, null ).size() > 0 )
+            if ( getTags( annotation, description ).size() > 0 )
             {
                 return true;
             }
