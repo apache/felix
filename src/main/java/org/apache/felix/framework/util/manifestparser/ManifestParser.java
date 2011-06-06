@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import org.apache.felix.framework.BundleRevisionImpl;
 
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.VersionRange;
@@ -149,10 +150,10 @@ public class ManifestParser
         // Parse Require-Bundle
         //
 
-        List<ParsedHeaderClause> requireClauses =
+        List<ParsedHeaderClause> rbClauses =
             parseStandardHeader((String) headerMap.get(Constants.REQUIRE_BUNDLE));
-        requireClauses = normalizeRequireClauses(m_logger, requireClauses, getManifestVersion());
-        List<BundleRequirementImpl> requireReqs = convertRequires(requireClauses, owner);
+        rbClauses = normalizeRequireClauses(m_logger, rbClauses, getManifestVersion());
+        List<BundleRequirementImpl> rbReqs = convertRequires(rbClauses, owner);
 
         //
         // Parse Import-Package.
@@ -173,15 +174,34 @@ public class ManifestParser
         List<BundleRequirement> dynamicReqs = convertImports(dynamicClauses, owner);
 
         //
+        // Parse Require-Capability.
+        //
+
+        List<ParsedHeaderClause> requireClauses =
+            parseStandardHeader((String) headerMap.get(Constants.REQUIRE_CAPABILITY));
+        importClauses = normalizeRequireCapabilityClauses(
+            m_logger, requireClauses, getManifestVersion());
+        List<BundleRequirement> requireReqs = convertRequireCapabilities(importClauses, owner);
+
+        //
         // Parse Export-Package.
         //
 
-        // Get exported packages from bundle manifest.
         List<ParsedHeaderClause> exportClauses =
             parseStandardHeader((String) headerMap.get(Constants.EXPORT_PACKAGE));
         exportClauses = normalizeExportClauses(logger, exportClauses,
             getManifestVersion(), m_bundleSymbolicName, m_bundleVersion);
         List<BundleCapability> exportCaps = convertExports(exportClauses, owner);
+
+        //
+        // Parse Provide-Capability.
+        //
+
+        List<ParsedHeaderClause> provideClauses =
+            parseStandardHeader((String) headerMap.get(Constants.PROVIDE_CAPABILITY));
+        exportClauses = normalizeProvideCapabilityClauses(
+            logger, provideClauses, getManifestVersion());
+        List<BundleCapability> provideCaps = convertProvideCapabilities(provideClauses, owner);
 
         //
         // Calculate implicit imports.
@@ -203,16 +223,19 @@ public class ManifestParser
 
         // Combine all capabilities.
         m_capabilities = new ArrayList(
-             capList.size() + exportCaps.size());
+             capList.size() + exportCaps.size() + provideCaps.size());
         m_capabilities.addAll(capList);
         m_capabilities.addAll(exportCaps);
+        m_capabilities.addAll(provideCaps);
 
         // Combine all requirements.
         m_requirements = new ArrayList(
-             importReqs.size() + requireReqs.size() + hostReqs.size() + dynamicReqs.size());
+            importReqs.size() + rbReqs.size() + hostReqs.size()
+            + requireReqs.size() + dynamicReqs.size());
         m_requirements.addAll(importReqs);
-        m_requirements.addAll(requireReqs);
+        m_requirements.addAll(rbReqs);
         m_requirements.addAll(hostReqs);
+        m_requirements.addAll(requireReqs);
         m_requirements.addAll(dynamicReqs);
 
         //
@@ -227,7 +250,7 @@ public class ManifestParser
 
         // Check to see if there was an optional native library clause, which is
         // represented by a null library header; if so, record it and remove it.
-        if ((m_libraryClauses.size() > 0) &&
+        if (!m_libraryClauses.isEmpty() &&
             (m_libraryClauses.get(m_libraryClauses.size() - 1).getLibraryEntries() == null))
         {
             m_libraryHeadersOptional = true;
@@ -302,9 +325,8 @@ public class ManifestParser
             }
 
             // Verify java.* is not imported, nor any duplicate imports.
-            for (int pathIdx = 0; pathIdx < clause.m_paths.size(); pathIdx++)
+            for (String pkgName : clause.m_paths)
             {
-                String pkgName = clause.m_paths.get(pathIdx);
                 if (!dupeSet.contains(pkgName))
                 {
                     // Verify that java.* packages are not imported.
@@ -314,7 +336,7 @@ public class ManifestParser
                             "Importing java.* packages not allowed: " + pkgName);
                     }
                     // Make sure a package name was specified.
-                    else if (clause.m_paths.get(pathIdx).length() == 0)
+                    else if (pkgName.length() == 0)
                     {
                         throw new BundleException(
                             "Imported package names cannot be zero length.");
@@ -383,14 +405,12 @@ public class ManifestParser
     {
         // Now convert generic header clauses into requirements.
         List reqList = new ArrayList();
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+        for (ParsedHeaderClause clause : clauses)
         {
-            for (int pathIdx = 0;
-                pathIdx < clauses.get(clauseIdx).m_paths.size();
-                pathIdx++)
+            for (String path : clause.m_paths)
             {
                 // Prepend the package name to the array of attributes.
-                Map<String, Object> attrs = clauses.get(clauseIdx).m_attrs;
+                Map<String, Object> attrs = clause.m_attrs;
                 // Note that we use a linked hash map here to ensure the
                 // package attribute is first, which will make indexing
                 // more efficient.
@@ -399,7 +419,7 @@ public class ManifestParser
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
                     BundleCapabilityImpl.PACKAGE_ATTR,
-                    clauses.get(clauseIdx).m_paths.get(pathIdx));
+                    path);
                 newAttrs.putAll(attrs);
 
                 // Create package requirement and add to requirement list.
@@ -407,7 +427,7 @@ public class ManifestParser
                     new BundleRequirementImpl(
                         owner,
                         BundleCapabilityImpl.PACKAGE_NAMESPACE,
-                        clauses.get(clauseIdx).m_dirs,
+                        clause.m_dirs,
                         newAttrs));
             }
         }
@@ -473,9 +493,8 @@ public class ManifestParser
 
             // Dynamic imports can have duplicates, so verify that java.*
             // packages are not imported.
-            for (int pathIdx = 0; pathIdx < clause.m_paths.size(); pathIdx++)
+            for (String pkgName : clause.m_paths)
             {
-                String pkgName = clause.m_paths.get(pathIdx);
                 if (pkgName.startsWith("java."))
                 {
                     throw new BundleException(
@@ -492,6 +511,180 @@ public class ManifestParser
         return clauses;
     }
 
+    private static List<ParsedHeaderClause> normalizeRequireCapabilityClauses(
+        Logger logger, List<ParsedHeaderClause> clauses, String mv)
+        throws BundleException
+    {
+
+        if (!mv.equals("2") && !clauses.isEmpty())
+        {
+            // Should we error here if we are not an R4 bundle?
+        }
+
+        return clauses;
+    }
+
+    private static List<BundleRequirement> convertRequireCapabilities(
+        List<ParsedHeaderClause> clauses, BundleRevision owner)
+        throws BundleException
+    {
+        // Now convert generic header clauses into requirements.
+        List reqList = new ArrayList();
+        for (ParsedHeaderClause clause : clauses)
+        {
+            try
+            {
+                String filterStr = clause.m_dirs.get("filter");
+                SimpleFilter sf = (filterStr != null)
+                    ? SimpleFilter.parse(filterStr)
+                    : new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
+                for (String path : clause.m_paths)
+                {
+                    // Create requirement and add to requirement list.
+                    reqList.add(
+                        new BundleRequirementImpl(
+                            owner,
+                            path,
+                            clause.m_dirs,
+                            clause.m_attrs,
+                            sf));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new BundleException("Error creating requirement: " + ex);
+            }
+        }
+
+        return reqList;
+    }
+
+    private static List<ParsedHeaderClause> normalizeProvideCapabilityClauses(
+        Logger logger, List<ParsedHeaderClause> clauses, String mv)
+        throws BundleException
+    {
+
+        if (!mv.equals("2") && !clauses.isEmpty())
+        {
+            // Should we error here if we are not an R4 bundle?
+        }
+
+        // Convert attributes into specified types.
+        for (ParsedHeaderClause clause : clauses)
+        {
+            for (Entry<String, String> entry : clause.m_types.entrySet())
+            {
+                String type = entry.getValue();
+                if (!type.equals("String"))
+                {
+                    if (type.equals("Double"))
+                    {
+                        clause.m_attrs.put(
+                            entry.getKey(),
+                            new Double(clause.m_attrs.get(entry.getKey()).toString().trim()));
+                    }
+                    else if (type.equals("Version"))
+                    {
+                        clause.m_attrs.put(
+                            entry.getKey(),
+                            new Version(clause.m_attrs.get(entry.getKey()).toString().trim()));
+                    }
+                    else if (type.equals("Long"))
+                    {
+                        clause.m_attrs.put(
+                            entry.getKey(),
+                            new Long(clause.m_attrs.get(entry.getKey()).toString().trim()));
+                    }
+                    else if (type.startsWith("List"))
+                    {
+                        int startIdx = type.indexOf('<');
+                        int endIdx = type.indexOf('>');
+                        if (((startIdx > 0) && (endIdx <= startIdx))
+                            || ((startIdx < 0) && (endIdx > 0)))
+                        {
+                            throw new BundleException(
+                                "Invalid Provide-Capability attribute list type for '"
+                                + entry.getKey()
+                                + "' : "
+                                + type);
+                        }
+
+                        String listType = "String";
+                        if (endIdx > startIdx)
+                        {
+                            listType = type.substring(startIdx + 1, endIdx).trim();
+                        }
+
+                        List<String> tokens = parseDelimitedString(
+                            clause.m_attrs.get(entry.getKey()).toString(), ",", false);
+                        List<Object> values = new ArrayList<Object>(tokens.size());
+                        for (String token : tokens)
+                        {
+                            if (listType.equals("String"))
+                            {
+                                values.add(token);
+                            }
+                            else if (listType.equals("Double"))
+                            {
+                                values.add(new Double(token.trim()));
+                            }
+                            else if (listType.equals("Version"))
+                            {
+                                values.add(new Version(token.trim()));
+                            }
+                            else if (listType.equals("Long"))
+                            {
+                                values.add(new Long(token.trim()));
+                            }
+                            else
+                            {
+                                throw new BundleException(
+                                    "Unknown Provide-Capability attribute list type for '"
+                                    + entry.getKey()
+                                    + "' : "
+                                    + type);
+                            }
+                        }
+                        clause.m_attrs.put(
+                            entry.getKey(),
+                            values);
+                    }
+                    else
+                    {
+                        throw new BundleException(
+                            "Unknown Provide-Capability attribute type for '"
+                            + entry.getKey()
+                            + "' : "
+                            + type);
+                    }
+                }
+            }
+        }
+
+        return clauses;
+    }
+
+    private static List<BundleCapability> convertProvideCapabilities(
+        List<ParsedHeaderClause> clauses, BundleRevision owner)
+    {
+        List<BundleCapability> capList = new ArrayList();
+        for (ParsedHeaderClause clause : clauses)
+        {
+            for (String path : clause.m_paths)
+            {
+                // Create package capability and add to capability list.
+                capList.add(
+                    new BundleCapabilityImpl(
+                        owner,
+                        path,
+                        clause.m_dirs,
+                        clause.m_attrs));
+            }
+        }
+
+        return capList;
+    }
+
     private static List<ParsedHeaderClause> normalizeExportClauses(
         Logger logger, List<ParsedHeaderClause> clauses,
         String mv, String bsn, Version bv)
@@ -501,16 +694,16 @@ public class ManifestParser
         for (ParsedHeaderClause clause : clauses)
         {
             // Verify that the named package has not already been declared.
-            for (int pathIdx = 0; pathIdx < clause.m_paths.size(); pathIdx++)
+            for (String pkgName : clause.m_paths)
             {
                 // Verify that java.* packages are not exported.
-                if (clause.m_paths.get(pathIdx).startsWith("java."))
+                if (pkgName.startsWith("java."))
                 {
                     throw new BundleException(
                         "Exporting java.* packages not allowed: "
-                        + clause.m_paths.get(pathIdx));
+                        + pkgName);
                 }
-                else if (clause.m_paths.get(pathIdx).length() == 0)
+                else if (pkgName.length() == 0)
                 {
                     throw new BundleException(
                         "Exported package names cannot be zero length.");
@@ -605,6 +798,35 @@ public class ManifestParser
         }
 
         return clauses;
+    }
+
+    private static List<BundleCapability> convertExports(
+        List<ParsedHeaderClause> clauses, BundleRevision owner)
+    {
+        List<BundleCapability> capList = new ArrayList();
+        for (ParsedHeaderClause clause : clauses)
+        {
+            for (String pkgName : clause.m_paths)
+            {
+                // Prepend the package name to the array of attributes.
+                Map<String, Object> attrs = clause.m_attrs;
+                Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
+                newAttrs.put(
+                    BundleCapabilityImpl.PACKAGE_ATTR,
+                    pkgName);
+                newAttrs.putAll(attrs);
+
+                // Create package capability and add to capability list.
+                capList.add(
+                    new BundleCapabilityImpl(
+                        owner,
+                        BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                        clause.m_dirs,
+                        newAttrs));
+            }
+        }
+
+        return capList;
     }
 
     public String getManifestVersion()
@@ -744,11 +966,11 @@ public class ManifestParser
             List clauseList = new ArrayList();
 
             // Search for matching native clauses.
-            for (int i = 0; i < m_libraryClauses.size(); i++)
+            for (R4LibraryClause libraryClause : m_libraryClauses)
             {
-                if (m_libraryClauses.get(i).match(m_configMap))
+                if (libraryClause.match(m_configMap))
                 {
-                    clauseList.add(m_libraryClauses.get(i));
+                    clauseList.add(libraryClause);
                 }
             }
 
@@ -780,7 +1002,7 @@ public class ManifestParser
         return null;
     }
 
-    private int firstSortedClause(List clauseList)
+    private int firstSortedClause(List<R4LibraryClause> clauseList)
     {
         ArrayList indexList = new ArrayList();
         ArrayList selection = new ArrayList();
@@ -918,7 +1140,8 @@ public class ManifestParser
                 paths.add((String)
                     exports.get(i).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
                 clauseList.add(
-                    new ParsedHeaderClause(paths, Collections.EMPTY_MAP, attrs));
+                    new ParsedHeaderClause(
+                        paths, Collections.EMPTY_MAP, attrs, Collections.EMPTY_MAP));
             }
         }
 
@@ -1136,37 +1359,6 @@ public class ManifestParser
         return caps;
     }
 
-    private static List<BundleCapability> convertExports(
-        List<ParsedHeaderClause> clauses, BundleRevision owner)
-    {
-        List<BundleCapability> capList = new ArrayList();
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
-        {
-            for (int pathIdx = 0;
-                pathIdx < clauses.get(clauseIdx).m_paths.size();
-                pathIdx++)
-            {
-                // Prepend the package name to the array of attributes.
-                Map<String, Object> attrs = clauses.get(clauseIdx).m_attrs;
-                Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
-                newAttrs.put(
-                    BundleCapabilityImpl.PACKAGE_ATTR,
-                    clauses.get(clauseIdx).m_paths.get(pathIdx));
-                newAttrs.putAll(attrs);
-
-                // Create package capability and add to capability list.
-                capList.add(
-                    new BundleCapabilityImpl(
-                        owner,
-                        BundleCapabilityImpl.PACKAGE_NAMESPACE,
-                        clauses.get(clauseIdx).m_dirs,
-                        newAttrs));
-            }
-        }
-
-        return capList;
-    }
-
     private static List<ParsedHeaderClause> normalizeRequireClauses(
         Logger logger, List<ParsedHeaderClause> clauses, String mv)
     {
@@ -1178,13 +1370,12 @@ public class ManifestParser
         else
         {
             // Convert bundle version attribute to VersionRange type.
-            for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+            for (ParsedHeaderClause clause : clauses)
             {
-                Object value = clauses.get(clauseIdx).m_attrs.get(
-                    Constants.BUNDLE_VERSION_ATTRIBUTE);
+                Object value = clause.m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
                 if (value != null)
                 {
-                    clauses.get(clauseIdx).m_attrs.put(
+                    clause.m_attrs.put(
                         Constants.BUNDLE_VERSION_ATTRIBUTE,
                         VersionRange.parse(value.toString()));
                 }
@@ -1198,14 +1389,12 @@ public class ManifestParser
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
         List<BundleRequirementImpl> reqList = new ArrayList();
-        for (int clauseIdx = 0; clauseIdx < clauses.size(); clauseIdx++)
+        for (ParsedHeaderClause clause : clauses)
         {
-            for (int pathIdx = 0;
-                pathIdx < clauses.get(clauseIdx).m_paths.size();
-                pathIdx++)
+            for (String path : clause.m_paths)
             {
                 // Prepend the bundle symbolic name to the array of attributes.
-                Map<String, Object> attrs = clauses.get(clauseIdx).m_attrs;
+                Map<String, Object> attrs = clause.m_attrs;
                 // Note that we use a linked hash map here to ensure the
                 // package attribute is first, which will make indexing
                 // more efficient.
@@ -1215,7 +1404,7 @@ public class ManifestParser
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
                     Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE,
-                    clauses.get(clauseIdx).m_paths.get(pathIdx));
+                    path);
                 newAttrs.putAll(attrs);
 
                 // Create package requirement and add to requirement list.
@@ -1223,7 +1412,7 @@ public class ManifestParser
                     new BundleRequirementImpl(
                         owner,
                         BundleCapabilityImpl.BUNDLE_NAMESPACE,
-                        clauses.get(clauseIdx).m_dirs,
+                        clause.m_dirs,
                         newAttrs));
             }
         }
@@ -1275,9 +1464,9 @@ public class ManifestParser
         {
             // Just look for a "path" matching the lazy policy, ignore
             // everything else.
-            for (int clauseIdx = 0; clauseIdx < clauses.get(0).m_paths.size(); clauseIdx++)
+            for (String path : clauses.get(0).m_paths)
             {
-                if (clauses.get(0).m_paths.get(clauseIdx).equals(Constants.ACTIVATION_LAZY))
+                if (path.equals(Constants.ACTIVATION_LAZY))
                 {
                     m_activationPolicy = BundleRevisionImpl.LAZY_ACTIVATION;
                     for (Entry<String, String> entry : clauses.get(0).m_dirs.entrySet())
@@ -1297,15 +1486,11 @@ public class ManifestParser
         }
     }
 
-    public static final int CLAUSE_PATHS_INDEX = 0;
-    public static final int CLAUSE_DIRECTIVES_INDEX = 1;
-    public static final int CLAUSE_ATTRIBUTES_INDEX = 2;
-
     // Like this: path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2,
     //            path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2
-    private static List<ParsedHeaderClause> parseStandardHeader(String header)
+    public static void main(String[] headers)
     {
-        List<ParsedHeaderClause> clauses = new ArrayList();
+        String header = headers[0];
 
         if (header != null)
         {
@@ -1315,110 +1500,279 @@ public class ManifestParser
                     "A header cannot be an empty string.");
             }
 
-            List<String> clauseStrings = parseDelimitedString(
-                header, FelixConstants.CLASS_PATH_SEPARATOR);
-
-            for (int i = 0; (clauseStrings != null) && (i < clauseStrings.size()); i++)
+            List<ParsedHeaderClause> clauses = parseStandardHeader(header);
+            for (ParsedHeaderClause clause : clauses)
             {
-                clauses.add(parseStandardHeaderClause(clauseStrings.get(i)));
+                System.out.println("PATHS " + clause.m_paths);
+                System.out.println("    DIRS  " + clause.m_dirs);
+                System.out.println("    ATTRS " + clause.m_attrs);
+                System.out.println("    TYPES " + clause.m_types);
             }
         }
 
+//        return clauses;
+    }
+
+    private static List<ParsedHeaderClause> parseStandardHeader(String header)
+    {
+        List<ParsedHeaderClause> clauses = new ArrayList<ParsedHeaderClause>();
+        if (header != null)
+        {
+            int[] startIdx = new int[1];
+            startIdx[0] = 0;
+            for (int i = 0; i < header.length(); i++)
+            {
+                clauses.add(parseClause(startIdx, header));
+                i = startIdx[0];
+            }
+        }
         return clauses;
     }
 
-    // Like this: path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2
-    private static ParsedHeaderClause parseStandardHeaderClause(String clauseString)
-        throws IllegalArgumentException
+    private static ParsedHeaderClause parseClause(int[] startIdx, String header)
     {
-        // Break string into semi-colon delimited pieces.
-        List<String> pieces = parseDelimitedString(
-            clauseString, FelixConstants.PACKAGE_SEPARATOR);
-
-        // Count the number of different paths; paths
-        // will not have an '=' in their string. This assumes
-        // that paths come first, before directives and
-        // attributes.
-        int pathCount = 0;
-        for (int pieceIdx = 0; pieceIdx < pieces.size(); pieceIdx++)
+        ParsedHeaderClause clause = new ParsedHeaderClause(
+            new ArrayList<String>(),
+            new HashMap<String, String>(),
+            new HashMap<String, Object>(),
+            new HashMap<String, String>());
+        for (int i = startIdx[0]; i < header.length(); i++)
         {
-            if (pieces.get(pieceIdx).indexOf('=') >= 0)
+            char c = header.charAt(i);
+            if ((c == ':') || (c == '='))
             {
+                parseClauseParameters(startIdx, header, clause);
+                i = startIdx[0];
                 break;
             }
-            pathCount++;
+            else if ((c == ';') || (c == ',') || (i == (header.length() - 1)))
+            {
+                String path;
+                if (i == (header.length() - 1))
+                {
+                    path = header.substring(startIdx[0], header.length());
+                }
+                else
+                {
+                    path = header.substring(startIdx[0], i);
+                }
+                clause.m_paths.add(path.trim());
+                startIdx[0] = i + 1;
+                if (c == ',')
+                {
+                    break;
+                }
+            }
+        }
+        return clause;
+    }
+
+    private static void parseClauseParameters(
+        int[] startIdx, String header, ParsedHeaderClause clause)
+    {
+        for (int i = startIdx[0]; i < header.length(); i++)
+        {
+            char c = header.charAt(i);
+            if ((c == ':') && (header.charAt(i + 1) == '='))
+            {
+                parseClauseDirective(startIdx, header, clause);
+                i = startIdx[0];
+            }
+            else if ((c == ':') || (c == '='))
+            {
+                parseClauseAttribute(startIdx, header, clause);
+                i = startIdx[0];
+            }
+            else if (c == ',')
+            {
+                startIdx[0] = i + 1;
+                break;
+            }
+        }
+    }
+
+    private static void parseClauseDirective(
+        int[] startIdx, String header, ParsedHeaderClause clause)
+    {
+        String name = null;
+        String value = null;
+        boolean isQuoted = false;
+        boolean isEscaped = false;
+        for (int i = startIdx[0]; i < header.length(); i++)
+        {
+            char c = header.charAt(i);
+            if (!isEscaped && (c == '"'))
+            {
+                isQuoted = !isQuoted;
+            }
+
+            if (!isEscaped
+                && !isQuoted && (c == ':'))
+            {
+                name = header.substring(startIdx[0], i);
+                startIdx[0] = i + 2;
+            }
+            else if (!isEscaped
+                && !isQuoted && ((c == ';') || (c == ',') || (i == (header.length() - 1))))
+            {
+                if (i == (header.length() - 1))
+                {
+                    value = header.substring(startIdx[0], header.length());
+                }
+                else
+                {
+                    value = header.substring(startIdx[0], i);
+                }
+                if (c == ',')
+                {
+                    startIdx[0] = i - 1;
+                }
+                else
+                {
+                    startIdx[0] = i + 1;
+                }
+                break;
+            }
+
+            isEscaped = (c == '\\');
         }
 
-        // Error if no paths were specified.
-        if (pathCount == 0)
+        // Trim whitespace.
+        name = name.trim();
+        value = value.trim();
+
+        // Remove quotes, if value is quoted.
+        if (value.startsWith("\"") && value.endsWith("\""))
+        {
+            value = value.substring(1, value.length() - 1);
+        }
+
+        // Check for dupes.
+        if (clause.m_dirs.get(name) != null)
         {
             throw new IllegalArgumentException(
-                "No paths specified in header: " + clauseString);
+                "Duplicate directive '" + name + "' in: " + header);
         }
 
-        // Create an array of paths.
-        List<String> paths = new ArrayList<String>(pathCount);
-        for (int pathIdx = 0; pathIdx < pathCount; pathIdx++)
+        clause.m_dirs.put(name, value);
+    }
+
+    private static void parseClauseAttribute(
+        int[] startIdx, String header, ParsedHeaderClause clause)
+    {
+        String type = null;
+
+        String name = parseClauseAttributeName(startIdx, header);
+        char c = header.charAt(startIdx[0]);
+        startIdx[0]++;
+        if (c == ':')
         {
-            paths.add(pieces.get(pathIdx));
+            type = parseClauseAttributeType(startIdx, header);
         }
 
-        // Parse the directives/attributes.
-        Map<String, String> dirs = new HashMap<String, String>();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        int idx = -1;
-        String sep = null;
-        for (int pieceIdx = pathCount; pieceIdx < pieces.size(); pieceIdx++)
+        String value = parseClauseAttributeValue(startIdx, header);
+
+        // Trim whitespace.
+        name = name.trim();
+        value = value.trim();
+        if (type != null)
         {
-            // Check if it is a directive.
-            if ((idx = pieces.get(pieceIdx).indexOf(FelixConstants.DIRECTIVE_SEPARATOR)) >= 0)
-            {
-                sep = FelixConstants.DIRECTIVE_SEPARATOR;
-            }
-            // Check if it is an attribute.
-            else if ((idx = pieces.get(pieceIdx).indexOf(FelixConstants.ATTRIBUTE_SEPARATOR)) >= 0)
-            {
-                sep = FelixConstants.ATTRIBUTE_SEPARATOR;
-            }
-            // It is an error.
-            else
-            {
-                throw new IllegalArgumentException("Not a directive/attribute: " + clauseString);
-            }
-
-            String key = pieces.get(pieceIdx).substring(0, idx).trim();
-            String value = pieces.get(pieceIdx).substring(idx + sep.length()).trim();
-
-            // Remove quotes, if value is quoted.
-            if (value.startsWith("\"") && value.endsWith("\""))
-            {
-                value = value.substring(1, value.length() - 1);
-            }
-
-            // Save the directive/attribute in the appropriate array.
-            if (sep.equals(FelixConstants.DIRECTIVE_SEPARATOR))
-            {
-                // Check for duplicates.
-                if (dirs.get(key) != null)
-                {
-                    throw new IllegalArgumentException(
-                        "Duplicate directive: " + key);
-                }
-                dirs.put(key, value);
-            }
-            else
-            {
-                // Check for duplicates.
-                if (attrs.get(key) != null)
-                {
-                    throw new IllegalArgumentException(
-                        "Duplicate attribute: " + key);
-                }
-                attrs.put(key, value);
-            }
+            type = type.trim();
         }
 
-        return new ParsedHeaderClause(paths, dirs, attrs);
+        // Remove quotes, if value is quoted.
+        if (value.startsWith("\"") && value.endsWith("\""))
+        {
+            value = value.substring(1, value.length() - 1);
+        }
+
+        // Check for dupes.
+        if (clause.m_attrs.get(name) != null)
+        {
+            throw new IllegalArgumentException(
+                "Duplicate attribute '" + name + "' in: " + header);
+        }
+
+        clause.m_attrs.put(name, value);
+        if (type != null)
+        {
+            clause.m_types.put(name, type);
+        }
+    }
+
+    private static String parseClauseAttributeName(int[] startIdx, String header)
+    {
+        for (int i = startIdx[0]; i < header.length(); i++)
+        {
+            char c = header.charAt(i);
+            if ((c == '=') || (c == ':'))
+            {
+                String name = header.substring(startIdx[0], i);
+                startIdx[0] = i;
+                return name;
+            }
+        }
+        return null;
+    }
+
+    private static String parseClauseAttributeType(int[] startIdx, String header)
+    {
+        for (int i = startIdx[0]; i < header.length(); i++)
+        {
+            char c = header.charAt(i);
+            if (c == '=')
+            {
+                String type = header.substring(startIdx[0], i);
+                startIdx[0] = i + 1;
+                return type;
+            }
+        }
+        return null;
+    }
+
+    private static String parseClauseAttributeValue(int[] startIdx, String header)
+    {
+        boolean isQuoted = false;
+        boolean isEscaped = false;
+        for (int i = startIdx[0]; i < header.length(); i++)
+        {
+            char c = header.charAt(i);
+            if (!isEscaped && (c == '"'))
+            {
+                isQuoted = !isQuoted;
+            }
+
+            if (!isEscaped &&
+                !isQuoted && ((c == ';') || (c == ',') || (i == (header.length() - 1))))
+            {
+                String value;
+                if (i == (header.length() - 1))
+                {
+                    value = header.substring(startIdx[0], header.length());
+                }
+                else
+                {
+                    value = header.substring(startIdx[0], i);
+                }
+                if (c == ',')
+                {
+                    startIdx[0] = i - 1;
+                }
+                else
+                {
+                    startIdx[0] = i + 1;
+                }
+                return value;
+            }
+
+            isEscaped = (c == '\\');
+        }
+        return null;
+    }
+
+    public static List<String> parseDelimitedString(String value, String delim)
+    {
+        return parseDelimitedString(value, delim, true);
     }
 
     /**
@@ -1430,7 +1784,7 @@ public class ManifestParser
      * @param delim the characters delimiting the tokens.
      * @return a list of string or an empty list if there are none.
     **/
-    public static List<String> parseDelimitedString(String value, String delim)
+    public static List<String> parseDelimitedString(String value, String delim, boolean trim)
     {
         if (value == null)
         {
@@ -1448,25 +1802,42 @@ public class ManifestParser
 
         int expecting = (CHAR | DELIMITER | STARTQUOTE);
 
+        boolean isEscaped = false;
         for (int i = 0; i < value.length(); i++)
         {
             char c = value.charAt(i);
 
             boolean isDelimiter = (delim.indexOf(c) >= 0);
-            boolean isQuote = (c == '"');
 
-            if (isDelimiter && ((expecting & DELIMITER) > 0))
+            if (c == '\\')
             {
-                list.add(sb.toString().trim());
+                isEscaped = true;
+                continue;
+            }
+
+            if (isEscaped)
+            {
+                sb.append(c);
+            }
+            else if (isDelimiter && ((expecting & DELIMITER) > 0))
+            {
+                if (trim)
+                {
+                    list.add(sb.toString().trim());
+                }
+                else
+                {
+                    list.add(sb.toString());
+                }
                 sb.delete(0, sb.length());
                 expecting = (CHAR | DELIMITER | STARTQUOTE);
             }
-            else if (isQuote && ((expecting & STARTQUOTE) > 0))
+            else if ((c == '"') && ((expecting & STARTQUOTE) > 0))
             {
                 sb.append(c);
                 expecting = CHAR | ENDQUOTE;
             }
-            else if (isQuote && ((expecting & ENDQUOTE) > 0))
+            else if ((c == '"') && ((expecting & ENDQUOTE) > 0))
             {
                 sb.append(c);
                 expecting = (CHAR | STARTQUOTE | DELIMITER);
@@ -1479,11 +1850,20 @@ public class ManifestParser
             {
                 throw new IllegalArgumentException("Invalid delimited string: " + value);
             }
+
+            isEscaped = false;
         }
 
         if (sb.length() > 0)
         {
-            list.add(sb.toString().trim());
+            if (trim)
+            {
+                list.add(sb.toString().trim());
+            }
+            else
+            {
+                list.add(sb.toString());
+            }
         }
 
         return list;

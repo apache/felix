@@ -60,18 +60,20 @@ public class BundleCapabilityImpl implements BundleCapability
         m_attrs = Collections.unmodifiableMap(attrs);
 
         // Find all export directives: uses, mandatory, include, and exclude.
-        
-        m_uses = new ArrayList(0);
+
+        List<String> uses = Collections.EMPTY_LIST;
         String value = m_dirs.get(Constants.USES_DIRECTIVE);
         if (value != null)
         {
             // Parse these uses directive.
             StringTokenizer tok = new StringTokenizer(value, ",");
+            uses = new ArrayList(tok.countTokens());
             while (tok.hasMoreTokens())
             {
-                m_uses.add(tok.nextToken().trim());
+                uses.add(tok.nextToken().trim());
             }
         }
+        m_uses = uses;
 
         value = m_dirs.get(Constants.INCLUDE_DIRECTIVE);
         if (value != null)
@@ -105,17 +107,18 @@ public class BundleCapabilityImpl implements BundleCapability
             m_excludeFilter = null;
         }
 
-        m_mandatory = new HashSet<String>(0);
+        Set<String> mandatory = Collections.EMPTY_SET;
         value = m_dirs.get(Constants.MANDATORY_DIRECTIVE);
         if (value != null)
         {
             List<String> names = ManifestParser.parseDelimitedString(value, ",");
+            mandatory = new HashSet<String>(names.size());
             for (String name : names)
             {
                 // If attribute exists, then record it as mandatory.
                 if (m_attrs.containsKey(name))
                 {
-                    m_mandatory.add(name);
+                    mandatory.add(name);
                 }
                 // Otherwise, report an error.
                 else
@@ -125,6 +128,7 @@ public class BundleCapabilityImpl implements BundleCapability
                 }
             }
         }
+        m_mandatory = mandatory;
     }
 
     public BundleRevision getRevision()

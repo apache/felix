@@ -266,7 +266,11 @@ public void dump()
     {
         boolean matched = true;
 
-        if (sf.getOperation() == SimpleFilter.AND)
+        if (sf.getOperation() == SimpleFilter.MATCH_ALL)
+        {
+            matched = true;
+        }
+        else if (sf.getOperation() == SimpleFilter.AND)
         {
             // Evaluate each subfilter against the remaining capabilities.
             // For AND we calculate the intersection of each subfilter.
