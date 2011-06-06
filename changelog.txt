@@ -2,6 +2,7 @@ Changes from 1.1.0 to 1.1.2
 ---------------------------
 
 ** Bug
+    * [FELIX-2978] - Lookup reference policy does not work for inherited components
     * [FELIX-2945] - SCR plugin: Parsing of "options" for property tag broken for java annotations
     * [FELIX-2906] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
     * [FELIX-2878] - scr- and bundle-plugin in multimodule project fails with goal "test"

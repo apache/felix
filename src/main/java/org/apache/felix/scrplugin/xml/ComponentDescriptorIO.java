@@ -18,25 +18,15 @@
  */
 package org.apache.felix.scrplugin.xml;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.StringTokenizer;
 
 import javax.xml.transform.TransformerException;
 
 import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.om.Implementation;
-import org.apache.felix.scrplugin.om.Interface;
-import org.apache.felix.scrplugin.om.Property;
-import org.apache.felix.scrplugin.om.Reference;
-import org.apache.felix.scrplugin.om.Service;
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+import org.apache.felix.scrplugin.om.*;
+import org.xml.sax.*;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -350,6 +340,7 @@ public class ComponentDescriptorIO {
 
         if ( isScrPrivateFile ) {
             IOUtils.addAttribute(ai, "checked", String.valueOf(reference.isChecked()));
+            IOUtils.addAttribute(ai, "strategy", reference.getStrategy());
         }
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME, ai);
@@ -511,6 +502,9 @@ public class ComponentDescriptorIO {
 
                     if ( attributes.getValue("checked") != null ) {
                         ref.setChecked(Boolean.valueOf(attributes.getValue("checked")).booleanValue());
+                    }
+                    if ( attributes.getValue("strategy") != null ) {
+                        ref.setStrategy(attributes.getValue("strategy"));
                     }
 
                     this.currentComponent.addReference(ref);
