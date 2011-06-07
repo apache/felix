@@ -470,9 +470,9 @@ public class SCRDescriptorGenerator
         // set implementation
         component.setImplementation( new Implementation( description.getName() ) );
 
-        final OCD ocd = this.doComponent( componentTag, component, metaData, iLog );
+        final boolean inherited = getBoolean( componentTag, Constants.COMPONENT_INHERIT, true );
+        final OCD ocd = this.doComponent( componentTag, component, metaData,inherited,  iLog );
 
-        boolean inherited = getBoolean( componentTag, Constants.COMPONENT_INHERIT, true );
         this.doServices( description.getTagsByName( Constants.SERVICE, inherited ), component, description );
 
         // collect references from class tags and fields
@@ -557,7 +557,11 @@ public class SCRDescriptorGenerator
      * @param tag
      * @param component
      */
-    protected OCD doComponent( JavaTag tag, Component component, MetaData metaData, final IssueLog iLog )
+    protected OCD doComponent( final JavaTag tag,
+            final Component component,
+            final MetaData metaData,
+            final boolean inherit,
+            final IssueLog iLog )
         throws SCRDescriptorException
     {
 
@@ -603,22 +607,10 @@ public class SCRDescriptorGenerator
             component.setSpecVersion( Constants.VERSION_1_1 );
             component.setConfigurationPolicy( tag.getNamedParameter( Constants.COMPONENT_CONFIG_POLICY ) );
         }
-        // check for V1.1 attributes: activate, deactivate
-        if ( tag.getNamedParameter( Constants.COMPONENT_ACTIVATE ) != null )
-        {
-            component.setSpecVersion( Constants.VERSION_1_1 );
-            component.setActivate( tag.getNamedParameter( Constants.COMPONENT_ACTIVATE ) );
-        }
-        if ( tag.getNamedParameter( Constants.COMPONENT_DEACTIVATE ) != null )
-        {
-            component.setSpecVersion( Constants.VERSION_1_1 );
-            component.setDeactivate( tag.getNamedParameter( Constants.COMPONENT_DEACTIVATE ) );
-        }
-        if ( tag.getNamedParameter( Constants.COMPONENT_MODIFIED ) != null )
-        {
-            component.setSpecVersion( Constants.VERSION_1_1 );
-            component.setModified( tag.getNamedParameter( Constants.COMPONENT_MODIFIED ) );
-        }
+        // check for V1.1 attributes: activate, deactivate, modified
+        component.setActivate(this.checkLifecycleMethod(component, Constants.COMPONENT_ACTIVATE, tag, inherit));
+        component.setDeactivate(this.checkLifecycleMethod(component, Constants.COMPONENT_DEACTIVATE, tag, inherit));
+        component.setModified(this.checkLifecycleMethod(component, Constants.COMPONENT_MODIFIED, tag, inherit));
 
         // whether metatype information is to generated for the component
         final String metaType = tag.getNamedParameter( Constants.COMPONENT_METATYPE );
@@ -672,6 +664,37 @@ public class SCRDescriptorGenerator
         return null;
     }
 
+    private String checkLifecycleMethod(final Component component,
+            final String methodTagName,
+            final JavaTag tag,
+            final boolean inherit)
+    throws SCRDescriptorException
+    {
+        String method = null;
+        if ( tag.getNamedParameter( methodTagName ) != null )
+        {
+            method = tag.getNamedParameter( methodTagName );
+        }
+        else if ( inherit )
+        {
+            // check if a super class has the activate method specified
+            JavaClassDescription desc = tag.getJavaClassDescription().getSuperClass();
+            while ( desc != null && method == null )
+            {
+                final JavaTag componentTag = desc.getTagByName( Constants.COMPONENT );
+                if ( componentTag != null && componentTag.getNamedParameter( methodTagName ) != null )
+                {
+                    method = componentTag.getNamedParameter( methodTagName );
+                }
+                desc = desc.getSuperClass();
+            }
+        }
+        if ( method != null )
+        {
+            component.setSpecVersion( Constants.VERSION_1_1 );
+        }
+        return method;
+    }
 
     /**
      * Process the service annotations
