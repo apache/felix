@@ -7,6 +7,9 @@ Changes from 1.1.0 to 1.1.2
     * [FELIX-2945] - SCR plugin: Parsing of "options" for property tag broken for java annotations
     * [FELIX-2906] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
 
+** Improvement
+    * [FELIX-2492] - scr plugin: using src annotations causes NoClassDefFoundError and other errors
+
 
 Changes from 1.0.0 to 1.1.0
 ---------------------------
