@@ -78,15 +78,15 @@ class ResolverStateImpl implements Resolver.ResolverState
 
         List<String> indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(BundleCapabilityImpl.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
+        m_capSets.put(BundleRevision.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
         indices.add(BundleCapabilityImpl.PACKAGE_ATTR);
-        m_capSets.put(BundleCapabilityImpl.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
+        m_capSets.put(BundleRevision.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
 
         indices = new ArrayList<String>();
         indices.add(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
-        m_capSets.put(BundleCapabilityImpl.HOST_NAMESPACE,  new CapabilitySet(indices, true));
+        m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
 
     synchronized void addRevision(BundleRevision br)
@@ -157,15 +157,15 @@ class ResolverStateImpl implements Resolver.ResolverState
             // corresponding package capability from the package capability set.
             for (BundleWire w : br.getWiring().getRequiredWires(null))
             {
-                if (w.getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                if (w.getCapability().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     for (BundleCapability cap : br.getWiring().getCapabilities(null))
                     {
-                        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                        if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                             && w.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
                                 .equals(cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
                         {
-                            m_capSets.get(BundleCapabilityImpl.PACKAGE_NAMESPACE).removeCapability(cap);
+                            m_capSets.get(BundleRevision.PACKAGE_NAMESPACE).removeCapability(cap);
                             break;
                         }
                     }
@@ -193,7 +193,7 @@ class ResolverStateImpl implements Resolver.ResolverState
             {
                 if (System.getSecurityManager() != null)
                 {
-                    if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) && (
+                    if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE) && (
                         !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                             new PackagePermission((String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
                             PackagePermission.EXPORTONLY)) ||
@@ -208,7 +208,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                             continue;
                         }
                     }
-                    else if (req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE) && (
+                    else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) && (
                         !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                             new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
                             !((reqRevision == null) ||
@@ -218,7 +218,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                     {
                         continue;
                     }
-                    else if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE) &&
+                    else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE) &&
                         (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
                             .impliesDirect(new BundlePermission(
                                 reqRevision.getSymbolicName(),
@@ -232,7 +232,7 @@ class ResolverStateImpl implements Resolver.ResolverState
                     }
                 }
 
-                if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE)
+                if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
                     && (cap.getRevision().getWiring() != null))
                 {
                     continue;

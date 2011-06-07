@@ -356,7 +356,7 @@ public class Util
                 for (BundleWire w : wires)
                 {
                     if (w.getCapability().getNamespace()
-                            .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+                            .equals(BundleRevision.PACKAGE_NAMESPACE) &&
                         w.getCapability().getAttributes()
                             .get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
                     {

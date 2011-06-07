@@ -3425,7 +3425,7 @@ public class Felix extends BundleImpl implements Framework
         attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             null,
-            BundleCapabilityImpl.PACKAGE_NAMESPACE,
+            BundleRevision.PACKAGE_NAMESPACE,
             Collections.EMPTY_MAP,
             attrs);
         Set<BundleCapability> exports = m_resolver.getCandidates(req, false);
@@ -3569,7 +3569,7 @@ public class Felix extends BundleImpl implements Framework
                 {
                     // See if the target bundle's revisions is one of the
                     // resolved exporters of the package.
-                    if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
                         String pkgName = (String)
                             cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
@@ -3578,7 +3578,7 @@ public class Felix extends BundleImpl implements Framework
                         BundleRequirementImpl req =
                             new BundleRequirementImpl(
                             null,
-                            BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                            BundleRevision.PACKAGE_NAMESPACE,
                             Collections.EMPTY_MAP,
                             attrs);
                         Set<BundleCapability> providers = m_resolver.getCandidates(req, false);
@@ -4495,7 +4495,7 @@ public class Felix extends BundleImpl implements Framework
             // attempt to dynamically import it.
             for (BundleCapability cap : revision.getWiring().getCapabilities(null))
             {
-                if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                     && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
                 {
                     return false;
@@ -4516,7 +4516,7 @@ public class Felix extends BundleImpl implements Framework
             attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
                 revision,
-                BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                BundleRevision.PACKAGE_NAMESPACE,
                 Collections.EMPTY_MAP,
                 attrs);
             Set<BundleCapability> candidates = m_resolverState.getCandidates(req, false);
@@ -4607,7 +4607,7 @@ public class Felix extends BundleImpl implements Framework
                             m_logger.log(Logger.LOG_DEBUG, "WIRE: " + rw.toString());
 
                             if (rw.getCapability().getNamespace()
-                                .equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                                .equals(BundleRevision.PACKAGE_NAMESPACE))
                             {
                                 importedPkgs.put(
                                     (String) rw.getCapability().getAttributes()
@@ -4615,7 +4615,7 @@ public class Felix extends BundleImpl implements Framework
                                     rw.getProvider());
                             }
                             else if (rw.getCapability().getNamespace()
-                                .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                                .equals(BundleRevision.BUNDLE_NAMESPACE))
                             {
                                 Set<String> pkgs = calculateExportedAndReexportedPackages(
                                         rw.getProvider(),
@@ -4793,7 +4793,7 @@ public class Felix extends BundleImpl implements Framework
             // Add all exported packages.
             for (BundleCapability cap : br.getDeclaredCapabilities(null))
             {
-                if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     pkgs.add((String)
                         cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
@@ -4807,7 +4807,7 @@ public class Felix extends BundleImpl implements Framework
                 for (ResolverWire rw : wireMap.get(br))
                 {
                     if (rw.getCapability().getNamespace().equals(
-                        BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        BundleRevision.BUNDLE_NAMESPACE))
                     {
                         String dir = rw.getRequirement()
                             .getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
@@ -4827,7 +4827,7 @@ public class Felix extends BundleImpl implements Framework
                 for (BundleWire bw : br.getWiring().getRequiredWires(null))
                 {
                     if (bw.getCapability().getNamespace().equals(
-                        BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        BundleRevision.BUNDLE_NAMESPACE))
                     {
                         String dir = bw.getRequirement()
                             .getDirectives().get(Constants.VISIBILITY_DIRECTIVE);

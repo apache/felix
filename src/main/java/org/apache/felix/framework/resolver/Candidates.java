@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -361,7 +361,7 @@ class Candidates
                         it.hasNext(); )
                     {
                         BundleRequirement r = it.next();
-                        if (r.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
+                        if (r.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                         {
                             hostReq = r;
                             it.remove();
@@ -391,7 +391,7 @@ class Candidates
                     // If there are populates host candidates, then finish up
                     // some other checks and prepopulate the result cache with
                     // the work we've done so far.
-                    
+
                     // Verify that any required execution environment is satisfied.
                     state.checkExecutionEnvironment(revision);
 
@@ -485,7 +485,7 @@ class Candidates
     **/
     private void add(BundleRequirement req, SortedSet<BundleCapability> candidates)
     {
-        if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
+        if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
         {
             m_fragmentsPresent = true;
         }
@@ -769,7 +769,7 @@ class Candidates
                 dependents.add(req);
 
                 // Keep track of hosts and associated fragments.
-                if (req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE))
+                if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                 {
                     Map<String, Map<Version, List<BundleRequirement>>>
                         fragments = m_hostFragments.get(cap);
@@ -795,7 +795,7 @@ class Candidates
                     actual.add(req);
                 }
             }
-        }   
+        }
     }
 
     /**
@@ -856,7 +856,7 @@ class Candidates
     **/
     private void remove(BundleRequirement req)
     {
-        boolean isFragment = req.getNamespace().equals(BundleCapabilityImpl.HOST_NAMESPACE);
+        boolean isFragment = req.getNamespace().equals(BundleRevision.HOST_NAMESPACE);
 
         SortedSet<BundleCapability> candidates = m_candidateMap.remove(req);
         if (candidates != null)
@@ -1028,7 +1028,7 @@ class Candidates
     {
         final List<BundleCapability> modCaps =
             Util.getCapabilityByNamespace(
-                revision, BundleCapabilityImpl.BUNDLE_NAMESPACE);
+                revision, BundleRevision.BUNDLE_NAMESPACE);
         if (modCaps == null || modCaps.isEmpty())
         {
             return false;
