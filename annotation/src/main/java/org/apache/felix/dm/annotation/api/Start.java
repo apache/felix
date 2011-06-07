@@ -45,7 +45,10 @@ import java.lang.annotation.Target;
  *         // Our Z Service is ready (all required dependencies have been satisfied), and is about to be 
  *         // registered into the OSGi registry. We return here an optional Map containing some extra-properties
  *         // which will be appended to the properties supplied in the Component annotation.
- *         return new HashMap() {{ put("foo2", "bar2"); }};
+ *         return new HashMap() {{
+ *            put("foo2", "bar2");
+ *            put(Constants.SERVICE_RANKING, Integer.valueOf(10));
+ *         }};
  *     }
  * }
  * </pre>
