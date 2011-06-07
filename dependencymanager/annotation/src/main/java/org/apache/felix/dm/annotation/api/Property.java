@@ -26,6 +26,11 @@ import java.lang.annotation.Target;
 /**
  * Annotation used to describe a property key-value pair. It is used when
  * declaring {@link Component#properties()} attribute.
+ * This annotation only support properties which type is either a
+ * String, or a String array.
+ * If you need to specify some properties with types other than Strings,
+ * then use the {@link Start} annotation, which allows to annotate a <code>start</code>
+ * method which may optionally return a Map of any service property types.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -46,7 +51,7 @@ public @interface Property
     String value() default "";
     
     /**
-     * Returns the property values as a String array).
+     * Returns the property value as a String array.
      * @return this property value as a String array
      */
     String[] values() default {};

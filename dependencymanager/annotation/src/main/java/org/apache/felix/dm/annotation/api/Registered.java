@@ -29,6 +29,26 @@ import java.lang.annotation.Target;
  * When a service is registered, the ServiceRegistration used to register the service is
  * also passed to the method (if it takes a ServiceRegistration as parameter).
  * 
+ * <p>
+ * <h3>Usage Examples</h3>
+ * <blockquote>
+ * 
+ * <pre>
+ * &#64;Component
+ * class X implements Z {
+ *     &#64;Start
+ *     void start() {
+ *         // Our Z Service is about to be registered into the OSGi registry. 
+ *     }
+ *     
+ *     &#64;Registered
+ *     void registered(ServiceRegistration sr) {
+ *        // At this point, our service has been registered into the registry.
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
