@@ -4600,8 +4600,7 @@ public class Felix extends BundleImpl implements Framework
                         {
                             m_logger.log(
                                 Logger.LOG_DEBUG,
-                                "FRAGMENT WIRE: "
-                                + this + " -> hosted by -> " + rw.getProvider());
+                                "FRAGMENT WIRE: " + rw.toString());
                         }
                         else
                         {
