@@ -91,7 +91,7 @@ public class ResolverImpl implements Resolver
                     // If the requested revision is a fragment, then
                     // ultimately we will verify the host.
                     List<BundleRequirement> hostReqs =
-                        revision.getDeclaredRequirements(BundleCapabilityImpl.HOST_NAMESPACE);
+                        revision.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE);
 
                     BundleRevision target = revision;
 
@@ -348,7 +348,7 @@ public class ResolverImpl implements Resolver
         // attempt to dynamically import it.
         for (BundleCapability cap : revision.getWiring().getCapabilities(null))
         {
-            if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+            if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                 && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
             {
                 return null;
@@ -369,7 +369,7 @@ public class ResolverImpl implements Resolver
         attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision,
-            BundleCapabilityImpl.PACKAGE_NAMESPACE,
+            BundleRevision.PACKAGE_NAMESPACE,
             Collections.EMPTY_MAP,
             attrs);
         SortedSet<BundleCapability> candidates = state.getCandidates(req, false);
@@ -619,12 +619,12 @@ public class ResolverImpl implements Resolver
         Map<BundleRevision, Packages> revisionPkgMap,
         Candidates allCandidates)
     {
-        if (candCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        if (candCap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             mergeCandidatePackage(
                 current, false, currentReq, candCap, revisionPkgMap);
         }
-        else if (candCap.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+        else if (candCap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
         {
 // TODO: FELIX3 - THIS NEXT LINE IS A HACK. IMPROVE HOW/WHEN WE CALCULATE EXPORTS.
             calculateExportedPackages(
@@ -653,7 +653,7 @@ public class ResolverImpl implements Resolver
                 : candCap.getRevision().getDeclaredRequirements(null);
             for (BundleRequirement req : reqs)
             {
-                if (req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                 {
                     String value = req.getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
                     if ((value != null) && value.equals(Constants.VISIBILITY_REEXPORT)
@@ -676,7 +676,7 @@ public class ResolverImpl implements Resolver
         BundleRequirement currentReq, BundleCapability candCap,
         Map<BundleRevision, Packages> revisionPkgMap)
     {
-        if (candCap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        if (candCap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             // Merge the candidate capability into the revision's package space
             // for imported or required packages, appropriately.
@@ -1144,7 +1144,7 @@ public class ResolverImpl implements Resolver
             new HashMap<String, BundleCapability>(caps.size());
         for (BundleCapability cap : caps)
         {
-            if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+            if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
                 exports.put(
                     (String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
@@ -1162,7 +1162,7 @@ public class ResolverImpl implements Resolver
                 for (BundleWire wire : revision.getWiring().getRequiredWires(null))
                 {
                     if (wire.getRequirement().getNamespace().equals(
-                        BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                        BundleRevision.PACKAGE_NAMESPACE))
                     {
                         String pkgName = (String) wire.getCapability()
                             .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
@@ -1174,7 +1174,7 @@ public class ResolverImpl implements Resolver
             {
                 for (BundleRequirement req : revision.getDeclaredRequirements(null))
                 {
-                    if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
                         Set<BundleCapability> cands =
                             allCandidates.getCandidates((BundleRequirementImpl) req);
@@ -1231,7 +1231,7 @@ public class ResolverImpl implements Resolver
     private List<BundleCapability> getPackageSources(
         BundleCapability cap, Map<BundleRevision, Packages> revisionPkgMap)
     {
-        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             List<BundleCapability> sources = m_packageSourcesCache.get(cap);
             if (sources == null)
@@ -1257,7 +1257,7 @@ public class ResolverImpl implements Resolver
         BundleCapability cap, Map<BundleRevision, Packages> revisionPkgMap,
         List<BundleCapability> sources, Set<BundleCapability> cycleMap)
     {
-        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             if (cycleMap.contains(cap))
             {
@@ -1276,7 +1276,7 @@ public class ResolverImpl implements Resolver
                 : cap.getRevision().getDeclaredCapabilities(null);
             for (int capIdx = 0; capIdx < caps.size(); capIdx++)
             {
-                if (caps.get(capIdx).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                if (caps.get(capIdx).getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                     && caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
                 {
                     sources.add(caps.get(capIdx));
@@ -1360,11 +1360,11 @@ public class ResolverImpl implements Resolver
                             getActualRequirement(req),
                             getActualBundleRevision(cand.getRevision()),
                             getActualCapability(cand));
-                        if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                        if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                         {
                             packageWires.add(wire);
                         }
-                        else if (req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                         {
                             bundleWires.add(wire);
                         }
@@ -1397,10 +1397,10 @@ public class ResolverImpl implements Resolver
                         new ResolverWireImpl(
                             getActualBundleRevision(fragment),
                             fragment.getDeclaredRequirements(
-                                BundleCapabilityImpl.HOST_NAMESPACE).get(0),
+                                BundleRevision.HOST_NAMESPACE).get(0),
                             unwrappedRevision,
                             unwrappedRevision.getDeclaredCapabilities(
-                                BundleCapabilityImpl.HOST_NAMESPACE).get(0)));
+                                BundleRevision.HOST_NAMESPACE).get(0)));
                 }
             }
         }
@@ -1443,7 +1443,7 @@ public class ResolverImpl implements Resolver
                             // conflict with previous ones.
                             new BundleRequirementImpl(
                                 revision,
-                                BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                                BundleRevision.PACKAGE_NAMESPACE,
                                 Collections.EMPTY_MAP,
                                 attrs),
                             getActualBundleRevision(blame.m_cap.getRevision()),
@@ -1505,7 +1505,7 @@ public class ResolverImpl implements Resolver
                 sb.append(" [");
                 sb.append(req.getRevision().toString());
                 sb.append("]\n");
-                if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     sb.append("    import: ");
                 }
@@ -1515,7 +1515,7 @@ public class ResolverImpl implements Resolver
                 }
                 sb.append(((BundleRequirementImpl) req).getFilter().toString());
                 sb.append("\n     |");
-                if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     sb.append("\n    export: ");
                 }
@@ -1528,7 +1528,7 @@ public class ResolverImpl implements Resolver
                     BundleCapability cap = Util.getSatisfyingCapability(
                         blame.m_reqs.get(i + 1).getRevision(),
                         (BundleRequirementImpl) blame.m_reqs.get(i));
-                    if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
                         sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
                         sb.append("=");

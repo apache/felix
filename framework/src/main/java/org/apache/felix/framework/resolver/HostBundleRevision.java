@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -82,7 +82,7 @@ class HostBundleRevision implements BundleRevision
                 {
                     for (BundleCapability cap : fragment.getDeclaredCapabilities(null))
                     {
-                        if (cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                        if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                         {
                             caps.add(new HostedCapability(this, (BundleCapabilityImpl) cap));
                         }
@@ -113,8 +113,8 @@ class HostBundleRevision implements BundleRevision
                 {
                     for (BundleRequirement req : fragment.getDeclaredRequirements(null))
                     {
-                        if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
-                            || req.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                            || req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                         {
                             reqs.add(new HostedRequirement(this, (BundleRequirementImpl) req));
                         }

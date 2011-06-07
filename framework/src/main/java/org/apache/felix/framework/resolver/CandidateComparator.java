@@ -23,6 +23,7 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRevision;
 
 public class CandidateComparator implements Comparator<BundleCapability>
 {
@@ -44,7 +45,7 @@ public class CandidateComparator implements Comparator<BundleCapability>
         }
 
         // Compare revision capabilities.
-        if ((c == 0) && cap1.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+        if ((c == 0) && cap1.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
         {
             c = ((Comparable) cap1.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
                 .compareTo(cap2.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE));
@@ -62,7 +63,7 @@ public class CandidateComparator implements Comparator<BundleCapability>
             }
         }
         // Compare package capabilities.
-        else if ((c == 0) && cap1.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+        else if ((c == 0) && cap1.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             c = ((Comparable) cap1.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR))
                 .compareTo(cap2.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));

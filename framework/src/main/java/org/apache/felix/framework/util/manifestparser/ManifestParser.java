@@ -111,7 +111,7 @@ public class ManifestParser
             {
                 capList.add(requireCap);
                 capList.add(new BundleCapabilityImpl(
-                    owner, BundleCapabilityImpl.HOST_NAMESPACE,
+                    owner, BundleRevision.HOST_NAMESPACE,
                     Collections.EMPTY_MAP,
 // TODO: OSGi R4.3 - Wraps map as unmodifiable twice.
                     requireCap.getAttributes()));
@@ -270,7 +270,7 @@ public class ManifestParser
 
     private static boolean isSingleton(BundleCapabilityImpl cap)
     {
-        if (cap.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+        if (cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
         {
             String value = cap.getDirectives().get(Constants.SINGLETON_DIRECTIVE);
             if ((value != null) && Boolean.valueOf(value))
@@ -426,7 +426,7 @@ public class ManifestParser
                 reqList.add(
                     new BundleRequirementImpl(
                         owner,
-                        BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                        BundleRevision.PACKAGE_NAMESPACE,
                         clause.m_dirs,
                         newAttrs));
             }
@@ -820,7 +820,7 @@ public class ManifestParser
                 capList.add(
                     new BundleCapabilityImpl(
                         owner,
-                        BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                        BundleRevision.PACKAGE_NAMESPACE,
                         clause.m_dirs,
                         newAttrs));
             }
@@ -1173,7 +1173,7 @@ public class ManifestParser
             dirs.put(Constants.USES_DIRECTIVE, usesValue);
             exports.set(i, new BundleCapabilityImpl(
                 exports.get(i).getRevision(),
-                BundleCapabilityImpl.PACKAGE_NAMESPACE,
+                BundleRevision.PACKAGE_NAMESPACE,
                 dirs,
                 exports.get(i).getAttributes()));
         }
@@ -1256,7 +1256,7 @@ public class ManifestParser
             attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
             return new BundleCapabilityImpl(
                 owner,
-                BundleCapabilityImpl.BUNDLE_NAMESPACE,
+                BundleRevision.BUNDLE_NAMESPACE,
                 clauses.get(0).m_dirs,
                 attrs);
         }
@@ -1322,7 +1322,7 @@ public class ManifestParser
                 newAttrs.putAll(attrs);
 
                 reqs.add(new BundleRequirementImpl(
-                    owner, BundleCapabilityImpl.HOST_NAMESPACE,
+                    owner, BundleRevision.HOST_NAMESPACE,
                     clauses.get(0).m_dirs,
                     newAttrs));
             }
@@ -1411,7 +1411,7 @@ public class ManifestParser
                 reqList.add(
                     new BundleRequirementImpl(
                         owner,
-                        BundleCapabilityImpl.BUNDLE_NAMESPACE,
+                        BundleRevision.BUNDLE_NAMESPACE,
                         clause.m_dirs,
                         newAttrs));
             }

@@ -93,7 +93,7 @@ class ExtensionManager extends URLStreamHandler implements Content
     {
         // pre-init the url sub-system as otherwise we don't work on gnu/classpath
         ExtensionManager extensionManager = new ExtensionManager();
-        try 
+        try
         {
             (new URL("http://felix.extensions:9/")).openConnection();
         }
@@ -101,7 +101,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             // This doesn't matter much - we only need the above to init the url subsystem
         }
-        
+
         // We use the secure action of Felix to add a new instance to the parent
         // classloader.
         try
@@ -440,7 +440,7 @@ class ExtensionManager extends URLStreamHandler implements Content
 
         for (int i = 0; (m_capabilities != null) && (i < m_capabilities.size()); i++)
         {
-            if (m_capabilities.get(i).getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+            if (m_capabilities.get(i).getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
                 // Add a comma separate if there is an existing package.
                 if (exportSB.length() > 0)

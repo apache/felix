@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -170,10 +170,10 @@ class BundleRevisionDependencies
                 for (Entry<BundleCapability, Set<BundleRevision>> entry : caps.entrySet())
                 {
                     BundleCapability cap = entry.getKey();
-                    if ((cap.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                    if ((cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                         && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
                             .equals(pkgName))
-                        || cap.getNamespace().equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        || cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                     {
                         for (BundleRevision dependent : entry.getValue())
                         {
@@ -203,7 +203,7 @@ class BundleRevisionDependencies
                 for (Entry<BundleCapability, Set<BundleRevision>> entry : caps.entrySet())
                 {
                     if (entry.getKey().getNamespace()
-                        .equals(BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        .equals(BundleRevision.BUNDLE_NAMESPACE))
                     {
                         for (BundleRevision dependent : entry.getValue())
                         {
