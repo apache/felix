@@ -32,15 +32,20 @@ public class ClassUtil {
      * @param fieldName The name of the field.
      * @return The initial value or null.
      */
-    public static String[] getInitializationExpression(Class<?> clazz, String fieldName) {
-        try {
+    public static String[] getInitializationExpression(final Class<?> clazz, final String fieldName)
+    {
+        try
+        {
             final Field field = clazz.getDeclaredField(fieldName);
             field.setAccessible(true);
             final Object value = field.get(null);
-            if ( value != null ) {
-                if ( value.getClass().isArray() ) {
+            if ( value != null )
+            {
+                if ( value.getClass().isArray() )
+                {
                     final String[] values = new String[Array.getLength(value)];
-                    for(int i=0; i<values.length; i++) {
+                    for(int i=0; i<values.length; i++)
+                    {
                         values[i] = Array.get(value, i).toString();
                     }
                     return values;
@@ -48,7 +53,14 @@ public class ClassUtil {
                 return new String[] {value.toString()};
             }
             return null;
-        } catch (Exception e) {
+        }
+        catch (final NoClassDefFoundError ncdfe)
+        {
+            throw new IllegalArgumentException("A class could not be found while parsing class " + clazz.getName() +
+                        ". Please check this stracktrace and add a dependency with the missing class to your project.", ncdfe);
+        }
+        catch (final Exception e)
+        {
             // ignore and just return null
         }
         return null;
