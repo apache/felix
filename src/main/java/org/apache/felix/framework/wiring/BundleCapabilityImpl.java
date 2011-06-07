@@ -34,9 +34,6 @@ import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleCapabilityImpl implements BundleCapability
 {
-    public static final String BUNDLE_NAMESPACE = "module";
-    public static final String HOST_NAMESPACE = "host";
-    public static final String PACKAGE_NAMESPACE = "package";
     public static final String SINGLETON_NAMESPACE = "singleton";
 
     public static final String PACKAGE_ATTR = "package";
@@ -199,7 +196,7 @@ public class BundleCapabilityImpl implements BundleCapability
         {
             return m_attrs.toString();
         }
-        if (m_namespace.equals(PACKAGE_NAMESPACE))
+        if (m_namespace.equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             return "[" + m_revision + "] "
                 + m_namespace + "; " + m_attrs.get(PACKAGE_ATTR);

@@ -202,7 +202,7 @@ public class BundleWiringImpl implements BundleWiring
                 capIdx++)
             {
                 if (caps.get(capIdx).getNamespace().equals(
-                    BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    BundleRevision.PACKAGE_NAMESPACE))
                 {
                     capList.add(
                         new HostedCapability(
@@ -225,9 +225,9 @@ public class BundleWiringImpl implements BundleWiring
                 reqIdx++)
             {
                 if (reqs.get(reqIdx).getNamespace().equals(
-                        BundleCapabilityImpl.PACKAGE_NAMESPACE)
+                        BundleRevision.PACKAGE_NAMESPACE)
                     || reqs.get(reqIdx).getNamespace().equals(
-                        BundleCapabilityImpl.BUNDLE_NAMESPACE))
+                        BundleRevision.BUNDLE_NAMESPACE))
                 {
                     reqList.add(
                         new HostedRequirement(
@@ -1863,7 +1863,7 @@ public class BundleWiringImpl implements BundleWiring
             ? null : revision.getWiring().getProvidedWires(null);
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
-            if (wires.get(i).getCapability().getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE) &&
+            if (wires.get(i).getCapability().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE) &&
                 wires.get(i).getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
             {
                 String exporter = wires.get(i).getProviderWiring().getBundle().toString();
@@ -1957,7 +1957,7 @@ public class BundleWiringImpl implements BundleWiring
             Map<String, Object> attrs = new HashMap<String, Object>(1);
             attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
-                revision, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+                revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
             Set<BundleCapability> exporters = resolver.getCandidates(req, false);
 
             BundleRevision provider = null;
@@ -1996,7 +1996,7 @@ public class BundleWiringImpl implements BundleWiring
         Map<String, Object> attrs = new HashMap<String, Object>(1);
         attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
-            revision, BundleCapabilityImpl.PACKAGE_NAMESPACE, dirs, attrs);
+            revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
         Set<BundleCapability> exports = resolver.getCandidates(req, false);
         if (exports.size() > 0)
         {
