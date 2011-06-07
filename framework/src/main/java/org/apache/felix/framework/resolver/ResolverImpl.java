@@ -84,7 +84,7 @@ public class ResolverImpl implements Resolver
                     allCandidates.prepare(getResolvedSingletons(state));
 
                     // Record the initial candidate permutation.
-                     m_usesPermutations.add(allCandidates);
+                    m_usesPermutations.add(allCandidates);
 
                     ResolveException rethrow = null;
 
@@ -692,7 +692,7 @@ public class ResolverImpl implements Resolver
             Map<String, List<Blame>> packages = (requires)
                 ? currentPkgs.m_requiredPkgs
                 : currentPkgs.m_importedPkgs;
-            List<Blame> blames = currentPkgs.m_requiredPkgs.get(pkgName);
+            List<Blame> blames = packages.get(pkgName);
             if (blames == null)
             {
                 blames = new ArrayList<Blame>();
@@ -1155,41 +1155,45 @@ public class ResolverImpl implements Resolver
         // For resolved revisions look at the wires, for resolving
         // revisions look in the candidate map to determine which
         // exports are substitutable.
-        if (revision.getWiring() != null)
+        if (!exports.isEmpty())
         {
-            for (BundleWire wire : revision.getWiring().getRequiredWires(null))
+            if (revision.getWiring() != null)
             {
-                if (wire.getRequirement().getNamespace().equals(
-                    BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                for (BundleWire wire : revision.getWiring().getRequiredWires(null))
                 {
-                    String pkgName = (String) wire.getCapability()
-                        .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
-                    exports.remove(pkgName);
-                }
-            }
-        }
-        else
-        {
-            for (BundleRequirement req : revision.getDeclaredRequirements(null))
-            {
-                if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
-                {
-                    Set<BundleCapability> cands =
-                        allCandidates.getCandidates((BundleRequirementImpl) req);
-                    if ((cands != null) && !cands.isEmpty())
+                    if (wire.getRequirement().getNamespace().equals(
+                        BundleCapabilityImpl.PACKAGE_NAMESPACE))
                     {
-                        String pkgName = (String) cands.iterator().next()
+                        String pkgName = (String) wire.getCapability()
                             .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
                         exports.remove(pkgName);
                     }
                 }
             }
-        }
-        // Add all non-substituted exports to the revisions's package space.
-        for (Entry<String, BundleCapability> entry : exports.entrySet())
-        {
-            packages.m_exportedPkgs.put(
-                entry.getKey(), new Blame(entry.getValue(), null));
+            else
+            {
+                for (BundleRequirement req : revision.getDeclaredRequirements(null))
+                {
+                    if (req.getNamespace().equals(BundleCapabilityImpl.PACKAGE_NAMESPACE))
+                    {
+                        Set<BundleCapability> cands =
+                            allCandidates.getCandidates((BundleRequirementImpl) req);
+                        if ((cands != null) && !cands.isEmpty())
+                        {
+                            String pkgName = (String) cands.iterator().next()
+                                .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                            exports.remove(pkgName);
+                        }
+                    }
+                }
+            }
+
+            // Add all non-substituted exports to the revisions's package space.
+            for (Entry<String, BundleCapability> entry : exports.entrySet())
+            {
+                packages.m_exportedPkgs.put(
+                    entry.getKey(), new Blame(entry.getValue(), null));
+            }
         }
 
         revisionPkgMap.put(revision, packages);
