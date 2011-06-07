@@ -46,11 +46,11 @@ public class ComponentTag extends AbstractTag {
         this.annotation = new Component() {
 
             public boolean componentAbstract() {
-                return Util.getBooleanValue(annotation, "componentAbstract", Component.class);
+                return Util.getBooleanValue(annotation, desc, "componentAbstract", Component.class);
             }
 
             public boolean createPid() {
-                return Util.getBooleanValue(annotation, "createPid", Component.class);
+                return Util.getBooleanValue(annotation, desc, "createPid", Component.class);
             }
 
             public String description() {
@@ -58,7 +58,7 @@ public class ComponentTag extends AbstractTag {
             }
 
             public boolean ds() {
-                return Util.getBooleanValue(annotation, "ds", Component.class);
+                return Util.getBooleanValue(annotation, desc, "ds", Component.class);
             }
 
             public String specVersion() {
@@ -66,7 +66,7 @@ public class ComponentTag extends AbstractTag {
             }
 
             public boolean enabled() {
-                return Util.getBooleanValue(annotation, "enabled", Component.class);
+                return Util.getBooleanValue(annotation, desc, "enabled", Component.class);
             }
 
             public String factory() {
@@ -74,11 +74,11 @@ public class ComponentTag extends AbstractTag {
             }
 
             public boolean immediate() {
-                return Util.getBooleanValue(annotation, "immediate", Component.class);
+                return Util.getBooleanValue(annotation, desc, "immediate", Component.class);
             }
 
             public boolean inherit() {
-                return Util.getBooleanValue(annotation, "inherit", Component.class);
+                return Util.getBooleanValue(annotation, desc, "inherit", Component.class);
             }
 
             public String label() {
@@ -86,7 +86,7 @@ public class ComponentTag extends AbstractTag {
             }
 
             public boolean metatype() {
-                return Util.getBooleanValue(annotation, "metatype", Component.class);
+                return Util.getBooleanValue(annotation, desc, "metatype", Component.class);
             }
 
             public String name() {
@@ -98,7 +98,7 @@ public class ComponentTag extends AbstractTag {
             }
 
             public boolean getConfigurationFactory() {
-                return Util.getBooleanValue(annotation, "getConfigurationFactory", Component.class);
+                return Util.getBooleanValue(annotation, desc, "getConfigurationFactory", Component.class);
             }
 
             public boolean configurationFactory() {

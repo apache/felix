@@ -40,36 +40,36 @@ public abstract class Util {
      * @param clazz The annotation class.
      * @return The boolean value.
      */
-    public static boolean getBooleanValue(Annotation annotation, String name, final Class<?> clazz) {
-        final Object obj = annotation.getNamedParameter(name);
-        if ( obj != null ) {
-            return Boolean.valueOf(obj.toString());
+    public static boolean getBooleanValue(final Annotation annotation, final JavaClassDescription desc, final String name, final Class<?> clazz) {
+        final String[] sValues = getAnnotationValues(annotation, name, desc);
+        if ( sValues != null )
+        {
+            return Boolean.valueOf(sValues[0]);
         }
-        try {
+        try
+        {
             return (Boolean) clazz.getMethod(name).getDefaultValue();
-        } catch( NoSuchMethodException mnfe) {
+        }
+        catch( final NoSuchMethodException mnfe)
+        {
             // we ignore this
             return true;
         }
     }
 
-    public static int getIntValue(Annotation annotation, String name, final Class<?> clazz) {
-        final Object obj = annotation.getNamedParameter(name);
-        if ( obj != null ) {
-            if ( obj instanceof Number ) {
-                return ((Number)obj).intValue();
-            }
-            final String value = obj.toString();
-            if ( value.equals("Integer.MAX_VALUE") ) {
-                return Integer.MAX_VALUE;
-            } else if ( value.equals("Integer.MIN_VALUE") ) {
-                return Integer.MIN_VALUE;
-            }
-            return Integer.valueOf(value);
+    public static int getIntValue(final Annotation annotation, final JavaClassDescription desc, final String name, final Class<?> clazz) {
+        final String[] sValues = getAnnotationValues(annotation, name, desc);
+        if ( sValues != null )
+        {
+            return Integer.valueOf(sValues[0]);
+
         }
-        try {
+        try
+        {
             return (Integer) clazz.getMethod(name).getDefaultValue();
-        } catch( NoSuchMethodException mnfe) {
+        }
+        catch(final NoSuchMethodException mnfe)
+        {
             // we ignore this
             return 0;
         }
@@ -382,11 +382,11 @@ public abstract class Util {
         return getEnumValue(annotation, name, enumClass, clazz, true);
     }
 
+    @SuppressWarnings("unchecked")
     public static String[] getAnnotationValues(final Annotation annotation, final String name, final JavaClassDescription desc)
     throws IllegalArgumentException
     {
-
-        EvaluatingVisitor evaluatingVisitor = new EvaluatingVisitor() {
+        final EvaluatingVisitor evaluatingVisitor = new EvaluatingVisitor() {
 
             public Object visitAnnotationFieldRef( AnnotationFieldRef fieldRef ) {
                 // during prescan of AnnotationTagProviderManager#hasScrPluginAnnotation this method is called without desc attribute
@@ -438,9 +438,9 @@ public abstract class Util {
             }
 
         };
-        @SuppressWarnings("unchecked")
         final List<Object> valueList = evaluatingVisitor.getListValue(annotation, name);
-        if (valueList==null) {
+        if (valueList == null || valueList.size() == 0)
+        {
             return null;
         }
         String[] values = new String[valueList.size()];

@@ -47,7 +47,7 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
         {
 
             // generate @Component tag if required
-            boolean generateComponent = Util.getBooleanValue(annotation, "generateComponent", SlingServlet.class);
+            boolean generateComponent = Util.getBooleanValue(annotation, description, "generateComponent", SlingServlet.class);
             if (generateComponent)
             {
                 String name = Util.getStringValue(annotation, description, "name", SlingServlet.class);
@@ -62,12 +62,12 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
                 if ( desc != null && desc.trim().length() == 0 ) {
                     desc = null;
                 }
-                final boolean createMetatype = Util.getBooleanValue(annotation, "metatype", SlingServlet.class);
+                final boolean createMetatype = Util.getBooleanValue(annotation, description, "metatype", SlingServlet.class);
                 tags.add(new SlingServletComponentTag(annotation, description, createMetatype, name, label, desc));
             }
 
             // generate @Service tag if required
-            boolean generateService = Util.getBooleanValue(annotation, "generateService", SlingServlet.class);
+            boolean generateService = Util.getBooleanValue(annotation, description, "generateService", SlingServlet.class);
             if (generateService)
             {
                 tags.add(new SlingServletServiceTag(annotation, description));
@@ -114,7 +114,7 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
         else if ( annotationName.equals(SlingFilter.class.getName()) )
         {
             // generate @Component tag if required
-            boolean generateComponent = Util.getBooleanValue(annotation, "generateComponent", SlingFilter.class);
+            boolean generateComponent = Util.getBooleanValue(annotation, description, "generateComponent", SlingFilter.class);
             if (generateComponent)
             {
                 String name = Util.getStringValue(annotation, description, "name", SlingFilter.class);
@@ -129,19 +129,19 @@ public class SlingAnnotationTagProvider implements AnnotationTagProvider {
                 if ( desc != null && desc.trim().length() == 0 ) {
                     desc = null;
                 }
-                final boolean createMetatype = Util.getBooleanValue(annotation, "metatype", SlingFilter.class);
+                final boolean createMetatype = Util.getBooleanValue(annotation, description, "metatype", SlingFilter.class);
                 tags.add(new SlingFilterComponentTag(annotation, description, createMetatype, name, label, desc));
             }
 
             // generate @Service tag if required
-            boolean generateService = Util.getBooleanValue(annotation, "generateService", SlingFilter.class);
+            boolean generateService = Util.getBooleanValue(annotation, description, "generateService", SlingFilter.class);
             if (generateService)
             {
                 tags.add(new SlingFilterServiceTag(annotation, description));
             }
 
             // property order = service.ranking
-            final int order = Util.getIntValue(annotation, "order", SlingFilter.class);
+            final int order = Util.getIntValue(annotation, description, "order", SlingFilter.class);
             tags.add(new SlingServletPropertyTag(annotation, "service.ranking", String.valueOf(order), description, "Integer", true));
 
             // property scope
