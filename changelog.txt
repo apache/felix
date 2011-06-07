@@ -2,6 +2,7 @@ Changes from 1.7.0 to 1.7.2
 ---------------------------
 
 ** Bug
+    * [FELIX-2963] - scr annotations @Activate @Deactivate @Modified are not detected with class inheritance
     * [FELIX-2978] - Lookup reference policy does not work for inherited components
     * [FELIX-2945] - SCR plugin: Parsing of "options" for property tag broken for java annotations
     * [FELIX-2906] - @Property(cardinality=Integer.MAX_Int, ...) causes java.lang.NumberFormatException
