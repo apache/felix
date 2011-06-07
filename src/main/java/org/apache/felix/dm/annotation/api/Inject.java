@@ -27,11 +27,51 @@ import java.lang.annotation.Target;
  * Inject classes in a component instance field.
  * The following injections are currently performed, depending on the type of the
  * field this annotation is applied on:
- * <dl>
- * <dt>BundleContext</dt><dd>the bundle context of the bundle</dd>
- * <dt>DependencyManager</dt><dd>the dependency manager instance</dd>
- * <dt>Component</dt><dd>the component instance of the dependency manager</dd>
- * </dl>
+ * <ul>
+ * <li>BundleContext: the bundle context of the bundle
+ * <li>DependencyManager: the dependency manager instance
+ * <li>Component: the component instance of the dependency manager
+ * </ul>
+ * 
+ * <p>
+ * <h3>Usage Examples</h3>
+ * <blockquote>
+ * 
+ * <pre>
+ * &#64;Component
+ * class X implements Z {
+ *     &#64;Inject
+ *     BundleContext bundleContext;
+ *   
+ *     &#64;Inject
+ *     Component component;
+ *     
+ *     &#64;Inject
+ *     DependencyManager manager;
+ *   
+ *     OtherService otherService;
+ *   
+ *     &#64;Init
+ *     void init() {
+ *         System.out.println("Bundle Context: " + bundleContext);
+ *         System.out.println("Manager: " + manager);
+ *         
+ *         // Use DM API for defining an extra service dependency
+ *         componnent.add(manager.createServiceDependency()
+ *                               .setService(OtherService.class)
+ *                               .setRequired(true)
+ *                               .setInstanceBound(true));
+ *     }
+ *     
+ *     &#64;Start
+ *     void start() {
+ *         System.out.println("OtherService: " + otherService);
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.FIELD)

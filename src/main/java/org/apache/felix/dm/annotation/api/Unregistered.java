@@ -28,6 +28,26 @@ import java.lang.annotation.Target;
  * At this point, the component has been unregistered from the OSGI registry (if it provides some services).
  * The method must not take any parameters.
  * 
+ * <p>
+ * <h3>Usage Examples</h3>
+ * <blockquote>
+ * 
+ * <pre>
+ * &#64;Component
+ * class X implements Z {     
+ *     &#64;Stop
+ *     void stop(ServiceRegistration sr) {
+ *        // Our service must stop because it is about to be unregistered from the registry.
+ *     }
+ *     
+ *     &#64;Unregistered
+ *     void unregistered() {
+ *        // At this point, our service has been unregistered from the OSGi registry
+ *     }
+ * }
+ * </pre>
+ * </blockquote>
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Retention(RetentionPolicy.CLASS)
