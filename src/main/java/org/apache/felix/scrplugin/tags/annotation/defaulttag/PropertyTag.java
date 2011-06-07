@@ -44,7 +44,7 @@ public class PropertyTag extends AbstractTag {
         this.annotation = new Property() {
 
             public int cardinality() {
-                return Util.getIntValue(annotation, "cardinality", Property.class);
+                return Util.getIntValue(annotation, desc, "cardinality", Property.class);
             }
 
             public String description() {
@@ -84,7 +84,7 @@ public class PropertyTag extends AbstractTag {
             }
 
             public boolean propertyPrivate() {
-                return Util.getBooleanValue(annotation, "propertyPrivate", Property.class);
+                return Util.getBooleanValue(annotation, desc, "propertyPrivate", Property.class);
             }
 
             public String[] value() {

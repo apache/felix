@@ -73,7 +73,7 @@ public class ServiceTag extends AbstractTag {
         final Service tag = new Service() {
 
             public boolean serviceFactory() {
-                return Util.getBooleanValue(annotation, "serviceFactory", Service.class);
+                return Util.getBooleanValue(annotation, desc, "serviceFactory", Service.class);
             }
 
             public Class<?>[] value() {
