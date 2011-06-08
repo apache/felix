@@ -25,6 +25,7 @@ import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 
 import org.osgi.framework.*;
+import org.osgi.framework.hooks.resolver.ResolverHookFactory;
 import org.osgi.framework.hooks.service.*;
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.wiring.BundleCapability;
@@ -56,6 +57,7 @@ public class ServiceRegistry
         FindHook.class,
         ListenerHook.class,
         WeavingHook.class,
+        ResolverHookFactory.class,
         URLStreamHandlerService.class,
         ContentHandler.class
     };
