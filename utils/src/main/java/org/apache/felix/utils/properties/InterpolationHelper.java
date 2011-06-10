@@ -16,22 +16,10 @@
  */
 package org.apache.felix.utils.properties;
 
-import org.osgi.framework.BundleContext;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilterWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.net.URL;
-import java.util.*;
+import org.osgi.framework.BundleContext;
 
 /**
  * <p>
@@ -50,6 +38,16 @@ public class InterpolationHelper {
     private static final String DELIM_START = "${";
     private static final String DELIM_STOP = "}";
 
+
+    /**
+     * Callback for substitution
+     */
+    public interface SubstitutionCallback {
+
+        public String getValue(String key);
+
+    }
+
     /**
      * Perform substitution on a property set
      *
@@ -57,7 +55,7 @@ public class InterpolationHelper {
      */
     public static void performSubstitution(Map<String,String> properties)
     {
-        performSubstitution(properties, null);
+        performSubstitution(properties, (BundleContext) null);
     }
 
     /**
@@ -67,10 +65,20 @@ public class InterpolationHelper {
      */
     public static void performSubstitution(Map<String,String> properties, BundleContext context)
     {
+        performSubstitution(properties, new BundleContextSubstitutionCallback(context));
+    }
+
+    /**
+     * Perform substitution on a property set
+     *
+     * @param properties the property set to perform substitution on
+     */
+    public static void performSubstitution(Map<String,String> properties, SubstitutionCallback callback)
+    {
         for (String name : properties.keySet())
         {
             String value = properties.get(name);
-            properties.put(name, substVars(value, name, null, properties, context));
+            properties.put(name, substVars(value, name, null, properties, callback));
         }
     }
 
@@ -86,6 +94,7 @@ public class InterpolationHelper {
      * are substituted from inner most to outer most. Configuration
      * properties override system properties.
      * </p>
+     *
      * @param val The string on which to perform property substitution.
      * @param currentKey The key of the property being evaluated used to
      *        detect cycles.
@@ -101,7 +110,40 @@ public class InterpolationHelper {
                                    Map<String,String> cycleMap,
                                    Map<String,String> configProps,
                                    BundleContext context)
-        throws IllegalArgumentException
+            throws IllegalArgumentException
+    {
+        return substVars(val, currentKey, cycleMap, configProps, new BundleContextSubstitutionCallback(context));
+    }
+
+    /**
+     * <p>
+     * This method performs property variable substitution on the
+     * specified value. If the specified value contains the syntax
+     * <tt>${&lt;prop-name&gt;}</tt>, where <tt>&lt;prop-name&gt;</tt>
+     * refers to either a configuration property or a system property,
+     * then the corresponding property value is substituted for the variable
+     * placeholder. Multiple variable placeholders may exist in the
+     * specified value as well as nested variable placeholders, which
+     * are substituted from inner most to outer most. Configuration
+     * properties override system properties.
+     * </p>
+     *
+     * @param val The string on which to perform property substitution.
+     * @param currentKey The key of the property being evaluated used to
+     *        detect cycles.
+     * @param cycleMap Map of variable references used to detect nested cycles.
+     * @param configProps Set of configuration properties.
+     * @param callback the callback to obtain substitution values
+     * @return The value of the specified string after system property substitution.
+     * @throws IllegalArgumentException If there was a syntax error in the
+     *         property placeholder syntax or a recursive variable reference.
+     **/
+    public static String substVars(String val,
+                                   String currentKey,
+                                   Map<String,String> cycleMap,
+                                   Map<String,String> configProps,
+                                   SubstitutionCallback callback)
+            throws IllegalArgumentException
     {
         if (cycleMap == null)
         {
@@ -168,17 +210,16 @@ public class InterpolationHelper {
             {
                 substValue = "";
             }
-            else if (context != null)
-            {
-                substValue = context.getProperty(variable);
-                if (substValue == null)
-                {
-                    substValue = "";
-                }
-            }
             else
             {
-                substValue = System.getProperty(variable, "");
+                if (callback != null)
+                {
+                    substValue = callback.getValue(variable);
+                }
+                if (substValue == null)
+                {
+                    substValue = System.getProperty(variable, "");
+                }
             }
         }
 
@@ -194,7 +235,7 @@ public class InterpolationHelper {
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
-        val = substVars(val, currentKey, cycleMap, configProps, context);
+        val = substVars(val, currentKey, cycleMap, configProps, callback);
 
         // Remove escape characters preceding {, } and \
         val = unescape(val);
@@ -203,7 +244,8 @@ public class InterpolationHelper {
         return val;
     }
 
-    private static String unescape(String val) {
+    private static String unescape(String val)
+    {
         int escape = val.indexOf(ESCAPE_CHAR);
         while (escape >= 0 && escape < val.length() - 1)
         {
@@ -215,6 +257,30 @@ public class InterpolationHelper {
             escape = val.indexOf(ESCAPE_CHAR, escape + 1);
         }
         return val;
+    }
+
+    private static class BundleContextSubstitutionCallback implements SubstitutionCallback
+    {
+        private final BundleContext context;
+
+        private BundleContextSubstitutionCallback(BundleContext context)
+        {
+            this.context = context;
+        }
+
+        public String getValue(String key)
+        {
+            String value = null;
+            if (context != null)
+            {
+                value = context.getProperty(key);
+            }
+            if (value == null)
+            {
+                value = System.getProperty(key, "");
+            }
+            return value;
+        }
     }
 
 }
