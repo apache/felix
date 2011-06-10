@@ -2663,7 +2663,10 @@ public class Felix extends BundleImpl implements Framework
                 // due to an error or system crash.
                 try
                 {
-                    ba.purge();
+                    if (ba.isRemovalPending())
+                    {
+                        ba.purge();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -3572,6 +3575,9 @@ public class Felix extends BundleImpl implements Framework
                     // resolved exporters of the package.
                     if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
+// TODO: OSGi R4.3 - We can probably do this in a more efficient way once
+//       BundleWiring.getCapabilities() returns the proper result. We probably
+//       Won't even need this method.
                         String pkgName = (String)
                             cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
                         Map<String, Object> attrs = new HashMap<String, Object>(1);
