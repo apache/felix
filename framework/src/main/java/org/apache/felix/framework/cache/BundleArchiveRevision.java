@@ -39,7 +39,7 @@ import org.apache.felix.framework.Logger;
  * @see org.apache.felix.framework.cache.BundleCache
  * @see org.apache.felix.framework.cache.BundleArchive
 **/
-public abstract class BundleRevision
+public abstract class BundleArchiveRevision
 {
     private final Logger m_logger;
     private final Map m_configMap;
@@ -64,7 +64,7 @@ public abstract class BundleRevision
      * @param trustedCaCerts the trusted CA certificates if any.
      * @throws Exception if any errors occur.
     **/
-    public BundleRevision(Logger logger, Map configMap, File revisionRootDir, String location)
+    public BundleArchiveRevision(Logger logger, Map configMap, File revisionRootDir, String location)
         throws Exception
     {
         m_logger = logger;

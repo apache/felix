@@ -101,8 +101,8 @@ public class BundleArchive
     private long m_refreshCount = -1;
 
     // Maps a Long revision number to a BundleRevision.
-    private final SortedMap<Long, BundleRevision> m_revisions
-        = new TreeMap<Long, BundleRevision>();
+    private final SortedMap<Long, BundleArchiveRevision> m_revisions
+        = new TreeMap<Long, BundleArchiveRevision>();
 
     /**
      * <p>
@@ -486,7 +486,7 @@ public class BundleArchive
      * </p>
      * @return the current revision object for the archive.
     **/
-    public synchronized BundleRevision getCurrentRevision()
+    public synchronized BundleArchiveRevision getCurrentRevision()
     {
         return (m_revisions.isEmpty()) ? null : m_revisions.get(m_revisions.lastKey());
     }
@@ -541,7 +541,7 @@ public class BundleArchive
         }
 
         // Create a bundle revision for revision number.
-        BundleRevision revision = createRevisionFromLocation(location, is, revNum);
+        BundleArchiveRevision revision = createRevisionFromLocation(location, is, revNum);
         if (revision == null)
         {
             throw new Exception("Unable to revise archive.");
@@ -577,7 +577,7 @@ public class BundleArchive
         }
 
         Long revNum = m_revisions.lastKey();
-        BundleRevision revision = m_revisions.remove(revNum);
+        BundleArchiveRevision revision = m_revisions.remove(revNum);
 
         try
         {
@@ -645,7 +645,7 @@ public class BundleArchive
     public synchronized void close()
     {
         // Get the current revision count.
-        for (BundleRevision revision : m_revisions.values())
+        for (BundleArchiveRevision revision : m_revisions.values())
         {
             // Dispose of the revision, but this might be null in certain
             // circumstances, such as if this bundle archive was created
@@ -744,7 +744,7 @@ public class BundleArchive
         m_revisions.clear();
 
         // Recreate the revision for the current location.
-        BundleRevision revision = createRevisionFromLocation(
+        BundleArchiveRevision revision = createRevisionFromLocation(
             getRevisionLocation(currentRevNum), null, currentRevNum);
         // Add new revision to the revision map.
         m_revisions.put(currentRevNum, revision);
@@ -806,7 +806,7 @@ public class BundleArchive
      * </p>
      * @return the location string associated with this archive.
     **/
-    private BundleRevision createRevisionFromLocation(
+    private BundleArchiveRevision createRevisionFromLocation(
         String location, InputStream is, Long revNum)
         throws Exception
     {
@@ -822,7 +822,7 @@ public class BundleArchive
         File revisionRootDir = new File(m_archiveRootDir,
             REVISION_DIRECTORY + getRefreshCount() + "." + revNum.toString());
 
-        BundleRevision result = null;
+        BundleArchiveRevision result = null;
 
         try
         {
