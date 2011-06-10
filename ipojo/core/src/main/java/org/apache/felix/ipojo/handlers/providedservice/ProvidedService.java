@@ -330,36 +330,34 @@ public class ProvidedService implements ServiceFactory {
     protected void registerService() {
         ServiceRegistration reg = null;
         Properties serviceProperties = null;
-
         synchronized (this) {
-            // Unregister if registered
             if (m_serviceRegistration != null) {
-                unregisterService();
-            }
+                return;
+            } else {
+                if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
+                        && m_serviceRegistration == null
+                        && isAtLeastAServiceControllerValid()) {
+                    // Build the service properties list
 
-            if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
-                    && m_serviceRegistration == null
-                    && isAtLeastAServiceControllerValid()) {
-                // Build the service properties list
-
-                BundleContext bc = m_handler.getInstanceManager().getContext();
-                // Security check
-                if (SecurityHelper.hasPermissionToRegisterServices(
-                        m_serviceSpecifications, bc)) {
-                    serviceProperties = getServiceProperties();
-                    m_strategy.onPublication(getInstanceManager(),
-                            getServiceSpecificationsToRegister(),
-                            serviceProperties);
-                    m_serviceRegistration = bc.registerService(
-                            getServiceSpecificationsToRegister(), this,
-                            serviceProperties);
-                    reg = m_serviceRegistration; // Stack confinement
-                } else {
-                    throw new SecurityException("The bundle "
-                            + bc.getBundle().getBundleId()
-                            + " does not have the"
-                            + " permission to register the services "
-                            + Arrays.asList(m_serviceSpecifications));
+                    BundleContext bc = m_handler.getInstanceManager().getContext();
+                    // Security check
+                    if (SecurityHelper.hasPermissionToRegisterServices(
+                            m_serviceSpecifications, bc)) {
+                        serviceProperties = getServiceProperties();
+                        m_strategy.onPublication(getInstanceManager(),
+                                getServiceSpecificationsToRegister(),
+                                serviceProperties);
+                        m_serviceRegistration = bc.registerService(
+                                getServiceSpecificationsToRegister(), this,
+                                serviceProperties);
+                        reg = m_serviceRegistration; // Stack confinement
+                    } else {
+                        throw new SecurityException("The bundle "
+                                + bc.getBundle().getBundleId()
+                                + " does not have the"
+                                + " permission to register the services "
+                                + Arrays.asList(m_serviceSpecifications));
+                    }
                 }
             }
         }
@@ -397,7 +395,6 @@ public class ProvidedService implements ServiceFactory {
     protected synchronized void unregisterService() {
         // Create a copy of the service reference in the case we need
         // to inject it to the post-unregistration callback.
-
         ServiceReference ref = null;
         if (m_serviceRegistration != null) {
             ref = m_serviceRegistration.getReference();
@@ -635,7 +632,7 @@ public class ProvidedService implements ServiceFactory {
         /**
          * The controller value.
          */
-        private volatile boolean m_value;
+        private boolean m_value;
         /**
          * The field attached to this controller.
          */
@@ -674,11 +671,14 @@ public class ProvidedService implements ServiceFactory {
                 if (value.booleanValue() != m_value) {
                     m_value = value.booleanValue();
                     if (m_value) {
-                        registerService();
+                        if (m_serviceRegistration == null) {
+                            registerService();
+                        }
+                        // Already registered.
                     } else {
                         // If we are still some specification valid, register those one
-                        // The registerService will call unregister.
                         if (getServiceSpecificationsToRegister().length != 0) {
+                            unregisterService();
                             registerService();
                         } else {
                             // If not, then unregister all
