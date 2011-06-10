@@ -326,7 +326,7 @@ class BundleImpl implements Bundle
         if (locale.length() == 0)
         {
             result = new StringMap(
-                ((BundleRevisionImpl) getCurrentRevision()).getHeaders(), false);
+                ((BundleRevisionImpl) adapt(BundleRevision.class)).getHeaders(), false);
         }
 
         // If we have no result, try to get it from the cached headers.
@@ -363,7 +363,7 @@ class BundleImpl implements Bundle
         {
             // Get a modifiable copy of the raw headers.
             Map headers = new StringMap(
-                ((BundleRevisionImpl) getCurrentRevision()).getHeaders(), false);
+                ((BundleRevisionImpl) adapt(BundleRevision.class)).getHeaders(), false);
             // Assume for now that this will be the result.
             result = headers;
 
@@ -395,7 +395,7 @@ class BundleImpl implements Bundle
                 // Create ordered list of revisions to search for localization
                 // property resources.
                 List<BundleRevision> revisionList = createLocalizationRevisionList(
-                    (BundleRevisionImpl) getCurrentRevision());
+                    (BundleRevisionImpl) adapt(BundleRevision.class));
 
                 // Create ordered list of files to load properties from
                 List<String> resourceList = createLocalizationResourceList(basename, locale);
@@ -871,12 +871,12 @@ class BundleImpl implements Bundle
 
     public String getSymbolicName()
     {
-        return getCurrentRevision().getSymbolicName();
+        return adapt(BundleRevision.class).getSymbolicName();
     }
 
     public Version getVersion()
     {
-        return getCurrentRevision().getVersion();
+        return adapt(BundleRevision.class).getVersion();
     }
 
     public boolean hasPermission(Object obj)
@@ -1008,9 +1008,13 @@ class BundleImpl implements Bundle
             return (A) getFramework().adapt(FrameworkStartLevelImpl.class)
                 .createBundleStartLevel(this);
         }
+        else if (type == BundleRevision.class)
+        {
+            return (A) m_revisions.get(m_revisions.size() - 1);
+        }
         else if (type == BundleWiring.class)
         {
-            return (A) getCurrentRevision().getWiring();
+            return (A) m_revisions.get(m_revisions.size() - 1).getWiring();
         }
         return null;
     }
@@ -1027,7 +1031,7 @@ class BundleImpl implements Bundle
 
     public String toString()
     {
-        String sym = getCurrentRevision().getSymbolicName();
+        String sym = adapt(BundleRevision.class).getSymbolicName();
         if (sym != null)
         {
             return sym + " [" + getBundleId() +"]";
@@ -1077,16 +1081,6 @@ class BundleImpl implements Bundle
             }
         }
         return false;
-    }
-
-    /**
-     * Returns the newest module, which corresponds to the last module
-     * in the module array.
-     * @return the newest module.
-    **/
-    synchronized BundleRevision getCurrentRevision()
-    {
-        return m_revisions.get(m_revisions.size() - 1);
     }
 
     synchronized void revise(String location, InputStream is)
@@ -1191,7 +1185,7 @@ class BundleImpl implements Bundle
                 {
                     String sym = bundles[i].getSymbolicName();
                     Version ver = ((BundleRevisionImpl)
-                        ((BundleImpl) bundles[i]).getCurrentRevision()).getVersion();
+                        bundles[i].adapt(BundleRevision.class)).getVersion();
                     if ((symName != null) && (sym != null) && symName.equals(sym) && bundleVersion.equals(ver))
                     {
                         throw new BundleException(

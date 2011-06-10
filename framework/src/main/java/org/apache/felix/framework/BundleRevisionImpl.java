@@ -355,7 +355,7 @@ public class BundleRevisionImpl implements BundleRevision
     public boolean isRemovalPending()
     {
         return (m_bundle.getState() == Bundle.UNINSTALLED)
-            || (this != ((BundleImpl) m_bundle).getCurrentRevision());
+            || (this != m_bundle.adapt(BundleRevision.class));
     }
 
     //

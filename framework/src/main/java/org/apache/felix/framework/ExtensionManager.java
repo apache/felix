@@ -304,7 +304,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
 
         String directive = ManifestParser.parseExtensionBundleHeader((String)
-            ((BundleRevisionImpl) bundle.getCurrentRevision())
+            ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getHeaders().get(Constants.FRAGMENT_HOST));
 
         // We only support classpath extensions (not bootclasspath).
@@ -323,7 +323,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             {
                 exports = ManifestParser.parseExportHeader(
                     m_logger, m_systemBundleRevision,
-                    (String) ((BundleRevisionImpl) bundle.getCurrentRevision())
+                    (String) ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                         .getHeaders().get(Constants.EXPORT_PACKAGE),
                     m_systemBundleRevision.getSymbolicName(), m_systemBundleRevision.getVersion());
                 exports = aliasSymbolicName(exports);
@@ -334,7 +334,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                     bundle,
                     Logger.LOG_ERROR,
                     "Error parsing extension bundle export statement: "
-                    + ((BundleRevisionImpl) bundle.getCurrentRevision())
+                    + ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                         .getHeaders().get(Constants.EXPORT_PACKAGE), ex);
                 return;
             }
@@ -377,7 +377,7 @@ class ExtensionManager extends URLStreamHandler implements Content
     void startExtensionBundle(Felix felix, BundleImpl bundle)
     {
         String activatorClass = (String)
-            ((BundleRevisionImpl) bundle.getCurrentRevision())
+            ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getHeaders().get(FelixConstants.FELIX_EXTENSION_ACTIVATOR);
 
         if (activatorClass != null)
@@ -506,8 +506,8 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             try
             {
-                result = ((BundleRevisionImpl) ((BundleImpl)
-                    extBundle).getCurrentRevision()).getResourceLocal(path);
+                result = ((BundleRevisionImpl)
+                    extBundle.adapt(BundleRevision.class)).getResourceLocal(path);
             }
             catch (Exception ex)
             {

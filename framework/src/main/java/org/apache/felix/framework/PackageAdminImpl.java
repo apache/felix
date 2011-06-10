@@ -81,7 +81,7 @@ class PackageAdminImpl implements PackageAdmin
             String sym = bundles[i].getSymbolicName();
             if ((sym != null) && sym.equals(symbolicName))
             {
-                Version v = ((BundleImpl) bundles[i]).getCurrentRevision().getVersion();
+                Version v = bundles[i].adapt(BundleRevision.class).getVersion();
                 if ((vr == null) || vr.isInRange(v))
                 {
                     list.add(bundles[i]);
@@ -96,8 +96,8 @@ class PackageAdminImpl implements PackageAdmin
         Arrays.sort(bundles,new Comparator() {
             public int compare(Object o1, Object o2)
             {
-                Version v1 = ((BundleImpl) o1).getCurrentRevision().getVersion();
-                Version v2 = ((BundleImpl) o2).getCurrentRevision().getVersion();
+                Version v1 = ((Bundle) o1).adapt(BundleRevision.class).getVersion();
+                Version v2 = ((Bundle) o2).adapt(BundleRevision.class).getVersion();
                 // Compare in reverse order to get descending sort.
                 return v2.compareTo(v1);
             }
@@ -108,7 +108,7 @@ class PackageAdminImpl implements PackageAdmin
     public int getBundleType(Bundle bundle)
     {
         Map headerMap = ((BundleRevisionImpl)
-            ((BundleImpl) bundle).getCurrentRevision()).getHeaders();
+            bundle.adapt(BundleRevision.class)).getHeaders();
         if (headerMap.containsKey(Constants.FRAGMENT_HOST))
         {
             return PackageAdmin.BUNDLE_TYPE_FRAGMENT;
