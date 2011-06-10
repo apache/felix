@@ -319,7 +319,7 @@ public class BundleWiringImpl implements BundleWiring
 
     public boolean isCurrent()
     {
-        return (((BundleImpl) m_revision.getBundle()).getCurrentRevision() == m_revision);
+        return (m_revision.getBundle().adapt(BundleRevision.class) == m_revision);
     }
 
     public boolean isInUse()
@@ -1519,8 +1519,8 @@ public class BundleWiringImpl implements BundleWiring
 
                                 int activationPolicy =
                                     ((BundleImpl) getBundle()).isDeclaredActivationPolicyUsed()
-                                    ? ((BundleRevisionImpl) ((BundleImpl) getBundle())
-                                        .getCurrentRevision()).getDeclaredActivationPolicy()
+                                    ? ((BundleRevisionImpl) getBundle()
+                                        .adapt(BundleRevision.class)).getDeclaredActivationPolicy()
                                     : EAGER_ACTIVATION;
 
                                 // If the revision is using deferred activation, then if
