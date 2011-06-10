@@ -683,7 +683,7 @@ public class Felix extends BundleImpl implements Framework
                 // state to be set to RESOLVED.
                 try
                 {
-                    m_resolver.resolve(getCurrentRevision());
+                    m_resolver.resolve(adapt(BundleRevision.class));
                 }
                 catch (ResolveException ex)
                 {
@@ -1527,7 +1527,7 @@ public class Felix extends BundleImpl implements Framework
         {
             throw new IllegalStateException("The bundle is uninstalled.");
         }
-        else if (Util.isFragment(bundle.getCurrentRevision()))
+        else if (Util.isFragment(bundle.adapt(BundleRevision.class)))
         {
             return null;
         }
@@ -1536,14 +1536,14 @@ public class Felix extends BundleImpl implements Framework
 //       searching if it fails. Perhaps we should attempt the resolve here
 //       and do the local searching here. This means we could get rid of
 //       resolve attempts in findClassOrResourceByDelegation().
-        if (bundle.getCurrentRevision().getWiring() == null)
+        if (bundle.adapt(BundleRevision.class).getWiring() == null)
         {
-            return ((BundleRevisionImpl) bundle.getCurrentRevision())
+            return ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getResourceLocal(name);
         }
         else
         {
-            return ((BundleWiringImpl) bundle.getCurrentRevision().getWiring())
+            return ((BundleWiringImpl) bundle.adapt(BundleRevision.class).getWiring())
                 .getResourceByDelegation(name);
         }
     }
@@ -1557,7 +1557,7 @@ public class Felix extends BundleImpl implements Framework
         {
             throw new IllegalStateException("The bundle is uninstalled.");
         }
-        else if (Util.isFragment(bundle.getCurrentRevision()))
+        else if (Util.isFragment(bundle.adapt(BundleRevision.class)))
         {
             return null;
         }
@@ -1566,14 +1566,14 @@ public class Felix extends BundleImpl implements Framework
 //       searching if it fails. Perhaps we should attempt the resolve here
 //       and do the local searching here. This means we could get rid of
 //       resolve attempts in findResourcesByDelegation().
-        if (bundle.getCurrentRevision().getWiring() == null)
+        if (bundle.adapt(BundleRevision.class).getWiring() == null)
         {
-            return ((BundleRevisionImpl) bundle.getCurrentRevision())
+            return ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getResourcesLocal(name);
         }
         else
         {
-            return ((BundleWiringImpl) bundle.getCurrentRevision().getWiring())
+            return ((BundleWiringImpl) bundle.adapt(BundleRevision.class).getWiring())
                 .getResourcesByDelegation(name);
         }
     }
@@ -1588,7 +1588,7 @@ public class Felix extends BundleImpl implements Framework
             throw new IllegalStateException("The bundle is uninstalled.");
         }
 
-        URL url = ((BundleRevisionImpl) bundle.getCurrentRevision()).getEntry(name);
+        URL url = ((BundleRevisionImpl) bundle.adapt(BundleRevision.class)).getEntry(name);
 
         // Some JAR files do not contain directory entries, so if
         // the entry wasn't found and is a directory, scan the entries
@@ -1718,7 +1718,7 @@ public class Felix extends BundleImpl implements Framework
         {
             throw new IllegalStateException("Bundle is uninstalled");
         }
-        else if (Util.isFragment(bundle.getCurrentRevision()))
+        else if (Util.isFragment(bundle.adapt(BundleRevision.class)))
         {
             throw new ClassNotFoundException("Fragments cannot load classes.");
         }
@@ -1737,7 +1737,7 @@ public class Felix extends BundleImpl implements Framework
             }
         }
         return ((BundleWiringImpl)
-            bundle.getCurrentRevision().getWiring()).getClassByDelegation(name);
+            bundle.adapt(BundleRevision.class).getWiring()).getClassByDelegation(name);
     }
 
     /**
@@ -1776,7 +1776,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Record whether the bundle is using its declared activation policy.
         boolean wasDeferred = bundle.isDeclaredActivationPolicyUsed()
-            && (((BundleRevisionImpl) bundle.getCurrentRevision())
+            && (((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                 .getDeclaredActivationPolicy() == BundleRevisionImpl.LAZY_ACTIVATION);
         bundle.setDeclaredActivationPolicyUsed(
             (options & Bundle.START_ACTIVATION_POLICY) != 0);
@@ -1793,7 +1793,7 @@ public class Felix extends BundleImpl implements Framework
 
             // As per the OSGi spec, fragment bundles can not be started and must
             // throw a BundleException when there is an attempt to start one.
-            if (Util.isFragment(bundle.getCurrentRevision()))
+            if (Util.isFragment(bundle.adapt(BundleRevision.class)))
             {
                 throw new BundleException("Fragment bundles can not be started.");
             }
@@ -1898,9 +1898,9 @@ public class Felix extends BundleImpl implements Framework
             // If the bundle's activation policy is eager or activation has already
             // been triggered, then activate the bundle immediately.
             if (!bundle.isDeclaredActivationPolicyUsed()
-                || (((BundleRevisionImpl) bundle.getCurrentRevision())
+                || (((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                     .getDeclaredActivationPolicy() != BundleRevisionImpl.LAZY_ACTIVATION)
-                || ((BundleWiringImpl) bundle.getCurrentRevision().getWiring())
+                || ((BundleWiringImpl) bundle.adapt(BundleRevision.class).getWiring())
                     .isActivationTriggered())
             {
                 // Record the event type for the final event and activate.
@@ -2090,7 +2090,7 @@ public class Felix extends BundleImpl implements Framework
 
             // First get the update-URL from our header.
             String updateLocation = (String)
-                ((BundleRevisionImpl) bundle.getCurrentRevision())
+                ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                     .getHeaders().get(Constants.BUNDLE_UPDATELOCATION);
 
             // If no update location specified, use original location.
@@ -2231,7 +2231,8 @@ public class Felix extends BundleImpl implements Framework
 
             // If the old state was active, but the new revision is a fragment,
             // then mark the persistent state to inactive.
-            if ((oldState == Bundle.ACTIVE) && Util.isFragment(bundle.getCurrentRevision()))
+            if ((oldState == Bundle.ACTIVE)
+                && Util.isFragment(bundle.adapt(BundleRevision.class)))
             {
                 bundle.setPersistentStateInactive();
                 m_logger.log(bundle, Logger.LOG_WARNING,
@@ -2324,7 +2325,7 @@ public class Felix extends BundleImpl implements Framework
 
             // As per the OSGi spec, fragment bundles can not be stopped and must
             // throw a BundleException when there is an attempt to stop one.
-            if (Util.isFragment(bundle.getCurrentRevision()))
+            if (Util.isFragment(bundle.adapt(BundleRevision.class)))
             {
                 throw new BundleException("Fragment bundles can not be stopped: " + bundle);
             }
@@ -2336,7 +2337,7 @@ public class Felix extends BundleImpl implements Framework
                     throw new IllegalStateException("Cannot stop an uninstalled bundle.");
                 case Bundle.STARTING:
                     if (bundle.isDeclaredActivationPolicyUsed()
-                        && ((BundleRevisionImpl) bundle.getCurrentRevision())
+                        && ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                             .getDeclaredActivationPolicy() != BundleRevisionImpl.LAZY_ACTIVATION)
                     {
                         throw new BundleException(
@@ -3682,11 +3683,11 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    private void resolveBundle(BundleImpl bundle) throws BundleException
+    private void resolveBundle(Bundle bundle) throws BundleException
     {
         try
         {
-            m_resolver.resolve(bundle.getCurrentRevision());
+            m_resolver.resolve(bundle.adapt(BundleRevision.class));
         }
         catch (ResolveException ex)
         {
@@ -4016,7 +4017,7 @@ public class Felix extends BundleImpl implements Framework
         return true;
     }
 
-    private BundleActivator createBundleActivator(BundleImpl impl)
+    private BundleActivator createBundleActivator(Bundle impl)
         throws Exception
     {
         // CONCURRENCY NOTE:
@@ -4025,7 +4026,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Get the activator class from the header map.
         BundleActivator activator = null;
-        Map headerMap = ((BundleRevisionImpl) impl.getCurrentRevision()).getHeaders();
+        Map headerMap = ((BundleRevisionImpl) impl.adapt(BundleRevision.class)).getHeaders();
         String className = (String) headerMap.get(Constants.BUNDLE_ACTIVATOR);
         // Try to instantiate activator class if present.
         if (className != null)
@@ -4035,7 +4036,7 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 clazz = ((BundleWiringImpl)
-                    impl.getCurrentRevision().getWiring()).getClassByDelegation(className);
+                    impl.adapt(BundleRevision.class).getWiring()).getClassByDelegation(className);
             }
             catch (ClassNotFoundException ex)
             {

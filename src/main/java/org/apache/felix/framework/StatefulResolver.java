@@ -468,7 +468,7 @@ class StatefulResolver
             {
                 // There is nothing we can do.
             }
-            if (bundle.getCurrentRevision() == revision)
+            if (bundle.adapt(BundleRevision.class) == revision)
             {
                 if (bundle.getState() != Bundle.INSTALLED)
                 {

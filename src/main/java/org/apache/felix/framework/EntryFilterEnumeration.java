@@ -22,11 +22,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRevision;
 
 class EntryFilterEnumeration implements Enumeration
 {
-    private final BundleImpl m_bundle;
+    private final Bundle m_bundle;
     private final List<Enumeration> m_enumerations;
     private final List<BundleRevision> m_revisions;
     private int m_revisionIndex = 0;
@@ -38,11 +39,11 @@ class EntryFilterEnumeration implements Enumeration
     private final List<Object> m_nextEntries = new ArrayList(2);
 
     public EntryFilterEnumeration(
-        BundleImpl bundle, boolean includeFragments, String path,
+        Bundle bundle, boolean includeFragments, String path,
         String filePattern, boolean recurse, boolean isURLValues)
     {
         m_bundle = bundle;
-        BundleRevision br = m_bundle.getCurrentRevision();
+        BundleRevision br = m_bundle.adapt(BundleRevision.class);
         if (includeFragments
             && (br.getWiring() != null)
             && (((BundleWiringImpl) br.getWiring()).getFragments() != null))

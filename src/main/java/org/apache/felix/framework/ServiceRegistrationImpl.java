@@ -485,11 +485,11 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // Get the package.
             String pkgName =
                 Util.getClassPackage(className);
-            BundleRevision requesterRevision = ((BundleImpl) requester).getCurrentRevision();
+            BundleRevision requesterRevision = requester.adapt(BundleRevision.class);
             // Get package wiring from service requester.
             BundleWire requesterWire = Util.getWire(requesterRevision, pkgName);
             // Get package wiring from service provider.
-            BundleRevision providerRevision = ((BundleImpl) m_bundle).getCurrentRevision();
+            BundleRevision providerRevision = m_bundle.adapt(BundleRevision.class);
             BundleWire providerWire = Util.getWire(providerRevision, pkgName);
 
             // There are four situations that may occur here:
