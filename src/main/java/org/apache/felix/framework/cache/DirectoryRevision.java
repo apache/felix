@@ -34,7 +34,7 @@ import org.apache.felix.framework.util.StringMap;
  * execute the bundle and does not copy the bundle content at all.
  * </p>
 **/
-class DirectoryRevision extends BundleRevision
+class DirectoryRevision extends BundleArchiveRevision
 {
     private final File m_refDir;
 
