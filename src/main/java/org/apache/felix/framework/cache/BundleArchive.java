@@ -25,6 +25,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 /**
  * <p>
@@ -490,15 +491,9 @@ public class BundleArchive
         return (m_revisions.isEmpty()) ? null : m_revisions.get(m_revisions.lastKey());
     }
 
-    /**
-     * <p>
-     * Returns the revision object for the specified revision.
-     * </p>
-     * @return the revision object for the specified revision.
-    **/
-    public synchronized BundleRevision getRevision(Long l)
+    public synchronized boolean isRemovalPending()
     {
-        return m_revisions.get(l);
+        return (m_revisions.size() > 1);
     }
 
     /**
@@ -700,21 +695,24 @@ public class BundleArchive
     **/
     public synchronized void purge() throws Exception
     {
-        if (m_revisions.size() > 1)
+        // Remember current revision number.
+        Long currentRevNum = getCurrentRevisionNumber();
+
+        // Record whether the current revision has native libraries, which
+        // we'll use later to determine if we need to rename its directory.
+        boolean hasNativeLibs = getCurrentRevision().getManifestHeader()
+            .containsKey(Constants.BUNDLE_NATIVECODE);
+
+        // Close all revisions and then delete all but the current revision.
+        // We don't delete it the current revision, because we want to rename it
+        // to the new refresh level.
+        close();
+
+        // Delete all old revisions.
+        long refreshCount = getRefreshCount();
+        for (Long revNum : m_revisions.keySet())
         {
-            // Close the revisions and then delete all but the current revision.
-            // We don't delete it the current revision, because we want to rename it
-            // to the new refresh level.
-            close();
-
-            // Remove the current revision from the revision map so it doesn't
-            // get deleted.
-            Long currentRevNum = m_revisions.lastKey();
-            m_revisions.remove(currentRevNum);
-
-            // Delete all old revisions.
-            long refreshCount = getRefreshCount();
-            for (Long revNum : m_revisions.keySet())
+            if (!revNum.equals(currentRevNum))
             {
                 File revisionDir = new File(
                     m_archiveRootDir,
@@ -724,7 +722,13 @@ public class BundleArchive
                     BundleCache.deleteDirectoryTree(revisionDir);
                 }
             }
+        }
 
+        // If the revision has native libraries, then rename its directory
+        // to avoid the issue of being unable to load the same native library
+        // into two different class loaders.
+        if (hasNativeLibs)
+        {
             // Increment the refresh count.
             setRefreshCount(refreshCount + 1);
 
@@ -734,16 +738,16 @@ public class BundleArchive
             File revisionDir = new File(m_archiveRootDir,
                 REVISION_DIRECTORY + refreshCount + "." + currentRevNum.toString());
             BundleCache.getSecureAction().renameFile(revisionDir, currentDir);
-
-            // Clear the revision map since they are all invalid now.
-            m_revisions.clear();
-
-            // Recreate the revision for the current location.
-            BundleRevision revision = createRevisionFromLocation(
-                getRevisionLocation(currentRevNum), null, currentRevNum);
-            // Add new revision to the revision map.
-            m_revisions.put(currentRevNum, revision);
         }
+
+        // Clear the revision map since they are all invalid now.
+        m_revisions.clear();
+
+        // Recreate the revision for the current location.
+        BundleRevision revision = createRevisionFromLocation(
+            getRevisionLocation(currentRevNum), null, currentRevNum);
+        // Add new revision to the revision map.
+        m_revisions.put(currentRevNum, revision);
     }
 
     /**
@@ -890,19 +894,19 @@ public class BundleArchive
 
     // Method from Harmony java.net.URIEncoderDecoder (luni subproject)
     // used by URI to decode uri components.
-    private static String decode(String s) throws UnsupportedEncodingException 
+    private static String decode(String s) throws UnsupportedEncodingException
     {
         StringBuffer result = new StringBuffer();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (int i = 0; i < s.length();) 
+        for (int i = 0; i < s.length();)
         {
             char c = s.charAt(i);
-            if (c == '%') 
+            if (c == '%')
             {
                 out.reset();
-                do 
+                do
                 {
-                    if ((i + 2) >= s.length()) 
+                    if ((i + 2) >= s.length())
                     {
                         throw new IllegalArgumentException(
                             "Incomplete % sequence at: " + i);
