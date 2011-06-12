@@ -79,7 +79,7 @@ public class CommandProxy implements Function
             }
             else
             {
-                return Reflective.method(session, tgt, function, arguments);
+                return Reflective.invoke(session, tgt, function, arguments);
             }
         }
         finally
