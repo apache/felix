@@ -167,7 +167,7 @@ public class TestParser extends TestCase
         assertEquals("http://www.aqute.biz?com=2&biz=1",
             c.execute("['http://www.aqute.biz?com=2&biz=1'] get 0"));
         assertEquals("{a=2, b=3}", c.execute("[a=2 b=3]").toString());
-        assertEquals("3", c.execute("[a=2 b=3] get b"));
+        assertEquals(3L, c.execute("[a=2 b=3] get b"));
         assertEquals("[3, 4]", c.execute("[1 2 [3 4] 5 6] get 2").toString());
         assertEquals(5, c.execute("[1 2 [3 4] 5 6] size"));
     }

@@ -25,7 +25,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -46,9 +45,18 @@ public final class Reflective
                 "finally", "long", "strictfp", "volatile", "const", "float", "native",
                 "super", "while" }));
 
-    public static Object method(CommandSession session, Object target, String name,
-        List<Object> args) throws IllegalArgumentException, IllegalAccessException,
-        InvocationTargetException, Exception
+    /**
+     * invokes the named method on the given target using the supplied args,
+     * which are converted if necessary.
+     * @param session
+     * @param target
+     * @param name
+     * @param args
+     * @return the result of the invoked method
+     * @throws Exception
+     */
+    public static Object invoke(CommandSession session, Object target, String name,
+        List<Object> args) throws Exception
     {
         Method[] methods = target.getClass().getMethods();
         name = name.toLowerCase();
@@ -79,7 +87,7 @@ public final class Reflective
 
         Method bestMethod = null;
         Object[] bestArgs = null;
-        int match = -1;
+        int lowestMatch = Integer.MAX_VALUE;
         ArrayList<Class<?>[]> possibleTypes = new ArrayList<Class<?>[]>();
 
         for (Method m : methods)
@@ -98,38 +106,25 @@ public final class Reflective
                     xargs.add(0, name);
                 }
 
-                // Check if the command takes a session
-                if ((types.length > 0) && types[0].isInterface()
-                    && types[0].isAssignableFrom(session.getClass()))
-                {
-                    xargs.add(0, session);
-                }
-
                 Object[] parms = new Object[types.length];
-                int local = coerce(session, target, m, types, parms, xargs);
+                int match = coerce(session, target, m, types, parms, xargs);
 
-                // FELIX-2894 xargs can contain parameters thus the size
-		// does not match the available slots. I think someone
-		// copied the xargs list in coerce but that left xargs
-		// having an incorrect length
- 
-                if (/*(local >= xargs.size()) && */(local >= types.length))
+                if (match < 0)
                 {
-                    boolean exact = ((local == xargs.size()) && (local == types.length));
-                    if (exact || (local > match))
-                    {
-                        bestMethod = m;
-                        bestArgs = parms;
-                        match = local;
-                    }
-                    if (exact)
-                    {
-                        break;
-                    }
+                    // coerce failed
+                    possibleTypes.add(types);
                 }
                 else
                 {
-                    possibleTypes.add(types);
+                    if (match < lowestMatch)
+                    {
+                        lowestMatch = match;
+                        bestMethod = m;
+                        bestArgs = parms;
+                    }
+
+                    if (match == 0)
+                        break; // can't get better score
                 }
             }
         }
@@ -186,6 +181,62 @@ public final class Reflective
     }
 
     /**
+     * transform name/value parameters into ordered argument list.
+     * params: --param2, value2, --flag1, arg3
+     * args: true, value2, arg3
+     * @param method
+     * @param params
+     * @return new ordered list of args.
+     */
+    private static List<Object> transformParameters(Method method, List<Object> in)
+    {
+        Annotation[][] pas = method.getParameterAnnotations();
+        ArrayList<Object> out = new ArrayList<Object>();
+        ArrayList<Object> parms = new ArrayList<Object>(in);
+
+        for (Annotation as[] : pas)
+        {
+            for (Annotation a : as)
+            {
+                if (a instanceof Parameter)
+                {
+                    int i = -1;
+                    Parameter p = (Parameter) a;
+                    for (String name : p.names())
+                    {
+                        i = parms.indexOf(name);
+                        if (i >= 0)
+                            break;
+                    }
+
+                    if (i >= 0)
+                    {
+                        // parameter present
+                        parms.remove(i);
+                        Object value = p.presentValue();
+                        if (Parameter.UNSPECIFIED.equals(value))
+                        {
+                            if (i >= parms.size())
+                                return null; // missing parameter, so try other methods
+                            value = parms.remove(i);
+                        }
+                        out.add(value);
+                    }
+                    else
+                    {
+                        out.add(p.absentValue());
+                    }
+
+                }
+            }
+        }
+
+        out.addAll(parms);
+
+        return out;
+    }
+
+    /**
      * Complex routein to convert the arguments given from the command line to
      * the arguments of the method call. First, an attempt is made to convert
      * each argument. If this fails, a check is made to see if varargs can be
@@ -197,154 +248,106 @@ public final class Reflective
      * @param types
      * @param out
      * @param in
-     * @return
-     * @throws Exception
+     * @return -1 if arguments can't be coerced; 0 if no coercion was necessary; > 0 if coercion was needed.
      */
-    @SuppressWarnings("unchecked")
     private static int coerce(CommandSession session, Object target, Method m,
-        Class<?> types[], Object out[], List<Object> in) throws Exception
+        Class<?> types[], Object out[], List<Object> in)
     {
-        Annotation[][] pas = m.getParameterAnnotations();
-
-        int start = 0;
-        for (int argIndex = 0; argIndex < pas.length; argIndex++)
+        in = transformParameters(m, in);
+        if (in == null)
         {
-            Annotation as[] = pas[argIndex];
-            for (int a = 0; a < as.length; a++)
-            {
-                if (as[a] instanceof Parameter)
-                {
-                    Parameter o = (Parameter) as[a];
-                    out[argIndex] = coerce(session, target, types[argIndex],
-                        o.absentValue());
-                    start = argIndex + 1;
-                }
-            }
+            // missing parameter argument?
+            return -1;
         }
 
-        in = new ArrayList(in);
-        for (Iterator<Object> itArgs = in.iterator(); itArgs.hasNext();)
+        int[] convert = { 0 };
+
+        // Check if the command takes a session
+        if ((types.length > 0) && types[0].isInterface()
+            && types[0].isAssignableFrom(session.getClass()))
         {
-            Object item = itArgs.next();
-            if (item instanceof String)
-            {
-                if (((String) item).startsWith("-"))
-                {
-                    for (int argIndex = 0; argIndex < pas.length; argIndex++)
-                    {
-                        Annotation as[] = pas[argIndex];
-                        for (int a = 0; a < as.length; a++)
-                        {
-                            if (as[a] instanceof Parameter)
-                            {
-                                Parameter param = (Parameter) as[a];
-                                for (String name : param.names())
-                                {
-                                    if (name.equals(item))
-                                    {
-					// FELIX-2984 annotations never return null, the Parameter annotation
-					// returns UNSPECIFIED
-                                        if (param.presentValue() == null || param.presentValue().equals(Parameter.UNSPECIFIED))
-                                        {
-                                            itArgs.remove(); // parameter name
-                                            assert itArgs.hasNext();
-                                            Object value = itArgs.next(); // the value
-                                            itArgs.remove(); // remove it
-                                            out[argIndex] = coerce(session, target,
-                                                types[argIndex], value);
-                                        }
-                                        else if (param.presentValue() != null)
-                                        {
-                                            itArgs.remove();
-                                            out[argIndex] = coerce(session, target,
-                                                types[argIndex], param.presentValue());
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            in.add(0, session);
         }
 
-        int i = start;
+        int i = 0;
         while (i < out.length)
         {
             out[i] = null;
-            try
+
+            // Try to convert one argument
+            if (in.size() == 0)
             {
-                // Try to convert one argument
-                if (in.size() == 0)
+                out[i] = NO_MATCH;
+            }
+            else
+            {
+                out[i] = coerce(session, types[i], in.get(0), convert);
+
+                if (out[i] == null && types[i].isArray() && in.size() > 0)
                 {
+                    // don't coerce null to array FELIX-2432
                     out[i] = NO_MATCH;
                 }
-                else
-                {
-                    out[i] = coerce(session, target, types[i], in.get(0));
-                    
-                    if (out[i] == null && types[i].isArray() && in.size() > 0)
-                    {
-                        // don't coerce null to array FELIX-2432
-                        out[i] = NO_MATCH;
-                    }
-                    
-                    if (out[i] != NO_MATCH)
-                    {
-                        in.remove(0);
-                    }
-                }
 
-                if (out[i] == NO_MATCH)
+                if (out[i] != NO_MATCH)
                 {
-                    // Failed
-                    // No match, check for varargs
-                    if (types[i].isArray() && (i == types.length - 1))
-                    {
-                        // Try to parse the remaining arguments in an array
-                        Class<?> component = types[i].getComponentType();
-                        Object components = Array.newInstance(component, in.size());
-                        int n = i;
-                        while (in.size() > 0)
-                        {
-                            Object t = coerce(session, target, component, in.remove(0));
-                            if (t == NO_MATCH)
-                            {
-                                return -1;
-                            }
-                            Array.set(components, i - n, t);
-                            i++;
-                        }
-                        out[n] = components;
-                        // Is last element, so we will quite hereafter
-                        // return n;
-                        if (in.size() == 0)
-                        {
-                            ++i;
-                        }
-                        return i; // derek - return number of args converted
-                    }
-                    return -1;
+                    in.remove(0);
                 }
-                i++;
             }
-            catch (Exception e)
-            {
-                System.err.println("Reflective:" + e);
-                e.printStackTrace();
 
-                // should get rid of those exceptions, but requires
-                // reg ex matching to see if it throws an exception.
-                // dont know what is better
+            if (out[i] == NO_MATCH)
+            {
+                // No match, check for varargs
+                if (types[i].isArray() && (i == types.length - 1))
+                {
+                    // Try to parse the remaining arguments in an array
+                    Class<?> ctype = types[i].getComponentType();
+                    int asize = in.size();
+                    Object array = Array.newInstance(ctype, asize);
+                    int n = i;
+                    while (in.size() > 0)
+                    {
+                        Object t = coerce(session, ctype, in.remove(0), convert);
+                        if (t == NO_MATCH)
+                        {
+                            return -1;
+                        }
+                        Array.set(array, i - n, t);
+                        i++;
+                    }
+                    out[n] = array;
+
+                    /*
+                     * 1. prefer f() to f(T[]) with empty array
+                     * 2. prefer f(T) to f(T[1])
+                     * 3. prefer f(T) to f(Object[1]) even if there is a conversion cost for T
+                     * 
+                     * 1 & 2 require to add 1 to conversion cost, but 3 also needs to match
+                     * the conversion cost for T.
+                     */
+                    return convert[0] + 1 + (asize * 2);
+                }
                 return -1;
             }
+            i++;
         }
-        return i;
+
+        if (in.isEmpty())
+            return convert[0];
+        return -1;
     }
 
-    private static Object coerce(CommandSession session, Object target, Class<?> type,
-        Object arg) throws Exception
+    /**
+     * converts given argument to specified type and increments convert[0] if any conversion was needed.
+     * @param session
+     * @param type
+     * @param arg
+     * @param convert convert[0] is incremented according to the conversion needed,
+     * to allow the "best" conversion to be determined.
+     * @return converted arg or NO_MATCH if no conversion possible.
+     */
+    private static Object coerce(CommandSession session, Class<?> type, Object arg,
+        int[] convert)
     {
         if (arg == null)
         {
@@ -356,6 +359,33 @@ public final class Reflective
             return arg;
         }
 
+        if (type.isArray())
+        {
+            return NO_MATCH;
+        }
+
+        if (type.isPrimitive() && arg instanceof Long)
+        {
+            // no-cost conversions between integer types
+            Number num = (Number) arg;
+
+            if (type == short.class)
+            {
+                return num.shortValue();
+            }
+            if (type == int.class)
+            {
+                return num.intValue();
+            }
+            if (type == long.class)
+            {
+                return num.longValue();
+            }
+        }
+
+        // all following conversions cost 2 points
+        convert[0] += 2;
+
         Object converted = session.convert(type, arg);
         if (converted != null)
         {
@@ -363,95 +393,68 @@ public final class Reflective
         }
 
         String string = arg.toString();
+
         if (type.isAssignableFrom(String.class))
         {
             return string;
         }
 
-        if (type.isArray())
+        if (type.isPrimitive())
         {
-            // Must handle array types
-            return NO_MATCH;
-        }
-        else
-        {
-            if (!type.isPrimitive())
-            {
-                try
-                {
-                    return type.getConstructor(String.class).newInstance(string);
-                }
-                catch (Exception e)
-                {
-                    return NO_MATCH;
-                }
-            }
+            type = primitiveToObject(type);
         }
 
         try
         {
-            if (type == boolean.class)
-            {
-                return new Boolean(string);
-            }
-            else
-            {
-                if (type == byte.class)
-                {
-                    return new Byte(string);
-                }
-                else
-                {
-                    if (type == char.class)
-                    {
-                        if (string.length() == 1)
-                        {
-                            return string.charAt(0);
-                        }
-                    }
-                    else
-                    {
-                        if (type == short.class)
-                        {
-                            return new Short(string);
-                        }
-                        else
-                        {
-                            if (type == int.class)
-                            {
-                                return new Integer(string);
-                            }
-                            else
-                            {
-                                if (type == float.class)
-                                {
-                                    return new Float(string);
-                                }
-                                else
-                                {
-                                    if (type == double.class)
-                                    {
-                                        return new Double(string);
-                                    }
-                                    else
-                                    {
-                                        if (type == long.class)
-                                        {
-                                            return new Long(string);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            return type.getConstructor(String.class).newInstance(string);
         }
-        catch (NumberFormatException e)
+        catch (Exception e)
         {
         }
 
+        if (type == Character.class && string.length() == 1)
+        {
+            return string.charAt(0);
+        }
+
         return NO_MATCH;
+    }
+
+    private static Class<?> primitiveToObject(Class<?> type)
+    {
+        if (type == boolean.class)
+        {
+            return Boolean.class;
+        }
+        if (type == byte.class)
+        {
+            return Byte.class;
+        }
+        if (type == char.class)
+        {
+            return Character.class;
+        }
+        if (type == short.class)
+        {
+            return Short.class;
+        }
+        if (type == int.class)
+        {
+            return Integer.class;
+        }
+        if (type == float.class)
+        {
+            return Float.class;
+        }
+        if (type == double.class)
+        {
+            return Double.class;
+        }
+        if (type == long.class)
+        {
+            return Long.class;
+        }
+        return null;
     }
 
 }
