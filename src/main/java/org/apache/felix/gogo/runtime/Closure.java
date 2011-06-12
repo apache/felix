@@ -249,7 +249,15 @@ public class Closure implements Function, Evaluate
         }
         else
         {
-            v = s;
+            try
+            {
+                v = s;
+                v = Double.parseDouble(s);    // if it parses as double
+                v = Long.parseLong(s);        // see whether it is integral
+            }
+            catch (NumberFormatException e)
+            {
+            }
         }
         return v;
     }
@@ -304,7 +312,7 @@ public class Closure implements Function, Evaluate
     {
         Object echo = session.get("echo");
         String xtrace = null;
-        
+
         if (echo != null && !"false".equals(echo.toString()))
         {
             // set -x execution trace
@@ -491,7 +499,7 @@ public class Closure implements Function, Evaluate
             {
                 if (".".equals(arg))
                 {
-                    target = Reflective.method(session, target,
+                    target = Reflective.invoke(session, target,
                         args.remove(0).toString(), args);
                     args.clear();
                 }
@@ -506,7 +514,7 @@ public class Closure implements Function, Evaluate
                 return target;
             }
 
-            return Reflective.method(session, target, args.remove(0).toString(), args);
+            return Reflective.invoke(session, target, args.remove(0).toString(), args);
         }
         else if (cmd.getClass().isArray() && values.size() == 1)
         {
@@ -516,7 +524,7 @@ public class Closure implements Function, Evaluate
         }
         else
         {
-            return Reflective.method(session, cmd, values.remove(0).toString(), values);
+            return Reflective.invoke(session, cmd, values.remove(0).toString(), values);
         }
     }
 
