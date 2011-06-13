@@ -45,6 +45,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Provided Service represent a provided service by the component.
@@ -129,6 +130,11 @@ public class ProvidedService implements ServiceFactory {
      * Post-Unregistration callback.
      */
     private Callback m_postUnregistration;
+
+    /**
+     * The published properties.
+     */
+    private Properties m_publishedProperties = new Properties();
 
     /**
      * Creates a provided service object.
@@ -256,8 +262,10 @@ public class ProvidedService implements ServiceFactory {
      * Remove a property.
      *
      * @param name : the property to remove
+     * @return <code>true</code> if the property was removed,
+     * <code>false</code> otherwise.
      */
-    private synchronized void removeProperty(String name) {
+    private synchronized boolean removeProperty(String name) {
         int idx = -1;
         for (int i = 0; i < m_properties.length; i++) {
             if (m_properties[i].getName().equals(name)) {
@@ -276,7 +284,11 @@ public class ProvidedService implements ServiceFactory {
                     System.arraycopy(m_properties, idx + 1, newPropertiesList, idx, newPropertiesList.length - idx);
                 }
                 m_properties = newPropertiesList;
+
             }
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -365,7 +377,9 @@ public class ProvidedService implements ServiceFactory {
         // An update may happen during the registration, re-check and apply.
         // This must be call outside the synchronized block.
         if (reg != null && m_wasUpdated) {
-            reg.setProperties(getServiceProperties());
+            Properties updated = getServiceProperties();
+            reg.setProperties(updated);
+            m_publishedProperties = updated;
             m_wasUpdated = false;
         }
 
@@ -466,7 +480,43 @@ public class ProvidedService implements ServiceFactory {
     public synchronized void update() {
         // Update the service registration
         if (m_serviceRegistration != null) {
-            m_serviceRegistration.setProperties(getServiceProperties());
+            Properties updated = getServiceProperties();
+            Properties oldProps = (Properties) m_publishedProperties.clone();
+            Properties newProps = (Properties) updated.clone();
+
+            // Remove keys that must not be compared
+            newProps.remove("instance.name");
+            oldProps.remove("instance.name");
+            newProps.remove(Constants.SERVICE_ID);
+            oldProps.remove(Constants.SERVICE_ID);
+            newProps.remove(Constants.SERVICE_PID);
+            oldProps.remove(Constants.SERVICE_PID);
+            newProps.remove("factory.name");
+            oldProps.remove("factory.name");
+            newProps.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
+            oldProps.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
+
+            // Trigger the update only if the properties have changed.
+
+            // First check, are the size equals
+            if (oldProps.size() != newProps.size()) {
+                m_handler.info("Updating Registration : " + oldProps.size() + " / " + newProps.size());
+                m_publishedProperties = updated;
+                m_serviceRegistration.setProperties(updated);
+            } else {
+                // Check changes
+                Enumeration keys = oldProps.keys();
+                while (keys.hasMoreElements()) {
+                    String k = (String) keys.nextElement();
+                    Object val = oldProps.get(k);
+                    if (! val.equals(updated.get(k))) {
+                        m_handler.info("Updating Registration : " + k);
+                        m_publishedProperties = updated;
+                        m_serviceRegistration.setProperties(updated);
+                        return;
+                    }
+                }
+            }
         } else {
             // Need to be updated later.
             m_wasUpdated = true;
@@ -479,6 +529,7 @@ public class ProvidedService implements ServiceFactory {
      */
     protected void addProperties(Dictionary props) {
         Enumeration keys = props.keys();
+        boolean updated = false;
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
             Object value = props.get(key);
@@ -494,10 +545,16 @@ public class ProvidedService implements ServiceFactory {
                 try {
                     Property prop = new Property(key, null, null, value.toString(), value.getClass().getName(), getInstanceManager(), m_handler);
                     addProperty(prop);
+                    updated = true;
                 } catch (ConfigurationException e) {
                     m_handler.error("The propagated property " + key + " cannot be created correctly : " + e.getMessage());
                 }
             }
+        }
+
+        if (updated) {
+            m_handler.info("Update trigged by adding properties " + props);
+            update();
         }
     }
 
@@ -507,9 +564,15 @@ public class ProvidedService implements ServiceFactory {
      */
     protected void deleteProperties(Dictionary props) {
         Enumeration keys = props.keys();
+        boolean mustUpdate = false;
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
-            removeProperty(key);
+            mustUpdate = mustUpdate || removeProperty(key);
+        }
+
+        if (mustUpdate) {
+            m_handler.info("Update triggered when removing properties : " + props);
+            update();
         }
     }
 
