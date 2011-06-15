@@ -358,7 +358,7 @@ public class Util
                     if (w.getCapability().getNamespace()
                             .equals(BundleRevision.PACKAGE_NAMESPACE) &&
                         w.getCapability().getAttributes()
-                            .get(BundleCapabilityImpl.PACKAGE_ATTR).equals(name))
+                            .get(BundleRevision.PACKAGE_NAMESPACE).equals(name))
                     {
                         return w;
                     }

@@ -31,6 +31,8 @@ public interface Resolver
     Map<BundleRevision, List<ResolverWire>> resolve(
         ResolverState state, BundleRevision revision, Set<BundleRevision> optional);
     Map<BundleRevision, List<ResolverWire>> resolve(
+        ResolverState state, Set<BundleRevision> revisions, Set<BundleRevision> optional);
+    Map<BundleRevision, List<ResolverWire>> resolve(
         ResolverState state, BundleRevision revision, String pkgName,
         Set<BundleRevision> fragments);
 

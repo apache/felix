@@ -157,7 +157,7 @@ class BundleRevisionDependencies
 
         // Get exported package name.
         String pkgName = (String)
-            exportCap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+            exportCap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
 
         // Get all importers and requirers for all revisions of the bundle.
         // The spec says that require-bundle should be returned with importers.
@@ -171,7 +171,7 @@ class BundleRevisionDependencies
                 {
                     BundleCapability cap = entry.getKey();
                     if ((cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                        && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                        && cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
                             .equals(pkgName))
                         || cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                     {

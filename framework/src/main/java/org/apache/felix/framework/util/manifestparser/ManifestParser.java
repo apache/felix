@@ -95,11 +95,11 @@ public class ManifestParser
         // Parse bundle symbolic name.
         //
 
-        BundleCapabilityImpl requireCap = parseBundleSymbolicName(owner, m_headerMap);
-        if (requireCap != null)
+        BundleCapabilityImpl bundleCap = parseBundleSymbolicName(owner, m_headerMap);
+        if (bundleCap != null)
         {
             m_bundleSymbolicName = (String)
-                requireCap.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE);
+                bundleCap.getAttributes().get(BundleRevision.BUNDLE_NAMESPACE);
 
             // Add a bundle capability and a host capability to all
             // non-fragment bundles. A host capability is the same
@@ -109,12 +109,15 @@ public class ManifestParser
             // dependencies.
             if (headerMap.get(Constants.FRAGMENT_HOST) == null)
             {
-                capList.add(requireCap);
+                capList.add(bundleCap);
+                Map<String, Object> hostAttrs =
+                    new HashMap<String, Object>(bundleCap.getAttributes());
+                Object value = hostAttrs.remove(BundleRevision.BUNDLE_NAMESPACE);
+                hostAttrs.put(BundleRevision.HOST_NAMESPACE, value);
                 capList.add(new BundleCapabilityImpl(
                     owner, BundleRevision.HOST_NAMESPACE,
                     Collections.EMPTY_MAP,
-// TODO: OSGi R4.3 - Wraps map as unmodifiable twice.
-                    requireCap.getAttributes()));
+                    hostAttrs));
             }
 
             // Add a singleton capability if the bundle is a singleton.
@@ -123,13 +126,16 @@ public class ManifestParser
             // attach this information to the bundle or host capabilities
             // because fragments don't have those capabilities, but fragments
             // can be singletons too.
-            if (isSingleton(requireCap))
+            if (isSingleton(bundleCap))
             {
+                Map<String, Object> singletonAttrs =
+                    new HashMap<String, Object>(bundleCap.getAttributes());
+                Object value = singletonAttrs.remove(BundleRevision.BUNDLE_NAMESPACE);
+                singletonAttrs.put(BundleCapabilityImpl.SINGLETON_NAMESPACE, value);
                 capList.add(new BundleCapabilityImpl(
                     owner, BundleCapabilityImpl.SINGLETON_NAMESPACE,
                     Collections.EMPTY_MAP,
-// TODO: OSGi R4.3 - Wraps map as unmodifiable twice.
-                    requireCap.getAttributes()));
+                    singletonAttrs));
             }
         }
 
@@ -418,7 +424,7 @@ public class ManifestParser
 //       notion where namespace is also the name of the key attribute.
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
-                    BundleCapabilityImpl.PACKAGE_ATTR,
+                    BundleRevision.PACKAGE_NAMESPACE,
                     path);
                 newAttrs.putAll(attrs);
 
@@ -812,7 +818,7 @@ public class ManifestParser
                 Map<String, Object> attrs = clause.m_attrs;
                 Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
-                    BundleCapabilityImpl.PACKAGE_ATTR,
+                    BundleRevision.PACKAGE_NAMESPACE,
                     pkgName);
                 newAttrs.putAll(attrs);
 
@@ -1124,7 +1130,7 @@ public class ManifestParser
         for (int i = 0; i < exports.size(); i++)
         {
             if (map.get(exports.get(i).getAttributes()
-                .get(BundleCapabilityImpl.PACKAGE_ATTR)) == null)
+                .get(BundleRevision.PACKAGE_NAMESPACE)) == null)
             {
                 // Convert Version to VersionRange.
                 Map<String, Object> attrs = new HashMap<String, Object>();
@@ -1138,7 +1144,7 @@ public class ManifestParser
 
                 List<String> paths = new ArrayList();
                 paths.add((String)
-                    exports.get(i).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                    exports.get(i).getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 clauseList.add(
                     new ParsedHeaderClause(
                         paths, Collections.EMPTY_MAP, attrs, Collections.EMPTY_MAP));
@@ -1252,7 +1258,7 @@ public class ManifestParser
             // Create a require capability and return it.
             String symName = (String) clauses.get(0).m_paths.get(0);
             Map<String, Object> attrs = new HashMap<String, Object>(2);
-            attrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, symName);
+            attrs.put(BundleRevision.BUNDLE_NAMESPACE, symName);
             attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
             return new BundleCapabilityImpl(
                 owner,
@@ -1317,7 +1323,7 @@ public class ManifestParser
                 Map<String, Object> attrs = clauses.get(0).m_attrs;
                 Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
-                    Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE,
+                    BundleRevision.HOST_NAMESPACE,
                     clauses.get(0).m_paths.get(0));
                 newAttrs.putAll(attrs);
 
@@ -1403,7 +1409,7 @@ public class ManifestParser
                 // Prepend the symbolic name to the array of attributes.
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
-                    Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE,
+                    BundleRevision.BUNDLE_NAMESPACE,
                     path);
                 newAttrs.putAll(attrs);
 

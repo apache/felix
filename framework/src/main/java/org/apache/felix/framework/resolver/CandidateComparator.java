@@ -47,8 +47,8 @@ public class CandidateComparator implements Comparator<BundleCapability>
         // Compare revision capabilities.
         if ((c == 0) && cap1.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
         {
-            c = ((Comparable) cap1.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE))
-                .compareTo(cap2.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE));
+            c = ((Comparable) cap1.getAttributes().get(BundleRevision.BUNDLE_NAMESPACE))
+                .compareTo(cap2.getAttributes().get(BundleRevision.BUNDLE_NAMESPACE));
             if (c == 0)
             {
                 Version v1 = (!cap1.getAttributes().containsKey(Constants.BUNDLE_VERSION_ATTRIBUTE))
@@ -65,8 +65,8 @@ public class CandidateComparator implements Comparator<BundleCapability>
         // Compare package capabilities.
         else if ((c == 0) && cap1.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
-            c = ((Comparable) cap1.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR))
-                .compareTo(cap2.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+            c = ((Comparable) cap1.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE))
+                .compareTo(cap2.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
             if (c == 0)
             {
                 Version v1 = (!cap1.getAttributes().containsKey(BundleCapabilityImpl.VERSION_ATTR))

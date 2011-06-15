@@ -31,10 +31,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.apache.felix.framework.BundleRevisionImpl;
-import org.apache.felix.framework.BundleWiringImpl;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -44,10 +42,8 @@ import org.osgi.framework.wiring.BundleRevision;
 
 class Candidates
 {
-    private final BundleRevision m_root;
-
-    // Set of all candidate bundle revisions.
-    private final Set<BundleRevision> m_candidateRevisions;
+    // Set of all involved bundle revisions.
+    private final Set<BundleRevision> m_involvedRevisions;
     // Maps a capability to requirements that match it.
     private final Map<BundleCapability, Set<BundleRequirement>> m_dependentMap;
     // Maps a requirement to the capability it matches.
@@ -69,23 +65,20 @@ class Candidates
 
     /**
      * Private copy constructor used by the copy() method.
-     * @param root the root module for the resolve.
      * @param dependentMap the capability dependency map.
      * @param candidateMap the requirement candidate map.
      * @param hostFragments the fragment map.
      * @param wrappedHosts the wrapped hosts map.
     **/
     private Candidates(
-        BundleRevision root,
-        Set<BundleRevision> candidateRevisions,
+        Set<BundleRevision> involvedRevisions,
         Map<BundleCapability, Set<BundleRequirement>> dependentMap,
         Map<BundleRequirement, SortedSet<BundleCapability>> candidateMap,
         Map<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>> hostFragments,
         Map<BundleRevision, HostBundleRevision> wrappedHosts, Map<BundleRevision, Object> populateResultCache,
         boolean fragmentsPresent)
     {
-        m_root = root;
-        m_candidateRevisions = candidateRevisions;
+        m_involvedRevisions = involvedRevisions;
         m_dependentMap = dependentMap;
         m_candidateMap = candidateMap;
         m_hostFragments = hostFragments;
@@ -95,49 +88,17 @@ class Candidates
     }
 
     /**
-     * Constructs a new populated Candidates object for the specified root module.
-     * @param state the resolver state used for populating the candidates.
-     * @param root the root module for the resolve.
+     * Constructs an empty Candidates object.
     **/
-    public Candidates(ResolverState state, BundleRevision root)
+    public Candidates()
     {
-        m_root = root;
-        m_candidateRevisions = new HashSet<BundleRevision>();
+        m_involvedRevisions = new HashSet<BundleRevision>();
         m_dependentMap = new HashMap<BundleCapability, Set<BundleRequirement>>();
         m_candidateMap = new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
         m_hostFragments =
             new HashMap<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>();
         m_allWrappedHosts = new HashMap<BundleRevision, HostBundleRevision>();
         m_populateResultCache = new HashMap<BundleRevision, Object>();
-
-        populate(state, m_root);
-    }
-
-    /**
-     * Constructs a new populated Candidates object with the specified root module and
-     * starting requirement and matching candidates. This constructor is used
-     * when the root module is performing a dynamic import for the given
-     * requirement and the given potential candidates.
-     * @param state the resolver state used for populating the candidates.
-     * @param root the module with a dynamic import to resolve.
-     * @param req the requirement being resolved.
-     * @param candidates the potential candidates matching the requirement.
-    **/
-    public Candidates(ResolverState state, BundleRevision root,
-        BundleRequirement req, SortedSet<BundleCapability> candidates)
-    {
-        m_root = root;
-        m_candidateRevisions = new HashSet<BundleRevision>();
-        m_dependentMap = new HashMap<BundleCapability, Set<BundleRequirement>>();
-        m_candidateMap = new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
-        m_hostFragments =
-            new HashMap<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>();
-        m_allWrappedHosts = new HashMap<BundleRevision, HostBundleRevision>();
-        m_populateResultCache = new HashMap<BundleRevision, Object>();
-
-        add(req, candidates);
-
-        populateDynamic(state, m_root);
     }
 
     /**
@@ -314,6 +275,9 @@ class Candidates
         }
         else if (cycleCount.intValue() == 0)
         {
+            // Record invoved revision.
+            m_involvedRevisions.add(revision);
+
             // Record that the revision was successfully populated.
             m_populateResultCache.put(revision, Boolean.TRUE);
 
@@ -325,26 +289,31 @@ class Candidates
         }
     }
 
-    public final void populateOptional(ResolverState state, BundleRevision revision)
+// TODO: OSGi R4.3 - Related to resolve() method clean up, can this just
+//       become the normal case? Currently, it just swallows the resolve
+//       exception, which would have to change.
+    public final boolean populate(
+        ResolverState state, BundleRevision revision, boolean isGreedyAttach)
     {
-        // We will always attempt to populate optional fragments, since this
-        // is necessary for greedy resolving of fragment. Howevere, we'll only
-        // attempt to populate optional non-fragment revisions if they aren't
-        // already resolved.
+        // We will always attempt to populate fragments, since this is necessary
+        // for greedy attaching of fragment. However, we'll only attempt to
+        // populate optional non-fragment revisions if they aren't already
+        // resolved.
         boolean isFragment = Util.isFragment(revision);
         if (!isFragment && (revision.getWiring() != null))
         {
-            return;
+            return false;
         }
 
         try
         {
-            // If the optional revision is a fragment, then we only want to populate
-            // the fragment if it has a candidate host in the set of already populated
-            // revisions. We do this to avoid unnecessary work in prepare(). If the
-            // fragment has a host, we'll prepopulate the result cache here to avoid
-            // having to do the host lookup again in populate().
-            if (isFragment)
+            // If the optional revision is a fragment and this is a greedy attach,
+            // then only populate the fragment if it has a candidate host in the
+            // set of already populated revisions. We do this to avoid resolving
+            // unneeded fragments and hosts. If the fragment has a host, we'll
+            // prepopulate the result cache here to avoid having to do the host
+            // lookup again in populate().
+            if (isGreedyAttach && isFragment)
             {
                 // Get the current result cache value, to make sure the revision
                 // hasn't already been populated.
@@ -385,7 +354,7 @@ class Candidates
                     // return since this fragment isn't needed.
                     if (hosts.isEmpty())
                     {
-                        return;
+                        return false;
                     }
 
                     // If there are populates host candidates, then finish up
@@ -423,26 +392,37 @@ class Candidates
         }
         catch (ResolveException ex)
         {
-            // Ignore since the revision is optional.
+            return false;
         }
+
+        return true;
     }
 
-    private boolean isPopulated(BundleRevision revision)
+    public boolean isPopulated(BundleRevision revision)
     {
         Object value = m_populateResultCache.get(revision);
         return ((value != null) && (value instanceof Boolean));
     }
 
-    private void populateDynamic(ResolverState state, BundleRevision revision)
+    public ResolveException getResolveException(BundleRevision revision)
     {
-        // There should be one entry in the candidate map, which are the
-        // the candidates for the matching dynamic requirement. Get the
-        // matching candidates and populate their candidates if necessary.
+        Object value = m_populateResultCache.get(revision);
+        return ((value != null) && (value instanceof ResolveException))
+            ? (ResolveException) value : null;
+    }
+
+    public void populateDynamic(
+        ResolverState state, BundleRevision revision,
+        BundleRequirement req, SortedSet<BundleCapability> candidates)
+    {
+        // Add the dynamic imports candidates.
+// TODO: OSGi R4.3 - Can we just calculate the candidates inside here too?
+//       I think we don't because of performance reasons since we have to
+//       look them up already. If so, maybe it is not worth doing it here.
+        add(req, candidates);
+
+        // Populate the candidates for the dynamic import.
         ResolveException rethrow = null;
-        Entry<BundleRequirement, SortedSet<BundleCapability>> entry =
-            m_candidateMap.entrySet().iterator().next();
-        BundleRequirement dynReq = entry.getKey();
-        SortedSet<BundleCapability> candidates = entry.getValue();
         for (Iterator<BundleCapability> itCandCap = candidates.iterator();
             itCandCap.hasNext(); )
         {
@@ -468,10 +448,12 @@ class Candidates
         {
             if (rethrow == null)
             {
-                rethrow = new ResolveException("Dynamic import failed.", revision, dynReq);
+                rethrow = new ResolveException("Dynamic import failed.", revision, req);
             }
             throw rethrow;
         }
+
+        m_populateResultCache.put(revision, Boolean.TRUE);
     }
 
     /**
@@ -492,16 +474,6 @@ class Candidates
 
         // Record the candidates.
         m_candidateMap.put(req, candidates);
-
-        // Make a list of all candidate revisions for determining singetons.
-        // Add the requirement as a dependent on the candidates. Keep track
-        // of fragments for hosts.
-        for (BundleCapability cap : candidates)
-        {
-            // Remember the revision for all capabilities so we can
-            // determine which ones are singletons.
-            m_candidateRevisions.add(cap.getRevision());
-        }
     }
 
     /**
@@ -569,7 +541,7 @@ class Candidates
 
         final Map<String, BundleRevision> singletons = new HashMap<String, BundleRevision>();
 
-        for (Iterator<BundleRevision> it = m_candidateRevisions.iterator(); it.hasNext(); )
+        for (Iterator<BundleRevision> it = m_involvedRevisions.iterator(); it.hasNext(); )
         {
             BundleRevision br = it.next();
             if (isSingleton(br))
@@ -597,18 +569,25 @@ class Candidates
                     // if it wasn't selected.
                     if (singleton != null)
                     {
-                        removeRevision(singleton);
+                        removeRevision(
+                            singleton,
+                            new ResolveException(
+                                "Conflict with another singleton.", singleton, null));
                     }
                 }
                 else
                 {
-                    removeRevision(br);
+                    removeRevision(br,
+                        new ResolveException(
+                            "Conflict with another singleton.", br, null));
                 }
             }
         }
 
         // If the root is a singleton, then prefer it over any other singleton.
-        if (isSingleton(m_root))
+// TODO: OSGi R4.3/SINGLETON - How do we prefer the root as a singleton?
+/*
+        if ((m_root != null) && isSingleton(m_root))
         {
             BundleRevision singleton = singletons.get(m_root.getSymbolicName());
             singletons.put(m_root.getSymbolicName(), m_root);
@@ -627,6 +606,7 @@ class Candidates
                 removeRevision(singleton);
             }
         }
+*/
 
         // Make sure selected singletons do not conflict with existing
         // singletons passed into this method.
@@ -637,7 +617,9 @@ class Candidates
             if ((singleton != null) && (singleton != existing))
             {
                 singletons.remove(singleton.getSymbolicName());
-                removeRevision(singleton);
+                removeRevision(singleton,
+                    new ResolveException(
+                        "Conflict with another singleton.", singleton, null));
             }
         }
 
@@ -712,7 +694,9 @@ class Candidates
         // Step 3
         for (BundleRevision br : unselectedFragments)
         {
-            removeRevision(br);
+            removeRevision(br,
+                new ResolveException(
+                    "Fragment was not selected for attachment.", br, null));
         }
 
         // Step 4
@@ -722,15 +706,20 @@ class Candidates
             // from the merged host.
             for (BundleCapability c : hostRevision.getDeclaredCapabilities(null))
             {
-                Set<BundleRequirement> dependents =
-                    m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
-                if (dependents != null)
+                // Don't replace the host capability, since the fragment will
+                // really be attached to the original host, not the wrapper.
+                if (!c.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                 {
-                    for (BundleRequirement r : dependents)
+                    Set<BundleRequirement> dependents =
+                        m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
+                    if (dependents != null)
                     {
-                        Set<BundleCapability> cands = m_candidateMap.get(r);
-                        cands.remove(((HostedCapability) c).getDeclaredCapability());
-                        cands.add(c);
+                        for (BundleRequirement r : dependents)
+                        {
+                            Set<BundleCapability> cands = m_candidateMap.get(r);
+                            cands.remove(((HostedCapability) c).getDeclaredCapability());
+                            cands.add(c);
+                        }
                     }
                 }
             }
@@ -806,17 +795,14 @@ class Candidates
      * @param revision the module to remove.
      * @throws ResolveException if removing the module caused the resolve to fail.
     **/
-    private void removeRevision(BundleRevision revision) throws ResolveException
+    private void removeRevision(BundleRevision revision, ResolveException ex)
     {
-        if (m_root.equals(revision))
-        {
-// TODO: SINGLETON RESOLVER - Improve this message.
-            String msg = "Unable to resolve " + m_root;
-            ResolveException ex = new ResolveException(msg, m_root, null);
-            throw ex;
-        }
+        // Add removal reason to result cache.
+        m_populateResultCache.put(revision, ex);
+        // Remove from dependents.
         Set<BundleRevision> unresolvedRevisions = new HashSet<BundleRevision>();
         remove(revision, unresolvedRevisions);
+        // Remove dependents that failed as a result of removing revision.
         while (!unresolvedRevisions.isEmpty())
         {
             Iterator<BundleRevision> it = unresolvedRevisions.iterator();
@@ -928,13 +914,10 @@ class Candidates
                     m_candidateMap.remove(r);
                     if (!((BundleRequirementImpl) r).isOptional())
                     {
-                        if (m_root.equals(r.getRevision()))
-                        {
-                            String msg = "Unable to resolve " + m_root
-                                + ": missing requirement " + r;
-                            ResolveException ex = new ResolveException(msg, m_root, r);
-                            throw ex;
-                        }
+                        String msg = "Unable to resolve " + r.getRevision()
+                            + ": missing requirement " + r;
+                        m_populateResultCache.put(
+                            r.getRevision(), new ResolveException(msg, r.getRevision(), r));
                         unresolvedRevisions.add(r.getRevision());
                     }
                 }
@@ -968,7 +951,7 @@ class Candidates
         }
 
         return new Candidates(
-            m_root, m_candidateRevisions, dependentMap, candidateMap,
+            m_involvedRevisions, dependentMap, candidateMap,
             m_hostFragments, m_allWrappedHosts, m_populateResultCache,
             m_fragmentsPresent);
     }

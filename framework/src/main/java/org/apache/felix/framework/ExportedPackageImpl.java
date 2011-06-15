@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,7 +42,7 @@ class ExportedPackageImpl implements ExportedPackage
         m_exportingBundle = exporter;
         m_exportingRevision = revision;
         m_export = export;
-        m_pkgName = (String) m_export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+        m_pkgName = (String) m_export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
         m_version = (!m_export.getAttributes().containsKey(BundleCapabilityImpl.VERSION_ATTR))
             ? Version.emptyVersion
             : (Version) m_export.getAttributes().get(BundleCapabilityImpl.VERSION_ATTR);

@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,17 +28,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.Resolver;
 import org.apache.felix.framework.resolver.ResolverImpl;
 import org.apache.felix.framework.resolver.ResolverWire;
+import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.BundlePermission;
 import org.osgi.framework.Constants;
+import org.osgi.framework.PackagePermission;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.resolver.ResolverHook;
+import org.osgi.framework.hooks.resolver.ResolverHookFactory;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -48,6 +62,9 @@ class StatefulResolver
     private final Felix m_felix;
     private final Resolver m_resolver;
     private final ResolverStateImpl m_resolverState;
+    private final List<ResolverHook> m_hooks = new ArrayList<ResolverHook>();
+    private boolean m_isResolving = false;
+    private Collection<BundleRevision> m_whitelist = null;
 
     StatefulResolver(Felix felix)
     {
@@ -72,15 +89,13 @@ class StatefulResolver
         return m_resolverState.getCandidates(req, obeyMandatory);
     }
 
-    void resolve(BundleRevision rootRevision) throws ResolveException
+    void resolve(BundleRevision rootRevision) throws ResolveException, BundleException
     {
         // Although there is a race condition to check the bundle state
         // then lock it, we do this because we don't want to acquire the
         // a lock just to check if the revision is resolved, which itself
         // is a safe read. If the revision isn't resolved, we end up double
         // check the resolved status later.
-// TODO: OSGi R4.3 - This locking strategy here depends on how we ultimately
-//       implement getWiring(), which may change.
         if (rootRevision.getWiring() == null)
         {
             // Acquire global lock.
@@ -91,26 +106,151 @@ class StatefulResolver
                     "Unable to acquire global lock for resolve.", rootRevision, null);
             }
 
+            // Make sure we are not already resolving, which can be
+            // the case if a resolver hook does something bad.
+            if (m_isResolving)
+            {
+                m_felix.releaseGlobalLock();
+                throw new IllegalStateException("Nested resolve operations not allowed.");
+            }
+            m_isResolving = true;
+
             Map<BundleRevision, List<ResolverWire>> wireMap = null;
             try
             {
-                BundleImpl bundle = (BundleImpl) rootRevision.getBundle();
-
                 // Extensions are resolved differently.
+                BundleImpl bundle = (BundleImpl) rootRevision.getBundle();
                 if (bundle.isExtension())
                 {
                     return;
                 }
 
-                // Resolve the revision.
-                wireMap = m_resolver.resolve(
-                    m_resolverState, rootRevision, m_resolverState.getFragments());
+                // Get resolver hook factories.
+                Set<ServiceReference<ResolverHookFactory>> hookRefs =
+                    m_felix.getHooks(ResolverHookFactory.class);
+                if (!hookRefs.isEmpty())
+                {
+                    // Create triggers list.
+                    List<BundleRevision> triggers = new ArrayList<BundleRevision>(1);
+                    triggers.add(rootRevision);
+                    triggers = Collections.unmodifiableList(triggers);
 
-                // Mark all revisions as resolved.
+                    // Create resolver hook objects by calling begin() on factory.
+                    for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+                    {
+                        try
+                        {
+                            ResolverHook hook = m_felix.getService(m_felix, ref).begin(triggers);
+                            if (hook != null)
+                            {
+                                m_hooks.add(hook);
+                            }
+                        }
+                        catch (Throwable ex)
+                        {
+                            throw new BundleException(
+                                "Resolver hook exception: " + ex.getMessage(),
+                                BundleException.REJECTED_BY_HOOK,
+                                ex);
+                        }
+                    }
+
+                    // Ask hooks to indicate which revisions should not be resolved.
+                    m_whitelist =
+                        new ShrinkableCollection<BundleRevision>(
+                            m_resolverState.getUnresolvedRevisions());
+                    int originalSize = m_whitelist.size();
+                    for (ResolverHook hook : m_hooks)
+                    {
+                        try
+                        {
+                            hook.filterResolvable(m_whitelist);
+                        }
+                        catch (Throwable ex)
+                        {
+                            throw new BundleException(
+                                "Resolver hook exception: " + ex.getMessage(),
+                                BundleException.REJECTED_BY_HOOK,
+                                ex);
+                        }
+                    }
+                    // If nothing was removed, then just null the whitelist
+                    // as an optimization.
+                    if (m_whitelist.size() == originalSize)
+                    {
+                        m_whitelist = null;
+                    }
+
+                    // Check to make sure the target revision is allowed to resolve.
+                    if ((m_whitelist != null) && !m_whitelist.contains(rootRevision))
+                    {
+                        throw new ResolveException(
+                            "Resolver hook prevented resolution.", rootRevision, null);
+                    }
+                }
+
+                // Catch any resolve exception to rethrow later because
+                // we may need to call end() on resolver hooks.
+                ResolveException rethrow = null;
+                try
+                {
+                    // Resolve the revision.
+                    wireMap = m_resolver.resolve(
+                        m_resolverState, rootRevision, m_resolverState.getFragments());
+                }
+                catch (ResolveException ex)
+                {
+                    rethrow = ex;
+                }
+
+                // If we have resolver hooks, we must call end() on them.
+                if (!hookRefs.isEmpty())
+                {
+                    // Verify that all resolver hook service references are still valid
+                    // Call end() on resolver hooks.
+                    for (ResolverHook hook : m_hooks)
+                    {
+// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
+//       to their svc ref since we aren't supposed to call end() on unregistered
+//       but currently we call end() on all.
+                        hook.end();
+                    }
+                    // Verify that all hook service references are still valid
+                    // and unget all resolver hook factories.
+                    boolean invalid = false;
+                    for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+                    {
+                        if (ref.getBundle() == null)
+                        {
+                            invalid = true;
+                        }
+                        m_felix.ungetService(m_felix, ref);
+                    }
+                    if (invalid)
+                    {
+                        throw new BundleException(
+                            "Resolver hook service unregistered during resolve.",
+                            BundleException.REJECTED_BY_HOOK);
+                    }
+                }
+
+                // If the resolve failed, rethrow the exception.
+                if (rethrow != null)
+                {
+                    throw rethrow;
+                }
+
+                // Otherwise, mark all revisions as resolved.
                 markResolvedRevisions(wireMap);
             }
             finally
             {
+                // Clear resolving flag.
+                m_isResolving = false;
+                // Clear whitelist.
+                m_whitelist = null;
+                // Always clear any hooks.
+                m_hooks.clear();
                 // Always release the global lock.
                 m_felix.releaseGlobalLock();
             }
@@ -119,8 +259,186 @@ class StatefulResolver
         }
     }
 
+// TODO: OSGi R4.3 - Isn't this method just a generalization of the above method?
+//       Can't we combine them and perhaps simplify the various resolve() methods
+//       here and in Felix.java too?
+    void resolve(Set<BundleRevision> revisions) throws ResolveException, BundleException
+    {
+        // Acquire global lock.
+        boolean locked = m_felix.acquireGlobalLock();
+        if (!locked)
+        {
+            throw new ResolveException(
+                "Unable to acquire global lock for resolve.", null, null);
+        }
+
+        // Make sure we are not already resolving, which can be
+        // the case if a resolver hook does something bad.
+        if (m_isResolving)
+        {
+            m_felix.releaseGlobalLock();
+            throw new IllegalStateException("Nested resolve operations not allowed.");
+        }
+        m_isResolving = true;
+
+        Map<BundleRevision, List<ResolverWire>> wireMap = null;
+        try
+        {
+            // Make our own copy of revisions.
+            revisions = new HashSet<BundleRevision>(revisions);
+
+            // Extensions are resolved differently.
+            for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
+            {
+                BundleImpl bundle = (BundleImpl) it.next().getBundle();
+                if (bundle.isExtension())
+                {
+                    it.remove();
+                }
+            }
+
+            // Get resolver hook factories.
+            Set<ServiceReference<ResolverHookFactory>> hookRefs =
+                m_felix.getHooks(ResolverHookFactory.class);
+            if (!hookRefs.isEmpty())
+            {
+                // Create triggers list.
+                Collection<BundleRevision> triggers = Collections.unmodifiableSet(revisions);
+
+                // Create resolver hook objects by calling begin() on factory.
+                for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+                {
+                    try
+                    {
+                        ResolverHookFactory factory = m_felix.getService(m_felix, ref);
+                        if (factory != null)
+                        {
+                            ResolverHook hook = factory.begin(triggers);
+                            if (hook != null)
+                            {
+                                m_hooks.add(hook);
+                            }
+                        }
+                    }
+                    catch (Throwable ex)
+                    {
+                        throw new BundleException(
+                            "Resolver hook exception: " + ex.getMessage(),
+                            BundleException.REJECTED_BY_HOOK,
+                            ex);
+                    }
+                }
+
+                // Ask hooks to indicate which revisions should not be resolved.
+                m_whitelist =
+                    new ShrinkableCollection<BundleRevision>(
+                        m_resolverState.getUnresolvedRevisions());
+                int originalSize = m_whitelist.size();
+                for (ResolverHook hook : m_hooks)
+                {
+                    try
+                    {
+                        hook.filterResolvable(m_whitelist);
+                    }
+                    catch (Throwable ex)
+                    {
+                        throw new BundleException(
+                            "Resolver hook exception: " + ex.getMessage(),
+                            BundleException.REJECTED_BY_HOOK,
+                            ex);
+                    }
+                }
+                // If nothing was removed, then just null the whitelist
+                // as an optimization.
+                if (m_whitelist.size() == originalSize)
+                {
+                    m_whitelist = null;
+                }
+
+                // Check to make sure the target revision is allowed to resolve.
+                if (m_whitelist != null)
+                {
+                    revisions.retainAll(m_whitelist);
+                    if (revisions.isEmpty())
+                    {
+                        throw new ResolveException(
+                            "Resolver hook prevented resolution.", null, null);
+                    }
+                }
+            }
+
+            // Catch any resolve exception to rethrow later because
+            // we may need to call end() on resolver hooks.
+            ResolveException rethrow = null;
+            try
+            {
+                // Resolve the revision.
+// TODO: OSGi R4.3 - Shouldn't we still be passing in greedy attach fragments here?
+                wireMap = m_resolver.resolve(
+                    m_resolverState, revisions, m_resolverState.getFragments());
+            }
+            catch (ResolveException ex)
+            {
+                rethrow = ex;
+            }
+
+            // If we have resolver hooks, we must call end() on them.
+            if (!hookRefs.isEmpty())
+            {
+                // Verify that all resolver hook service references are still valid
+                // Call end() on resolver hooks.
+                for (ResolverHook hook : m_hooks)
+                {
+// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
+//       to their svc ref since we aren't supposed to call end() on unregistered
+//       but currently we call end() on all.
+                    hook.end();
+                }
+                // Verify that all hook service references are still valid
+                // and unget all resolver hook factories.
+                boolean invalid = false;
+                for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+                {
+                    if (ref.getBundle() == null)
+                    {
+                        invalid = true;
+                    }
+                    m_felix.ungetService(m_felix, ref);
+                }
+                if (invalid)
+                {
+                    throw new BundleException(
+                        "Resolver hook service unregistered during resolve.",
+                        BundleException.REJECTED_BY_HOOK);
+                }
+            }
+
+            // If the resolve failed, rethrow the exception.
+            if (rethrow != null)
+            {
+                throw rethrow;
+            }
+
+            // Otherwise, mark all revisions as resolved.
+            markResolvedRevisions(wireMap);
+        }
+        finally
+        {
+            // Clear resolving flag.
+            m_isResolving = false;
+            // Clear whitelist.
+            m_whitelist = null;
+            // Always clear any hooks.
+            m_hooks.clear();
+            // Always release the global lock.
+            m_felix.releaseGlobalLock();
+        }
+
+        fireResolvedEvents(wireMap);
+    }
+
     BundleRevision resolve(BundleRevision revision, String pkgName)
-        throws ResolveException
+        throws ResolveException, BundleException
     {
         BundleRevision provider = null;
 
@@ -139,6 +457,14 @@ class StatefulResolver
                     "Unable to acquire global lock for resolve.", revision, null);
             }
 
+            // Make sure we are not already resolving, which can be
+            // the case if a resolver hook does something bad.
+            if (m_isResolving)
+            {
+                throw new IllegalStateException("Nested resolve operations not allowed.");
+            }
+            m_isResolving = true;
+
             Map<BundleRevision, List<ResolverWire>> wireMap = null;
             try
             {
@@ -150,9 +476,117 @@ class StatefulResolver
                     .getImportedPackageSource(pkgName);
                 if (provider == null)
                 {
-                    wireMap = m_resolver.resolve(
-                        m_resolverState, revision, pkgName,
-                        m_resolverState.getFragments());
+                    // Get resolver hook factories.
+                    Set<ServiceReference<ResolverHookFactory>> hookRefs =
+                        m_felix.getHooks(ResolverHookFactory.class);
+                    if (!hookRefs.isEmpty())
+                    {
+                        // Create triggers list.
+                        List<BundleRevision> triggers = new ArrayList<BundleRevision>(1);
+                        triggers.add(revision);
+                        triggers = Collections.unmodifiableList(triggers);
+
+                        // Create resolver hook objects by calling begin() on factory.
+                        for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+                        {
+                            try
+                            {
+                                ResolverHook hook = m_felix.getService(m_felix, ref).begin(triggers);
+                                if (hook != null)
+                                {
+                                    m_hooks.add(hook);
+                                }
+                            }
+                            catch (Throwable ex)
+                            {
+                                throw new BundleException(
+                                    "Resolver hook exception: " + ex.getMessage(),
+                                    BundleException.REJECTED_BY_HOOK,
+                                    ex);
+                            }
+                        }
+
+                        // Ask hooks to indicate which revisions should not be resolved.
+                        m_whitelist =
+                            new ShrinkableCollection<BundleRevision>(
+                                m_resolverState.getUnresolvedRevisions());
+                        int originalSize = m_whitelist.size();
+                        for (ResolverHook hook : m_hooks)
+                        {
+                            try
+                            {
+                                hook.filterResolvable(m_whitelist);
+                            }
+                            catch (Throwable ex)
+                            {
+                                throw new BundleException(
+                                    "Resolver hook exception: " + ex.getMessage(),
+                                    BundleException.REJECTED_BY_HOOK,
+                                    ex);
+                            }
+                        }
+                        // If nothing was removed, then just null the whitelist
+                        // as an optimization.
+                        if (m_whitelist.size() == originalSize)
+                        {
+                            m_whitelist = null;
+                        }
+
+                        // Since this is a dynamic import, the root revision is
+                        // already resolved, so we don't need to check it against
+                        // the whitelist as we do in other cases.
+                    }
+
+                    // Catch any resolve exception to rethrow later because
+                    // we may need to call end() on resolver hooks.
+                    ResolveException rethrow = null;
+                    try
+                    {
+                        wireMap = m_resolver.resolve(
+                            m_resolverState, revision, pkgName,
+                            m_resolverState.getFragments());
+                    }
+                    catch (ResolveException ex)
+                    {
+                        rethrow = ex;
+                    }
+
+                    // If we have resolver hooks, we must call end() on them.
+                    if (!hookRefs.isEmpty())
+                    {
+                        // Verify that all resolver hook service references are still valid
+                        // Call end() on resolver hooks.
+                        for (ResolverHook hook : m_hooks)
+                        {
+// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
+//       to their svc ref since we aren't supposed to call end() on unregistered
+//       but currently we call end() on all.
+                            hook.end();
+                        }
+                        // Verify that all hook service references are still valid
+                        // and unget all resolver hook factories.
+                        boolean invalid = false;
+                        for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+                        {
+                            if (ref.getBundle() == null)
+                            {
+                                invalid = true;
+                            }
+                            m_felix.ungetService(m_felix, ref);
+                        }
+                        if (invalid)
+                        {
+                            throw new BundleException(
+                                "Resolver hook service unregistered during resolve.",
+                                BundleException.REJECTED_BY_HOOK);
+                        }
+                    }
+
+                    // If the resolve failed, rethrow the exception.
+                    if (rethrow != null)
+                    {
+                        throw rethrow;
+                    }
 
                     if ((wireMap != null) && wireMap.containsKey(revision))
                     {
@@ -190,6 +624,12 @@ class StatefulResolver
             }
             finally
             {
+                // Clear resolving flag.
+                m_isResolving = false;
+                // Clear whitelist.
+                m_whitelist = null;
+                // Always clear any hooks.
+                m_hooks.clear();
                 // Always release the global lock.
                 m_felix.releaseGlobalLock();
             }
@@ -225,7 +665,7 @@ class StatefulResolver
         for (BundleCapability cap : revision.getWiring().getCapabilities(null))
         {
             if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
+                && cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(pkgName))
             {
                 return false;
             }
@@ -242,7 +682,7 @@ class StatefulResolver
         // there is a matching one for the package from which we want to
         // load a class.
         Map<String, Object> attrs = new HashMap(1);
-        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision,
             BundleRevision.PACKAGE_NAMESPACE,
@@ -342,7 +782,7 @@ class StatefulResolver
                         {
                             importedPkgs.put(
                                 (String) rw.getCapability().getAttributes()
-                                    .get(BundleCapabilityImpl.PACKAGE_ATTR),
+                                    .get(BundleRevision.PACKAGE_NAMESPACE),
                                 rw.getProvider());
                         }
                         else if (rw.getCapability().getNamespace()
@@ -527,7 +967,7 @@ class StatefulResolver
                 if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     pkgs.add((String)
-                        cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                        cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 }
             }
 
@@ -576,5 +1016,352 @@ class StatefulResolver
         }
 
         return pkgs;
+    }
+
+    class ResolverStateImpl implements Resolver.ResolverState
+    {
+        private final Logger m_logger;
+        // Set of all revisions.
+        private final Set<BundleRevision> m_revisions;
+        // Set of all fragments.
+        private final Set<BundleRevision> m_fragments;
+        // Capability sets.
+        private final Map<String, CapabilitySet> m_capSets;
+        // Execution environment.
+        private final String m_fwkExecEnvStr;
+        // Parsed framework environments
+        private final Set<String> m_fwkExecEnvSet;
+
+//    void dump()
+//    {
+//        for (Entry<String, CapabilitySet> entry : m_capSets.entrySet())
+//        {
+//            System.out.println("+++ START CAPSET " + entry.getKey());
+//            entry.getValue().dump();
+//            System.out.println("+++ END CAPSET " + entry.getKey());
+//        }
+//    }
+
+        ResolverStateImpl(Logger logger, String fwkExecEnvStr)
+        {
+            m_logger = logger;
+            m_revisions = new HashSet<BundleRevision>();
+            m_fragments = new HashSet<BundleRevision>();
+            m_capSets = new HashMap<String, CapabilitySet>();
+
+            m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
+            m_fwkExecEnvSet = parseExecutionEnvironments(fwkExecEnvStr);
+
+            List<String> indices = new ArrayList<String>();
+            indices.add(BundleRevision.BUNDLE_NAMESPACE);
+            m_capSets.put(BundleRevision.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
+
+            indices = new ArrayList<String>();
+            indices.add(BundleRevision.PACKAGE_NAMESPACE);
+            m_capSets.put(BundleRevision.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
+
+            indices = new ArrayList<String>();
+            indices.add(BundleRevision.HOST_NAMESPACE);
+            m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
+        }
+
+// TODO: OSGi R4.3/RESOLVER HOOK - We could maintain a separate list to optimize this.
+        synchronized Set<BundleRevision> getUnresolvedRevisions()
+        {
+            Set<BundleRevision> unresolved = new HashSet<BundleRevision>();
+            for (BundleRevision revision : m_revisions)
+            {
+                if (revision.getWiring() == null)
+                {
+                    unresolved.add(revision);
+                }
+            }
+            return unresolved;
+        }
+
+        synchronized void addRevision(BundleRevision br)
+        {
+            m_revisions.add(br);
+            List<BundleCapability> caps = (br.getWiring() == null)
+                ? br.getDeclaredCapabilities(null)
+                : br.getWiring().getCapabilities(null);
+            if (caps != null)
+            {
+                for (BundleCapability cap : caps)
+                {
+                    CapabilitySet capSet = m_capSets.get(cap.getNamespace());
+                    if (capSet == null)
+                    {
+                        capSet = new CapabilitySet(null, true);
+                        m_capSets.put(cap.getNamespace(), capSet);
+                    }
+                    capSet.addCapability(cap);
+                }
+            }
+
+            if (Util.isFragment(br))
+            {
+                m_fragments.add(br);
+            }
+        }
+
+        synchronized void removeRevision(BundleRevision br)
+        {
+            m_revisions.remove(br);
+            List<BundleCapability> caps = (br.getWiring() == null)
+                ? br.getDeclaredCapabilities(null)
+                : br.getWiring().getCapabilities(null);
+            if (caps != null)
+            {
+                for (BundleCapability cap : caps)
+                {
+                    CapabilitySet capSet = m_capSets.get(cap.getNamespace());
+                    if (capSet != null)
+                    {
+                        capSet.removeCapability(cap);
+                    }
+                }
+            }
+
+            if (Util.isFragment(br))
+            {
+                m_fragments.remove(br);
+            }
+        }
+
+        synchronized Set<BundleRevision> getFragments()
+        {
+            return new HashSet(m_fragments);
+        }
+
+// TODO: OSGi R4.3 - This will need to be changed once BundleWiring.getCapabilities()
+//       is correctly implemented, since it already has to remove substituted caps.
+        synchronized void removeSubstitutedCapabilities(BundleRevision br)
+        {
+            if (br.getWiring() != null)
+            {
+                // Loop through the revision's package wires and determine if any
+                // of them overlap any of the packages exported by the revision.
+                // If so, then the framework must have chosen to have the revision
+                // import rather than export the package, so we need to remove the
+                // corresponding package capability from the package capability set.
+                for (BundleWire w : br.getWiring().getRequiredWires(null))
+                {
+                    if (w.getCapability().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                    {
+                        for (BundleCapability cap : br.getWiring().getCapabilities(null))
+                        {
+                            if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                                && w.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
+                                    .equals(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)))
+                            {
+                                m_capSets.get(BundleRevision.PACKAGE_NAMESPACE).removeCapability(cap);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //
+        // ResolverState methods.
+        //
+
+        public synchronized SortedSet<BundleCapability> getCandidates(
+            BundleRequirementImpl req, boolean obeyMandatory)
+        {
+            BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
+            SortedSet<BundleCapability> result =
+                new TreeSet<BundleCapability>(new CandidateComparator());
+
+            CapabilitySet capSet = m_capSets.get(req.getNamespace());
+            if (capSet != null)
+            {
+                Set<BundleCapability> matches = capSet.match(req.getFilter(), obeyMandatory);
+                for (BundleCapability cap : matches)
+                {
+                    if (System.getSecurityManager() != null)
+                    {
+                        if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE) && (
+                            !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                                new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                                PackagePermission.EXPORTONLY)) ||
+                                !((reqRevision == null) ||
+                                    ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                                        new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                                        cap.getRevision().getBundle(),PackagePermission.IMPORT))
+                                )))
+                        {
+                            if (reqRevision != cap.getRevision())
+                            {
+                                continue;
+                            }
+                        }
+                        else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) && (
+                            !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                                new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
+                                !((reqRevision == null) ||
+                                    ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                                        new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
+                                )))
+                        {
+                            continue;
+                        }
+                        else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE) &&
+                            (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
+                                .impliesDirect(new BundlePermission(
+                                    reqRevision.getSymbolicName(),
+                                    BundlePermission.FRAGMENT))
+                            || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
+                                .impliesDirect(new BundlePermission(
+                                    cap.getRevision().getSymbolicName(),
+                                    BundlePermission.HOST))))
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
+                        && (cap.getRevision().getWiring() != null))
+                    {
+                        continue;
+                    }
+
+                    result.add(cap);
+                }
+            }
+
+            // If we have resolver hooks, then we may need to filter our results
+            // based on a whitelist and/or fine-grained candidate filtering.
+            if (!result.isEmpty() && !m_hooks.isEmpty())
+            {
+                // It we have a whitelist, then first filter out candidates
+                // from disallowed revisions.
+// TODO: OSGi R4.3 - It would be better if we could think of a way to do this
+//       filtering that was less costly. One possibility it to do the check in
+//       ResolverState.checkExecutionEnvironment(), since it will only need to
+//       be done once for any black listed revision. However, as we move toward
+//       OBR-like API, this is a non-standard call, so doing it here is the only
+//       standard way of achieving it.
+                if (m_whitelist != null)
+                {
+                    for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
+                    {
+                        if (!m_whitelist.contains(it.next().getRevision()))
+                        {
+                            it.remove();
+                        }
+                    }
+                }
+
+                // Now give the hooks a chance to do fine-grained filtering.
+                ShrinkableCollection<BundleCapability> shrinkable =
+                    new ShrinkableCollection<BundleCapability>(result);
+                for (ResolverHook hook : m_hooks)
+                {
+                    hook.filterMatches(req, shrinkable);
+                }
+            }
+
+            return result;
+        }
+
+        public void checkExecutionEnvironment(BundleRevision revision) throws ResolveException
+        {
+            String bundleExecEnvStr = (String)
+                ((BundleRevisionImpl) revision).getHeaders().get(
+                    Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
+            if (bundleExecEnvStr != null)
+            {
+                bundleExecEnvStr = bundleExecEnvStr.trim();
+
+                // If the bundle has specified an execution environment and the
+                // framework has an execution environment specified, then we must
+                // check for a match.
+                if (!bundleExecEnvStr.equals("")
+                    && (m_fwkExecEnvStr != null)
+                    && (m_fwkExecEnvStr.length() > 0))
+                {
+                    StringTokenizer tokens = new StringTokenizer(bundleExecEnvStr, ",");
+                    boolean found = false;
+                    while (tokens.hasMoreTokens() && !found)
+                    {
+                        if (m_fwkExecEnvSet.contains(tokens.nextToken().trim()))
+                        {
+                            found = true;
+                        }
+                    }
+                    if (!found)
+                    {
+                        throw new ResolveException(
+                            "Execution environment not supported: "
+                            + bundleExecEnvStr, revision, null);
+                    }
+                }
+            }
+        }
+
+        public void checkNativeLibraries(BundleRevision revision) throws ResolveException
+        {
+            // Next, try to resolve any native code, since the revision is
+            // not resolvable if its native code cannot be loaded.
+// TODO: OSGi R4.3 - Is it sufficient to just check declared native libs here?
+//        List<R4Library> libs = ((BundleWiringImpl) revision.getWiring()).getNativeLibraries();
+            List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
+            if (libs != null)
+            {
+                String msg = null;
+                // Verify that all native libraries exist in advance; this will
+                // throw an exception if the native library does not exist.
+                for (int libIdx = 0; (msg == null) && (libIdx < libs.size()); libIdx++)
+                {
+                    String entryName = libs.get(libIdx).getEntryName();
+                    if (entryName != null)
+                    {
+                        if (!((BundleRevisionImpl) revision).getContent().hasEntry(entryName))
+                        {
+                            msg = "Native library does not exist: " + entryName;
+                        }
+                    }
+                }
+                // If we have a zero-length native library array, then
+                // this means no native library class could be selected
+                // so we should fail to resolve.
+                if (libs.isEmpty())
+                {
+                    msg = "No matching native libraries found.";
+                }
+                if (msg != null)
+                {
+                    throw new ResolveException(msg, revision, null);
+                }
+            }
+        }
+    }
+
+    //
+    // Utility methods.
+    //
+
+    /**
+     * Updates the framework wide execution environment string and a cached Set of
+     * execution environment tokens from the comma delimited list specified by the
+     * system variable 'org.osgi.framework.executionenvironment'.
+     * @param fwkExecEnvStr Comma delimited string of provided execution environments
+     * @return the parsed set of execution environments
+    **/
+    private static Set<String> parseExecutionEnvironments(String fwkExecEnvStr)
+    {
+        Set<String> newSet = new HashSet<String>();
+        if (fwkExecEnvStr != null)
+        {
+            StringTokenizer tokens = new StringTokenizer(fwkExecEnvStr, ",");
+            while (tokens.hasMoreTokens())
+            {
+                newSet.add(tokens.nextToken().trim());
+            }
+        }
+        return newSet;
     }
 }
