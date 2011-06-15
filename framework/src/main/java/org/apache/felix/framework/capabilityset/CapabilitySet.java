@@ -407,11 +407,32 @@ public void dump()
             switch (op)
             {
                 case SimpleFilter.EQ :
-                    return (((Comparable) lhs).compareTo(rhs) == 0);
+                    try
+                    {
+                        return (((Comparable) lhs).compareTo(rhs) == 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        return false;
+                    }
                 case SimpleFilter.GTE :
-                    return (((Comparable) lhs).compareTo(rhs) >= 0);
+                    try
+                    {
+                        return (((Comparable) lhs).compareTo(rhs) >= 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        return false;
+                    }
                 case SimpleFilter.LTE :
-                    return (((Comparable) lhs).compareTo(rhs) <= 0);
+                    try
+                    {
+                        return (((Comparable) lhs).compareTo(rhs) <= 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        return false;
+                    }
                 case SimpleFilter.APPROX :
                     return compareApproximate(((Comparable) lhs), rhs);
                 case SimpleFilter.SUBSTRING :
@@ -478,27 +499,14 @@ public void dump()
 
         // Since we cannot identify the LHS type, then we can only perform
         // equality comparison.
-// TODO: COMPLIANCE - This should be changed to return false in case
-//       of an exception, but the R4.2 CT has a mistake in it, so for
-//       now we'll throw exceptions from equals().
-//        try
-//        {
-//            return lhs.equals(coerceType(lhs, (String) rhsUnknown));
-//        }
-//        catch (Exception ex)
-//        {
-//            return false;
-//        }
-        Object rhsObj = null;
         try
         {
-            rhsObj = coerceType(lhs, (String) rhsUnknown);
+            return lhs.equals(coerceType(lhs, (String) rhsUnknown));
         }
         catch (Exception ex)
         {
             return false;
         }
-        return lhs.equals(rhsObj);
     }
 
     private static boolean compareApproximate(Object lhs, Object rhs)
