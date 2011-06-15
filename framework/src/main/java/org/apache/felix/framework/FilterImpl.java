@@ -101,7 +101,7 @@ public class FilterImpl implements Filter
         public WrapperCapability(Map map)
         {
             super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = map;
+            m_map = (map == null) ? Collections.EMPTY_MAP : map;
         }
 
         public WrapperCapability(Dictionary dict, boolean caseSensitive)
