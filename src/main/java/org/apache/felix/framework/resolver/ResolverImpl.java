@@ -71,17 +71,25 @@ public class ResolverImpl implements Resolver
 
                 try
                 {
-                    // Populate all candidates.
-                    Candidates allCandidates = new Candidates(state, revision);
+                    // Populate revision's candidates.
+                    Candidates allCandidates = new Candidates();
+                    allCandidates.populate(state, revision);
 
                     // Try to populate optional fragments.
                     for (BundleRevision br : optional)
                     {
-                        allCandidates.populateOptional(state, br);
+                        allCandidates.populate(state, br, true);
                     }
 
                     // Merge any fragments into hosts.
                     allCandidates.prepare(getResolvedSingletons(state));
+                    // Make sure revision is still valid, since it could
+                    // fail due to fragment and/or singleton selection.
+// TODO: OSGi R4.3 - Could this be merged back into Candidates?
+                    if (!allCandidates.isPopulated(revision))
+                    {
+                        throw allCandidates.getResolveException(revision);
+                    }
 
                     // Record the initial candidate permutation.
                     m_usesPermutations.add(allCandidates);
@@ -183,6 +191,182 @@ public class ResolverImpl implements Resolver
     }
 
     public Map<BundleRevision, List<ResolverWire>> resolve(
+        ResolverState state, Set<BundleRevision> revisions, Set<BundleRevision> optional)
+    {
+        Map<BundleRevision, List<ResolverWire>> wireMap = new HashMap<BundleRevision, List<ResolverWire>>();
+        Map<BundleRevision, Packages> revisionPkgMap = new HashMap<BundleRevision, Packages>();
+
+        boolean retry;
+        do
+        {
+            retry = false;
+
+            try
+            {
+                // Create object to hold all candidates.
+                Candidates allCandidates = new Candidates();
+
+                // Populate revisions.
+                for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
+                {
+                    BundleRevision br = it.next();
+// TODO: OSGi R4.3 - This is not correct for fragments, since they may have wires already
+//       but we still need to resolve them.
+                    if ((br.getWiring() != null) || !allCandidates.populate(state, br, false))
+                    {
+                        it.remove();
+                    }
+                }
+
+                // Try to populate optional fragments.
+                for (BundleRevision br : optional)
+                {
+                    allCandidates.populate(state, br, true);
+                }
+
+                // Merge any fragments into hosts.
+                allCandidates.prepare(getResolvedSingletons(state));
+
+                // Prune failed revisions.
+// TODO: OSGi R4.3 - Again, can we merge this stuff into Candidates?
+//                for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
+//                {
+//                    if (!allCandidates.isPopulated(it.next()))
+//                    {
+//                        it.remove();
+//                    }
+//                }
+
+                // Record the initial candidate permutation.
+                m_usesPermutations.add(allCandidates);
+
+                ResolveException rethrow = null;
+
+                // If the requested revision is a fragment, then
+                // ultimately we will verify the host., so store
+                // any host requirements
+                Map<BundleRevision, List<BundleRequirement>> hostReqs =
+                    new HashMap<BundleRevision, List<BundleRequirement>>();
+                for (BundleRevision br : revisions)
+                {
+                    hostReqs.put(
+                        br, br.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE));
+                }
+
+                do
+                {
+                    rethrow = null;
+
+                    revisionPkgMap.clear();
+                    m_packageSourcesCache.clear();
+
+                    allCandidates = (m_usesPermutations.size() > 0)
+                        ? m_usesPermutations.remove(0)
+                        : m_importPermutations.remove(0);
+//allCandidates.dump();
+
+                    for (BundleRevision br : revisions)
+                    {
+                        BundleRevision target = br;
+
+                        // If we are resolving a fragment, then we
+                        // actually want to verify its host.
+                        List<BundleRequirement> hostReq = hostReqs.get(br);
+                        if (!hostReq.isEmpty())
+                        {
+                            target = allCandidates.getCandidates(hostReq.get(0))
+                                .iterator().next().getRevision();
+                        }
+
+                        calculatePackageSpaces(
+                            allCandidates.getWrappedHost(target), allCandidates, revisionPkgMap,
+                            new HashMap(), new HashSet());
+//System.out.println("+++ PACKAGE SPACES START +++");
+//dumpRevisionPkgMap(revisionPkgMap);
+//System.out.println("+++ PACKAGE SPACES END +++");
+
+                        try
+                        {
+                            checkPackageSpaceConsistency(
+                                false, allCandidates.getWrappedHost(target),
+                                allCandidates, revisionPkgMap, new HashMap());
+                        }
+                        catch (ResolveException ex)
+                        {
+                            rethrow = ex;
+                        }
+                    }
+                }
+                while ((rethrow != null)
+                    && ((m_usesPermutations.size() > 0) || (m_importPermutations.size() > 0)));
+
+                // If there is a resolve exception, then determine if an
+                // optionally resolved revision is to blame (typically a fragment).
+                // If so, then remove the optionally resolved resolved and try
+                // again; otherwise, rethrow the resolve exception.
+                if (rethrow != null)
+                {
+                    BundleRevision faultyRevision =
+                        getActualBundleRevision(rethrow.getRevision());
+                    if (rethrow.getRequirement() instanceof HostedRequirement)
+                    {
+                        faultyRevision =
+                            ((HostedRequirement) rethrow.getRequirement())
+                                .getDeclaredRequirement().getRevision();
+                    }
+                    if (revisions.remove(faultyRevision))
+                    {
+                        retry = true;
+                    }
+                    else if (optional.remove(faultyRevision))
+                    {
+                        retry = true;
+                    }
+                    else
+                    {
+                        throw rethrow;
+                    }
+                }
+                // If there is no exception to rethrow, then this was a clean
+                // resolve, so populate the wire map.
+                else
+                {
+                    for (BundleRevision br : revisions)
+                    {
+                        BundleRevision target = br;
+
+                        // If we are resolving a fragment, then we
+                        // actually want to populate its host's wires.
+                        List<BundleRequirement> hostReq = hostReqs.get(br);
+                        if (!hostReq.isEmpty())
+                        {
+                            target = allCandidates.getCandidates(hostReq.get(0))
+                                .iterator().next().getRevision();
+                        }
+
+                        if (allCandidates.isPopulated(target))
+                        {
+                            wireMap =
+                                populateWireMap(
+                                    allCandidates.getWrappedHost(target),
+                                    revisionPkgMap, wireMap, allCandidates);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // Always clear the state.
+                m_usesPermutations.clear();
+                m_importPermutations.clear();
+            }
+        }
+        while (retry);
+
+        return wireMap;
+    }
+
+    public Map<BundleRevision, List<ResolverWire>> resolve(
         ResolverState state, BundleRevision revision, String pkgName,
         Set<BundleRevision> optional)
     {
@@ -212,11 +396,18 @@ public class ResolverImpl implements Resolver
                     // Try to populate optional fragments.
                     for (BundleRevision br : optional)
                     {
-                        allCandidates.populateOptional(state, br);
+                        allCandidates.populate(state, br, true);
                     }
 
                     // Merge any fragments into hosts.
                     allCandidates.prepare(getResolvedSingletons(state));
+                    // Make sure revision is still valid, since it could
+                    // fail due to fragment and/or singleton selection.
+// TODO: OSGi R4.3 - Could this be merged back into Candidates?
+                    if (!allCandidates.isPopulated(revision))
+                    {
+                        throw allCandidates.getResolveException(revision);
+                    }
 
                     // Record the initial candidate permutation.
                     m_usesPermutations.add(allCandidates);
@@ -349,7 +540,7 @@ public class ResolverImpl implements Resolver
         for (BundleCapability cap : revision.getWiring().getCapabilities(null))
         {
             if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                && cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
+                && cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(pkgName))
             {
                 return null;
             }
@@ -366,7 +557,7 @@ public class ResolverImpl implements Resolver
         // there is a matching one for the package from which we want to
         // load a class.
         Map<String, Object> attrs = new HashMap(1);
-        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision,
             BundleRevision.PACKAGE_NAMESPACE,
@@ -417,7 +608,8 @@ public class ResolverImpl implements Resolver
 
         if (candidates.size() > 0)
         {
-            allCandidates = new Candidates(state, revision, dynReq, candidates);
+            allCandidates = new Candidates();
+            allCandidates.populateDynamic(state, revision, dynReq, candidates);
         }
 
         return allCandidates;
@@ -682,7 +874,7 @@ public class ResolverImpl implements Resolver
             // for imported or required packages, appropriately.
 
             String pkgName = (String)
-                candCap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                candCap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
 
             List blameReqs = new ArrayList();
             blameReqs.add(currentReq);
@@ -1147,7 +1339,7 @@ public class ResolverImpl implements Resolver
             if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
                 exports.put(
-                    (String) cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
+                    (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
                     cap);
             }
         }
@@ -1165,7 +1357,7 @@ public class ResolverImpl implements Resolver
                         BundleRevision.PACKAGE_NAMESPACE))
                     {
                         String pkgName = (String) wire.getCapability()
-                            .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                            .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
                         exports.remove(pkgName);
                     }
                 }
@@ -1181,7 +1373,7 @@ public class ResolverImpl implements Resolver
                         if ((cands != null) && !cands.isEmpty())
                         {
                             String pkgName = (String) cands.iterator().next()
-                                .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                                .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
                             exports.remove(pkgName);
                         }
                     }
@@ -1267,7 +1459,7 @@ public class ResolverImpl implements Resolver
 
             // Get the package name associated with the capability.
             String pkgName = cap.getAttributes()
-                .get(BundleCapabilityImpl.PACKAGE_ATTR).toString();
+                .get(BundleRevision.PACKAGE_NAMESPACE).toString();
 
             // Since a revision can export the same package more than once, get
             // all package capabilities for the specified package name.
@@ -1277,7 +1469,7 @@ public class ResolverImpl implements Resolver
             for (int capIdx = 0; capIdx < caps.size(); capIdx++)
             {
                 if (caps.get(capIdx).getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                    && caps.get(capIdx).getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
+                    && caps.get(capIdx).getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(pkgName))
                 {
                     sources.add(caps.get(capIdx));
                 }
@@ -1423,7 +1615,7 @@ public class ResolverImpl implements Resolver
             {
                 // Ignore revisions that import themselves.
                 if (!revision.equals(blame.m_cap.getRevision())
-                    && blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                    && blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
                         .equals(pkgName))
                 {
                     if (blame.m_cap.getRevision().getWiring() == null)
@@ -1434,7 +1626,7 @@ public class ResolverImpl implements Resolver
 
                     Packages candPkgs = revisionPkgMap.get(blame.m_cap.getRevision());
                     Map<String, Object> attrs = new HashMap(1);
-                    attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+                    attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
                     packageWires.add(
                         new ResolverWireImpl(
                             revision,
@@ -1530,9 +1722,9 @@ public class ResolverImpl implements Resolver
                         (BundleRequirementImpl) blame.m_reqs.get(i));
                     if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
-                        sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
+                        sb.append(BundleRevision.PACKAGE_NAMESPACE);
                         sb.append("=");
-                        sb.append(cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).toString());
+                        sb.append(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).toString());
                         BundleCapability usedCap;
                         if ((i + 2) < blame.m_reqs.size())
                         {
@@ -1547,7 +1739,7 @@ public class ResolverImpl implements Resolver
                                 (BundleRequirementImpl) blame.m_reqs.get(i + 1));
                         }
                         sb.append("; uses:=");
-                        sb.append(usedCap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                        sb.append(usedCap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                     }
                     else
                     {
@@ -1560,18 +1752,18 @@ public class ResolverImpl implements Resolver
                     BundleCapability export = Util.getSatisfyingCapability(
                         blame.m_cap.getRevision(),
                         (BundleRequirementImpl) blame.m_reqs.get(i));
-                    sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
+                    sb.append(BundleRevision.PACKAGE_NAMESPACE);
                     sb.append("=");
-                    sb.append(export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).toString());
-                    if (!export.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
-                        .equals(blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)))
+                    sb.append(export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).toString());
+                    if (!export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
+                        .equals(blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)))
                     {
                         sb.append("; uses:=");
-                        sb.append(blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                        sb.append(blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                         sb.append("\n    export: ");
-                        sb.append(BundleCapabilityImpl.PACKAGE_ATTR);
+                        sb.append(BundleRevision.PACKAGE_NAMESPACE);
                         sb.append("=");
-                        sb.append(blame.m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).toString());
+                        sb.append(blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).toString());
                     }
                     sb.append("\n  ");
                     sb.append(blame.m_cap.getRevision().getSymbolicName());
@@ -1617,7 +1809,7 @@ public class ResolverImpl implements Resolver
         public String toString()
         {
             return m_cap.getRevision()
-                + "." + m_cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR)
+                + "." + m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
                 + (((m_reqs == null) || m_reqs.isEmpty())
                     ? " NO BLAME"
                     : " BLAMED ON " + m_reqs);

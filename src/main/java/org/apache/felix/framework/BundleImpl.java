@@ -162,17 +162,22 @@ class BundleImpl implements Bundle
         }
         else
         {
-            // Dispose of the current revisions.
+            // Get current revision, since we can reuse it.
+            BundleRevisionImpl current = (BundleRevisionImpl) adapt(BundleRevision.class);
+            // Close all existing revisions.
             closeRevisions();
+            // Clear all revisions.
+            m_revisions.clear();
 
-            // Now we will purge all old revisions, only keeping the newest one.
+            // Purge all old archive revisions, only keeping the newest one.
             m_archive.purge();
 
-            // Lastly, we want to reset our bundle be reinitializing our state
-            // and recreating a revision object for the newest revision.
-            m_revisions.clear();
-            final BundleRevision br = createRevision();
-            addRevision(br);
+            // Reset the content of the current bundle revision.
+            current.resetContent(m_archive.getCurrentRevision().getContent());
+            // Re-add the revision to the bundle.
+            addRevision(current);
+
+            // Reset the bundle state.
             m_state = Bundle.INSTALLED;
             m_stale = false;
             m_cachedHeaders.clear();

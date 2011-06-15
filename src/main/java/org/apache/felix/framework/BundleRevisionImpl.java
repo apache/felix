@@ -51,7 +51,6 @@ public class BundleRevisionImpl implements BundleRevision
     private final Logger m_logger;
     private final Map m_configMap;
     private final String m_id;
-    private final Content m_content;
     private final Map m_headerMap;
     private final URLStreamHandler m_streamHandler;
 
@@ -69,6 +68,7 @@ public class BundleRevisionImpl implements BundleRevision
 
     private final Bundle m_bundle;
 
+    private Content m_content;
     private List<Content> m_contentPath;
     private ProtectionDomain m_protectionDomain = null;
     private final static SecureAction m_secureAction = new SecureAction();
@@ -362,9 +362,14 @@ public class BundleRevisionImpl implements BundleRevision
     // Content access methods.
     //
 
-    public Content getContent()
+    public synchronized Content getContent()
     {
         return m_content;
+    }
+
+    synchronized void resetContent(Content content)
+    {
+        m_content = content;
     }
 
     synchronized List<Content> getContentPath()
@@ -607,7 +612,7 @@ public class BundleRevisionImpl implements BundleRevision
         }
         if (index == 0)
         {
-            return m_content.hasEntry(urlPath);
+            return getContent().hasEntry(urlPath);
         }
         return getContentPath().get(index - 1).hasEntry(urlPath);
     }
@@ -621,7 +626,7 @@ public class BundleRevisionImpl implements BundleRevision
         }
         if (index == 0)
         {
-            return m_content.getEntryAsStream(urlPath);
+            return getContent().getEntryAsStream(urlPath);
         }
         return getContentPath().get(index - 1).getEntryAsStream(urlPath);
     }
@@ -634,7 +639,7 @@ public class BundleRevisionImpl implements BundleRevision
         }
         if (index == 0)
         {
-            return m_content.getEntryAsURL(urlPath);
+            return getContent().getEntryAsURL(urlPath);
         }
         return getContentPath().get(index - 1).getEntryAsURL(urlPath);
     }
@@ -676,6 +681,7 @@ public class BundleRevisionImpl implements BundleRevision
             m_logger.log(Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
         m_content.close();
+        m_content = null;
         for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
         {
             m_contentPath.get(i).close();
