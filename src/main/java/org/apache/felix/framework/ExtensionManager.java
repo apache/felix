@@ -447,7 +447,7 @@ class ExtensionManager extends URLStreamHandler implements Content
 
                 // Append exported package information.
                 exportSB.append(m_capabilities.get(i)
-                    .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                    .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 for (Entry<String, String> entry
                     : m_capabilities.get(i).getDirectives().entrySet())
                 {
@@ -460,7 +460,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                 for (Entry<String, Object> entry
                     : m_capabilities.get(i).getAttributes().entrySet())
                 {
-                    if (!entry.getKey().equals(BundleCapabilityImpl.PACKAGE_ATTR)
+                    if (!entry.getKey().equals(BundleRevision.PACKAGE_NAMESPACE)
                         && !entry.getKey().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
                         && !entry.getKey().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
                     {
@@ -474,7 +474,7 @@ class ExtensionManager extends URLStreamHandler implements Content
 
                 // Remember exported packages.
                 exportNames.add(m_capabilities.get(i)
-                    .getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR));
+                    .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
             }
         }
 

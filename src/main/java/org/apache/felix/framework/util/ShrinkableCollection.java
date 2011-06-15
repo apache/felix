@@ -24,21 +24,21 @@ import java.util.Iterator;
 /** This collection wraps any other collection but prohibits calls to add
  *  elements to the collection.
  */
-public class ShrinkableCollection implements Collection
+public class ShrinkableCollection<T> implements Collection<T>
 {
-    private final Collection m_delegate;
+    private final Collection<T> m_delegate;
 
-    public ShrinkableCollection(Collection delegate)
+    public ShrinkableCollection(Collection<T> delegate)
     {
         m_delegate = delegate;
     }
 
-    public boolean add(Object o)
+    public boolean add(T o)
     {
         throw new UnsupportedOperationException();
     }
 
-    public boolean addAll(Collection c)
+    public boolean addAll(Collection<? extends T> c)
     {
         throw new UnsupportedOperationException();
     }
@@ -53,16 +53,18 @@ public class ShrinkableCollection implements Collection
         return m_delegate.contains(o);
     }
 
-    public boolean containsAll(Collection c)
+    public boolean containsAll(Collection<?> c)
     {
         return m_delegate.containsAll(c);
     }
 
+    @Override
     public boolean equals(Object o)
     {
         return m_delegate.equals(o);
     }
 
+    @Override
     public int hashCode()
     {
         return m_delegate.hashCode();
@@ -83,12 +85,12 @@ public class ShrinkableCollection implements Collection
         return m_delegate.remove(o);
     }
 
-    public boolean removeAll(Collection c)
+    public boolean removeAll(Collection<?> c)
     {
         return m_delegate.removeAll(c);
     }
 
-    public boolean retainAll(Collection c)
+    public boolean retainAll(Collection<?> c)
     {
         return m_delegate.retainAll(c);
     }
@@ -103,7 +105,7 @@ public class ShrinkableCollection implements Collection
         return m_delegate.toArray();
     }
 
-    public Object[] toArray(Object[] a)
+    public <A> A[] toArray(A[] a)
     {
         return m_delegate.toArray(a);
     }

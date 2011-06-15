@@ -36,7 +36,6 @@ public class BundleCapabilityImpl implements BundleCapability
 {
     public static final String SINGLETON_NAMESPACE = "singleton";
 
-    public static final String PACKAGE_ATTR = "package";
     public static final String VERSION_ATTR = "version";
 
     private final BundleRevision m_revision;
@@ -199,7 +198,7 @@ public class BundleCapabilityImpl implements BundleCapability
         if (m_namespace.equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             return "[" + m_revision + "] "
-                + m_namespace + "; " + m_attrs.get(PACKAGE_ATTR);
+                + m_namespace + "; " + m_attrs.get(BundleRevision.PACKAGE_NAMESPACE);
         }
         return "[" + m_revision + "] " + m_namespace + "; " + m_attrs;
     }

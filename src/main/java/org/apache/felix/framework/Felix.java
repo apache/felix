@@ -1531,11 +1531,23 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-// TODO: OSGi R4.3 - Currently, we try to resolve resource requests in
+// TODO: OSGi R4.3 - Previously, we try to resolve resource requests in
 //       findClassOrResourceByDelegation() and fall back to local resource
-//       searching if it fails. Perhaps we should attempt the resolve here
-//       and do the local searching here. This means we could get rid of
-//       resolve attempts in findClassOrResourceByDelegation().
+//       searching if it fails. Now we must attempt the resolve here since
+//       we cannot search by delegation until we are resolved and do the local
+//       searching here if we fail. This means we could get rid of resolve
+//       attempts in findClassOrResourceByDelegation().
+        try
+        {
+            resolveBundleRevision(bundle.adapt(BundleRevision.class));
+        }
+        catch (Exception ex)
+        {
+            // Ignore.
+        }
+
+        // If the bundle revision isn't resolved, then just search
+        // locally, otherwise delegate.
         if (bundle.adapt(BundleRevision.class).getWiring() == null)
         {
             return ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
@@ -1561,11 +1573,21 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-// TODO: OSGi R4.3 - Currently, we try to resolve resource requests in
-//       findResourcesByDelegation() and fall back to local resource
-//       searching if it fails. Perhaps we should attempt the resolve here
-//       and do the local searching here. This means we could get rid of
-//       resolve attempts in findResourcesByDelegation().
+// TODO: OSGi R4.3 - Previously, we try to resolve resource requests in
+//       findClassOrResourceByDelegation() and fall back to local resource
+//       searching if it fails. Now we must attempt the resolve here since
+//       we cannot search by delegation until we are resolved and do the local
+//       searching here if we fail. This means we could get rid of resolve
+//       attempts in findClassOrResourceByDelegation().
+        try
+        {
+            resolveBundleRevision(bundle.adapt(BundleRevision.class));
+        }
+        catch (Exception ex)
+        {
+            // Ignore.
+        }
+
         if (bundle.adapt(BundleRevision.class).getWiring() == null)
         {
             return ((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
@@ -1726,7 +1748,7 @@ public class Felix extends BundleImpl implements Framework
         {
             try
             {
-                resolveBundle(bundle);
+                resolveBundleRevision(bundle.adapt(BundleRevision.class));
             }
             catch (BundleException ex)
             {
@@ -1881,7 +1903,7 @@ public class Felix extends BundleImpl implements Framework
                 case Bundle.ACTIVE:
                     return;
                 case Bundle.INSTALLED:
-                    resolveBundle(bundle);
+                    resolveBundleRevision(bundle.adapt(BundleRevision.class));
                     // No break.
                 case Bundle.RESOLVED:
                     // Set the bundle's context.
@@ -2037,7 +2059,9 @@ public class Felix extends BundleImpl implements Framework
                 }
 
                 // Rethrow all other exceptions as a BundleException.
-                throw new BundleException("Activator start error in bundle " + bundle + ".", th);
+                throw new BundleException(
+                    "Activator start error in bundle " + bundle + ".",
+                    BundleException.ACTIVATOR_ERROR, th);
             }
         }
         finally
@@ -3427,7 +3451,7 @@ public class Felix extends BundleImpl implements Framework
     {
         // First, get all exporters of the package.
         Map<String, Object> attrs = new HashMap<String, Object>(1);
-        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             null,
             BundleRevision.PACKAGE_NAMESPACE,
@@ -3580,9 +3604,9 @@ public class Felix extends BundleImpl implements Framework
 //       BundleWiring.getCapabilities() returns the proper result. We probably
 //       Won't even need this method.
                         String pkgName = (String)
-                            cap.getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                            cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
                         Map<String, Object> attrs = new HashMap<String, Object>(1);
-                        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+                        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
                         BundleRequirementImpl req =
                             new BundleRequirementImpl(
                             null,
@@ -3637,22 +3661,15 @@ public class Felix extends BundleImpl implements Framework
 
         try
         {
+            // Remember original targets.
+            Collection<Bundle> originalTargets = targets;
+
             // Determine set of bundles to be resolved, which is either the
             // specified bundles or all bundles if null.
             if (targets == null)
             {
-                targets = new ArrayList<Bundle>();
-
-                // Add all unresolved bundles to the list.
-                Iterator iter = m_installedBundles[LOCATION_MAP_IDX].values().iterator();
-                while (iter.hasNext())
-                {
-                    BundleImpl bundle = (BundleImpl) iter.next();
-                    if (bundle.getState() == Bundle.INSTALLED)
-                    {
-                        targets.add(bundle);
-                    }
-                }
+                // Add all bundles to the list.
+                targets = m_installedBundles[LOCATION_MAP_IDX].values();
             }
 
             // Now resolve each target bundle.
@@ -3661,16 +3678,44 @@ public class Felix extends BundleImpl implements Framework
             // If there are targets, then resolve each one.
             if (!targets.isEmpty())
             {
+                // Get bundle revisions for bundles in INSTALLED state.
+                Set<BundleRevision> revisions =
+                    new HashSet<BundleRevision>(targets.size());
                 for (Bundle b : targets)
                 {
-                    try
+                    if (b.getState() != Bundle.UNINSTALLED)
                     {
-                        resolveBundle((BundleImpl) b);
+                        revisions.add(b.adapt(BundleRevision.class));
                     }
-                    catch (BundleException ex)
+                }
+                // If we had to filter any of the original targets, then
+                // the return result will be false regardless.
+                if ((originalTargets != null) && (originalTargets.size() != revisions.size()))
+                {
+                    result = false;
+                }
+                try
+                {
+                    m_resolver.resolve(revisions);
+                    if (result)
                     {
-                        result = false;
+                        for (BundleRevision br : revisions)
+                        {
+                            if (br.getWiring() == null)
+                            {
+                                result = false;
+                                break;
+                            }
+                        }
                     }
+                }
+                catch (ResolveException ex)
+                {
+                    result = false;
+                }
+                catch (BundleException ex)
+                {
+                    result = false;
                 }
             }
 
@@ -3683,11 +3728,11 @@ public class Felix extends BundleImpl implements Framework
         }
     }
 
-    private void resolveBundle(Bundle bundle) throws BundleException
+    private void resolveBundleRevision(BundleRevision revision) throws BundleException
     {
         try
         {
-            m_resolver.resolve(bundle.adapt(BundleRevision.class));
+            m_resolver.resolve(revision);
         }
         catch (ResolveException ex)
         {
@@ -3696,11 +3741,11 @@ public class Felix extends BundleImpl implements Framework
                 Bundle b = ex.getRevision().getBundle();
                 throw new BundleException(
                     "Unresolved constraint in bundle "
-                    + b + ": " + ex.getMessage());
+                    + b + ": " + ex.getMessage(), BundleException.RESOLVE_ERROR);
             }
             else
             {
-                throw new BundleException(ex.getMessage());
+                throw new BundleException(ex.getMessage(), BundleException.RESOLVE_ERROR);
             }
         }
     }

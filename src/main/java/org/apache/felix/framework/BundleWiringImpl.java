@@ -403,7 +403,7 @@ public class BundleWiringImpl implements BundleWiring
     {
         m_wires.add(wire);
         m_importedPkgs.put(
-            (String) wire.getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR),
+            (String) wire.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
             wire.getProviderWiring().getRevision());
     }
 
@@ -537,7 +537,7 @@ public class BundleWiringImpl implements BundleWiring
         {
             m_resolver.resolve(m_revision);
         }
-        catch (ResolveException ex)
+        catch (Exception ex)
         {
             // The spec states that if the bundle cannot be resolved, then
             // only the local bundle's resources should be searched. So we
@@ -638,6 +638,10 @@ public class BundleWiringImpl implements BundleWiring
             catch (ResolveException ex)
             {
                 // Ignore this since it is likely normal.
+            }
+            catch (BundleException ex)
+            {
+                // Ignore this since it is likely the result of a resolver hook.
             }
             if (provider != null)
             {
@@ -886,20 +890,11 @@ public class BundleWiringImpl implements BundleWiring
                     }
                 }
             }
-            catch (ResolveException ex)
+// TODO: OSGi R4.3 - If we eliminate resolving from this method, then we can
+//       simplify this catch, since resolve throws resolve and bundle exceptions.
+            catch (Exception ex)
             {
-                if (isClass)
-                {
-                    // We do not use the resolve exception as the
-                    // cause of the exception, since this would
-                    // potentially leak internal module information.
-                    throw new ClassNotFoundException(
-                        name + " not found because "
-                        + getBundle()
-                        + " cannot resolve: "
-                        + ex.getRequirement());
-                }
-                else
+                if (!isClass && (ex instanceof ResolveException))
                 {
                     // The spec states that if the bundle cannot be resolved, then
                     // only the local bundle's resources should be searched. So we
@@ -909,13 +904,38 @@ public class BundleWiringImpl implements BundleWiring
                     {
                         return url;
                     }
+                }
 
-                    // We need to throw a resource not found exception.
-                    throw new ResourceNotFoundException(
-                        name + " not found because "
-                        + getBundle()
-                        + " cannot resolve: "
-                        + ex.getRequirement());
+                if (isClass)
+                {
+                    if (!(ex instanceof ClassNotFoundException))
+                    {
+                        ClassNotFoundException cnfe = new ClassNotFoundException(
+                            name
+                            + " not found in "
+                            + getBundle()
+                            + " : "
+                            + ex.getMessage());
+ex.printStackTrace();
+                        cnfe.initCause(ex);
+                        throw cnfe;
+                    }
+                    throw (ClassNotFoundException) ex;
+                }
+                else
+                {
+                    if (!(ex instanceof ResourceNotFoundException))
+                    {
+                        ResourceNotFoundException rnfe = new ResourceNotFoundException(
+                            name
+                            + " not found in "
+                            + getBundle()
+                            + " : "
+                            + ex.getMessage());
+                        rnfe.initCause(ex);
+                        throw rnfe;
+                    }
+                    throw (ResourceNotFoundException) ex;
                 }
             }
             finally
@@ -965,10 +985,14 @@ public class BundleWiringImpl implements BundleWiring
                 return result;
             }
 
-            // If no class was found, then we must throw an exception
+            // If no class or resource was found, then we must throw an exception
             // since the provider of this package did not contain the
             // requested class and imported packages are atomic.
-            throw new ClassNotFoundException(name);
+            if (isClass)
+            {
+                throw new ClassNotFoundException(name);
+            }
+            throw new ResourceNotFoundException(name);
         }
 
         // Check if the package is required.
@@ -1016,6 +1040,10 @@ public class BundleWiringImpl implements BundleWiring
         catch (ResolveException ex)
         {
             // Ignore this since it is likely normal.
+        }
+        catch (BundleException ex)
+        {
+            // Ignore this since it is likely the result of a resolver hook.
         }
 
         // If the dynamic import was successful, then this initial
@@ -1858,7 +1886,7 @@ public class BundleWiringImpl implements BundleWiring
         for (int i = 0; (wires != null) && (i < wires.size()); i++)
         {
             if (wires.get(i).getCapability().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE) &&
-                wires.get(i).getCapability().getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR).equals(pkgName))
+                wires.get(i).getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(pkgName))
             {
                 String exporter = wires.get(i).getProviderWiring().getBundle().toString();
 
@@ -1949,7 +1977,7 @@ public class BundleWiringImpl implements BundleWiring
             // Try to see if there is an exporter available.
             Map<String, String> dirs = Collections.EMPTY_MAP;
             Map<String, Object> attrs = new HashMap<String, Object>(1);
-            attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+            attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
                 revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
             Set<BundleCapability> exporters = resolver.getCandidates(req, false);
@@ -1988,7 +2016,7 @@ public class BundleWiringImpl implements BundleWiring
         // Next, check to see if there are any exporters for the package at all.
         Map<String, String> dirs = Collections.EMPTY_MAP;
         Map<String, Object> attrs = new HashMap<String, Object>(1);
-        attrs.put(BundleCapabilityImpl.PACKAGE_ATTR, pkgName);
+        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
         Set<BundleCapability> exports = resolver.getCandidates(req, false);

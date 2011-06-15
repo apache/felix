@@ -113,7 +113,9 @@ public class HostedCapability extends BundleCapabilityImpl
         if (getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             return "[" + m_host + "] "
-                + getNamespace() + "; " + getAttributes().get(BundleCapabilityImpl.PACKAGE_ATTR);
+                + getNamespace()
+                + "; "
+                + getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
         }
         return "[" + m_host + "] " + getNamespace() + "; " + getAttributes();
     }
