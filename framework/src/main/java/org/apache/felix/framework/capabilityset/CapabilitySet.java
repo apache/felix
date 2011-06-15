@@ -559,6 +559,11 @@ public void dump()
             }
             else
             {
+                // Spec says we should trim number types.
+                if ((lhs instanceof Number) || (lhs instanceof Boolean))
+                {
+                    rhsString = rhsString.trim();
+                }
                 Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
                 m_secureAction.setAccesssible(ctor);
                 rhs = ctor.newInstance(new Object[] { rhsString });
