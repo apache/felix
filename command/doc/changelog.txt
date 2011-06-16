@@ -1,3 +1,14 @@
+Changes from 0.8.0 to 0.10.0
+----------------------------
+
+** Bug
+    * [FELIX-2937] - [Gogo Command] OBR commands do not output anything
+      when nothing is found
+    * [FELIX-2938] - [Gogo Command] The "info" command throws an NPE if
+      the specified bundle identifier doesn't exist
+    * [FELIX-3001] - [gogo] help command throws ClassCastException if any
+      osgi.command.function service property is not String[]
+
 Changes from 0.6.1 to 0.8.0
 ---------------------------
 

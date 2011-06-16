@@ -1,3 +1,12 @@
+Changes 0.8.0 to 0.10.0
+----------------------
+
+** Bug
+    * [FELIX-2870] - ConcurrentModificationException in gogo runtime
+    * [FELIX-2894] - Gogo does not handles options but not parameters
+    * [FELIX-2927] - [gogo] coercion mechanism invokes foo(String) instead
+      of foo(int) - even with explicit int argument
+
 Changes 0.6.1 to 0.8.0
 ----------------------
 
