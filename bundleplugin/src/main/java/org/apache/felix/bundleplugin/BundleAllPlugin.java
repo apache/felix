@@ -64,7 +64,9 @@ import aQute.lib.osgi.Jar;
  * @phase package
  * @requiresDependencyResolution test
  * @description build an OSGi bundle jar for all transitive dependencies
+ * @deprecated The bundleall goal is no longer supported and may be removed in a future release
  */
+@Deprecated
 public class BundleAllPlugin extends ManifestPlugin
 {
     private static final String LS = System.getProperty( "line.separator" );
@@ -174,6 +176,9 @@ public class BundleAllPlugin extends ManifestPlugin
      */
     protected BundleInfo bundleAll( MavenProject project, int maxDepth ) throws MojoExecutionException
     {
+        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+        getLog().warn( "! The bundleall goal is no longer supported and may be removed in a future release !" );
+        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
         if ( alreadyBundled( project.getArtifact() ) )
         {
