@@ -734,7 +734,8 @@ public class Felix extends BundleImpl implements Framework
                         {
                             // Install the cached bundle.
                             installBundle(
-                                archives[i].getId(), archives[i].getLocation(), archives[i], null);
+                                this, archives[i].getId(), archives[i].getLocation(),
+                                archives[i], null);
                         }
                     }
                     catch (Exception ex)
@@ -2615,13 +2616,15 @@ public class Felix extends BundleImpl implements Framework
         return (val == null) ? System.getProperty(key) : val;
     }
 
-    Bundle installBundle(String location, InputStream is)
+    Bundle installBundle(
+        Bundle origin, String location, InputStream is)
         throws BundleException
     {
-        return installBundle(-1, location, null, is);
+        return installBundle(origin, -1, location, null, is);
     }
 
-    private Bundle installBundle(long id, String location, BundleArchive ba, InputStream is)
+    private Bundle installBundle(
+        Bundle origin, long id, String location, BundleArchive ba, InputStream is)
         throws BundleException
     {
         BundleImpl bundle = null;
@@ -2825,7 +2828,7 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Fire bundle event.
-        fireBundleEvent(BundleEvent.INSTALLED, bundle);
+        fireBundleEvent(BundleEvent.INSTALLED, bundle, origin);
 
         // Return new bundle.
         return bundle;
@@ -4155,6 +4158,11 @@ public class Felix extends BundleImpl implements Framework
     void fireBundleEvent(int type, Bundle bundle)
     {
         m_dispatcher.fireBundleEvent(new BundleEvent(type, bundle));
+    }
+
+    void fireBundleEvent(int type, Bundle bundle, Bundle origin)
+    {
+        m_dispatcher.fireBundleEvent(new BundleEvent(type, bundle, origin));
     }
 
     /**
