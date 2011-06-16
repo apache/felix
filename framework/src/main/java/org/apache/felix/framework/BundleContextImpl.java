@@ -152,7 +152,7 @@ class BundleContextImpl implements FelixBundleContext
 
         if (sm != null)
         {
-            result = m_felix.installBundle(location, is);
+            result = m_felix.installBundle(m_bundle, location, is);
             // Do check the bundle again in case that is was installed
             // already.
             ((SecurityManager) sm).checkPermission(
@@ -160,7 +160,7 @@ class BundleContextImpl implements FelixBundleContext
         }
         else
         {
-            result = m_felix.installBundle(location, is);
+            result = m_felix.installBundle(m_bundle, location, is);
         }
 
         return result;
