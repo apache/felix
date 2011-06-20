@@ -229,7 +229,7 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
                 // remain in the state we were, assuming that any error causes
                 // the "old" configuration to stay in effect.
                 // CM will log any thrown exceptions.
-                InvocationUtil.invokeMethod(service, service.getClass(), callback, new Class[][] {{ Dictionary.class }}, new Object[][] {{ settings }}, false);
+                InvocationUtil.invokeCallbackMethod(service, callback, new Class[][] {{ Dictionary.class }}, new Object[][] {{ settings }});
             } 
             catch (InvocationTargetException e) {
                 // The component has thrown an exception during it's callback invocation.
