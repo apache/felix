@@ -88,21 +88,30 @@ class BundleRevisionDependencies
         return m_dependentsMap.get(provider);
     }
 
+    public synchronized boolean hasDependents(BundleRevision revision)
+    {
+        // We have to special case fragments, since their dependencies
+        // are actually reversed (i.e., they require a host, but then
+        // the host ends up dependent on them at run time).
+        if (Util.isFragment(revision)
+            && (revision.getWiring() != null)
+            && !revision.getWiring().getRequiredWires(null).isEmpty())
+        {
+            return true;
+        }
+        else if (m_dependentsMap.containsKey(revision))
+        {
+            return true;
+        }
+        return false;
+    }
+
     public synchronized boolean hasDependents(BundleImpl bundle)
     {
         List<BundleRevision> revisions = bundle.getRevisions();
         for (BundleRevision revision : revisions)
         {
-            // We have to special case fragments, since their dependencies
-            // are actually reversed (i.e., they require a host, but then
-            // the host ends up dependent on them at run time).
-            if (Util.isFragment(revision)
-                && (revision.getWiring() != null)
-                && !revision.getWiring().getRequiredWires(null).isEmpty())
-            {
-                return true;
-            }
-            else if (m_dependentsMap.containsKey(revision))
+            if (hasDependents(revision))
             {
                 return true;
             }
