@@ -29,6 +29,7 @@ import org.apache.felix.dependencymanager.Dependency;
 import org.apache.felix.dependencymanager.DependencyManager;
 import org.apache.felix.dependencymanager.Service;
 import org.apache.felix.dependencymanager.ServiceStateListener;
+import org.apache.felix.dm.Component;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -46,6 +47,10 @@ public class ServiceImpl implements Service
     {
         org.apache.felix.dm.DependencyManager dmDelegate = (org.apache.felix.dm.DependencyManager) dm.getDelegate();
         m_delegate = dmDelegate.createComponent();
+    }
+
+    public ServiceImpl(Component c) {
+        m_delegate = c;
     }
 
     public Service add(Dependency dependency)
@@ -235,5 +240,9 @@ public class ServiceImpl implements Service
     public void stop()
     {
         m_delegate.stop();
+    }
+
+    public Component getDelegate() {
+        return m_delegate;
     }
 }
