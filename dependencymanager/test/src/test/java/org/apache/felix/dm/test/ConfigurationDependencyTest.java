@@ -72,6 +72,28 @@ public class ConfigurationDependencyTest extends Base {
         // ensure we executed all steps inside the component instance
         e.step(5);
     }
+    
+    @Test
+    public void testFELIX2987(BundleContext context) {
+        // mimics testComponentWithRequiredConfigurationAndServicePropertyPropagation
+        DependencyManager m = new DependencyManager(context);
+        // helper class that ensures certain steps get executed in sequence
+        Ensure e = new Ensure();
+        // create a service provider and consumer
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer2(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid("test").setPropagate(true));
+        Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
+        Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
+        m.add(s1);
+        m.add(s2);
+        m.add(s3);
+        e.waitForStep(4, 15000);
+        m.remove(s1);
+        m.remove(s2);
+        m.remove(s3);
+        // ensure we executed all steps inside the component instance
+        e.step(5);
+    }
+
 
     static class ConfigurationCreator {
         private volatile ConfigurationAdmin m_ca;
@@ -92,6 +114,12 @@ public class ConfigurationDependencyTest extends Base {
             catch (IOException e) {
                 Assert.fail("Could not create configuration: " + e.getMessage());
             }
+        }
+    }
+    
+    static class ConfigurationConsumer2 extends ConfigurationConsumer {
+        public ConfigurationConsumer2(Ensure e) {
+            super(e);
         }
     }
 
