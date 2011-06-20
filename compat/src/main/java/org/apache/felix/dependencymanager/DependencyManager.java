@@ -20,6 +20,7 @@ package org.apache.felix.dependencymanager;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.osgi.framework.BundleContext;
@@ -32,7 +33,6 @@ import org.osgi.framework.BundleContext;
 public class DependencyManager
 {
     private org.apache.felix.dm.DependencyManager m_delegate;
-    private List m_services = Collections.synchronizedList(new ArrayList());
 
     /**
      * Creates a new dependency manager.
@@ -53,8 +53,8 @@ public class DependencyManager
      */
     public void add(Service service)
     {
-        m_services.add(service);
-        service.start();
+        org.apache.felix.dependencymanager.impl.ServiceImpl serviceImpl = (org.apache.felix.dependencymanager.impl.ServiceImpl)service;
+        ((org.apache.felix.dm.DependencyManager) m_delegate).add(serviceImpl.getDelegate());
     }
 
     /**
@@ -65,8 +65,8 @@ public class DependencyManager
      */
     public void remove(Service service)
     {
-        service.stop();
-        m_services.remove(service);
+        org.apache.felix.dependencymanager.impl.ServiceImpl impl = (org.apache.felix.dependencymanager.impl.ServiceImpl)service;
+        ((org.apache.felix.dm.DependencyManager) m_delegate).remove(impl.getDelegate());
     }
 
     /**
@@ -101,7 +101,14 @@ public class DependencyManager
      */
     public List getServices()
     {
-        return Collections.unmodifiableList(m_services);
+        List list = new ArrayList();
+        List components = m_delegate.getComponents();
+        Iterator it = components.iterator();
+        while (it.hasNext()) {
+            org.apache.felix.dm.Component c = (org.apache.felix.dm.Component) it.next();
+            list.add(new org.apache.felix.dependencymanager.impl.ServiceImpl(c));
+        }
+        return Collections.unmodifiableList(list);
     }
 
     /**
