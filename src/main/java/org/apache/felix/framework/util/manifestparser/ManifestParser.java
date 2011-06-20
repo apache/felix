@@ -109,15 +109,25 @@ public class ManifestParser
             // dependencies.
             if (headerMap.get(Constants.FRAGMENT_HOST) == null)
             {
+                // All non-fragment bundles have host capabilities.
                 capList.add(bundleCap);
-                Map<String, Object> hostAttrs =
-                    new HashMap<String, Object>(bundleCap.getAttributes());
-                Object value = hostAttrs.remove(BundleRevision.BUNDLE_NAMESPACE);
-                hostAttrs.put(BundleRevision.HOST_NAMESPACE, value);
-                capList.add(new BundleCapabilityImpl(
-                    owner, BundleRevision.HOST_NAMESPACE,
-                    Collections.EMPTY_MAP,
-                    hostAttrs));
+                // A non-fragment bundle can choose to not have a host capability.
+                String attachment =
+                    bundleCap.getDirectives().get(Constants.FRAGMENT_ATTACHMENT_DIRECTIVE);
+                attachment = (attachment == null)
+                    ? Constants.FRAGMENT_ATTACHMENT_RESOLVETIME
+                    : attachment;
+                if (!attachment.equalsIgnoreCase(Constants.FRAGMENT_ATTACHMENT_NEVER))
+                {
+                    Map<String, Object> hostAttrs =
+                        new HashMap<String, Object>(bundleCap.getAttributes());
+                    Object value = hostAttrs.remove(BundleRevision.BUNDLE_NAMESPACE);
+                    hostAttrs.put(BundleRevision.HOST_NAMESPACE, value);
+                    capList.add(new BundleCapabilityImpl(
+                        owner, BundleRevision.HOST_NAMESPACE,
+                        Collections.EMPTY_MAP,
+                        hostAttrs));
+                }
             }
 
             // Add a singleton capability if the bundle is a singleton.
