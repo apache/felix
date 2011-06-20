@@ -324,7 +324,11 @@ public class BundleWiringImpl implements BundleWiring
 
     public boolean isInUse()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (isCurrent()
+// TODO: OSGi R4.3 - The following can be replaced with a call to getProvidedWires()
+//       once it is implemented.
+            || ((BundleImpl) m_revision.getBundle())
+                .getFramework().getDependencies().hasDependents(m_revision));
     }
 
     public List<BundleCapability> getCapabilities(String namespace)
