@@ -57,7 +57,7 @@ import org.osgi.framework.FrameworkUtil;
  */
 public class DependencyManager {
     public static final String ASPECT = "org.apache.felix.dependencymanager.aspect";
-    public static final String SERVICEREGISTRY_CACHE_INDICES = "dm.index"; // TODO rename
+    public static final String SERVICEREGISTRY_CACHE_INDICES = "org.apache.felix.dependencymanager.filterindex";
     public static final String METHOD_CACHE_SIZE = "org.apache.felix.dependencymanager.methodcache";
     private final BundleContext m_context;
     private final Logger m_logger;
