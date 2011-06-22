@@ -67,7 +67,7 @@ public class FilterIndexResourceAdapterTest extends Base {
     
     @Test
     public void testBasicResourceAdapter(BundleContext context) throws Exception {
-        System.setProperty("dm.index", "objectClass");
+        System.setProperty("org.apache.felix.dependencymanager.filterindex", "objectClass");
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
