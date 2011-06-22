@@ -42,7 +42,9 @@ import org.apache.felix.dm.impl.index.AspectFilterIndex;
 import org.apache.felix.dm.impl.index.MultiPropertyExactFilter;
 import org.apache.felix.dm.impl.index.ServiceRegistryCache;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -89,17 +91,29 @@ public class DependencyManager {
     static {
         String index = System.getProperty(SERVICEREGISTRY_CACHE_INDICES);
         if (index != null) {
-            m_serviceRegistryCache = new ServiceRegistryCache(FrameworkUtil.getBundle(DependencyManager.class).getBundleContext());
-            m_serviceRegistryCache.open(); // TODO close it somewhere
-            String[] props = index.split(";");
-            for (int i = 0; i < props.length; i++) {
-                if (props[i].equals("*aspect*")) {
-                    m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
+            Bundle bundle = FrameworkUtil.getBundle(DependencyManager.class);
+            try {
+                if (bundle.getState() != Bundle.ACTIVE) {
+                    bundle.start();
                 }
-                else {
-                    String[] propList = props[i].split(",");
-                    m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
+                BundleContext bundleContext = bundle.getBundleContext();
+                
+                m_serviceRegistryCache = new ServiceRegistryCache(bundleContext);
+                m_serviceRegistryCache.open(); // TODO close it somewhere
+                String[] props = index.split(";");
+                for (int i = 0; i < props.length; i++) {
+                    if (props[i].equals("*aspect*")) {
+                        m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
+                    }
+                    else {
+                        String[] propList = props[i].split(",");
+                        m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
+                    }
                 }
+            }
+            catch (BundleException e) {
+                // if we cannot start ourselves, we cannot use the indices
+                // TODO we might want to warn people about this
             }
         }
     }
