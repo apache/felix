@@ -206,11 +206,6 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
         return true;
     }
     
-    public static void main(String[] args) {
-        
-        System.out.println("" + (new MultiPropertyExactFilter(new String[] { "objectClass", "repository", "path", "name" })).isApplicable(null, "(objectClass=abc)"));
-    }
-    
     public boolean isApplicable(String clazz, String filter) {
         // "(&(a=b)(c=d))"
         // "(&(&(a=b)(c=d))(objC=aaa))"
@@ -240,7 +235,7 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
                 }
                 // TODO check value tuple[1]
             }
-            return (found.size() == m_propertyKeys.size());
+            return found.size() == m_propertyKeys.size();
         }
         else if (filter != null && filter.startsWith("(&(") && filter.endsWith("))")) {
             String[] parts = filter.substring(3, filter.length() - 2).split("\\)\\(");
@@ -255,7 +250,7 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
                 }
                 // TODO check value tuple[1]
             }
-            return (found.size() == m_propertyKeys.size());
+            return found.size() == m_propertyKeys.size();
         }
         else if (filter != null && filter.startsWith("(") && filter.endsWith(")") && m_propertyKeys.size() == 1) { // TODO quick hack
             String part = filter.substring(1, filter.length() - 1);
@@ -331,7 +326,7 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
             } // (&(obC=a)(&(a=b)(c=d)))
             if (filter != null) {
                 String startString = "(" + key + "=";
-                int i1 = filter.indexOf(startString);
+                int i1 = filter.toLowerCase().indexOf(startString);
                 if (i1 != -1) {
                     int i2 = filter.indexOf(")(", i1);
                     if (i2 == -1) {
