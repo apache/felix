@@ -113,29 +113,32 @@ public class BlacklistingHandlerTasks implements HandlerTasks
         final List result = new ArrayList();
         for (int i = 0; i < handlerRefs.length; i++)
         {
-            if (!m_blackList.contains(handlerRefs[i])
-                && handlerRefs[i].getBundle().hasPermission(
-                        PermissionsUtil.createSubscribePermission(event.getTopic())))
+            final ServiceReference ref = handlerRefs[i];
+            final Bundle serviceBundle = ref.getBundle();
+            if ( serviceBundle != null )
             {
-                try
+                if (!m_blackList.contains(ref)
+                    && serviceBundle.hasPermission(
+                          PermissionsUtil.createSubscribePermission(event.getTopic())))
                 {
-                    if (event.matches(m_filters.createFilter(
-                        (String) handlerRefs[i]
-                            .getProperty(EventConstants.EVENT_FILTER))))
+                    try
                     {
-                        result.add(new HandlerTaskImpl(handlerRefs[i],
-                            event, this));
-                    }
-                } catch (InvalidSyntaxException e)
-                {
-                    LogWrapper.getLogger().log(
-                        handlerRefs[i],
-                        LogWrapper.LOG_WARNING,
-                        "Invalid EVENT_FILTER - Blacklisting ServiceReference ["
-                            + handlerRefs[i] + " | Bundle("
-                            + handlerRefs[i].getBundle() + ")]", e);
+                        if (event.matches(m_filters.createFilter(
+                            (String) ref.getProperty(EventConstants.EVENT_FILTER))))
+                        {
+                            result.add(new HandlerTaskImpl(ref, event, this));
+                        }
+                    } catch (InvalidSyntaxException e)
+                    {
+                        LogWrapper.getLogger().log(
+                            ref,
+                            LogWrapper.LOG_WARNING,
+                            "Invalid EVENT_FILTER - Blacklisting ServiceReference ["
+                                + ref + " | Bundle("
+                                + serviceBundle + ")]", e);
 
-                    m_blackList.add(handlerRefs[i]);
+                        m_blackList.add(ref);
+                    }
                 }
             }
         }
