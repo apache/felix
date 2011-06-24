@@ -937,10 +937,13 @@ public class BundlePlugin extends AbstractMojo
 
         if ( currentProject.getOrganization() != null )
         {
-            String organizationName = currentProject.getOrganization().getName();
-            header( properties, Analyzer.BUNDLE_VENDOR, organizationName );
-            properties.put( "project.organization.name", organizationName );
-            properties.put( "pom.organization.name", organizationName );
+            if ( currentProject.getOrganization().getName() != null )
+            {
+                String organizationName = currentProject.getOrganization().getName();
+                header( properties, Analyzer.BUNDLE_VENDOR, organizationName );
+                properties.put( "project.organization.name", organizationName );
+                properties.put( "pom.organization.name", organizationName );
+            }
             if ( currentProject.getOrganization().getUrl() != null )
             {
                 String organizationUrl = currentProject.getOrganization().getUrl();
