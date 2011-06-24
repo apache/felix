@@ -325,8 +325,11 @@ public class BundlePlugin extends AbstractMojo
 
             Artifact mainArtifact = currentProject.getArtifact();
 
-            // workaround for MNG-1682: force maven to install artifact using the "jar" handler
-            mainArtifact.setArtifactHandler( m_artifactHandlerManager.getArtifactHandler( "jar" ) );
+            if ( "bundle".equals( mainArtifact.getType() ) )
+            {
+                // workaround for MNG-1682: force maven to install artifact using the "jar" handler
+                mainArtifact.setArtifactHandler( m_artifactHandlerManager.getArtifactHandler( "jar" ) );
+            }
 
             if ( null == classifier || classifier.trim().length() == 0 )
             {
@@ -908,12 +911,25 @@ public class BundlePlugin extends AbstractMojo
      */
     protected String getBundleName( MavenProject currentProject )
     {
+        String extension;
+        try
+        {
+            extension = currentProject.getArtifact().getArtifactHandler().getExtension();
+        }
+        catch ( Throwable e )
+        {
+            extension = currentProject.getArtifact().getType();
+        }
+        if ( StringUtils.isEmpty( extension ) || "bundle".equals( extension ) )
+        {
+            extension = "jar"; // just in case maven gets confused
+        }
         String finalName = currentProject.getBuild().getFinalName();
         if ( null != classifier && classifier.trim().length() > 0 )
         {
-            return finalName + '-' + classifier + ".jar";
+            return finalName + '-' + classifier + '.' + extension;
         }
-        return finalName + ".jar";
+        return finalName + '.' + extension;
     }
 
 
