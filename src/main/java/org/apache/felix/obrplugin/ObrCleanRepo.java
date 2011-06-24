@@ -137,6 +137,7 @@ public class ObrCleanRepo extends AbstractMojo
     private Element cleanDocument( Element elem )
     {
         String localRepoPath = localRepository.getBasedir();
+        URI baseURI = new File( localRepoPath + '/' ).toURI();
         NodeList nodes = elem.getElementsByTagName( "resource" );
         List toRemove = new ArrayList();
 
@@ -146,8 +147,18 @@ public class ObrCleanRepo extends AbstractMojo
             Element n = ( Element ) nodes.item( i );
             String value = n.getAttribute( "uri" );
 
-            File file = new File( localRepoPath, value );
-            if ( !file.exists() )
+            URI resource;
+            try
+            {
+                resource = baseURI.resolve( value );
+            }
+            catch ( IllegalArgumentException e )
+            {
+                getLog().error( "Malformed URL when creating the resource absolute URI : " + e.getMessage() );
+                return null;
+            }
+
+            if ( "file".equals( resource.getScheme() ) && !new File( resource ).exists() )
             {
                 getLog().info(
                     "The bundle " + n.getAttribute( "presentationname" ) + " - " + n.getAttribute( "version" )
