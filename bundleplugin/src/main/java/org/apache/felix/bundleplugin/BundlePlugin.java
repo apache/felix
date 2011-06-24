@@ -25,11 +25,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import aQute.lib.osgi.*;
 import org.apache.maven.archiver.ManifestSection;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
@@ -37,6 +48,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -51,6 +63,13 @@ import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.StringInputStream;
 import org.codehaus.plexus.util.StringUtils;
 
+import aQute.lib.osgi.Analyzer;
+import aQute.lib.osgi.Builder;
+import aQute.lib.osgi.Constants;
+import aQute.lib.osgi.EmbeddedResource;
+import aQute.lib.osgi.FileResource;
+import aQute.lib.osgi.Jar;
+import aQute.lib.osgi.Processor;
 import aQute.lib.spring.SpringXMLType;
 
 
@@ -1075,14 +1094,33 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    private static String getMavenResourcePaths( MavenProject project )
+    private static List getMavenResources( MavenProject project )
+    {
+        List resources = new ArrayList(project.getResources());
+
+        // also scan for any "packageinfo" files lurking in the source folders
+        List packageInfoIncludes = Collections.singletonList( "**/packageinfo" );
+        for ( Iterator i = project.getCompileSourceRoots().iterator(); i.hasNext(); )
+        {
+            String sourceRoot = (String) i.next();
+            Resource packageInfoResource = new Resource();
+            packageInfoResource.setDirectory( sourceRoot );
+            packageInfoResource.setIncludes( packageInfoIncludes );
+            resources.add( packageInfoResource );
+        }
+
+        return resources;
+    }
+
+
+    protected static String getMavenResourcePaths( MavenProject project )
     {
         final String basePath = project.getBasedir().getAbsolutePath();
 
         Set pathSet = new LinkedHashSet();
-        for ( Iterator i = project.getResources().iterator(); i.hasNext(); )
+        for ( Iterator i = getMavenResources( project ).iterator(); i.hasNext(); )
         {
-            org.apache.maven.model.Resource resource = ( org.apache.maven.model.Resource ) i.next();
+            Resource resource = ( Resource ) i.next();
 
             final String sourcePath = resource.getDirectory();
             final String targetPath = resource.getTargetPath();
@@ -1092,7 +1130,7 @@ public class BundlePlugin extends AbstractMojo
             {
                 DirectoryScanner scanner = new DirectoryScanner();
 
-                scanner.setBasedir( resource.getDirectory() );
+                scanner.setBasedir( sourcePath );
                 if ( resource.getIncludes() != null && !resource.getIncludes().isEmpty() )
                 {
                     scanner.setIncludes( ( String[] ) resource.getIncludes().toArray( EMPTY_STRING_ARRAY ) );
