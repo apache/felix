@@ -196,5 +196,15 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         String cleanupVersion = Builder.cleanupVersion( "0.0.0.4aug2000r7-dev" );
         assertEquals( "0.0.0.4aug2000r7-dev", cleanupVersion );
     }
+    
+    public void testPackageInfoDetection() throws Exception
+    {
+        MavenProject project = new MavenProjectStub();
+        project.addCompileSourceRoot( getBasedir() + "/src/test/java" );
 
+        String resourcePaths = plugin.getMavenResourcePaths( project );
+
+        assertEquals( "org/apache/felix/bundleplugin/packageinfo=" +
+                      "src/test/java/org/apache/felix/bundleplugin/packageinfo", resourcePaths );
+    }
 }
