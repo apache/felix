@@ -273,6 +273,12 @@ public class BundlePlugin extends AbstractMojo
                 value = value.replaceAll( "\\p{Blank}*[\r\n]\\p{Blank}*", "" );
             }
 
+            if ( Analyzer.WAB.equals( key ) && value.length() == 0 )
+            {
+                // provide useful default
+                value = "src/main/webapp/";
+            }
+
             transformedInstructions.put( key, value );
         }
         return transformedInstructions;
