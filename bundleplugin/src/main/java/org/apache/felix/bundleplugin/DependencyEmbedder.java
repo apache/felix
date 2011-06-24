@@ -108,7 +108,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             }
         }
 
-        if ( bundleClassPath.length() > 0 )
+        if ( analyzer.getProperty( Analyzer.WAB ) == null && bundleClassPath.length() > 0 )
         {
             // set explicit default before merging dependency classpath
             if ( analyzer.getProperty( Analyzer.BUNDLE_CLASSPATH ) == null )
