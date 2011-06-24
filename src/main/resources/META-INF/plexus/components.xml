@@ -58,6 +58,8 @@
         <language>java</language>
         <extension>jar</extension>
         <addedToClasspath>true</addedToClasspath>
+        <packaging>bundle</packaging>
+        <classifier></classifier>
       </configuration>
     </component>
   </components>
