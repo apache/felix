@@ -297,18 +297,33 @@ public class BundlePlugin extends AbstractMojo
             List errors = builder.getErrors();
             List warnings = builder.getWarnings();
 
+            String warningPrefix = "Warning building bundle " + currentProject.getArtifact() + " : ";
             for ( Iterator w = warnings.iterator(); w.hasNext(); )
             {
                 String msg = ( String ) w.next();
-                getLog().warn( "Warning building bundle " + currentProject.getArtifact() + " : " + msg );
+                getLog().warn( warningPrefix + msg );
             }
+
+            boolean hasErrors = false;
+            String errorPrefix = "Error building bundle " + currentProject.getArtifact() + " : ";
+            String fileNotFound = "Input file does not exist: ";
             for ( Iterator e = errors.iterator(); e.hasNext(); )
             {
                 String msg = ( String ) e.next();
-                getLog().error( "Error building bundle " + currentProject.getArtifact() + " : " + msg );
+                if ( msg.startsWith( fileNotFound ) && msg.endsWith( "~" ) )
+                {
+                    // treat as warning; this error happens when you have duplicate entries in Include-Resource
+                    String duplicate = Processor.removeDuplicateMarker( msg.substring( fileNotFound.length() ) );
+                    getLog().warn( warningPrefix + "Duplicate path '" + duplicate  + "' in Include-Resource" );
+                }
+                else
+                {
+                    getLog().error( errorPrefix + msg );
+                    hasErrors = true;
+                }
             }
 
-            if ( errors.size() > 0 )
+            if ( hasErrors )
             {
                 String failok = builder.getProperty( "-failok" );
                 if ( null == failok || "false".equalsIgnoreCase( failok ) )
