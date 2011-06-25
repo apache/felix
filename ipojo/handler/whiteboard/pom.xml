@@ -28,7 +28,7 @@
   <name>Apache Felix iPOJO White Board Pattern Handler</name>
   <artifactId> org.apache.felix.ipojo.handler.whiteboard </artifactId>
   <groupId>org.apache.felix</groupId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.6.0</version>
 
   <description>
   iPOJO extension to easily implement a white-board pattern (host).
@@ -118,4 +118,10 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.handler.whiteboard-1.6.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.handler.whiteboard-1.6.0</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.handler.whiteboard-1.6.0</url>
+  </scm>
 </project>
