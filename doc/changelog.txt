@@ -1,4 +1,4 @@
-Changes from 1.6.2 to 1.8.0
+Changes from 1.4.0 to 1.6.0
 ----------------------------
 ** Bug
     * [FELIX-2581] - White Board Pattern onActivate called before @Validate
