@@ -150,6 +150,10 @@ public class BundleAllPlugin extends ManifestPlugin
 
     public void execute() throws MojoExecutionException
     {
+        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+        getLog().warn( "! The bundleall goal is no longer supported and may be removed in a future release !" );
+        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+
         BundleInfo bundleInfo = bundleAll( getProject() );
         logDuplicatedPackages( bundleInfo );
     }
@@ -176,10 +180,6 @@ public class BundleAllPlugin extends ManifestPlugin
      */
     protected BundleInfo bundleAll( MavenProject project, int maxDepth ) throws MojoExecutionException
     {
-        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-        getLog().warn( "! The bundleall goal is no longer supported and may be removed in a future release !" );
-        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-
         if ( alreadyBundled( project.getArtifact() ) )
         {
             getLog().debug( "Ignoring project already processed " + project.getArtifact() );
