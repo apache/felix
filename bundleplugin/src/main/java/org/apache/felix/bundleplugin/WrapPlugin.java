@@ -27,11 +27,17 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @phase package
  * @requiresDependencyResolution test
  * @description build an OSGi bundle jar for direct dependencies
+ * @deprecated The wrap goal is no longer supported and may be removed in a future release
  */
+@Deprecated
 public final class WrapPlugin extends BundleAllPlugin
 {
     public void execute() throws MojoExecutionException
     {
+        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+        getLog().warn( "! The wrap goal is no longer supported and may be removed in a future release !" );
+        getLog().warn( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+
         BundleInfo bundleInfo = bundleAll( getProject(), 1 );
         logDuplicatedPackages( bundleInfo );
     }
