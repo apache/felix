@@ -46,6 +46,7 @@ import aQute.lib.osgi.Jar;
  * @goal manifest
  * @phase process-classes
  * @requiresDependencyResolution test
+ * @threadSafe
  */
 public class ManifestPlugin extends BundlePlugin
 {

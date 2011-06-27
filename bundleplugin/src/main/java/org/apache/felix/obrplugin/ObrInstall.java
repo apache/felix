@@ -37,6 +37,7 @@ import org.apache.maven.project.MavenProject;
  * 
  * @goal install
  * @phase install
+ * @threadSafe
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
