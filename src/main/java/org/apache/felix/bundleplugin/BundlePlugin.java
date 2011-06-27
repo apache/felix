@@ -80,6 +80,7 @@ import aQute.lib.spring.SpringXMLType;
  * @phase package
  * @requiresDependencyResolution test
  * @description build an OSGi bundle jar
+ * @threadSafe
  */
 public class BundlePlugin extends AbstractMojo
 {

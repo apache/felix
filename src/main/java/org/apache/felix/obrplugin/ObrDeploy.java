@@ -43,6 +43,7 @@ import org.apache.maven.settings.Settings;
  * 
  * @goal deploy
  * @phase deploy
+ * @threadSafe
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */

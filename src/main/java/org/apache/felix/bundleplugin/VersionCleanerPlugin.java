@@ -31,6 +31,7 @@ import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 /**
  * @goal cleanVersions
  * @description clean OSGi versions
+ * @threadSafe
  */
 public class VersionCleanerPlugin extends AbstractMojo {
 
