@@ -450,7 +450,9 @@ public class BundlePlugin extends AbstractMojo
             getLog().debug( "BND Instructions:" + NL + dumpInstructions( builder.getProperties(), buf ) );
             if ( dumpInstructions != null )
             {
-                FileUtils.fileWrite( dumpInstructions, buf.toString() );
+                getLog().info( "Writing BND instructions to " + dumpInstructions );
+                dumpInstructions.getParentFile().mkdirs();
+                FileUtils.fileWrite( dumpInstructions, "# BND instructions" + NL + buf );
             }
         }
 
@@ -460,7 +462,9 @@ public class BundlePlugin extends AbstractMojo
             getLog().debug( "BND Classpath:" + NL + dumpClasspath( builder.getClasspath(), buf ) );
             if ( dumpClasspath != null )
             {
-                FileUtils.fileWrite( dumpClasspath, buf.toString() );
+                getLog().info( "Writing BND classpath to " + dumpClasspath );
+                dumpClasspath.getParentFile().mkdirs();
+                FileUtils.fileWrite( dumpClasspath, "# BND classpath" + NL + buf );
             }
         }
     }
