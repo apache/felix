@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +46,7 @@ import aQute.lib.osgi.Resource;
 import aQute.libg.generics.Create;
 import aQute.libg.qtokens.QuotedTokenizer;
 import aQute.libg.reporter.Reporter;
+
 
 public class BlueprintPlugin implements AnalyzerPlugin {
 
