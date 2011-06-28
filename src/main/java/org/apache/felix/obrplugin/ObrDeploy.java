@@ -224,7 +224,7 @@ public final class ObrDeploy extends AbstractMojo
             String mavenRepository = localRepository.getBasedir();
 
             URI repositoryXml = downloadedRepositoryXml.toURI();
-            URI obrXmlFile = ObrUtils.findObrXml( project.getResources() );
+            URI obrXmlFile = ObrUtils.findObrXml( project );
 
             Config userConfig = new Config();
             userConfig.setRemoteFile( true );

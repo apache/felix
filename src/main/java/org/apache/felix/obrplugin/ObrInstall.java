@@ -133,7 +133,7 @@ public final class  ObrInstall extends AbstractMojo
             String mavenRepository = localRepository.getBasedir();
 
             URI repositoryXml = ObrUtils.findRepositoryXml( mavenRepository, obrRepository );
-            URI obrXmlFile = ObrUtils.findObrXml( project.getResources() );
+            URI obrXmlFile = ObrUtils.findObrXml( project );
 
             Config userConfig = new Config();
 

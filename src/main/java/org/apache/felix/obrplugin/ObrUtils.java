@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.model.Resource;
+import org.apache.maven.project.MavenProject;
 
 
 /**
@@ -85,15 +86,20 @@ public class ObrUtils
 
 
     /**
-     * @param resources collection of resource locations
+     * @param project current project
      * @return URI pointing to correct obr.xml, null if not found
      */
-    public static URI findObrXml( Collection resources )
+    public static URI findObrXml( MavenProject project )
     {
-        for ( Iterator i = resources.iterator(); i.hasNext(); )
+        File obrFile = new File( project.getBuild().getOutputDirectory(), OBR_XML );
+        if ( obrFile.exists() )
+        {
+            return obrFile.toURI();
+        }
+        for ( Iterator i = project.getResources().iterator(); i.hasNext(); )
         {
             Resource resource = ( Resource ) i.next();
-            File obrFile = new File( resource.getDirectory(), OBR_XML );
+            obrFile = new File( resource.getDirectory(), OBR_XML );
             if ( obrFile.exists() )
             {
                 return obrFile.toURI();
