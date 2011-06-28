@@ -461,6 +461,7 @@ class StatefulResolver
             // the case if a resolver hook does something bad.
             if (m_isResolving)
             {
+                m_felix.releaseGlobalLock();
                 throw new IllegalStateException("Nested resolve operations not allowed.");
             }
             m_isResolving = true;
