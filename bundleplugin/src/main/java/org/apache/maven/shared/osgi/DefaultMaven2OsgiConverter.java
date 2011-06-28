@@ -18,6 +18,7 @@
  */
 package org.apache.maven.shared.osgi;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -34,6 +35,7 @@ import org.apache.maven.artifact.Artifact;
 
 import aQute.lib.osgi.Analyzer;
 
+
 /**
  * Default implementation of {@link Maven2OsgiConverter}
  * 
@@ -42,16 +44,17 @@ import aQute.lib.osgi.Analyzer;
  * @author <a href="mailto:carlos@apache.org">Carlos Sanchez</a>
  * @version $Id: DefaultMaven2OsgiConverter.java 661727 2008-05-30 14:21:49Z bentmann $
  */
-public class DefaultMaven2OsgiConverter
-    implements Maven2OsgiConverter
+public class DefaultMaven2OsgiConverter implements Maven2OsgiConverter
 {
 
     private static final String FILE_SEPARATOR = System.getProperty( "file.separator" );
+
 
     private String getBundleSymbolicName( String groupId, String artifactId )
     {
         return groupId + "." + artifactId;
     }
+
 
     /**
      * Get the symbolic name as groupId + "." + artifactId, with the following exceptions
@@ -87,7 +90,7 @@ public class DefaultMaven2OsgiConverter
                     Iterator it = bundleSymbolicNameHeader.keySet().iterator();
                     if ( it.hasNext() )
                     {
-                        return (String) it.next();
+                        return ( String ) it.next();
                     }
                 }
             }
@@ -140,6 +143,7 @@ public class DefaultMaven2OsgiConverter
         return getBundleSymbolicName( artifact.getGroupId(), artifact.getArtifactId() );
     }
 
+
     private String getGroupIdFromPackage( File artifactFile )
     {
         try
@@ -150,7 +154,7 @@ public class DefaultMaven2OsgiConverter
             Enumeration entries = jar.entries();
             while ( entries.hasMoreElements() )
             {
-                ZipEntry entry = (ZipEntry) entries.nextElement();
+                ZipEntry entry = ( ZipEntry ) entries.nextElement();
                 if ( entry.getName().endsWith( ".class" ) )
                 {
                     File f = new File( entry.getName() );
@@ -167,7 +171,7 @@ public class DefaultMaven2OsgiConverter
             String[] groupIdSections = null;
             for ( Iterator it = packageNames.iterator(); it.hasNext(); )
             {
-                String packageName = (String) it.next();
+                String packageName = ( String ) it.next();
 
                 String[] packageNameSections = packageName.split( "\\" + FILE_SEPARATOR );
                 if ( groupIdSections == null )
@@ -223,19 +227,22 @@ public class DefaultMaven2OsgiConverter
         }
     }
 
+
     public String getBundleFileName( Artifact artifact )
     {
         return getBundleSymbolicName( artifact ) + "_" + getVersion( artifact.getVersion() ) + ".jar";
     }
+
 
     public String getVersion( Artifact artifact )
     {
         return getVersion( artifact.getVersion() );
     }
 
+
     public String getVersion( String version )
     {
-        return cleanupVersion(version);
+        return cleanupVersion( version );
     }
 
     /**
@@ -246,58 +253,78 @@ public class DefaultMaven2OsgiConverter
      * @param VERSION_STRING
      * @return
      */
-    static final Pattern FUZZY_VERSION = Pattern.compile("(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
-                                                         Pattern.DOTALL);
+    static final Pattern FUZZY_VERSION = Pattern.compile( "(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
+        Pattern.DOTALL );
 
-    static public String cleanupVersion(String version) {
+
+    static public String cleanupVersion( String version )
+    {
         StringBuffer result = new StringBuffer();
-        Matcher m = FUZZY_VERSION.matcher(version);
-        if (m.matches()) {
-            String major = m.group(1);
-            String minor = m.group(3);
-            String micro = m.group(5);
-            String qualifier = m.group(7);
+        Matcher m = FUZZY_VERSION.matcher( version );
+        if ( m.matches() )
+        {
+            String major = m.group( 1 );
+            String minor = m.group( 3 );
+            String micro = m.group( 5 );
+            String qualifier = m.group( 7 );
 
-            if (major != null) {
-                result.append(major);
-                if (minor != null) {
-                    result.append(".");
-                    result.append(minor);
-                    if (micro != null) {
-                        result.append(".");
-                        result.append(micro);
-                        if (qualifier != null) {
-                            result.append(".");
-                            cleanupModifier(result, qualifier);
+            if ( major != null )
+            {
+                result.append( major );
+                if ( minor != null )
+                {
+                    result.append( "." );
+                    result.append( minor );
+                    if ( micro != null )
+                    {
+                        result.append( "." );
+                        result.append( micro );
+                        if ( qualifier != null )
+                        {
+                            result.append( "." );
+                            cleanupModifier( result, qualifier );
                         }
-                    } else if (qualifier != null) {
-                        result.append(".0.");
-                        cleanupModifier(result, qualifier);
-                    } else {
-                        result.append(".0");
                     }
-                } else if (qualifier != null) {
-                    result.append(".0.0.");
-                    cleanupModifier(result, qualifier);
-                } else {
-                    result.append(".0.0");
+                    else if ( qualifier != null )
+                    {
+                        result.append( ".0." );
+                        cleanupModifier( result, qualifier );
+                    }
+                    else
+                    {
+                        result.append( ".0" );
+                    }
+                }
+                else if ( qualifier != null )
+                {
+                    result.append( ".0.0." );
+                    cleanupModifier( result, qualifier );
+                }
+                else
+                {
+                    result.append( ".0.0" );
                 }
             }
-        } else {
-            result.append("0.0.0.");
-            cleanupModifier(result, version);
+        }
+        else
+        {
+            result.append( "0.0.0." );
+            cleanupModifier( result, version );
         }
         return result.toString();
     }
 
-    static void cleanupModifier(StringBuffer result, String modifier) {
-        for (int i = 0; i < modifier.length(); i++) {
-            char c = modifier.charAt(i);
-            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z')
-                    || (c >= 'A' && c <= 'Z') || c == '_' || c == '-')
-                result.append(c);
+
+    static void cleanupModifier( StringBuffer result, String modifier )
+    {
+        for ( int i = 0; i < modifier.length(); i++ )
+        {
+            char c = modifier.charAt( i );
+            if ( ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || c == '_'
+                || c == '-' )
+                result.append( c );
             else
-                result.append('_');
+                result.append( '_' );
         }
     }
 

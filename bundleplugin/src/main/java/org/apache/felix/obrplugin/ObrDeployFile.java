@@ -187,14 +187,14 @@ public final class ObrDeployFile extends AbstractFileMojo
             {
                 // public URL differs from the bundle file location
                 URI uri = URI.create( bundleUrl );
-                log.info("Computed bundle uri: " + uri);
+                log.info( "Computed bundle uri: " + uri );
                 userConfig.setRemoteBundle( uri );
             }
             else if ( null != file )
             {
                 // assume file will be deployed in remote repository, so find the remote relative location
                 URI uri = URI.create( localRepository.pathOf( project.getArtifact() ) );
-                log.info("Computed bundle uri: " + uri);
+                log.info( "Computed bundle uri: " + uri );
                 userConfig.setRemoteBundle( uri );
             }
 

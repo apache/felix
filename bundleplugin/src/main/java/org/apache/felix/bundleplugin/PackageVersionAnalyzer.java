@@ -32,34 +32,34 @@ public final class PackageVersionAnalyzer extends Builder
     /*
      * Remove META-INF subfolders from exports and set package versions to bundle version.
      */
-/*
-    public Map analyzeBundleClasspath( Jar dot, Map bundleClasspath, Map contained, Map referred, Map uses )
-        throws IOException
-    {
-        Map classSpace = super.analyzeBundleClasspath( dot, bundleClasspath, contained, referred, uses );
-        String bundleVersion = getProperty( BUNDLE_VERSION );
-        for ( Iterator it = contained.entrySet().iterator(); it.hasNext(); )
+    /*
+        public Map analyzeBundleClasspath( Jar dot, Map bundleClasspath, Map contained, Map referred, Map uses )
+            throws IOException
         {
-            Map.Entry entry = ( Map.Entry ) it.next();
-
-            // remove packages under META-INF
-            String packageName = ( String ) entry.getKey();
-            if ( packageName.startsWith( "META-INF." ) )
+            Map classSpace = super.analyzeBundleClasspath( dot, bundleClasspath, contained, referred, uses );
+            String bundleVersion = getProperty( BUNDLE_VERSION );
+            for ( Iterator it = contained.entrySet().iterator(); it.hasNext(); )
             {
-                it.remove();
-            }
+                Map.Entry entry = ( Map.Entry ) it.next();
 
-            // set package versions to bundle version values
-            if ( bundleVersion != null )
-            {
-                Map values = ( Map ) entry.getValue();
-                if ( values.get( "version" ) == null )
+                // remove packages under META-INF
+                String packageName = ( String ) entry.getKey();
+                if ( packageName.startsWith( "META-INF." ) )
                 {
-                    values.put( "version", bundleVersion );
+                    it.remove();
+                }
+
+                // set package versions to bundle version values
+                if ( bundleVersion != null )
+                {
+                    Map values = ( Map ) entry.getValue();
+                    if ( values.get( "version" ) == null )
+                    {
+                        values.put( "version", bundleVersion );
+                    }
                 }
             }
+            return classSpace;
         }
-        return classSpace;
-    }
-*/
+    */
 }

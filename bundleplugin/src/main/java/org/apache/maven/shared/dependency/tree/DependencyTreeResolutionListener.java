@@ -1,5 +1,6 @@
 package org.apache.maven.shared.dependency.tree;
 
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -34,6 +35,7 @@ import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
 import org.codehaus.plexus.logging.Logger;
 
+
 /**
  * An artifact resolution listener that constructs a dependency tree.
  * 
@@ -44,7 +46,7 @@ import org.codehaus.plexus.logging.Logger;
 public class DependencyTreeResolutionListener implements ResolutionListener, ResolutionListenerForDepMgmt
 {
     // fields -----------------------------------------------------------------
-    
+
     /**
      * The log to write debug messages to.
      */
@@ -69,7 +71,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
      * The dependency node currently being processed by this listener.
      */
     private DependencyNode currentNode;
-    
+
     /**
      * Map &lt; String replacementId, String premanaged version >
      */
@@ -79,6 +81,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
      * Map &lt; String replacementId, String premanaged scope >
      */
     private Map managedScopes = new HashMap();
+
 
     // constructors -----------------------------------------------------------
 
@@ -91,12 +94,13 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
     public DependencyTreeResolutionListener( Logger logger )
     {
         this.logger = logger;
-        
+
         parentNodes = new Stack();
         nodesByArtifact = new IdentityHashMap();
         rootNode = null;
         currentNode = null;
     }
+
 
     // ResolutionListener methods ---------------------------------------------
 
@@ -108,31 +112,33 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         log( "testArtifact: artifact=" + artifact );
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void startProcessChildren( Artifact artifact )
     {
         log( "startProcessChildren: artifact=" + artifact );
-        
+
         if ( !currentNode.getArtifact().equals( artifact ) )
         {
             throw new IllegalStateException( "Artifact was expected to be " + currentNode.getArtifact() + " but was "
-                            + artifact );
+                + artifact );
         }
 
         parentNodes.push( currentNode );
     }
+
 
     /**
      * {@inheritDoc}
      */
     public void endProcessChildren( Artifact artifact )
     {
-        DependencyNode node = (DependencyNode) parentNodes.pop();
+        DependencyNode node = ( DependencyNode ) parentNodes.pop();
 
         log( "endProcessChildren: artifact=" + artifact );
-        
+
         if ( node == null )
         {
             throw new IllegalStateException( "Parent dependency node was null" );
@@ -141,9 +147,10 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         if ( !node.getArtifact().equals( artifact ) )
         {
             throw new IllegalStateException( "Parent dependency node artifact was expected to be " + node.getArtifact()
-                            + " but was " + artifact );
+                + " but was " + artifact );
         }
     }
+
 
     /**
      * {@inheritDoc}
@@ -151,7 +158,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
     public void includeArtifact( Artifact artifact )
     {
         log( "includeArtifact: artifact=" + artifact );
-        
+
         DependencyNode existingNode = getNode( artifact );
 
         /*
@@ -170,18 +177,19 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         }
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void omitForNearer( Artifact omitted, Artifact kept )
     {
         log( "omitForNearer: omitted=" + omitted + " kept=" + kept );
-        
+
         if ( !omitted.getDependencyConflictId().equals( kept.getDependencyConflictId() ) )
         {
             throw new IllegalArgumentException( "Omitted artifact dependency conflict id "
-                            + omitted.getDependencyConflictId() + " differs from kept artifact dependency conflict id "
-                            + kept.getDependencyConflictId() );
+                + omitted.getDependencyConflictId() + " differs from kept artifact dependency conflict id "
+                + kept.getDependencyConflictId() );
         }
 
         if ( isCurrentNodeIncluded() )
@@ -200,15 +208,15 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
             }
 
             omittedNode.omitForConflict( kept );
-            
+
             /*
              * Add the dependency management information cached in any prior manageArtifact calls, since omitForNearer
              * is always called after manageArtifact.
              */
             flushDependencyManagement( omittedNode );
-            
+
             DependencyNode keptNode = getNode( kept );
-            
+
             if ( keptNode == null )
             {
                 addNode( kept );
@@ -216,13 +224,14 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         }
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void updateScope( Artifact artifact, String scope )
     {
         log( "updateScope: artifact=" + artifact + ", scope=" + scope );
-        
+
         DependencyNode node = getNode( artifact );
 
         if ( node == null )
@@ -234,25 +243,27 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         node.setOriginalScope( artifact.getScope() );
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void manageArtifact( Artifact artifact, Artifact replacement )
     {
         // TODO: remove when ResolutionListenerForDepMgmt merged into ResolutionListener
-        
+
         log( "manageArtifact: artifact=" + artifact + ", replacement=" + replacement );
-        
+
         if ( replacement.getVersion() != null )
         {
             manageArtifactVersion( artifact, replacement );
         }
-        
+
         if ( replacement.getScope() != null )
         {
             manageArtifactScope( artifact, replacement );
         }
     }
+
 
     /**
      * {@inheritDoc}
@@ -260,7 +271,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
     public void omitForCycle( Artifact artifact )
     {
         log( "omitForCycle: artifact=" + artifact );
-        
+
         if ( isCurrentNodeIncluded() )
         {
             DependencyNode node = createNode( artifact );
@@ -269,13 +280,14 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         }
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void updateScopeCurrentPom( Artifact artifact, String scopeIgnored )
     {
         log( "updateScopeCurrentPom: artifact=" + artifact + ", scopeIgnored=" + scopeIgnored );
-        
+
         DependencyNode node = getNode( artifact );
 
         if ( node == null )
@@ -287,6 +299,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
 
         node.setFailedUpdateScope( scopeIgnored );
     }
+
 
     /**
      * {@inheritDoc}
@@ -309,25 +322,27 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         node.setAvailableVersions( artifact.getAvailableVersions() );
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void restrictRange( Artifact artifact, Artifact replacement, VersionRange versionRange )
     {
         log( "restrictRange: artifact=" + artifact + ", replacement=" + replacement + ", versionRange=" + versionRange );
-        
+
         // TODO: track range restriction in node (MNG-3093)
     }
-    
+
+
     // ResolutionListenerForDepMgmt methods -----------------------------------
-    
+
     /**
      * {@inheritDoc}
      */
     public void manageArtifactVersion( Artifact artifact, Artifact replacement )
     {
         log( "manageArtifactVersion: artifact=" + artifact + ", replacement=" + replacement );
-        
+
         /*
          * DefaultArtifactCollector calls manageArtifact twice: first with the change; then subsequently with no change.
          * We ignore the second call when the versions are equal.
@@ -342,13 +357,14 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         }
     }
 
+
     /**
      * {@inheritDoc}
      */
     public void manageArtifactScope( Artifact artifact, Artifact replacement )
     {
         log( "manageArtifactScope: artifact=" + artifact + ", replacement=" + replacement );
-        
+
         /*
          * DefaultArtifactCollector calls manageArtifact twice: first with the change; then subsequently with no change.
          * We ignore the second call when the scopes are equal.
@@ -362,7 +378,8 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
             managedScopes.put( getRangeId( replacement ), artifact.getScope() );
         }
     }
-    
+
+
     // public methods ---------------------------------------------------------
 
     /**
@@ -376,6 +393,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         return Collections.unmodifiableCollection( nodesByArtifact.values() );
     }
 
+
     /**
      * Gets the root dependency node of the computed dependency tree.
      * 
@@ -386,8 +404,9 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         return rootNode;
     }
 
+
     // private methods --------------------------------------------------------
-    
+
     /**
      * Writes the specified message to the log at debug level with indentation for the current node's depth.
      * 
@@ -410,6 +429,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
         logger.debug( buffer.toString() );
     }
 
+
     /**
      * Creates a new dependency node for the specified artifact and appends it to the current parent dependency node.
      * 
@@ -423,14 +443,15 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
 
         if ( !parentNodes.isEmpty() )
         {
-            DependencyNode parent = (DependencyNode) parentNodes.peek();
+            DependencyNode parent = ( DependencyNode ) parentNodes.peek();
 
             parent.addChild( node );
         }
 
         return node;
     }
-    
+
+
     /**
      * Creates a new dependency node for the specified artifact, appends it to the current parent dependency node and
      * puts it into the dependency node cache.
@@ -444,22 +465,23 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
     {
         DependencyNode node = createNode( artifact );
 
-        DependencyNode previousNode = (DependencyNode) nodesByArtifact.put( node.getArtifact(), node );
-        
+        DependencyNode previousNode = ( DependencyNode ) nodesByArtifact.put( node.getArtifact(), node );
+
         if ( previousNode != null )
         {
             throw new IllegalStateException( "Duplicate node registered for artifact: " + node.getArtifact() );
         }
-        
+
         if ( rootNode == null )
         {
             rootNode = node;
         }
 
         currentNode = node;
-        
+
         return node;
     }
+
 
     /**
      * Gets the dependency node for the specified artifact from the dependency node cache.
@@ -471,8 +493,9 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
      */
     private DependencyNode getNode( Artifact artifact )
     {
-        return (DependencyNode) nodesByArtifact.get( artifact );
+        return ( DependencyNode ) nodesByArtifact.get( artifact );
     }
+
 
     /**
      * Removes the dependency node for the specified artifact from the dependency node cache.
@@ -482,14 +505,15 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
      */
     private void removeNode( Artifact artifact )
     {
-        DependencyNode node = (DependencyNode) nodesByArtifact.remove( artifact );
+        DependencyNode node = ( DependencyNode ) nodesByArtifact.remove( artifact );
 
         if ( !artifact.equals( node.getArtifact() ) )
         {
             throw new IllegalStateException( "Removed dependency node artifact was expected to be " + artifact
-                            + " but was " + node.getArtifact() );
+                + " but was " + node.getArtifact() );
         }
     }
+
 
     /**
      * Gets whether the all the ancestors of the dependency node currently being processed by this listener have an
@@ -504,7 +528,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
 
         for ( Iterator iterator = parentNodes.iterator(); included && iterator.hasNext(); )
         {
-            DependencyNode node = (DependencyNode) iterator.next();
+            DependencyNode node = ( DependencyNode ) iterator.next();
 
             if ( node.getState() != DependencyNode.INCLUDED )
             {
@@ -514,6 +538,7 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
 
         return included;
     }
+
 
     /**
      * Updates the specified node with any dependency management information cached in prior <code>manageArtifact</code>
@@ -525,25 +550,26 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
     private void flushDependencyManagement( DependencyNode node )
     {
         Artifact artifact = node.getArtifact();
-        String premanagedVersion = (String) managedVersions.get( getRangeId( artifact ) );
-        String premanagedScope = (String) managedScopes.get( getRangeId( artifact ) );
-        
+        String premanagedVersion = ( String ) managedVersions.get( getRangeId( artifact ) );
+        String premanagedScope = ( String ) managedScopes.get( getRangeId( artifact ) );
+
         if ( premanagedVersion != null || premanagedScope != null )
         {
             if ( premanagedVersion != null )
             {
                 node.setPremanagedVersion( premanagedVersion );
             }
-            
+
             if ( premanagedScope != null )
             {
                 node.setPremanagedScope( premanagedScope );
             }
-            
+
             premanagedVersion = null;
             premanagedScope = null;
         }
     }
+
 
     private static String getRangeId( Artifact artifact )
     {

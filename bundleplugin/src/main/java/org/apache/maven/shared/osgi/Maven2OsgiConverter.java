@@ -18,7 +18,9 @@
  */
 package org.apache.maven.shared.osgi;
 
+
 import org.apache.maven.artifact.Artifact;
+
 
 /**
  * Converter from Maven groupId,artifactId and versions to OSGi Bundle-SymbolicName and version
@@ -37,7 +39,9 @@ public interface Maven2OsgiConverter
      */
     String getBundleSymbolicName( Artifact artifact );
 
+
     String getBundleFileName( Artifact artifact );
+
 
     /**
      * Convert a Maven version into an OSGi compliant version
@@ -46,6 +50,7 @@ public interface Maven2OsgiConverter
      * @return the OSGi version
      */
     String getVersion( Artifact artifact );
+
 
     /**
      * Convert a Maven version into an OSGi compliant version

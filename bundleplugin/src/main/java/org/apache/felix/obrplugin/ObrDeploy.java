@@ -233,7 +233,7 @@ public final class ObrDeploy extends AbstractMojo
             {
                 // public URL differs from the bundle file location
                 URI uri = URI.create( bundleUrl );
-                log.info("Computed bundle uri: " + uri);
+                log.info( "Computed bundle uri: " + uri );
                 userConfig.setRemoteBundle( uri );
             }
             else if ( prefixUrl != null )
@@ -244,7 +244,7 @@ public final class ObrDeploy extends AbstractMojo
                     .toASCIIString();
                 URL resourceURL = new URL( new URL( prefixUrl + '/' ), relative );
                 URI uri = URI.create( resourceURL.toString() );
-                log.info("Computed bundle uri: " + uri);
+                log.info( "Computed bundle uri: " + uri );
                 userConfig.setRemoteBundle( uri );
             }
 

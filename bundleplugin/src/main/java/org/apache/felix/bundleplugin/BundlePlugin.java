@@ -202,7 +202,7 @@ public class BundlePlugin extends AbstractMojo
      * @required
      * @readonly
      */
-    private MavenSession m_mavenSession;   
+    private MavenSession m_mavenSession;
 
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
@@ -324,7 +324,7 @@ public class BundlePlugin extends AbstractMojo
             {
                 // treat as warning; this error happens when you have duplicate entries in Include-Resource
                 String duplicate = Processor.removeDuplicateMarker( msg.substring( fileNotFound.length() ) );
-                getLog().warn( prefix + " : Duplicate path '" + duplicate  + "' in Include-Resource" );
+                getLog().warn( prefix + " : Duplicate path '" + duplicate + "' in Include-Resource" );
             }
             else
             {
@@ -428,6 +428,7 @@ public class BundlePlugin extends AbstractMojo
 
         return builder;
     }
+
 
     protected void addMavenInstructions( MavenProject currentProject, Builder builder ) throws Exception
     {
@@ -599,8 +600,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected void mergeMavenManifest( MavenProject currentProject, Builder builder )
-        throws Exception
+    protected void mergeMavenManifest( MavenProject currentProject, Builder builder ) throws Exception
     {
         Jar jar = builder.getJar();
 
@@ -685,20 +685,23 @@ public class BundlePlugin extends AbstractMojo
 
             // adjust the import package attributes so that optional dependencies use
             // optional resolution.
-            String importPackages = bundleManifest.getMainAttributes().getValue("Import-Package");
-            if( importPackages!=null ) {
-                Set optionalPackages = getOptionalPackages(currentProject);
+            String importPackages = bundleManifest.getMainAttributes().getValue( "Import-Package" );
+            if ( importPackages != null )
+            {
+                Set optionalPackages = getOptionalPackages( currentProject );
 
-                Map<String, Map<String, String>> values = new Analyzer().parseHeader(importPackages);
-                for (Map.Entry<String, Map<String, String>> entry: values.entrySet()) {
+                Map<String, Map<String, String>> values = new Analyzer().parseHeader( importPackages );
+                for ( Map.Entry<String, Map<String, String>> entry : values.entrySet() )
+                {
                     String pkg = entry.getKey();
                     Map<String, String> options = entry.getValue();
-                    if( !options.containsKey("resolution:") && optionalPackages.contains(pkg) ) {
-                        options.put("resolution:", "optional");
+                    if ( !options.containsKey( "resolution:" ) && optionalPackages.contains( pkg ) )
+                    {
+                        options.put( "resolution:", "optional" );
                     }
                 }
-                String result = Processor.printClauses(values, "resolution:");
-                bundleManifest.getMainAttributes().putValue("Import-Package", result);
+                String result = Processor.printClauses( values, "resolution:" );
+                bundleManifest.getMainAttributes().putValue( "Import-Package", result );
             }
 
             jar.setManifest( bundleManifest );
@@ -733,7 +736,7 @@ public class BundlePlugin extends AbstractMojo
             {
                 if ( !Artifact.SCOPE_TEST.equals( artifact.getScope() ) )
                 {
-                    inscope.add(artifact);
+                    inscope.add( artifact );
                 }
             }
         }
@@ -742,13 +745,15 @@ public class BundlePlugin extends AbstractMojo
         for ( Iterator it = inscope.iterator(); it.hasNext(); )
         {
             Artifact artifact = ( Artifact ) it.next();
-            if( artifact.isOptional() ) {
+            if ( artifact.isOptional() )
+            {
                 String id = artifact.toString();
-                if( artifact.getScope()!=null ) {
+                if ( artifact.getScope() != null )
+                {
                     // strip the scope...
-                    id = id.replaceFirst(":[^:]*$", "");
+                    id = id.replaceFirst( ":[^:]*$", "" );
                 }
-                optionalArtifactIds.add(id);
+                optionalArtifactIds.add( id );
             }
 
         }
@@ -765,17 +770,21 @@ public class BundlePlugin extends AbstractMojo
             }
 
             Jar jar = new Jar( artifact.getArtifactId(), file );
-            if( isTransitivelyOptional(optionalArtifactIds, artifact) ) {
-                optional.addAll(jar.getPackages());
-            } else {
-                required.addAll(jar.getPackages());
+            if ( isTransitivelyOptional( optionalArtifactIds, artifact ) )
+            {
+                optional.addAll( jar.getPackages() );
+            }
+            else
+            {
+                required.addAll( jar.getPackages() );
             }
             jar.close();
         }
 
-        optional.removeAll(required);
+        optional.removeAll( required );
         return optional;
     }
+
 
     /**
      * Check to see if any dependency along the dependency trail of
@@ -783,16 +792,20 @@ public class BundlePlugin extends AbstractMojo
      *
      * @param artifact
      */
-    protected boolean isTransitivelyOptional(HashSet optionalArtifactIds, Artifact artifact) {
+    protected boolean isTransitivelyOptional( HashSet optionalArtifactIds, Artifact artifact )
+    {
         List trail = artifact.getDependencyTrail();
-        for (Iterator iterator = trail.iterator(); iterator.hasNext();) {
-            String next = (String) iterator.next();
-            if( optionalArtifactIds.contains(next) ) {
+        for ( Iterator iterator = trail.iterator(); iterator.hasNext(); )
+        {
+            String next = ( String ) iterator.next();
+            if ( optionalArtifactIds.contains( next ) )
+            {
                 return true;
             }
         }
         return false;
     }
+
 
     private void unpackBundle( File jarFile )
     {
@@ -917,9 +930,7 @@ public class BundlePlugin extends AbstractMojo
         p.put( "artifactId", currentProject.getArtifactId() );
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         p.store( out, "Generated by org.apache.felix.bundleplugin" );
-        jar
-            .putResource( path + "/pom.properties",
-                new EmbeddedResource( out.toByteArray(), System.currentTimeMillis() ) );
+        jar.putResource( path + "/pom.properties", new EmbeddedResource( out.toByteArray(), System.currentTimeMillis() ) );
     }
 
 
@@ -1071,7 +1082,7 @@ public class BundlePlugin extends AbstractMojo
         properties.put( MAVEN_SYMBOLICNAME, bsn );
         properties.put( Analyzer.BUNDLE_SYMBOLICNAME, bsn );
         properties.put( Analyzer.IMPORT_PACKAGE, "*" );
-        properties.put( Analyzer.BUNDLE_VERSION, getMaven2OsgiConverter().getVersion(currentProject.getVersion()) );
+        properties.put( Analyzer.BUNDLE_VERSION, getMaven2OsgiConverter().getVersion( currentProject.getVersion() ) );
 
         // remove the extraneous Include-Resource and Private-Package entries from generated manifest
         properties.put( Constants.REMOVEHEADERS, Analyzer.INCLUDE_RESOURCE + ',' + Analyzer.PRIVATE_PACKAGE );
@@ -1120,9 +1131,7 @@ public class BundlePlugin extends AbstractMojo
         properties.put( "classifier", classifier == null ? "" : classifier );
 
         // Add default plugins
-        header( properties, Analyzer.PLUGIN,
-                    BlueprintPlugin.class.getName() + ","
-                        + SpringXMLType.class.getName());
+        header( properties, Analyzer.PLUGIN, BlueprintPlugin.class.getName() + "," + SpringXMLType.class.getName() );
 
         return properties;
     }
@@ -1170,8 +1179,8 @@ public class BundlePlugin extends AbstractMojo
 
         StringBuffer exportedPkgs = new StringBuffer();
         StringBuffer privatePkgs = new StringBuffer();
-        
-        boolean noprivatePackages = "!*".equals(analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) );
+
+        boolean noprivatePackages = "!*".equals( analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) );
 
         for ( Iterator i = packages.iterator(); i.hasNext(); )
         {
@@ -1183,7 +1192,7 @@ public class BundlePlugin extends AbstractMojo
             // we can't export the default package (".") and we shouldn't export internal packages 
             if ( noprivatePackages || !( ".".equals( pkg ) || pkg.contains( ".internal" ) || pkg.contains( ".impl" ) ) )
             {
-                if( exportedPkgs.length() > 0 )
+                if ( exportedPkgs.length() > 0 )
                 {
                     exportedPkgs.append( ';' );
                 }
@@ -1207,7 +1216,7 @@ public class BundlePlugin extends AbstractMojo
         else
         {
             String exported = analyzer.getProperty( Analyzer.EXPORT_PACKAGE );
-            if( exported.indexOf( LOCAL_PACKAGES ) >= 0 )
+            if ( exported.indexOf( LOCAL_PACKAGES ) >= 0 )
             {
                 String newExported = StringUtils.replace( exported, LOCAL_PACKAGES, exportedPkgs.toString() );
                 analyzer.setProperty( Analyzer.EXPORT_PACKAGE, newExported );
@@ -1232,7 +1241,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static List getMavenResources( MavenProject currentProject )
     {
-        List resources = new ArrayList(currentProject.getResources());
+        List resources = new ArrayList( currentProject.getResources() );
 
         if ( currentProject.getCompileSourceRoots() != null )
         {
@@ -1240,7 +1249,7 @@ public class BundlePlugin extends AbstractMojo
             List packageInfoIncludes = Collections.singletonList( "**/packageinfo" );
             for ( Iterator i = currentProject.getCompileSourceRoots().iterator(); i.hasNext(); )
             {
-                String sourceRoot = (String) i.next();
+                String sourceRoot = ( String ) i.next();
                 Resource packageInfoResource = new Resource();
                 packageInfoResource.setDirectory( sourceRoot );
                 packageInfoResource.setIncludes( packageInfoIncludes );
@@ -1334,7 +1343,7 @@ public class BundlePlugin extends AbstractMojo
         }
 
         StringBuffer resourcePaths = new StringBuffer();
-        for ( Iterator i = pathSet.iterator() ; i.hasNext(); )
+        for ( Iterator i = pathSet.iterator(); i.hasNext(); )
         {
             resourcePaths.append( i.next() );
             if ( i.hasNext() )

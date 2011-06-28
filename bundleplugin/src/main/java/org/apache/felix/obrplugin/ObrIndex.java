@@ -18,6 +18,7 @@
  */
 package org.apache.felix.obrplugin;
 
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileWriter;
@@ -38,6 +39,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
+
 /**
  * Index the content of a maven repository using OBR
  *
@@ -46,7 +48,8 @@ import org.apache.maven.plugin.logging.Log;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class ObrIndex extends AbstractMojo {
+public final class ObrIndex extends AbstractMojo
+{
 
     /**
      * OBR Repository.
@@ -78,56 +81,62 @@ public final class ObrIndex extends AbstractMojo {
      */
     private ArtifactRepository localRepository;
 
-    public void execute() throws MojoExecutionException {
+
+    public void execute() throws MojoExecutionException
+    {
         Log log = getLog();
         try
         {
-            log.info("Indexing...");
+            log.info( "Indexing..." );
 
             String repo = mavenRepository;
-            if (repo == null) {
+            if ( repo == null )
+            {
                 repo = localRepository.getBasedir();
             }
-            URI mavenRepoUri = new File(repo).toURI();
+            URI mavenRepoUri = new File( repo ).toURI();
 
             URI repositoryXml = ObrUtils.findRepositoryXml( repo, obrRepository );
 
-            log.info("Repository:   " + mavenRepoUri);
-            log.info("OBR xml:      " + repositoryXml);
-            log.info("URL template: " + urlTemplate);
+            log.info( "Repository:   " + mavenRepoUri );
+            log.info( "OBR xml:      " + repositoryXml );
+            log.info( "URL template: " + urlTemplate );
 
             List<File> files = new ArrayList<File>();
-            findAllJars( new File(repo), files );
+            findAllJars( new File( repo ), files );
 
             DataModelHelperImpl dmh = new DataModelHelperImpl();
             RepositoryImpl repository;
 
-            File obrRepoFile = new File(repositoryXml);
-            if (obrRepoFile.isFile()) {
-                repository = (RepositoryImpl) dmh.repository( repositoryXml.toURL() );
-            } else {
+            File obrRepoFile = new File( repositoryXml );
+            if ( obrRepoFile.isFile() )
+            {
+                repository = ( RepositoryImpl ) dmh.repository( repositoryXml.toURL() );
+            }
+            else
+            {
                 repository = new RepositoryImpl();
             }
 
-            for (File file : files)
+            for ( File file : files )
             {
                 try
                 {
-                    ResourceImpl resource = (ResourceImpl) dmh.createResource(file.toURI().toURL());
-                    if (resource != null)
+                    ResourceImpl resource = ( ResourceImpl ) dmh.createResource( file.toURI().toURL() );
+                    if ( resource != null )
                     {
-                        repository.addResource(resource);
-                        doTemplate(mavenRepoUri, file, resource);
-                        log.info("Adding resource: " + file);
+                        repository.addResource( resource );
+                        doTemplate( mavenRepoUri, file, resource );
+                        log.info( "Adding resource: " + file );
                     }
                     else
                     {
-                        log.info("Ignoring non OSGi bundle: " + file);
+                        log.info( "Ignoring non OSGi bundle: " + file );
                     }
                 }
-                catch (Exception e)
+                catch ( Exception e )
                 {
-                    log.warn("Error processing bundle: " + file + " " + e.getMessage());
+                    log.warn( "Error processing bundle: " + file + " " + e.getMessage() );
                 }
             }
             Writer writer = new FileWriter( obrRepoFile );
@@ -146,94 +155,105 @@ public final class ObrIndex extends AbstractMojo {
         }
     }
 
-    protected void doTemplate(URI root, File path, ResourceImpl resource) throws IOException, URISyntaxException
+
+    protected void doTemplate( URI root, File path, ResourceImpl resource ) throws IOException, URISyntaxException
     {
         path = path.getAbsoluteFile().getCanonicalFile();
-        String finalUri = root.relativize(path.toURI()).toString();
-        if ("maven".equals(urlTemplate))
+        String finalUri = root.relativize( path.toURI() ).toString();
+        if ( "maven".equals( urlTemplate ) )
         {
-            String dir = root.relativize(path.toURI()).toString();
-            String[] p = dir.split("/");
-            if (p.length >= 4 && p[p.length-1].startsWith(p[p.length-3] + "-" + p[p.length-2]))
+            String dir = root.relativize( path.toURI() ).toString();
+            String[] p = dir.split( "/" );
+            if ( p.length >= 4 && p[p.length - 1].startsWith( p[p.length - 3] + "-" + p[p.length - 2] ) )
             {
-                String artifactId = p[p.length-3];
-                String version = p[p.length-2];
+                String artifactId = p[p.length - 3];
+                String version = p[p.length - 2];
                 String classifier;
                 String type;
                 String artifactIdVersion = artifactId + "-" + version;
                 StringBuffer sb = new StringBuffer();
-                if (p[p.length-1].charAt(artifactIdVersion.length()) == '-')
+                if ( p[p.length - 1].charAt( artifactIdVersion.length() ) == '-' )
                 {
-                    classifier = p[p.length-1].substring(artifactIdVersion.length() + 1, p[p.length-1].lastIndexOf('.'));
+                    classifier = p[p.length - 1].substring( artifactIdVersion.length() + 1,
+                        p[p.length - 1].lastIndexOf( '.' ) );
                 }
                 else
                 {
                     classifier = null;
                 }
-                type = p[p.length-1].substring(p[p.length-1].lastIndexOf('.') + 1);
-                sb.append("mvn:");
-                for (int j = 0; j < p.length - 3; j++)
+                type = p[p.length - 1].substring( p[p.length - 1].lastIndexOf( '.' ) + 1 );
+                sb.append( "mvn:" );
+                for ( int j = 0; j < p.length - 3; j++ )
                 {
-                    if (j > 0)
+                    if ( j > 0 )
                     {
-                        sb.append('.');
+                        sb.append( '.' );
                     }
-                    sb.append(p[j]);
+                    sb.append( p[j] );
                 }
-                sb.append('/').append(artifactId).append('/').append(version);
-                if (!"jar".equals(type) || classifier != null)
+                sb.append( '/' ).append( artifactId ).append( '/' ).append( version );
+                if ( !"jar".equals( type ) || classifier != null )
                 {
-                    sb.append('/');
-                    if (!"jar".equals(type))
+                    sb.append( '/' );
+                    if ( !"jar".equals( type ) )
                     {
-                        sb.append(type);
+                        sb.append( type );
                     }
-                    if (classifier != null)
+                    if ( classifier != null )
                     {
-                        sb.append('/').append(classifier);
+                        sb.append( '/' ).append( classifier );
                     }
                 }
                 finalUri = sb.toString();
             }
         }
-        else if (urlTemplate != null)
+        else if ( urlTemplate != null )
         {
             String dir = path.getParentFile().toURI().toURL().toString();
-            if (dir.endsWith("/"))
-                dir = dir.substring(0, dir.length() - 1);
+            if ( dir.endsWith( "/" ) )
+                dir = dir.substring( 0, dir.length() - 1 );
 
-            if (dir.startsWith(root.toString()))
-                dir = dir.substring(root.toString().length());
+            if ( dir.startsWith( root.toString() ) )
+                dir = dir.substring( root.toString().length() );
 
-            String url = urlTemplate.replaceAll("%v", "" + resource.getVersion());
-            url = url.replaceAll("%s", resource.getSymbolicName());
-            url = url.replaceAll("%f", path.getName());
-            url = url.replaceAll("%p", dir);
+            String url = urlTemplate.replaceAll( "%v", "" + resource.getVersion() );
+            url = url.replaceAll( "%s", resource.getSymbolicName() );
+            url = url.replaceAll( "%f", path.getName() );
+            url = url.replaceAll( "%p", dir );
             finalUri = url;
         }
-        resource.put(Resource.URI, finalUri, Property.URI);
+        resource.put( Resource.URI, finalUri, Property.URI );
     }
 
-    private final FileFilter filter = new FileFilter() {
+    private final FileFilter filter = new FileFilter()
+    {
 
-        public boolean accept(File pathname) {
-            return pathname.getName().endsWith("ar");
+        public boolean accept( File pathname )
+        {
+            return pathname.getName().endsWith( "ar" );
         }
     };
 
 
-    private void findAllJars(File mainRoot, List<File> files) {
+    private void findAllJars( File mainRoot, List<File> files )
+    {
         List<File> roots = new ArrayList<File>();
-        roots.add(mainRoot);
-        while (!roots.isEmpty()) {
-            File root = roots.remove(0);
+        roots.add( mainRoot );
+        while ( !roots.isEmpty() )
+        {
+            File root = roots.remove( 0 );
             File[] children = root.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    if (child.isFile() && filter.accept(child)) {
-                        files.add(child);
-                    } else if (child.isDirectory()) {
-                        roots.add(child);
+            if ( children != null )
+            {
+                for ( File child : children )
+                {
+                    if ( child.isFile() && filter.accept( child ) )
+                    {
+                        files.add( child );
+                    }
+                    else if ( child.isDirectory() )
+                    {
+                        roots.add( child );
                     }
                 }
             }
