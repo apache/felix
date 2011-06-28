@@ -51,7 +51,6 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         super.setUp();
         plugin = new BundlePlugin();
         plugin.setMaven2OsgiConverter( new DefaultMaven2OsgiConverter() );
-        plugin.setBasedir( new File( "." ) );
         plugin.setBuildDirectory( "." );
         plugin.setOutputDirectory( new File( "." ) );
     }

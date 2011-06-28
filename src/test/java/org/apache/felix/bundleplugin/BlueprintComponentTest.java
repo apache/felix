@@ -25,11 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.jar.Manifest;
 
 import aQute.lib.osgi.Builder;
-import aQute.lib.spring.XMLType;
 import junit.framework.TestCase;
 import org.apache.felix.bundleplugin.ManifestPlugin;
 import org.apache.maven.model.Resource;
@@ -40,7 +38,6 @@ public class BlueprintComponentTest extends TestCase {
 
     public void testBlueprint() throws Exception
     {
-
         MavenProjectStub project = new MavenProjectStub() {
             private final List resources = new ArrayList();
             @Override
@@ -51,6 +48,12 @@ public class BlueprintComponentTest extends TestCase {
             @Override
             public List getResources() {
                 return resources;
+            }
+
+            @Override
+            public File getBasedir()
+            {
+                return new File("target/tmp/basedir");
             }
         };
         project.setGroupId( "group" );
@@ -63,7 +66,6 @@ public class BlueprintComponentTest extends TestCase {
         project.addCompileSourceRoot(new File("src/test/resources").getAbsoluteFile().getCanonicalPath());
 
         ManifestPlugin plugin = new ManifestPlugin();
-        plugin.setBasedir(new File("target/tmp/basedir"));
         plugin.setBuildDirectory("target/tmp/basedir/target");
         plugin.setOutputDirectory(new File("target/tmp/basedir/target/classes"));
 
