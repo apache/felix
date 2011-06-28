@@ -93,6 +93,8 @@ public class BundleAllPluginTest extends AbstractBundlePluginTest
         artifact.setVersion( "1.0.0.0" );
 
         MavenProject project = new MavenProjectStub();
+        project.setGroupId( artifact.getGroupId() );
+        project.setArtifactId( artifact.getArtifactId() );
         project.setVersion( artifact.getVersion() );
         project.setArtifact( artifact );
         project.setArtifacts( Collections.EMPTY_SET );
