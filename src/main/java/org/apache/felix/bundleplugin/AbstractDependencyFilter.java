@@ -115,7 +115,8 @@ public abstract class AbstractDependencyFilter
             StringBuilder tag = new StringBuilder();
             tag.append( clause.getKey() );
 
-            if( !((String)clause.getKey()).matches("\\*~*") ) {
+            if ( !( ( String ) clause.getKey() ).matches( "\\*~*" ) )
+            {
                 filter = new DependencyFilter( ( String ) clause.getKey() )
                 {
                     boolean matches( Artifact dependency )

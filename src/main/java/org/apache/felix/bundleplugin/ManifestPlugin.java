@@ -127,8 +127,8 @@ public class ManifestPlugin extends BundlePlugin
     }
 
 
-    protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath )
-        throws IOException, MojoExecutionException, Exception
+    protected Analyzer getAnalyzer( MavenProject project, Jar[] classpath ) throws IOException, MojoExecutionException,
+        Exception
     {
         return getAnalyzer( project, new LinkedHashMap(), new Properties(), classpath );
     }
@@ -152,9 +152,9 @@ public class ManifestPlugin extends BundlePlugin
 
         analyzer.setJar( file );
 
-        if ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == null &&
-             analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == null &&
-             analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null )
+        if ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == null
+            && analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == null
+            && analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null )
         {
             String export = analyzer.calculateExportsFromContents( analyzer.getJar() );
             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );

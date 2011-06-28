@@ -167,15 +167,15 @@ public class ObrUpdate
 
             try
             {
-                m_resourceBundle = (ResourceImpl) new DataModelHelperImpl().createResource( bundleJar.toURL() );
-                if (m_resourceBundle == null)
+                m_resourceBundle = ( ResourceImpl ) new DataModelHelperImpl().createResource( bundleJar.toURL() );
+                if ( m_resourceBundle == null )
                 {
                     return;
                 }
             }
-            catch (IOException e)
+            catch ( IOException e )
             {
-                throw new MojoExecutionException("Unable to load resource information", e);
+                throw new MojoExecutionException( "Unable to load resource information", e );
             }
 
             m_resourceBundle.put( Resource.SIZE, String.valueOf( bundleFile.length() ) );
@@ -202,11 +202,11 @@ public class ObrUpdate
         String sourcePath = relativisePath( sourceJar );
         String docPath = relativisePath( docJar );
 
-//        m_resourceBundle.construct( m_project, bindexExtractor, sourcePath, docPath );
-//         TODO: rebuild wrt m_project
+        //        m_resourceBundle.construct( m_project, bindexExtractor, sourcePath, docPath );
+        //         TODO: rebuild wrt m_project
 
         m_repository.addResource( m_resourceBundle );
-        m_repository.setLastModified(System.currentTimeMillis());
+        m_repository.setLastModified( System.currentTimeMillis() );
     }
 
 
@@ -246,7 +246,7 @@ public class ObrUpdate
 
         try
         {
-            new DataModelHelperImpl().writeRepository(m_repository, writer);
+            new DataModelHelperImpl().writeRepository( m_repository, writer );
         }
         catch ( IOException e )
         {
@@ -271,11 +271,11 @@ public class ObrUpdate
     }
 
 
-   /**
-     * Parse the repository descriptor file.
-     *
-     * @throws MojoExecutionException if the plugin failed
-     */
+    /**
+      * Parse the repository descriptor file.
+      *
+      * @throws MojoExecutionException if the plugin failed
+      */
     public void parseRepositoryXml() throws MojoExecutionException
     {
         File fout = new File( m_repositoryXml );
@@ -288,7 +288,7 @@ public class ObrUpdate
         {
             try
             {
-                m_repository = (RepositoryImpl) new DataModelHelperImpl().repository( m_repositoryXml.toURL() );
+                m_repository = ( RepositoryImpl ) new DataModelHelperImpl().repository( m_repositoryXml.toURL() );
             }
             catch ( Exception e )
             {
@@ -301,54 +301,55 @@ public class ObrUpdate
     /**
      * put the information from obr.xml into ressourceBundle object.
      */
-    private void parseObrXml() throws MojoExecutionException {
+    private void parseObrXml() throws MojoExecutionException
+    {
         try
         {
-            InputStream is = new FileInputStream(new File(m_obrXml));
+            InputStream is = new FileInputStream( new File( m_obrXml ) );
             try
             {
                 KXmlParser kxp = new KXmlParser();
-                kxp.setInput(is, null);
+                kxp.setInput( is, null );
                 kxp.nextTag(); // skip top level element
                 kxp.nextTag(); // go to first child element
-                parseObrXml(kxp);
+                parseObrXml( kxp );
             }
             finally
             {
                 is.close();
             }
         }
-        catch (Exception e)
+        catch ( Exception e )
         {
-            throw new MojoExecutionException("Unable to parse obr xml: " + m_obrXml, e);
+            throw new MojoExecutionException( "Unable to parse obr xml: " + m_obrXml, e );
         }
     }
 
-    private void parseObrXml(KXmlParser kxp) throws Exception
+
+    private void parseObrXml( KXmlParser kxp ) throws Exception
     {
         PullParser parser = new PullParser();
-        while (kxp.getEventType() == XmlPullParser.START_TAG)
+        while ( kxp.getEventType() == XmlPullParser.START_TAG )
         {
-            if (RepositoryParser.CATEGORY.equals(kxp.getName()))
+            if ( RepositoryParser.CATEGORY.equals( kxp.getName() ) )
             {
-                m_resourceBundle.addCategory(parser.parseCategory(kxp));
+                m_resourceBundle.addCategory( parser.parseCategory( kxp ) );
             }
-            else if (RepositoryParser.REQUIRE.equals(kxp.getName()))
+            else if ( RepositoryParser.REQUIRE.equals( kxp.getName() ) )
             {
-                m_resourceBundle.addRequire(parser.parseRequire(kxp));
+                m_resourceBundle.addRequire( parser.parseRequire( kxp ) );
             }
-            else if (RepositoryParser.CAPABILITY.equals(kxp.getName()))
+            else if ( RepositoryParser.CAPABILITY.equals( kxp.getName() ) )
             {
-                m_resourceBundle.addCapability(parser.parseCapability(kxp));
+                m_resourceBundle.addCapability( parser.parseCapability( kxp ) );
             }
             else
             {
                 kxp.nextTag();
-                parseObrXml(kxp);
+                parseObrXml( kxp );
             }
             kxp.nextTag();
         }
     }
-
 
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.felix.bundleplugin;
 
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -28,12 +29,14 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 
+
 /**
  * @goal cleanVersions
  * @description clean OSGi versions
  * @threadSafe
  */
-public class VersionCleanerPlugin extends AbstractMojo {
+public class VersionCleanerPlugin extends AbstractMojo
+{
 
     /**
      * The BND instructions for the bundle.
@@ -53,21 +56,27 @@ public class VersionCleanerPlugin extends AbstractMojo {
 
     private Maven2OsgiConverter maven2OsgiConverter = new DefaultMaven2OsgiConverter();
 
-    public Maven2OsgiConverter getMaven2OsgiConverter() {
+
+    public Maven2OsgiConverter getMaven2OsgiConverter()
+    {
         return maven2OsgiConverter;
     }
 
-    public void setMaven2OsgiConverter(Maven2OsgiConverter maven2OsgiConverter) {
+
+    public void setMaven2OsgiConverter( Maven2OsgiConverter maven2OsgiConverter )
+    {
         this.maven2OsgiConverter = maven2OsgiConverter;
     }
 
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        for (Object key : versions.keySet())
+
+    public void execute() throws MojoExecutionException, MojoFailureException
+    {
+        for ( Object key : versions.keySet() )
         {
-            String name = (String) key;
-            String version = (String) versions.get(key);
-            String osgi = maven2OsgiConverter.getVersion(version);
-            project.getProperties().put(name, osgi);
+            String name = ( String ) key;
+            String version = ( String ) versions.get( key );
+            String osgi = maven2OsgiConverter.getVersion( version );
+            project.getProperties().put( name, osgi );
         }
     }
 }

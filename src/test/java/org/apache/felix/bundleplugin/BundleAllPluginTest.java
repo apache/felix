@@ -114,8 +114,8 @@ public class BundleAllPluginTest extends AbstractBundlePluginTest
                 exports.containsKey( packages[i] ) );
         }
 
-        assertFalse( "Bundle info contains a package that it is not exported in the manifest", exports
-            .containsKey( "org.apache.maven.model.io.xpp3" ) );
+        assertFalse( "Bundle info contains a package that it is not exported in the manifest",
+            exports.containsKey( "org.apache.maven.model.io.xpp3" ) );
     }
 
     //    public void testRewriting()

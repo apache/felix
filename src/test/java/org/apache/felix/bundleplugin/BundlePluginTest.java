@@ -22,13 +22,13 @@ package org.apache.felix.bundleplugin;
 
 import java.io.File;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Properties;
+import java.util.TreeMap;
 
+import org.apache.maven.model.Organization;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
-import org.apache.maven.model.Organization;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
@@ -112,7 +112,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         project.setArtifactId( "artifact" );
         project.setVersion( "1.1.0.0" );
 
-//        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
+        //        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
         Builder analyzer = new Builder();
         Jar jar = new Jar( "name", osgiBundleFile );
         analyzer.setJar( jar );
@@ -165,6 +165,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         assertEquals( "", transformedInstructions.get( "-z" ) );
     }
 
+
     public void testDefaultPropertiesIncludeOrganization()
     {
         final Organization organization = new Organization();
@@ -174,7 +175,8 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         // MavenProjectStub.setOrganization(Organization) doesn't do anything, so we have to make it work this way
         MavenProject project = new MavenProjectStub()
         {
-            @Override public Organization getOrganization()
+            @Override
+            public Organization getOrganization()
             {
                 return organization;
             }
@@ -190,12 +192,14 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         assertEquals( organization.getUrl(), properties.getProperty( "pom.organization.url" ) );
     }
 
+
     public void testVersion() throws Exception
     {
         String cleanupVersion = Builder.cleanupVersion( "0.0.0.4aug2000r7-dev" );
         assertEquals( "0.0.0.4aug2000r7-dev", cleanupVersion );
     }
-    
+
+
     public void testPackageInfoDetection() throws Exception
     {
         MavenProject project = new MavenProjectStub();
@@ -203,7 +207,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
 
         String resourcePaths = plugin.getMavenResourcePaths( project );
 
-        assertEquals( "org/apache/felix/bundleplugin/packageinfo=" +
-                      "src/test/java/org/apache/felix/bundleplugin/packageinfo", resourcePaths );
+        assertEquals( "org/apache/felix/bundleplugin/packageinfo="
+            + "src/test/java/org/apache/felix/bundleplugin/packageinfo", resourcePaths );
     }
 }
