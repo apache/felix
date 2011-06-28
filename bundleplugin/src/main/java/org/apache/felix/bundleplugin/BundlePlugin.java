@@ -46,6 +46,7 @@ import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
@@ -187,6 +188,13 @@ public class BundlePlugin extends AbstractMojo
      * @parameter
      */
     private MavenArchiveConfiguration archive; // accessed indirectly in JarPluginConfiguration
+
+    /**
+     * @parameter default-value="${session}"
+     * @required
+     * @readonly
+     */
+    private MavenSession m_mavenSession;   
 
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
@@ -1012,9 +1020,15 @@ public class BundlePlugin extends AbstractMojo
 
         properties.putAll( currentProject.getProperties() );
         properties.putAll( currentProject.getModel().getProperties() );
+        if ( m_mavenSession != null )
+        {
+            properties.putAll( m_mavenSession.getExecutionProperties() );
+        }
+
         properties.putAll( getProperties( currentProject.getModel(), "project.build." ) );
         properties.putAll( getProperties( currentProject.getModel(), "pom." ) );
         properties.putAll( getProperties( currentProject.getModel(), "project." ) );
+
         properties.put( "project.baseDir", baseDir );
         properties.put( "project.build.directory", getBuildDirectory() );
         properties.put( "project.build.outputdirectory", getOutputDirectory() );
