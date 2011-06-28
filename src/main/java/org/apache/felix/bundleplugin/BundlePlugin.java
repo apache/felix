@@ -286,44 +286,46 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
+    protected boolean reportErrors( String prefix, Builder builder )
+    {
+        List errors = builder.getErrors();
+        List warnings = builder.getWarnings();
+
+        for ( Iterator w = warnings.iterator(); w.hasNext(); )
+        {
+            String msg = ( String ) w.next();
+            getLog().warn( prefix + " : " + msg );
+        }
+
+        boolean hasErrors = false;
+        String fileNotFound = "Input file does not exist: ";
+        for ( Iterator e = errors.iterator(); e.hasNext(); )
+        {
+            String msg = ( String ) e.next();
+            if ( msg.startsWith( fileNotFound ) && msg.endsWith( "~" ) )
+            {
+                // treat as warning; this error happens when you have duplicate entries in Include-Resource
+                String duplicate = Processor.removeDuplicateMarker( msg.substring( fileNotFound.length() ) );
+                getLog().warn( prefix + " : Duplicate path '" + duplicate  + "' in Include-Resource" );
+            }
+            else
+            {
+                getLog().error( prefix + " : " + msg );
+                hasErrors = true;
+            }
+        }
+        return hasErrors;
+    }
+
+
     protected void execute( MavenProject currentProject, Map originalInstructions, Properties properties,
         Jar[] classpath ) throws MojoExecutionException
     {
         try
         {
             File jarFile = new File( getBuildDirectory(), getBundleName( currentProject ) );
-
             Builder builder = buildOSGiBundle( currentProject, originalInstructions, properties, classpath );
-
-            List errors = builder.getErrors();
-            List warnings = builder.getWarnings();
-
-            String warningPrefix = "Warning building bundle " + currentProject.getArtifact() + " : ";
-            for ( Iterator w = warnings.iterator(); w.hasNext(); )
-            {
-                String msg = ( String ) w.next();
-                getLog().warn( warningPrefix + msg );
-            }
-
-            boolean hasErrors = false;
-            String errorPrefix = "Error building bundle " + currentProject.getArtifact() + " : ";
-            String fileNotFound = "Input file does not exist: ";
-            for ( Iterator e = errors.iterator(); e.hasNext(); )
-            {
-                String msg = ( String ) e.next();
-                if ( msg.startsWith( fileNotFound ) && msg.endsWith( "~" ) )
-                {
-                    // treat as warning; this error happens when you have duplicate entries in Include-Resource
-                    String duplicate = Processor.removeDuplicateMarker( msg.substring( fileNotFound.length() ) );
-                    getLog().warn( warningPrefix + "Duplicate path '" + duplicate  + "' in Include-Resource" );
-                }
-                else
-                {
-                    getLog().error( errorPrefix + msg );
-                    hasErrors = true;
-                }
-            }
-
+            boolean hasErrors = reportErrors( "Bundle " + currentProject.getArtifact(), builder );
             if ( hasErrors )
             {
                 String failok = builder.getProperty( "-failok" );
@@ -1157,15 +1159,18 @@ public class BundlePlugin extends AbstractMojo
     {
         List resources = new ArrayList(project.getResources());
 
-        // also scan for any "packageinfo" files lurking in the source folders
-        List packageInfoIncludes = Collections.singletonList( "**/packageinfo" );
-        for ( Iterator i = project.getCompileSourceRoots().iterator(); i.hasNext(); )
+        if ( project.getCompileSourceRoots() != null )
         {
-            String sourceRoot = (String) i.next();
-            Resource packageInfoResource = new Resource();
-            packageInfoResource.setDirectory( sourceRoot );
-            packageInfoResource.setIncludes( packageInfoIncludes );
-            resources.add( packageInfoResource );
+            // also scan for any "packageinfo" files lurking in the source folders
+            List packageInfoIncludes = Collections.singletonList( "**/packageinfo" );
+            for ( Iterator i = project.getCompileSourceRoots().iterator(); i.hasNext(); )
+            {
+                String sourceRoot = (String) i.next();
+                Resource packageInfoResource = new Resource();
+                packageInfoResource.setDirectory( sourceRoot );
+                packageInfoResource.setIncludes( packageInfoIncludes );
+                resources.add( packageInfoResource );
+            }
         }
 
         return resources;
