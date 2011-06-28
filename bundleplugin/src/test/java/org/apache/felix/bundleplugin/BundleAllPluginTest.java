@@ -52,7 +52,6 @@ public class BundleAllPluginTest extends AbstractBundlePluginTest
     {
         plugin = new BundleAllPlugin();
         File baseDirectory = new File( getBasedir() );
-        plugin.setBasedir( baseDirectory );
         File buildDirectory = new File( baseDirectory, "target" );
         plugin.setBuildDirectory( buildDirectory.getPath() );
         File outputDirectory = new File( buildDirectory, "test-classes" );

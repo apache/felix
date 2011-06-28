@@ -146,14 +146,6 @@ public class BundlePlugin extends AbstractMojo
     private File outputDirectory;
 
     /**
-     * The directory for the pom
-     *
-     * @parameter expression="${basedir}"
-     * @required
-     */
-    private File baseDir;
-
-    /**
      * The directory for the generated JAR.
      *
      * @parameter expression="${project.build.directory}"
@@ -400,17 +392,28 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Builder buildOSGiBundle( MavenProject currentProject, Map originalInstructions, Properties properties,
+    protected Builder getOSGiBuilder( MavenProject currentProject, Map originalInstructions, Properties properties,
         Jar[] classpath ) throws Exception
     {
         properties.putAll( getDefaultProperties( currentProject ) );
         properties.putAll( transformDirectives( originalInstructions ) );
 
         Builder builder = new Builder();
-        builder.setBase( currentProject.getBasedir() );
+        if ( currentProject.getBasedir() != null )
+        {
+            builder.setBase( currentProject.getBasedir() );
+        }
         builder.setProperties( properties );
-        builder.setClasspath( classpath );
+        if ( classpath != null )
+        {
+            builder.setClasspath( classpath );
+        }
 
+        return builder;
+    }
+
+    protected void addMavenInstructions( MavenProject currentProject, Builder builder ) throws Exception
+    {
         // update BND instructions to add included Maven resources
         includeMavenResources( currentProject, builder, getLog() );
 
@@ -423,18 +426,18 @@ public class BundlePlugin extends AbstractMojo
 
         dumpInstructions( "BND Instructions:", builder.getProperties(), getLog() );
         dumpClasspath( "BND Classpath:", builder.getClasspath(), getLog() );
+    }
+
+    protected Builder buildOSGiBundle( MavenProject currentProject, Map originalInstructions, Properties properties,
+        Jar[] classpath ) throws Exception
+    {
+        Builder builder = getOSGiBuilder( currentProject, originalInstructions, properties, classpath );
+
+        addMavenInstructions( currentProject, builder );
 
         builder.build();
-        Jar jar = builder.getJar();
 
-        dumpManifest( "BND Manifest:", jar.getManifest(), getLog() );
-
-        String[] removeHeaders = builder.getProperty( Constants.REMOVEHEADERS, "" ).split( "," );
-
-        mergeMavenManifest( currentProject, jar, removeHeaders, getLog() );
-        builder.setJar( jar );
-
-        dumpManifest( "Final Manifest:", jar.getManifest(), getLog() );
+        mergeMavenManifest( currentProject, builder );
 
         return builder;
     }
@@ -531,9 +534,13 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected void mergeMavenManifest( MavenProject currentProject, Jar jar, String[] removeHeaders, Log log )
-        throws IOException
+    protected void mergeMavenManifest( MavenProject currentProject, Builder builder )
+        throws Exception
     {
+        Jar jar = builder.getJar();
+
+        dumpManifest( "BND Manifest:", jar.getManifest(), getLog() );
+
         boolean addMavenDescriptor = true;
 
         try
@@ -587,6 +594,8 @@ public class BundlePlugin extends AbstractMojo
             Attributes mainMavenAttributes = mavenManifest.getMainAttributes();
             mainMavenAttributes.putValue( "Created-By", "Apache Maven Bundle Plugin" );
 
+            String[] removeHeaders = builder.getProperty( Constants.REMOVEHEADERS, "" ).split( "," );
+
             // apply -removeheaders to the custom manifest
             for ( int i = 0; i < removeHeaders.length; i++ )
             {
@@ -628,13 +637,17 @@ public class BundlePlugin extends AbstractMojo
         }
         catch ( Exception e )
         {
-            log.warn( "Unable to merge Maven manifest: " + e.getLocalizedMessage() );
+            getLog().warn( "Unable to merge Maven manifest: " + e.getLocalizedMessage() );
         }
 
         if ( addMavenDescriptor )
         {
             doMavenMetadata( currentProject, jar );
         }
+
+        dumpManifest( "Final Manifest:", builder.getJar().getManifest(), getLog() );
+
+        builder.setJar( jar );
     }
 
 
@@ -824,7 +837,7 @@ public class BundlePlugin extends AbstractMojo
     private void doMavenMetadata( MavenProject currentProject, Jar jar ) throws IOException
     {
         String path = "META-INF/maven/" + currentProject.getGroupId() + "/" + currentProject.getArtifactId();
-        File pomFile = new File( baseDir, "pom.xml" );
+        File pomFile = new File( currentProject.getBasedir(), "pom.xml" );
         jar.putResource( path + "/pom.xml", new FileResource( pomFile ) );
 
         Properties p = new Properties();
@@ -1029,7 +1042,7 @@ public class BundlePlugin extends AbstractMojo
         properties.putAll( getProperties( currentProject.getModel(), "pom." ) );
         properties.putAll( getProperties( currentProject.getModel(), "project." ) );
 
-        properties.put( "project.baseDir", baseDir );
+        properties.put( "project.baseDir", currentProject.getBasedir() );
         properties.put( "project.build.directory", getBuildDirectory() );
         properties.put( "project.build.outputdirectory", getOutputDirectory() );
 
@@ -1041,12 +1054,6 @@ public class BundlePlugin extends AbstractMojo
                         + SpringXMLType.class.getName());
 
         return properties;
-    }
-
-
-    protected void setBasedir( File _basedir )
-    {
-        baseDir = _basedir;
     }
 
 
