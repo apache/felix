@@ -103,7 +103,7 @@ public class ManifestPlugin extends BundlePlugin
     public Manifest getManifest( MavenProject project, Jar[] classpath ) throws IOException, MojoFailureException,
         MojoExecutionException, Exception
     {
-        return getManifest( project, new Properties(), new Properties(), classpath );
+        return getManifest( project, new LinkedHashMap(), new Properties(), classpath );
     }
 
 
@@ -111,22 +111,8 @@ public class ManifestPlugin extends BundlePlugin
         throws IOException, MojoFailureException, MojoExecutionException, Exception
     {
         Analyzer analyzer = getAnalyzer( project, instructions, properties, classpath );
-
-        List errors = analyzer.getErrors();
-        List warnings = analyzer.getWarnings();
-
-        for ( Iterator w = warnings.iterator(); w.hasNext(); )
-        {
-            String msg = ( String ) w.next();
-            getLog().warn( "Warning in manifest for " + project.getArtifact() + " : " + msg );
-        }
-        for ( Iterator e = errors.iterator(); e.hasNext(); )
-        {
-            String msg = ( String ) e.next();
-            getLog().error( "Error in manifest for " + project.getArtifact() + " : " + msg );
-        }
-
-        if ( errors.size() > 0 )
+        boolean hasErrors = reportErrors( "Manifest " + project.getArtifact(), analyzer );
+        if ( hasErrors )
         {
             String failok = analyzer.getProperty( "-failok" );
             if ( null == failok || "false".equalsIgnoreCase( failok ) )
@@ -165,19 +151,7 @@ public class ManifestPlugin extends BundlePlugin
             throw new FileNotFoundException( file.getPath() );
         }
 
-        properties.putAll( getDefaultProperties( project ) );
-        properties.putAll( transformDirectives( instructions ) );
-
-//        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
-        Builder analyzer = new Builder();
-
-        if ( project.getBasedir() != null )
-            analyzer.setBase( project.getBasedir() );
-
-        analyzer.setProperties( properties );
-
-        if ( classpath != null )
-            analyzer.setClasspath( classpath );
+        Builder analyzer = getOSGiBuilder( project, instructions, properties, classpath );
 
         analyzer.setJar( file );
 
@@ -189,17 +163,12 @@ public class ManifestPlugin extends BundlePlugin
             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );
         }
 
-        // Apply Embed-Dependency headers, even though the contents won't be changed
-        Collection embeddableArtifacts = getEmbeddableArtifacts( project, analyzer );
-        new DependencyEmbedder( getLog(), embeddableArtifacts ).processHeaders( analyzer );
-
-        dumpInstructions( "BND Instructions:", analyzer.getProperties(), getLog() );
-        dumpClasspath( "BND Classpath:", analyzer.getClasspath(), getLog() );
+        addMavenInstructions( project, analyzer );
 
         analyzer.mergeManifest( analyzer.getJar().getManifest() );
         analyzer.calcManifest();
 
-        dumpManifest( "BND Manifest:", analyzer.getJar().getManifest(), getLog() );
+        mergeMavenManifest( project, analyzer );
 
         return analyzer;
     }

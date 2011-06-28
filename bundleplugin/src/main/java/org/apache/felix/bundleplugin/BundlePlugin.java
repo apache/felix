@@ -286,10 +286,10 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected boolean reportErrors( String prefix, Builder builder )
+    protected boolean reportErrors( String prefix, Analyzer analyzer )
     {
-        List errors = builder.getErrors();
-        List warnings = builder.getWarnings();
+        List errors = analyzer.getErrors();
+        List warnings = analyzer.getWarnings();
 
         for ( Iterator w = warnings.iterator(); w.hasNext(); )
         {
@@ -401,10 +401,7 @@ public class BundlePlugin extends AbstractMojo
         properties.putAll( transformDirectives( originalInstructions ) );
 
         Builder builder = new Builder();
-        if ( currentProject.getBasedir() != null )
-        {
-            builder.setBase( currentProject.getBasedir() );
-        }
+        builder.setBase( getBase( currentProject ) );
         builder.setProperties( properties );
         if ( classpath != null )
         {
@@ -416,11 +413,14 @@ public class BundlePlugin extends AbstractMojo
 
     protected void addMavenInstructions( MavenProject currentProject, Builder builder ) throws Exception
     {
-        // update BND instructions to add included Maven resources
-        includeMavenResources( currentProject, builder, getLog() );
+        if ( currentProject.getBasedir() != null )
+        {
+            // update BND instructions to add included Maven resources
+            includeMavenResources( currentProject, builder, getLog() );
 
-        // calculate default export/private settings based on sources
-        addLocalPackages( outputDirectory, builder );
+            // calculate default export/private settings based on sources
+            addLocalPackages( outputDirectory, builder );
+        }
 
         // update BND instructions to embed selected Maven dependencies
         Collection embeddableArtifacts = getEmbeddableArtifacts( currentProject, builder );
@@ -543,7 +543,7 @@ public class BundlePlugin extends AbstractMojo
 
         dumpManifest( "BND Manifest:", jar.getManifest(), getLog() );
 
-        boolean addMavenDescriptor = true;
+        boolean addMavenDescriptor = currentProject.getBasedir() != null;
 
         try
         {
@@ -552,7 +552,7 @@ public class BundlePlugin extends AbstractMojo
              */
             MavenArchiveConfiguration archiveConfig = JarPluginConfiguration.getArchiveConfiguration( currentProject );
             String mavenManifestText = new MavenArchiver().getManifest( currentProject, archiveConfig ).toString();
-            addMavenDescriptor = archiveConfig.isAddMavenDescriptor();
+            addMavenDescriptor = addMavenDescriptor && archiveConfig.isAddMavenDescriptor();
 
             Manifest mavenManifest = new Manifest();
 
@@ -959,7 +959,7 @@ public class BundlePlugin extends AbstractMojo
         {
             extension = currentProject.getArtifact().getType();
         }
-        if ( StringUtils.isEmpty( extension ) || "bundle".equals( extension ) )
+        if ( StringUtils.isEmpty( extension ) || "bundle".equals( extension ) || "pom".equals( extension ) )
         {
             extension = "jar"; // just in case maven gets confused
         }
@@ -1044,7 +1044,7 @@ public class BundlePlugin extends AbstractMojo
         properties.putAll( getProperties( currentProject.getModel(), "pom." ) );
         properties.putAll( getProperties( currentProject.getModel(), "project." ) );
 
-        properties.put( "project.baseDir", currentProject.getBasedir() );
+        properties.put( "project.baseDir", getBase( currentProject ) );
         properties.put( "project.build.directory", getBuildDirectory() );
         properties.put( "project.build.outputdirectory", getOutputDirectory() );
 
@@ -1056,6 +1056,12 @@ public class BundlePlugin extends AbstractMojo
                         + SpringXMLType.class.getName());
 
         return properties;
+    }
+
+
+    protected static File getBase( MavenProject currentProject )
+    {
+        return currentProject.getBasedir() != null ? currentProject.getBasedir() : new File( "" );
     }
 
 
@@ -1155,15 +1161,15 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    private static List getMavenResources( MavenProject project )
+    private static List getMavenResources( MavenProject currentProject )
     {
-        List resources = new ArrayList(project.getResources());
+        List resources = new ArrayList(currentProject.getResources());
 
-        if ( project.getCompileSourceRoots() != null )
+        if ( currentProject.getCompileSourceRoots() != null )
         {
             // also scan for any "packageinfo" files lurking in the source folders
             List packageInfoIncludes = Collections.singletonList( "**/packageinfo" );
-            for ( Iterator i = project.getCompileSourceRoots().iterator(); i.hasNext(); )
+            for ( Iterator i = currentProject.getCompileSourceRoots().iterator(); i.hasNext(); )
             {
                 String sourceRoot = (String) i.next();
                 Resource packageInfoResource = new Resource();
@@ -1177,12 +1183,12 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected static String getMavenResourcePaths( MavenProject project )
+    protected static String getMavenResourcePaths( MavenProject currentProject )
     {
-        final String basePath = project.getBasedir().getAbsolutePath();
+        final String basePath = currentProject.getBasedir().getAbsolutePath();
 
         Set pathSet = new LinkedHashSet();
-        for ( Iterator i = getMavenResources( project ).iterator(); i.hasNext(); )
+        for ( Iterator i = getMavenResources( currentProject ).iterator(); i.hasNext(); )
         {
             Resource resource = ( Resource ) i.next();
 
@@ -1272,7 +1278,7 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected Collection getEmbeddableArtifacts( MavenProject project, Analyzer analyzer )
+    protected Collection getEmbeddableArtifacts( MavenProject currentProject, Analyzer analyzer )
         throws MojoExecutionException
     {
         final Collection artifacts;
@@ -1281,12 +1287,12 @@ public class BundlePlugin extends AbstractMojo
         if ( Boolean.valueOf( embedTransitive ).booleanValue() )
         {
             // includes transitive dependencies
-            artifacts = project.getArtifacts();
+            artifacts = currentProject.getArtifacts();
         }
         else
         {
             // only includes direct dependencies
-            artifacts = project.getDependencyArtifacts();
+            artifacts = currentProject.getDependencyArtifacts();
         }
 
         return getSelectedDependencies( artifacts );
