@@ -19,12 +19,7 @@
 package org.apache.felix.bundleplugin;
 
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
-
 import aQute.lib.osgi.Builder;
-import aQute.lib.osgi.Jar;
 
 
 /**

@@ -21,7 +21,6 @@ package org.apache.felix.obrplugin;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 

@@ -19,11 +19,13 @@
 package org.apache.felix.bundleplugin;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +63,7 @@ import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.util.DirectoryScanner;
-import org.codehaus.plexus.util.StringInputStream;
+import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.lib.osgi.Analyzer;
@@ -91,6 +93,20 @@ public class BundlePlugin extends AbstractMojo
      * @parameter expression="${manifestLocation}" default-value="${project.build.outputDirectory}/META-INF"
      */
     protected File manifestLocation;
+
+    /**
+     * File where the BND instructions will be dumped
+     *
+     * @parameter expression="${dumpInstructions}"
+     */
+    protected File dumpInstructions;
+
+    /**
+     * File where the BND class-path will be dumped
+     *
+     * @parameter expression="${dumpClasspath}"
+     */
+    protected File dumpClasspath;
 
     /**
      * When true, unpack the bundle contents to the outputDirectory
@@ -196,6 +212,8 @@ public class BundlePlugin extends AbstractMojo
         {};
     private static final String[] DEFAULT_INCLUDES =
         { "**/**" };
+
+    private static final String NL = System.getProperty( "line.separator" );
 
 
     protected Maven2OsgiConverter getMaven2OsgiConverter()
@@ -426,9 +444,27 @@ public class BundlePlugin extends AbstractMojo
         Collection embeddableArtifacts = getEmbeddableArtifacts( currentProject, builder );
         new DependencyEmbedder( getLog(), embeddableArtifacts ).processHeaders( builder );
 
-        dumpInstructions( "BND Instructions:", builder.getProperties(), getLog() );
-        dumpClasspath( "BND Classpath:", builder.getClasspath(), getLog() );
+        if ( dumpInstructions != null || getLog().isDebugEnabled() )
+        {
+            StringBuilder buf = new StringBuilder();
+            getLog().debug( "BND Instructions:" + NL + dumpInstructions( builder.getProperties(), buf ) );
+            if ( dumpInstructions != null )
+            {
+                FileUtils.fileWrite( dumpInstructions, buf.toString() );
+            }
+        }
+
+        if ( dumpClasspath != null || getLog().isDebugEnabled() )
+        {
+            StringBuilder buf = new StringBuilder();
+            getLog().debug( "BND Classpath:" + NL + dumpClasspath( builder.getClasspath(), buf ) );
+            if ( dumpClasspath != null )
+            {
+                FileUtils.fileWrite( dumpClasspath, buf.toString() );
+            }
+        }
     }
+
 
     protected Builder buildOSGiBundle( MavenProject currentProject, Map originalInstructions, Properties properties,
         Jar[] classpath ) throws Exception
@@ -445,51 +481,74 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected static void dumpInstructions( String title, Properties properties, Log log )
+    protected static StringBuilder dumpInstructions( Properties properties, StringBuilder buf )
     {
-        if ( log.isDebugEnabled() )
+        try
         {
-            log.debug( title );
-            log.debug( "------------------------------------------------------------------------" );
+            buf.append( "#-----------------------------------------------------------------------" + NL );
+            Properties stringProperties = new Properties();
             for ( Enumeration e = properties.propertyNames(); e.hasMoreElements(); )
             {
+                // we can only store String properties
                 String key = ( String ) e.nextElement();
-                log.debug( key + ": " + properties.getProperty( key ) );
+                String value = properties.getProperty( key );
+                if ( value != null )
+                {
+                    stringProperties.setProperty( key, value );
+                }
             }
-            log.debug( "------------------------------------------------------------------------" );
+            StringWriter writer = new StringWriter();
+            stringProperties.store( writer, null );
+            buf.append( writer );
+            buf.append( "#-----------------------------------------------------------------------" + NL );
         }
+        catch ( Throwable e )
+        {
+            // ignore...
+        }
+        return buf;
     }
 
 
-    protected static void dumpClasspath( String title, List classpath, Log log )
+    protected static StringBuilder dumpClasspath( List classpath, StringBuilder buf )
     {
-        if ( log.isDebugEnabled() )
+        try
         {
-            log.debug( title );
-            log.debug( "------------------------------------------------------------------------" );
+            buf.append( "#-----------------------------------------------------------------------" + NL );
+            buf.append( "-classpath:\\" + NL );
             for ( Iterator i = classpath.iterator(); i.hasNext(); )
             {
                 File path = ( ( Jar ) i.next() ).getSource();
-                log.debug( null == path ? "null" : path.toString() );
+                if ( path != null )
+                {
+                    buf.append( ' ' + path.toString() + ( i.hasNext() ? ",\\" : "" ) + NL );
+                }
             }
-            log.debug( "------------------------------------------------------------------------" );
+            buf.append( "#-----------------------------------------------------------------------" + NL );
         }
+        catch ( Throwable e )
+        {
+            // ignore...
+        }
+        return buf;
     }
 
 
-    protected static void dumpManifest( String title, Manifest manifest, Log log )
+    protected static StringBuilder dumpManifest( Manifest manifest, StringBuilder buf )
     {
-        if ( log.isDebugEnabled() )
+        try
         {
-            log.debug( title );
-            log.debug( "------------------------------------------------------------------------" );
-            for ( Iterator i = manifest.getMainAttributes().entrySet().iterator(); i.hasNext(); )
-            {
-                Map.Entry entry = ( Map.Entry ) i.next();
-                log.debug( entry.getKey() + ": " + entry.getValue() );
-            }
-            log.debug( "------------------------------------------------------------------------" );
+            buf.append( "#-----------------------------------------------------------------------" + NL );
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            manifest.write( out ); // manifest encoding is UTF8
+            buf.append( out.toString( "UTF8" ) );
+            buf.append( "#-----------------------------------------------------------------------" + NL );
         }
+        catch ( Throwable e )
+        {
+            // ignore...
+        }
+        return buf;
     }
 
 
@@ -541,7 +600,10 @@ public class BundlePlugin extends AbstractMojo
     {
         Jar jar = builder.getJar();
 
-        dumpManifest( "BND Manifest:", jar.getManifest(), getLog() );
+        if ( getLog().isDebugEnabled() )
+        {
+            getLog().debug( "BND Manifest:" + NL + dumpManifest( jar.getManifest(), new StringBuilder() ) );
+        }
 
         boolean addMavenDescriptor = currentProject.getBasedir() != null;
 
@@ -565,8 +627,8 @@ public class BundlePlugin extends AbstractMojo
                 mis.close();
             }
 
-            // Then apply the customized entries from the jar plugin
-            mavenManifest.read( new StringInputStream( mavenManifestText ) );
+            // Then apply customized entries from the jar plugin; note: manifest encoding is UTF8
+            mavenManifest.read( new ByteArrayInputStream( mavenManifestText.getBytes( "UTF8" ) ) );
 
             if ( !archiveConfig.isManifestSectionsEmpty() )
             {
@@ -647,7 +709,10 @@ public class BundlePlugin extends AbstractMojo
             doMavenMetadata( currentProject, jar );
         }
 
-        dumpManifest( "Final Manifest:", builder.getJar().getManifest(), getLog() );
+        if ( getLog().isDebugEnabled() )
+        {
+            getLog().debug( "Final Manifest:" + NL + dumpManifest( jar.getManifest(), new StringBuilder() ) );
+        }
 
         builder.setJar( jar );
     }
