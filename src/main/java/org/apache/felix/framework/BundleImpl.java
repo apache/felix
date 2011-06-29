@@ -297,7 +297,8 @@ class BundleImpl implements Bundle
             }
         }
 
-        return getFramework().findBundleEntries(this, path, filePattern, recurse);
+        return getFramework().findBundleEntries(
+            adapt(BundleRevision.class), path, filePattern, recurse);
     }
 
     public Dictionary getHeaders()
