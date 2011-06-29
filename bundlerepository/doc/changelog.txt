@@ -1,3 +1,68 @@
+Changes from 1.6.4 to 1.6.6
+---------------------------
+
+** Bug
+    * [FELIX-2612] - [OBR] Doesn't work on Java 1.4 due to use of Boolean.parseBoolean()
+    * [FELIX-2884] - The multiplicity isn't taken into account by the maven bundle plugin and bundlerepository when generating the repository xml
+    * [FELIX-2912] - Host name is lost in exceptions when dealing with Windows shared drives
+    * [FELIX-2958] - Unable to remove previously added repository from OBR
+
+Changes from 1.6.2 to 1.6.4
+---------------------------
+
+** Bug
+    * [FELIX-2306] - ClassCastException in Wrapper.unwrap() when calling Resolver.add(x implements Resource)
+    * [FELIX-2385] - Execution environment property is not correctly exposed
+
+Changes from 1.6.0 to 1.6.2
+---------------------------
+
+** Bug
+    * [FELIX-2269] - Only the higher version of a given bundle is kept in a repository
+    * [FELIX-2276] - Authentication credentials for proxies are not set when retrieving resources
+    * [FELIX-2304] - Single quotes need to be escaped in xml attribute values 
+
+Changes from 1.4.3 to 1.6.0
+---------------------------
+
+** Bug
+    * [FELIX-1007] - OBR search doesn't take 'categories' into account
+    * [FELIX-1531] - Mandatory directive is ignored on the Export-Package when it comes to resolve the bundles
+    * [FELIX-1621] - OBR fails to take bundles into account that are already available in the framework
+    * [FELIX-1809] - OBR issue when using parameters with exported packages
+    * [FELIX-2081] - Attribtues and directives and not used on local resources
+    * [FELIX-2082] - Local resources should really be preferred over remote resources
+    * [FELIX-2083] - bundlerepository should mark dependencies it includes as optional
+    * [FELIX-2102] - Bad exception thrown when an obr url can not be resolved
+    * [FELIX-2114] - The reasons for adding a resource may contain the same requirement several times
+    * [FELIX-2126] - Dependencies of optional resources should be optional
+    * [FELIX-2136] - Improve OBR speed
+    * [FELIX-2138] - The resolver should prefer required resources over optional resources to minimize the set of required resources
+    * [FELIX-2139] - Move extensions to a new api into the bundlerepository module as to not pollute the org.osgi.* package
+    * [FELIX-2221] - DataModelHelper.filter() throws wrong Exception
+
+** Improvement
+    * [FELIX-280] - OBR should be able to confirm satisfaction of a filter, including availability of local resources
+    * [FELIX-483] - Log detailed information on invalid syntax in parsed repository xml requirements
+    * [FELIX-692] - OBR should provide an API for resolving bundles dependencies regardless of locally installed bundles
+    * [FELIX-1492] - Add option to exclude optional dependencies during OBR deploy
+    * [FELIX-2106] - Resolver scoped Repository
+    * [FELIX-2115] - The api offers no way to have a timeout or cancel the resolution if it takes too long
+    * [FELIX-2127] - The explanation given why a resource is include is insufficient
+    * [FELIX-2134] - Change the filter implementation
+    * [FELIX-2140] - The Requirement#isSatisfied() method should actually check the capability/requirement namespace
+    * [FELIX-2151] - Use Strings instead of URLs in the API
+
+** New Feature
+    * [FELIX-178] - OBR should expose some way to convert a locally installed bundle to a Resource
+    * [FELIX-2103] - Improve the OBR url handler to be able to access external bundles
+    * [FELIX-2144] - Add global requirements and capabilities
+
+** Task
+    * [FELIX-2104] - Add an optional faster stax based parser
+    * [FELIX-2211] - Simplify the repository parser based on KXml2
+    * [FELIX-2215] - Refactor bundlerepository and maven bundle plugin obr data model
+
 Changes from 1.4.2 to 1.4.3
 ---------------------------
 
