@@ -76,7 +76,7 @@ public class BundleWiringImpl implements BundleWiring
     private final StatefulResolver m_resolver;
     private final BundleRevisionImpl m_revision;
     private final List<BundleRevision> m_fragments;
-// TODO: OSGi R,4.3 - Perhaps we should make m_wires and m_importedPkgs volatile
+// TODO: OSGi R4.3 - Perhaps we should make m_wires and m_importedPkgs volatile
 //       and copy-on-write instead of protecting them with object lock.
     private final List<BundleWire> m_wires;
     private final Map<String, BundleRevision> m_importedPkgs;
@@ -281,7 +281,7 @@ public class BundleWiringImpl implements BundleWiring
                 ? false : true;
     }
 
-    public void dispose()
+    public synchronized void dispose()
     {
         if (m_fragmentContents != null)
         {
@@ -464,7 +464,20 @@ public class BundleWiringImpl implements BundleWiring
 
     public List<URL> findEntries(String path, String filePattern, int options)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (!Util.isFragment(m_revision))
+        {
+            Enumeration<URL> e =
+                ((BundleImpl) m_revision.getBundle()).getFramework()
+                    .findBundleEntries(m_revision, path, filePattern,
+                       (options & BundleWiring.FINDENTRIES_RECURSE) > 0);
+            List<URL> entries = new ArrayList<URL>();
+            while ((e != null) && e.hasMoreElements())
+            {
+                entries.add(e.nextElement());
+            }
+            return Collections.unmodifiableList(entries);
+        }
+        return Collections.EMPTY_LIST;
     }
 
     public Collection<String> listResources(String path, String filePattern, int options)
@@ -738,7 +751,7 @@ public class BundleWiringImpl implements BundleWiring
         return result;
     }
 
-    ClassLoader getBootDelegationClassLoader()
+    synchronized ClassLoader getBootDelegationClassLoader()
     {
         // Get the appropriate class loader for delegation.
         ClassLoader parent = (m_classLoader == null)
