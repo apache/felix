@@ -22,12 +22,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRevision;
 
 class EntryFilterEnumeration implements Enumeration
 {
-    private final Bundle m_bundle;
+    private final BundleRevision m_revision;
     private final List<Enumeration> m_enumerations;
     private final List<BundleRevision> m_revisions;
     private int m_revisionIndex = 0;
@@ -39,24 +38,23 @@ class EntryFilterEnumeration implements Enumeration
     private final List<Object> m_nextEntries = new ArrayList(2);
 
     public EntryFilterEnumeration(
-        Bundle bundle, boolean includeFragments, String path,
+        BundleRevision revision, boolean includeFragments, String path,
         String filePattern, boolean recurse, boolean isURLValues)
     {
-        m_bundle = bundle;
-        BundleRevision br = m_bundle.adapt(BundleRevision.class);
+        m_revision = revision;
         if (includeFragments
-            && (br.getWiring() != null)
-            && (((BundleWiringImpl) br.getWiring()).getFragments() != null))
+            && (m_revision.getWiring() != null)
+            && (((BundleWiringImpl) m_revision.getWiring()).getFragments() != null))
         {
             m_revisions = new ArrayList(
-                ((BundleWiringImpl) br.getWiring()).getFragments().size() + 1);
-            m_revisions.addAll(((BundleWiringImpl) br.getWiring()).getFragments());
+                ((BundleWiringImpl) m_revision.getWiring()).getFragments().size() + 1);
+            m_revisions.addAll(((BundleWiringImpl) m_revision.getWiring()).getFragments());
         }
         else
         {
             m_revisions = new ArrayList(1);
         }
-        m_revisions.add(0, br);
+        m_revisions.add(0, m_revision);
         m_enumerations = new ArrayList(m_revisions.size());
         for (int i = 0; i < m_revisions.size(); i++)
         {

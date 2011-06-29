@@ -1621,7 +1621,8 @@ public class Felix extends BundleImpl implements Framework
             // Use the entry filter enumeration to search the bundle content
             // recursively for matching entries and return URLs to them.
             Enumeration enumeration =
-                new EntryFilterEnumeration(bundle, false, name, "*", true, true);
+                new EntryFilterEnumeration(
+                    bundle.adapt(BundleRevision.class), false, name, "*", true, true);
             // If the enumeration has elements, then that means we need
             // to synthesize the directory entry.
             if (enumeration.hasMoreElements())
@@ -1653,7 +1654,8 @@ public class Felix extends BundleImpl implements Framework
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
         Enumeration enumeration =
-            new EntryFilterEnumeration(bundle, false, path, "*", false, false);
+            new EntryFilterEnumeration(
+                bundle.adapt(BundleRevision.class), false, path, "*", false, false);
 
         // Return the enumeration if it has elements.
         return (!enumeration.hasMoreElements()) ? null : enumeration;
@@ -1663,17 +1665,17 @@ public class Felix extends BundleImpl implements Framework
      * Implementation for Bundle.findEntries().
     **/
     Enumeration findBundleEntries(
-        BundleImpl bundle, String path, String filePattern, boolean recurse)
+        BundleRevision revision, String path, String filePattern, boolean recurse)
     {
         // Try to resolve the bundle per the spec.
         List<Bundle> list = new ArrayList<Bundle>(1);
-        list.add(bundle);
+        list.add(revision.getBundle());
         resolveBundles(list);
 
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
         Enumeration enumeration =
-            new EntryFilterEnumeration(bundle, true, path, filePattern, recurse, true);
+            new EntryFilterEnumeration(revision, true, path, filePattern, recurse, true);
 
         // Return the enumeration if it has elements.
         return (!enumeration.hasMoreElements()) ? null : enumeration;
