@@ -31,19 +31,19 @@
   <version>1.6.5-SNAPSHOT</version>
   <dependencies>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
       <version>1.0.1-SNAPSHOT</version>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>org.osgi.service.obr</artifactId>
       <version>1.0.2</version>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.shell</artifactId>
       <version>1.4.1</version>
       <optional>true</optional>
@@ -101,11 +101,11 @@
             </Private-Package>
             <Import-Package>!javax.xml.parsers,!org.xml.sax,org.osgi.service.log;resolution:=optional,org.osgi.service.obr;resolution:=optional,javax.xml.stream;resolution:=optional,*</Import-Package>
             <DynamicImport-Package>org.apache.felix.shell</DynamicImport-Package>
-            <Bundle-Activator>${pom.artifactId}.impl.Activator</Bundle-Activator>
+            <Bundle-Activator>${project.artifactId}.impl.Activator</Bundle-Activator>
             <Bundle-DocURL>http://felix.apache.org/site/apache-felix-osgi-bundle-repository.html</Bundle-DocURL>
             <Bundle-Url>http://felix.apache.org/site/downloads.cgi</Bundle-Url>
             <Bundle-Source>http://felix.apache.org/site/downloads.cgi</Bundle-Source>
-            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Export-Service>org.apache.felix.bundlerepository.RepositoryAdmin,org.osgi.service.obr.RepositoryAdmin</Export-Service>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
