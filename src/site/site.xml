@@ -24,15 +24,10 @@ under the License.
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
       <item name="Goals" href="plugin-info.html"/>
-      <item name="Usage" href="usage.html"/>
-      <item name="FAQ" href="faq.html"/>
+      <item name="Wiki" href="https://cwiki.apache.org/confluence/display/FELIX/Apache+Felix+Maven+Bundle+Plugin+%28BND%29"/>
+      <item name="FAQ" href="https://cwiki.apache.org/confluence/display/FELIX/Apache+Felix+Bundle+Plugin+FAQ"/>
       <item name="Release Notes" href="jira-report.html"/>
     </menu>
-
-    <menu name="Examples">
-      <item name="TODO" href="examples/todo.html"/>
-    </menu>
-
     <menu ref="reports"/>
   </body>
 </project>
