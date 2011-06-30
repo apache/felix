@@ -82,10 +82,9 @@ class HostBundleRevision implements BundleRevision
                 {
                     for (BundleCapability cap : fragment.getDeclaredCapabilities(null))
                     {
-                        if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
-                        {
-                            caps.add(new HostedCapability(this, (BundleCapabilityImpl) cap));
-                        }
+// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
+//       that will need to be excluded from here.
+                        caps.add(new HostedCapability(this, (BundleCapabilityImpl) cap));
                     }
                 }
             }
@@ -113,8 +112,7 @@ class HostBundleRevision implements BundleRevision
                 {
                     for (BundleRequirement req : fragment.getDeclaredRequirements(null))
                     {
-                        if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                            || req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
+                        if (!req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                         {
                             reqs.add(new HostedRequirement(this, (BundleRequirementImpl) req));
                         }
