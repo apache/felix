@@ -601,18 +601,15 @@ class StatefulResolver
                         // Dynamically add new wire to importing revision.
                         if (dynamicWire != null)
                         {
-                            m_felix.getDependencies().addDependent(
+                            BundleWire bw = new BundleWireImpl(
+                                dynamicWire.getRequirer(),
+                                dynamicWire.getRequirement(),
                                 dynamicWire.getProvider(),
-                                dynamicWire.getCapability(),
-                                revision);
+                                dynamicWire.getCapability());
 
-                            ((BundleWiringImpl) revision.getWiring())
-                                .addDynamicWire(
-                                    new BundleWireImpl(
-                                        dynamicWire.getRequirer(),
-                                        dynamicWire.getRequirement(),
-                                        dynamicWire.getProvider(),
-                                        dynamicWire.getCapability()));
+                            m_felix.getDependencies().addDependent(bw);
+
+                            ((BundleWiringImpl) revision.getWiring()).addDynamicWire(bw);
 
                             m_felix.getLogger().log(
                                 Logger.LOG_DEBUG,
@@ -759,15 +756,14 @@ class StatefulResolver
                     new HashMap<String, List<BundleRevision>>();
                 for (ResolverWire rw : resolverWires)
                 {
-                    bundleWires.add(
-                        new BundleWireImpl(
-                            rw.getRequirer(),
-                            rw.getRequirement(),
-                            rw.getProvider(),
-                            rw.getCapability()));
+                    BundleWire bw = new BundleWireImpl(
+                        rw.getRequirer(),
+                        rw.getRequirement(),
+                        rw.getProvider(),
+                        rw.getCapability());
+                    bundleWires.add(bw);
 
-                    m_felix.getDependencies().addDependent(
-                        rw.getProvider(), rw.getCapability(), rw.getRequirer());
+                    m_felix.getDependencies().addDependent(bw);
 
                     if (Util.isFragment(revision))
                     {
