@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import org.objectweb.asm.ClassWriter;
 /**
  * iPOJO Byte code Manipulator.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- * 
+ *
  */
 public class Manipulator {
     /**
@@ -50,12 +50,12 @@ public class Manipulator {
      * Store the methods list.
      */
     private List m_methods;
-    
+
     /**
      * Pojo super class.
      */
     private String m_superClass;
-    
+
     /**
      * List of owned inner classed.
      */
@@ -64,7 +64,7 @@ public class Manipulator {
     /**
      * Manipulate the given byte array.
      * @param origin : original class.
-     * @return the manipulated class.
+     * @return the manipulated class, if the class is already manipulated, the original class.
      * @throws IOException : if an error occurs during the manipulation.
      */
     public byte[] manipulate(byte[] origin) throws IOException {
@@ -84,7 +84,7 @@ public class Manipulator {
 
         // Get the methods list
         m_methods = ck.getMethods();
-        
+
         m_inners = ck.getInnerClasses();
 
         ClassWriter finalWriter = null;
@@ -103,7 +103,7 @@ public class Manipulator {
         }
         // The file is in the bundle
         if (ck.isalreadyManipulated()) {
-            return new byte[0];
+            return origin;
         } else {
             return finalWriter.toByteArray();
         }
@@ -115,18 +115,18 @@ public class Manipulator {
      */
     public Element getManipulationMetadata() {
         Element elem = new Element("Manipulation", "");
-        
+
         if (m_superClass != null) {
             elem.addAttribute(new Attribute("super", m_superClass));
         }
-        
+
         for (int j = 0; j < m_interfaces.size(); j++) {
             Element itf = new Element("Interface", "");
             Attribute att = new Attribute("name", m_interfaces.get(j).toString());
             itf.addAttribute(att);
             elem.addElement(itf);
         }
-        
+
         for (Iterator it = m_fields.keySet().iterator(); it.hasNext();) {
             Element field = new Element("Field", "");
             String name = (String) it.next();
@@ -145,11 +145,11 @@ public class Manipulator {
 
         return elem;
     }
-    
+
     public Map getFields() {
         return m_fields;
     }
-    
+
     public List getInnerClasses() {
         return m_inners;
     }
