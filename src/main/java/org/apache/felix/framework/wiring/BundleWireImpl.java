@@ -41,6 +41,11 @@ public class BundleWireImpl implements BundleWire
         m_cap = cap;
     }
 
+    public BundleRevision getRequirer()
+    {
+        return m_requirer;
+    }
+
     public BundleWiring getRequirerWiring()
     {
         return m_requirer.getWiring();
@@ -49,6 +54,11 @@ public class BundleWireImpl implements BundleWire
     public BundleRequirement getRequirement()
     {
         return m_req;
+    }
+
+    public BundleRevision getProvider()
+    {
+        return m_provider;
     }
 
     public BundleWiring getProviderWiring()
