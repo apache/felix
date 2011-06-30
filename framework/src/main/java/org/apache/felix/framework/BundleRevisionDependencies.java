@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.felix.framework.util.Util;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
@@ -35,26 +35,31 @@ import org.osgi.framework.wiring.BundleWiring;
 
 class BundleRevisionDependencies
 {
-    private final Map<BundleRevision, Map<BundleCapability, Set<BundleRevision>>>
-        m_dependentsMap = new HashMap<BundleRevision, Map<BundleCapability, Set<BundleRevision>>>();
+    private final Map<BundleRevision, Map<BundleCapability, Set<BundleWire>>>
+        m_dependentsMap = new HashMap<BundleRevision, Map<BundleCapability, Set<BundleWire>>>();
 
-    public synchronized void addDependent(BundleRevision provider, BundleCapability cap, BundleRevision requirer)
+    public synchronized void addDependent(BundleWire bw)
     {
-        Map<BundleCapability, Set<BundleRevision>> caps = m_dependentsMap.get(provider);
+// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
+//       since the plan is to standardize on this method for the OBR spec.
+        BundleRevision provider = ((BundleWireImpl) bw).getProvider();
+        Map<BundleCapability, Set<BundleWire>> caps =
+            m_dependentsMap.get(provider);
         if (caps == null)
         {
-            caps = new HashMap<BundleCapability, Set<BundleRevision>>();
+            caps = new HashMap<BundleCapability, Set<BundleWire>>();
             m_dependentsMap.put(provider, caps);
         }
-        Set<BundleRevision> dependents = caps.get(cap);
+        Set<BundleWire> dependents = caps.get(bw.getCapability());
         if (dependents == null)
         {
-            dependents = new HashSet<BundleRevision>();
-            caps.put(cap, dependents);
+            dependents = new HashSet<BundleWire>();
+            caps.put(bw.getCapability(), dependents);
         }
-        dependents.add(requirer);
+        dependents.add(bw);
     }
 
+/*
     public synchronized void removeDependent(
         BundleRevision provider, BundleCapability cap, BundleRevision requirer)
     {
@@ -81,8 +86,8 @@ class BundleRevisionDependencies
     {
         m_dependentsMap.remove(provider);
     }
-
-    public synchronized Map<BundleCapability, Set<BundleRevision>>
+*/
+    public synchronized Map<BundleCapability, Set<BundleWire>>
         getDependents(BundleRevision provider)
     {
         return m_dependentsMap.get(provider);
@@ -119,6 +124,27 @@ class BundleRevisionDependencies
         return false;
     }
 
+    public synchronized List<BundleWire> getProvidedWires(
+        BundleRevision revision, String namespace)
+    {
+        List<BundleWire> providedWires = new ArrayList<BundleWire>();
+
+        Map<BundleCapability, Set<BundleWire>> caps =
+            m_dependentsMap.get(revision);
+        if (caps != null)
+        {
+            for (Entry<BundleCapability, Set<BundleWire>> entry : caps.entrySet())
+            {
+                if ((namespace == null) || entry.getKey().getNamespace().equals(namespace))
+                {
+                    providedWires.addAll(entry.getValue());
+                }
+            }
+        }
+
+        return providedWires;
+    }
+
     public synchronized Set<Bundle> getDependentBundles(BundleImpl bundle)
     {
         Set<Bundle> result = new HashSet<Bundle>();
@@ -140,15 +166,18 @@ class BundleRevisionDependencies
             }
             else
             {
-                Map<BundleCapability, Set<BundleRevision>> caps =
+                Map<BundleCapability, Set<BundleWire>> caps =
                     m_dependentsMap.get(revision);
                 if (caps != null)
                 {
-                    for (Entry<BundleCapability, Set<BundleRevision>> entry : caps.entrySet())
+                    for (Entry<BundleCapability, Set<BundleWire>> entry : caps.entrySet())
                     {
-                        for (BundleRevision rev : entry.getValue())
+                        for (BundleWire dependentWire : entry.getValue())
                         {
-                            result.add(rev.getBundle());
+// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
+//       since the plan is to standardize on this method for the OBR spec.
+                            result.add(((BundleWireImpl) dependentWire)
+                                .getRequirer().getBundle());
                         }
                     }
                 }
@@ -172,11 +201,11 @@ class BundleRevisionDependencies
         // The spec says that require-bundle should be returned with importers.
         for (BundleRevision revision : exporter.getRevisions())
         {
-            Map<BundleCapability, Set<BundleRevision>>
+            Map<BundleCapability, Set<BundleWire>>
                 caps = m_dependentsMap.get(revision);
             if (caps != null)
             {
-                for (Entry<BundleCapability, Set<BundleRevision>> entry : caps.entrySet())
+                for (Entry<BundleCapability, Set<BundleWire>> entry : caps.entrySet())
                 {
                     BundleCapability cap = entry.getKey();
                     if ((cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
@@ -184,9 +213,12 @@ class BundleRevisionDependencies
                             .equals(pkgName))
                         || cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                     {
-                        for (BundleRevision dependent : entry.getValue())
+                        for (BundleWire dependentWire : entry.getValue())
                         {
-                            result.add(dependent.getBundle());
+// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
+//       since the plan is to standardize on this method for the OBR spec.
+                            result.add(((BundleWireImpl) dependentWire)
+                                .getRequirer().getBundle());
                         }
                     }
                 }
@@ -205,18 +237,21 @@ class BundleRevisionDependencies
         // Get all requirers for all revisions of the bundle.
         for (BundleRevision revision : bundle.getRevisions())
         {
-            Map<BundleCapability, Set<BundleRevision>>
+            Map<BundleCapability, Set<BundleWire>>
                 caps = m_dependentsMap.get(revision);
             if (caps != null)
             {
-                for (Entry<BundleCapability, Set<BundleRevision>> entry : caps.entrySet())
+                for (Entry<BundleCapability, Set<BundleWire>> entry : caps.entrySet())
                 {
                     if (entry.getKey().getNamespace()
                         .equals(BundleRevision.BUNDLE_NAMESPACE))
                     {
-                        for (BundleRevision dependent : entry.getValue())
+                        for (BundleWire dependentWire : entry.getValue())
                         {
-                            result.add(dependent.getBundle());
+// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
+//       since the plan is to standardize on this method for the OBR spec.
+                            result.add(((BundleWireImpl) dependentWire)
+                                .getRequirer().getBundle());
                         }
                     }
                 }
@@ -242,15 +277,15 @@ class BundleRevisionDependencies
                     // in that case.
                     if (wire.getProviderWiring() != null)
                     {
-                        Map<BundleCapability, Set<BundleRevision>> caps =
+                        Map<BundleCapability, Set<BundleWire>> caps =
                             m_dependentsMap.get(wire.getProviderWiring().getRevision());
                         if (caps != null)
                         {
                             List<BundleCapability> gc = new ArrayList<BundleCapability>();
-                            for (Entry<BundleCapability, Set<BundleRevision>> entry
+                            for (Entry<BundleCapability, Set<BundleWire>> entry
                                 : caps.entrySet())
                             {
-                                entry.getValue().remove(rev);
+                                entry.getValue().remove(wire);
                                 if (entry.getValue().isEmpty())
                                 {
                                     gc.add(entry.getKey());
@@ -262,7 +297,9 @@ class BundleRevisionDependencies
                             }
                             if (caps.isEmpty())
                             {
-                                m_dependentsMap.remove(wire.getProviderWiring().getRevision());
+// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
+//       since the plan is to standardize on this method for the OBR spec.
+                                m_dependentsMap.remove(((BundleWireImpl) wire).getProvider());
                             }
                         }
                     }

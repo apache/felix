@@ -377,8 +377,8 @@ public class BundleWiringImpl implements BundleWiring
 
     public List<BundleWire> getProvidedWires(String namespace)
     {
-// TODO: OSGI R4.3 - IMPLEMENT THIS!!
-        return Collections.EMPTY_LIST;
+        return ((BundleImpl) m_revision.getBundle())
+            .getFramework().getDependencies().getProvidedWires(m_revision, namespace);
     }
 
     public synchronized List<BundleWire> getRequiredWires(String namespace)
