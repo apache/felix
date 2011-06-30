@@ -195,13 +195,11 @@ public class BundleWiringImpl implements BundleWiring
                 (caps != null) && (capIdx < caps.size());
                 capIdx++)
             {
-                if (caps.get(capIdx).getNamespace().equals(
-                    BundleRevision.PACKAGE_NAMESPACE))
-                {
-                    capList.add(
-                        new HostedCapability(
-                            m_revision, (BundleCapabilityImpl) caps.get(capIdx)));
-                }
+// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
+//       that will need to be excluded from here.
+                capList.add(
+                    new HostedCapability(
+                        m_revision, (BundleCapabilityImpl) caps.get(capIdx)));
             }
         }
         m_resolvedCaps = Collections.unmodifiableList(capList);
@@ -218,10 +216,7 @@ public class BundleWiringImpl implements BundleWiring
                 (reqs != null) && (reqIdx < reqs.size());
                 reqIdx++)
             {
-                if (reqs.get(reqIdx).getNamespace().equals(
-                        BundleRevision.PACKAGE_NAMESPACE)
-                    || reqs.get(reqIdx).getNamespace().equals(
-                        BundleRevision.BUNDLE_NAMESPACE))
+                if (!reqs.get(reqIdx).getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                 {
                     reqList.add(
                         new HostedRequirement(

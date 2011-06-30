@@ -194,10 +194,11 @@ class Candidates
         {
             BundleRequirement req = remainingReqs.remove(0);
 
-            // Ignore dynamic requirements.
+            // Ignore non-effective and dynamic requirements.
             String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+            if (!state.isEffective(req)
 // TODO: OSGi R4.3 - Use proper "dynamic" constant.
-            if ((resolution != null) && resolution.equals("dynamic"))
+                || ((resolution != null) && resolution.equals("dynamic")))
             {
                 continue;
             }

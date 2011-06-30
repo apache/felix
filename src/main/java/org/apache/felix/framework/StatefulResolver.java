@@ -32,6 +32,7 @@ import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.Resolver;
@@ -1169,8 +1170,14 @@ class StatefulResolver
         // ResolverState methods.
         //
 
+        public boolean isEffective(BundleRequirement req)
+        {
+            String effective = req.getDirectives().get(Constants.EFFECTIVE_DIRECTIVE);
+            return ((effective == null) || effective.equals(Constants.EFFECTIVE_RESOLVE));
+        }
+
         public synchronized SortedSet<BundleCapability> getCandidates(
-            BundleRequirementImpl req, boolean obeyMandatory)
+            BundleRequirement req, boolean obeyMandatory)
         {
             BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
             SortedSet<BundleCapability> result =
@@ -1179,7 +1186,29 @@ class StatefulResolver
             CapabilitySet capSet = m_capSets.get(req.getNamespace());
             if (capSet != null)
             {
-                Set<BundleCapability> matches = capSet.match(req.getFilter(), obeyMandatory);
+                // Get the requirement's filter; if this is our own impl we
+                // have a shortcut to get the already parsed filter, otherwise
+                // we must parse it from the directive.
+                SimpleFilter sf = null;
+                if (req instanceof BundleRequirementImpl)
+                {
+                    sf = ((BundleRequirementImpl) req).getFilter();
+                }
+                else
+                {
+                    String filter = req.getDirectives().get(Constants.FILTER_DIRECTIVE);
+                    if (filter == null)
+                    {
+                        sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
+                    }
+                    else
+                    {
+                        sf = SimpleFilter.parse(filter);
+                    }
+                }
+
+                // Find the matching candidates.
+                Set<BundleCapability> matches = capSet.match(sf, obeyMandatory);
                 for (BundleCapability cap : matches)
                 {
                     if (System.getSecurityManager() != null)

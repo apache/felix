@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
 public interface Resolver
@@ -38,8 +38,9 @@ public interface Resolver
 
     public static interface ResolverState
     {
+        boolean isEffective(BundleRequirement req);
         SortedSet<BundleCapability> getCandidates(
-            BundleRequirementImpl req, boolean obeyMandatory);
+            BundleRequirement req, boolean obeyMandatory);
         void checkExecutionEnvironment(BundleRevision revision) throws ResolveException;
         void checkNativeLibraries(BundleRevision revision) throws ResolveException;
     }
