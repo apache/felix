@@ -42,7 +42,7 @@
  <scm>
   <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundleplugin</connection>
   <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundleplugin</developerConnection>
-  <url>http://svn.apache.org/repos/asf/felix/bundleplugin</url>
+  <url>http://svn.apache.org/repos/asf/felix/trunk/bundleplugin</url>
  </scm>
 
  <build>
