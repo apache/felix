@@ -35,6 +35,10 @@
     <inceptionYear>2006</inceptionYear>
     <description>Apache Felix is an OSGi implementation.</description>
 
+    <properties>
+        <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+    </properties>
+
     <issueManagement>
         <system>Jira</system>
         <url>http://issues.apache.org/jira/browse/FELIX</url>
