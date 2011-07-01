@@ -139,7 +139,7 @@ public class BundleRevisionImpl implements BundleRevision
         // system bundle directly later on.
         m_manifestVersion = mp.getManifestVersion();
         m_version = mp.getBundleVersion();
-        m_declaredCaps = mp.isExtension() ? null : mp.getCapabilities();
+        m_declaredCaps = mp.isExtension() ? Collections.EMPTY_LIST : mp.getCapabilities();
         m_declaredReqs = mp.getRequirements();
         m_declaredNativeLibs = mp.getLibraries();
         m_declaredActivationPolicy = mp.getActivationPolicy();

@@ -182,9 +182,8 @@ public class BundleWiringImpl implements BundleWiring
         m_fragments = fragments;
         m_fragmentContents = fragmentContents;
 
-        List<BundleCapability> capList = (m_revision.getDeclaredCapabilities(null) == null)
-            ? new ArrayList<BundleCapability>()
-            : new ArrayList<BundleCapability>(m_revision.getDeclaredCapabilities(null));
+        List<BundleCapability> capList =
+            new ArrayList<BundleCapability>(m_revision.getDeclaredCapabilities(null));
         for (int fragIdx = 0;
             (m_fragments != null) && (fragIdx < m_fragments.size());
             fragIdx++)
@@ -204,8 +203,8 @@ public class BundleWiringImpl implements BundleWiring
         }
         m_resolvedCaps = Collections.unmodifiableList(capList);
 
-        List<BundleRequirement> reqList = (m_revision.getDeclaredRequirements(null) == null)
-            ? new ArrayList() : new ArrayList(m_revision.getDeclaredRequirements(null));
+        List<BundleRequirement> reqList =
+            new ArrayList(m_revision.getDeclaredRequirements(null));
         for (int fragIdx = 0;
             (m_fragments != null) && (fragIdx < m_fragments.size());
             fragIdx++)
