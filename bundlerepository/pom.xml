@@ -29,6 +29,11 @@
   <description>Bundle repository service.</description>
   <artifactId>org.apache.felix.bundlerepository</artifactId>
   <version>1.6.7-SNAPSHOT</version>
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundlerepository</developerConnection>
+    <url>http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</url>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
