@@ -502,9 +502,9 @@ public class BundlePlugin extends AbstractMojo
                     stringProperties.setProperty( key, value );
                 }
             }
-            StringWriter writer = new StringWriter();
-            stringProperties.store( writer, null );
-            buf.append( writer );
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            stringProperties.store( out, null ); // properties encoding is 8859_1
+            buf.append( out.toString( "8859_1" ) );
             buf.append( "#-----------------------------------------------------------------------" + NL );
         }
         catch ( Throwable e )
