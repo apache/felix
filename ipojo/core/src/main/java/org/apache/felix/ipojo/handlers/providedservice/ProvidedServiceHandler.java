@@ -147,15 +147,15 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             // Post-Registration callback
             String post = providedServices[i].getAttribute("post-registration");
             if (post != null) {
-            	Callback cb = new Callback(post, new Class[] {ServiceReference.class}, false, getInstanceManager());
-            	svc.setPostRegistrationCallback(cb);
+                Callback cb = new Callback(post, new Class[] {ServiceReference.class}, false, getInstanceManager());
+                svc.setPostRegistrationCallback(cb);
             }
 
             post = providedServices[i].getAttribute("post-unregistration");
             if (post != null) {
-            	// TODO Can we really send the service reference here ?
-            	Callback cb = new Callback(post, new Class[] {ServiceReference.class}, false, getInstanceManager());
-            	svc.setPostUnregistrationCallback(cb);
+                // TODO Can we really send the service reference here ?
+                Callback cb = new Callback(post, new Class[] {ServiceReference.class}, false, getInstanceManager());
+                svc.setPostUnregistrationCallback(cb);
             }
 
             Element[] props = providedServices[i].getElements("Property");
@@ -230,26 +230,26 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param specs : implemented interfaces.
      * @param parent : parent class.
      * @param bundle : Bundle object.
-     * @return the set of implemented interfaces.
+     * @param interfaces : the set of implemented interfaces
+     * @param classes : the set of extended classes
      * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
      */
-    private Set computeInterfaces(String[] specs, String parent, Bundle bundle) throws ClassNotFoundException {
-        Set result = new HashSet();
+    private void computeInterfacesAndSuperClasses(String[] specs, String parent, Bundle bundle, Set interfaces, Set classes) throws ClassNotFoundException {
         // First iterate on found specification in manipulation metadata
         for (int i = 0; i < specs.length; i++) {
-            result.add(specs[i]);
+            interfaces.add(specs[i]);
             // Iterate on interfaces implemented by the current interface
             Class clazz = bundle.loadClass(specs[i]);
-            collectInterfaces(clazz, result, bundle);
+            collectInterfaces(clazz, interfaces, bundle);
         }
 
         // Look for parent class.
         if (parent != null) {
             Class clazz = bundle.loadClass(parent);
-            collectInterfacesFromClass(clazz, result, bundle);
+            collectInterfacesFromClass(clazz, interfaces, bundle);
+            classes.add(parent);
+            collectParentClassesFromClass(clazz, classes, bundle);
         }
-
-        return result;
     }
 
     /**
@@ -285,6 +285,21 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         Class sup = clazz.getSuperclass();
         if (sup != null) {
             collectInterfacesFromClass(sup, acc, bundle);
+        }
+    }
+
+    /**
+     * Collect parent classes for the given class.
+     * @param clazz : class object.
+     * @param acc : set of extended classes (accumulator)
+     * @param bundle : bundle.
+     * @throws ClassNotFoundException : occurs if an interface cannot be load.
+     */
+    private void collectParentClassesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+        Class parent = clazz.getSuperclass();
+        if (parent != null) {
+            acc.add(parent.getName());
+            collectParentClassesFromClass(parent, acc, bundle);
         }
     }
 
@@ -567,11 +582,14 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             // First : create the serviceSpecification list
             String[] serviceSpecification = manipulation.getInterfaces();
             String parent = manipulation.getSuperClass();
-            Set all = null;
+            Set interfaces = new HashSet();
+            Set parentClasses = new HashSet();
             try {
-                all = computeInterfaces(serviceSpecification, parent, desc.getBundleContext().getBundle());
+                computeInterfacesAndSuperClasses(serviceSpecification, parent, desc.getBundleContext().getBundle(), interfaces, parentClasses);
+                getLogger().log(Logger.INFO, "Collected interfaces from " + metadata.getAttribute("classname") + " : " + interfaces);
+                getLogger().log(Logger.INFO, "Collected super classes from " + metadata.getAttribute("classname") + " : " + parentClasses);
             } catch (ClassNotFoundException e) {
-                throw new ConfigurationException("An interface cannot be loaded : " + e.getMessage());
+                throw new ConfigurationException("An interface or parent class cannot be loaded : " + e.getMessage());
             }
 
             String serviceSpecificationStr = provides[i].getAttribute("specifications");
@@ -585,23 +603,22 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             if (serviceSpecificationStr != null) {
                 List itfs = ParseUtils.parseArraysAsList(serviceSpecificationStr);
                 for (int j = 0; j < itfs.size(); j++) {
-                    if (! all.contains(itfs.get(j))) {
-                        if (parent == null || (parent != null && ! parent.equals((String) itfs.get(j)))) {
-                            desc.getFactory().getLogger().log(Logger.WARNING, "The specification " + itfs.get(j) + " is not implemented by " + metadata.getAttribute("classname")
-                                    + " it might be a superclass or the class itself.");
-                        }
+                    if (! interfaces.contains(itfs.get(j))
+                            && ! parentClasses.contains(itfs.get(j))
+                            && ! desc.getFactory().getClassName().equals(itfs.get(j))) {
+                            desc.getFactory().getLogger().log(Logger.ERROR, "The specification " + itfs.get(j) + " is not implemented by " + metadata.getAttribute("classname"));
                     }
                 }
-                all = new HashSet(itfs);
+                interfaces = new HashSet(itfs);
             }
 
-            if (all.isEmpty()) {
-            	warn("No service interface found in the class hierarchy, use the implementation class");
-                all.add(desc.getFactory().getClassName());
+            if (interfaces.isEmpty()) {
+                warn("No service interface found in the class hierarchy, use the implementation class");
+                interfaces.add(desc.getFactory().getClassName());
             }
 
             StringBuffer specs = null;
-            Set set = new HashSet(all);
+            Set set = new HashSet(interfaces);
             set.remove(Pojo.class.getName()); // Remove POJO.
             Iterator iterator = set.iterator();
             while (iterator.hasNext()) {
