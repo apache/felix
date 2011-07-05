@@ -75,6 +75,7 @@ public class BundleWireImpl implements BundleWire
     {
         return m_req
             + " -> "
-            + "[" + m_provider + "]";
+            + "[" + m_cap.getRevision() + " VIA " + m_provider + "]";
+// TODO: OSGi R4.3 - Simplify this message once we know wiring works.
     }
 }
