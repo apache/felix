@@ -64,7 +64,7 @@ public class BundleRequirementImpl implements BundleRequirement
         BundleRevision revision, String namespace,
         Map<String, String> dirs, Map<String, Object> attrs)
     {
-        this(revision, namespace, dirs, attrs, convertToFilter(attrs));
+        this(revision, namespace, dirs, Collections.EMPTY_MAP, convertToFilter(attrs));
     }
 
     public String getNamespace()

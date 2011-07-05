@@ -23,17 +23,13 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.*;
-import java.util.Map.Entry;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.ext.SecurityProvider;
 import org.apache.felix.framework.resolver.ResolveException;
-import org.apache.felix.framework.resolver.Resolver;
-import org.apache.felix.framework.resolver.ResolverImpl;
 import org.apache.felix.framework.util.EventDispatcher;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.ListenerHookInfoImpl;
@@ -44,9 +40,7 @@ import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.ThreadGate;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4LibraryClause;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -72,9 +66,8 @@ import org.osgi.framework.hooks.service.FindHook;
 import org.osgi.framework.hooks.service.ListenerHook;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.startlevel.StartLevel;
@@ -3480,7 +3473,7 @@ public class Felix extends BundleImpl implements Framework
             for (Iterator<BundleCapability> it = exports.iterator(); it.hasNext(); )
             {
                 // Get the bundle associated with the current exporting revision.
-                BundleImpl bundle = (BundleImpl) it.next().getRevision().getBundle();
+                Bundle bundle = it.next().getRevision().getBundle();
 
                 // We need to find the version of the exported package, but this
                 // is tricky since there may be multiple versions of the package
@@ -3488,11 +3481,14 @@ public class Felix extends BundleImpl implements Framework
                 // bundle JAR file may exist if the bundle was updated without
                 // refreshing the framework. In this case, each revision of the
                 // bundle JAR file is represented as a revision ordered from
-                // oldest to newest. We assume that the first revision found to
+                // newest to oldest. We assume that the first revision found to
                 // be exporting the package is the provider of the package,
                 // which makes sense since it must have been resolved first.
-                for (BundleRevision br : bundle.getRevisions())
+                List<BundleRevision> revisions =
+                    bundle.adapt(BundleRevisions.class).getRevisions();
+                for (int i = revisions.size() - 1; i >= 0; i--)
                 {
+                    BundleRevision br = revisions.get(i);
                     List<BundleCapability> caps = (br.getWiring() == null)
                         ? br.getDeclaredCapabilities(null)
                         : br.getWiring().getCapabilities(null);
@@ -3503,7 +3499,7 @@ public class Felix extends BundleImpl implements Framework
                         {
                             pkgs.add(
                                 new ExportedPackageImpl(
-                                    this, bundle, br, cap));
+                                    this, (BundleImpl) bundle, br, cap));
                         }
                     }
                 }
@@ -3587,12 +3583,12 @@ public class Felix extends BundleImpl implements Framework
      * @param bundle The bundle from which to retrieve exported packages.
      * @param list The list to which the exported packages are added
     **/
-    private void getExportedPackages(BundleImpl bundle, List list)
+    private void getExportedPackages(Bundle bundle, List list)
     {
         // Since a bundle may have many revisions associated with it,
         // one for each revision in the cache, search each revision
         // to get all exports.
-        for (BundleRevision br : bundle.getRevisions())
+        for (BundleRevision br : bundle.adapt(BundleRevisions.class).getRevisions())
         {
             List<BundleCapability> caps = (br.getWiring() == null)
                 ? br.getDeclaredCapabilities(null)
@@ -3629,7 +3625,8 @@ public class Felix extends BundleImpl implements Framework
                                 if ((provider.getRevision().getWiring() != null)
                                     && (provider == cap))
                                 {
-                                    list.add(new ExportedPackageImpl(this, bundle, br, cap));
+                                    list.add(new ExportedPackageImpl(
+                                        this, (BundleImpl) bundle, br, cap));
                                 }
                             }
                         }

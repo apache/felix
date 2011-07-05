@@ -24,6 +24,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -164,7 +165,7 @@ class PackageAdminImpl implements PackageAdmin
         {
             List<Bundle> list = new ArrayList<Bundle>();
             // Iterate through revisions
-            for (BundleRevision revision : ((BundleImpl) bundle).getRevisions())
+            for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {
                 // Get attached fragments.
                 if (revision.getWiring() != null)
@@ -196,7 +197,7 @@ class PackageAdminImpl implements PackageAdmin
         {
             List<Bundle> list = new ArrayList<Bundle>();
             // Iterate through revisions
-            for (BundleRevision revision : ((BundleImpl) bundle).getRevisions())
+            for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {
                 // Get hosts
                 if (revision.getWiring() != null)
