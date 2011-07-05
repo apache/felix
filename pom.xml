@@ -28,11 +28,11 @@
   <name>Apache Felix Bundle Repository</name>
   <description>Bundle repository service.</description>
   <artifactId>org.apache.felix.bundlerepository</artifactId>
-  <version>1.6.7-SNAPSHOT</version>
+  <version>1.6.6</version>
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundlerepository</developerConnection>
-    <url>http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.bundlerepository-1.6.6</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.bundlerepository-1.6.6</developerConnection>
+    <url>http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.bundlerepository-1.6.6</url>
   </scm>
   <dependencies>
     <dependency>
