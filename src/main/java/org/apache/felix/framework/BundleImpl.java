@@ -40,12 +40,13 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
-class BundleImpl implements Bundle
+class BundleImpl implements Bundle, BundleRevisions
 {
-    // No one should use this field directly, use getFramework() instead.
+    // No one should use this field directlhttp://www.youtube.com/watch?v=zQwxwPDU4bwy, use getFramework() instead.
     private final Felix __m_felix;
 
     private final BundleArchive m_archive;
@@ -871,9 +872,9 @@ class BundleImpl implements Bundle
 
     synchronized boolean isExtension()
     {
-        for (int i = (m_revisions.size() - 1); i > -1; i--)
+        for (BundleRevision revision : m_revisions)
         {
-            if (((BundleRevisionImpl) m_revisions.get(i)).isExtension())
+            if (((BundleRevisionImpl) revision).isExtension())
             {
                 return true;
             }
@@ -1022,11 +1023,19 @@ class BundleImpl implements Bundle
         }
         else if (type == BundleRevision.class)
         {
-            return (A) m_revisions.get(m_revisions.size() - 1);
+            if (m_state == Bundle.UNINSTALLED)
+            {
+                return null;
+            }
+            return (A) m_revisions.get(0);
+        }
+        else if (type == BundleRevisions.class)
+        {
+            return (A) this;
         }
         else if (type == BundleWiring.class)
         {
-            return (A) m_revisions.get(m_revisions.size() - 1).getWiring();
+            return (A) m_revisions.get(0).getWiring();
         }
         return null;
     }
@@ -1060,21 +1069,14 @@ class BundleImpl implements Bundle
     // Revision management.
     //
 
-    /**
-     * Returns an array of all modules associated with the bundle represented by
-     * this <tt>BundleInfo</tt> object. A module in the array corresponds to a
-     * revision of the bundle's JAR file and is ordered from oldest to newest.
-     * Multiple revisions of a bundle JAR file might exist if a bundle is
-     * updated, without refreshing the framework. In this case, exports from
-     * the prior revisions of the bundle JAR file are still offered; the
-     * current revision will be bound to packages from the prior revision,
-     * unless the packages were not offered by the prior revision. There is
-     * no limit on the potential number of bundle JAR file revisions.
-     * @return array of modules corresponding to the bundle JAR file revisions.
-    **/
-    synchronized List<BundleRevision> getRevisions()
+    public Bundle getBundle()
     {
-        return m_revisions;
+        return this;
+    }
+
+    public synchronized List<BundleRevision> getRevisions()
+    {
+        return new ArrayList<BundleRevision>(m_revisions);
     }
 
     /**
@@ -1085,14 +1087,7 @@ class BundleImpl implements Bundle
     **/
     synchronized boolean hasRevision(BundleRevision revision)
     {
-        for (int i = 0; i < m_revisions.size(); i++)
-        {
-            if (m_revisions.get(i) == revision)
-            {
-                return true;
-            }
-        }
-        return false;
+        return m_revisions.contains(revision);
     }
 
     synchronized void revise(String location, InputStream is)
@@ -1115,7 +1110,7 @@ class BundleImpl implements Bundle
     synchronized boolean rollbackRevise() throws Exception
     {
         boolean isExtension = isExtension();
-        BundleRevision br = m_revisions.remove(m_revisions.size() - 1);
+        BundleRevision br = m_revisions.remove(0);
         if (!isExtension)
         {
             // Since revising a bundle adds a revision to the global
@@ -1131,7 +1126,7 @@ class BundleImpl implements Bundle
     // which is the normal case.
     synchronized void addRevision(BundleRevision revision) throws Exception
     {
-        m_revisions.add(revision);
+        m_revisions.add(0, revision);
 
         // Set protection domain after adding the revision to the bundle,
         // since this requires that the bundle has a revision.
@@ -1147,7 +1142,7 @@ class BundleImpl implements Bundle
             }
             catch (Exception ex)
             {
-                m_revisions.remove(m_revisions.size() - 1);
+                m_revisions.remove(0);
                 throw ex;
             }
         }

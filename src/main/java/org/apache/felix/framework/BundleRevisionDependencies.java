@@ -30,6 +30,7 @@ import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -111,9 +112,9 @@ class BundleRevisionDependencies
         return false;
     }
 
-    public synchronized boolean hasDependents(BundleImpl bundle)
+    public synchronized boolean hasDependents(Bundle bundle)
     {
-        List<BundleRevision> revisions = bundle.getRevisions();
+        List<BundleRevision> revisions = bundle.adapt(BundleRevisions.class).getRevisions();
         for (BundleRevision revision : revisions)
         {
             if (hasDependents(revision))
@@ -145,11 +146,11 @@ class BundleRevisionDependencies
         return providedWires;
     }
 
-    public synchronized Set<Bundle> getDependentBundles(BundleImpl bundle)
+    public synchronized Set<Bundle> getDependentBundles(Bundle bundle)
     {
         Set<Bundle> result = new HashSet<Bundle>();
 
-        List<BundleRevision> revisions = bundle.getRevisions();
+        List<BundleRevision> revisions = bundle.adapt(BundleRevisions.class).getRevisions();
         for (BundleRevision revision : revisions)
         {
 // TODO: OSGi R4.3 - This is sort of a hack. We need to special case fragments,
@@ -188,7 +189,7 @@ class BundleRevisionDependencies
     }
 
     public synchronized Set<Bundle> getImportingBundles(
-        BundleImpl exporter, BundleCapability exportCap)
+        Bundle exporter, BundleCapability exportCap)
     {
         // Create set for storing importing bundles.
         Set<Bundle> result = new HashSet<Bundle>();
@@ -199,7 +200,7 @@ class BundleRevisionDependencies
 
         // Get all importers and requirers for all revisions of the bundle.
         // The spec says that require-bundle should be returned with importers.
-        for (BundleRevision revision : exporter.getRevisions())
+        for (BundleRevision revision : exporter.adapt(BundleRevisions.class).getRevisions())
         {
             Map<BundleCapability, Set<BundleWire>>
                 caps = m_dependentsMap.get(revision);
@@ -229,13 +230,13 @@ class BundleRevisionDependencies
         return result;
     }
 
-    public synchronized Set<Bundle> getRequiringBundles(BundleImpl bundle)
+    public synchronized Set<Bundle> getRequiringBundles(Bundle bundle)
     {
         // Create set for storing requiring bundles.
         Set<Bundle> result = new HashSet<Bundle>();
 
         // Get all requirers for all revisions of the bundle.
-        for (BundleRevision revision : bundle.getRevisions())
+        for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
         {
             Map<BundleCapability, Set<BundleWire>>
                 caps = m_dependentsMap.get(revision);
@@ -262,9 +263,9 @@ class BundleRevisionDependencies
         return result;
     }
 
-    public synchronized void removeDependencies(BundleImpl bundle)
+    public synchronized void removeDependencies(Bundle bundle)
     {
-        List<BundleRevision> revs = bundle.getRevisions();
+        List<BundleRevision> revs = bundle.adapt(BundleRevisions.class).getRevisions();
         for (BundleRevision rev : revs)
         {
             BundleWiring wiring = rev.getWiring();
