@@ -234,38 +234,58 @@ public class BundleWiringImpl implements BundleWiring
         // Calculate resolved list of capabilities, which includes:
         // 1. All capabilities from host and any fragments except for exported
         //    packages that we have an import (i.e., the export was substituted).
-        // And nothing else at this time.
-        List<BundleCapability> capList = new ArrayList<BundleCapability>();
-        for (BundleCapability cap : m_revision.getDeclaredCapabilities(null))
+        // And nothing else at this time. Fragments currently have no capabilities.
+        boolean isFragment = Util.isFragment(revision);
+        List<BundleCapability> capList = (isFragment)
+            ? Collections.EMPTY_LIST
+            : new ArrayList<BundleCapability>();
+// TODO: OSGi R4.4 - Fragments currently have no capabilities, but they may
+//       have an identity capability in the future.
+        if (!isFragment)
         {
-            if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                    && !imports.contains(cap.getAttributes()
-                        .get(BundleRevision.PACKAGE_NAMESPACE).toString())))
+            for (BundleCapability cap : m_revision.getDeclaredCapabilities(null))
             {
-                capList.add(cap);
-            }
-        }
-        if (m_fragments != null)
-        {
-            for (BundleRevision fragment : m_fragments)
-            {
-                for (BundleCapability cap : fragment.getDeclaredCapabilities(null))
+                if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                    || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                        && !imports.contains(cap.getAttributes()
+                            .get(BundleRevision.PACKAGE_NAMESPACE).toString())))
                 {
-// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
-//       that will need to be excluded from here.
-                    capList.add((BundleCapabilityImpl) cap);
-                    if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                        || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                            && !imports.contains(cap.getAttributes()
-                                .get(BundleRevision.PACKAGE_NAMESPACE).toString())))
+// TODO: OSGi R4.4 - We may need to make this more flexible since in the future it may
+//       be possible to consider other effective values via OBR's Environment.isEffective().
+                    String effective = cap.getDirectives().get(Constants.EFFECTIVE_DIRECTIVE);
+                    if ((effective == null) || (effective.equals(Constants.EFFECTIVE_RESOLVE)))
                     {
                         capList.add(cap);
                     }
                 }
             }
+            if (m_fragments != null)
+            {
+                for (BundleRevision fragment : m_fragments)
+                {
+                    for (BundleCapability cap : fragment.getDeclaredCapabilities(null))
+                    {
+// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
+//       that will need to be excluded from here.
+                        if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                            || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                                && !imports.contains(cap.getAttributes()
+                                    .get(BundleRevision.PACKAGE_NAMESPACE).toString())))
+                        {
+// TODO: OSGi R4.4 - We may need to make this more flexible since in the future it may
+//       be possible to consider other effective values via OBR's Environment.isEffective().
+                            String effective = cap.getDirectives().get(Constants.EFFECTIVE_DIRECTIVE);
+                            if ((effective == null) || (effective.equals(Constants.EFFECTIVE_RESOLVE)))
+                            {
+                                capList.add(cap);
+                            }
+                        }
+                    }
+                }
+            }
         }
         m_resolvedCaps = Collections.unmodifiableList(capList);
+
 
         List<R4Library> libList = (m_revision.getDeclaredNativeLibraries() == null)
             ? new ArrayList<R4Library>()

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,10 +23,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
-import java.util.List;
 
 import org.apache.felix.framework.util.Util;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleRevisions;
 
 class URLHandlersBundleURLConnection extends URLConnection
 {
@@ -81,7 +82,7 @@ class URLHandlersBundleURLConnection extends URLConnection
         //     bundle://<revision-id>:<bundle-classpath-index>/<resource-path>
         // Where <revision-id> = <bundle-id>.<revision>
         long bundleId = Util.getBundleIdFromRevisionId(url.getHost());
-        BundleImpl bundle = (BundleImpl) m_framework.getBundle(bundleId);
+        Bundle bundle = m_framework.getBundle(bundleId);
         if (bundle == null)
         {
             throw new IOException("No bundle associated with resource: " + url);
@@ -89,14 +90,14 @@ class URLHandlersBundleURLConnection extends URLConnection
         m_contentTime = bundle.getLastModified();
 
         // Get the bundle's revisions to find the target revision.
-        List<BundleRevision> revisions = bundle.getRevisions();
-        if ((revisions == null) || revisions.isEmpty())
+        BundleRevisions revisions = bundle.adapt(BundleRevisions.class);
+        if ((revisions == null) || revisions.getRevisions().isEmpty())
         {
             throw new IOException("Resource does not exist: " + url);
         }
 
         // Search for matching revision name.
-        for (BundleRevision br : revisions)
+        for (BundleRevision br : revisions.getRevisions())
         {
             if (((BundleRevisionImpl) br).getId().equals(url.getHost()))
             {
@@ -108,7 +109,7 @@ class URLHandlersBundleURLConnection extends URLConnection
         // If not found, assume the current revision.
         if (m_targetRevision == null)
         {
-            m_targetRevision = revisions.get(revisions.size() - 1);
+            m_targetRevision = revisions.getRevisions().get(0);
         }
 
         // If the resource cannot be found at the current class path index,
