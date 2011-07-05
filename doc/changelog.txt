@@ -1,3 +1,33 @@
+Changes from 2.3.4 to 2.3.5
+---------------------------
+
+** Bug
+    * [FELIX-1039] - Inconsistency packaging vs. type
+    * [FELIX-1571] - Bundle-ClassPath without "." while using maven-bundle-plugin in a war project confuses the plugin
+    * [FELIX-1734] - The _donotcopy is ignored
+    * [FELIX-1985] - Error when Include-Resource instruction contains duplicate paths.
+    * [FELIX-2346] - mvn bundle:clean removes all, even the existing resources
+    * [FELIX-2427] - maven site crashes
+    * [FELIX-2435] - <supportedProjectType> on a WAR file will switch the project to generate jar artifacts
+    * [FELIX-2449] - Resource filtering does not use Maven properties specified on the mvn command line via -D command line switches
+    * [FELIX-2656] - Maven-bundle-plugin identified as not thread-safe in Maven 3.0
+    * [FELIX-2722] - With an empty  organization like this <organization/>, maven bundle plugin raises a NPE.
+    * [FELIX-2765] - bundle plugin throw IllegalArgumentException while do the install
+    * [FELIX-2819] - packageinfo files in src/main/java are ignored
+    * [FELIX-2820] - Provide a default value when using <_wab/>
+    * [FELIX-2884] - The multiplicity isn't taken into account by the maven bundle plugin and bundlerepository when generating the repository xml
+    * [FELIX-2914] - Nullpointer exception on mvn install if the pom contains organization/url but not organization/name
+    * [FELIX-2934] - Bundle-ClassPath contains "." despite using _wab instruction
+
+** Improvement
+    * [FELIX-1836] - Maven resource filtering support for obr.xml
+
+** New Feature
+    * [FELIX-3011] - Add a new goal to save the bnd instructions that would be passed onto bnd, to allow people to use other toolchains such as bndtools
+
+** Task
+    * [FELIX-344] - Generate standard maven documentation for the maven-bundle-plugin
+
 Changes from 2.2.0 to 2.3.4
 ---------------------------
 
