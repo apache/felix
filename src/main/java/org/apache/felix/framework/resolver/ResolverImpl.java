@@ -40,6 +40,7 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
+// TODO: OSGi R.4.3 - Make sure we have sufficient wrapping of caps/reqs.
 public class ResolverImpl implements Resolver
 {
     private final Logger m_logger;
@@ -640,9 +641,14 @@ public class ResolverImpl implements Resolver
             {
                 // Wrap the requirement as a hosted requirement
                 // if it comes from a fragment, since we will need
-                // to know the host.
+                // to know the host. We also need to wrap if the
+                // requirement is a dynamic import, since that
+                // requirement will be shared with any other
+                // matching dynamic imports.
                 BundleRequirement r = wire.getRequirement();
-                if (!r.getRevision().equals(wire.getRequirerWiring().getRevision()))
+                if (!r.getRevision().equals(wire.getRequirerWiring().getRevision())
+                    || ((r.getDirectives().get(Constants.RESOLUTION_DIRECTIVE) != null)
+                        && r.getDirectives().get(Constants.RESOLUTION_DIRECTIVE).equals("dynamic")))
                 {
                     r = new HostedRequirement(
                         wire.getRequirerWiring().getRevision(),
@@ -847,6 +853,8 @@ public class ResolverImpl implements Resolver
             {
                 if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                 {
+// TODO: OSGi R.4.3 - Something doesn't seem correct here since we don't calculate
+//       reexported packages for resolved bundles. Create a test case.
                     String value = req.getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
                     if ((value != null) && value.equals(Constants.VISIBILITY_REEXPORT)
                         && (allCandidates.getCandidates(req) != null))
@@ -1338,31 +1346,23 @@ public class ResolverImpl implements Resolver
         {
             if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
+                if (!cap.getRevision().equals(revision))
+                {
+                    cap = new HostedCapability(revision, (BundleCapabilityImpl) cap);
+                }
                 exports.put(
                     (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
                     cap);
             }
         }
         // Remove substitutable exports that were imported.
-        // For resolved revisions look at the wires, for resolving
-        // revisions look in the candidate map to determine which
-        // exports are substitutable.
+        // For resolved revisions BundleWiring.getCapabilities()
+        // already excludes imported substitutable exports, but
+        // for resolving revisions we must look in the candidate
+        // map to determine which exports are substitutable.
         if (!exports.isEmpty())
         {
-            if (revision.getWiring() != null)
-            {
-                for (BundleWire wire : revision.getWiring().getRequiredWires(null))
-                {
-                    if (wire.getRequirement().getNamespace().equals(
-                        BundleRevision.PACKAGE_NAMESPACE))
-                    {
-                        String pkgName = (String) wire.getCapability()
-                            .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
-                        exports.remove(pkgName);
-                    }
-                }
-            }
-            else
+            if (revision.getWiring() == null)
             {
                 for (BundleRequirement req : revision.getDeclaredRequirements(null))
                 {

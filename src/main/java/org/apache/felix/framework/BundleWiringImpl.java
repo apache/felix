@@ -182,48 +182,90 @@ public class BundleWiringImpl implements BundleWiring
         m_fragments = fragments;
         m_fragmentContents = fragmentContents;
 
-        List<BundleCapability> capList =
-            new ArrayList<BundleCapability>(m_revision.getDeclaredCapabilities(null));
-        for (int fragIdx = 0;
-            (m_fragments != null) && (fragIdx < m_fragments.size());
-            fragIdx++)
+        // Calculate resolved list of requirements, which includes:
+        // 1. All requirements for which we have a wire.
+        // 2. All dynamic imports from the host and any fragments.
+        // Also create set of imported packages so we can eliminate any
+        // substituted exports from our resolved capabilities.
+        Set<String> imports = new HashSet<String>();
+        List<BundleRequirement> reqList = new ArrayList<BundleRequirement>();
+        // First add resolved requirements from wires.
+        for (BundleWire bw : wires)
         {
-            List<BundleCapability> caps =
-                m_fragments.get(fragIdx).getDeclaredCapabilities(null);
-            for (int capIdx = 0;
-                (caps != null) && (capIdx < caps.size());
-                capIdx++)
+            reqList.add(bw.getRequirement());
+            if (bw.getRequirement().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
-// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
-//       that will need to be excluded from here.
-                capList.add(
-                    new HostedCapability(
-                        m_revision, (BundleCapabilityImpl) caps.get(capIdx)));
+                imports.add((String)
+                    bw.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
             }
         }
-        m_resolvedCaps = Collections.unmodifiableList(capList);
-
-        List<BundleRequirement> reqList =
-            new ArrayList(m_revision.getDeclaredRequirements(null));
-        for (int fragIdx = 0;
-            (m_fragments != null) && (fragIdx < m_fragments.size());
-            fragIdx++)
+        // Next add dynamic requirements from host.
+        for (BundleRequirement req : m_revision.getDeclaredRequirements(null))
         {
-            List<BundleRequirement> reqs =
-                m_fragments.get(fragIdx).getDeclaredRequirements(null);
-            for (int reqIdx = 0;
-                (reqs != null) && (reqIdx < reqs.size());
-                reqIdx++)
+            if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
-                if (!reqs.get(reqIdx).getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+                String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+                if ((resolution != null) && (resolution.equals("dynamic")))
                 {
-                    reqList.add(
-                        new HostedRequirement(
-                            m_revision, (BundleRequirementImpl) reqs.get(reqIdx)));
+                    reqList.add(req);
+                }
+            }
+        }
+        // Finally, add dynamic requirements from fragments.
+        if (m_fragments != null)
+        {
+            for (BundleRevision fragment : m_fragments)
+            {
+                for (BundleRequirement req : fragment.getDeclaredRequirements(null))
+                {
+                    if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                    {
+                        String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
+                        if ((resolution != null) && (resolution.equals("dynamic")))
+                        {
+                            reqList.add(req);
+                        }
+                    }
                 }
             }
         }
         m_resolvedReqs = Collections.unmodifiableList(reqList);
+
+        // Calculate resolved list of capabilities, which includes:
+        // 1. All capabilities from host and any fragments except for exported
+        //    packages that we have an import (i.e., the export was substituted).
+        // And nothing else at this time.
+        List<BundleCapability> capList = new ArrayList<BundleCapability>();
+        for (BundleCapability cap : m_revision.getDeclaredCapabilities(null))
+        {
+            if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                    && !imports.contains(cap.getAttributes()
+                        .get(BundleRevision.PACKAGE_NAMESPACE).toString())))
+            {
+                capList.add(cap);
+            }
+        }
+        if (m_fragments != null)
+        {
+            for (BundleRevision fragment : m_fragments)
+            {
+                for (BundleCapability cap : fragment.getDeclaredCapabilities(null))
+                {
+// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
+//       that will need to be excluded from here.
+                    capList.add((BundleCapabilityImpl) cap);
+                    if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                        || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                            && !imports.contains(cap.getAttributes()
+                                .get(BundleRevision.PACKAGE_NAMESPACE).toString())))
+                    {
+                        capList.add(cap);
+                    }
+                }
+            }
+        }
+        m_resolvedCaps = Collections.unmodifiableList(capList);
 
         List<R4Library> libList = (m_revision.getDeclaredNativeLibraries() == null)
             ? new ArrayList<R4Library>()
