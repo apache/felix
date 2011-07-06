@@ -130,15 +130,22 @@ class BundleRevisionDependencies
     {
         List<BundleWire> providedWires = new ArrayList<BundleWire>();
 
-        Map<BundleCapability, Set<BundleWire>> caps =
+        Map<BundleCapability, Set<BundleWire>> providedCaps =
             m_dependentsMap.get(revision);
-        if (caps != null)
+        if (providedCaps != null)
         {
-            for (Entry<BundleCapability, Set<BundleWire>> entry : caps.entrySet())
+            // The wires are supposed to be in declared capability order, so
+            // get the capability list from the revision's wiring, which is
+            // in declared order (including fragments), and use it to create
+            // the provided wire list in declared order.
+            List<BundleCapability> resolvedCaps =
+                revision.getWiring().getCapabilities(namespace);
+            for (BundleCapability resolvedCap : resolvedCaps)
             {
-                if ((namespace == null) || entry.getKey().getNamespace().equals(namespace))
+                Set<BundleWire> dependentWires = providedCaps.get(resolvedCap);
+                if (dependentWires != null)
                 {
-                    providedWires.addAll(entry.getValue());
+                    providedWires.addAll(dependentWires);
                 }
             }
         }
