@@ -164,7 +164,7 @@ class BundleImpl implements Bundle, BundleRevisions
         else
         {
             // Get current revision, since we can reuse it.
-            BundleRevisionImpl current = (BundleRevisionImpl) adapt(BundleRevision.class);
+            BundleRevisionImpl current = (BundleRevisionImpl) adapt(BundleRevisionImpl.class);
             // Close all existing revisions.
             closeRevisions();
             // Clear all revisions.
@@ -299,7 +299,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
 
         return getFramework().findBundleEntries(
-            adapt(BundleRevision.class), path, filePattern, recurse);
+            adapt(BundleRevisionImpl.class), path, filePattern, recurse);
     }
 
     public Dictionary getHeaders()
@@ -332,8 +332,7 @@ class BundleImpl implements Bundle, BundleRevisions
         // Spec says empty local returns raw headers.
         if (locale.length() == 0)
         {
-            result = new StringMap(
-                ((BundleRevisionImpl) adapt(BundleRevision.class)).getHeaders(), false);
+            result = new StringMap(adapt(BundleRevisionImpl.class).getHeaders(), false);
         }
 
         // If we have no result, try to get it from the cached headers.
@@ -369,8 +368,7 @@ class BundleImpl implements Bundle, BundleRevisions
         if (result == null)
         {
             // Get a modifiable copy of the raw headers.
-            Map headers = new StringMap(
-                ((BundleRevisionImpl) adapt(BundleRevision.class)).getHeaders(), false);
+            Map headers = new StringMap(adapt(BundleRevisionImpl.class).getHeaders(), false);
             // Assume for now that this will be the result.
             result = headers;
 
@@ -402,7 +400,7 @@ class BundleImpl implements Bundle, BundleRevisions
                 // Create ordered list of revisions to search for localization
                 // property resources.
                 List<BundleRevision> revisionList = createLocalizationRevisionList(
-                    (BundleRevisionImpl) adapt(BundleRevision.class));
+                    adapt(BundleRevisionImpl.class));
 
                 // Create ordered list of files to load properties from
                 List<String> resourceList = createLocalizationResourceList(basename, locale);
@@ -884,12 +882,12 @@ class BundleImpl implements Bundle, BundleRevisions
 
     public String getSymbolicName()
     {
-        return adapt(BundleRevision.class).getSymbolicName();
+        return adapt(BundleRevisionImpl.class).getSymbolicName();
     }
 
     public Version getVersion()
     {
-        return adapt(BundleRevision.class).getVersion();
+        return adapt(BundleRevisionImpl.class).getVersion();
     }
 
     public boolean hasPermission(Object obj)
@@ -1029,6 +1027,13 @@ class BundleImpl implements Bundle, BundleRevisions
             }
             return (A) m_revisions.get(0);
         }
+        // We need some way to get the current revision even if
+        // the associated bundle is uninstalled, so we use the
+        // impl revision class for this purpose.
+        else if (type == BundleRevisionImpl.class)
+        {
+            return (A) m_revisions.get(0);
+        }
         else if (type == BundleRevisions.class)
         {
             return (A) this;
@@ -1052,7 +1057,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
     public String toString()
     {
-        String sym = adapt(BundleRevision.class).getSymbolicName();
+        String sym = getSymbolicName();
         if (sym != null)
         {
             return sym + " [" + getBundleId() +"]";
@@ -1191,9 +1196,11 @@ class BundleImpl implements Bundle, BundleRevisions
                 if (id != getBundleId())
                 {
                     String sym = bundles[i].getSymbolicName();
-                    Version ver = ((BundleRevisionImpl)
-                        bundles[i].adapt(BundleRevision.class)).getVersion();
-                    if ((symName != null) && (sym != null) && symName.equals(sym) && bundleVersion.equals(ver))
+                    Version ver = bundles[i].getVersion();
+                    if ((symName != null)
+                        && (sym != null)
+                        && symName.equals(sym)
+                        && bundleVersion.equals(ver))
                     {
                         throw new BundleException(
                             "Bundle symbolic name and version are not unique: "
