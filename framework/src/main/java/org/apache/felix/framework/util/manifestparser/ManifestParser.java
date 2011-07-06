@@ -1267,14 +1267,13 @@ public class ManifestParser
 
             // Create a require capability and return it.
             String symName = (String) clauses.get(0).m_paths.get(0);
-            Map<String, Object> attrs = new HashMap<String, Object>(2);
-            attrs.put(BundleRevision.BUNDLE_NAMESPACE, symName);
-            attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
+            clauses.get(0).m_attrs.put(BundleRevision.BUNDLE_NAMESPACE, symName);
+            clauses.get(0).m_attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
             return new BundleCapabilityImpl(
                 owner,
                 BundleRevision.BUNDLE_NAMESPACE,
                 clauses.get(0).m_dirs,
-                attrs);
+                clauses.get(0).m_attrs);
         }
 
         return null;
