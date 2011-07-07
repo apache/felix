@@ -125,7 +125,11 @@ function displayConfigForm(obj) {
 	var ua = navigator.userAgent;
 	if (ua.indexOf('MSIE 6') != -1 || ua.indexOf('MSIE 7') != -1) $(parent).html(parent.innerHTML);
 
-	initStaticWidgets(editor.attr('__pid', obj.pid).dialog('option', 'title', obj.title).dialog('open'));
+	initStaticWidgets(editor
+		.attr('__pid', obj.pid)
+		.attr('__location', obj.bundleLocation?obj.bundleLocation:'')
+		.dialog('option', 'title', obj.title)
+		.dialog('open'));
 }
 
 function printTextArea(/* Element */ parent, props )
@@ -410,8 +414,6 @@ function removeValue(vidx)
 
 function configConfirm(/* String */ message, /* String */ title, /* String */ location)
 {
-    var message = i18n.del_ask;
-    
     if (title) {
         message += "\r\n" + i18n.del_config + title;
     }
@@ -422,14 +424,26 @@ function configConfirm(/* String */ message, /* String */ title, /* String */ lo
     return confirm(message);
 }
 
-function confirmDelete(/* String */ title, /* String */ location)
+function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 {
-    return configConfirm(i18n.del_ask, title, location);
+    if ( configConfirm(i18n.del_ask, configId, bundleLocation) ) {
+	$.post(pluginRoot + '/' + configId + '?apply=1&delete=1', null, function() {
+	    document.location.href = pluginRoot;
+	}, 'json');
+	return true;
+    }
+    return false;
 }
 
-function confirmUnbind(/* String */ title, /* String */ location)
+function unbindConfig(/* String */ configId, /* String */ bundleLocation)
 {
-    return configConfirm(i18n.unbind_ask, title, location);
+    if ( configConfirm(i18n.unbind_ask, configId, bundleLocation) ) {
+	$.post(pluginRoot + '/' + configId + '?unbind=1', null, function() {
+	    document.location.href = pluginRoot + '/' + configId;
+	}, 'json');
+	return true;
+    }
+    return false;
 }
 
 function addConfig(conf) {
@@ -454,19 +468,13 @@ function addConfig(conf) {
 		configure(conf.id);
 	});
 	tr.find('li:eq(2)').click(function() { // delete
-		if ( confirmDelete(conf.id, conf.bundle_name) ) {
-			$.post(pluginRoot + '/' + conf.id + '?apply=1&delete=1', null, function() {
-				document.location.href = pluginRoot;
-			}, 'json');
-		}
+	    	deleteConfig(conf.id, conf.bundle_name);
 	});
-	if (conf.bundle) tr.find('li:eq(1)').click(function() { // unbind
-		if ( confirmUnbind(conf.id, conf.bundle_name) ) {
-			$.post(pluginRoot + '/' + conf.id + '?apply=1&delete=1', null, function() {
-				document.location.href = pluginRoot + '/' + conf.id;
-			}, 'json');
-		}
-	}).removeClass('ui-state-disabled');
+	if (conf.bundle) {
+	    	tr.find('li:eq(1)').click(function() { // unbind
+        		unbindConfig(conf.id, conf.bundle_name);
+        	}).removeClass('ui-state-disabled');
+	}
 }
 
 function addFactoryConfig(conf) {
@@ -518,9 +526,18 @@ $(document).ready(function() {
 		var form = document.getElementById('editorForm');
 		if (form) form.reset();
 	}
+	_buttons[i18n.del] = function() {
+	    	if (deleteConfig($(this).attr('__pid'), $(this).attr('__location'))) {
+			$(this).dialog('close');
+	    	}
+	}
+	_buttons[i18n.unbind_btn] = function() {
+	    	unbindConfig($(this).attr('__pid'), $(this).attr('__location'));
+	}
 	_buttons[i18n.save] = function() {
 		$.post(pluginRoot + '/' + $(this).attr('__pid') + '?' + $(this).find('form').serialize());
 		$(this).dialog('close');
+		document.location.href = pluginRoot;
 	}
 	// prepare editor, but don't open yet!
 	editor = $('#editor').dialog({
