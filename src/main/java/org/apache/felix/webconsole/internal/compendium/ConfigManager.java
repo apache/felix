@@ -149,9 +149,23 @@ public class ConfigManager extends ConfigManagerBase
         // check for configuration unbinding
         if ( request.getParameter( "unbind" ) != null )
         {
-            config.setBundleLocation( null );
-            response.setContentType("text/plain");
-            response.getWriter().print("true");
+            if ( config != null && config.getBundleLocation() != null )
+            {
+                config.setBundleLocation( null );
+
+                // workaround for Felix Config Admin 1.2.8 not clearing dynamic
+                // bundle location when clearing static bundle location. In
+                // this case we first set the static bundle location to the
+                // dynamic bundle location and then try to set both to null
+                if ( config.getBundleLocation() != null )
+                {
+                    config.setBundleLocation( "??invalid:bundle/location" );
+                    config.setBundleLocation( null );
+                }
+            }
+            response.setContentType( "application/json" );
+            response.setCharacterEncoding( "UTF-8" );
+            response.getWriter().print( "{ \"status\": true }" );
             return;
         }
 
