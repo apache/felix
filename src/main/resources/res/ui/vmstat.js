@@ -34,7 +34,6 @@ $(document).ready(function() {
 			target.text(statData[i]);
 		}
 	}
-	$('#lastStarted').text(localTm(statData.lastStarted));
 	var st = statData.shutdownTimer;
 	$('#shutdownform').css('display', st ? 'none' : 'block');
 	$('#shutdownform2').css('display', st ? 'block' : 'none');

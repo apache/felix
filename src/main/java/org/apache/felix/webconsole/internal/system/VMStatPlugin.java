@@ -20,6 +20,8 @@ package org.apache.felix.webconsole.internal.system;
 
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.util.Date;
 
 import javax.servlet.ServletException;
@@ -55,7 +57,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
     private static final String PARAM_SHUTDOWN_TYPE_RESTART = "Restart";
     //private static final String PARAM_SHUTDOWN_TYPE_STOP = "Stop";
 
-    private static final long startDate = ( new Date() ).getTime();
+    private static final long startDate = System.currentTimeMillis();
 
     // from BaseWebConsolePlugin
     private static String START_LEVEL_NAME = StartLevel.class.getName();
@@ -195,12 +197,17 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         if ( shutdownType == null )
             shutdownType = "";
 
+        DateFormat format = DateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG, request.getLocale() );
+        final String startTime = format.format( new Date( startDate ) );
+        final String upTime = formatPeriod( System.currentTimeMillis() - startDate );
+
         JSONObject json = new JSONObject();
         try
         {
             json.put( "systemStartLevel", getStartLevel().getStartLevel() );
             json.put( "bundleStartLevel", getStartLevel().getInitialBundleStartLevel() );
-            json.put( "lastStarted", startDate );
+            json.put( "lastStarted", startTime );
+            json.put( "upTime", upTime );
             json.put( "runtime", System.getProperty( "java.runtime.name" ) + "(build "
                 + System.getProperty( "java.runtime.version" ) + ")" );
             json.put( "jvm", System.getProperty( "java.vm.name" ) + "(build " + System.getProperty( "java.vm.version" )
@@ -227,6 +234,20 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         vars.put( "startData", json.toString() );
 
         response.getWriter().print( body );
+    }
+
+
+    private String formatPeriod( final long period )
+    {
+        final Long msecs = new Long( period % 1000 );
+        final Long secs = new Long( period / 1000 % 60 );
+        final Long mins = new Long( period / 1000 / 60 % 60 );
+        final Long hours = new Long( period / 1000 / 60 / 60 % 24 );
+        final Long days = new Long( period / 1000 / 60 / 60 / 24 );
+        return MessageFormat.format(
+            "{0,number} '${vmstat.upTime.format.days}' {1,number,00}:{2,number,00}:{3,number,00}.{4,number,000}",
+            new Object[]
+                { days, hours, mins, secs, msecs } );
     }
 
 
