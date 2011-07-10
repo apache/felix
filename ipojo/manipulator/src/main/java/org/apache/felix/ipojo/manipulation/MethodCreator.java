@@ -50,7 +50,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * All POJO method will be renamed by using this prefix.
      */
-    public static final String PREFIX = "__";
+    public static final String PREFIX = "__M_";
 
     /**
      * POJO class.
@@ -310,10 +310,10 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      */
     private void generateConstructor(int access, String descriptor, String signature, String[] exceptions, List annotations, Map paramAnnotations) {
          GeneratorAdapter mv = new GeneratorAdapter(
-        		 cv.visitMethod(access, "<init>", descriptor, signature, exceptions),
-        		 access, "<init>", descriptor);
-    	 // Compute the new signature
-    	 String newDesc = descriptor.substring(1); // Remove the first (
+                 cv.visitMethod(access, "<init>", descriptor, signature, exceptions),
+                 access, "<init>", descriptor);
+         // Compute the new signature
+         String newDesc = descriptor.substring(1); // Remove the first (
          newDesc = "(Lorg/apache/felix/ipojo/InstanceManager;" + newDesc;
 
          mv.visitCode();
