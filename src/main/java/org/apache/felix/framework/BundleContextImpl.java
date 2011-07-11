@@ -175,7 +175,7 @@ class BundleContextImpl implements FelixBundleContext
         // the result is the same as if the calling thread had
         // won the race condition.
 
-        return m_felix.getBundle(id);
+        return m_felix.getBundle(this, id);
     }
 
     public Bundle getBundle(String location)
@@ -199,7 +199,7 @@ class BundleContextImpl implements FelixBundleContext
         // the result is the same as if the calling thread had
         // won the race condition.
 
-        return m_felix.getBundles();
+        return m_felix.getBundles(this);
     }
 
     public void addBundleListener(BundleListener l)

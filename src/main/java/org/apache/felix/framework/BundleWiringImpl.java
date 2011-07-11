@@ -1496,6 +1496,7 @@ ex.printStackTrace();
                                 {
                                     try
                                     {
+// TODO: OSGi R4.3 - Need to call all hooks in privileged block.
                                         wh.weave(wci);
                                     }
                                     catch (Throwable th)

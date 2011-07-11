@@ -62,8 +62,6 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.hooks.service.FindHook;
-import org.osgi.framework.hooks.service.ListenerHook;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
@@ -2622,7 +2620,7 @@ public class Felix extends BundleImpl implements Framework
         Bundle origin, long id, String location, BundleArchive ba, InputStream is)
         throws BundleException
     {
-        BundleImpl bundle = null;
+        BundleImpl existing, bundle = null;
 
         // Acquire an install lock.
         acquireInstallLock(location);
@@ -2638,169 +2636,167 @@ public class Felix extends BundleImpl implements Framework
 
             // If bundle location is already installed, then
             // return it as required by the OSGi specification.
-            bundle = (BundleImpl) getBundle(location);
-            if (bundle != null)
+            existing = (BundleImpl) getBundle(location);
+            if (existing == null)
             {
-                return bundle;
-            }
+                // Determine if this is a new or existing bundle.
+                boolean isNew = (ba == null);
 
-            // Determine if this is a new or existing bundle.
-            boolean isNew = (ba == null);
+                // If the bundle is new we must cache its JAR file.
+                if (isNew)
+                {
+                    // First generate an identifier for it.
+                    id = getNextId();
 
-            // If the bundle is new we must cache its JAR file.
-            if (isNew)
-            {
-                // First generate an identifier for it.
-                id = getNextId();
-
-                try
-                {
-                    // Add the bundle to the cache.
-                    ba = m_cache.create(id, getInitialBundleStartLevel(), location, is);
-                }
-                catch (Exception ex)
-                {
-                    throw new BundleException(
-                        "Unable to cache bundle: " + location, ex);
-                }
-                finally
-                {
                     try
                     {
-                        if (is != null) is.close();
+                        // Add the bundle to the cache.
+                        ba = m_cache.create(id, getInitialBundleStartLevel(), location, is);
                     }
-                    catch (IOException ex)
+                    catch (Exception ex)
+                    {
+                        throw new BundleException(
+                            "Unable to cache bundle: " + location, ex);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (is != null) is.close();
+                        }
+                        catch (IOException ex)
+                        {
+                            m_logger.log(
+                                Logger.LOG_ERROR,
+                                "Unable to close input stream.", ex);
+                        }
+                    }
+                }
+                else
+                {
+                    // If the bundle we are installing is not new,
+                    // then try to purge old revisions before installing
+                    // it; this is done just in case a "refresh"
+                    // didn't occur last session...this would only be
+                    // due to an error or system crash.
+                    try
+                    {
+                        if (ba.isRemovalPending())
+                        {
+                            ba.purge();
+                        }
+                    }
+                    catch (Exception ex)
                     {
                         m_logger.log(
                             Logger.LOG_ERROR,
-                            "Unable to close input stream.", ex);
+                            "Could not purge bundle.", ex);
                     }
                 }
-            }
-            else
-            {
-                // If the bundle we are installing is not new,
-                // then try to purge old revisions before installing
-                // it; this is done just in case a "refresh"
-                // didn't occur last session...this would only be
-                // due to an error or system crash.
+
                 try
                 {
-                    if (ba.isRemovalPending())
+                    // Acquire the global lock to create the bundle,
+                    // since this impacts the global state.
+                    boolean locked = acquireGlobalLock();
+                    if (!locked)
                     {
-                        ba.purge();
+                        throw new BundleException(
+                            "Unable to acquire the global lock to install the bundle.");
+                    }
+                    try
+                    {
+                        bundle = new BundleImpl(this, ba);
+                    }
+                    finally
+                    {
+                        // Always release the global lock.
+                        releaseGlobalLock();
+                    }
+
+                    if (!bundle.isExtension())
+                    {
+                        Object sm = System.getSecurityManager();
+                        if (sm != null)
+                        {
+                            ((SecurityManager) sm).checkPermission(
+                                new AdminPermission(bundle, AdminPermission.LIFECYCLE));
+                        }
+                    }
+                    else
+                    {
+                        m_extensionManager.addExtensionBundle(this, bundle);
+                        m_resolver.addRevision(m_extensionManager.getRevision());
                     }
                 }
-                catch (Exception ex)
+                catch (Throwable ex)
                 {
-                    m_logger.log(
-                        Logger.LOG_ERROR,
-                        "Could not purge bundle.", ex);
+                    // If the bundle is new, then remove it from the cache.
+                    // TODO: FRAMEWORK - Perhaps it should be removed if it is not new too.
+                    if (isNew)
+                    {
+                        try
+                        {
+                            if (bundle != null)
+                            {
+                                bundle.closeAndDelete();
+                            }
+                            else if (ba != null)
+                            {
+                                ba.closeAndDelete();
+                            }
+                        }
+                        catch (Exception ex1)
+                        {
+                            m_logger.log(bundle,
+                                Logger.LOG_ERROR,
+                                "Could not remove from cache.", ex1);
+                        }
+                    }
+                    if (ex instanceof BundleException)
+                    {
+                        throw (BundleException) ex;
+                    }
+                    else if (ex instanceof AccessControlException)
+                    {
+                        throw (AccessControlException) ex;
+                    }
+                    else
+                    {
+                        throw new BundleException("Could not create bundle object.", ex);
+                    }
                 }
-            }
 
-            try
-            {
-                // Acquire the global lock to create the bundle,
-                // since this impacts the global state.
+                // Acquire global lock.
                 boolean locked = acquireGlobalLock();
                 if (!locked)
                 {
-                    throw new BundleException(
-                        "Unable to acquire the global lock to install the bundle.");
+                    // If the calling thread holds bundle locks, then we might not
+                    // be able to get the global lock.
+                    throw new IllegalStateException(
+                        "Unable to acquire global lock to add bundle.");
                 }
                 try
                 {
-                    bundle = new BundleImpl(this, ba);
+                    // Use a copy-on-write approach to add the bundle
+                    // to the installed maps.
+                    Map[] maps = new Map[] {
+                        new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
+                        new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
+                    };
+                    maps[LOCATION_MAP_IDX].put(location, bundle);
+                    maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
+                    m_installedBundles = maps;
                 }
                 finally
                 {
-                    // Always release the global lock.
                     releaseGlobalLock();
                 }
 
-                if (!bundle.isExtension())
+                if (bundle.isExtension())
                 {
-                    Object sm = System.getSecurityManager();
-                    if (sm != null)
-                    {
-                        ((SecurityManager) sm).checkPermission(
-                            new AdminPermission(bundle, AdminPermission.LIFECYCLE));
-                    }
+                    m_extensionManager.startExtensionBundle(this, bundle);
                 }
-                else
-                {
-                    m_extensionManager.addExtensionBundle(this, bundle);
-                    m_resolver.addRevision(m_extensionManager.getRevision());
-                }
-            }
-            catch (Throwable ex)
-            {
-                // If the bundle is new, then remove it from the cache.
-                // TODO: FRAMEWORK - Perhaps it should be removed if it is not new too.
-                if (isNew)
-                {
-                    try
-                    {
-                        if (bundle != null)
-                        {
-                            bundle.closeAndDelete();
-                        }
-                        else if (ba != null)
-                        {
-                            ba.closeAndDelete();
-                        }
-                    }
-                    catch (Exception ex1)
-                    {
-                        m_logger.log(bundle,
-                            Logger.LOG_ERROR,
-                            "Could not remove from cache.", ex1);
-                    }
-                }
-                if (ex instanceof BundleException)
-                {
-                    throw (BundleException) ex;
-                }
-                else if (ex instanceof AccessControlException)
-                {
-                    throw (AccessControlException) ex;
-                }
-                else
-                {
-                    throw new BundleException("Could not create bundle object.", ex);
-                }
-            }
-
-            // Acquire global lock.
-            boolean locked = acquireGlobalLock();
-            if (!locked)
-            {
-                // If the calling thread holds bundle locks, then we might not
-                // be able to get the global lock.
-                throw new IllegalStateException(
-                    "Unable to acquire global lock to add bundle.");
-            }
-            try
-            {
-                // Use a copy-on-write approach to add the bundle
-                // to the installed maps.
-                Map[] maps = new Map[] {
-                    new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
-                    new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
-                };
-                maps[LOCATION_MAP_IDX].put(location, bundle);
-                maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
-                m_installedBundles = maps;
-            }
-            finally
-            {
-                releaseGlobalLock();
-            }
-
-            if (bundle.isExtension())
-            {
-                m_extensionManager.startExtensionBundle(this, bundle);
             }
         }
         finally
@@ -2822,11 +2818,52 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        // Fire bundle event.
-        fireBundleEvent(BundleEvent.INSTALLED, bundle, origin);
+        if (existing != null)
+        {
+            Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
+                getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
+            if (!hooks.isEmpty())
+            {
+                Collection<Bundle> bundles = new ArrayList<Bundle>(1);
+                bundles.add(existing);
+                bundles = new ShrinkableCollection<Bundle>(bundles);
+                for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
+                {
+                    org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
+                    if (fh != null)
+                    {
+// TODO: OSGi R4.3 - Call all hooks in privileged block.
+                        try
+                        {
+                            fh.find(origin.getBundleContext(), bundles);
+                        }
+                        catch (Throwable th)
+                        {
+                            m_logger.doLog(
+                                hook.getBundle(),
+                                hook,
+                                Logger.LOG_WARNING,
+                                "Problem invoking bundle hook.",
+                                th);
+                        }
+                    }
+                }
+                if (bundles.isEmpty())
+                {
+                    throw new BundleException(
+                        "Bundle installation rejected by hook.",
+                        BundleException.REJECTED_BY_HOOK);
+                }
+            }
+        }
+        else
+        {
+            // Fire bundle event.
+            fireBundleEvent(BundleEvent.INSTALLED, bundle, origin);
+        }
 
         // Return new bundle.
-        return bundle;
+        return (existing != null) ? existing : bundle;
     }
 
     /**
@@ -2848,6 +2885,64 @@ public class Felix extends BundleImpl implements Framework
      * @param id The identifier of the bundle to retrieve.
      * @return The bundle associated with the identifier or null if there
      *         is no bundle associated with the identifier.
+    **/
+    Bundle getBundle(BundleContext bc, long id)
+    {
+        BundleImpl bundle = (BundleImpl)
+            m_installedBundles[IDENTIFIER_MAP_IDX].get(new Long(id));
+        if (bundle != null)
+        {
+            List<BundleImpl> uninstalledBundles = m_uninstalledBundles;
+            for (int i = 0;
+                (bundle == null)
+                    && (uninstalledBundles != null)
+                    && (i < uninstalledBundles.size());
+                i++)
+            {
+                if (uninstalledBundles.get(i).getBundleId() == id)
+                {
+                    bundle = uninstalledBundles.get(i);
+                }
+            }
+        }
+
+        Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
+            getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
+        if (!hooks.isEmpty() && (bundle != null))
+        {
+            Collection<Bundle> bundles = new ArrayList<Bundle>(1);
+            bundles.add(bundle);
+            bundles = new ShrinkableCollection<Bundle>(bundles);
+            for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
+            {
+                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
+                if (fh != null)
+                {
+// TODO: OSGi R4.3 - Call all hooks in privileged block.
+                    try
+                    {
+                        fh.find(bc, bundles);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.doLog(
+                            hook.getBundle(),
+                            hook,
+                            Logger.LOG_WARNING,
+                            "Problem invoking bundle hook.",
+                            th);
+                    }
+                }
+            }
+            bundle = (bundles.isEmpty()) ? null : bundle;
+        }
+        return bundle;
+    }
+
+    /**
+     * Retrieves a bundle by its identifier and avoids bundles hooks.
+     *
+     * @return The bundle associated with the identifier or null.
     **/
     Bundle getBundle(long id)
     {
@@ -2879,14 +2974,49 @@ public class Felix extends BundleImpl implements Framework
      * @return An array containing all installed bundles or null if
      *         there are no installed bundles.
     **/
+    Bundle[] getBundles(BundleContext bc)
+    {
+        Collection<Bundle> bundles = m_installedBundles[IDENTIFIER_MAP_IDX].values();
+        Set<ServiceReference<org.osgi.framework.hooks.bundle.FindHook>> hooks =
+            getHooks(org.osgi.framework.hooks.bundle.FindHook.class);
+        if (!hooks.isEmpty())
+        {
+            bundles = new ShrinkableCollection<Bundle>(new ArrayList(bundles));
+            for (ServiceReference<org.osgi.framework.hooks.bundle.FindHook> hook : hooks)
+            {
+                org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
+                if (fh != null)
+                {
+// TODO: OSGi R4.3 - Call all hooks in privileged block.
+                    try
+                    {
+                        fh.find(bc, bundles);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.doLog(
+                            hook.getBundle(),
+                            hook,
+                            Logger.LOG_WARNING,
+                            "Problem invoking bundle hook.",
+                            th);
+                    }
+                }
+            }
+        }
+        return (Bundle[]) bundles.toArray(new Bundle[bundles.size()]);
+    }
+
+    /**
+     * Retrieves all installed bundles and avoids bundles hooks.
+     *
+     * @return An array containing all installed bundles or null if
+     *         there are no installed bundles.
+    **/
     Bundle[] getBundles()
     {
-        Map bundles = m_installedBundles[IDENTIFIER_MAP_IDX];
-        if (bundles.isEmpty())
-        {
-            return null;
-        }
-        return (Bundle[]) bundles.values().toArray(new Bundle[bundles.size()]);
+        Collection<Bundle> bundles = m_installedBundles[IDENTIFIER_MAP_IDX].values();
+        return (Bundle[]) bundles.toArray(new Bundle[bundles.size()]);
     }
 
     void addBundleListener(BundleImpl bundle, BundleListener l)
@@ -2954,16 +3084,16 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Invoke ListenerHook.removed() if filter updated.
-        Set<ServiceReference<ListenerHook>> listenerHooks =
-            m_registry.getHooks(ListenerHook.class);
+        Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
+            m_registry.getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
                 new ListenerHookInfoImpl(
                 ((BundleImpl) bundle)._getBundleContext(), l, oldFilter.toString(), true));
-            for (ServiceReference<ListenerHook> sr : listenerHooks)
+            for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
-                ListenerHook lh = m_registry.getServiceSafely(this, sr);
+                org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
                 if (lh != null)
                 {
                     try
@@ -2986,9 +3116,9 @@ public class Felix extends BundleImpl implements Framework
         // Invoke the ListenerHook.added() on all hooks.
         final Collection added = Collections.singleton(
             new ListenerHookInfoImpl(((BundleImpl) bundle)._getBundleContext(), l, f, false));
-        for (ServiceReference<ListenerHook> sr : listenerHooks)
+        for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
         {
-            ListenerHook lh = m_registry.getServiceSafely(this, sr);
+            org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
             if (lh != null)
             {
                 try
@@ -3017,18 +3147,18 @@ public class Felix extends BundleImpl implements Framework
     **/
     void removeServiceListener(BundleImpl bundle, ServiceListener l)
     {
-        ListenerHook.ListenerInfo listener =
+        org.osgi.framework.hooks.service.ListenerHook.ListenerInfo listener =
             m_dispatcher.removeListener(bundle, ServiceListener.class, l);
 
         if (listener != null)
         {
             // Invoke the ListenerHook.removed() on all hooks.
-            Set<ServiceReference<ListenerHook>> listenerHooks =
-                m_registry.getHooks(ListenerHook.class);
+            Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
+                m_registry.getHooks(org.osgi.framework.hooks.service.ListenerHook.class);
             Collection removed = Collections.singleton(listener);
-            for (ServiceReference<ListenerHook> sr : listenerHooks)
+            for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
-                ListenerHook lh = m_registry.getServiceSafely(this, sr);
+                org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
                 if (lh != null)
                 {
                     try
@@ -3147,9 +3277,12 @@ public class Felix extends BundleImpl implements Framework
 
         // Check to see if this a listener hook; if so, then we need
         // to invoke the callback with all existing service listeners.
-        if (ServiceRegistry.isHook(classNames, ListenerHook.class, svcObj))
+        if (ServiceRegistry.isHook(
+            classNames, org.osgi.framework.hooks.service.ListenerHook.class, svcObj))
         {
-            ListenerHook lh = (ListenerHook) m_registry.getServiceSafely(this, reg.getReference());
+            org.osgi.framework.hooks.service.ListenerHook lh =
+                (org.osgi.framework.hooks.service.ListenerHook)
+                    getService(this, reg.getReference());
             if (lh != null)
             {
                 try
@@ -3228,11 +3361,11 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // activate findhooks
-        Set<ServiceReference<FindHook>> findHooks =
-            m_registry.getHooks(FindHook.class);
-        for (ServiceReference<FindHook> sr : findHooks)
+        Set<ServiceReference<org.osgi.framework.hooks.service.FindHook>> findHooks =
+            m_registry.getHooks(org.osgi.framework.hooks.service.FindHook.class);
+        for (ServiceReference<org.osgi.framework.hooks.service.FindHook> sr : findHooks)
         {
-            FindHook fh = m_registry.getServiceSafely(this, sr);
+            org.osgi.framework.hooks.service.FindHook fh = getService(this, sr);
             if (fh != null)
             {
                 try
@@ -4156,12 +4289,12 @@ public class Felix extends BundleImpl implements Framework
     **/
     void fireBundleEvent(int type, Bundle bundle)
     {
-        m_dispatcher.fireBundleEvent(new BundleEvent(type, bundle));
+        m_dispatcher.fireBundleEvent(new BundleEvent(type, bundle), this);
     }
 
     void fireBundleEvent(int type, Bundle bundle, Bundle origin)
     {
-        m_dispatcher.fireBundleEvent(new BundleEvent(type, bundle, origin));
+        m_dispatcher.fireBundleEvent(new BundleEvent(type, bundle, origin), this);
     }
 
     /**
