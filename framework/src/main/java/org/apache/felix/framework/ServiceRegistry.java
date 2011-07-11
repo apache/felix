@@ -18,18 +18,18 @@
  */
 package org.apache.felix.framework;
 
-import java.net.ContentHandler;
 import java.util.*;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-
-import org.osgi.framework.*;
-import org.osgi.framework.hooks.resolver.ResolverHookFactory;
-import org.osgi.framework.hooks.service.*;
-import org.osgi.framework.hooks.weaving.WeavingHook;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceException;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.service.url.URLStreamHandlerService;
 
 public class ServiceRegistry
 {
@@ -53,13 +53,15 @@ public class ServiceRegistry
         new WeakHashMap<ServiceReference, ServiceReference>();
 
     private final static Class<?>[] m_hookClasses = {
-        EventHook.class,
-        FindHook.class,
-        ListenerHook.class,
-        WeavingHook.class,
-        ResolverHookFactory.class,
-        URLStreamHandlerService.class,
-        ContentHandler.class
+        org.osgi.framework.hooks.bundle.FindHook.class,
+        org.osgi.framework.hooks.bundle.EventHook.class,
+        org.osgi.framework.hooks.service.EventHook.class,
+        org.osgi.framework.hooks.service.FindHook.class,
+        org.osgi.framework.hooks.service.ListenerHook.class,
+        org.osgi.framework.hooks.weaving.WeavingHook.class,
+        org.osgi.framework.hooks.resolver.ResolverHookFactory.class,
+        org.osgi.service.url.URLStreamHandlerService.class,
+        java.net.ContentHandler.class
     };
     private final Map<Class<?>, Set<ServiceReference<?>>> m_allHooks =
         new HashMap<Class<?>, Set<ServiceReference<?>>>();
@@ -239,19 +241,6 @@ public class ServiceRegistry
                 refs[i] = usages[i].m_ref;
             }
             return refs;
-        }
-        return null;
-    }
-
-    public <S> S getServiceSafely(Bundle bundle, ServiceReference<S> ref)
-    {
-        try
-        {
-            return getService(bundle, ref);
-        }
-        catch (ServiceException ex)
-        {
-            // Just ignore and return null.
         }
         return null;
     }
