@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>2</version>
+        <version>2.1</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -61,21 +61,12 @@
             <resource>
                 <directory>${basedir}/src/main/resources</directory>
             </resource>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>LICENSE*</include>
-                    <include>NOTICE</include>
-                    <include>DEPENDENCIES</include>
-                </includes>
-            </resource>
         </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.5-SNAPSHOT</version>
+                <version>2.3.5</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
