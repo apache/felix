@@ -20,33 +20,13 @@ package org.apache.felix.webconsole.internal.servlet;
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
+import java.util.*;
+
+import javax.servlet.*;
+import javax.servlet.http.*;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.BrandingPlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.felix.webconsole.*;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.core.BundlesServlet;
@@ -54,13 +34,8 @@ import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
 import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
 import org.apache.felix.webconsole.internal.servlet.PluginHolder.InternalPlugin;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
+import org.osgi.framework.*;
 import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.log.LogService;
@@ -151,6 +126,7 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.compendium.ConfigurationAdminConfigurationPrinter",
             "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter",
             "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter",
+            "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter",
             "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter",
             "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter",
             "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter",
@@ -938,7 +914,7 @@ public class OsgiManager extends GenericServlet
      * Returns <code>true</code> if the list of enabled plugins is
      * configured but the plugin is not contained in that list.
      * <p>
-     * This method is intended to be used only for {@link InternalPlugin#isEnabled()} 
+     * This method is intended to be used only for {@link InternalPlugin#isEnabled()}
      */
     boolean isPluginDisabled( String pluginClass )
     {
