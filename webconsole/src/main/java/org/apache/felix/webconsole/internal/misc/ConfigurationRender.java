@@ -19,7 +19,8 @@ package org.apache.felix.webconsole.internal.misc;
 
 import java.io.*;
 import java.net.URL;
-import java.text.*;
+import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.zip.*;
 
@@ -49,14 +50,6 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
 
     // use English as the locale for all non-display titles
     private static final Locale DEFAULT = Locale.ENGLISH;
-
-    /**
-     * Formatter pattern to generate a relative path for the generation
-     * of the plain text or zip file representation of the status. The file
-     * name consists of a base name and the current time of status generation.
-     */
-    private static final SimpleDateFormat FILE_NAME_FORMAT = new SimpleDateFormat( "'" + LABEL
-        + "/configuration-status-'yyyyMMdd'-'HHmmZ" );
 
     /**
      * Formatter pattern to render the current time of status generation.
@@ -207,15 +200,6 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
 
         pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Zip</button>");
         pw.print("<button type=\"button\" class=\"downloadTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Text</button>");
-/*        synchronized ( FILE_NAME_FORMAT )
-        {
-            String fileName = FILE_NAME_FORMAT.format( currentTime );
-            pw.print("<br/>Download as <a href='");
-            pw.print(fileName);
-            pw.print(".txt'>[Single File]</a> or as <a href='");
-            pw.print(fileName);
-            pw.println(".zip'>[ZIP]</a>");
-        }*/
 
         pw.println("<br/>&nbsp;</p>"); // status line
 
