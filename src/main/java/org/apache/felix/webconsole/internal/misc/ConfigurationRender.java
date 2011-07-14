@@ -205,7 +205,9 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             pw.println(DISPLAY_DATE_FORMAT.format(currentTime));
         }
 
-        synchronized ( FILE_NAME_FORMAT )
+        pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Zip</button>");
+        pw.print("<button type=\"button\" class=\"downloadTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Text</button>");
+/*        synchronized ( FILE_NAME_FORMAT )
         {
             String fileName = FILE_NAME_FORMAT.format( currentTime );
             pw.print("<br/>Download as <a href='");
@@ -213,9 +215,9 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             pw.print(".txt'>[Single File]</a> or as <a href='");
             pw.print(fileName);
             pw.println(".zip'>[ZIP]</a>");
-        }
+        }*/
 
-        pw.println("</p>"); // status line
+        pw.println("<br/>&nbsp;</p>"); // status line
 
         // display some information while the data is loading
         // load the data (hidden to begin with)
@@ -529,7 +531,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             write(chars, 0, chars.length);
         }
 
-        
+
         private final char[] oneChar = new char[1];
 
         // always delegate to write(char[], int, int) otherwise in some VM
