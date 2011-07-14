@@ -20,16 +20,10 @@ package org.apache.felix.webconsole.plugins.packageadmin.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Comparator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
@@ -144,6 +138,79 @@ public class PackageAdminPlugin extends GenericServlet {
         pw.println("</table>");
     }
 
+    private void dumpDuplicatesAsTxt(final PrintWriter pw,
+            final Map<String, Set<ExportedPackage>> exports)
+    {
+        pw.println("Duplicate Exported Packages");
+        pw.println("---------------------------");
+        final List<String[]> lines = new ArrayList<String[]>();
+        lines.add(new String[] {"Package", "Exports", "Imports"});
+
+        for (Entry<String, Set<ExportedPackage>> exportEntry : exports.entrySet())
+        {
+            final Set<ExportedPackage> exportSet = exportEntry.getValue();
+            if (exportSet.size() > 1)
+            {
+                String firstCol = exportEntry.getKey();
+                for (ExportedPackage exportedPackage : exportSet)
+                {
+                    final Bundle[] importers = exportedPackage.getImportingBundles();
+                    final String secondCol = "version=" + exportedPackage.getVersion() + ", Bundle " + exportedPackage.getExportingBundle();
+                    if (importers != null && importers.length > 0) {
+                        boolean first = true;
+                        for (Bundle bundle : importers)
+                        {
+                            if ( first )
+                            {
+                                lines.add(new String[] {firstCol, secondCol, bundle.toString()});
+                                first = false;
+                            }
+                            else
+                            {
+                                lines.add(new String[] {"", "", bundle.toString()});
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        lines.add(new String[] {firstCol, secondCol, ""});
+                    }
+                    firstCol = "";
+                }
+            }
+        }
+        int maxFirst = 0, maxSecond = 0;
+        for(final String[] entry : lines)
+        {
+            if ( entry[0].length() > maxFirst )
+            {
+                maxFirst = entry[0].length();
+            }
+            if ( entry[1].length() > maxSecond )
+            {
+                maxSecond = entry[1].length();
+            }
+        }
+        maxFirst += 2;
+        maxSecond += 2;
+        for(final String[] entry : lines)
+        {
+            padText(pw, entry[0], maxFirst);
+            padText(pw, entry[1], maxSecond);
+            pw.println(entry[2]);
+        }
+    }
+
+    private void padText(final PrintWriter pw, final String text, final int length)
+    {
+        pw.print(text);
+        final int padLength = length - text.length();
+        for(int i=0;i<padLength;i++) {
+            pw.print(' ');
+        }
+    }
+
     private static class ExportedPackageComparator implements
             Comparator<ExportedPackage> {
 
@@ -166,5 +233,31 @@ public class PackageAdminPlugin extends GenericServlet {
                 o2.getExportingBundle().getBundleId());
         }
 
+    }
+
+    /**
+     * Configuration printer
+     */
+    public void printConfiguration(final PrintWriter pw)
+    {
+        final PackageAdmin pa = (PackageAdmin) this.pkgAdminTracker.getService();
+        if (pa == null)
+        {
+            pw.println("PackageAdmin Service not registered");
+            return;
+        }
+
+        try {
+            Map<String, Set<ExportedPackage>> exports = collectExportedPackages(pa);
+
+            pw.print("PackageAdmin service reports ");
+            pw.print(String.valueOf(exports.size()));
+            pw.println(" exported packages.");
+            pw.println();
+
+            dumpDuplicatesAsTxt(pw, exports);
+        } catch (Exception e) {
+            pw.println("failure ...." + e);
+        }
     }
 }

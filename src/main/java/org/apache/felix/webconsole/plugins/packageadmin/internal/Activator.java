@@ -21,18 +21,18 @@ package org.apache.felix.webconsole.plugins.packageadmin.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class Activator implements BundleActivator {
+public class Activator implements BundleActivator
+{
 
     private ServiceTracker pkgAdminTracker;
 
     private ServiceRegistration pkgAdminPlugin;
 
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception
+    {
         this.pkgAdminTracker = new ServiceTracker(context,
             "org.osgi.service.packageadmin.PackageAdmin", null);
         this.pkgAdminTracker.open();
@@ -42,13 +42,23 @@ public class Activator implements BundleActivator {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("felix.webconsole.label", PackageAdminPlugin.LABEL);
         props.put("felix.webconsole.title", PackageAdminPlugin.TITLE);
+        props.put("felix.webconsole.configprinter.modes", new String[] {"zip", "txt"});
         this.pkgAdminPlugin = context.registerService("javax.servlet.Servlet",
             plugin, props);
     }
 
-    public void stop(BundleContext context) throws Exception {
-        this.pkgAdminPlugin.unregister();
-        this.pkgAdminTracker.close();
+    public void stop(final BundleContext context) throws Exception
+    {
+        if ( this.pkgAdminPlugin != null )
+        {
+            this.pkgAdminPlugin.unregister();
+            this.pkgAdminPlugin = null;
+        }
+        if ( this.pkgAdminTracker != null )
+        {
+            this.pkgAdminTracker.close();
+            this.pkgAdminTracker = null;
+        }
     }
 
 }
