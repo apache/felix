@@ -367,6 +367,18 @@ public abstract class JavaClassDescriptorManager
         return descs;
     }
 
+    private boolean doingHasScrPluginAnnotationCheck = false;
+
+    private boolean hasScrPluginAnnotation(final Class<?> clazz, final JavaClass javaClass)
+    {
+        boolean result;
+        doingHasScrPluginAnnotationCheck = true;
+
+        result = getAnnotationTagProviderManager().hasScrPluginAnnotation( javaClass,
+                new AnnotationJavaClassDescription( clazz, javaClass, this ));
+        doingHasScrPluginAnnotationCheck = false;
+        return result;
+    }
 
     /**
      * Get a java class description for the class.
@@ -393,17 +405,16 @@ public abstract class JavaClassDescriptorManager
                         // check for java annotation descriptions - fallback to
                         // QDox if none found
                         Class<?> clazz = this.classloader.loadClass( className );
-                        if ( this.processAnnotations
-                            && getAnnotationTagProviderManager().hasScrPluginAnnotation( javaClass,
-                                    new AnnotationJavaClassDescription( clazz, javaClasses[index], this )) )
+                        if ( this.processAnnotations && !doingHasScrPluginAnnotationCheck
+                            && hasScrPluginAnnotation(clazz, javaClass) )
                         {
                             this.log.debug( "Found java annotation description for: " + className );
-                            result = new AnnotationJavaClassDescription( clazz, javaClasses[index], this );
+                            result = new AnnotationJavaClassDescription( clazz, javaClass, this );
                         }
                         else if ( this.parseJavadocs )
                         {
                             this.log.debug( "Found qdox description for: " + className );
-                            result = new QDoxJavaClassDescription( clazz, javaClasses[index], this );
+                            result = new QDoxJavaClassDescription( clazz, javaClass, this );
                         }
                     }
                     catch ( ClassNotFoundException e )
@@ -429,7 +440,9 @@ public abstract class JavaClassDescriptorManager
                     throw new SCRDescriptorException( "Unable to load class", className, 0 );
                 }
             }
-            this.javaClassDescriptions.put( className, result );
+            if ( !doingHasScrPluginAnnotationCheck ) {
+                this.javaClassDescriptions.put( className, result );
+            }
         }
         return result;
     }
