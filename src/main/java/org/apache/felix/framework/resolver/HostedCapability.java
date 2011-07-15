@@ -68,7 +68,7 @@ public class HostedCapability extends BundleCapabilityImpl
         return hash;
     }
 
-    public BundleCapabilityImpl getDeclaredCapability()
+    public BundleCapabilityImpl getOriginalCapability()
     {
         return m_cap;
     }
