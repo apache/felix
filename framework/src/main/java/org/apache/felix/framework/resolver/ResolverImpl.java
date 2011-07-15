@@ -157,7 +157,7 @@ public class ResolverImpl implements Resolver
                         {
                             faultyRevision =
                                 ((HostedRequirement) rethrow.getRequirement())
-                                    .getDeclaredRequirement().getRevision();
+                                    .getOriginalRequirement().getRevision();
                         }
                         if (optional.remove(faultyRevision))
                         {
@@ -313,7 +313,7 @@ public class ResolverImpl implements Resolver
                     {
                         faultyRevision =
                             ((HostedRequirement) rethrow.getRequirement())
-                                .getDeclaredRequirement().getRevision();
+                                .getOriginalRequirement().getRevision();
                     }
                     if (revisions.remove(faultyRevision))
                     {
@@ -465,7 +465,7 @@ public class ResolverImpl implements Resolver
                         {
                             faultyRevision =
                                 ((HostedRequirement) rethrow.getRequirement())
-                                    .getDeclaredRequirement().getRevision();
+                                    .getOriginalRequirement().getRevision();
                         }
                         if (optional.remove(faultyRevision))
                         {
@@ -1503,7 +1503,7 @@ public class ResolverImpl implements Resolver
     {
         if (c instanceof HostedCapability)
         {
-            return ((HostedCapability) c).getDeclaredCapability();
+            return ((HostedCapability) c).getOriginalCapability();
         }
         return c;
     }
@@ -1512,7 +1512,7 @@ public class ResolverImpl implements Resolver
     {
         if (r instanceof HostedRequirement)
         {
-            return ((HostedRequirement) r).getDeclaredRequirement();
+            return ((HostedRequirement) r).getOriginalRequirement();
         }
         return r;
     }

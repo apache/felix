@@ -711,14 +711,21 @@ class Candidates
                 // really be attached to the original host, not the wrapper.
                 if (!c.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                 {
-                    Set<BundleRequirement> dependents =
-                        m_dependentMap.get(((HostedCapability) c).getDeclaredCapability());
+                    BundleCapability origCap =
+                        ((HostedCapability) c).getOriginalCapability();
+                    // Note that you might think we could remove the original cap
+                    // from the dependent map, but you can't since it may come from
+                    // a fragment that is attached to multiple hosts, so each host
+                    // will need to make their own copy.
+                    Set<BundleRequirement> dependents = m_dependentMap.get(origCap);
                     if (dependents != null)
                     {
+                        dependents = new HashSet<BundleRequirement>(dependents);
+                        m_dependentMap.put(c, dependents);
                         for (BundleRequirement r : dependents)
                         {
                             Set<BundleCapability> cands = m_candidateMap.get(r);
-                            cands.remove(((HostedCapability) c).getDeclaredCapability());
+                            cands.remove(origCap);
                             cands.add(c);
                         }
                     }
@@ -726,15 +733,20 @@ class Candidates
             }
 
             // Copy candidates for fragment requirements to the host.
-            // This doesn't record the reverse dependency, but that
-            // information should not be needed at this point anymore.
             for (BundleRequirement r : hostRevision.getDeclaredRequirements(null))
             {
-                SortedSet<BundleCapability> cands =
-                    m_candidateMap.get(((HostedRequirement) r).getDeclaredRequirement());
+                BundleRequirement origReq =
+                    ((HostedRequirement) r).getOriginalRequirement();
+                SortedSet<BundleCapability> cands = m_candidateMap.get(origReq);
                 if (cands != null)
                 {
                     m_candidateMap.put(r, new TreeSet<BundleCapability>(cands));
+                    for (BundleCapability cand : cands)
+                    {
+                        Set<BundleRequirement> dependents = m_dependentMap.get(cand);
+                        dependents.remove(origReq);
+                        dependents.add(r);
+                    }
                 }
             }
         }
