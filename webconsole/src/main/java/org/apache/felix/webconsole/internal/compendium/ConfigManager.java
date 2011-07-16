@@ -17,23 +17,10 @@
 package org.apache.felix.webconsole.internal.compendium;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.SortedMap;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.Vector;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -42,20 +29,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.Util;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONWriter;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Version;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ManagedService;
-import org.osgi.service.cm.ManagedServiceFactory;
+import org.json.*;
+import org.osgi.framework.*;
+import org.osgi.service.cm.*;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
@@ -87,6 +63,19 @@ public class ConfigManager extends ConfigManagerBase
         TEMPLATE = readTemplateFile( "/templates/config.html" );
     }
 
+    private boolean isAllowedPid(final String pid)
+    {
+        for(int i = 0; i < pid.length(); i++)
+        {
+            final char c = pid.charAt(i);
+            if ( c == '&' || c == '<' || c == '>' || c == '"' || c == '\'' )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -109,6 +98,18 @@ public class ConfigManager extends ConfigManagerBase
         if ( pid == null || pid.length() == 0 || ca == null )
         {
             // should log this here !!
+            return;
+        }
+
+        // ignore this request, if the pid is invalud
+        if ( ! isAllowedPid(pid) )
+        {
+            response.sendError(500);
+            return;
+        }
+        if ( pidFilter != null && ! isAllowedPid(pidFilter) )
+        {
+            response.sendError(500);
             return;
         }
 
@@ -218,6 +219,16 @@ public class ConfigManager extends ConfigManagerBase
                 pidFilter = null;
             }
 
+            // check both pid and pid filter
+            if ( pid != null && !this.isAllowedPid(pid) )
+            {
+                response.sendError(500);
+            }
+            if ( pidFilter != null && !this.isAllowedPid(pidFilter) )
+            {
+                response.sendError(500);
+            }
+
             final ConfigurationAdmin ca = this.getConfigurationAdmin();
 
             final Locale loc = getLocale( request );
@@ -294,6 +305,15 @@ public class ConfigManager extends ConfigManagerBase
             }
         }
 
+        // check both pid and pid filter
+        if ( pid != null && !this.isAllowedPid(pid) )
+        {
+            response.sendError(500);
+        }
+        if ( pidFilter != null && !this.isAllowedPid(pidFilter) )
+        {
+            response.sendError(500);
+        }
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
 
         final Locale loc = getLocale( request );
@@ -403,8 +423,9 @@ public class ConfigManager extends ConfigManagerBase
             {
 
                 // ignore configuration object if an entry already exists in the map
-                String pid = cfgs[i].getPid();
-                if (optionsPlain.containsKey(pid))
+                // or if it is invalid
+                final String pid = cfgs[i].getPid();
+                if (optionsPlain.containsKey(pid) || !this.isAllowedPid(pid) )
                 {
                     continue;
                 }
@@ -494,7 +515,8 @@ public class ConfigManager extends ConfigManagerBase
         for ( int i = 0; refs != null && i < refs.length; i++ )
         {
             Object pidObject = refs[i].getProperty( Constants.SERVICE_PID );
-            if ( pidObject instanceof String )
+            // only include valid pids
+            if ( pidObject instanceof String && this.isAllowedPid((String)pidObject) )
             {
                 String pid = ( String ) pidObject;
                 String name;
