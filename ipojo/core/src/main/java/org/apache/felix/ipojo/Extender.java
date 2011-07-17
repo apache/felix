@@ -85,6 +85,14 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     private static final String IPOJO_HEADER = "iPOJO-Components";
 
     /**
+     * iPOJO Component Type and Instance declaration header
+     * (alternative).
+     * This header was introduced because of BND supporting only header
+     * starting with an uppercase.
+     */
+    private static final String IPOJO_HEADER_ALT = "IPOJO-Components";
+
+    /**
      * iPOJO Extension declaration header.
      */
     private static final String IPOJO_EXTENSION = "IPOJO-Extension";
@@ -219,6 +227,11 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
 
         // Check bundle
         String header = (String) dict.get(IPOJO_HEADER);
+        // Check the alternative header
+        if (header == null) {
+            header = (String) dict.get(IPOJO_HEADER_ALT);
+        }
+
         if (header != null) {
             try {
                 parse(bundle, header);
