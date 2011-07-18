@@ -41,7 +41,6 @@ import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
