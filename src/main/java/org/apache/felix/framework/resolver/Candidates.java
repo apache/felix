@@ -210,7 +210,7 @@ class Candidates
             ResolveException rethrow = null;
             SortedSet<BundleCapability> candidates =
                 state.getCandidates((BundleRequirementImpl) req, true);
-            Set<BundleCapability> fragmentCands = new HashSet();
+            Set<BundleCapability> fragmentCands = null;
             for (Iterator<BundleCapability> itCandCap = candidates.iterator();
                 itCandCap.hasNext(); )
             {
@@ -223,6 +223,10 @@ class Candidates
                 // if the fragment is already attached to any hosts.
                 if (isFragment)
                 {
+                    if (fragmentCands == null)
+                    {
+                        fragmentCands = new HashSet<BundleCapability>();
+                    }
                     fragmentCands.add(candCap);
                 }
 
@@ -263,7 +267,7 @@ class Candidates
             // then also insert synthesized hosted capabilities for any other host
             // to which the fragment is attached since they are all effectively
             // unique capabilities.
-            if (!fragmentCands.isEmpty())
+            if (fragmentCands != null)
             {
                 for (BundleCapability fragCand : fragmentCands)
                 {
