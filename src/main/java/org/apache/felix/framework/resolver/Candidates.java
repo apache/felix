@@ -33,12 +33,15 @@ import java.util.TreeSet;
 import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 class Candidates
 {
@@ -207,10 +210,21 @@ class Candidates
             ResolveException rethrow = null;
             SortedSet<BundleCapability> candidates =
                 state.getCandidates((BundleRequirementImpl) req, true);
+            Set<BundleCapability> fragmentCands = new HashSet();
             for (Iterator<BundleCapability> itCandCap = candidates.iterator();
                 itCandCap.hasNext(); )
             {
                 BundleCapability candCap = itCandCap.next();
+
+                boolean isFragment = Util.isFragment(candCap.getRevision());
+
+                // If the capability is from a fragment, then record it
+                // because we have to insert associated host capabilities
+                // if the fragment is already attached to any hosts.
+                if (isFragment)
+                {
+                    fragmentCands.add(candCap);
+                }
 
                 // If the candidate revision is a fragment, then always attempt
                 // to populate candidates for its dependency, since it must be
@@ -224,7 +238,7 @@ class Candidates
                 // since we effectively chain exception messages for each level
                 // of recursion; thus, any avoided recursion results in fewer
                 // exceptions to chain when an error does occur.
-                if (Util.isFragment(candCap.getRevision())
+                if (isFragment
                     || ((candCap.getRevision().getWiring() == null)
                         && !candCap.getRevision().equals(revision)))
                 {
@@ -241,6 +255,40 @@ class Candidates
                         // Remove the candidate since we weren't able to
                         // populate its candidates.
                         itCandCap.remove();
+                    }
+                }
+            }
+
+            // If any of the candidates for the requirement were from a fragment,
+            // then also insert synthesized hosted capabilities for any other host
+            // to which the fragment is attached since they are all effectively
+            // unique capabilities.
+            if (!fragmentCands.isEmpty())
+            {
+                for (BundleCapability fragCand : fragmentCands)
+                {
+                    // Only necessary for resolved fragments.
+                    BundleWiring wiring = fragCand.getRevision().getWiring();
+                    if (wiring != null)
+                    {
+                        // Fragments only have host wire, so each wire represents
+                        // an attached host.
+                        for (BundleWire wire : wiring.getRequiredWires(null))
+                        {
+                            // If the capability is a package, then make sure the
+                            // host actually provides it in its resolved capabilities,
+                            // since it may be a substitutable export.
+                            if (!fragCand.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                                || wire.getProviderWiring().getCapabilities(null).contains(fragCand))
+                            {
+                                // Note that we can just add this as a candidate
+                                // directly, since we know it is already resolved.
+                                candidates.add(
+                                    new HostedCapability(
+                                        wire.getCapability().getRevision(),
+                                        (BundleCapabilityImpl) fragCand));
+                            }
+                        }
                     }
                 }
             }
@@ -296,6 +344,20 @@ class Candidates
     public final boolean populate(
         ResolverState state, BundleRevision revision, boolean isGreedyAttach)
     {
+        // Get the current result cache value, to make sure the revision
+        // hasn't already been populated.
+        Object cacheValue = m_populateResultCache.get(revision);
+        // Has been unsuccessfully populated.
+        if (cacheValue instanceof ResolveException)
+        {
+            return false;
+        }
+        // Has been successfully populated.
+        else if (cacheValue instanceof Boolean)
+        {
+            return true;
+        }
+
         // We will always attempt to populate fragments, since this is necessary
         // for greedy attaching of fragment. However, we'll only attempt to
         // populate optional non-fragment revisions if they aren't already
@@ -316,76 +378,70 @@ class Candidates
             // lookup again in populate().
             if (isGreedyAttach && isFragment)
             {
-                // Get the current result cache value, to make sure the revision
-                // hasn't already been populated.
-                Object cacheValue = m_populateResultCache.get(revision);
-                if (cacheValue == null)
+                // Create a modifiable list of the revision's requirements.
+                List<BundleRequirement> remainingReqs =
+                    new ArrayList(revision.getDeclaredRequirements(null));
+
+                // Find the host requirement.
+                BundleRequirement hostReq = null;
+                for (Iterator<BundleRequirement> it = remainingReqs.iterator();
+                    it.hasNext(); )
                 {
-                    // Create a modifiable list of the revision's requirements.
-                    List<BundleRequirement> remainingReqs =
-                        new ArrayList(revision.getDeclaredRequirements(null));
-
-                    // Find the host requirement.
-                    BundleRequirement hostReq = null;
-                    for (Iterator<BundleRequirement> it = remainingReqs.iterator();
-                        it.hasNext(); )
+                    BundleRequirement r = it.next();
+                    if (r.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                     {
-                        BundleRequirement r = it.next();
-                        if (r.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
-                        {
-                            hostReq = r;
-                            it.remove();
-                            break;
-                        }
+                        hostReq = r;
+                        it.remove();
+                        break;
                     }
-
-                    // Get candidates hosts and keep any that have been populated.
-                    SortedSet<BundleCapability> hosts =
-                        state.getCandidates((BundleRequirementImpl) hostReq, false);
-                    for (Iterator<BundleCapability> it = hosts.iterator(); it.hasNext(); )
-                    {
-                        BundleCapability host = it.next();
-                        if (!isPopulated(host.getRevision()))
-                        {
-                            it.remove();
-                        }
-                    }
-
-                    // If there aren't any populated hosts, then we can just
-                    // return since this fragment isn't needed.
-                    if (hosts.isEmpty())
-                    {
-                        return false;
-                    }
-
-                    // If there are populates host candidates, then finish up
-                    // some other checks and prepopulate the result cache with
-                    // the work we've done so far.
-
-                    // Verify that any required execution environment is satisfied.
-                    state.checkExecutionEnvironment(revision);
-
-                    // Verify that any native libraries match the current platform.
-                    state.checkNativeLibraries(revision);
-
-                    // Record cycle count, but start at -1 since it will
-                    // be incremented again in populate().
-                    Integer cycleCount = new Integer(-1);
-
-                    // Create a local map for populating candidates first, just in case
-                    // the revision is not resolvable.
-                    Map<BundleRequirement, SortedSet<BundleCapability>> localCandidateMap =
-                        new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
-
-                    // Add the discovered host candidates to the local candidate map.
-                    localCandidateMap.put(hostReq, hosts);
-
-                    // Add these value to the result cache so we know we are
-                    // in the middle of populating candidates for the current
-                    // revision.
-                    m_populateResultCache.put(revision,
-                        new Object[] { cycleCount, localCandidateMap, remainingReqs });
                 }
+
+                // Get candidates hosts and keep any that have been populated.
+                SortedSet<BundleCapability> hosts =
+                    state.getCandidates((BundleRequirementImpl) hostReq, false);
+                for (Iterator<BundleCapability> it = hosts.iterator(); it.hasNext(); )
+                {
+                    BundleCapability host = it.next();
+                    if (!isPopulated(host.getRevision()))
+                    {
+                        it.remove();
+                    }
+                }
+
+                // If there aren't any populated hosts, then we can just
+                // return since this fragment isn't needed.
+                if (hosts.isEmpty())
+                {
+                    return false;
+                }
+
+                // If there are populates host candidates, then finish up
+                // some other checks and prepopulate the result cache with
+                // the work we've done so far.
+
+                // Verify that any required execution environment is satisfied.
+                state.checkExecutionEnvironment(revision);
+
+                // Verify that any native libraries match the current platform.
+                state.checkNativeLibraries(revision);
+
+                // Record cycle count, but start at -1 since it will
+                // be incremented again in populate().
+                Integer cycleCount = new Integer(-1);
+
+                // Create a local map for populating candidates first, just in case
+                // the revision is not resolvable.
+                Map<BundleRequirement, SortedSet<BundleCapability>> localCandidateMap =
+                    new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
+
+                // Add the discovered host candidates to the local candidate map.
+                localCandidateMap.put(hostReq, hosts);
+
+                // Add these value to the result cache so we know we are
+                // in the middle of populating candidates for the current
+                // revision.
+                m_populateResultCache.put(revision,
+                    new Object[] { cycleCount, localCandidateMap, remainingReqs });
             }
 
             // Try to populate candidates for the optional revision.
