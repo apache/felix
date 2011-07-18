@@ -842,9 +842,6 @@ class StatefulResolver
                                 rte.getMessage(), ex2);
                             throw rte;
                         }
-
-                        // Reindex host with no fragments.
-                        m_resolverState.addRevision(revision);
                     }
 
                     ResolveException re = new ResolveException(
@@ -870,12 +867,9 @@ class StatefulResolver
                 // Update resolver state to remove substituted capabilities.
                 if (!Util.isFragment(revision))
                 {
-                    // Update resolver state by reindexing host with attached
-                    // fragments and removing any substituted exports.
-// TODO: OSGi R4.3 - We could avoid reindexing for fragments if we check it
-//       the revision has fragments or not.
+                    // Reindex the revision's capabilities since its resolved
+                    // capabilities could be different than its declared ones.
                     m_resolverState.addRevision(revision);
-                    m_resolverState.removeSubstitutedCapabilities(revision);
                 }
 
                 // Update the state of the revision's bundle to resolved as well.
@@ -1079,6 +1073,14 @@ class StatefulResolver
 
         synchronized void addRevision(BundleRevision br)
         {
+            // Always attempt to remove the revision, since
+            // this method can be used for re-indexing a revision
+            // after it has been resolved.
+            removeRevision(br);
+
+            // Add the revision and index its declared or resolved
+            // capabilities depending on whether it is resolved or
+            // not.
             m_revisions.add(br);
             List<BundleCapability> caps = (br.getWiring() == null)
                 ? br.getDeclaredCapabilities(null)
@@ -1087,13 +1089,19 @@ class StatefulResolver
             {
                 for (BundleCapability cap : caps)
                 {
-                    CapabilitySet capSet = m_capSets.get(cap.getNamespace());
-                    if (capSet == null)
+                    // If the capability is from a different revision, then
+                    // don't index it since it is a capability from a fragment.
+                    // In that case, the fragment capability is still indexed.
+                    if (cap.getRevision() == br)
                     {
-                        capSet = new CapabilitySet(null, true);
-                        m_capSets.put(cap.getNamespace(), capSet);
+                        CapabilitySet capSet = m_capSets.get(cap.getNamespace());
+                        if (capSet == null)
+                        {
+                            capSet = new CapabilitySet(null, true);
+                            m_capSets.put(cap.getNamespace(), capSet);
+                        }
+                        capSet.addCapability(cap);
                     }
-                    capSet.addCapability(cap);
                 }
             }
 
@@ -1105,61 +1113,33 @@ class StatefulResolver
 
         synchronized void removeRevision(BundleRevision br)
         {
-            m_revisions.remove(br);
-            List<BundleCapability> caps = (br.getWiring() == null)
-                ? br.getDeclaredCapabilities(null)
-                : br.getWiring().getCapabilities(null);
-            if (caps != null)
+            if (m_revisions.remove(br))
             {
-                for (BundleCapability cap : caps)
+                // We only need be concerned with declared capabilities here,
+                // because resolved capabilities will be a subset.
+                List<BundleCapability> caps = br.getDeclaredCapabilities(null);
+                if (caps != null)
                 {
-                    CapabilitySet capSet = m_capSets.get(cap.getNamespace());
-                    if (capSet != null)
+                    for (BundleCapability cap : caps)
                     {
-                        capSet.removeCapability(cap);
+                        CapabilitySet capSet = m_capSets.get(cap.getNamespace());
+                        if (capSet != null)
+                        {
+                            capSet.removeCapability(cap);
+                        }
                     }
                 }
-            }
 
-            if (Util.isFragment(br))
-            {
-                m_fragments.remove(br);
+                if (Util.isFragment(br))
+                {
+                    m_fragments.remove(br);
+                }
             }
         }
 
         synchronized Set<BundleRevision> getFragments()
         {
             return new HashSet(m_fragments);
-        }
-
-// TODO: OSGi R4.3 - This will need to be changed once BundleWiring.getCapabilities()
-//       is correctly implemented, since it already has to remove substituted caps.
-        synchronized void removeSubstitutedCapabilities(BundleRevision br)
-        {
-            if (br.getWiring() != null)
-            {
-                // Loop through the revision's package wires and determine if any
-                // of them overlap any of the packages exported by the revision.
-                // If so, then the framework must have chosen to have the revision
-                // import rather than export the package, so we need to remove the
-                // corresponding package capability from the package capability set.
-                for (BundleWire w : br.getWiring().getRequiredWires(null))
-                {
-                    if (w.getCapability().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
-                    {
-                        for (BundleCapability cap : br.getWiring().getCapabilities(null))
-                        {
-                            if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                                && w.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
-                                    .equals(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)))
-                            {
-                                m_capSets.get(BundleRevision.PACKAGE_NAMESPACE).removeCapability(cap);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         //
