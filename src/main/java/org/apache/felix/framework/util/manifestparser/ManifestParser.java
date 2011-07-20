@@ -441,7 +441,7 @@ public class ManifestParser
                 newAttrs.putAll(attrs);
 
                 // Create filter now so we can inject filter directive.
-                SimpleFilter sf = BundleRequirementImpl.convertToFilter(newAttrs);
+                SimpleFilter sf = SimpleFilter.convert(newAttrs);
 
                 // Inject filter directive.
 // TODO: OSGi R4.3 - Can we insert this on demand somehow?
@@ -1352,7 +1352,7 @@ public class ManifestParser
                     clauses.get(0).m_paths.get(0));
 
                 // Create filter now so we can inject filter directive.
-                SimpleFilter sf = BundleRequirementImpl.convertToFilter(newAttrs);
+                SimpleFilter sf = SimpleFilter.convert(newAttrs);
 
                 // Inject filter directive.
 // TODO: OSGi R4.3 - Can we insert this on demand somehow?
@@ -1450,7 +1450,7 @@ public class ManifestParser
                 newAttrs.putAll(attrs);
 
                 // Create filter now so we can inject filter directive.
-                SimpleFilter sf = BundleRequirementImpl.convertToFilter(newAttrs);
+                SimpleFilter sf = SimpleFilter.convert(newAttrs);
 
                 // Inject filter directive.
 // TODO: OSGi R4.3 - Can we insert this on demand somehow?
