@@ -29,7 +29,9 @@ import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
-import org.osgi.framework.*;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -430,7 +432,7 @@ public class ManifestParser
                 // Note that we use a linked hash map here to ensure the
                 // package attribute is first, which will make indexing
                 // more efficient.
-// TODO: OSGi R4.3 - This is a hack...perhaps we should use the standard "key"
+// TODO: OSGi R4.3 - This ordering fix is a hack...perhaps we should use the standard "key"
 //       notion where namespace is also the name of the key attribute.
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
                 newAttrs.put(
@@ -438,13 +440,26 @@ public class ManifestParser
                     path);
                 newAttrs.putAll(attrs);
 
+                // Create filter now so we can inject filter directive.
+                SimpleFilter sf = BundleRequirementImpl.convertToFilter(newAttrs);
+
+                // Inject filter directive.
+// TODO: OSGi R4.3 - Can we insert this on demand somehow?
+                Map<String, String> dirs = clause.m_dirs;
+                Map<String, String> newDirs = new HashMap<String, String>(dirs.size() + 1);
+                newDirs.putAll(dirs);
+                newDirs.put(
+                    Constants.FILTER_DIRECTIVE,
+                    sf.toString());
+
                 // Create package requirement and add to requirement list.
                 reqList.add(
                     new BundleRequirementImpl(
                         owner,
                         BundleRevision.PACKAGE_NAMESPACE,
-                        clause.m_dirs,
-                        newAttrs));
+                        newDirs,
+                        Collections.EMPTY_MAP,
+                        sf));
             }
         }
 
@@ -550,7 +565,7 @@ public class ManifestParser
         {
             try
             {
-                String filterStr = clause.m_dirs.get("filter");
+                String filterStr = clause.m_dirs.get(Constants.FILTER_DIRECTIVE);
                 SimpleFilter sf = (filterStr != null)
                     ? SimpleFilter.parse(filterStr)
                     : new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
@@ -827,10 +842,10 @@ public class ManifestParser
                 // Prepend the package name to the array of attributes.
                 Map<String, Object> attrs = clause.m_attrs;
                 Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
+                newAttrs.putAll(attrs);
                 newAttrs.put(
                     BundleRevision.PACKAGE_NAMESPACE,
                     pkgName);
-                newAttrs.putAll(attrs);
 
                 // Create package capability and add to capability list.
                 capList.add(
@@ -1331,14 +1346,26 @@ public class ManifestParser
                 // Prepend the host symbolic name to the array of attributes.
                 Map<String, Object> attrs = clauses.get(0).m_attrs;
                 Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
+                newAttrs.putAll(attrs);
                 newAttrs.put(
                     BundleRevision.HOST_NAMESPACE,
                     clauses.get(0).m_paths.get(0));
-                newAttrs.putAll(attrs);
+
+                // Create filter now so we can inject filter directive.
+                SimpleFilter sf = BundleRequirementImpl.convertToFilter(newAttrs);
+
+                // Inject filter directive.
+// TODO: OSGi R4.3 - Can we insert this on demand somehow?
+                Map<String, String> dirs = clauses.get(0).m_dirs;
+                Map<String, String> newDirs = new HashMap<String, String>(dirs.size() + 1);
+                newDirs.putAll(dirs);
+                newDirs.put(
+                    Constants.FILTER_DIRECTIVE,
+                    sf.toString());
 
                 reqs.add(new BundleRequirementImpl(
                     owner, BundleRevision.HOST_NAMESPACE,
-                    clauses.get(0).m_dirs,
+                    newDirs,
                     newAttrs));
             }
         }
@@ -1413,7 +1440,7 @@ public class ManifestParser
                 // Note that we use a linked hash map here to ensure the
                 // package attribute is first, which will make indexing
                 // more efficient.
-// TODO: OSGi R4.3 - This is a hack...perhaps we should use the standard "key"
+// TODO: OSGi R4.3 - This ordering fix is a hack...perhaps we should use the standard "key"
 //       notion where namespace is also the name of the key attribute.
                 // Prepend the symbolic name to the array of attributes.
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
@@ -1422,12 +1449,24 @@ public class ManifestParser
                     path);
                 newAttrs.putAll(attrs);
 
+                // Create filter now so we can inject filter directive.
+                SimpleFilter sf = BundleRequirementImpl.convertToFilter(newAttrs);
+
+                // Inject filter directive.
+// TODO: OSGi R4.3 - Can we insert this on demand somehow?
+                Map<String, String> dirs = clause.m_dirs;
+                Map<String, String> newDirs = new HashMap<String, String>(dirs.size() + 1);
+                newDirs.putAll(dirs);
+                newDirs.put(
+                    Constants.FILTER_DIRECTIVE,
+                    sf.toString());
+
                 // Create package requirement and add to requirement list.
                 reqList.add(
                     new BundleRequirementImpl(
                         owner,
                         BundleRevision.BUNDLE_NAMESPACE,
-                        clause.m_dirs,
+                        newDirs,
                         newAttrs));
             }
         }
