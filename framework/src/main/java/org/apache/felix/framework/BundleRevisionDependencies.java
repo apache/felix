@@ -138,14 +138,17 @@ class BundleRevisionDependencies
             // get the capability list from the revision's wiring, which is
             // in declared order (including fragments), and use it to create
             // the provided wire list in declared order.
-            List<BundleCapability> resolvedCaps =
-                revision.getWiring().getCapabilities(namespace);
-            for (BundleCapability resolvedCap : resolvedCaps)
+            BundleWiring wiring = revision.getWiring();
+            if (wiring != null)
             {
-                Set<BundleWire> dependentWires = providedCaps.get(resolvedCap);
-                if (dependentWires != null)
+                List<BundleCapability> resolvedCaps = wiring.getCapabilities(namespace);
+                for (BundleCapability resolvedCap : resolvedCaps)
                 {
-                    providedWires.addAll(dependentWires);
+                    Set<BundleWire> dependentWires = providedCaps.get(resolvedCap);
+                    if (dependentWires != null)
+                    {
+                        providedWires.addAll(dependentWires);
+                    }
                 }
             }
         }
@@ -164,11 +167,12 @@ class BundleRevisionDependencies
 //       since their dependents are their hosts.
             if (Util.isFragment(revision))
             {
-                if (revision.getWiring() != null)
+                BundleWiring wiring = revision.getWiring();
+                if (wiring != null)
                 {
-                    for (BundleWire wire : revision.getWiring().getRequiredWires(null))
+                    for (BundleWire bw : wiring.getRequiredWires(null))
                     {
-                        result.add(wire.getProviderWiring().getBundle());
+                        result.add(((BundleWireImpl) bw).getProvider().getBundle());
                     }
                 }
             }
@@ -278,37 +282,33 @@ class BundleRevisionDependencies
             BundleWiring wiring = rev.getWiring();
             if (wiring != null)
             {
-                for (BundleWire wire : wiring.getRequiredWires(null))
+                for (BundleWire bw : wiring.getRequiredWires(null))
                 {
-                    // The provider wiring may already be null if the framework
-                    // is shutting down, so don't worry about updating dependencies
-                    // in that case.
-                    if (wire.getProviderWiring() != null)
-                    {
-                        Map<BundleCapability, Set<BundleWire>> caps =
-                            m_dependentsMap.get(wire.getProviderWiring().getRevision());
-                        if (caps != null)
-                        {
-                            List<BundleCapability> gc = new ArrayList<BundleCapability>();
-                            for (Entry<BundleCapability, Set<BundleWire>> entry
-                                : caps.entrySet())
-                            {
-                                entry.getValue().remove(wire);
-                                if (entry.getValue().isEmpty())
-                                {
-                                    gc.add(entry.getKey());
-                                }
-                            }
-                            for (BundleCapability cap : gc)
-                            {
-                                caps.remove(cap);
-                            }
-                            if (caps.isEmpty())
-                            {
 // TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
 //       since the plan is to standardize on this method for the OBR spec.
-                                m_dependentsMap.remove(((BundleWireImpl) wire).getProvider());
+                    Map<BundleCapability, Set<BundleWire>> caps =
+                        m_dependentsMap.get(((BundleWireImpl) bw).getProvider());
+                    if (caps != null)
+                    {
+                        List<BundleCapability> gc = new ArrayList<BundleCapability>();
+                        for (Entry<BundleCapability, Set<BundleWire>> entry
+                            : caps.entrySet())
+                        {
+                            entry.getValue().remove(bw);
+                            if (entry.getValue().isEmpty())
+                            {
+                                gc.add(entry.getKey());
                             }
+                        }
+                        for (BundleCapability cap : gc)
+                        {
+                            caps.remove(cap);
+                        }
+                        if (caps.isEmpty())
+                        {
+// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
+//       since the plan is to standardize on this method for the OBR spec.
+                            m_dependentsMap.remove(((BundleWireImpl) bw).getProvider());
                         }
                     }
                 }
