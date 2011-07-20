@@ -64,7 +64,7 @@ public class BundleRequirementImpl implements BundleRequirement
         BundleRevision revision, String namespace,
         Map<String, String> dirs, Map<String, Object> attrs)
     {
-        this(revision, namespace, dirs, Collections.EMPTY_MAP, convertToFilter(attrs));
+        this(revision, namespace, dirs, Collections.EMPTY_MAP, SimpleFilter.convert(attrs));
     }
 
     public String getNamespace()
@@ -105,100 +105,5 @@ public class BundleRequirementImpl implements BundleRequirement
     public String toString()
     {
         return "[" + m_revision + "] " + m_namespace + "; " + getFilter().toString();
-    }
-
-    private static SimpleFilter convertToFilter(Map<String, Object> attrs)
-    {
-        // Rather than building a filter string to be parsed into a SimpleFilter,
-        // we will just create the parsed SimpleFilter directly.
-
-        List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
-
-        for (Entry<String, Object> entry : attrs.entrySet())
-        {
-            if (entry.getValue() instanceof VersionRange)
-            {
-                VersionRange vr = (VersionRange) entry.getValue();
-                if (vr.isFloorInclusive())
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            vr.getFloor().toString(),
-                            SimpleFilter.GTE));
-                }
-                else
-                {
-                    SimpleFilter not =
-                        new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
-                    ((List) not.getValue()).add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            vr.getFloor().toString(),
-                            SimpleFilter.LTE));
-                    filters.add(not);
-                }
-
-                if (vr.getCeiling() != null)
-                {
-                    if (vr.isCeilingInclusive())
-                    {
-                        filters.add(
-                            new SimpleFilter(
-                                entry.getKey(),
-                                vr.getCeiling().toString(),
-                                SimpleFilter.LTE));
-                    }
-                    else
-                    {
-                        SimpleFilter not =
-                            new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
-                        ((List) not.getValue()).add(
-                            new SimpleFilter(
-                                entry.getKey(),
-                                vr.getCeiling().toString(),
-                                SimpleFilter.GTE));
-                        filters.add(not);
-                    }
-                }
-            }
-            else
-            {
-                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
-                if (values.size() > 1)
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            values,
-                            SimpleFilter.SUBSTRING));
-                }
-                else
-                {
-                    filters.add(
-                        new SimpleFilter(
-                            entry.getKey(),
-                            values.get(0),
-                            SimpleFilter.EQ));
-                }
-            }
-        }
-
-        SimpleFilter sf = null;
-
-        if (filters.size() == 1)
-        {
-            sf = filters.get(0);
-        }
-        else if (attrs.size() > 1)
-        {
-            sf = new SimpleFilter(null, filters, SimpleFilter.AND);
-        }
-        else if (filters.isEmpty())
-        {
-            sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
-        }
-
-        return sf;
     }
 }

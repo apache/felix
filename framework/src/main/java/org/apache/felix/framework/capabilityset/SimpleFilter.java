@@ -20,6 +20,9 @@ package org.apache.felix.framework.capabilityset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import org.apache.felix.framework.util.VersionRange;
 
 public class SimpleFilter
 {
@@ -544,5 +547,110 @@ loop:   for (int i = 0; i < len; i++)
             startIdx++;
         }
         return startIdx;
+    }
+
+    /**
+     * Converts a attribute map to a filter. The filter is created by iterating
+     * over the map's entry set. If ordering of attributes is important (e.g.,
+     * for hitting attribute indices), then the map's entry set should iterate
+     * in the desired order. Equality testing is assumed for all attribute types
+     * other than version ranges, which are handled appropriated. If the attribute
+     * map is empty, then a filter that matches anything is returned.
+     * @param attrs Map of attributes to convert to a filter.
+     * @return A filter corresponding to the attributes.
+     */
+    public static SimpleFilter convert(Map<String, Object> attrs)
+    {
+        // Rather than building a filter string to be parsed into a SimpleFilter,
+        // we will just create the parsed SimpleFilter directly.
+
+        List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
+
+        for (Entry<String, Object> entry : attrs.entrySet())
+        {
+            if (entry.getValue() instanceof VersionRange)
+            {
+                VersionRange vr = (VersionRange) entry.getValue();
+                if (vr.isFloorInclusive())
+                {
+                    filters.add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            vr.getFloor().toString(),
+                            SimpleFilter.GTE));
+                }
+                else
+                {
+                    SimpleFilter not =
+                        new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
+                    ((List) not.getValue()).add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            vr.getFloor().toString(),
+                            SimpleFilter.LTE));
+                    filters.add(not);
+                }
+
+                if (vr.getCeiling() != null)
+                {
+                    if (vr.isCeilingInclusive())
+                    {
+                        filters.add(
+                            new SimpleFilter(
+                                entry.getKey(),
+                                vr.getCeiling().toString(),
+                                SimpleFilter.LTE));
+                    }
+                    else
+                    {
+                        SimpleFilter not =
+                            new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
+                        ((List) not.getValue()).add(
+                            new SimpleFilter(
+                                entry.getKey(),
+                                vr.getCeiling().toString(),
+                                SimpleFilter.GTE));
+                        filters.add(not);
+                    }
+                }
+            }
+            else
+            {
+                List<String> values = SimpleFilter.parseSubstring(entry.getValue().toString());
+                if (values.size() > 1)
+                {
+                    filters.add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            values,
+                            SimpleFilter.SUBSTRING));
+                }
+                else
+                {
+                    filters.add(
+                        new SimpleFilter(
+                            entry.getKey(),
+                            values.get(0),
+                            SimpleFilter.EQ));
+                }
+            }
+        }
+
+        SimpleFilter sf = null;
+
+        if (filters.size() == 1)
+        {
+            sf = filters.get(0);
+        }
+        else if (attrs.size() > 1)
+        {
+            sf = new SimpleFilter(null, filters, SimpleFilter.AND);
+        }
+        else if (filters.isEmpty())
+        {
+            sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
+        }
+
+        return sf;
     }
 }
