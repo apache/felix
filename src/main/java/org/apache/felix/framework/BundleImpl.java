@@ -1040,6 +1040,10 @@ class BundleImpl implements Bundle, BundleRevisions
         }
         else if (type == BundleWiring.class)
         {
+            if (m_state == Bundle.UNINSTALLED)
+            {
+                return null;
+            }
             return (A) m_revisions.get(0).getWiring();
         }
         return null;
