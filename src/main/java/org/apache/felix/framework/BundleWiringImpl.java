@@ -134,6 +134,9 @@ public class BundleWiringImpl implements BundleWiring
     // Flag indicating whether we are on an old JVM or not.
     private volatile static boolean m_isPreJava5 = false;
 
+    // Flag indicating whether this wiring has been disposed.
+    private volatile boolean m_isDisposed = false;
+
     BundleWiringImpl(
         Logger logger, Map configMap, StatefulResolver resolver,
         BundleRevisionImpl revision, List<BundleRevision> fragments,
@@ -345,6 +348,7 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
         m_classLoader = null;
+        m_isDisposed = true;
     }
 
 // TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
@@ -373,60 +377,65 @@ public class BundleWiringImpl implements BundleWiring
 
     public boolean isCurrent()
     {
-        return (m_revision.getBundle().adapt(BundleRevision.class) == m_revision);
+        BundleRevision current = getBundle().adapt(BundleRevision.class);
+        return (current != null) && (current.getWiring() == this);
     }
 
-    public boolean isInUse()
+    public synchronized boolean isInUse()
     {
-        return (isCurrent()
-// TODO: OSGi R4.3 - The following can be replaced with a call to getProvidedWires()
-//       once it is implemented.
-            || ((BundleImpl) m_revision.getBundle())
-                .getFramework().getDependencies().hasDependents(m_revision));
+        return !m_isDisposed;
     }
 
     public List<BundleCapability> getCapabilities(String namespace)
     {
-        List<BundleCapability> result = m_resolvedCaps;
-        if (namespace != null)
+        if (isInUse())
         {
-            result = new ArrayList<BundleCapability>();
-            for (BundleCapability cap : m_resolvedCaps)
+            List<BundleCapability> result = m_resolvedCaps;
+            if (namespace != null)
             {
-                if (cap.getNamespace().equals(namespace))
+                result = new ArrayList<BundleCapability>();
+                for (BundleCapability cap : m_resolvedCaps)
                 {
-                    result.add(cap);
+                    if (cap.getNamespace().equals(namespace))
+                    {
+                        result.add(cap);
+                    }
                 }
             }
+            return result;
         }
-        return result;
+        return null;
     }
 
     public List<BundleRequirement> getRequirements(String namespace)
     {
-        List<BundleRequirement> searchReqs = m_resolvedReqs;
-        List<BundleRequirement> wovenReqs = m_wovenReqs;
-        List<BundleRequirement> result = m_resolvedReqs;
-
-        if (wovenReqs != null)
+        if (isInUse())
         {
-            searchReqs = new ArrayList<BundleRequirement>(m_resolvedReqs);
-            searchReqs.addAll(wovenReqs);
-            result = searchReqs;
-        }
+            List<BundleRequirement> searchReqs = m_resolvedReqs;
+            List<BundleRequirement> wovenReqs = m_wovenReqs;
+            List<BundleRequirement> result = m_resolvedReqs;
 
-        if (namespace != null)
-        {
-            result = new ArrayList<BundleRequirement>();
-            for (BundleRequirement req : searchReqs)
+            if (wovenReqs != null)
             {
-                if (req.getNamespace().equals(namespace))
+                searchReqs = new ArrayList<BundleRequirement>(m_resolvedReqs);
+                searchReqs.addAll(wovenReqs);
+                result = searchReqs;
+            }
+
+            if (namespace != null)
+            {
+                result = new ArrayList<BundleRequirement>();
+                for (BundleRequirement req : searchReqs)
                 {
-                    result.add(req);
+                    if (req.getNamespace().equals(namespace))
+                    {
+                        result.add(req);
+                    }
                 }
             }
+            return result;
         }
-        return result;
+        return null;
     }
 
     public List<R4Library> getNativeLibraries()
@@ -436,25 +445,33 @@ public class BundleWiringImpl implements BundleWiring
 
     public List<BundleWire> getProvidedWires(String namespace)
     {
-        return ((BundleImpl) m_revision.getBundle())
-            .getFramework().getDependencies().getProvidedWires(m_revision, namespace);
+        if (isInUse())
+        {
+            return ((BundleImpl) m_revision.getBundle())
+                .getFramework().getDependencies().getProvidedWires(m_revision, namespace);
+        }
+        return null;
     }
 
     public synchronized List<BundleWire> getRequiredWires(String namespace)
     {
-        List<BundleWire> result = m_wires;
-        if (namespace != null)
+        if (isInUse())
         {
-            result = new ArrayList<BundleWire>();
-            for (BundleWire bw : m_wires)
+            List<BundleWire> result = m_wires;
+            if (namespace != null)
             {
-                if (bw.getRequirement().getNamespace().equals(namespace))
+                result = new ArrayList<BundleWire>();
+                for (BundleWire bw : m_wires)
                 {
-                    result.add(bw);
+                    if (bw.getRequirement().getNamespace().equals(namespace))
+                    {
+                        result.add(bw);
+                    }
                 }
             }
+            return result;
         }
-        return result;
+        return null;
     }
 
     public synchronized void addDynamicWire(BundleWire wire)
@@ -472,6 +489,10 @@ public class BundleWiringImpl implements BundleWiring
 
     public synchronized ClassLoader getClassLoader()
     {
+        if (m_isDisposed)
+        {
+            return null;
+        }
         if (m_classLoader == null)
         {
             // Determine which class loader to use based on which
@@ -518,25 +539,33 @@ public class BundleWiringImpl implements BundleWiring
 
     public List<URL> findEntries(String path, String filePattern, int options)
     {
-        if (!Util.isFragment(m_revision))
+        if (isInUse())
         {
-            Enumeration<URL> e =
-                ((BundleImpl) m_revision.getBundle()).getFramework()
-                    .findBundleEntries(m_revision, path, filePattern,
-                       (options & BundleWiring.FINDENTRIES_RECURSE) > 0);
-            List<URL> entries = new ArrayList<URL>();
-            while ((e != null) && e.hasMoreElements())
+            if (!Util.isFragment(m_revision))
             {
-                entries.add(e.nextElement());
+                Enumeration<URL> e =
+                    ((BundleImpl) m_revision.getBundle()).getFramework()
+                        .findBundleEntries(m_revision, path, filePattern,
+                           (options & BundleWiring.FINDENTRIES_RECURSE) > 0);
+                List<URL> entries = new ArrayList<URL>();
+                while ((e != null) && e.hasMoreElements())
+                {
+                    entries.add(e.nextElement());
+                }
+                return Collections.unmodifiableList(entries);
             }
-            return Collections.unmodifiableList(entries);
+            return Collections.EMPTY_LIST;
         }
-        return Collections.EMPTY_LIST;
+        return null;
     }
 
     public Collection<String> listResources(String path, String filePattern, int options)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (isInUse())
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+        return null;
     }
 
     public Bundle getBundle()
