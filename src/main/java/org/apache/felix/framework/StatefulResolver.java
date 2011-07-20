@@ -56,6 +56,7 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 class StatefulResolver
 {
@@ -762,8 +763,6 @@ class StatefulResolver
                         rw.getCapability());
                     bundleWires.add(bw);
 
-                    m_felix.getDependencies().addDependent(bw);
-
                     if (Util.isFragment(revision))
                     {
                         m_felix.getLogger().log(
@@ -861,7 +860,14 @@ class StatefulResolver
                 BundleRevisionImpl revision = (BundleRevisionImpl) entry.getKey();
 
                 // Mark revision as resolved.
+                BundleWiring wiring = entry.getValue();
                 revision.resolve(entry.getValue());
+
+                // Record dependencies.
+                for (BundleWire bw : wiring.getRequiredWires(null))
+                {
+                    m_felix.getDependencies().addDependent(bw);
+                }
 
                 // Update resolver state to remove substituted capabilities.
                 if (!Util.isFragment(revision))
