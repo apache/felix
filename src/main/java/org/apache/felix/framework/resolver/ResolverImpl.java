@@ -554,9 +554,7 @@ public class ResolverImpl implements Resolver
             return null;
         }
 
-        // Loop through the importer's dynamic requirements to determine if
-        // there is a matching one for the package from which we want to
-        // load a class.
+        // Determine if any providers of the package exist.
         Map<String, Object> attrs = new HashMap(1);
         attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
@@ -566,7 +564,7 @@ public class ResolverImpl implements Resolver
             attrs);
         SortedSet<BundleCapability> candidates = state.getCandidates(req, false);
 
-        // First find a dynamic requirement that matches the capabilities.
+        // Try to find a dynamic requirement that matches the capabilities.
         BundleRequirementImpl dynReq = null;
         for (int dynIdx = 0;
             (candidates.size() > 0) && (dynReq == null) && (dynIdx < dynamics.size());
@@ -639,11 +637,10 @@ public class ResolverImpl implements Resolver
             // Use wires to get actual requirements and satisfying capabilities.
             for (BundleWire wire : revision.getWiring().getRequiredWires(null))
             {
-                // Wrap the requirement as a hosted requirement
-                // if it comes from a fragment, since we will need
-                // to know the host. We also need to wrap if the
-                // requirement is a dynamic import, since that
-                // requirement will be shared with any other
+                // Wrap the requirement as a hosted requirement if it comes
+                // from a fragment, since we will need to know the host. We
+                // also need to wrap if the requirement is a dynamic import,
+                // since that requirement will be shared with any other
                 // matching dynamic imports.
                 BundleRequirement r = wire.getRequirement();
                 if (!r.getRevision().equals(wire.getRequirerWiring().getRevision())
@@ -654,9 +651,8 @@ public class ResolverImpl implements Resolver
                         wire.getRequirerWiring().getRevision(),
                         (BundleRequirementImpl) r);
                 }
-                // Wrap the capability as a hosted capability
-                // if it comes from a fragment, since we will need
-                // to know the host.
+                // Wrap the capability as a hosted capability if it comes
+                // from a fragment, since we will need to know the host.
                 BundleCapability c = wire.getCapability();
                 if (!c.getRevision().equals(wire.getProviderWiring().getRevision()))
                 {
@@ -1608,40 +1604,45 @@ public class ResolverImpl implements Resolver
 
         List<ResolverWire> packageWires = new ArrayList<ResolverWire>();
 
-        Packages pkgs = revisionPkgMap.get(revision);
-        for (Entry<String, List<Blame>> entry : pkgs.m_importedPkgs.entrySet())
+        BundleRequirement dynReq = null;
+        BundleCapability dynCand = null;
+        for (BundleRequirement req
+            : Util.getDynamicRequirements(revision.getWiring().getRequirements(null)))
         {
-            for (Blame blame : entry.getValue())
+            // Get the candidates for the current dynamic requirement.
+            SortedSet<BundleCapability> candCaps =
+                allCandidates.getCandidates((BundleRequirementImpl) req);
+            // Optional requirements may not have any candidates.
+            if ((candCaps == null) || candCaps.isEmpty())
             {
-                // Ignore revisions that import themselves.
-                if (!revision.equals(blame.m_cap.getRevision())
-                    && blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
-                        .equals(pkgName))
-                {
-                    if (blame.m_cap.getRevision().getWiring() == null)
-                    {
-                        populateWireMap(blame.m_cap.getRevision(), revisionPkgMap, wireMap,
-                            allCandidates);
-                    }
-
-                    Packages candPkgs = revisionPkgMap.get(blame.m_cap.getRevision());
-                    Map<String, Object> attrs = new HashMap(1);
-                    attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
-                    packageWires.add(
-                        new ResolverWireImpl(
-                            revision,
-                            // We need an unique requirement here or else subsequent
-                            // dynamic imports for the same dynamic requirement will
-                            // conflict with previous ones.
-                            new BundleRequirementImpl(
-                                revision,
-                                BundleRevision.PACKAGE_NAMESPACE,
-                                Collections.EMPTY_MAP,
-                                attrs),
-                            getActualBundleRevision(blame.m_cap.getRevision()),
-                            getActualCapability(blame.m_cap)));
-                }
+                continue;
             }
+
+            // Record the dynamic requirement.
+            dynReq = req;
+            dynCand = candCaps.first();
+
+            // Can only dynamically import one at a time, so break
+            // out of the loop after the first.
+            break;
+        }
+
+        if (dynReq != null)
+        {
+            if (dynCand.getRevision().getWiring() == null)
+            {
+                populateWireMap(dynCand.getRevision(), revisionPkgMap, wireMap,
+                    allCandidates);
+            }
+
+            Map<String, Object> attrs = new HashMap(1);
+            attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
+            packageWires.add(
+                new ResolverWireImpl(
+                    revision,
+                    dynReq,
+                    getActualBundleRevision(dynCand.getRevision()),
+                    getActualCapability(dynCand)));
         }
 
         wireMap.put(revision, packageWires);
