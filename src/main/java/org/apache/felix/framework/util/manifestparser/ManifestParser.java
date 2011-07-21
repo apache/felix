@@ -127,7 +127,7 @@ public class ManifestParser
                     hostAttrs.put(BundleRevision.HOST_NAMESPACE, value);
                     capList.add(new BundleCapabilityImpl(
                         owner, BundleRevision.HOST_NAMESPACE,
-                        Collections.EMPTY_MAP,
+                        bundleCap.getDirectives(),
                         hostAttrs));
                 }
             }
@@ -138,6 +138,8 @@ public class ManifestParser
             // attach this information to the bundle or host capabilities
             // because fragments don't have those capabilities, but fragments
             // can be singletons too.
+// TODO: OSGi R4.4 - Eventually we will have an identity capability from OBR
+//       that we can use instead of this custom singleton capability.
             if (isSingleton(bundleCap))
             {
                 Map<String, Object> singletonAttrs =
@@ -1321,21 +1323,10 @@ public class ManifestParser
                             + headerMap.get(Constants.FRAGMENT_HOST));
                 }
 
-                // Strip all attributes other than bundle-version.
-                for (Iterator<Entry<String, Object>> it =
-                        clauses.get(0).m_attrs.entrySet().iterator();
-                    it.hasNext(); )
-                {
-                    Entry<String, Object> entry = it.next();
-                    if (!entry.getKey().equals(Constants.BUNDLE_VERSION_ATTRIBUTE))
-                    {
-                        it.remove();
-                    }
-                }
-
                 // If the bundle-version attribute is specified, then convert
                 // it to the proper type.
                 Object value = clauses.get(0).m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
+                value = (value == null) ? "0.0.0" : value;
                 if (value != null)
                 {
                     clauses.get(0).m_attrs.put(
