@@ -181,23 +181,42 @@ class ExtensionManager extends URLStreamHandler implements Content
         // We must construct the system bundle's export metadata.
         // Get configuration property that specifies which class path
         // packages should be exported by the system bundle.
-        String syspkgs = (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
+        String syspkgs =
+            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES);
         // If no system packages were specified, load our default value.
         syspkgs = (syspkgs == null)
             ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMPACKAGES)
             : syspkgs;
         syspkgs = (syspkgs == null) ? "" : syspkgs;
         // If any extra packages are specified, then append them.
-        String extra = (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
-        syspkgs = (extra == null) ? syspkgs : syspkgs + "," + extra;
+        String pkgextra =
+            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
+        syspkgs = (pkgextra == null) ? syspkgs : syspkgs + "," + pkgextra;
         m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
         m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
+
+        // The system bundle alsp provides framework generic capabilities
+        // as well as arbitrary user-defined generic capabilities. We must
+        // construct the system bundle's capabilitie metadata. Get the
+        // configuration property that specifies which capabilities should
+        // be provided by the system bundle.
+        String syscaps =
+            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES);
+        // If no system capabilities were specified, load our default value.
+        syscaps = (syscaps == null)
+            ? Util.getDefaultProperty(logger, Constants.FRAMEWORK_SYSTEMCAPABILITIES)
+            : syscaps;
+        syscaps = (syscaps == null) ? "" : syscaps;
+        // If any extra capabilities are specified, then append them.
+        String capextra =
+            (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
+        syscaps = (capextra == null) ? syscaps : syscaps + "," + capextra;
+        m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
         try
         {
             ManifestParser mp = new ManifestParser(
                 m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
-            List<BundleCapability> caps = aliasSymbolicName(mp.getCapabilities());
-            setCapabilities(caps);
+            setCapabilities(mp.getCapabilities());
         }
         catch (Exception ex)
         {
