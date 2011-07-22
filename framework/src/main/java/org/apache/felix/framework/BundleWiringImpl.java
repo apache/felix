@@ -193,11 +193,17 @@ public class BundleWiringImpl implements BundleWiring
         // First add resolved requirements from wires.
         for (BundleWire bw : wires)
         {
-            reqList.add(bw.getRequirement());
-            if (bw.getRequirement().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+            // Fragments may have multiple wires for the same requirement, so we
+            // need to check for and avoid duplicates in that case.
+            if (!bw.getRequirement().getNamespace().equals(BundleRevision.HOST_NAMESPACE)
+                || !reqList.contains(bw.getRequirement()))
             {
-                imports.add((String)
-                    bw.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                reqList.add(bw.getRequirement());
+                if (bw.getRequirement().getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                {
+                    imports.add((String)
+                        bw.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                }
             }
         }
         // Next add dynamic requirements from host.
@@ -286,7 +292,6 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
         m_resolvedCaps = Collections.unmodifiableList(capList);
-
 
         List<R4Library> libList = (m_revision.getDeclaredNativeLibraries() == null)
             ? new ArrayList<R4Library>()
