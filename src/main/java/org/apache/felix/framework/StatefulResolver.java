@@ -747,6 +747,16 @@ class StatefulResolver
                 List<BundleWire> bundleWires =
                     new ArrayList<BundleWire>(resolverWires.size());
 
+                // Need to special case fragments since they may already have
+                // wires if they are already attached to another host; if that
+                // is the case, then we want to merge the old host wires with
+                // the new ones.
+                if ((revision.getWiring() != null) && Util.isFragment(revision))
+                {
+                    // Fragments only have host wires, so just add them all.
+                    bundleWires.addAll(revision.getWiring().getRequiredWires(null));
+                }
+
                 // Loop through resolver wires to calculate the package
                 // space implied by the wires as well as to record the
                 // dependencies.
