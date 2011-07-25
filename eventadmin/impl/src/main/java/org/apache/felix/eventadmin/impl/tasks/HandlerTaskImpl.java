@@ -64,11 +64,15 @@ public class HandlerTaskImpl implements HandlerTask
     /**
      * @see org.apache.felix.eventadmin.impl.tasks.HandlerTask#getHandlerClassName()
      */
-    public String getHandlerClassName() {
+    public String getHandlerClassName()
+    {
         final EventHandler handler = m_handlerTasks.getEventHandler(m_eventHandlerRef);
-        try {
+        try
+        {
             return handler.getClass().getName();
-        } finally {
+        }
+        finally
+        {
             m_handlerTasks.ungetEventHandler(handler, m_eventHandlerRef);
         }
     }
@@ -85,7 +89,7 @@ public class HandlerTaskImpl implements HandlerTask
         try
         {
             handler.handleEvent(m_event);
-        } catch (Exception e)
+        } catch (Throwable e)
         {
             // The spec says that we must catch exceptions and log them:
             LogWrapper.getLogger().log(
