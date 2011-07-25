@@ -4,6 +4,8 @@ Changes from 1.2.12 to 1.2.14
 ** Bug
     * [FELIX-2997] - java.lang.NullPointerException during shutdown while sending events
     * [FELIX-3002] - Embed the OBR specific information for the EventAdmin bundle in the manifest
+    * [FELIX-3053] - Potential deadlock if event handler throws Throwable and is bypassing timeout handling
+    
 
 
 Changes from 1.2.10 to 1.2.12
