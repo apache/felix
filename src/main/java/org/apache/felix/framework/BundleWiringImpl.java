@@ -35,12 +35,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.cache.Content;
+import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
 import org.apache.felix.framework.util.CompoundEnumeration;
@@ -80,6 +80,8 @@ public class BundleWiringImpl implements BundleWiring
     private final Map<String, BundleRevision> m_importedPkgs;
     private final Map<String, List<BundleRevision>> m_requiredPkgs;
     private final List<BundleCapability> m_resolvedCaps;
+    private final Map<String, List<List<String>>> m_includedPkgFilters;
+    private final Map<String, List<List<String>>> m_excludedPkgFilters;
     private final List<BundleRequirement> m_resolvedReqs;
     private final List<R4Library> m_resolvedNativeLibs;
     private final List<Content> m_fragmentContents;
@@ -246,6 +248,11 @@ public class BundleWiringImpl implements BundleWiring
         List<BundleCapability> capList = (isFragment)
             ? Collections.EMPTY_LIST
             : new ArrayList<BundleCapability>();
+        // Also keep track of whether any resolved package capabilities are filtered.
+        Map<String, List<List<String>>> includedPkgFilters =
+            new HashMap<String, List<List<String>>>();
+        Map<String, List<List<String>>> excludedPkgFilters =
+            new HashMap<String, List<List<String>>>();
 // TODO: OSGi R4.4 - Fragments currently have no capabilities, but they may
 //       have an identity capability in the future.
         if (!isFragment)
@@ -263,6 +270,24 @@ public class BundleWiringImpl implements BundleWiring
                     if ((effective == null) || (effective.equals(Constants.EFFECTIVE_RESOLVE)))
                     {
                         capList.add(cap);
+                        if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                        {
+                            List<List<String>> filters =
+                                parsePkgFilters(cap, Constants.INCLUDE_DIRECTIVE);
+                            if (filters != null)
+                            {
+                                includedPkgFilters.put((String)
+                                    cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                                    filters);
+                            }
+                            filters = parsePkgFilters(cap, Constants.EXCLUDE_DIRECTIVE);
+                            if (filters != null)
+                            {
+                                excludedPkgFilters.put((String)
+                                    cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                                    filters);
+                            }
+                        }
                     }
                 }
             }
@@ -285,6 +310,28 @@ public class BundleWiringImpl implements BundleWiring
                             if ((effective == null) || (effective.equals(Constants.EFFECTIVE_RESOLVE)))
                             {
                                 capList.add(cap);
+                                if (cap.getNamespace().equals(
+                                    BundleRevision.PACKAGE_NAMESPACE))
+                                {
+                                    List<List<String>> filters =
+                                        parsePkgFilters(
+                                            cap, Constants.INCLUDE_DIRECTIVE);
+                                    if (filters != null)
+                                    {
+                                        includedPkgFilters.put((String)
+                                            cap.getAttributes()
+                                                .get(BundleRevision.PACKAGE_NAMESPACE),
+                                            filters);
+                                    }
+                                    filters = parsePkgFilters(cap, Constants.EXCLUDE_DIRECTIVE);
+                                    if (filters != null)
+                                    {
+                                        excludedPkgFilters.put((String)
+                                            cap.getAttributes()
+                                                .get(BundleRevision.PACKAGE_NAMESPACE),
+                                            filters);
+                                    }
+                                }
                             }
                         }
                     }
@@ -292,6 +339,10 @@ public class BundleWiringImpl implements BundleWiring
             }
         }
         m_resolvedCaps = Collections.unmodifiableList(capList);
+        m_includedPkgFilters = (includedPkgFilters.isEmpty())
+            ? Collections.EMPTY_MAP : includedPkgFilters;
+        m_excludedPkgFilters = (excludedPkgFilters.isEmpty())
+            ? Collections.EMPTY_MAP : excludedPkgFilters;
 
         List<R4Library> libList = (m_revision.getDeclaredNativeLibraries() == null)
             ? new ArrayList<R4Library>()
@@ -341,6 +392,25 @@ public class BundleWiringImpl implements BundleWiring
         m_useLocalURLs =
             (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
                 ? false : true;
+    }
+
+    private static List<List<String>> parsePkgFilters(BundleCapability cap, String filtername)
+    {
+        List<List<String>> filters = null;
+        String include = cap.getDirectives().get(filtername);
+        if (include != null)
+        {
+            List<String> filterStrings = ManifestParser.parseDelimitedString(include, ",");
+            filters = new ArrayList<List<String>>(filterStrings.size());
+
+            for (int filterIdx = 0; filterIdx < filterStrings.size(); filterIdx++)
+            {
+                List<String> substrings =
+                    SimpleFilter.parseSubstring(filterStrings.get(filterIdx));
+                filters.add(substrings);
+            }
+        }
+        return filters;
     }
 
     public synchronized void dispose()
@@ -902,7 +972,50 @@ public class BundleWiringImpl implements BundleWiring
         {
             return Class.forName(name, false, getClassLoader());
         }
+
+        // Check to see if the requested class is filtered.
+        if (isFiltered(name))
+        {
+            throw new ClassNotFoundException(name);
+        }
+
         return getClassLoader().loadClass(name);
+    }
+
+    private boolean isFiltered(String name)
+    {
+        String pkgName = Util.getClassPackage(name);
+        List<List<String>> includeFilters = m_includedPkgFilters.get(pkgName);
+        List<List<String>> excludeFilters = m_excludedPkgFilters.get(pkgName);
+
+        if ((includeFilters == null) && (excludeFilters == null))
+        {
+            return false;
+        }
+
+        // Get the class name portion of the target class.
+        String className = Util.getClassName(name);
+
+        // If there are no include filters then all classes are included
+        // by default, otherwise try to find one match.
+        boolean included = (includeFilters == null);
+        for (int i = 0;
+            (!included) && (includeFilters != null) && (i < includeFilters.size());
+            i++)
+        {
+            included = SimpleFilter.compareSubstring(includeFilters.get(i), className);
+        }
+
+        // If there are no exclude filters then no classes are excluded
+        // by default, otherwise try to find one match.
+        boolean excluded = false;
+        for (int i = 0;
+            (!excluded) && (excludeFilters != null) && (i < excludeFilters.size());
+            i++)
+        {
+            excluded = SimpleFilter.compareSubstring(excludeFilters.get(i), className);
+        }
+        return !included || excluded;
     }
 
     public URL getResourceByDelegation(String name)
