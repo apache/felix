@@ -26,10 +26,12 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.EventListener;
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.felix.framework.Logger;
@@ -52,20 +54,13 @@ import org.osgi.framework.launch.Framework;
 
 public class EventDispatcher
 {
-    static final int LISTENER_BUNDLE_OFFSET = 0;
-    static final int LISTENER_CLASS_OFFSET = 1;
-    static final int LISTENER_OBJECT_OFFSET = 2;
-    static final int LISTENER_FILTER_OFFSET = 3;
-    static final int LISTENER_SECURITY_OFFSET = 4;
-    static final int LISTENER_ARRAY_SIZE = 5;
-
     private final Logger m_logger;
     private final ServiceRegistry m_registry;
 
-    private List<Object[]> m_frameworkListeners = Collections.EMPTY_LIST;
-    private List<Object[]> m_bundleListeners = Collections.EMPTY_LIST;
-    private List<Object[]> m_syncBundleListeners = Collections.EMPTY_LIST;
-    private List<Object[]> m_serviceListeners = Collections.EMPTY_LIST;
+    private List<ListenerInfo> m_frameworkListeners = Collections.EMPTY_LIST;
+    private List<ListenerInfo> m_bundleListeners = Collections.EMPTY_LIST;
+    private List<ListenerInfo> m_syncBundleListeners = Collections.EMPTY_LIST;
+    private List<ListenerInfo> m_serviceListeners = Collections.EMPTY_LIST;
 
     // A single thread is used to deliver events for all dispatchers.
     private static Thread m_thread = null;
@@ -188,7 +183,7 @@ public class EventDispatcher
         // Lock the object to add the listener.
         synchronized (this)
         {
-            List<Object[]> listeners = null;
+            List<ListenerInfo> listeners = null;
             Object acc = null;
 
             if (clazz == FrameworkListener.class)
@@ -226,14 +221,10 @@ public class EventDispatcher
             }
 
             // Add listener.
-            Object[] listener = new Object[LISTENER_ARRAY_SIZE];
-            listener[LISTENER_BUNDLE_OFFSET] = bundle;
-            listener[LISTENER_CLASS_OFFSET] = clazz;
-            listener[LISTENER_OBJECT_OFFSET] = l;
-            listener[LISTENER_FILTER_OFFSET] = filter;
-            listener[LISTENER_SECURITY_OFFSET] = acc;
+            ListenerInfo listener =
+                new ListenerInfo(bundle, clazz, l, filter, acc, false);
 
-            List<Object[]> newListeners = new ArrayList<Object[]>(listeners.size() + 1);
+            List<ListenerInfo> newListeners = new ArrayList<ListenerInfo>(listeners.size() + 1);
             newListeners.addAll(listeners);
             newListeners.add(listener);
             listeners = newListeners;
@@ -280,7 +271,7 @@ public class EventDispatcher
         // Lock the object to remove the listener.
         synchronized (this)
         {
-            List<Object[]> listeners = null;
+            List<ListenerInfo> listeners = null;
 
             if (clazz == FrameworkListener.class)
             {
@@ -310,16 +301,16 @@ public class EventDispatcher
             int idx = -1;
             for (int i = 0; i < listeners.size(); i++)
             {
-                Object[] listener = listeners.get(i);
-                if (listener[LISTENER_BUNDLE_OFFSET].equals(bundle) &&
-                    (listener[LISTENER_CLASS_OFFSET] == clazz) &&
-                    (listener[LISTENER_OBJECT_OFFSET] == l))
+                ListenerInfo listener = listeners.get(i);
+                if (listener.getBundle().equals(bundle) &&
+                    (listener.getListenerClass() == clazz) &&
+                    (listener.getListener() == l))
                 {
                     // For service listeners, we must return some info about
                     // the listener for the ListenerHook callback.
                     if (ServiceListener.class == clazz)
                     {
-                        listenerInfo = wrapListener(listeners.get(i), true);
+                        listenerInfo = new ListenerInfo(listeners.get(i), true);
                     }
                     idx = i;
                     break;
@@ -341,7 +332,7 @@ public class EventDispatcher
                 // and is not affected by the new value.
                 else
                 {
-                    List<Object[]> newListeners = new ArrayList<Object[]>(listeners);
+                    List<ListenerInfo> newListeners = new ArrayList<ListenerInfo>(listeners);
                     newListeners.remove(idx);
                     listeners = newListeners;
                 }
@@ -383,14 +374,12 @@ public class EventDispatcher
         synchronized (this)
         {
             // Remove all framework listeners associated with the specified bundle.
-            List<Object[]> newListeners = new ArrayList<Object[]>(m_frameworkListeners);
-            for (Iterator<Object[]> it = newListeners.iterator(); it.hasNext(); )
+            List<ListenerInfo> newListeners = new ArrayList<ListenerInfo>(m_frameworkListeners);
+            for (Iterator<ListenerInfo> it = newListeners.iterator(); it.hasNext(); )
             {
                 // Check if the bundle associated with the current listener
                 // is the same as the specified bundle, if so remove the listener.
-                Object[] listener = it.next();
-                Bundle registeredBundle = (Bundle) listener[LISTENER_BUNDLE_OFFSET];
-                if (bundle.equals(registeredBundle))
+                if (bundle.equals(it.next().getBundle()))
                 {
                     it.remove();
                 }
@@ -398,14 +387,12 @@ public class EventDispatcher
             m_frameworkListeners = newListeners;
 
             // Remove all bundle listeners associated with the specified bundle.
-            newListeners = new ArrayList<Object[]>(m_bundleListeners);
-            for (Iterator<Object[]> it = newListeners.iterator(); it.hasNext(); )
+            newListeners = new ArrayList<ListenerInfo>(m_bundleListeners);
+            for (Iterator<ListenerInfo> it = newListeners.iterator(); it.hasNext(); )
             {
                 // Check if the bundle associated with the current listener
                 // is the same as the specified bundle, if so remove the listener.
-                Object[] listener = it.next();
-                Bundle registeredBundle = (Bundle) listener[LISTENER_BUNDLE_OFFSET];
-                if (bundle.equals(registeredBundle))
+                if (bundle.equals(it.next().getBundle()))
                 {
                     it.remove();
                 }
@@ -414,14 +401,12 @@ public class EventDispatcher
 
             // Remove all synchronous bundle listeners associated with
             // the specified bundle.
-            newListeners = new ArrayList<Object[]>(m_syncBundleListeners);
-            for (Iterator<Object[]> it = newListeners.iterator(); it.hasNext(); )
+            newListeners = new ArrayList<ListenerInfo>(m_syncBundleListeners);
+            for (Iterator<ListenerInfo> it = newListeners.iterator(); it.hasNext(); )
             {
                 // Check if the bundle associated with the current listener
                 // is the same as the specified bundle, if so remove the listener.
-                Object[] listener = it.next();
-                Bundle registeredBundle = (Bundle) listener[LISTENER_BUNDLE_OFFSET];
-                if (bundle.equals(registeredBundle))
+                if (bundle.equals(it.next().getBundle()))
                 {
                     it.remove();
                 }
@@ -429,14 +414,12 @@ public class EventDispatcher
             m_syncBundleListeners = newListeners;
 
             // Remove all service listeners associated with the specified bundle.
-            newListeners = new ArrayList<Object[]>(m_serviceListeners);
-            for (Iterator<Object[]> it = newListeners.iterator(); it.hasNext(); )
+            newListeners = new ArrayList<ListenerInfo>(m_serviceListeners);
+            for (Iterator<ListenerInfo> it = newListeners.iterator(); it.hasNext(); )
             {
                 // Check if the bundle associated with the current listener
                 // is the same as the specified bundle, if so remove the listener.
-                Object[] listener = it.next();
-                Bundle registeredBundle = (Bundle) listener[LISTENER_BUNDLE_OFFSET];
-                if (bundle.equals(registeredBundle))
+                if (bundle.equals(it.next().getBundle()))
                 {
                     it.remove();
                 }
@@ -449,7 +432,7 @@ public class EventDispatcher
     {
         synchronized (this)
         {
-            List<Object[]> listeners = null;
+            List<ListenerInfo> listeners = null;
 
             if (clazz == FrameworkListener.class)
             {
@@ -475,10 +458,10 @@ public class EventDispatcher
             // handle it according to the spec.
             for (int i = 0; i < listeners.size(); i++)
             {
-                Object[] listener = listeners.get(i);
-                if (listener[LISTENER_BUNDLE_OFFSET].equals(bundle) &&
-                    (listener[LISTENER_CLASS_OFFSET] == clazz) &&
-                    (listener[LISTENER_OBJECT_OFFSET] == l))
+                ListenerInfo listener = listeners.get(i);
+                if (listener.getBundle().equals(bundle) &&
+                    (listener.getListenerClass() == clazz) &&
+                    (listener.getListener() == l))
                 {
                     Filter oldFilter = null;
                     if (clazz == FrameworkListener.class)
@@ -492,8 +475,17 @@ public class EventDispatcher
                     else if (clazz == ServiceListener.class)
                     {
                         // The spec says to update the filter in this case.
-                        oldFilter = (Filter) listener[LISTENER_FILTER_OFFSET];
-                        listener[LISTENER_FILTER_OFFSET] = filter;
+                        oldFilter = listener.getParsedFilter();
+                        listeners = new ArrayList<ListenerInfo>(listeners);
+                        listeners.set(i,
+                            new ListenerInfo(
+                                listener.getBundle(),
+                                listener.getListenerClass(),
+                                listener.getListener(),
+                                filter,
+                                listener.getSecurityContext(),
+                                listener.isRemoved()));
+                        m_serviceListeners = listeners;
                     }
                     return oldFilter;
                 }
@@ -510,45 +502,25 @@ public class EventDispatcher
      * @return Returns all existing service listener information into a collection of
      *         ListenerHook.ListenerInfo objects
     **/
-    public Collection /* <? extends ListenerHook.ListenerInfo> */
-        wrapAllServiceListeners(boolean removed)
+    public Collection<ListenerHook.ListenerInfo> getAllServiceListeners()
     {
-        List<Object[]> listeners = null;
+        List<ListenerInfo> listeners = null;
         synchronized (this)
         {
             listeners = m_serviceListeners;
         }
-
-        List existingListeners = new ArrayList();
-        for (int i = 0; i < listeners.size(); i++)
-        {
-            existingListeners.add(wrapListener(listeners.get(i), removed));
-        }
-        return existingListeners;
+        return asTypedCollection(new ArrayList<ListenerHook.ListenerInfo>(listeners));
     }
 
-    /**
-     * Wraps the information about a given listener in a ListenerHook.ListenerInfo
-     * object.
-     * @param listeners The array of listeners.
-     * @param offset The offset into the array of the listener to wrap.
-     * @return A ListenerHook.ListenerInfo object for the specified listener.
-     */
-    private static ListenerHook.ListenerInfo wrapListener(Object[] listener, boolean removed)
+    private static <S> Collection<S> asTypedCollection(Collection<?> c)
     {
-        Filter filter = (Filter) listener[LISTENER_FILTER_OFFSET];
-
-        return new ListenerHookInfoImpl(
-            ((Bundle)listener[LISTENER_BUNDLE_OFFSET]).getBundleContext(),
-            (ServiceListener) listener[LISTENER_OBJECT_OFFSET],
-            filter == null ? null : filter.toString(),
-            removed);
+        return (Collection<S>) c;
     }
 
     public void fireFrameworkEvent(FrameworkEvent event)
     {
         // Take a snapshot of the listener array.
-        List<Object[]> listeners = null;
+        List<ListenerInfo> listeners = null;
         synchronized (this)
         {
             listeners = m_frameworkListeners;
@@ -561,8 +533,8 @@ public class EventDispatcher
     public void fireBundleEvent(BundleEvent event, Framework felix)
     {
         // Take a snapshot of the listener array.
-        List<Object[]> listeners = null;
-        List<Object[]> syncListeners = null;
+        List<ListenerInfo> listeners = null;
+        List<ListenerInfo> syncListeners = null;
         synchronized (this)
         {
             listeners = m_bundleListeners;
@@ -571,7 +543,7 @@ public class EventDispatcher
 
         // Create a whitelist of bundle context for bundle listeners,
         // if we have hooks.
-        List<Object[]> allListeners = new ArrayList(listeners);
+        List<ListenerInfo> allListeners = new ArrayList(listeners);
         allListeners.addAll(syncListeners);
         Set<BundleContext> whitelist =
             createWhitelistFromHooks(
@@ -597,7 +569,7 @@ public class EventDispatcher
         final ServiceEvent event, final Dictionary oldProps, final Framework felix)
     {
         // Take a snapshot of the listener array.
-        List<Object[]> listeners = null;
+        List<ListenerInfo> listeners = null;
         synchronized (this)
         {
             listeners = m_serviceListeners;
@@ -615,7 +587,7 @@ public class EventDispatcher
 
 
     private Set<BundleContext> createWhitelistFromHooks(
-        EventObject event, Framework felix, List<Object[]> listeners, Class hookClass)
+        EventObject event, Framework felix, List<ListenerInfo> listeners, Class hookClass)
     {
         // Create a whitelist of bundle context, if we have hooks.
         Set<BundleContext> whitelist = null;
@@ -623,10 +595,9 @@ public class EventDispatcher
         if ((hooks != null) && !hooks.isEmpty())
         {
             whitelist = new HashSet<BundleContext>();
-            for (Object[] listener : listeners)
+            for (ListenerInfo listener : listeners)
             {
-                BundleContext bc =
-                    ((Bundle) listener[LISTENER_BUNDLE_OFFSET]).getBundleContext();
+                BundleContext bc = listener.getBundleContext();
                 if (bc != null)
                 {
                     whitelist.add(bc);
@@ -686,7 +657,7 @@ public class EventDispatcher
     }
 
     private static void fireEventAsynchronously(
-        EventDispatcher dispatcher, int type, List<Object[]> listeners,
+        EventDispatcher dispatcher, int type, List<ListenerInfo> listeners,
         Set<BundleContext> whitelist, EventObject event)
     {
         //TODO: should possibly check this within thread lock, seems to be ok though without
@@ -728,18 +699,18 @@ public class EventDispatcher
     }
 
     private static void fireEventImmediately(
-        EventDispatcher dispatcher, int type, List<Object[]> listeners,
+        EventDispatcher dispatcher, int type, List<ListenerInfo> listeners,
         Set<BundleContext> whitelist, EventObject event, Dictionary oldProps)
     {
         if (!listeners.isEmpty())
         {
             // Notify appropriate listeners.
-            for (Object[] listener : listeners)
+            for (ListenerInfo listener : listeners)
             {
-                Bundle bundle = (Bundle) listener[LISTENER_BUNDLE_OFFSET];
-                EventListener l = (EventListener) listener[LISTENER_OBJECT_OFFSET];
-                Filter filter = (Filter) listener[LISTENER_FILTER_OFFSET];
-                Object acc = listener[LISTENER_SECURITY_OFFSET];
+                Bundle bundle = listener.getBundle();
+                EventListener l = listener.getListener();
+                Filter filter = listener.getParsedFilter();
+                Object acc = listener.getSecurityContext();
 
                 // Only deliver events to bundles in the whitelist, if we have one.
                 if ((whitelist == null) || whitelist.contains(bundle.getBundleContext()))
@@ -997,7 +968,7 @@ public class EventDispatcher
 
         public EventDispatcher m_dispatcher = null;
         public int m_type = -1;
-        public List<Object[]> m_listeners = null;
+        public List<ListenerInfo> m_listeners = null;
         public Set<BundleContext> m_whitelist = null;
         public EventObject m_event = null;
     }
