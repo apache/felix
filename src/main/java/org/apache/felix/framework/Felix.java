@@ -32,7 +32,7 @@ import org.apache.felix.framework.ext.SecurityProvider;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.util.EventDispatcher;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.ListenerHookInfoImpl;
+import org.apache.felix.framework.util.ListenerInfo;
 import org.apache.felix.framework.util.MapToDictionary;
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.ShrinkableCollection;
@@ -3071,12 +3071,12 @@ public class Felix extends BundleImpl implements Framework
         }
 
         Filter oldFilter;
+        Filter newFilter = (f == null) ? null : FrameworkUtil.createFilter(f);
 
         try
         {
             oldFilter = m_dispatcher.addListener(
-                bundle, ServiceListener.class, l,
-                (f == null) ? null : FrameworkUtil.createFilter(f));
+                bundle, ServiceListener.class, l, newFilter);
         }
         finally
         {
@@ -3089,8 +3089,7 @@ public class Felix extends BundleImpl implements Framework
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
-                new ListenerHookInfoImpl(
-                ((BundleImpl) bundle)._getBundleContext(), l, oldFilter.toString(), true));
+                new ListenerInfo(bundle, ServiceListener.class, l, oldFilter, null, true));
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
                 org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
@@ -3115,7 +3114,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke the ListenerHook.added() on all hooks.
         final Collection added = Collections.singleton(
-            new ListenerHookInfoImpl(((BundleImpl) bundle)._getBundleContext(), l, f, false));
+            new ListenerInfo(bundle, ServiceListener.class, l, newFilter, null, false));
         for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
         {
             org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
@@ -3287,7 +3286,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 try
                 {
-                    lh.added(m_dispatcher.wrapAllServiceListeners(false));
+                    lh.added(m_dispatcher.getAllServiceListeners());
                 }
                 catch (Throwable th)
                 {
