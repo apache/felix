@@ -56,6 +56,7 @@ public class ServiceRegistry
         org.osgi.framework.hooks.bundle.FindHook.class,
         org.osgi.framework.hooks.bundle.EventHook.class,
         org.osgi.framework.hooks.service.EventHook.class,
+        org.osgi.framework.hooks.service.EventListenerHook.class,
         org.osgi.framework.hooks.service.FindHook.class,
         org.osgi.framework.hooks.service.ListenerHook.class,
         org.osgi.framework.hooks.weaving.WeavingHook.class,
