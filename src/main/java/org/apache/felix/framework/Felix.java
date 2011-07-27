@@ -2034,7 +2034,7 @@ public class Felix extends BundleImpl implements Framework
                 m_registry.ungetServices(bundle);
 
                 // Remove any listeners registered by this bundle.
-                m_dispatcher.removeListeners(bundle);
+                m_dispatcher.removeListeners(bundle._getBundleContext());
 
                 // Clean up the bundle context.
                 ((BundleContextImpl) bundle._getBundleContext()).invalidate();
@@ -2412,7 +2412,7 @@ public class Felix extends BundleImpl implements Framework
 
                 // The spec says that we must remove all event
                 // listeners for a bundle when it is stopped.
-                m_dispatcher.removeListeners(bundle);
+                m_dispatcher.removeListeners(bundle._getBundleContext());
 
                 // Clean up the bundle context.
                 ((BundleContextImpl) bundle._getBundleContext()).invalidate();
@@ -3034,7 +3034,8 @@ public class Felix extends BundleImpl implements Framework
 
         try
         {
-            m_dispatcher.addListener(bundle, BundleListener.class, l, null);
+            m_dispatcher.addListener(
+                bundle._getBundleContext(), BundleListener.class, l, null);
         }
         finally
         {
@@ -3044,7 +3045,8 @@ public class Felix extends BundleImpl implements Framework
 
     void removeBundleListener(BundleImpl bundle, BundleListener l)
     {
-        m_dispatcher.removeListener(bundle, BundleListener.class, l);
+        m_dispatcher.removeListener(
+            bundle._getBundleContext(), BundleListener.class, l);
     }
 
     /**
@@ -3076,7 +3078,7 @@ public class Felix extends BundleImpl implements Framework
         try
         {
             oldFilter = m_dispatcher.addListener(
-                bundle, ServiceListener.class, l, newFilter);
+                bundle._getBundleContext(), ServiceListener.class, l, newFilter);
         }
         finally
         {
@@ -3089,7 +3091,8 @@ public class Felix extends BundleImpl implements Framework
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
-                new ListenerInfo(bundle, ServiceListener.class, l, oldFilter, null, true));
+                new ListenerInfo(bundle._getBundleContext(),
+                    ServiceListener.class, l, oldFilter, null, true));
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
                 org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
@@ -3114,7 +3117,8 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke the ListenerHook.added() on all hooks.
         final Collection added = Collections.singleton(
-            new ListenerInfo(bundle, ServiceListener.class, l, newFilter, null, false));
+            new ListenerInfo(bundle.getBundleContext(),
+                ServiceListener.class, l, newFilter, null, false));
         for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
         {
             org.osgi.framework.hooks.service.ListenerHook lh = getService(this, sr);
@@ -3147,7 +3151,8 @@ public class Felix extends BundleImpl implements Framework
     void removeServiceListener(BundleImpl bundle, ServiceListener l)
     {
         org.osgi.framework.hooks.service.ListenerHook.ListenerInfo listener =
-            m_dispatcher.removeListener(bundle, ServiceListener.class, l);
+            m_dispatcher.removeListener(
+                bundle._getBundleContext(), ServiceListener.class, l);
 
         if (listener != null)
         {
@@ -3193,7 +3198,8 @@ public class Felix extends BundleImpl implements Framework
 
         try
         {
-            m_dispatcher.addListener(bundle, FrameworkListener.class, l, null);
+            m_dispatcher.addListener(
+                bundle._getBundleContext(), FrameworkListener.class, l, null);
         }
         finally
         {
@@ -3203,7 +3209,8 @@ public class Felix extends BundleImpl implements Framework
 
     void removeFrameworkListener(BundleImpl bundle, FrameworkListener l)
     {
-        m_dispatcher.removeListener(bundle, FrameworkListener.class, l);
+        m_dispatcher.removeListener(
+            bundle._getBundleContext(), FrameworkListener.class, l);
     }
 
     /**

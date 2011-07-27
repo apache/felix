@@ -95,7 +95,7 @@ public class EventDispatcherTest extends TestCase
                 System.out.println("*** sl1");
             }
         };
-        ed.addListener(b1, ServiceListener.class, sl1, null);
+        ed.addListener(b1.getBundleContext(), ServiceListener.class, sl1, null);
 
         ServiceListener sl2 = new ServiceListener()
         {
@@ -105,7 +105,7 @@ public class EventDispatcherTest extends TestCase
                 System.out.println("*** sl2");
             }
         };
-        ed.addListener(b2, ServiceListener.class, sl2, null);
+        ed.addListener(b2.getBundleContext(), ServiceListener.class, sl2, null);
 
         ServiceListener sl3 = new ServiceListener()
         {
@@ -115,7 +115,7 @@ public class EventDispatcherTest extends TestCase
                 System.out.println("*** sl3");
             }
         };
-        ed.addListener(b3, ServiceListener.class, sl3, null);
+        ed.addListener(b3.getBundleContext(), ServiceListener.class, sl3, null);
 
         // --- make the invocation
         ServiceReference sr = (ServiceReference) EasyMock.createNiceMock(ServiceReference.class);
