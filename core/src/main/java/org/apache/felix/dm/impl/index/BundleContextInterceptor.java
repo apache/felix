@@ -89,6 +89,9 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
                     }
                 }
             }
+            if (result == null || result.size() == 0) {
+                return null;
+            }
             return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
         }
         else {
@@ -102,6 +105,9 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         FilterIndex filterIndex = m_cache.hasFilterIndexFor(clazz, filter);
         if (filterIndex != null) {
             List /* <ServiceReference> */ result = filterIndex.getAllServiceReferences(clazz, filter);
+            if (result == null || result.size() == 0) {
+                return null;
+            }
             return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
         }
         else {
