@@ -21,9 +21,9 @@ package org.apache.felix.framework.util;
 import java.util.Collection;
 import java.util.Iterator;
 
-/** This collection wraps any other collection but prohibits calls to add
- *  elements to the collection.
- */
+/**
+ * A collection wrapper that only permits clients to shrink the collection.
+**/
 public class ShrinkableCollection<T> implements Collection<T>
 {
     private final Collection<T> m_delegate;

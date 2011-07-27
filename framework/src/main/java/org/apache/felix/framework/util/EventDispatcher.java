@@ -440,7 +440,7 @@ public class EventDispatcher
         }
 
         // Fire all framework listeners on a separate thread.
-        fireEventAsynchronously(this, Request.FRAMEWORK_EVENT, listeners, null, event);
+        fireEventAsynchronously(this, Request.FRAMEWORK_EVENT, listeners, event);
     }
 
     public void fireBundleEvent(BundleEvent event, Framework felix)
@@ -459,9 +459,36 @@ public class EventDispatcher
         Set<BundleContext> whitelist = createWhitelistFromHooks(event, felix,
             listeners, syncListeners, org.osgi.framework.hooks.bundle.EventHook.class);
 
+        // If we have a whitelist, then create copies of only the whitelisted
+        // listeners.
+        if (whitelist != null)
+        {
+            Map<BundleContext, List<ListenerInfo>> copy =
+                new HashMap<BundleContext, List<ListenerInfo>>();
+            for (BundleContext bc : whitelist)
+            {
+                List<ListenerInfo> infos = listeners.get(bc);
+                if (infos != null)
+                {
+                    copy.put(bc, infos);
+                }
+            }
+            listeners = copy;
+            copy = new HashMap<BundleContext, List<ListenerInfo>>();
+            for (BundleContext bc : whitelist)
+            {
+                List<ListenerInfo> infos = syncListeners.get(bc);
+                if (infos != null)
+                {
+                    copy.put(bc, infos);
+                }
+            }
+            syncListeners = copy;
+        }
+
         // Fire synchronous bundle listeners immediately on the calling thread.
         fireEventImmediately(
-            this, Request.BUNDLE_EVENT, syncListeners, whitelist, event, null);
+            this, Request.BUNDLE_EVENT, syncListeners, event, null);
 
         // The spec says that asynchronous bundle listeners do not get events
         // of types STARTING, STOPPING, or LAZY_ACTIVATION.
@@ -471,7 +498,7 @@ public class EventDispatcher
         {
             // Fire asynchronous bundle listeners on a separate thread.
             fireEventAsynchronously(
-                this, Request.BUNDLE_EVENT, listeners, whitelist, event);
+                this, Request.BUNDLE_EVENT, listeners, event);
         }
     }
 
@@ -485,14 +512,107 @@ public class EventDispatcher
             listeners = m_svcListeners;
         }
 
-        // Create a whitelist of bundle contexts for service listeners,
-        // if we have hooks.
-        Set<BundleContext> whitelist = createWhitelistFromHooks(event, felix,
-            listeners, null, org.osgi.framework.hooks.service.EventHook.class);
+        // Use service registry hooks to filter target listeners.
+        listeners = filterListenersUsingHooks(event, felix, listeners);
 
-        // Fire synchronous bundle listeners immediately on the calling thread.
+        // Fire all service events immediately on the calling thread.
         fireEventImmediately(
-            this, Request.SERVICE_EVENT, listeners, whitelist, event, oldProps);
+            this, Request.SERVICE_EVENT, listeners, event, oldProps);
+    }
+
+// TODO: OSGi R4.3 - This is ugly and inefficient.
+    private Map<BundleContext, List<ListenerInfo>> filterListenersUsingHooks(
+        ServiceEvent event, Framework felix, Map<BundleContext, List<ListenerInfo>> listeners)
+    {
+        Set<ServiceReference<org.osgi.framework.hooks.service.EventHook>> ehs =
+            m_registry.getHooks(org.osgi.framework.hooks.service.EventHook.class);
+        if ((ehs != null) && !ehs.isEmpty())
+        {
+            // Create a whitelist of bundle context for bundle listeners,
+            // if we have hooks.
+            Set<BundleContext> whitelist = createWhitelistFromHooks(event, felix,
+                listeners, null, org.osgi.framework.hooks.service.EventHook.class);
+
+            // If we have a whitelist, then create copies of only the whitelisted
+            // listeners.
+            if (whitelist != null)
+            {
+                Map<BundleContext, List<ListenerInfo>> copy =
+                    new HashMap<BundleContext, List<ListenerInfo>>();
+                for (BundleContext bc : whitelist)
+                {
+                    copy.put(bc, listeners.get(bc));
+                }
+                listeners = copy;
+            }
+        }
+
+        Set<ServiceReference<org.osgi.framework.hooks.service.EventListenerHook>> elhs =
+            m_registry.getHooks(org.osgi.framework.hooks.service.EventListenerHook.class);
+        if ((elhs != null) && !elhs.isEmpty())
+        {
+            // Create shrinkable map with shrinkable collections.
+            Map<BundleContext, Collection<ListenerHook.ListenerInfo>> shrinkableMap =
+                new HashMap<BundleContext, Collection<ListenerHook.ListenerInfo>>();
+            for (Entry<BundleContext, List<ListenerInfo>> entry : listeners.entrySet())
+            {
+                Collection shrinkableCollection =
+                    new ShrinkableCollection(new ArrayList(entry.getValue()));
+                shrinkableMap.put(
+                    entry.getKey(),
+                    (Collection<ListenerHook.ListenerInfo>) shrinkableCollection);
+            }
+            shrinkableMap =
+                new ShrinkableMap<BundleContext, Collection<ListenerHook.ListenerInfo>>
+                    (shrinkableMap);
+
+            for (ServiceReference<org.osgi.framework.hooks.service.EventListenerHook> sr : elhs)
+            {
+                if (felix != null)
+                {
+                    org.osgi.framework.hooks.service.EventListenerHook elh = null;
+                    try
+                    {
+                        elh = m_registry.getService(felix, sr);
+                    }
+                    catch (Exception ex)
+                    {
+                        // If we can't get the hook, then ignore it.
+                    }
+                    if (elh != null)
+                    {
+                        try
+                        {
+                            elh.event(event, shrinkableMap);
+                        }
+                        catch (Throwable th)
+                        {
+                            m_logger.log(sr, Logger.LOG_WARNING,
+                                "Problem invoking event hook", th);
+                        }
+                        finally
+                        {
+                            m_registry.ungetService(felix, sr);
+                        }
+                    }
+                }
+            }
+// TODO: OSGi R4.3 - Should check and only do this if there was a change.
+//       Also, it is inefficient to have to create new lists for the values.
+            Map<BundleContext, List<ListenerInfo>> newMap =
+                new HashMap<BundleContext, List<ListenerInfo>>();
+            for (Entry entry : shrinkableMap.entrySet())
+            {
+                if (!((Collection) entry.getValue()).isEmpty())
+                {
+                    newMap.put((BundleContext) entry.getKey(),
+                        new ArrayList<ListenerInfo>((Collection) entry.getValue()));
+                }
+            }
+            listeners = newMap;
+        }
+
+        return listeners;
     }
 
     private Set<BundleContext> createWhitelistFromHooks(
@@ -575,7 +695,7 @@ public class EventDispatcher
     private static void fireEventAsynchronously(
         EventDispatcher dispatcher, int type,
         Map<BundleContext, List<ListenerInfo>> listeners,
-        Set<BundleContext> whitelist, EventObject event)
+        EventObject event)
     {
         //TODO: should possibly check this within thread lock, seems to be ok though without
         // If dispatch thread is stopped, then ignore dispatch request.
@@ -602,7 +722,6 @@ public class EventDispatcher
         req.m_dispatcher = dispatcher;
         req.m_type = type;
         req.m_listeners = listeners;
-        req.m_whitelist = whitelist;
         req.m_event = event;
 
         // Lock the request list.
@@ -618,7 +737,7 @@ public class EventDispatcher
     private static void fireEventImmediately(
         EventDispatcher dispatcher, int type,
         Map<BundleContext, List<ListenerInfo>> listeners,
-        Set<BundleContext> whitelist, EventObject event, Dictionary oldProps)
+        EventObject event, Dictionary oldProps)
     {
         if (!listeners.isEmpty())
         {
@@ -632,36 +751,32 @@ public class EventDispatcher
                     Filter filter = info.getParsedFilter();
                     Object acc = info.getSecurityContext();
 
-                    // Only deliver events to bundles in the whitelist, if we have one.
-                    if ((whitelist == null) || whitelist.contains(bc))
+                    try
                     {
-                        try
+                        if (type == Request.FRAMEWORK_EVENT)
                         {
-                            if (type == Request.FRAMEWORK_EVENT)
-                            {
-                                invokeFrameworkListenerCallback(bc.getBundle(), l, event);
-                            }
-                            else if (type == Request.BUNDLE_EVENT)
-                            {
-                                invokeBundleListenerCallback(bc.getBundle(), l, event);
-                            }
-                            else if (type == Request.SERVICE_EVENT)
-                            {
-                                invokeServiceListenerCallback(
-                                    bc.getBundle(), l, filter, acc, event, oldProps);
-                            }
+                            invokeFrameworkListenerCallback(bc.getBundle(), l, event);
                         }
-                        catch (Throwable th)
+                        else if (type == Request.BUNDLE_EVENT)
                         {
-                            if ((type != Request.FRAMEWORK_EVENT)
-                                || (((FrameworkEvent) event).getType() != FrameworkEvent.ERROR))
-                            {
-                                dispatcher.m_logger.log(bc.getBundle(),
-                                    Logger.LOG_ERROR,
-                                    "EventDispatcher: Error during dispatch.", th);
-                                dispatcher.fireFrameworkEvent(
-                                    new FrameworkEvent(FrameworkEvent.ERROR, bc.getBundle(), th));
-                            }
+                            invokeBundleListenerCallback(bc.getBundle(), l, event);
+                        }
+                        else if (type == Request.SERVICE_EVENT)
+                        {
+                            invokeServiceListenerCallback(
+                                bc.getBundle(), l, filter, acc, event, oldProps);
+                        }
+                    }
+                    catch (Throwable th)
+                    {
+                        if ((type != Request.FRAMEWORK_EVENT)
+                            || (((FrameworkEvent) event).getType() != FrameworkEvent.ERROR))
+                        {
+                            dispatcher.m_logger.log(bc.getBundle(),
+                                Logger.LOG_ERROR,
+                                "EventDispatcher: Error during dispatch.", th);
+                            dispatcher.fireFrameworkEvent(
+                                new FrameworkEvent(FrameworkEvent.ERROR, bc.getBundle(), th));
                         }
                     }
                 }
@@ -945,7 +1060,7 @@ public class EventDispatcher
             // catching Throwables when it invokes callbacks.
             fireEventImmediately(
                 req.m_dispatcher, req.m_type, req.m_listeners,
-                req.m_whitelist, req.m_event, null);
+                req.m_event, null);
 
             // Put dispatch request in cache.
             synchronized (m_requestPool)
@@ -953,7 +1068,6 @@ public class EventDispatcher
                 req.m_dispatcher = null;
                 req.m_type = -1;
                 req.m_listeners = null;
-                req.m_whitelist = null;
                 req.m_event = null;
                 m_requestPool.add(req);
             }
@@ -969,7 +1083,6 @@ public class EventDispatcher
         public EventDispatcher m_dispatcher = null;
         public int m_type = -1;
         public Map<BundleContext, List<ListenerInfo>> m_listeners = null;
-        public Set<BundleContext> m_whitelist = null;
         public EventObject m_event = null;
     }
 }
