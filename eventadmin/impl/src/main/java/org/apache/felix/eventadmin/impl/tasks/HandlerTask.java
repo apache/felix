@@ -40,9 +40,4 @@ public interface HandlerTask
      * Blacklist the handler.
      */
     void blackListHandler();
-
-    /**
-     * Is the delivery finished
-     */
-    boolean finished();
 }

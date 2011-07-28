@@ -40,9 +40,6 @@ public class HandlerTaskImpl implements HandlerTask
     // Used to blacklist the service or get the service object for the reference
     private final BlacklistingHandlerTasks m_handlerTasks;
 
-    // Is this handler finished
-    private volatile boolean m_finished = false;
-
     /**
      * Construct a delivery task for the given service and event.
      *
@@ -89,7 +86,8 @@ public class HandlerTaskImpl implements HandlerTask
         try
         {
             handler.handleEvent(m_event);
-        } catch (Throwable e)
+        }
+        catch (final Throwable e)
         {
             // The spec says that we must catch exceptions and log them:
             LogWrapper.getLogger().log(
@@ -99,8 +97,10 @@ public class HandlerTaskImpl implements HandlerTask
                     + m_eventHandlerRef + " | Bundle("
                     + m_eventHandlerRef.getBundle() + ")]", e);
         }
-        m_finished = true;
-        m_handlerTasks.ungetEventHandler(handler, m_eventHandlerRef);
+        finally
+        {
+            m_handlerTasks.ungetEventHandler(handler, m_eventHandlerRef);
+        }
     }
 
     /**
@@ -110,13 +110,4 @@ public class HandlerTaskImpl implements HandlerTask
     {
         m_handlerTasks.blackList(m_eventHandlerRef);
     }
-
-    /**
-     * @see org.apache.felix.eventadmin.impl.tasks.HandlerTask#finished()
-     */
-    public boolean finished()
-    {
-        return m_finished;
-    }
-
 }
