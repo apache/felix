@@ -28,7 +28,7 @@ import EDU.oswego.cs.dl.util.concurrent.*;
  */
 public class Rendezvous extends CyclicBarrier
 {
-    /** Flag for timedout handling. */
+    /** Flag for timeout handling. */
     private volatile boolean timedout = false;
 
     /**
@@ -84,10 +84,5 @@ public class Rendezvous extends CyclicBarrier
         catch (InterruptedException ignore2)
         {
         }
-    }
-
-    public boolean isTimedOut()
-    {
-        return timedout;
     }
 }

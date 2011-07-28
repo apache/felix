@@ -60,10 +60,17 @@ public class SyncDeliverTasks implements DeliverTask
     /** The timeout for event handlers, 0 = disabled. */
     long m_timeout;
 
+    /**
+     * The matcher interface for checking if timeout handling
+     * is disabled for the handler.
+     * Matching is based on the class name of the event handler.
+     */
     private static interface Matcher
     {
         boolean match(String className);
     }
+
+    /** Match a package. */
     private static final class PackageMatcher implements Matcher
     {
         private final String m_packageName;
@@ -78,6 +85,8 @@ public class SyncDeliverTasks implements DeliverTask
             return pos > -1 && className.substring(0, pos).equals(m_packageName);
         }
     }
+
+    /** Match a package or sub package. */
     private static final class SubPackageMatcher implements Matcher
     {
         private final String m_packageName;
@@ -92,6 +101,8 @@ public class SyncDeliverTasks implements DeliverTask
             return pos > -1 && className.substring(0, pos + 1).startsWith(m_packageName);
         }
     }
+
+    /** Match a class name. */
     private static final class ClassMatcher implements Matcher
     {
         private final String m_className;
@@ -237,7 +248,7 @@ public class SyncDeliverTasks implements DeliverTask
                             // stop the timer
                             timerBarrier.waitForRendezvous();
                         }
-                        catch (IllegalStateException ise)
+                        catch (final IllegalStateException ise)
                         {
                             // this can happen on shutdown, so we ignore it
                         }
@@ -247,14 +258,13 @@ public class SyncDeliverTasks implements DeliverTask
                 startBarrier.waitForRendezvous();
 
                 // timeout handling
-                final long sleepTime = m_timeout;
                 // we sleep for the sleep time
                 // if someone wakes us up it's the finished inner task
                 try
                 {
-                    timerBarrier.waitAttemptForRendezvous(sleepTime);
+                    timerBarrier.waitAttemptForRendezvous(m_timeout);
                 }
-                catch (TimeoutException ie)
+                catch (final TimeoutException ie)
                 {
                     // if we timed out, we have to blacklist the handler
                     task.blackListHandler();
