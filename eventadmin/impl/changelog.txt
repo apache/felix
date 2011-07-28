@@ -7,6 +7,9 @@ Changes from 1.2.12 to 1.2.14
     * [FELIX-3053] - Potential deadlock if event handler throws Throwable and is bypassing timeout handling
     * [FELIX-3055] - Event Admin deadlocks when sendEvent is called from within a handleEvent method
 
+** Improvement
+    * [FELIX-2156] - Remove Import-Service header in MANIFEST
+
 
 Changes from 1.2.10 to 1.2.12
 -----------------------------
