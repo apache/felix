@@ -21,19 +21,12 @@ package org.apache.felix.eventadmin.impl.tasks;
 /**
  * This thread class is used for sending the events
  * synchronously.
- * It handles cascaded synchronous events.
+ * It acts like a marker.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class SyncThread extends Thread
 {
-
-    /** Counter to track the nesting level. */
-    private volatile int counter;
-
-    /** The barriers for synchronizing. */
-    private volatile Rendezvous timerBarrier;
-    private volatile Rendezvous cascadingBarrier;
 
     /**
      * Constructor used by the thread pool.
@@ -41,42 +34,5 @@ public class SyncThread extends Thread
     public SyncThread(Runnable target)
     {
         super(target);
-    }
-
-    public void init(final Rendezvous timerBarrier, final Rendezvous cascadingBarrier)
-    {
-        this.timerBarrier = timerBarrier;
-        this.cascadingBarrier = cascadingBarrier;
-    }
-
-    public void cleanup()
-    {
-        this.timerBarrier = null;
-        this.cascadingBarrier = null;
-    }
-
-    public Rendezvous getTimerBarrier()
-    {
-        return timerBarrier;
-    }
-
-    public Rendezvous getCascadingBarrier()
-    {
-        return cascadingBarrier;
-    }
-
-    public boolean isTopMostHandler()
-    {
-        return counter == 0;
-    }
-
-    public void innerEventHandlingStart()
-    {
-        counter++;
-    }
-
-    public void innerEventHandlingStopped()
-    {
-        counter--;
     }
 }
