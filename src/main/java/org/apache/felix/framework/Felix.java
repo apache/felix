@@ -3091,7 +3091,7 @@ public class Felix extends BundleImpl implements Framework
         if (oldFilter != null)
         {
             final Collection removed = Collections.singleton(
-                new ListenerInfo(bundle._getBundleContext(),
+                new ListenerInfo(bundle, bundle._getBundleContext(),
                     ServiceListener.class, l, oldFilter, null, true));
             for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
             {
@@ -3117,7 +3117,7 @@ public class Felix extends BundleImpl implements Framework
 
         // Invoke the ListenerHook.added() on all hooks.
         final Collection added = Collections.singleton(
-            new ListenerInfo(bundle.getBundleContext(),
+            new ListenerInfo(bundle, bundle._getBundleContext(),
                 ServiceListener.class, l, newFilter, null, false));
         for (ServiceReference<org.osgi.framework.hooks.service.ListenerHook> sr : listenerHooks)
         {

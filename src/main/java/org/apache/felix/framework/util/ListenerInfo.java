@@ -27,6 +27,7 @@ import org.osgi.framework.hooks.service.ListenerHook;
 
 public class ListenerInfo implements ListenerHook.ListenerInfo
 {
+    private final Bundle m_bundle;
     private final BundleContext m_context;
     private final Class m_listenerClass;
     private final EventListener m_listener;
@@ -35,9 +36,13 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
     private final boolean m_removed;
 
     public ListenerInfo(
-        BundleContext context, Class listenerClass, EventListener listener,
+        Bundle bundle, BundleContext context, Class listenerClass, EventListener listener,
         Filter filter, Object acc, boolean removed)
     {
+        // Technically, we could get the bundle from the bundle context, but
+        // there are some corner cases where the bundle context might become
+        // invalid and we still need the bundle.
+        m_bundle = bundle;
         m_context = context;
         m_listenerClass = listenerClass;
         m_listener = listener;
@@ -48,12 +53,18 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
 
     public ListenerInfo(ListenerInfo info, boolean removed)
     {
+        m_bundle = info.m_bundle;
         m_context = info.m_context;
         m_listenerClass = info.m_listenerClass;
         m_listener = info.m_listener;
         m_filter = info.m_filter;
         m_acc = info.m_acc;
         m_removed = removed;
+    }
+
+    public Bundle getBundle()
+    {
+        return m_bundle;
     }
 
     public BundleContext getBundleContext()
@@ -109,21 +120,22 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
         }
 
         ListenerInfo other = (ListenerInfo) obj;
-        return (other.m_context == m_context)
+        return (other.m_bundle == m_bundle)
+            && (other.m_context == m_context)
             && (other.m_listenerClass == m_listenerClass)
             && (other.m_listener == m_listener)
             && (m_filter == null ? other.m_filter == null : m_filter.equals(other.m_filter));
     }
 
-
     @Override
     public int hashCode()
     {
         int hash = 7;
-        hash = 71 * hash + (this.m_context != null ? this.m_context.hashCode() : 0);
-        hash = 71 * hash + (this.m_listenerClass != null ? this.m_listenerClass.hashCode() : 0);
-        hash = 71 * hash + (this.m_listener != null ? this.m_listener.hashCode() : 0);
-        hash = 71 * hash + (this.m_filter != null ? this.m_filter.hashCode() : 0);
+        hash = 59 * hash + (this.m_bundle != null ? this.m_bundle.hashCode() : 0);
+        hash = 59 * hash + (this.m_context != null ? this.m_context.hashCode() : 0);
+        hash = 59 * hash + (this.m_listenerClass != null ? this.m_listenerClass.hashCode() : 0);
+        hash = 59 * hash + (this.m_listener != null ? this.m_listener.hashCode() : 0);
+        hash = 59 * hash + (this.m_filter != null ? this.m_filter.hashCode() : 0);
         return hash;
     }
 }
