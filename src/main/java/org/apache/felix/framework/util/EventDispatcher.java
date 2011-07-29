@@ -224,7 +224,8 @@ public class EventDispatcher
             }
 
             // Add listener.
-            ListenerInfo info = new ListenerInfo(bc, clazz, l, filter, acc, false);
+            ListenerInfo info =
+                new ListenerInfo(bc.getBundle(), bc, clazz, l, filter, acc, false);
             listeners = addListenerInfo(listeners, info);
 
             if (clazz == FrameworkListener.class)
@@ -394,6 +395,7 @@ public class EventDispatcher
                         // The spec says to update the filter in this case.
                         Filter oldFilter = info.getParsedFilter();
                         ListenerInfo newInfo = new ListenerInfo(
+                            info.getBundle(),
                             info.getBundleContext(),
                             info.getListenerClass(),
                             info.getListener(),
@@ -746,7 +748,7 @@ public class EventDispatcher
             {
                 for (ListenerInfo info : entry.getValue())
                 {
-                    BundleContext bc = info.getBundleContext();
+                    Bundle bundle = info.getBundle();
                     EventListener l = info.getListener();
                     Filter filter = info.getParsedFilter();
                     Object acc = info.getSecurityContext();
@@ -755,16 +757,16 @@ public class EventDispatcher
                     {
                         if (type == Request.FRAMEWORK_EVENT)
                         {
-                            invokeFrameworkListenerCallback(bc.getBundle(), l, event);
+                            invokeFrameworkListenerCallback(bundle, l, event);
                         }
                         else if (type == Request.BUNDLE_EVENT)
                         {
-                            invokeBundleListenerCallback(bc.getBundle(), l, event);
+                            invokeBundleListenerCallback(bundle, l, event);
                         }
                         else if (type == Request.SERVICE_EVENT)
                         {
                             invokeServiceListenerCallback(
-                                bc.getBundle(), l, filter, acc, event, oldProps);
+                                bundle, l, filter, acc, event, oldProps);
                         }
                     }
                     catch (Throwable th)
@@ -772,11 +774,11 @@ public class EventDispatcher
                         if ((type != Request.FRAMEWORK_EVENT)
                             || (((FrameworkEvent) event).getType() != FrameworkEvent.ERROR))
                         {
-                            dispatcher.m_logger.log(bc.getBundle(),
+                            dispatcher.m_logger.log(bundle,
                                 Logger.LOG_ERROR,
                                 "EventDispatcher: Error during dispatch.", th);
                             dispatcher.fireFrameworkEvent(
-                                new FrameworkEvent(FrameworkEvent.ERROR, bc.getBundle(), th));
+                                new FrameworkEvent(FrameworkEvent.ERROR, bundle, th));
                         }
                     }
                 }
