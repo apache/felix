@@ -717,12 +717,13 @@ public class ResolverImpl implements Resolver
         Packages revisionPkgs = revisionPkgMap.get(revision);
 
         // Second, add all imported packages to the target revision's package space.
+        Set<BundleRevision> cycles = new HashSet<BundleRevision>();
         for (int i = 0; i < reqs.size(); i++)
         {
             BundleRequirement req = reqs.get(i);
             BundleCapability cap = caps.get(i);
             calculateExportedPackages(cap.getRevision(), allCandidates, revisionPkgMap);
-            mergeCandidatePackages(revision, req, cap, revisionPkgMap, allCandidates);
+            mergeCandidatePackages(revision, req, cap, revisionPkgMap, allCandidates, cycles);
         }
 
         // Third, have all candidates to calculate their package spaces.
@@ -811,8 +812,14 @@ public class ResolverImpl implements Resolver
     private void mergeCandidatePackages(
         BundleRevision current, BundleRequirement currentReq, BundleCapability candCap,
         Map<BundleRevision, Packages> revisionPkgMap,
-        Candidates allCandidates)
+        Candidates allCandidates, Set<BundleRevision> cycles)
     {
+        if (cycles.contains(current))
+        {
+            return;
+        }
+        cycles.add(current);
+
         if (candCap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
             mergeCandidatePackage(
@@ -860,11 +867,14 @@ public class ResolverImpl implements Resolver
                             currentReq,
                             allCandidates.getCandidates(req).iterator().next(),
                             revisionPkgMap,
-                            allCandidates);
+                            allCandidates,
+                            cycles);
                     }
                 }
             }
         }
+
+        cycles.remove(current);
     }
 
     private void mergeCandidatePackage(
