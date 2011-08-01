@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,7 +55,7 @@ public class ContentDirectoryContent implements Content
         return m_content.hasEntry(m_rootPath + name);
     }
 
-    public Enumeration getEntries()
+    public Enumeration<String> getEntries()
     {
         return new EntriesEnumeration(m_content.getEntries(), m_rootPath);
     }

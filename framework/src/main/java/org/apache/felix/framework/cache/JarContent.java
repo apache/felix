@@ -101,10 +101,10 @@ public class JarContent implements Content
         }
     }
 
-    public Enumeration getEntries()
+    public Enumeration<String> getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
-        Enumeration e = new EntriesEnumeration(m_zipFile.entries());
+        Enumeration<String> e = new EntriesEnumeration(m_zipFile.entries());
 
         // Spec says to return null if there are no entries.
         return (e.hasMoreElements()) ? e : null;
@@ -490,7 +490,7 @@ public class JarContent implements Content
         }
     }
 
-    private static class EntriesEnumeration implements Enumeration
+    private static class EntriesEnumeration implements Enumeration<String>
     {
         private final Enumeration m_enumeration;
 
@@ -504,17 +504,17 @@ public class JarContent implements Content
             return m_enumeration.hasMoreElements();
         }
 
-        public Object nextElement()
+        public String nextElement()
         {
             return ((ZipEntry) m_enumeration.nextElement()).getName();
         }
     }
 
-    private static class DevNullRunnable implements Runnable 
+    private static class DevNullRunnable implements Runnable
     {
         private final InputStream m_in;
 
-        public DevNullRunnable(InputStream in) 
+        public DevNullRunnable(InputStream in)
         {
             m_in = in;
         }
@@ -527,12 +527,12 @@ public class JarContent implements Content
                 {
                     while (m_in.read() != -1){}
                 }
-                finally 
+                finally
                 {
                     m_in.close();
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 // Not much we can do - maybe we should log it?
             }

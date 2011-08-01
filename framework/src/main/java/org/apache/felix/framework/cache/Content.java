@@ -57,7 +57,7 @@ public interface Content
      * </p>
      * @returns An enumeration of entry names or <tt>null</tt>.
     **/
-    Enumeration getEntries();
+    Enumeration<String> getEntries();
 
     /**
      * <p>

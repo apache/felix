@@ -33,11 +33,13 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -66,6 +68,8 @@ import org.osgi.framework.wiring.BundleWiring;
 
 public class BundleWiringImpl implements BundleWiring
 {
+    public final static int LISTRESOURCES_DEBUG = 1048576;
+
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
 
@@ -634,13 +638,315 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-    public Collection<String> listResources(String path, String filePattern, int options)
+// TODO: OSGi R4.3 - Should this be synchronized or should we take a snapshot?
+    // Thread local to detect class loading cycles.
+    private final ThreadLocal m_listResourcesCycleCheck = new ThreadLocal();
+
+    public synchronized Collection<String> listResources(
+        String path, String filePattern, int options)
+    {
+        // Implementation note: If you enable the DEBUG option for
+        // listResources() to print from where each resource comes,
+        // it will not give 100% accurate answers in the face of
+        // Require-Bundle cycles with overlapping content since
+        // the actual source will depend on who does the class load
+        // first. Further, normal class loaders cache class load
+        // results so it is always the same subsequently, but we
+        // don't do that here so it will always return a different
+        // result depending upon who is asking. Moral to the story:
+        // don't do cycles and certainly don't do them with
+        // overlapping content.
+
+        Collection<String> resources = null;
+
+        // Normalize path.
+        if ((path.length() > 0) && (path.charAt(0) == '/'))
+        {
+            path = path.substring(1);
+        }
+        if ((path.length() > 0) && (path.charAt(path.length() - 1) != '/'))
+        {
+            path = path + '/';
+        }
+
+        // Parse the file filter.
+        filePattern = (filePattern == null) ? "*" : filePattern;
+        List<String> pattern = SimpleFilter.parseSubstring(filePattern);
+
+        // We build an internal collection of ResourceSources, since this
+        // allows us to print out additional debug information.
+        Collection<ResourceSource> sources = listResourcesInternal(path, pattern, options);
+        if (sources != null)
+        {
+            boolean debug = (options & LISTRESOURCES_DEBUG) > 0;
+            resources = new TreeSet<String>();
+            for (ResourceSource source : sources)
+            {
+                if (debug)
+                {
+                    resources.add(source.toString());
+                }
+                else
+                {
+                    resources.add(source.m_resource);
+                }
+            }
+        }
+        return resources;
+    }
+
+    private Collection<ResourceSource> listResourcesInternal(
+        String path, List<String> pattern, int options)
     {
         if (isInUse())
         {
-            throw new UnsupportedOperationException("Not supported yet.");
+            boolean recurse = (options & BundleWiring.LISTRESOURCES_RECURSE) > 0;
+            boolean localOnly = (options & BundleWiring.LISTRESOURCES_LOCAL) > 0;
+
+            // Check for cycles, which can happen with Require-Bundle.
+            Set<String> cycles = (Set<String>) m_listResourcesCycleCheck.get();
+            if (cycles == null)
+            {
+                cycles = new HashSet<String>();
+                m_listResourcesCycleCheck.set(cycles);
+            }
+            if (cycles.contains(path))
+            {
+                return Collections.EMPTY_LIST;
+            }
+            cycles.add(path);
+
+            try
+            {
+                // Calculate set of remote resources (i.e., those either
+                // imported or required).
+                Collection<ResourceSource> remoteResources = new TreeSet<ResourceSource>();
+                // Imported packages cannot have merged content, so we need to
+                // keep track of these packages.
+                Set<String> noMerging = new HashSet<String>();
+                // Loop through wires to compute remote resources.
+                for (BundleWire bw : m_wires)
+                {
+                    if (bw.getCapability().getNamespace()
+                        .equals(BundleRevision.PACKAGE_NAMESPACE))
+                    {
+                        // For imported packages, we only need to calculate
+                        // the remote resources of the specific imported package.
+                        remoteResources.addAll(
+                            calculateRemotePackageResources(
+                                bw, bw.getCapability(), recurse,
+                                    path, pattern, noMerging));
+                    }
+                    else if (bw.getCapability().getNamespace()
+                        .equals(BundleRevision.BUNDLE_NAMESPACE))
+                    {
+                        // For required bundles, all declared package capabilities
+                        // from the required bundle will be available to requirers,
+                        // so get the target required bundle's declared packages
+                        // and handle them in a similar fashion to a normal import
+                        // except that their content can be merged with local
+                        // packages.
+                        List<BundleCapability> exports =
+                            bw.getProviderWiring().getRevision()
+                                .getDeclaredCapabilities(BundleRevision.PACKAGE_NAMESPACE);
+                        for (BundleCapability export : exports)
+                        {
+                            remoteResources.addAll(
+                                calculateRemotePackageResources(
+                                    bw, export, recurse, path, pattern, null));
+                        }
+
+                        // Since required bundle may reexport bundles it requires,
+                        // check its wires for this case.
+                        List<BundleWire> requiredBundles =
+                            bw.getProviderWiring().getRequiredWires(
+                                BundleRevision.BUNDLE_NAMESPACE);
+                        for (BundleWire rbWire : requiredBundles)
+                        {
+                            String visibility =
+                                rbWire.getRequirement().getDirectives()
+                                    .get(Constants.VISIBILITY_DIRECTIVE);
+                            if ((visibility != null)
+                                && (visibility.equals(Constants.VISIBILITY_REEXPORT)))
+                            {
+                                // For each reexported required bundle, treat them
+                                // in a similar fashion as a normal required bundle
+                                // by including all of their declared package
+                                // capabilities in the requiring bundle's class
+                                // space.
+                                List<BundleCapability> reexports =
+                                    rbWire.getProviderWiring().getRevision()
+                                        .getDeclaredCapabilities(BundleRevision.PACKAGE_NAMESPACE);
+                                for (BundleCapability reexport : reexports)
+                                {
+                                    remoteResources.addAll(
+                                        calculateRemotePackageResources(
+                                            bw, reexport, recurse, path, pattern, null));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Calculate set of local resources (i.e., those contained
+                // in the revision or its fragments).
+                Collection<ResourceSource> localResources = new TreeSet<ResourceSource>();
+                // Get the revision's content path, which includes contents
+                // from fragments.
+                List<Content> contentPath = m_revision.getContentPath();
+                for (Content content : contentPath)
+                {
+                    Enumeration<String> e = content.getEntries();
+                    if (e != null)
+                    {
+                        while (e.hasMoreElements())
+                        {
+                            String resource = e.nextElement();
+                            String resourcePath = getTrailingPath(resource);
+                            if (!noMerging.contains(resourcePath))
+                            {
+                                if ((!recurse && resourcePath.equals(path))
+                                    || (recurse && resourcePath.startsWith(path)))
+                                {
+                                    if (matchesPattern(pattern, getPathHead(resource)))
+                                    {
+                                        localResources.add(
+                                            new ResourceSource(resource, m_revision));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (localOnly)
+                {
+                    return localResources;
+                }
+                else
+                {
+                    remoteResources.addAll(localResources);
+                    return remoteResources;
+                }
+            }
+            finally
+            {
+                cycles.remove(path);
+                if (cycles.isEmpty())
+                {
+                    m_listResourcesCycleCheck.set(null);
+                }
+            }
         }
         return null;
+    }
+
+    private Collection<ResourceSource> calculateRemotePackageResources(
+        BundleWire bw, BundleCapability cap, boolean recurse,
+        String path, List<String> pattern, Set<String> noMerging)
+    {
+        Collection<ResourceSource> resources = Collections.EMPTY_SET;
+
+        // Convert package name to a path.
+        String subpath = (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
+        subpath = subpath.replace('.', '/') + '/';
+        // If necessary, record that this package should not be merged
+        // with local content.
+        if (noMerging != null)
+        {
+            noMerging.add(subpath);
+        }
+
+        // If we are not recuring, check for path equality or if
+        // we are recursing, check that the subpath starts with
+        // the target path.
+        if ((!recurse && subpath.equals(path))
+            || (recurse && subpath.startsWith(path)))
+        {
+            // Delegate to the original provider wiring to have it calculate
+            // the list of resources in the package. In this case, we don't
+            // want to recurse since we want the precise package.
+            resources =
+                ((BundleWiringImpl) bw.getProviderWiring()).listResourcesInternal(
+                    subpath, pattern, 0);
+
+            // The delegatedResources result will include subpackages
+            // which need to be filtered out, since imported packages
+            // do not give access to subpackages. If a subpackage is
+            // imported, it will be added by its own wire.
+            for (Iterator<ResourceSource> it = resources.iterator();
+                it.hasNext(); )
+            {
+                ResourceSource reqResource = it.next();
+                if (reqResource.m_resource.charAt(
+                    reqResource.m_resource.length() - 1) == '/')
+                {
+                    it.remove();
+                }
+            }
+        }
+        // If we are not recursing, but the required package
+        // is a child of the desired path, then include its
+        // immediate child package. We do this so that it is
+        // possible to use listResources() to walk the resource
+        // tree similar to doing a directory walk one level
+        // at a time.
+        else if (!recurse && subpath.startsWith(path))
+        {
+            int idx = subpath.indexOf('/', path.length());
+            if (idx >= 0)
+            {
+                subpath = subpath.substring(0, idx + 1);
+            }
+            if (matchesPattern(pattern, getPathHead(subpath)))
+            {
+                resources = Collections.singleton(
+                    new ResourceSource(subpath, bw.getProviderWiring().getRevision()));
+            }
+        }
+
+        return resources;
+    }
+
+    private static String getPathHead(String resource)
+    {
+        if (resource.length() == 0)
+        {
+            return resource;
+        }
+        int idx = (resource.charAt(resource.length() - 1) == '/')
+            ? resource.lastIndexOf('/', resource.length() - 2)
+            : resource.lastIndexOf('/');
+        if (idx < 0)
+        {
+            return resource;
+        }
+        return resource.substring(idx + 1);
+    }
+
+    private static String getTrailingPath(String resource)
+    {
+        if (resource.length() == 0)
+        {
+            return null;
+        }
+        int idx = (resource.charAt(resource.length() - 1) == '/')
+            ? resource.lastIndexOf('/', resource.length() - 2)
+            : resource.lastIndexOf('/');
+        if (idx < 0)
+        {
+            return "";
+        }
+        return resource.substring(0, idx + 1);
+    }
+
+    private static boolean matchesPattern(List<String> pattern, String resource)
+    {
+        if (resource.charAt(resource.length() - 1) == '/')
+        {
+            resource = resource.substring(0, resource.length() - 1);
+        }
+        return SimpleFilter.compareSubstring(pattern, resource);
     }
 
     public Bundle getBundle()
@@ -2081,6 +2387,48 @@ ex.printStackTrace();
             }
         }
         return url;
+    }
+
+    private static class ResourceSource implements Comparable<ResourceSource>
+    {
+        public final String m_resource;
+        public final BundleRevision m_revision;
+
+        public ResourceSource(String resource, BundleRevision revision)
+        {
+            m_resource = resource;
+            m_revision = revision;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o instanceof ResourceSource)
+            {
+                return m_resource.equals(((ResourceSource) o).m_resource);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return m_resource.hashCode();
+        }
+
+        public int compareTo(ResourceSource t)
+        {
+            return m_resource.compareTo(t.m_resource);
+        }
+
+        @Override
+        public String toString()
+        {
+            return m_resource
+                + " -> "
+                + m_revision.getSymbolicName()
+                + " [" + m_revision + "]";
+        }
     }
 
     private static String diagnoseClassLoadError(

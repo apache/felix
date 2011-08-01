@@ -71,10 +71,10 @@ public class DirectoryContent implements Content
                 ? BundleCache.getSecureAction().isFileDirectory(file) : true);
     }
 
-    public Enumeration getEntries()
+    public Enumeration<String> getEntries()
     {
         // Wrap entries enumeration to filter non-matching entries.
-        Enumeration e = new EntriesEnumeration(m_dir);
+        Enumeration<String> e = new EntriesEnumeration(m_dir);
 
         // Spec says to return null if there are no entries.
         return (e.hasMoreElements()) ? e : null;
