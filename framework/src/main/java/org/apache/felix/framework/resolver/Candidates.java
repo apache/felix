@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.resolver.Resolver.ResolverState;
+import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
@@ -201,7 +202,8 @@ class Candidates
             String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
             if (!state.isEffective(req)
 // TODO: OSGi R4.3 - Use proper "dynamic" constant.
-                || ((resolution != null) && resolution.equals("dynamic")))
+                || ((resolution != null)
+                    && resolution.equals(FelixConstants.RESOLUTION_DYNAMIC)))
             {
                 continue;
             }
