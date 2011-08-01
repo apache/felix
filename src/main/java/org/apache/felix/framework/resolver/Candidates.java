@@ -201,7 +201,6 @@ class Candidates
             // Ignore non-effective and dynamic requirements.
             String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
             if (!state.isEffective(req)
-// TODO: OSGi R4.3 - Use proper "dynamic" constant.
                 || ((resolution != null)
                     && resolution.equals(FelixConstants.RESOLUTION_DYNAMIC)))
             {
