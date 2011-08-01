@@ -31,6 +31,7 @@ import java.util.SortedSet;
 import org.apache.felix.framework.BundleWiringImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
+import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
@@ -693,8 +694,8 @@ public class ResolverImpl implements Resolver
             for (BundleRequirement req : revision.getDeclaredRequirements(null))
             {
                 String resolution = req.getDirectives().get(Constants.RESOLUTION_DIRECTIVE);
-// TODO: OSGi R4.3 - Use proper "dynamic" constant.
-                if ((resolution == null) || !resolution.equals("dynamic"))
+                if ((resolution == null)
+                    || !resolution.equals(FelixConstants.RESOLUTION_DYNAMIC))
                 {
                     // Get the candidates for the current requirement.
                     SortedSet<BundleCapability> candCaps =
