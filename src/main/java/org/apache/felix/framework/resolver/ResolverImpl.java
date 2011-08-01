@@ -40,7 +40,7 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
-// TODO: OSGi R.4.3 - Make sure we have sufficient wrapping of caps/reqs.
+// TODO: OSGi R4.3 - Make sure we have sufficient wrapping of caps/reqs.
 public class ResolverImpl implements Resolver
 {
     private final Logger m_logger;
@@ -856,7 +856,7 @@ public class ResolverImpl implements Resolver
             {
                 if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
                 {
-// TODO: OSGi R.4.3 - Something doesn't seem correct here since we don't calculate
+// TODO: OSGi R4.3 - Something doesn't seem correct here since we don't calculate
 //       reexported packages for resolved bundles. Create a test case.
                     String value = req.getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
                     if ((value != null) && value.equals(Constants.VISIBILITY_REEXPORT)

@@ -487,8 +487,8 @@ public class ManifestParser
 
             // Add the resolution directive to indicate that these are
             // dynamic imports.
-// TODO: OSGi R4.3 - Use real constant value for "dynamic".
-            clause.m_dirs.put(Constants.RESOLUTION_DIRECTIVE, "dynamic");
+            clause.m_dirs.put(Constants.RESOLUTION_DIRECTIVE,
+                FelixConstants.RESOLUTION_DYNAMIC);
 
             // Check for "version" and "specification-version" attributes
             // and verify they are the same if both are specified.

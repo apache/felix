@@ -20,48 +20,48 @@ package org.apache.felix.framework.util;
 
 public interface FelixConstants extends org.osgi.framework.Constants
 {
-    public static final String SYSTEM_BUNDLE_SYMBOLICNAME = "org.apache.felix.framework";
+    String SYSTEM_BUNDLE_SYMBOLICNAME = "org.apache.felix.framework";
     // Framework constants and values.
-    public static final String FRAMEWORK_VERSION_VALUE = "1.5";
-    public static final String FRAMEWORK_VENDOR_VALUE = "Apache Software Foundation";
+    String FRAMEWORK_VERSION_VALUE = "1.5";
+    String FRAMEWORK_VENDOR_VALUE = "Apache Software Foundation";
 
     // Framework constants and values.
-    public static final String FELIX_VERSION_PROPERTY = "felix.version";
+    String FELIX_VERSION_PROPERTY = "felix.version";
 
     // Miscellaneous manifest constants.
-    public static final String DIRECTIVE_SEPARATOR = ":=";
-    public static final String ATTRIBUTE_SEPARATOR = "=";
-    public static final String CLASS_PATH_SEPARATOR = ",";
-    public static final String CLASS_PATH_DOT = ".";
-    public static final String PACKAGE_SEPARATOR = ";";
-    public static final String VERSION_SEGMENT_SEPARATOR = ".";
-    public static final int VERSION_SEGMENT_COUNT = 3;
-    public static final String BUNDLE_NATIVECODE_OPTIONAL = "*";
+    String DIRECTIVE_SEPARATOR = ":=";
+    String ATTRIBUTE_SEPARATOR = "=";
+    String CLASS_PATH_SEPARATOR = ",";
+    String CLASS_PATH_DOT = ".";
+    String PACKAGE_SEPARATOR = ";";
+    String VERSION_SEGMENT_SEPARATOR = ".";
+    int VERSION_SEGMENT_COUNT = 3;
+    String BUNDLE_NATIVECODE_OPTIONAL = "*";
 
     // Miscellaneous OSGi constants.
-    public static final String BUNDLE_URL_PROTOCOL = "bundle";
+    String BUNDLE_URL_PROTOCOL = "bundle";
 
     // Miscellaneous framework configuration property names.
-    public static final String FRAMEWORK_BUNDLECACHE_IMPL
-        = "felix.bundlecache.impl";
-    public static final String LOG_LEVEL_PROP = "felix.log.level";
-    public static final String LOG_LOGGER_PROP = "felix.log.logger";
-    public static final String SYSTEMBUNDLE_ACTIVATORS_PROP
-        = "felix.systembundle.activators";
-    public static final String BUNDLE_STARTLEVEL_PROP
-        = "felix.startlevel.bundle";
-    public static final String SERVICE_URLHANDLERS_PROP = "felix.service.urlhandlers";
-    public static final String IMPLICIT_BOOT_DELEGATION_PROP = "felix.bootdelegation.implicit";
-    public static final String BOOT_CLASSLOADERS_PROP = "felix.bootdelegation.classloaders";
-    public static final String USE_LOCALURLS_PROP = "felix.jarurls";
+    String FRAMEWORK_BUNDLECACHE_IMPL = "felix.bundlecache.impl";
+    String LOG_LEVEL_PROP = "felix.log.level";
+    String LOG_LOGGER_PROP = "felix.log.logger";
+    String SYSTEMBUNDLE_ACTIVATORS_PROP = "felix.systembundle.activators";
+    String BUNDLE_STARTLEVEL_PROP = "felix.startlevel.bundle";
+    String SERVICE_URLHANDLERS_PROP = "felix.service.urlhandlers";
+    String IMPLICIT_BOOT_DELEGATION_PROP = "felix.bootdelegation.implicit";
+    String BOOT_CLASSLOADERS_PROP = "felix.bootdelegation.classloaders";
+    String USE_LOCALURLS_PROP = "felix.jarurls";
+
+    // Missing OSGi constant for resolution directive.
+    String RESOLUTION_DYNAMIC = "dynamic";
 
     // Start level-related constants.
-    public static final int FRAMEWORK_INACTIVE_STARTLEVEL = 0;
-    public static final int FRAMEWORK_DEFAULT_STARTLEVEL = 1;
-    public static final int SYSTEMBUNDLE_DEFAULT_STARTLEVEL = 0;
-    public static final int BUNDLE_DEFAULT_STARTLEVEL = 1;
+    int FRAMEWORK_INACTIVE_STARTLEVEL = 0;
+    int FRAMEWORK_DEFAULT_STARTLEVEL = 1;
+    int SYSTEMBUNDLE_DEFAULT_STARTLEVEL = 0;
+    int BUNDLE_DEFAULT_STARTLEVEL = 1;
 
     // Miscellaneous properties values.
-    public static final String FAKE_URL_PROTOCOL_VALUE = "location:";
-    public static final String FELIX_EXTENSION_ACTIVATOR = "Felix-Activator";
+    String FAKE_URL_PROTOCOL_VALUE = "location:";
+    String FELIX_EXTENSION_ACTIVATOR = "Felix-Activator";
 }
