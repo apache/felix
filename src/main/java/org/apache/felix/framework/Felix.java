@@ -1523,12 +1523,6 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-// TODO: OSGi R4.3/ELIMINATE RESOLVE - Previously, we try to resolve resource requests in
-//       findClassOrResourceByDelegation() and fall back to local resource
-//       searching if it fails. Now we must attempt the resolve here since
-//       we cannot search by delegation until we are resolved and do the local
-//       searching here if we fail. This means we could get rid of resolve
-//       attempts in findClassOrResourceByDelegation().
         try
         {
             resolveBundleRevision(bundle.adapt(BundleRevision.class));
@@ -1565,12 +1559,6 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-// TODO: OSGi R4.3/ELIMINATE RESOLVE - Previously, we try to resolve resource requests in
-//       findClassOrResourceByDelegation() and fall back to local resource
-//       searching if it fails. Now we must attempt the resolve here since
-//       we cannot search by delegation until we are resolved and do the local
-//       searching here if we fail. This means we could get rid of resolve
-//       attempts in findClassOrResourceByDelegation().
         try
         {
             resolveBundleRevision(bundle.adapt(BundleRevision.class));
