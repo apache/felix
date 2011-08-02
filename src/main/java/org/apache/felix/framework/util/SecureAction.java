@@ -1091,6 +1091,30 @@ public class SecureAction
         }
     }
 
+    public void invokeWeavingHook(
+        org.osgi.framework.hooks.weaving.WeavingHook wh,
+        org.osgi.framework.hooks.weaving.WovenClass wc)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_WEAVING_HOOK, wh, wc);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            wh.weave(wc);
+        }
+    }
+
     private static class Actions implements PrivilegedExceptionAction
     {
         public static final int INITIALIZE_CONTEXT_ACTION = 0;
@@ -1135,6 +1159,7 @@ public class SecureAction
         public static final int GET_CLASS_LOADER_ACTION = 39;
         public static final int INVOKE_BUNDLE_FIND_HOOK = 40;
         public static final int INVOKE_BUNDLE_EVENT_HOOK = 41;
+        public static final int INVOKE_WEAVING_HOOK = 42;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1315,6 +1340,10 @@ public class SecureAction
                 case INVOKE_BUNDLE_EVENT_HOOK:
                     ((org.osgi.framework.hooks.bundle.EventHook) arg1).event(
                         (BundleEvent) arg2, (Collection<BundleContext>) arg3);
+                    return null;
+                case INVOKE_WEAVING_HOOK:
+                    ((org.osgi.framework.hooks.weaving.WeavingHook) arg1).weave(
+                        (org.osgi.framework.hooks.weaving.WovenClass) arg2);
                     return null;
             }
 
