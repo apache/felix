@@ -1958,8 +1958,8 @@ ex.printStackTrace();
                                 {
                                     try
                                     {
-// TODO: OSGi R4.3 - Need to call all hooks in privileged block.
-                                        wh.weave(wci);
+                                        m_revision.getSecureAction()
+                                            .invokeWeavingHook(wh, wci);
                                     }
                                     catch (Throwable th)
                                     {
