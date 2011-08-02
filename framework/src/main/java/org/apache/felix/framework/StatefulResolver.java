@@ -60,6 +60,7 @@ import org.osgi.framework.wiring.BundleWiring;
 
 class StatefulResolver
 {
+    private final Logger m_logger;
     private final Felix m_felix;
     private final Resolver m_resolver;
     private final ResolverStateImpl m_resolverState;
@@ -70,8 +71,9 @@ class StatefulResolver
     StatefulResolver(Felix felix)
     {
         m_felix = felix;
-        m_resolver = new ResolverImpl(m_felix.getLogger());
-        m_resolverState = new ResolverStateImpl(m_felix.getLogger(),
+        m_logger = m_felix.getLogger();
+        m_resolver = new ResolverImpl(m_logger);
+        m_resolverState = new ResolverStateImpl(
             (String) m_felix.getConfig().get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT));
     }
 
@@ -141,10 +143,16 @@ class StatefulResolver
                     {
                         try
                         {
-                            ResolverHook hook = m_felix.getService(m_felix, ref).begin(triggers);
-                            if (hook != null)
+                            ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
+                            if (rhf != null)
                             {
-                                m_hooks.add(hook);
+                                ResolverHook hook =
+                                    Felix.m_secureAction
+                                        .invokeResolverHookFactory(rhf, triggers);
+                                if (hook != null)
+                                {
+                                    m_hooks.add(hook);
+                                }
                             }
                         }
                         catch (Throwable ex)
@@ -165,7 +173,8 @@ class StatefulResolver
                     {
                         try
                         {
-                            hook.filterResolvable(m_whitelist);
+                            Felix.m_secureAction
+                                .invokeResolverHookResolvable(hook, m_whitelist);
                         }
                         catch (Throwable ex)
                         {
@@ -214,7 +223,15 @@ class StatefulResolver
 // TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
 //       to their svc ref since we aren't supposed to call end() on unregistered
 //       but currently we call end() on all.
-                        hook.end();
+                        try
+                        {
+                            Felix.m_secureAction.invokeResolverHookEnd(hook);
+                        }
+                        catch (Throwable th)
+                        {
+                            m_logger.log(
+                                Logger.LOG_WARNING, "Resolver hook exception.", th);
+                        }
                     }
                     // Verify that all hook service references are still valid
                     // and unget all resolver hook factories.
@@ -311,10 +328,12 @@ class StatefulResolver
                 {
                     try
                     {
-                        ResolverHookFactory factory = m_felix.getService(m_felix, ref);
-                        if (factory != null)
+                        ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
+                        if (rhf != null)
                         {
-                            ResolverHook hook = factory.begin(triggers);
+                            ResolverHook hook =
+                                Felix.m_secureAction
+                                    .invokeResolverHookFactory(rhf, triggers);
                             if (hook != null)
                             {
                                 m_hooks.add(hook);
@@ -339,7 +358,8 @@ class StatefulResolver
                 {
                     try
                     {
-                        hook.filterResolvable(m_whitelist);
+                        Felix.m_secureAction
+                            .invokeResolverHookResolvable(hook, m_whitelist);
                     }
                     catch (Throwable ex)
                     {
@@ -393,7 +413,15 @@ class StatefulResolver
 // TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
 //       to their svc ref since we aren't supposed to call end() on unregistered
 //       but currently we call end() on all.
-                    hook.end();
+                    try
+                    {
+                        Felix.m_secureAction.invokeResolverHookEnd(hook);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.log(
+                            Logger.LOG_WARNING, "Resolver hook exception.", th);
+                    }
                 }
                 // Verify that all hook service references are still valid
                 // and unget all resolver hook factories.
@@ -493,10 +521,16 @@ class StatefulResolver
                         {
                             try
                             {
-                                ResolverHook hook = m_felix.getService(m_felix, ref).begin(triggers);
-                                if (hook != null)
+                                ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
+                                if (rhf != null)
                                 {
-                                    m_hooks.add(hook);
+                                    ResolverHook hook =
+                                        Felix.m_secureAction
+                                            .invokeResolverHookFactory(rhf, triggers);
+                                    if (hook != null)
+                                    {
+                                        m_hooks.add(hook);
+                                    }
                                 }
                             }
                             catch (Throwable ex)
@@ -517,7 +551,8 @@ class StatefulResolver
                         {
                             try
                             {
-                                hook.filterResolvable(m_whitelist);
+                                Felix.m_secureAction
+                                    .invokeResolverHookResolvable(hook, m_whitelist);
                             }
                             catch (Throwable ex)
                             {
@@ -563,7 +598,15 @@ class StatefulResolver
 // TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
 //       to their svc ref since we aren't supposed to call end() on unregistered
 //       but currently we call end() on all.
-                            hook.end();
+                            try
+                            {
+                                Felix.m_secureAction.invokeResolverHookEnd(hook);
+                            }
+                            catch (Throwable th)
+                            {
+                                m_logger.log(
+                                    Logger.LOG_WARNING, "Resolver hook exception.", th);
+                            }
                         }
                         // Verify that all hook service references are still valid
                         // and unget all resolver hook factories.
@@ -1027,7 +1070,6 @@ class StatefulResolver
 
     class ResolverStateImpl implements Resolver.ResolverState
     {
-        private final Logger m_logger;
         // Set of all revisions.
         private final Set<BundleRevision> m_revisions;
         // Set of all fragments.
@@ -1049,9 +1091,8 @@ class StatefulResolver
 //        }
 //    }
 
-        ResolverStateImpl(Logger logger, String fwkExecEnvStr)
+        ResolverStateImpl(String fwkExecEnvStr)
         {
-            m_logger = logger;
             m_revisions = new HashSet<BundleRevision>();
             m_fragments = new HashSet<BundleRevision>();
             m_capSets = new HashMap<String, CapabilitySet>();
@@ -1281,7 +1322,15 @@ class StatefulResolver
                     new ShrinkableCollection<BundleCapability>(result);
                 for (ResolverHook hook : m_hooks)
                 {
-                    hook.filterMatches(req, shrinkable);
+                    try
+                    {
+                        Felix.m_secureAction
+                            .invokeResolverHookMatches(hook, req, shrinkable);
+                    }
+                    catch (Throwable th)
+                    {
+                        m_logger.log(Logger.LOG_WARNING, "Resolver hook exception.", th);
+                    }
                 }
             }
 
