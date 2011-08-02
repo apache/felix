@@ -663,8 +663,7 @@ class ExtensionManager extends URLStreamHandler implements Content
 
         ExtensionManagerRevision(Felix felix)
         {
-            super(m_logger, m_configMap, felix, "0",
-                felix.getBootPackages(), felix.getBootPackageWildcards());
+            super(felix, "0");
             m_version = new Version((String)
                 m_configMap.get(FelixConstants.FELIX_VERSION_PROPERTY));
         }
