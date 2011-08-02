@@ -1271,7 +1271,7 @@ public class BundleWiringImpl implements BundleWiring
            dexFileClassLoadClass = null;
         }
         m_dexFileClassConstructor = dexFileClassConstructor;
-        m_dexFileClassLoadDex= dexFileClassLoadDex;
+        m_dexFileClassLoadDex = dexFileClassLoadDex;
         m_dexFileClassLoadClass = dexFileClassLoadClass;
     }
 
