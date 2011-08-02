@@ -78,10 +78,12 @@ public class BundleWiringImpl implements BundleWiring
     private final StatefulResolver m_resolver;
     private final BundleRevisionImpl m_revision;
     private final List<BundleRevision> m_fragments;
-// TODO: OSGi R4.3 - Perhaps we should make m_wires and m_importedPkgs volatile
-//       and copy-on-write instead of protecting them with object lock.
-    private final List<BundleWire> m_wires;
-    private final Map<String, BundleRevision> m_importedPkgs;
+    // Wire list is copy-on-write since it may change due to
+    // dynamic imports.
+    private volatile List<BundleWire> m_wires;
+    // Imported package map is copy-on-write since it may change
+    // due to dynamic imports.
+    private volatile Map<String, BundleRevision> m_importedPkgs;
     private final Map<String, List<BundleRevision>> m_requiredPkgs;
     private final List<BundleCapability> m_resolvedCaps;
     private final Map<String, List<List<String>>> m_includedPkgFilters;
@@ -157,7 +159,7 @@ public class BundleWiringImpl implements BundleWiring
         m_revision = revision;
         m_importedPkgs = importedPkgs;
         m_requiredPkgs = requiredPkgs;
-        m_wires = wires;
+        m_wires = Collections.unmodifiableList(wires);
 
         // We need to sort the fragments and add ourself as a dependent of each one.
         // We also need to create an array of fragment contents to attach to our
@@ -432,14 +434,14 @@ public class BundleWiringImpl implements BundleWiring
 
 // TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
 //       resolver to determine if a bundle can dynamically import.
-    public synchronized boolean hasPackageSource(String pkgName)
+    public boolean hasPackageSource(String pkgName)
     {
         return (m_importedPkgs.containsKey(pkgName) || m_requiredPkgs.containsKey(pkgName));
     }
 
 // TODO: OSGi R4.3 - This really shouldn't be public, but it is needed by the
 //       to implement dynamic imports.
-    public synchronized BundleRevision getImportedPackageSource(String pkgName)
+    public BundleRevision getImportedPackageSource(String pkgName)
     {
         return m_importedPkgs.get(pkgName);
     }
@@ -532,7 +534,7 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-    public synchronized List<BundleWire> getRequiredWires(String namespace)
+    public List<BundleWire> getRequiredWires(String namespace)
     {
         if (isInUse())
         {
@@ -555,10 +557,21 @@ public class BundleWiringImpl implements BundleWiring
 
     public synchronized void addDynamicWire(BundleWire wire)
     {
-        m_wires.add(wire);
-        m_importedPkgs.put(
+        // Make new wires list.
+        List<BundleWire> wires = new ArrayList<BundleWire>(m_wires);
+        wires.add(wire);
+        // Make new imported package map.
+        Map<String, BundleRevision> importedPkgs =
+            new HashMap<String, BundleRevision>(m_importedPkgs);
+        importedPkgs.put(
             (String) wire.getCapability().getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
             wire.getProviderWiring().getRevision());
+        // Update associated member values.
+        // Technically, there is a window here where readers won't see
+        // both values updates at the same time, but it seems unlikely
+        // to cause any issues.
+        m_wires = Collections.unmodifiableList(wires);
+        m_importedPkgs = importedPkgs;
     }
 
     public BundleRevision getRevision()
@@ -1057,7 +1070,6 @@ public class BundleWiringImpl implements BundleWiring
         // Look in the revisions's imported packages. If the package is
         // imported, then we stop searching no matter the result since
         // imported packages cannot be split.
-// TODO: OSGi R4.3 - Access should be guarded by object lock.
         BundleRevision provider = m_importedPkgs.get(pkgName);
         if (provider != null)
         {
@@ -1496,7 +1508,6 @@ ex.printStackTrace();
         throws ClassNotFoundException, ResourceNotFoundException
     {
         // Check if the package is imported.
-// TODO: OSGi R4.3 - Access should be guarded by object lock.
         BundleRevision provider = m_importedPkgs.get(pkgName);
         if (provider != null)
         {
