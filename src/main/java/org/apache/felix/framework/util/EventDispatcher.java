@@ -76,6 +76,8 @@ public class EventDispatcher
     // Pooled requests to avoid memory allocation.
     private static final List<Request> m_requestPool = new ArrayList<Request>();
 
+    private static final SecureAction m_secureAction = new SecureAction();
+
     public EventDispatcher(Logger logger, ServiceRegistry registry)
     {
         m_logger = logger;
@@ -668,8 +670,9 @@ public class EventDispatcher
                             }
                             else if (eh instanceof org.osgi.framework.hooks.bundle.EventHook)
                             {
-                                ((org.osgi.framework.hooks.bundle.EventHook)
-                                    eh).event((BundleEvent) event, shrinkable);
+                                m_secureAction.invokeBundleEventHook(
+                                    (org.osgi.framework.hooks.bundle.EventHook) eh,
+                                    (BundleEvent) event, shrinkable);
                             }
                         }
                         catch (Throwable th)
