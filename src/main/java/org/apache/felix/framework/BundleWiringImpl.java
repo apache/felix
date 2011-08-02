@@ -1433,7 +1433,7 @@ public class BundleWiringImpl implements BundleWiring
                     }
                 }
             }
-// TODO: OSGi R4.3 - If we eliminate resolving from this method, then we can
+// TODO: OSGi R4.3/ELIMINATE RESOLVE - If we eliminate resolving from this method, then we can
 //       simplify this catch, since resolve throws resolve and bundle exceptions.
             catch (Exception ex)
             {

@@ -1523,7 +1523,7 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-// TODO: OSGi R4.3 - Previously, we try to resolve resource requests in
+// TODO: OSGi R4.3/ELIMINATE RESOLVE - Previously, we try to resolve resource requests in
 //       findClassOrResourceByDelegation() and fall back to local resource
 //       searching if it fails. Now we must attempt the resolve here since
 //       we cannot search by delegation until we are resolved and do the local
@@ -1565,7 +1565,7 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-// TODO: OSGi R4.3 - Previously, we try to resolve resource requests in
+// TODO: OSGi R4.3/ELIMINATE RESOLVE - Previously, we try to resolve resource requests in
 //       findClassOrResourceByDelegation() and fall back to local resource
 //       searching if it fails. Now we must attempt the resolve here since
 //       we cannot search by delegation until we are resolved and do the local
@@ -3737,39 +3737,12 @@ public class Felix extends BundleImpl implements Framework
             {
                 for (BundleCapability cap : caps)
                 {
-                    // See if the target bundle's revisions is one of the
-                    // resolved exporters of the package.
                     if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
-// TODO: OSGi R4.3 - We can probably do this in a more efficient way once
-//       BundleWiring.getCapabilities() returns the proper result. We probably
-//       Won't even need this method.
                         String pkgName = (String)
                             cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
-                        Map<String, Object> attrs = new HashMap<String, Object>(1);
-                        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
-                        BundleRequirementImpl req =
-                            new BundleRequirementImpl(
-                            null,
-                            BundleRevision.PACKAGE_NAMESPACE,
-                            Collections.EMPTY_MAP,
-                            attrs);
-                        Set<BundleCapability> providers = m_resolver.getCandidates(req, false);
-
-                        // Search through the current providers to find the target revision.
-                        // We only want resolved capabilities.
-                        if (providers != null)
-                        {
-                            for (BundleCapability provider : providers)
-                            {
-                                if ((provider.getRevision().getWiring() != null)
-                                    && (provider == cap))
-                                {
-                                    list.add(new ExportedPackageImpl(
-                                        this, (BundleImpl) bundle, br, cap));
-                                }
-                            }
-                        }
+                        list.add(new ExportedPackageImpl(
+                            this, (BundleImpl) bundle, br, cap));
                     }
                 }
             }
