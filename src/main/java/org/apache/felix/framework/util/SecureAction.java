@@ -33,7 +33,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.resolver.ResolverHook;
 import org.osgi.framework.hooks.service.ListenerHook;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 
 /**
  * <p>
@@ -1243,6 +1247,127 @@ public class SecureAction
         }
     }
 
+    public ResolverHook invokeResolverHookFactory(
+        org.osgi.framework.hooks.resolver.ResolverHookFactory rhf,
+        Collection<BundleRevision> triggers)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_FACTORY, rhf, triggers);
+            try
+            {
+                return (ResolverHook) AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            return rhf.begin(triggers);
+        }
+    }
+
+    public void invokeResolverHookResolvable(
+        org.osgi.framework.hooks.resolver.ResolverHook rh,
+        Collection<BundleRevision> candidates)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_RESOLVABLE, rh, candidates);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.filterResolvable(candidates);
+        }
+    }
+
+    public void invokeResolverHookSingleton(
+        org.osgi.framework.hooks.resolver.ResolverHook rh,
+        BundleCapability singleton,
+        Collection<BundleCapability> collisions)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_SINGLETON, rh, singleton, collisions);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.filterSingletonCollisions(singleton, collisions);
+        }
+    }
+
+    public void invokeResolverHookMatches(
+        org.osgi.framework.hooks.resolver.ResolverHook rh,
+        BundleRequirement req,
+        Collection<BundleCapability> candidates)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_MATCHES, rh, req, candidates);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.filterMatches(req, candidates);
+        }
+    }
+
+    public void invokeResolverHookEnd(
+        org.osgi.framework.hooks.resolver.ResolverHook rh)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_RESOLVER_HOOK_END, rh);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            rh.end();
+        }
+    }
+
     private static class Actions implements PrivilegedExceptionAction
     {
         public static final int INITIALIZE_CONTEXT_ACTION = 0;
@@ -1293,6 +1418,11 @@ public class SecureAction
         public static final int INVOKE_SERVICE_LISTENER_HOOK_ADDED = 45;
         public static final int INVOKE_SERVICE_LISTENER_HOOK_REMOVED = 46;
         public static final int INVOKE_SERVICE_EVENT_LISTENER_HOOK = 47;
+        public static final int INVOKE_RESOLVER_HOOK_FACTORY = 48;
+        public static final int INVOKE_RESOLVER_HOOK_RESOLVABLE = 49;
+        public static final int INVOKE_RESOLVER_HOOK_SINGLETON = 50;
+        public static final int INVOKE_RESOLVER_HOOK_MATCHES = 51;
+        public static final int INVOKE_RESOLVER_HOOK_END = 52;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1515,6 +1645,27 @@ public class SecureAction
                     ((org.osgi.framework.hooks.service.EventListenerHook) arg1).event(
                         (ServiceEvent) arg2,
                         (Map<BundleContext, Collection<ListenerHook.ListenerInfo>>) arg3);
+                    return null;
+                case INVOKE_RESOLVER_HOOK_FACTORY:
+                    return ((org.osgi.framework.hooks.resolver.ResolverHookFactory) arg1).begin(
+                        (Collection<BundleRevision>) arg2);
+                case INVOKE_RESOLVER_HOOK_RESOLVABLE:
+                    ((org.osgi.framework.hooks.resolver.ResolverHook) arg1).filterResolvable(
+                        (Collection<BundleRevision>) arg2);
+                    return null;
+                case INVOKE_RESOLVER_HOOK_SINGLETON:
+                    ((org.osgi.framework.hooks.resolver.ResolverHook) arg1)
+                        .filterSingletonCollisions(
+                            (BundleCapability) arg2,
+                            (Collection<BundleCapability>) arg3);
+                    return null;
+                case INVOKE_RESOLVER_HOOK_MATCHES:
+                    ((org.osgi.framework.hooks.resolver.ResolverHook) arg1).filterMatches(
+                        (BundleRequirement) arg2,
+                        (Collection<BundleCapability>) arg3);
+                    return null;
+                case INVOKE_RESOLVER_HOOK_END:
+                    ((org.osgi.framework.hooks.resolver.ResolverHook) arg1).end();
                     return null;
             }
 
