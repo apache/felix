@@ -985,7 +985,8 @@ public class BundleWiringImpl implements BundleWiring
         {
             return BundleRevisionImpl.getSecureAction().createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
-                m_revision.getId() + ":" + port + path, m_revision.getURLStreamHandler());
+                m_revision.getId() + ":" + port + path,
+                ((BundleImpl) getBundle()).getFramework().getBundleStreamHandler());
         }
         catch (MalformedURLException ex)
         {
@@ -1205,19 +1206,25 @@ public class BundleWiringImpl implements BundleWiring
         // not take a stand on this issue.
         if (pkgName.length() > 0)
         {
-            for (int i = 0; !result && (i < m_revision.getBootDelegationPackages().length); i++)
+            for (int i = 0;
+                !result
+                    && (i < ((BundleImpl) getBundle())
+                        .getFramework().getBootPackages().length);
+                i++)
             {
                 // Check if the boot package is wildcarded.
                 // A wildcarded boot package will be in the form "foo.",
                 // so a matching subpackage will start with "foo.", e.g.,
                 // "foo.bar".
-                if (m_revision.getBootDelegationPackageWildcards()[i]
-                    && pkgName.startsWith(m_revision.getBootDelegationPackages()[i]))
+                if (((BundleImpl) getBundle()).getFramework().getBootPackageWildcards()[i]
+                    && pkgName.startsWith(
+                        ((BundleImpl) getBundle()).getFramework().getBootPackages()[i]))
                 {
                     return true;
                 }
                 // If not wildcarded, then check for an exact match.
-                else if (m_revision.getBootDelegationPackages()[i].equals(pkgName))
+                else if (((BundleImpl) getBundle())
+                    .getFramework().getBootPackages()[i].equals(pkgName))
                 {
                     return true;
                 }
