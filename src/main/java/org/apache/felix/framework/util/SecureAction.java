@@ -25,11 +25,15 @@ import java.security.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import org.osgi.framework.Bundle;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.hooks.service.ListenerHook;
 
 /**
  * <p>
@@ -1115,6 +1119,130 @@ public class SecureAction
         }
     }
 
+    public void invokeServiceEventHook(
+        org.osgi.framework.hooks.service.EventHook eh,
+        ServiceEvent event, Collection<BundleContext> contexts)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_EVENT_HOOK, eh, contexts);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            eh.event(event, contexts);
+        }
+    }
+
+    public void invokeServiceFindHook(
+        org.osgi.framework.hooks.service.FindHook fh,
+        BundleContext context, String name, String filter,
+        boolean allServices, Collection<ServiceReference<?>> references)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(
+                Actions.INVOKE_SERVICE_EVENT_HOOK, fh, context, name, filter,
+                (allServices) ? Boolean.TRUE : Boolean.FALSE, references);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            fh.find(context, name, filter, allServices, references);
+        }
+    }
+
+    public void invokeServiceListenerHookAdded(
+        org.osgi.framework.hooks.service.ListenerHook lh,
+        Collection<ListenerHook.ListenerInfo> listeners)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_LISTENER_HOOK_ADDED, lh, listeners);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            lh.added(listeners);
+        }
+    }
+
+    public void invokeServiceListenerHookRemoved(
+        org.osgi.framework.hooks.service.ListenerHook lh,
+        Collection<ListenerHook.ListenerInfo> listeners)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_LISTENER_HOOK_REMOVED, lh, listeners);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            lh.removed(listeners);
+        }
+    }
+
+    public void invokeServiceEventListenerHook(
+        org.osgi.framework.hooks.service.EventListenerHook elh,
+        ServiceEvent event,
+        Map<BundleContext, Collection<ListenerHook.ListenerInfo>> listeners)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_SERVICE_EVENT_LISTENER_HOOK, elh, listeners);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            elh.event(event, listeners);
+        }
+    }
+
     private static class Actions implements PrivilegedExceptionAction
     {
         public static final int INITIALIZE_CONTEXT_ACTION = 0;
@@ -1160,6 +1288,11 @@ public class SecureAction
         public static final int INVOKE_BUNDLE_FIND_HOOK = 40;
         public static final int INVOKE_BUNDLE_EVENT_HOOK = 41;
         public static final int INVOKE_WEAVING_HOOK = 42;
+        public static final int INVOKE_SERVICE_EVENT_HOOK = 43;
+        public static final int INVOKE_SERVICE_FIND_HOOK = 44;
+        public static final int INVOKE_SERVICE_LISTENER_HOOK_ADDED = 45;
+        public static final int INVOKE_SERVICE_LISTENER_HOOK_REMOVED = 46;
+        public static final int INVOKE_SERVICE_EVENT_LISTENER_HOOK = 47;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1167,6 +1300,7 @@ public class SecureAction
         private Object m_arg3 = null;
         private Object m_arg4 = null;
         private Object m_arg5 = null;
+        private Object m_arg6 = null;
 
         public void set(int action)
         {
@@ -1215,6 +1349,18 @@ public class SecureAction
             m_arg5 = arg5;
         }
 
+        public void set(int action, Object arg1, Object arg2, Object arg3,
+            Object arg4, Object arg5, Object arg6)
+        {
+            m_action = action;
+            m_arg1 = arg1;
+            m_arg2 = arg2;
+            m_arg3 = arg3;
+            m_arg4 = arg4;
+            m_arg5 = arg5;
+            m_arg6 = arg6;
+        }
+
         private void unset()
         {
             m_action = -1;
@@ -1223,6 +1369,7 @@ public class SecureAction
             m_arg3 = null;
             m_arg4 = null;
             m_arg5 = null;
+            m_arg6 = null;
         }
 
         public Object run() throws Exception
@@ -1233,6 +1380,7 @@ public class SecureAction
             Object arg3 = m_arg3;
             Object arg4 = m_arg4;
             Object arg5 = m_arg5;
+            Object arg6 = m_arg6;
 
             unset();
 
@@ -1344,6 +1492,29 @@ public class SecureAction
                 case INVOKE_WEAVING_HOOK:
                     ((org.osgi.framework.hooks.weaving.WeavingHook) arg1).weave(
                         (org.osgi.framework.hooks.weaving.WovenClass) arg2);
+                    return null;
+                case INVOKE_SERVICE_EVENT_HOOK:
+                    ((org.osgi.framework.hooks.service.EventHook) arg1).event(
+                        (ServiceEvent) arg2, (Collection<BundleContext>) arg3);
+                    return null;
+                case INVOKE_SERVICE_FIND_HOOK:
+                    ((org.osgi.framework.hooks.service.FindHook) arg1).find(
+                        (BundleContext) arg2, (String) arg3, (String) arg4,
+                        ((Boolean) arg5).booleanValue(),
+                        (Collection<ServiceReference<?>>) arg6);
+                    return null;
+                case INVOKE_SERVICE_LISTENER_HOOK_ADDED:
+                    ((org.osgi.framework.hooks.service.ListenerHook) arg1).added(
+                        (Collection<ListenerHook.ListenerInfo>) arg2);
+                    return null;
+                case INVOKE_SERVICE_LISTENER_HOOK_REMOVED:
+                    ((org.osgi.framework.hooks.service.ListenerHook) arg1).removed(
+                        (Collection<ListenerHook.ListenerInfo>) arg2);
+                    return null;
+                case INVOKE_SERVICE_EVENT_LISTENER_HOOK:
+                    ((org.osgi.framework.hooks.service.EventListenerHook) arg1).event(
+                        (ServiceEvent) arg2,
+                        (Map<BundleContext, Collection<ListenerHook.ListenerInfo>>) arg3);
                     return null;
             }
 

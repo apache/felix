@@ -587,7 +587,8 @@ public class EventDispatcher
                     {
                         try
                         {
-                            elh.event(event, shrinkableMap);
+                            m_secureAction.invokeServiceEventListenerHook(
+                                elh, event, shrinkableMap);
                         }
                         catch (Throwable th)
                         {
@@ -665,8 +666,9 @@ public class EventDispatcher
                         {
                             if (eh instanceof org.osgi.framework.hooks.service.EventHook)
                             {
-                                ((org.osgi.framework.hooks.service.EventHook)
-                                    eh).event((ServiceEvent) event, shrinkable);
+                                m_secureAction.invokeServiceEventHook(
+                                    (org.osgi.framework.hooks.service.EventHook) eh,
+                                    (ServiceEvent) event, shrinkable);
                             }
                             else if (eh instanceof org.osgi.framework.hooks.bundle.EventHook)
                             {
