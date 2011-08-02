@@ -212,9 +212,8 @@ public class ResolverImpl implements Resolver
                 for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
                 {
                     BundleRevision br = it.next();
-// TODO: OSGi R4.3 - This is not correct for fragments, since they may have wires already
-//       but we still need to resolve them.
-                    if ((br.getWiring() != null) || !allCandidates.populate(state, br, false))
+                    if ((!Util.isFragment(br) && br.getWiring() != null)
+                        || !allCandidates.populate(state, br, false))
                     {
                         it.remove();
                     }
@@ -230,14 +229,14 @@ public class ResolverImpl implements Resolver
                 allCandidates.prepare(getResolvedSingletons(state));
 
                 // Prune failed revisions.
-// TODO: OSGi R4.3 - Again, can we merge this stuff into Candidates?
-//                for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
-//                {
-//                    if (!allCandidates.isPopulated(it.next()))
-//                    {
-//                        it.remove();
-//                    }
-//                }
+// TODO: OSGi R4.3 - Could this be merged back into Candidates?
+                for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
+                {
+                    if (!allCandidates.isPopulated(it.next()))
+                    {
+                        it.remove();
+                    }
+                }
 
                 // Record the initial candidate permutation.
                 m_usesPermutations.add(allCandidates);
