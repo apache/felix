@@ -66,6 +66,7 @@ import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.startlevel.StartLevel;
@@ -1741,7 +1742,7 @@ public class Felix extends BundleImpl implements Framework
             }
         }
         return ((BundleWiringImpl)
-            bundle.adapt(BundleRevision.class).getWiring()).getClassByDelegation(name);
+            bundle.adapt(BundleWiring.class)).getClassLoader().loadClass(name);
     }
 
     /**
