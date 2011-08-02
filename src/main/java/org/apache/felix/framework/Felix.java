@@ -3098,7 +3098,7 @@ public class Felix extends BundleImpl implements Framework
                 {
                     try
                     {
-                        lh.removed(removed);
+                        m_secureAction.invokeServiceListenerHookRemoved(lh, removed);
                     }
                     catch (Throwable th)
                     {
@@ -3124,7 +3124,7 @@ public class Felix extends BundleImpl implements Framework
             {
                 try
                 {
-                    lh.added(added);
+                    m_secureAction.invokeServiceListenerHookAdded(lh, added);
                 }
                 catch (Throwable th)
                 {
@@ -3165,7 +3165,7 @@ public class Felix extends BundleImpl implements Framework
                 {
                     try
                     {
-                        lh.removed(removed);
+                        m_secureAction.invokeServiceListenerHookRemoved(lh, removed);
                     }
                     catch (Throwable th)
                     {
@@ -3291,7 +3291,8 @@ public class Felix extends BundleImpl implements Framework
             {
                 try
                 {
-                    lh.added(m_dispatcher.getAllServiceListeners());
+                    m_secureAction.invokeServiceListenerHookAdded(
+                        lh, m_dispatcher.getAllServiceListeners());
                 }
                 catch (Throwable th)
                 {
@@ -3374,7 +3375,9 @@ public class Felix extends BundleImpl implements Framework
             {
                 try
                 {
-                    fh.find(bundle._getBundleContext(),
+                    m_secureAction.invokeServiceFindHook(
+                        fh,
+                        bundle._getBundleContext(),
                         className,
                         expr,
                         !checkAssignable,
