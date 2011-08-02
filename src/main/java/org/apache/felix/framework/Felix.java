@@ -2832,10 +2832,10 @@ public class Felix extends BundleImpl implements Framework
                     org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
                     if (fh != null)
                     {
-// TODO: OSGi R4.3 - Call all hooks in privileged block.
                         try
                         {
-                            fh.find(origin.getBundleContext(), bundles);
+                            m_secureAction.invokeBundleFindHook(
+                                fh, origin.getBundleContext(), bundles);
                         }
                         catch (Throwable th)
                         {
@@ -2918,10 +2918,9 @@ public class Felix extends BundleImpl implements Framework
                 org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
                 if (fh != null)
                 {
-// TODO: OSGi R4.3 - Call all hooks in privileged block.
                     try
                     {
-                        fh.find(bc, bundles);
+                        m_secureAction.invokeBundleFindHook(fh, bc, bundles);
                     }
                     catch (Throwable th)
                     {
@@ -2987,10 +2986,9 @@ public class Felix extends BundleImpl implements Framework
                 org.osgi.framework.hooks.bundle.FindHook fh = getService(this, hook);
                 if (fh != null)
                 {
-// TODO: OSGi R4.3 - Call all hooks in privileged block.
                     try
                     {
-                        fh.find(bc, bundles);
+                        m_secureAction.invokeBundleFindHook(fh, bc, bundles);
                     }
                     catch (Throwable th)
                     {

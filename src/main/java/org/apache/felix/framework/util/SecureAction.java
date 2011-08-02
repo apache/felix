@@ -22,11 +22,14 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.security.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
+import org.osgi.framework.Bundle;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 
 /**
  * <p>
@@ -137,7 +140,7 @@ public class SecureAction
             return ClassLoader.getSystemClassLoader();
         }
     }
-    
+
     public ClassLoader getClassLoader(Class clazz)
     {
         if (System.getSecurityManager() != null)
@@ -1009,7 +1012,7 @@ public class SecureAction
 
     private static void _flush(Class targetClazz, Object lock) throws Exception
     {
-        synchronized (lock) 
+        synchronized (lock)
         {
             Field[] fields = targetClazz.getDeclaredFields();
             // reset cache
@@ -1037,6 +1040,54 @@ public class SecureAction
                     }
                 }
             }
+        }
+    }
+
+    public void invokeBundleFindHook(
+        org.osgi.framework.hooks.bundle.FindHook fh,
+        BundleContext bc, Collection<Bundle> bundles)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_BUNDLE_FIND_HOOK, fh, bc, bundles);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            fh.find(bc, bundles);
+        }
+    }
+
+    public void invokeBundleEventHook(
+        org.osgi.framework.hooks.bundle.EventHook eh,
+        BundleEvent event, Collection<BundleContext> contexts)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_BUNDLE_EVENT_HOOK, eh, contexts);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            eh.event(event, contexts);
         }
     }
 
@@ -1082,6 +1133,8 @@ public class SecureAction
         public static final int SYSTEM_EXIT_ACTION = 37;
         public static final int FLUSH_FIELD_ACTION = 38;
         public static final int GET_CLASS_LOADER_ACTION = 39;
+        public static final int INVOKE_BUNDLE_FIND_HOOK = 40;
+        public static final int INVOKE_BUNDLE_EVENT_HOOK = 41;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1255,6 +1308,14 @@ public class SecureAction
                     return null;
                 case GET_CLASS_LOADER_ACTION:
                     return ((Class) arg1).getClassLoader();
+                case INVOKE_BUNDLE_FIND_HOOK:
+                    ((org.osgi.framework.hooks.bundle.FindHook) arg1).find(
+                        (BundleContext) arg2, (Collection<Bundle>) arg3);
+                    return null;
+                case INVOKE_BUNDLE_EVENT_HOOK:
+                    ((org.osgi.framework.hooks.bundle.EventHook) arg1).event(
+                        (BundleEvent) arg2, (Collection<BundleContext>) arg3);
+                    return null;
             }
 
             return null;
