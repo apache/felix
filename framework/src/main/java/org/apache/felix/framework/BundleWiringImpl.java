@@ -1027,19 +1027,6 @@ public class BundleWiringImpl implements BundleWiring
         Enumeration urls = null;
         List completeUrlList = new ArrayList();
 
-        // First, try to resolve the originating module.
-        try
-        {
-            m_resolver.resolve(m_revision);
-        }
-        catch (Exception ex)
-        {
-            // The spec states that if the bundle cannot be resolved, then
-            // only the local bundle's resources should be searched. So we
-            // will ask the module's own class path.
-            return m_revision.getResourcesLocal(name);
-        }
-
         // Get the package of the target class/resource.
         String pkgName = Util.getResourcePackage(name);
 
@@ -1377,9 +1364,6 @@ public class BundleWiringImpl implements BundleWiring
         {
             try
             {
-                // First, try to resolve the originating revision.
-                m_resolver.resolve(m_revision);
-
                 // Get the package of the target class/resource.
                 String pkgName = (isClass)
                     ? Util.getClassPackage(name)
@@ -1431,54 +1415,6 @@ public class BundleWiringImpl implements BundleWiring
                     {
                         result = searchDynamicImports(pkgName, name, isClass);
                     }
-                }
-            }
-// TODO: OSGi R4.3/ELIMINATE RESOLVE - If we eliminate resolving from this method, then we can
-//       simplify this catch, since resolve throws resolve and bundle exceptions.
-            catch (Exception ex)
-            {
-                if (!isClass && (ex instanceof ResolveException))
-                {
-                    // The spec states that if the bundle cannot be resolved, then
-                    // only the local bundle's resources should be searched. So we
-                    // will ask the module's own class path.
-                    URL url = m_revision.getResourceLocal(name);
-                    if (url != null)
-                    {
-                        return url;
-                    }
-                }
-
-                if (isClass)
-                {
-                    if (!(ex instanceof ClassNotFoundException))
-                    {
-                        ClassNotFoundException cnfe = new ClassNotFoundException(
-                            name
-                            + " not found in "
-                            + getBundle()
-                            + " : "
-                            + ex.getMessage());
-ex.printStackTrace();
-                        cnfe.initCause(ex);
-                        throw cnfe;
-                    }
-                    throw (ClassNotFoundException) ex;
-                }
-                else
-                {
-                    if (!(ex instanceof ResourceNotFoundException))
-                    {
-                        ResourceNotFoundException rnfe = new ResourceNotFoundException(
-                            name
-                            + " not found in "
-                            + getBundle()
-                            + " : "
-                            + ex.getMessage());
-                        rnfe.initCause(ex);
-                        throw rnfe;
-                    }
-                    throw (ResourceNotFoundException) ex;
                 }
             }
             finally

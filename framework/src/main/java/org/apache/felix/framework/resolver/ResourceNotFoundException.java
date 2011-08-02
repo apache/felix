@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,5 +23,10 @@ public class ResourceNotFoundException extends Exception
     public ResourceNotFoundException(String msg)
     {
         super(msg);
+    }
+
+    public ResourceNotFoundException(String msg, Throwable th)
+    {
+        super(msg, th);
     }
 }
