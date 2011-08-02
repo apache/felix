@@ -478,9 +478,6 @@ class Candidates
         BundleRequirement req, SortedSet<BundleCapability> candidates)
     {
         // Add the dynamic imports candidates.
-// TODO: OSGi R4.3 - Can we just calculate the candidates inside here too?
-//       I think we don't because of performance reasons since we have to
-//       look them up already. If so, maybe it is not worth doing it here.
         add(req, candidates);
 
         // Populate the candidates for the dynamic import.
