@@ -48,11 +48,8 @@ public class BundleRevisionImpl implements BundleRevision
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
 
-    private final Logger m_logger;
-    private final Map m_configMap;
     private final String m_id;
     private final Map m_headerMap;
-    private final URLStreamHandler m_streamHandler;
 
     private final String m_manifestVersion;
     private final boolean m_isExtension;
@@ -76,10 +73,6 @@ public class BundleRevisionImpl implements BundleRevision
     // Bundle wiring when resolved.
     private volatile BundleWiringImpl m_wiring = null;
 
-    // Boot delegation packages.
-    private final String[] m_bootPkgs;
-    private final boolean[] m_bootPkgWildcards;
-
     /**
      * This constructor is used by the extension manager, since it needs
      * a constructor that does not throw an exception.
@@ -90,19 +83,12 @@ public class BundleRevisionImpl implements BundleRevision
      * @param bootPkgWildcards
      * @throws org.osgi.framework.BundleException
      */
-    public BundleRevisionImpl(
-        Logger logger, Map configMap, Bundle bundle, String id,
-        String[] bootPkgs, boolean[] bootPkgWildcards)
+    public BundleRevisionImpl(Bundle bundle, String id)
     {
-        m_logger = logger;
-        m_configMap = configMap;
         m_bundle = bundle;
         m_id = id;
         m_headerMap = null;
         m_content = null;
-        m_streamHandler = null;
-        m_bootPkgs = bootPkgs;
-        m_bootPkgWildcards = bootPkgWildcards;
         m_manifestVersion = null;
         m_symbolicName = null;
         m_isExtension = false;
@@ -116,23 +102,19 @@ public class BundleRevisionImpl implements BundleRevision
     }
 
     BundleRevisionImpl(
-        Logger logger, Map configMap, StatefulResolver resolver,
-        Bundle bundle, String id, Map headerMap, Content content,
-        URLStreamHandler streamHandler, String[] bootPkgs,
-        boolean[] bootPkgWildcards)
+        Bundle bundle, String id, Map headerMap, Content content)
         throws BundleException
     {
-        m_logger = logger;
-        m_configMap = configMap;
         m_bundle = bundle;
         m_id = id;
         m_headerMap = headerMap;
         m_content = content;
-        m_streamHandler = streamHandler;
-        m_bootPkgs = bootPkgs;
-        m_bootPkgWildcards = bootPkgWildcards;
 
-        ManifestParser mp = new ManifestParser(m_logger, m_configMap, this, m_headerMap);
+        ManifestParser mp = new ManifestParser(
+            ((BundleImpl) bundle).getFramework().getLogger(),
+            ((BundleImpl) bundle).getFramework().getConfig(),
+            this,
+            m_headerMap);
 
         // Record some of the parsed metadata. Note, if this is an extension
         // bundle it's exports are removed, since they will be added to the
@@ -190,27 +172,6 @@ public class BundleRevisionImpl implements BundleRevision
             excluded = m_activationExcludes.get(i).equals(pkgName);
         }
         return included && !excluded;
-    }
-
-    URLStreamHandler getURLStreamHandler()
-    {
-        return m_streamHandler;
-    }
-
-    // TODO: OSGi R4.3 - Figure out how to handle this. Here we provide access
-    //       needed for BundleWiringImpl, but for implicit boot delegation property
-    //       we store it in BundleWiringImpl.
-    String[] getBootDelegationPackages()
-    {
-        return m_bootPkgs;
-    }
-
-    // TODO: OSGi R4.3 - Figure out how to handle this. Here we provide access
-    //       needed for BundleWiringImpl, but for implicit boot delegation property
-    //       we store it in BundleWiringImpl.
-    boolean[] getBootDelegationPackageWildcards()
-    {
-        return m_bootPkgWildcards;
     }
 
     //
@@ -382,7 +343,7 @@ public class BundleRevisionImpl implements BundleRevision
             }
             catch (Exception ex)
             {
-                m_logger.log(
+                ((BundleImpl) m_bundle).getFramework().getLogger().log(
                     m_bundle, Logger.LOG_ERROR, "Unable to get module class path.", ex);
             }
         }
@@ -479,7 +440,8 @@ public class BundleRevisionImpl implements BundleRevision
                 {
 // TODO: FRAMEWORK - Per the spec, this should fire a FrameworkEvent.INFO event;
 //       need to create an "Eventer" class like "Logger" perhaps.
-                    m_logger.log(getBundle(), Logger.LOG_INFO,
+                    ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                        getBundle(), Logger.LOG_INFO,
                         "Class path entry not found: "
                         + classPathStrings.get(i));
                 }
@@ -658,11 +620,13 @@ public class BundleRevisionImpl implements BundleRevision
         {
             return m_secureAction.createURL(null,
                 FelixConstants.BUNDLE_URL_PROTOCOL + "://" +
-                m_id + ":" + port + path, m_streamHandler);
+                m_id + ":" + port + path,
+                ((BundleImpl) getBundle()).getFramework().getBundleStreamHandler());
         }
         catch (MalformedURLException ex)
         {
-            m_logger.log(m_bundle,
+            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                m_bundle,
                 Logger.LOG_ERROR,
                 "Unable to create resource URL.",
                 ex);
@@ -678,7 +642,8 @@ public class BundleRevisionImpl implements BundleRevision
         }
         catch (Exception ex)
         {
-            m_logger.log(Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
+            ((BundleImpl) m_bundle).getFramework().getLogger().log(
+                Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
         m_content.close();
         m_content = null;

@@ -1174,17 +1174,11 @@ class BundleImpl implements Bundle, BundleRevisions
 
         // Create the bundle revision instance.
         BundleRevisionImpl revision = new BundleRevisionImpl(
-            getFramework().getLogger(),
-            getFramework().getConfig(),
-            getFramework().getResolver(),
             this,
             Long.toString(getBundleId())
                 + "." + m_archive.getCurrentRevisionNumber().toString(),
             headerMap,
-            m_archive.getCurrentRevision().getContent(),
-            getFramework().getBundleStreamHandler(),
-            getFramework().getBootPackages(),
-            getFramework().getBootPackageWildcards());
+            m_archive.getCurrentRevision().getContent());
 
         // Verify that the bundle symbolic name + version is unique.
         if (revision.getManifestVersion().equals("2"))
