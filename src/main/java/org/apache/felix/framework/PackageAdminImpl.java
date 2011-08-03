@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import java.util.*;
+import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -171,8 +172,8 @@ class PackageAdminImpl implements PackageAdmin
                 if (revision.getWiring() != null)
                 {
                     List<BundleRevision> fragments =
-                        ((BundleWiringImpl) revision.getWiring()).getFragments();
-                    for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
+                        Util.getFragments(revision.getWiring());
+                    for (int i = 0; i < fragments.size(); i++)
                     {
                         Bundle b = fragments.get(i).getBundle();
                         if (b != null)
