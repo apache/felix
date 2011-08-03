@@ -509,9 +509,7 @@ class BundleImpl implements Bundle, BundleRevisions
         BundleWiring wiring = br.getWiring();
         if (wiring != null)
         {
-// TODO: OSGi R4.3 - Technically, I think we can get the fragments using standard
-//       R4.3 API once we get everything implemented.
-            List<BundleRevision> fragments = ((BundleWiringImpl) wiring).getFragments();
+            List<BundleRevision> fragments = Util.getFragments(wiring);
             if (fragments != null)
             {
                 result.addAll(fragments);

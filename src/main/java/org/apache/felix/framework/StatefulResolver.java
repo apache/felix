@@ -394,7 +394,6 @@ class StatefulResolver
             try
             {
                 // Resolve the revision.
-// TODO: OSGi R4.3 - Shouldn't we still be passing in greedy attach fragments here?
                 wireMap = m_resolver.resolve(
                     m_resolverState, revisions, m_resolverState.getFragments());
             }
@@ -982,7 +981,8 @@ class StatefulResolver
     {
         if (wireMap != null)
         {
-            Iterator<Entry<BundleRevision, List<ResolverWire>>> iter = wireMap.entrySet().iterator();
+            Iterator<Entry<BundleRevision, List<ResolverWire>>> iter =
+                wireMap.entrySet().iterator();
             // Iterate over the map to fire necessary RESOLVED events.
             while (iter.hasNext())
             {
@@ -991,10 +991,11 @@ class StatefulResolver
 
                 // Fire RESOLVED events for all fragments.
                 List<BundleRevision> fragments =
-                    ((BundleWiringImpl) revision.getWiring()).getFragments();
-                for (int i = 0; (fragments != null) && (i < fragments.size()); i++)
+                    Util.getFragments(revision.getWiring());
+                for (int i = 0; i < fragments.size(); i++)
                 {
-                    m_felix.fireBundleEvent(BundleEvent.RESOLVED, fragments.get(i).getBundle());
+                    m_felix.fireBundleEvent(
+                        BundleEvent.RESOLVED, fragments.get(i).getBundle());
                 }
                 m_felix.fireBundleEvent(BundleEvent.RESOLVED, revision.getBundle());
             }
@@ -1300,12 +1301,6 @@ class StatefulResolver
             {
                 // It we have a whitelist, then first filter out candidates
                 // from disallowed revisions.
-// TODO: OSGi R4.3 - It would be better if we could think of a way to do this
-//       filtering that was less costly. One possibility it to do the check in
-//       ResolverState.checkExecutionEnvironment(), since it will only need to
-//       be done once for any black listed revision. However, as we move toward
-//       OBR-like API, this is a non-standard call, so doing it here is the only
-//       standard way of achieving it.
                 if (m_whitelist != null)
                 {
                     for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
@@ -1376,8 +1371,6 @@ class StatefulResolver
         {
             // Next, try to resolve any native code, since the revision is
             // not resolvable if its native code cannot be loaded.
-// TODO: OSGi R4.3 - Is it sufficient to just check declared native libs here?
-//        List<R4Library> libs = ((BundleWiringImpl) revision.getWiring()).getNativeLibraries();
             List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
             if (libs != null)
             {

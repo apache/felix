@@ -24,7 +24,6 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
-// TODO: OSGi R4.3 - Should this be in framework package?
 public class BundleWireImpl implements BundleWire
 {
     private final BundleRevision m_requirer;
@@ -75,7 +74,6 @@ public class BundleWireImpl implements BundleWire
     {
         return m_req
             + " -> "
-            + "[" + m_cap.getRevision() + " VIA " + m_provider + "]";
-// TODO: OSGi R4.3 - Simplify this message once we know wiring works.
+            + "[" + m_provider + "]";
     }
 }

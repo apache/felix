@@ -41,7 +41,6 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
-// TODO: OSGi R4.3 - Make sure we have sufficient wrapping of caps/reqs.
 public class ResolverImpl implements Resolver
 {
     private final Logger m_logger;

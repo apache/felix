@@ -32,6 +32,7 @@ import java.util.Map;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.osgi.framework.Bundle;
@@ -282,7 +283,7 @@ public class BundleRevisionImpl implements BundleRevision
         {
             // If the wiring has fragments, then close the old content path,
             // since it'll need to be recalculated to include fragments.
-            if (wiring.getFragments() != null)
+            if (!Util.getFragments(wiring).isEmpty())
             {
                 for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
                 {
@@ -359,7 +360,7 @@ public class BundleRevisionImpl implements BundleRevision
         List<Content> fragmentContents = null;
         if (m_wiring != null)
         {
-            fragments = m_wiring.getFragments();
+            fragments = Util.getFragments(m_wiring);
             fragmentContents = m_wiring.getFragmentContents();
         }
         if (fragments != null)

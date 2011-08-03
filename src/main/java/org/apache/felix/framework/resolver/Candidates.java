@@ -1053,9 +1053,6 @@ class Candidates
                     System.out.println("    " + req + ": " + candidates);
                 }
             }
-// TODO: OSGi R4.3 - Need to check what getWiring().getRequirements() returns
-//       with respect to dynamic imports; is it the union of all declared
-//       dynamic imports from fragments and host?
             reqs = (br.getWiring() != null)
                 ? Util.getDynamicRequirements(br.getWiring().getRequirements(null))
                 : Util.getDynamicRequirements(br.getDeclaredRequirements(null));

@@ -22,6 +22,7 @@ import java.io.*;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 
 public class Util
 {
@@ -617,5 +619,31 @@ public class Util
     public static boolean isFragment(BundleRevision revision)
     {
         return ((revision.getTypes() & BundleRevision.TYPE_FRAGMENT) > 0);
+    }
+
+    public static List<BundleRevision> getFragments(BundleWiring wiring)
+    {
+        List<BundleRevision> fragments = Collections.EMPTY_LIST;
+        if (wiring != null)
+        {
+            List<BundleWire> wires = wiring.getProvidedWires(null);
+            if (wires != null)
+            {
+                for (BundleWire w : wires)
+                {
+                    if (w.getCapability().getNamespace()
+                        .equals(BundleRevision.HOST_NAMESPACE))
+                    {
+                        // Create array list if needed.
+                        if (fragments.isEmpty())
+                        {
+                            fragments = new ArrayList<BundleRevision>();
+                        }
+                        fragments.add(w.getRequirerWiring().getRevision());
+                    }
+                }
+            }
+        }
+        return fragments;
     }
 }

@@ -63,7 +63,6 @@ class ResolverWireImpl implements ResolverWire
     {
         return m_req
             + " -> "
-            + "[" + m_cap.getRevision() + " VIA " + m_provider + "]";
-// TODO: OSGi R4.3 - Simplify this message once we know wiring works.
+            + "[" + m_provider + "]";
     }
 }
