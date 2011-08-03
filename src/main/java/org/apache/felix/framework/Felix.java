@@ -23,6 +23,7 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.*;
+import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.cache.BundleCache;
@@ -1905,7 +1906,7 @@ public class Felix extends BundleImpl implements Framework
             if (!bundle.isDeclaredActivationPolicyUsed()
                 || (((BundleRevisionImpl) bundle.adapt(BundleRevision.class))
                     .getDeclaredActivationPolicy() != BundleRevisionImpl.LAZY_ACTIVATION)
-                || ((BundleWiringImpl) bundle.adapt(BundleRevision.class).getWiring())
+                || ((BundleClassLoader) bundle.adapt(BundleWiring.class).getClassLoader())
                     .isActivationTriggered())
             {
                 // Record the event type for the final event and activate.
