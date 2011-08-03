@@ -28,6 +28,7 @@ import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
+import org.osgi.framework.wiring.BundleWiring;
 
 class URLHandlersBundleURLConnection extends URLConnection
 {
@@ -124,12 +125,12 @@ class URLHandlersBundleURLConnection extends URLConnection
         {
             m_classPathIdx = 0;
         }
-// TODO: OSGi R4.3 - This is messed up. We need to fix resource lookup.
         if (!((BundleRevisionImpl) m_targetRevision)
             .hasInputStream(m_classPathIdx, url.getPath()))
         {
-            URL newurl = ((BundleWiringImpl)
-                m_targetRevision.getWiring()).getResourceByDelegation(url.getPath());
+            BundleWiring wiring = m_targetRevision.getWiring();
+            ClassLoader cl = (wiring != null) ? wiring.getClassLoader() : null;
+            URL newurl = (cl != null) ? cl.getResource(url.getPath()) : null;
             if (newurl == null)
             {
                 throw new IOException("Resource does not exist: " + url);
