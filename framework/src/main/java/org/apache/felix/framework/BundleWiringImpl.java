@@ -95,7 +95,6 @@ public class BundleWiringImpl implements BundleWiring
     private volatile List<BundleRequirement> m_wovenReqs = null;
 
     private BundleClassLoader m_classLoader;
-    private boolean m_isActivationTriggered = false;
 
     // Bundle-specific class loader for boot delegation.
     private final ClassLoader m_bootClassLoader;
@@ -1717,11 +1716,6 @@ public class BundleWiringImpl implements BundleWiring
         return true;
     }
 
-    synchronized boolean isActivationTriggered()
-    {
-        return m_isActivationTriggered;
-    }
-
     static class ToLocalUrlEnumeration implements Enumeration
     {
         final Enumeration m_enumeration;
@@ -1769,6 +1763,10 @@ public class BundleWiringImpl implements BundleWiring
 
     public class BundleClassLoader extends SecureClassLoader implements BundleReference
     {
+        // Flag used to determine if a class has been loaded from this class
+        // loader or not.
+        private volatile boolean m_isActivationTriggered = false;
+
         private final Map m_jarContentToDexFile;
         private Object[][] m_cachedLibs = new Object[0][];
         private static final int LIBNAME_IDX = 0;
@@ -1785,6 +1783,11 @@ public class BundleWiringImpl implements BundleWiring
             {
                 m_jarContentToDexFile = null;
             }
+        }
+
+        public boolean isActivationTriggered()
+        {
+            return m_isActivationTriggered;
         }
 
         public Bundle getBundle()
@@ -2108,7 +2111,6 @@ public class BundleWiringImpl implements BundleWiring
                                 // activation trigger has tripped.
                                 if (!m_isActivationTriggered && isTriggerClass && (clazz != null))
                                 {
-// TODO: OSGi R4.3 - This isn't protected by the correct lock.
                                     m_isActivationTriggered = true;
                                 }
                             }
