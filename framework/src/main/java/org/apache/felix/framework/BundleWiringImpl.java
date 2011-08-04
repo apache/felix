@@ -2494,8 +2494,8 @@ public class BundleWiringImpl implements BundleWiring
         {
             // Try to see if there is an exporter available.
             Map<String, String> dirs = Collections.EMPTY_MAP;
-            Map<String, Object> attrs = new HashMap<String, Object>(1);
-            attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
+            Map<String, Object> attrs = Collections.singletonMap(
+                BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
                 revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
             Set<BundleCapability> exporters = resolver.getCandidates(req, false);
@@ -2533,8 +2533,8 @@ public class BundleWiringImpl implements BundleWiring
 
         // Next, check to see if there are any exporters for the package at all.
         Map<String, String> dirs = Collections.EMPTY_MAP;
-        Map<String, Object> attrs = new HashMap<String, Object>(1);
-        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
+        Map<String, Object> attrs = Collections.singletonMap(
+            BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
         Set<BundleCapability> exports = resolver.getCandidates(req, false);
