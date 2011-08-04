@@ -434,13 +434,18 @@ public class ManifestParser
                 // Note that we use a linked hash map here to ensure the
                 // package attribute is first, which will make indexing
                 // more efficient.
-// TODO: OSGi R4.3 - This ordering fix is a hack...perhaps we should use the standard "key"
-//       notion where namespace is also the name of the key attribute.
+// TODO: OSGi R4.3 - This is ordering is kind of hacky.
+                // Prepend the package name to the array of attributes.
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
+                // We want this first from an indexing perspective.
                 newAttrs.put(
                     BundleRevision.PACKAGE_NAMESPACE,
                     path);
                 newAttrs.putAll(attrs);
+                // But we need to put it again to make sure it wasn't overwritten.
+                newAttrs.put(
+                    BundleRevision.PACKAGE_NAMESPACE,
+                    path);
 
                 // Create filter now so we can inject filter directive.
                 SimpleFilter sf = SimpleFilter.convert(newAttrs);
@@ -1334,10 +1339,19 @@ public class ManifestParser
                         VersionRange.parse(value.toString()));
                 }
 
-                // Prepend the host symbolic name to the array of attributes.
+                // Note that we use a linked hash map here to ensure the
+                // host symbolic name is first, which will make indexing
+                // more efficient.
+// TODO: OSGi R4.3 - This is ordering is kind of hacky.
+                // Prepend the host symbolic name to the map of attributes.
                 Map<String, Object> attrs = clauses.get(0).m_attrs;
-                Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
+                Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
+                // We want this first from an indexing perspective.
+                newAttrs.put(
+                    BundleRevision.HOST_NAMESPACE,
+                    clauses.get(0).m_paths.get(0));
                 newAttrs.putAll(attrs);
+                // But we need to put it again to make sure it wasn't overwritten.
                 newAttrs.put(
                     BundleRevision.HOST_NAMESPACE,
                     clauses.get(0).m_paths.get(0));
@@ -1429,16 +1443,20 @@ public class ManifestParser
                 // Prepend the bundle symbolic name to the array of attributes.
                 Map<String, Object> attrs = clause.m_attrs;
                 // Note that we use a linked hash map here to ensure the
-                // package attribute is first, which will make indexing
+                // symbolic name attribute is first, which will make indexing
                 // more efficient.
-// TODO: OSGi R4.3 - This ordering fix is a hack...perhaps we should use the standard "key"
-//       notion where namespace is also the name of the key attribute.
+// TODO: OSGi R4.3 - This is ordering is kind of hacky.
                 // Prepend the symbolic name to the array of attributes.
                 Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
+                // We want this first from an indexing perspective.
                 newAttrs.put(
                     BundleRevision.BUNDLE_NAMESPACE,
                     path);
                 newAttrs.putAll(attrs);
+                // But we need to put it again to make sure it wasn't overwritten.
+                newAttrs.put(
+                    BundleRevision.BUNDLE_NAMESPACE,
+                    path);
 
                 // Create filter now so we can inject filter directive.
                 SimpleFilter sf = SimpleFilter.convert(newAttrs);
