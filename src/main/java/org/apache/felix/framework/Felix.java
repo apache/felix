@@ -3578,8 +3578,8 @@ public class Felix extends BundleImpl implements Framework
     ExportedPackage[] getExportedPackages(String pkgName)
     {
         // First, get all exporters of the package.
-        Map<String, Object> attrs = new HashMap<String, Object>(1);
-        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
+        Map<String, Object> attrs = Collections.singletonMap(
+            BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             null,
             BundleRevision.PACKAGE_NAMESPACE,

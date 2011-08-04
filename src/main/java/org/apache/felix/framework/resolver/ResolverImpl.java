@@ -554,8 +554,8 @@ public class ResolverImpl implements Resolver
         }
 
         // Determine if any providers of the package exist.
-        Map<String, Object> attrs = new HashMap(1);
-        attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
+        Map<String, Object> attrs = Collections.singletonMap(
+            BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision,
             BundleRevision.PACKAGE_NAMESPACE,
