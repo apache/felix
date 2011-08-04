@@ -195,11 +195,6 @@ public class BundleCapabilityImpl implements BundleCapability
         {
             return m_attrs.toString();
         }
-        if (m_namespace.equals(BundleRevision.PACKAGE_NAMESPACE))
-        {
-            return "[" + m_revision + "] "
-                + m_namespace + "; " + m_attrs.get(BundleRevision.PACKAGE_NAMESPACE);
-        }
         return "[" + m_revision + "] " + m_namespace + "; " + m_attrs;
     }
 }

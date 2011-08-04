@@ -120,9 +120,9 @@ class ExtensionManager extends URLStreamHandler implements Content
     private final Map m_configMap;
     private final Map m_headerMap = new StringMap(false);
     private final BundleRevision m_systemBundleRevision;
-    private List<BundleCapability> m_capabilities = null;
-    private Set m_exportNames = null;
-    private Object m_securityContext = null;
+    private volatile List<BundleCapability> m_capabilities = Collections.EMPTY_LIST;
+    private volatile Set<String> m_exportNames = Collections.EMPTY_SET;
+    private volatile Object m_securityContext = null;
     private final List m_extensions;
     private volatile Bundle[] m_extensionsCache;
     private final Set m_names;
@@ -216,11 +216,12 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             ManifestParser mp = new ManifestParser(
                 m_logger, m_configMap, m_systemBundleRevision, m_headerMap);
-            setCapabilities(mp.getCapabilities());
+            List<BundleCapability> caps = aliasSymbolicName(mp.getCapabilities());
+            appendCapabilities(caps);
         }
         catch (Exception ex)
         {
-            m_capabilities = new ArrayList<BundleCapability>(0);
+            m_capabilities = Collections.EMPTY_LIST;
             m_logger.log(
                 Logger.LOG_ERROR,
                 "Error parsing system bundle export statement: "
@@ -275,7 +276,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         return m_systemBundleRevision;
     }
 
-    public synchronized Object getSecurityContext()
+    public Object getSecurityContext()
     {
         return m_securityContext;
     }
@@ -372,11 +373,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                 throw new UnsupportedOperationException(
                     "Unable to add extension bundle to FrameworkClassLoader - Maybe not an URLClassLoader?");
             }
-            List<BundleCapability> temp =
-                new ArrayList<BundleCapability>(m_capabilities.size() + exports.size());
-            temp.addAll(m_capabilities);
-            temp.addAll(exports);
-            setCapabilities(temp);
+            appendCapabilities(exports);
         }
         catch (Exception ex)
         {
@@ -443,20 +440,43 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
     }
 
-    private void setCapabilities(List<BundleCapability> capabilities)
+    private List<BundleCapability> getCapabilities(String namespace)
     {
-        m_capabilities = capabilities;
+        List<BundleCapability> caps = m_capabilities;
+        List<BundleCapability> result = caps;
+        if (namespace != null)
+        {
+            result = new ArrayList<BundleCapability>();
+            for (BundleCapability cap : caps)
+            {
+                if (cap.getNamespace().equals(namespace))
+                {
+                    result.add(cap);
+                }
+            }
+        }
+        return result;
+    }
+
+    private synchronized void appendCapabilities(List<BundleCapability> caps)
+    {
+        List<BundleCapability> newCaps =
+            new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
+        newCaps.addAll(m_capabilities);
+        newCaps.addAll(caps);
+        m_capabilities = Collections.unmodifiableList(newCaps);
         m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(m_headerMap));
     }
 
     private String convertCapabilitiesToHeaders(Map headers)
     {
         StringBuffer exportSB = new StringBuffer("");
-        Set exportNames = new HashSet();
+        Set<String> exportNames = new HashSet<String>();
 
-        for (int i = 0; (m_capabilities != null) && (i < m_capabilities.size()); i++)
+        List<BundleCapability> caps = m_capabilities;
+        for (BundleCapability cap : caps)
         {
-            if (m_capabilities.get(i).getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+            if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
             {
                 // Add a comma separate if there is an existing package.
                 if (exportSB.length() > 0)
@@ -465,10 +485,8 @@ class ExtensionManager extends URLStreamHandler implements Content
                 }
 
                 // Append exported package information.
-                exportSB.append(m_capabilities.get(i)
-                    .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
-                for (Entry<String, String> entry
-                    : m_capabilities.get(i).getDirectives().entrySet())
+                exportSB.append(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                for (Entry<String, String> entry : cap.getDirectives().entrySet())
                 {
                     exportSB.append("; ");
                     exportSB.append(entry.getKey());
@@ -476,8 +494,7 @@ class ExtensionManager extends URLStreamHandler implements Content
                     exportSB.append(entry.getValue());
                     exportSB.append("\"");
                 }
-                for (Entry<String, Object> entry
-                    : m_capabilities.get(i).getAttributes().entrySet())
+                for (Entry<String, Object> entry : cap.getAttributes().entrySet())
                 {
                     if (!entry.getKey().equals(BundleRevision.PACKAGE_NAMESPACE)
                         && !entry.getKey().equals(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE)
@@ -492,8 +509,8 @@ class ExtensionManager extends URLStreamHandler implements Content
                 }
 
                 // Remember exported packages.
-                exportNames.add(m_capabilities.get(i)
-                    .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                exportNames.add(
+                    (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
             }
         }
 
@@ -680,10 +697,7 @@ class ExtensionManager extends URLStreamHandler implements Content
         @Override
         public List<BundleCapability> getDeclaredCapabilities(String namespace)
         {
-            synchronized (ExtensionManager.this)
-            {
-                return m_capabilities;
-            }
+            return ExtensionManager.this.getCapabilities(namespace);
         }
 
         @Override
@@ -767,12 +781,15 @@ class ExtensionManager extends URLStreamHandler implements Content
         }
 
         @Override
+        public ClassLoader getClassLoader()
+        {
+            return getClass().getClassLoader();
+        }
+
+        @Override
         public List<BundleCapability> getCapabilities(String namespace)
         {
-            synchronized (ExtensionManager.this)
-            {
-                return m_capabilities;
-            }
+            return ExtensionManager.this.getCapabilities(namespace);
         }
 
         @Override
@@ -812,12 +829,9 @@ class ExtensionManager extends URLStreamHandler implements Content
             }
             if (clazz == null)
             {
-                synchronized (ExtensionManager.this)
+                if (!m_exportNames.contains(Util.getClassPackage(name)))
                 {
-                    if (!m_exportNames.contains(Util.getClassPackage(name)))
-                    {
-                        throw new ClassNotFoundException(name);
-                    }
+                    throw new ClassNotFoundException(name);
                 }
 
                 clazz = getClass().getClassLoader().loadClass(name);
