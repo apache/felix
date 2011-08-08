@@ -2560,8 +2560,7 @@ public class Felix extends BundleImpl implements Framework
                 {
                     try
                     {
-                        List<Bundle> list = new ArrayList<Bundle>(1);
-                        list.add(bundle);
+                        List<Bundle> list = Collections.singletonList((Bundle) bundle);
                         refreshPackages(list, null);
                     }
                     catch (Exception ex)
