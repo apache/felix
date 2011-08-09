@@ -46,6 +46,10 @@ import org.osgi.framework.wiring.BundleWiring;
 
 class Candidates
 {
+    public static final int MANDATORY = 0;
+    public static final int OPTIONAL = 1;
+    public static final int ON_DEMAND = 2;
+
     // Set of all involved bundle revisions.
     private final Set<BundleRevision> m_involvedRevisions;
     // Maps a capability to requirements that match it.
@@ -106,12 +110,77 @@ class Candidates
     }
 
     /**
-     * Populates additional candidates for the specified module.
+     * Populates candidates for the specified revision. How a revision is
+     * resolved depends on its resolution type as follows:
+     * <ul>
+     *   <li><tt>MANDATORY</tt> - must resolve and failure to do so throws
+     *       an exception.</li>
+     *   <li><tt>OPTIONAL</tt> - attempt to resolve, but no exception is thrown
+     *       if the resolve fails.</li>
+     *   <li><tt>ON_DEMAND</tt> - only resolve on demand; this only applies to
+     *       fragments and will only resolve a fragment if its host is already
+     *       selected as a candidate.</li>
+     * </ul>
      * @param state the resolver state used for populating the candidates.
-     * @param revision the module whose candidates should be populated.
+     * @param revision the revision whose candidates should be populated.
+     * @param resolution indicates the resolution type.
+     */
+    public final void populate(
+        ResolverState state, BundleRevision revision, int resolution)
+    {
+        // Get the current result cache value, to make sure the revision
+        // hasn't already been populated.
+        Object cacheValue = m_populateResultCache.get(revision);
+        // Has been unsuccessfully populated.
+        if (cacheValue instanceof ResolveException)
+        {
+            return;
+        }
+        // Has been successfully populated.
+        else if (cacheValue instanceof Boolean)
+        {
+            return;
+        }
+
+        // We will always attempt to populate fragments, since this is necessary
+        // for ondemand attaching of fragment. However, we'll only attempt to
+        // populate optional non-fragment revisions if they aren't already
+        // resolved.
+        boolean isFragment = Util.isFragment(revision);
+        if (!isFragment && (revision.getWiring() != null))
+        {
+            return;
+        }
+
+        // Always attempt to populate mandatory or optional revisions.
+        // However, for on-demand fragments only populate if their host
+        // is already populated.
+        if ((resolution != ON_DEMAND)
+            || (isFragment && populateFragment(state, revision)))
+        {
+            try
+            {
+                // Try to populate candidates for the optional revision.
+                populateRevision(state, revision);
+            }
+            catch (ResolveException ex)
+            {
+                // Only throw an exception if resolution is mandatory.
+                if (resolution == MANDATORY)
+                {
+                    throw ex;
+                }
+            }
+        }
+    }
+
+    /**
+     * Populates candidates for the specified revision.
+     * @param state the resolver state used for populating the candidates.
+     * @param revision the revision whose candidates should be populated.
      */
 // TODO: FELIX3 - Modify to not be recursive.
-    public final void populate(ResolverState state, BundleRevision revision)
+    private void populateRevision(ResolverState state, BundleRevision revision)
     {
         // Determine if we've already calculated this revision's candidates.
         // The result cache will have one of three values:
@@ -249,7 +318,7 @@ class Candidates
                 {
                     try
                     {
-                        populate(state, candCap.getRevision());
+                        populateRevision(state, candCap.getRevision());
                     }
                     catch (ResolveException ex)
                     {
@@ -343,120 +412,63 @@ class Candidates
         }
     }
 
-// TODO: OSGi R4.3 - Related to resolve() method clean up, can this just
-//       become the normal case? Currently, it just swallows the resolve
-//       exception, which would have to change.
-    public final boolean populate(
-        ResolverState state, BundleRevision revision, boolean isGreedyAttach)
+    private boolean populateFragment(ResolverState state, BundleRevision revision)
+        throws ResolveException
     {
-        // Get the current result cache value, to make sure the revision
-        // hasn't already been populated.
-        Object cacheValue = m_populateResultCache.get(revision);
-        // Has been unsuccessfully populated.
-        if (cacheValue instanceof ResolveException)
+        // Create a modifiable list of the revision's requirements.
+        List<BundleRequirement> remainingReqs =
+            new ArrayList(revision.getDeclaredRequirements(null));
+        // Find the host requirement.
+        BundleRequirement hostReq = null;
+        for (Iterator<BundleRequirement> it = remainingReqs.iterator();
+            it.hasNext(); )
         {
-            return false;
-        }
-        // Has been successfully populated.
-        else if (cacheValue instanceof Boolean)
-        {
-            return true;
-        }
-
-        // We will always attempt to populate fragments, since this is necessary
-        // for greedy attaching of fragment. However, we'll only attempt to
-        // populate optional non-fragment revisions if they aren't already
-        // resolved.
-        boolean isFragment = Util.isFragment(revision);
-        if (!isFragment && (revision.getWiring() != null))
-        {
-            return false;
-        }
-
-        try
-        {
-            // If the optional revision is a fragment and this is a greedy attach,
-            // then only populate the fragment if it has a candidate host in the
-            // set of already populated revisions. We do this to avoid resolving
-            // unneeded fragments and hosts. If the fragment has a host, we'll
-            // prepopulate the result cache here to avoid having to do the host
-            // lookup again in populate().
-            if (isGreedyAttach && isFragment)
+            BundleRequirement r = it.next();
+            if (r.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
             {
-                // Create a modifiable list of the revision's requirements.
-                List<BundleRequirement> remainingReqs =
-                    new ArrayList(revision.getDeclaredRequirements(null));
-
-                // Find the host requirement.
-                BundleRequirement hostReq = null;
-                for (Iterator<BundleRequirement> it = remainingReqs.iterator();
-                    it.hasNext(); )
-                {
-                    BundleRequirement r = it.next();
-                    if (r.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
-                    {
-                        hostReq = r;
-                        it.remove();
-                        break;
-                    }
-                }
-
-                // Get candidates hosts and keep any that have been populated.
-                SortedSet<BundleCapability> hosts =
-                    state.getCandidates((BundleRequirementImpl) hostReq, false);
-                for (Iterator<BundleCapability> it = hosts.iterator(); it.hasNext(); )
-                {
-                    BundleCapability host = it.next();
-                    if (!isPopulated(host.getRevision()))
-                    {
-                        it.remove();
-                    }
-                }
-
-                // If there aren't any populated hosts, then we can just
-                // return since this fragment isn't needed.
-                if (hosts.isEmpty())
-                {
-                    return false;
-                }
-
-                // If there are populates host candidates, then finish up
-                // some other checks and prepopulate the result cache with
-                // the work we've done so far.
-
-                // Verify that any required execution environment is satisfied.
-                state.checkExecutionEnvironment(revision);
-
-                // Verify that any native libraries match the current platform.
-                state.checkNativeLibraries(revision);
-
-                // Record cycle count, but start at -1 since it will
-                // be incremented again in populate().
-                Integer cycleCount = new Integer(-1);
-
-                // Create a local map for populating candidates first, just in case
-                // the revision is not resolvable.
-                Map<BundleRequirement, SortedSet<BundleCapability>> localCandidateMap =
-                    new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
-
-                // Add the discovered host candidates to the local candidate map.
-                localCandidateMap.put(hostReq, hosts);
-
-                // Add these value to the result cache so we know we are
-                // in the middle of populating candidates for the current
-                // revision.
-                m_populateResultCache.put(revision,
-                    new Object[] { cycleCount, localCandidateMap, remainingReqs });
+                hostReq = r;
+                it.remove();
+                break;
             }
-
-            // Try to populate candidates for the optional revision.
-            populate(state, revision);
         }
-        catch (ResolveException ex)
+        // Get candidates hosts and keep any that have been populated.
+        SortedSet<BundleCapability> hosts =
+            state.getCandidates((BundleRequirementImpl) hostReq, false);
+        for (Iterator<BundleCapability> it = hosts.iterator(); it.hasNext(); )
+        {
+            BundleCapability host = it.next();
+            if (!isPopulated(host.getRevision()))
+            {
+                it.remove();
+            }
+        }
+        // If there aren't any populated hosts, then we can just
+        // return since this fragment isn't needed.
+        if (hosts.isEmpty())
         {
             return false;
         }
-
+        // If there are populates host candidates, then finish up
+        // some other checks and prepopulate the result cache with
+        // the work we've done so far.
+        // Verify that any required execution environment is satisfied.
+        state.checkExecutionEnvironment(revision);
+        // Verify that any native libraries match the current platform.
+        state.checkNativeLibraries(revision);
+        // Record cycle count, but start at -1 since it will
+        // be incremented again in populate().
+        Integer cycleCount = new Integer(-1);
+        // Create a local map for populating candidates first, just in case
+        // the revision is not resolvable.
+        Map<BundleRequirement, SortedSet<BundleCapability>> localCandidateMap =
+            new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
+        // Add the discovered host candidates to the local candidate map.
+        localCandidateMap.put(hostReq, hosts);
+        // Add these value to the result cache so we know we are
+        // in the middle of populating candidates for the current
+        // revision.
+        m_populateResultCache.put(revision,
+            new Object[] { cycleCount, localCandidateMap, remainingReqs });
         return true;
     }
 
@@ -490,7 +502,7 @@ class Candidates
             {
                 try
                 {
-                    populate(state, candCap.getRevision());
+                    populateRevision(state, candCap.getRevision());
                 }
                 catch (ResolveException ex)
                 {

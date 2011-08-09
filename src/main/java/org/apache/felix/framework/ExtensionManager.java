@@ -542,8 +542,12 @@ class ExtensionManager extends URLStreamHandler implements Content
         {
             try
             {
-                result = ((BundleRevisionImpl)
-                    extBundle.adapt(BundleRevision.class)).getResourceLocal(path);
+                BundleRevisionImpl bri =
+                    (BundleRevisionImpl) extBundle.adapt(BundleRevision.class);
+                if (bri != null)
+                {
+                    result = bri.getResourceLocal(path);
+                }
             }
             catch (Exception ex)
             {
