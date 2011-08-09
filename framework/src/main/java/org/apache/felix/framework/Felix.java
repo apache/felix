@@ -676,7 +676,9 @@ public class Felix extends BundleImpl implements Framework
                 // state to be set to RESOLVED.
                 try
                 {
-                    m_resolver.resolve(adapt(BundleRevision.class));
+                    m_resolver.resolve(
+                        Collections.singleton(adapt(BundleRevision.class)),
+                        Collections.EMPTY_SET);
                 }
                 catch (ResolveException ex)
                 {
@@ -3800,7 +3802,7 @@ public class Felix extends BundleImpl implements Framework
                 }
                 try
                 {
-                    m_resolver.resolve(revisions);
+                    m_resolver.resolve(Collections.EMPTY_SET, revisions);
                     if (result)
                     {
                         for (BundleRevision br : revisions)
@@ -3836,7 +3838,7 @@ public class Felix extends BundleImpl implements Framework
     {
         try
         {
-            m_resolver.resolve(revision);
+            m_resolver.resolve(Collections.singleton(revision), Collections.EMPTY_SET);
         }
         catch (ResolveException ex)
         {
