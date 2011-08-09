@@ -29,12 +29,13 @@ import org.osgi.framework.wiring.BundleRevision;
 public interface Resolver
 {
     Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, Set<BundleRevision> optional);
-    Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, Set<BundleRevision> revisions, Set<BundleRevision> optional);
+        ResolverState state,
+        Set<BundleRevision> mandatoryRevisions,
+        Set<BundleRevision> optionalRevisions,
+        Set<BundleRevision> ondemandFragments);
     Map<BundleRevision, List<ResolverWire>> resolve(
         ResolverState state, BundleRevision revision, String pkgName,
-        Set<BundleRevision> fragments);
+        Set<BundleRevision> ondemandFragments);
 
     public static interface ResolverState
     {

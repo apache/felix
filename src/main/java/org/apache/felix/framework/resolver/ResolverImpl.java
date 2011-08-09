@@ -58,144 +58,15 @@ public class ResolverImpl implements Resolver
     }
 
     public Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, Set<BundleRevision> optional)
+        ResolverState state,
+        Set<BundleRevision> mandatoryRevisions,
+        Set<BundleRevision> optionalRevisions,
+        Set<BundleRevision> ondemandFragments)
     {
-        Map<BundleRevision, List<ResolverWire>> wireMap = new HashMap<BundleRevision, List<ResolverWire>>();
-        Map<BundleRevision, Packages> revisionPkgMap = new HashMap<BundleRevision, Packages>();
-
-        if (revision.getWiring() == null)
-        {
-            boolean retryFragments;
-            do
-            {
-                retryFragments = false;
-
-                try
-                {
-                    // Populate revision's candidates.
-                    Candidates allCandidates = new Candidates();
-                    allCandidates.populate(state, revision);
-
-                    // Try to populate optional fragments.
-                    for (BundleRevision br : optional)
-                    {
-                        allCandidates.populate(state, br, true);
-                    }
-
-                    // Merge any fragments into hosts.
-                    allCandidates.prepare(getResolvedSingletons(state));
-                    // Make sure revision is still valid, since it could
-                    // fail due to fragment and/or singleton selection.
-// TODO: OSGi R4.3 - Could this be merged back into Candidates?
-                    if (!allCandidates.isPopulated(revision))
-                    {
-                        throw allCandidates.getResolveException(revision);
-                    }
-
-                    // Record the initial candidate permutation.
-                    m_usesPermutations.add(allCandidates);
-
-                    ResolveException rethrow = null;
-
-                    // If the requested revision is a fragment, then
-                    // ultimately we will verify the host.
-                    List<BundleRequirement> hostReqs =
-                        revision.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE);
-
-                    BundleRevision target = revision;
-
-                    do
-                    {
-                        rethrow = null;
-
-                        revisionPkgMap.clear();
-                        m_packageSourcesCache.clear();
-
-                        allCandidates = (m_usesPermutations.size() > 0)
-                            ? m_usesPermutations.remove(0)
-                            : m_importPermutations.remove(0);
-//allCandidates.dump();
-
-                        // If we are resolving a fragment, then we
-                        // actually want to verify its host.
-                        if (!hostReqs.isEmpty())
-                        {
-                            target = allCandidates.getCandidates(hostReqs.get(0))
-                                .iterator().next().getRevision();
-                        }
-
-                        calculatePackageSpaces(
-                            allCandidates.getWrappedHost(target), allCandidates, revisionPkgMap,
-                            new HashMap(), new HashSet());
-//System.out.println("+++ PACKAGE SPACES START +++");
-//dumpRevisionPkgMap(revisionPkgMap);
-//System.out.println("+++ PACKAGE SPACES END +++");
-
-                        try
-                        {
-                            checkPackageSpaceConsistency(
-                                false, allCandidates.getWrappedHost(target),
-                                allCandidates, revisionPkgMap, new HashMap());
-                        }
-                        catch (ResolveException ex)
-                        {
-                            rethrow = ex;
-                        }
-                    }
-                    while ((rethrow != null)
-                        && ((m_usesPermutations.size() > 0) || (m_importPermutations.size() > 0)));
-
-                    // If there is a resolve exception, then determine if an
-                    // optionally resolved revision is to blame (typically a fragment).
-                    // If so, then remove the optionally resolved resolved and try
-                    // again; otherwise, rethrow the resolve exception.
-                    if (rethrow != null)
-                    {
-                        BundleRevision faultyRevision =
-                            getActualBundleRevision(rethrow.getRevision());
-                        if (rethrow.getRequirement() instanceof HostedRequirement)
-                        {
-                            faultyRevision =
-                                ((HostedRequirement) rethrow.getRequirement())
-                                    .getOriginalRequirement().getRevision();
-                        }
-                        if (optional.remove(faultyRevision))
-                        {
-                            retryFragments = true;
-                        }
-                        else
-                        {
-                            throw rethrow;
-                        }
-                    }
-                    // If there is no exception to rethrow, then this was a clean
-                    // resolve, so populate the wire map.
-                    else
-                    {
-                        wireMap =
-                            populateWireMap(
-                                allCandidates.getWrappedHost(target),
-                                revisionPkgMap, wireMap, allCandidates);
-                    }
-                }
-                finally
-                {
-                    // Always clear the state.
-                    m_usesPermutations.clear();
-                    m_importPermutations.clear();
-                }
-            }
-            while (retryFragments);
-        }
-
-        return wireMap;
-    }
-
-    public Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, Set<BundleRevision> revisions, Set<BundleRevision> optional)
-    {
-        Map<BundleRevision, List<ResolverWire>> wireMap = new HashMap<BundleRevision, List<ResolverWire>>();
-        Map<BundleRevision, Packages> revisionPkgMap = new HashMap<BundleRevision, Packages>();
+        Map<BundleRevision, List<ResolverWire>> wireMap =
+            new HashMap<BundleRevision, List<ResolverWire>>();
+        Map<BundleRevision, Packages> revisionPkgMap =
+            new HashMap<BundleRevision, Packages>();
 
         boolean retry;
         do
@@ -207,33 +78,70 @@ public class ResolverImpl implements Resolver
                 // Create object to hold all candidates.
                 Candidates allCandidates = new Candidates();
 
-                // Populate revisions.
-                for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
+                // Populate mandatory revisions; since these are mandatory
+                // revisions, failure throws a resolve exception.
+                for (Iterator<BundleRevision> it = mandatoryRevisions.iterator();
+                    it.hasNext(); )
                 {
                     BundleRevision br = it.next();
-                    if ((!Util.isFragment(br) && br.getWiring() != null)
-                        || !allCandidates.populate(state, br, false))
+                    if (Util.isFragment(br) || (br.getWiring() == null))
+                    {
+                        allCandidates.populate(state, br, Candidates.MANDATORY);
+                    }
+                    else
                     {
                         it.remove();
                     }
                 }
 
-                // Try to populate optional fragments.
-                for (BundleRevision br : optional)
+                // Populate optional revisions; since these are optional
+                // revisions, failure does not throw a resolve exception.
+                for (BundleRevision br : optionalRevisions)
                 {
-                    allCandidates.populate(state, br, true);
+                    boolean isFragment = Util.isFragment(br);
+                    if (isFragment || (br.getWiring() == null))
+                    {
+                        allCandidates.populate(state, br, Candidates.OPTIONAL);
+                    }
+                }
+
+                // Populate ondemand fragments; since these are optional
+                // revisions, failure does not throw a resolve exception.
+                for (BundleRevision br : ondemandFragments)
+                {
+                    boolean isFragment = Util.isFragment(br);
+                    if (isFragment)
+                    {
+                        allCandidates.populate(state, br, Candidates.ON_DEMAND);
+                    }
                 }
 
                 // Merge any fragments into hosts.
                 allCandidates.prepare(getResolvedSingletons(state));
 
-                // Prune failed revisions.
+                // Make sure mandatory revisions are still resolved,
+                // since they could fail due to fragment and/or singleton
+                // selection.
 // TODO: OSGi R4.3 - Could this be merged back into Candidates?
-                for (Iterator<BundleRevision> it = revisions.iterator(); it.hasNext(); )
+                for (BundleRevision br : mandatoryRevisions)
                 {
-                    if (!allCandidates.isPopulated(it.next()))
+                    if (!allCandidates.isPopulated(br))
                     {
-                        it.remove();
+                        throw allCandidates.getResolveException(br);
+                    }
+                }
+
+                // Create a combined list of populated revisions; for
+                // optional revisions. We do not need to consider ondemand
+                // fragments, since they will only be pulled in if their
+                // host is already present.
+                Set<BundleRevision> allRevisions =
+                    new HashSet<BundleRevision>(mandatoryRevisions);
+                for (BundleRevision br : optionalRevisions)
+                {
+                    if (allCandidates.isPopulated(br))
+                    {
+                        allRevisions.add(br);
                     }
                 }
 
@@ -242,15 +150,19 @@ public class ResolverImpl implements Resolver
 
                 ResolveException rethrow = null;
 
-                // If the requested revision is a fragment, then
-                // ultimately we will verify the host., so store
-                // any host requirements
+                // If a populated revision is a fragment, then its host
+                // must ultimately be verified, so store its host requirement
+                // to use for package space calculation.
                 Map<BundleRevision, List<BundleRequirement>> hostReqs =
                     new HashMap<BundleRevision, List<BundleRequirement>>();
-                for (BundleRevision br : revisions)
+                for (BundleRevision br : allRevisions)
                 {
-                    hostReqs.put(
-                        br, br.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE));
+                    if (Util.isFragment(br))
+                    {
+                        hostReqs.put(
+                            br,
+                            br.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE));
+                    }
                 }
 
                 do
@@ -265,14 +177,14 @@ public class ResolverImpl implements Resolver
                         : m_importPermutations.remove(0);
 //allCandidates.dump();
 
-                    for (BundleRevision br : revisions)
+                    for (BundleRevision br : allRevisions)
                     {
                         BundleRevision target = br;
 
-                        // If we are resolving a fragment, then we
-                        // actually want to verify its host.
+                        // If we are resolving a fragment, then get its
+                        // host candidate and verify it instead.
                         List<BundleRequirement> hostReq = hostReqs.get(br);
-                        if (!hostReq.isEmpty())
+                        if (hostReq != null)
                         {
                             target = allCandidates.getCandidates(hostReq.get(0))
                                 .iterator().next().getRevision();
@@ -314,11 +226,11 @@ public class ResolverImpl implements Resolver
                             ((HostedRequirement) rethrow.getRequirement())
                                 .getOriginalRequirement().getRevision();
                     }
-                    if (revisions.remove(faultyRevision))
+                    if (optionalRevisions.remove(faultyRevision))
                     {
                         retry = true;
                     }
-                    else if (optional.remove(faultyRevision))
+                    else if (ondemandFragments.remove(faultyRevision))
                     {
                         retry = true;
                     }
@@ -331,14 +243,14 @@ public class ResolverImpl implements Resolver
                 // resolve, so populate the wire map.
                 else
                 {
-                    for (BundleRevision br : revisions)
+                    for (BundleRevision br : allRevisions)
                     {
                         BundleRevision target = br;
 
                         // If we are resolving a fragment, then we
                         // actually want to populate its host's wires.
                         List<BundleRequirement> hostReq = hostReqs.get(br);
-                        if (!hostReq.isEmpty())
+                        if (hostReq != null)
                         {
                             target = allCandidates.getCandidates(hostReq.get(0))
                                 .iterator().next().getRevision();
@@ -368,7 +280,7 @@ public class ResolverImpl implements Resolver
 
     public Map<BundleRevision, List<ResolverWire>> resolve(
         ResolverState state, BundleRevision revision, String pkgName,
-        Set<BundleRevision> optional)
+        Set<BundleRevision> ondemandFragments)
     {
         // We can only create a dynamic import if the following
         // conditions are met:
@@ -386,21 +298,25 @@ public class ResolverImpl implements Resolver
             Map<BundleRevision, List<ResolverWire>> wireMap = new HashMap<BundleRevision, List<ResolverWire>>();
             Map<BundleRevision, Packages> revisionPkgMap = new HashMap<BundleRevision, Packages>();
 
-            boolean retryFragments;
+            boolean retry;
             do
             {
-                retryFragments = false;
+                retry = false;
 
                 try
                 {
                     // Try to populate optional fragments.
-                    for (BundleRevision br : optional)
+                    for (BundleRevision br : ondemandFragments)
                     {
-                        allCandidates.populate(state, br, true);
+                        if (Util.isFragment(br))
+                        {
+                            allCandidates.populate(state, br, Candidates.ON_DEMAND);
+                        }
                     }
 
                     // Merge any fragments into hosts.
                     allCandidates.prepare(getResolvedSingletons(state));
+
                     // Make sure revision is still valid, since it could
                     // fail due to fragment and/or singleton selection.
 // TODO: OSGi R4.3 - Could this be merged back into Candidates?
@@ -466,9 +382,9 @@ public class ResolverImpl implements Resolver
                                 ((HostedRequirement) rethrow.getRequirement())
                                     .getOriginalRequirement().getRevision();
                         }
-                        if (optional.remove(faultyRevision))
+                        if (ondemandFragments.remove(faultyRevision))
                         {
-                            retryFragments = true;
+                            retry = true;
                         }
                         else
                         {
@@ -491,7 +407,7 @@ public class ResolverImpl implements Resolver
                     m_importPermutations.clear();
                 }
             }
-            while (retryFragments);
+            while (retry);
         }
 
         return null;

@@ -163,8 +163,8 @@ class BundleRevisionDependencies
         List<BundleRevision> revisions = bundle.adapt(BundleRevisions.class).getRevisions();
         for (BundleRevision revision : revisions)
         {
-// TODO: OSGi R4.3 - This is sort of a hack. We need to special case fragments,
-//       since their dependents are their hosts.
+            // We need to special case fragments,
+            // since their dependents are their hosts.
             if (Util.isFragment(revision))
             {
                 BundleWiring wiring = revision.getWiring();
