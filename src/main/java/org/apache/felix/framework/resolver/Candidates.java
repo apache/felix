@@ -50,6 +50,8 @@ class Candidates
     public static final int OPTIONAL = 1;
     public static final int ON_DEMAND = 2;
 
+    // Set of all mandatory bundle revisions.
+    private final Set<BundleRevision> m_mandatoryRevisions;
     // Set of all involved bundle revisions.
     private final Set<BundleRevision> m_involvedRevisions;
     // Maps a capability to requirements that match it.
@@ -79,13 +81,14 @@ class Candidates
      * @param wrappedHosts the wrapped hosts map.
     **/
     private Candidates(
-        Set<BundleRevision> involvedRevisions,
+        Set<BundleRevision> mandatoryRevisions, Set<BundleRevision> involvedRevisions,
         Map<BundleCapability, Set<BundleRequirement>> dependentMap,
         Map<BundleRequirement, SortedSet<BundleCapability>> candidateMap,
         Map<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>> hostFragments,
         Map<BundleRevision, HostBundleRevision> wrappedHosts, Map<BundleRevision, Object> populateResultCache,
         boolean fragmentsPresent)
     {
+        m_mandatoryRevisions = mandatoryRevisions;
         m_involvedRevisions = involvedRevisions;
         m_dependentMap = dependentMap;
         m_candidateMap = candidateMap;
@@ -100,6 +103,7 @@ class Candidates
     **/
     public Candidates()
     {
+        m_mandatoryRevisions = new HashSet<BundleRevision>();
         m_involvedRevisions = new HashSet<BundleRevision>();
         m_dependentMap = new HashMap<BundleCapability, Set<BundleRequirement>>();
         m_candidateMap = new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
@@ -158,6 +162,10 @@ class Candidates
         if ((resolution != ON_DEMAND)
             || (isFragment && populateFragment(state, revision)))
         {
+            if (resolution == MANDATORY)
+            {
+                m_mandatoryRevisions.add(revision);
+            }
             try
             {
                 // Try to populate candidates for the optional revision.
@@ -489,6 +497,10 @@ class Candidates
         ResolverState state, BundleRevision revision,
         BundleRequirement req, SortedSet<BundleCapability> candidates)
     {
+        // Record the revision associated with the dynamic require
+        // as a mandatory revision.
+        m_mandatoryRevisions.add(revision);
+
         // Add the dynamic imports candidates.
         add(req, candidates);
 
@@ -820,6 +832,17 @@ class Candidates
                 }
             }
         }
+
+        // Lastly, verify that all mandatory revisions are still
+        // populated, since some might have become unresolved after
+        // selecting fragments/singletons.
+        for (BundleRevision br : m_mandatoryRevisions)
+        {
+            if (!isPopulated(br))
+            {
+                throw getResolveException(br);
+            }
+        }
     }
 
     private void populateDependents()
@@ -1034,7 +1057,7 @@ class Candidates
         }
 
         return new Candidates(
-            m_involvedRevisions, dependentMap, candidateMap,
+            m_mandatoryRevisions, m_involvedRevisions, dependentMap, candidateMap,
             m_hostFragments, m_allWrappedHosts, m_populateResultCache,
             m_fragmentsPresent);
     }

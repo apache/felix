@@ -119,18 +119,6 @@ public class ResolverImpl implements Resolver
                 // Merge any fragments into hosts.
                 allCandidates.prepare(getResolvedSingletons(state));
 
-                // Make sure mandatory revisions are still resolved,
-                // since they could fail due to fragment and/or singleton
-                // selection.
-// TODO: OSGi R4.3 - Could this be merged back into Candidates?
-                for (BundleRevision br : mandatoryRevisions)
-                {
-                    if (!allCandidates.isPopulated(br))
-                    {
-                        throw allCandidates.getResolveException(br);
-                    }
-                }
-
                 // Create a combined list of populated revisions; for
                 // optional revisions. We do not need to consider ondemand
                 // fragments, since they will only be pulled in if their
@@ -316,14 +304,6 @@ public class ResolverImpl implements Resolver
 
                     // Merge any fragments into hosts.
                     allCandidates.prepare(getResolvedSingletons(state));
-
-                    // Make sure revision is still valid, since it could
-                    // fail due to fragment and/or singleton selection.
-// TODO: OSGi R4.3 - Could this be merged back into Candidates?
-                    if (!allCandidates.isPopulated(revision))
-                    {
-                        throw allCandidates.getResolveException(revision);
-                    }
 
                     // Record the initial candidate permutation.
                     m_usesPermutations.add(allCandidates);
