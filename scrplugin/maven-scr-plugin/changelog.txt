@@ -1,3 +1,10 @@
+Changes from 1.7.2 to 1.7.4
+---------------------------
+
+** Improvement
+    * [FELIX-3066] - Add support for source directory include filter via plugin configuration
+
+
 Changes from 1.7.0 to 1.7.2
 ---------------------------
 

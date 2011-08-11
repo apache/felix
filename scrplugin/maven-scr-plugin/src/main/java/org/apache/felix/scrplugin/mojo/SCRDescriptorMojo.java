@@ -125,6 +125,14 @@ public class SCRDescriptorMojo extends AbstractMojo {
      */
     protected boolean strictMode;
 
+    
+    /**
+     * The comma separated list of tokens to include when processing sources.
+     * 
+     * @parameter alias="includes"
+     */
+    private String sourceIncludes;
+    
     /**
      * The comma separated list of tokens to exclude when processing sources.
      *
@@ -166,7 +174,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
             final ClassLoader classLoader = new URLClassLoader( getClassPath(), this.getClass().getClassLoader() );
             final JavaClassDescriptorManager jManager = new MavenJavaClassDescriptorManager( project, scrLog,
-                classLoader, this.annotationTagProviders, this.sourceExcludes, this.parseJavadoc,
+                classLoader, this.annotationTagProviders, this.sourceIncludes, this.sourceExcludes, this.parseJavadoc,
                 this.processAnnotations );
 
             final SCRDescriptorGenerator generator = new SCRDescriptorGenerator( scrLog );
