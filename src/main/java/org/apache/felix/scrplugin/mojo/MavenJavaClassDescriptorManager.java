@@ -36,6 +36,8 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
 
     private final MavenProject project;
 
+    private final String includeString;
+    
     private final String excludeString;
 
     /** The component definitions from other bundles hashed by classname. */
@@ -43,12 +45,13 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
 
 
     public MavenJavaClassDescriptorManager( MavenProject project, Log log, ClassLoader classLoader,
-        String[] annotationTagProviders, String excludeString, boolean parseJavadocs, boolean processAnnotations )
+        String[] annotationTagProviders, String includeString, String excludeString, boolean parseJavadocs, boolean processAnnotations )
         throws SCRDescriptorFailureException
     {
         super( log, classLoader, annotationTagProviders, parseJavadocs, processAnnotations );
 
         this.project = project;
+        this.includeString = includeString;
         this.excludeString = excludeString;
     }
 
@@ -68,7 +71,11 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
         final Iterator<String> i = project.getCompileSourceRoots().iterator();
 
         // FELIX-509: check for excludes
-        final String[] includes = new String[] { "**/*.java" };
+        String[] includes = new String[] { "**/*.java" };
+        if ( includeString != null ) {
+        	includes = StringUtils.split( includeString, "," );
+        }
+        
         final String[] excludes;
         if ( excludeString != null )
         {
