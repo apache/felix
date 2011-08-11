@@ -19,8 +19,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.apache.felix</groupId>
-    <artifactId>felix</artifactId>
-    <version>1.0.4</version>
+    <artifactId>felix-parent</artifactId>
+    <version>1.2.0</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -30,15 +30,15 @@
   <version>0.9.0-SNAPSHOT</version>
   <dependencies>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>1.0.1</version>
+      <version>4.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
-      <version>1.0.0</version>
+      <version>4.0.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -47,7 +47,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>2.3.5</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -61,6 +61,7 @@
             </Bundle-Activator>
             <Bundle-SymbolicName>org.apache.felix.wireadmin</Bundle-SymbolicName>
             <Private-Package>org.apache.felix.wireadmin.*</Private-Package>
+            <Export-Package>org.osgi.service.wireadmin</Export-Package>
           </instructions>
         </configuration>
       </plugin>
