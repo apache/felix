@@ -955,7 +955,6 @@ class StatefulResolver
             m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
         }
 
-// TODO: OSGi R4.3/RESOLVER HOOK - We could maintain a separate list to optimize this.
         synchronized Set<BundleRevision> getUnresolvedRevisions()
         {
             Set<BundleRevision> unresolved = new HashSet<BundleRevision>();
