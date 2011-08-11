@@ -18,21 +18,12 @@
  */
 package org.apache.felix.scrplugin.tags.cl;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.*;
+import java.util.*;
 
-import org.apache.felix.scrplugin.Constants;
-import org.apache.felix.scrplugin.JavaClassDescriptorManager;
-import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.*;
 import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaField;
-import org.apache.felix.scrplugin.tags.JavaMethod;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.tags.*;
 
 /**
  * <code>ClassLoaderJavaClassDescription.java</code>...
@@ -185,8 +176,10 @@ public class ClassLoaderJavaClassDescription implements JavaClassDescription {
      * @see org.apache.felix.scrplugin.tags.JavaClassDescription#getTagByName(java.lang.String)
      */
     public JavaTag getTagByName(String name) {
-        // this is only used to retrieve the component tag, so we can ignore it
-        // for classes from other bundles and simply return null
+        // this is only used to retrieve the component tag, so we just support this
+        if ( this.component != null && name.equals(Constants.COMPONENT) ) {
+            return new ClassLoaderJavaTag(this, this.component);
+        }
         return null;
     }
 

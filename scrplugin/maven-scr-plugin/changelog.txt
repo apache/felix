@@ -1,6 +1,9 @@
 Changes from 1.7.2 to 1.7.4
 ---------------------------
 
+** Bug
+    * [FELIX-2963] - scr annotations @Activate @Deactivate @Modified are not detected with class inheritance
+
 ** Improvement
     * [FELIX-3066] - Add support for source directory include filter via plugin configuration
 
