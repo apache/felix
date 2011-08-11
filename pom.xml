@@ -39,9 +39,9 @@
     <log.level>4</log.level>
     <dollar>$</dollar>
     <framework.version>3.3.0-SNAPSHOT</framework.version>
-    <gogo.runtime.version>0.8.0</gogo.runtime.version>
-    <gogo.shell.version>0.8.0</gogo.shell.version>
-    <gogo.command.version>0.8.0</gogo.command.version>
+    <gogo.runtime.version>0.10.0</gogo.runtime.version>
+    <gogo.shell.version>0.10.0</gogo.shell.version>
+    <gogo.command.version>0.10.0</gogo.command.version>
     <obr.version>1.6.2</obr.version>
   </properties>
   <profiles>
