@@ -612,13 +612,14 @@ public class ResolverImpl implements Resolver
         Packages revisionPkgs = revisionPkgMap.get(revision);
 
         // Second, add all imported packages to the target revision's package space.
-        Set<BundleRevision> cycles = new HashSet<BundleRevision>();
         for (int i = 0; i < reqs.size(); i++)
         {
             BundleRequirement req = reqs.get(i);
             BundleCapability cap = caps.get(i);
             calculateExportedPackages(cap.getRevision(), allCandidates, revisionPkgMap);
-            mergeCandidatePackages(revision, req, cap, revisionPkgMap, allCandidates, cycles);
+            mergeCandidatePackages(
+                revision, req, cap, revisionPkgMap, allCandidates,
+                new HashMap<BundleRevision, List<BundleCapability>>());
         }
 
         // Third, have all candidates to calculate their package spaces.
@@ -645,8 +646,10 @@ public class ResolverImpl implements Resolver
             {
                 BundleRequirement req = reqs.get(i);
                 BundleCapability cap = caps.get(i);
-                // Ignore revisions that import from themselves.
-                if (!cap.getRevision().equals(revision))
+                // Ignore bundle/package requirements, since they are
+                // considered below.
+                if (!req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE)
+                    && !req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     List<BundleRequirement> blameReqs = new ArrayList();
                     blameReqs.add(req);
@@ -707,13 +710,19 @@ public class ResolverImpl implements Resolver
     private void mergeCandidatePackages(
         BundleRevision current, BundleRequirement currentReq, BundleCapability candCap,
         Map<BundleRevision, Packages> revisionPkgMap,
-        Candidates allCandidates, Set<BundleRevision> cycles)
+        Candidates allCandidates, Map<BundleRevision, List<BundleCapability>> cycles)
     {
-        if (cycles.contains(current))
+        List<BundleCapability> cycleCaps = cycles.get(current);
+        if (cycleCaps == null)
+        {
+            cycleCaps = new ArrayList<BundleCapability>();
+            cycles.put(current, cycleCaps);
+        }
+        if (cycleCaps.contains(candCap))
         {
             return;
         }
-        cycles.add(current);
+        cycleCaps.add(candCap);
 
         if (candCap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
         {
@@ -744,26 +753,54 @@ public class ResolverImpl implements Resolver
 
             // If the candidate requires any other bundles with reexport visibility,
             // then we also need to merge their packages too.
-            List<BundleRequirement> reqs = (candCap.getRevision().getWiring() != null)
-                ? candCap.getRevision().getWiring().getRequirements(null)
-                : candCap.getRevision().getDeclaredRequirements(null);
-            for (BundleRequirement req : reqs)
+            if (candCap.getRevision().getWiring() != null)
             {
-                if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
+                for (BundleWire bw
+                    : candCap.getRevision().getWiring().getRequiredWires(null))
                 {
-// TODO: OSGi R4.3 - Something doesn't seem correct here since we don't calculate
-//       reexported packages for resolved bundles. Create a test case.
-                    String value = req.getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
-                    if ((value != null) && value.equals(Constants.VISIBILITY_REEXPORT)
-                        && (allCandidates.getCandidates(req) != null))
+                    if (bw.getRequirement().getNamespace()
+                        .equals(BundleRevision.BUNDLE_NAMESPACE))
                     {
-                        mergeCandidatePackages(
-                            current,
-                            currentReq,
-                            allCandidates.getCandidates(req).iterator().next(),
-                            revisionPkgMap,
-                            allCandidates,
-                            cycles);
+                        String value = bw.getRequirement()
+                            .getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
+                        if ((value != null)
+                            && value.equals(Constants.VISIBILITY_REEXPORT))
+                        {
+                            mergeCandidatePackages(
+                                current,
+                                currentReq,
+                                bw.getCapability(),
+                                revisionPkgMap,
+                                allCandidates,
+                                cycles);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                List<BundleRequirement> reqs = (candCap.getRevision().getWiring() != null)
+                    ? candCap.getRevision().getWiring().getRequirements(null)
+                    : candCap.getRevision().getDeclaredRequirements(null);
+                for (BundleRequirement req
+                    : candCap.getRevision().getDeclaredRequirements(null))
+                {
+                    if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
+                    {
+                        String value =
+                            req.getDirectives().get(Constants.VISIBILITY_DIRECTIVE);
+                        if ((value != null)
+                            && value.equals(Constants.VISIBILITY_REEXPORT)
+                            && (allCandidates.getCandidates(req) != null))
+                        {
+                            mergeCandidatePackages(
+                                current,
+                                currentReq,
+                                allCandidates.getCandidates(req).iterator().next(),
+                                revisionPkgMap,
+                                allCandidates,
+                                cycles);
+                        }
                     }
                 }
             }
@@ -836,8 +873,9 @@ public class ResolverImpl implements Resolver
             for (String usedPkgName : ((BundleCapabilityImpl) candSourceCap).getUses())
             {
                 Packages candSourcePkgs = revisionPkgMap.get(candSourceCap.getRevision());
-                Blame candExportedBlame = candSourcePkgs.m_exportedPkgs.get(usedPkgName);
                 List<Blame> candSourceBlames = null;
+                // Check to see if the used package is exported.
+                Blame candExportedBlame = candSourcePkgs.m_exportedPkgs.get(usedPkgName);
                 if (candExportedBlame != null)
                 {
                     candSourceBlames = new ArrayList(1);
@@ -845,9 +883,17 @@ public class ResolverImpl implements Resolver
                 }
                 else
                 {
-                    candSourceBlames = candSourcePkgs.m_importedPkgs.get(usedPkgName);
+                    // If the used package is not exported, check to see if it
+                    // is required.
+                    candSourceBlames = candSourcePkgs.m_requiredPkgs.get(usedPkgName);
+                    // Lastly, if the used package is not required, check to see if it
+                    // is imported.
+                    candSourceBlames = (candSourceBlames != null)
+                        ? candSourceBlames : candSourcePkgs.m_importedPkgs.get(usedPkgName);
                 }
 
+                // If the used package cannot be found, then just ignore it
+                // since it has no impact.
                 if (candSourceBlames == null)
                 {
                     continue;
@@ -1658,11 +1704,13 @@ public class ResolverImpl implements Resolver
                     BundleCapability export = Util.getSatisfyingCapability(
                         blame.m_cap.getRevision(),
                         (BundleRequirementImpl) blame.m_reqs.get(i));
-                    sb.append(BundleRevision.PACKAGE_NAMESPACE);
+                    sb.append(export.getNamespace());
                     sb.append("=");
-                    sb.append(export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).toString());
-                    if (!export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
-                        .equals(blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)))
+                    sb.append(export.getAttributes().get(export.getNamespace()).toString());
+                    if (export.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                        && !export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE)
+                            .equals(blame.m_cap.getAttributes().get(
+                                BundleRevision.PACKAGE_NAMESPACE)))
                     {
                         sb.append("; uses:=");
                         sb.append(blame.m_cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
