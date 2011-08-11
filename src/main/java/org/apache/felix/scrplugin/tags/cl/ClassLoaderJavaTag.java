@@ -32,31 +32,43 @@ import org.apache.felix.scrplugin.tags.*;
 public class ClassLoaderJavaTag implements JavaTag {
 
     protected final JavaClassDescription description;
+    protected final Component component;
     protected final Reference reference;
     protected final Property property;
     protected final Interface interf;
     protected boolean isServiceFactory;
 
-    public ClassLoaderJavaTag(JavaClassDescription desc, Reference reference) {
+    public ClassLoaderJavaTag(final JavaClassDescription desc, final Component component) {
+        this.description = desc;
+        this.reference = null;
+        this.interf = null;
+        this.property = null;
+        this.component = component;
+    }
+
+    public ClassLoaderJavaTag(final JavaClassDescription desc, final Reference reference) {
         this.description = desc;
         this.reference = reference;
         this.interf = null;
         this.property = null;
+        this.component = null;
     }
 
-    public ClassLoaderJavaTag(JavaClassDescription desc, Property property) {
+    public ClassLoaderJavaTag(final JavaClassDescription desc, final Property property) {
         this.description = desc;
         this.property = property;
         this.reference = null;
         this.interf = null;
+        this.component = null;
     }
 
-    public ClassLoaderJavaTag(JavaClassDescription desc, Interface i, boolean isSF) {
+    public ClassLoaderJavaTag(final JavaClassDescription desc, final Interface i, final boolean isSF) {
         this.interf = i;
         this.description = desc;
         this.property = null;
         this.reference = null;
         this.isServiceFactory = isSF;
+        this.component = null;
     }
 
     /**
@@ -84,6 +96,8 @@ public class ClassLoaderJavaTag implements JavaTag {
             return Constants.PROPERTY;
         } else if ( this.interf != null ) {
             return Constants.SERVICE;
+        } else if ( this.component != null ) {
+            return Constants.COMPONENT;
         }
         return null;
     }
@@ -151,6 +165,18 @@ public class ClassLoaderJavaTag implements JavaTag {
             map.put(Constants.SERVICE_INTERFACE, this.interf.getInterfacename());
             if ( this.isServiceFactory ) {
                 map.put(Constants.SERVICE_FACTORY, "true");
+            }
+            return map;
+        } else if ( this.component != null ) {
+            final Map<String, String> map = new HashMap<String, String>();
+            if ( this.component.getActivate() != null ) {
+                map.put(Constants.COMPONENT_ACTIVATE, this.component.getActivate());
+            }
+            if ( this.component.getDeactivate() != null ) {
+                map.put(Constants.COMPONENT_DEACTIVATE, this.component.getDeactivate());
+            }
+            if ( this.component.getModified() != null ) {
+                map.put(Constants.COMPONENT_MODIFIED, this.component.getModified());
             }
             return map;
         }
