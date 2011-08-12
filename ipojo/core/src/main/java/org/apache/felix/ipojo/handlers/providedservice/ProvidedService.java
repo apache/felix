@@ -732,21 +732,13 @@ public class ProvidedService implements ServiceFactory {
         public void setValue(Boolean value) {
             synchronized (ProvidedService.this) {
                 if (value.booleanValue() != m_value) {
+                    // If there is a change to the ServiceController value then
+                    // we will
+                    // need to modify the registrations.
                     m_value = value.booleanValue();
-                    if (m_value) {
-                        if (m_serviceRegistration == null) {
-                            registerService();
-                        }
-                        // Already registered.
-                    } else {
-                        // If we are still some specification valid, register those one
-                        if (getServiceSpecificationsToRegister().length != 0) {
-                            unregisterService();
-                            registerService();
-                        } else {
-                            // If not, then unregister all
-                            unregisterService();
-                        }
+                    unregisterService();
+                    if (getServiceSpecificationsToRegister().length != 0) {
+                        registerService();
                     }
                 }
             }
