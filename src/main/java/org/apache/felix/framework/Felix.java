@@ -728,9 +728,7 @@ public class Felix extends BundleImpl implements Framework
                         else
                         {
                             // Install the cached bundle.
-                            installBundle(
-                                this, archives[i].getId(), archives[i].getLocation(),
-                                archives[i], null);
+                            reloadBundle(archives[i]);
                         }
                     }
                     catch (Exception ex)
@@ -2600,17 +2598,111 @@ public class Felix extends BundleImpl implements Framework
         return (val == null) ? System.getProperty(key) : val;
     }
 
+    private Bundle reloadBundle(BundleArchive ba)
+        throws BundleException
+    {
+        BundleImpl bundle = null;
+
+        // Try to purge old revisions before installing;
+        // this is done just in case a "refresh" didn't
+        // occur last session...this would only be due to
+        // an error or system crash.
+        try
+        {
+            if (ba.isRemovalPending())
+            {
+                ba.purge();
+            }
+        }
+        catch (Exception ex)
+        {
+            m_logger.log(
+                Logger.LOG_ERROR,
+                "Could not purge bundle.", ex);
+        }
+
+        try
+        {
+            // Acquire the global lock to create the bundle,
+            // since this impacts the global state.
+            boolean locked = acquireGlobalLock();
+            if (!locked)
+            {
+                throw new BundleException(
+                    "Unable to acquire the global lock to install the bundle.");
+            }
+            try
+            {
+                bundle = new BundleImpl(this, ba);
+            }
+            finally
+            {
+                // Always release the global lock.
+                releaseGlobalLock();
+            }
+
+            if (bundle.isExtension())
+            {
+                m_extensionManager.addExtensionBundle(this, bundle);
+                m_resolver.addRevision(m_extensionManager.getRevision());
+            }
+        }
+        catch (Throwable ex)
+        {
+            if (ex instanceof BundleException)
+            {
+                throw (BundleException) ex;
+            }
+            else if (ex instanceof AccessControlException)
+            {
+                throw (AccessControlException) ex;
+            }
+            else
+            {
+                throw new BundleException("Could not create bundle object.", ex);
+            }
+        }
+
+        // Acquire global lock.
+// TODO: OSGi R4.3 - Could we do this in the above lock block?
+        boolean locked = acquireGlobalLock();
+        if (!locked)
+        {
+            // If the calling thread holds bundle locks, then we might not
+            // be able to get the global lock.
+            throw new IllegalStateException(
+                "Unable to acquire global lock to add bundle.");
+        }
+        try
+        {
+            // Use a copy-on-write approach to add the bundle
+            // to the installed maps.
+            Map[] maps = new Map[] {
+                new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
+                new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
+            };
+            maps[LOCATION_MAP_IDX].put(bundle._getLocation(), bundle);
+            maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
+            m_installedBundles = maps;
+        }
+        finally
+        {
+            releaseGlobalLock();
+        }
+
+        if (bundle.isExtension())
+        {
+            m_extensionManager.startExtensionBundle(this, bundle);
+        }
+
+        return bundle;
+    }
+
     Bundle installBundle(
         Bundle origin, String location, InputStream is)
         throws BundleException
     {
-        return installBundle(origin, -1, location, null, is);
-    }
-
-    private Bundle installBundle(
-        Bundle origin, long id, String location, BundleArchive ba, InputStream is)
-        throws BundleException
-    {
+        BundleArchive ba = null;
         BundleImpl existing, bundle = null;
 
         // Acquire an install lock.
@@ -2630,58 +2722,30 @@ public class Felix extends BundleImpl implements Framework
             existing = (BundleImpl) getBundle(location);
             if (existing == null)
             {
-                // Determine if this is a new or existing bundle.
-                boolean isNew = (ba == null);
+                // First generate an identifier for it.
+                long id = getNextId();
 
-                // If the bundle is new we must cache its JAR file.
-                if (isNew)
+                try
                 {
-                    // First generate an identifier for it.
-                    id = getNextId();
-
-                    try
-                    {
-                        // Add the bundle to the cache.
-                        ba = m_cache.create(id, getInitialBundleStartLevel(), location, is);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new BundleException(
-                            "Unable to cache bundle: " + location, ex);
-                    }
-                    finally
-                    {
-                        try
-                        {
-                            if (is != null) is.close();
-                        }
-                        catch (IOException ex)
-                        {
-                            m_logger.log(
-                                Logger.LOG_ERROR,
-                                "Unable to close input stream.", ex);
-                        }
-                    }
+                    // Add the bundle to the cache.
+                    ba = m_cache.create(id, getInitialBundleStartLevel(), location, is);
                 }
-                else
+                catch (Exception ex)
                 {
-                    // If the bundle we are installing is not new,
-                    // then try to purge old revisions before installing
-                    // it; this is done just in case a "refresh"
-                    // didn't occur last session...this would only be
-                    // due to an error or system crash.
+                    throw new BundleException(
+                        "Unable to cache bundle: " + location, ex);
+                }
+                finally
+                {
                     try
                     {
-                        if (ba.isRemovalPending())
-                        {
-                            ba.purge();
-                        }
+                        if (is != null) is.close();
                     }
-                    catch (Exception ex)
+                    catch (IOException ex)
                     {
                         m_logger.log(
                             Logger.LOG_ERROR,
-                            "Could not purge bundle.", ex);
+                            "Unable to close input stream.", ex);
                     }
                 }
 
@@ -2722,27 +2786,23 @@ public class Felix extends BundleImpl implements Framework
                 }
                 catch (Throwable ex)
                 {
-                    // If the bundle is new, then remove it from the cache.
-                    // TODO: FRAMEWORK - Perhaps it should be removed if it is not new too.
-                    if (isNew)
+                    // Remove bundle from the cache.
+                    try
                     {
-                        try
+                        if (bundle != null)
                         {
-                            if (bundle != null)
-                            {
-                                bundle.closeAndDelete();
-                            }
-                            else if (ba != null)
-                            {
-                                ba.closeAndDelete();
-                            }
+                            bundle.closeAndDelete();
                         }
-                        catch (Exception ex1)
+                        else if (ba != null)
                         {
-                            m_logger.log(bundle,
-                                Logger.LOG_ERROR,
-                                "Could not remove from cache.", ex1);
+                            ba.closeAndDelete();
                         }
+                    }
+                    catch (Exception ex1)
+                    {
+                        m_logger.log(bundle,
+                            Logger.LOG_ERROR,
+                            "Could not remove from cache.", ex1);
                     }
                     if (ex instanceof BundleException)
                     {
