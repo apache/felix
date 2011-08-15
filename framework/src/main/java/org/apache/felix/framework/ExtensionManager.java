@@ -45,6 +45,7 @@ import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.manifestparser.R4Library;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -53,7 +54,9 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
@@ -380,6 +383,21 @@ class ExtensionManager extends URLStreamHandler implements Content
             throw ex;
         }
 
+        BundleRevisionImpl bri = (BundleRevisionImpl) bundle.adapt(BundleRevision.class);
+        List<BundleRequirement> reqs = bri.getDeclaredRequirements(BundleRevision.HOST_NAMESPACE);
+        List<BundleCapability> caps = getCapabilities(BundleRevision.HOST_NAMESPACE);
+        BundleWire bw = new BundleWireImpl(bri, reqs.get(0), m_systemBundleRevision, caps.get(0));
+        bri.resolve(
+            new BundleWiringImpl(
+                m_logger,
+                m_configMap,
+                null,
+                bri,
+                null,
+                Collections.singletonList(bw),
+                Collections.EMPTY_MAP,
+                Collections.EMPTY_MAP));
+        felix.getDependencies().addDependent(bw);
         felix.setBundleStateAndNotify(bundle, Bundle.RESOLVED);
     }
 
