@@ -46,7 +46,12 @@ public class ComponentTag extends AbstractTag {
         this.annotation = new Component() {
 
             public boolean componentAbstract() {
-                return Util.getBooleanValue(annotation, desc, "componentAbstract", Component.class);
+                final String[] sValues = Util.getAnnotationValues(annotation, "componentAbstract", desc);
+                if ( sValues != null )
+                {
+                    return Boolean.valueOf(sValues[0]);
+                }
+                return desc.isAbstract();
             }
 
             public boolean createPid() {
