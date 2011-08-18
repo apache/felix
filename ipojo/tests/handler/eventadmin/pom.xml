@@ -23,6 +23,7 @@
         <groupId>ipojo.tests</groupId>
         <artifactId>ipojo.tests</artifactId>
         <version>1.5.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
     <groupId>ipojo.tests</groupId>
     <version>${ipojo.eah.snapshot}</version>

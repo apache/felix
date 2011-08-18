@@ -23,6 +23,7 @@
         <groupId>ipojo.tests</groupId>
         <artifactId>ipojo.tests</artifactId>
         <version>1.5.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
     <groupId>ipojo.tests</groupId>
     <version>1.5.0-SNAPSHOT</version>
@@ -31,39 +32,39 @@
     <name>iPOJO JMX Handler Test Suite</name>
     <artifactId>tests.jmx.handler</artifactId>
 
-	<dependencies>
+  <dependencies>
         <dependency>
           <groupId>org.apache.felix</groupId>
           <artifactId>org.apache.felix.ipojo.annotations</artifactId>
         </dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.ipojo</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.ipojo.handler.jmx</artifactId>
-			<version>1.5.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.ipojo.junit4osgi</artifactId>
-			<version>1.1.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
-		</dependency>
-	</dependencies>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.ipojo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.ipojo.handler.jmx</artifactId>
+      <version>1.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.ipojo.junit4osgi</artifactId>
+      <version>1.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+    </dependency>
+  </dependencies>
     <build>
         <plugins>
             <plugin>
@@ -103,25 +104,25 @@
                 </executions>
             </plugin>
             <plugin>
-		        <groupId>org.apache.felix</groupId>
-		        <artifactId>maven-junit4osgi-plugin
-		        </artifactId>
-		        <version>1.1.0-SNAPSHOT</version>
-		        <executions>
-		          <execution>
-		            <goals>
-		              <goal>test</goal>
-		            </goals>
-		            <configuration>
-		              <hideOutputs>false</hideOutputs>
-		              <logService>false</logService>
-		              <configuration>
-		              <org.osgi.http.port>8083</org.osgi.http.port>
-		              </configuration>
-		            </configuration>
-		          </execution>
-		        </executions>
-		     </plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-junit4osgi-plugin
+            </artifactId>
+            <version>1.1.0-SNAPSHOT</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration>
+                  <hideOutputs>false</hideOutputs>
+                  <logService>false</logService>
+                  <configuration>
+                  <org.osgi.http.port>8083</org.osgi.http.port>
+                  </configuration>
+                </configuration>
+              </execution>
+            </executions>
+         </plugin>
         </plugins>
     </build>
 </project>
