@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,7 @@ import org.xml.sax.SAXParseException;
 
 /**
  * XML Metadata parser.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class XMLMetadataParser implements ContentHandler, ErrorHandler {
@@ -41,7 +41,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
 
     /**
      * Get parsed metadata.
-     * The document must be parsed before calling this method. 
+     * The document must be parsed before calling this method.
      * @return : all the metadata.
      * @throws ParseException : occurs if an error occurs during the parsing.
      */
@@ -113,7 +113,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
      * @param ch : character
      * @param start : start
      * @param length : length
-     * @throws SAXException : can never occurs. 
+     * @throws SAXException : can never occurs.
      * @see org.xml.sax.ContentHandler#ignorableWhitespace(char[], int, int)
      */
     public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
@@ -176,7 +176,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
                 && (namespaceURI.equalsIgnoreCase("org.apache.felix.ipojo") || namespaceURI.equalsIgnoreCase("org.apache.felix.ipojo.composite"))) {
             namespace = null; // Remove the 'org.apache.felix.ipojo' namespace
         }
-        
+
         Element elem = new Element(localName, namespace);
         for (int i = 0; i < atts.getLength(); i++) {
             String name = (String) atts.getLocalName(i);
@@ -271,6 +271,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
      */
     public void fatalError(SAXParseException saxparseexception)
         throws SAXException {
+        //TODO use reporter
         System.err.println("Fatal error during XML-Schema parsing : " + saxparseexception);
         throw saxparseexception;
     }
@@ -285,7 +286,8 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
      */
     public void warning(SAXParseException saxparseexception)
         throws SAXException {
+        // TODO use reporter
         System.err.println("Warning : an error was detected in the metadata file : " + saxparseexception);
-        
+
     }
 }

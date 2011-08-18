@@ -11,6 +11,7 @@ public class PojoizationTest extends TestCase {
 
 	public void testJarManipulation() {
 		Pojoization pojoization = new Pojoization();
+        pojoization.setUseLocalXSD();
 		File in = new File("target/test-classes/tests.manipulation-no-annotations.jar");
 		File out = new File("target/test-classes/tests.manipulation-no-annotations-manipulated.jar");
 		out.delete();
@@ -22,6 +23,7 @@ public class PojoizationTest extends TestCase {
 
 	public void testManipulationWithAnnotations() {
 		Pojoization pojoization = new Pojoization();
+        pojoization.setUseLocalXSD();
 		File in = new File("target/test-classes/tests.manipulator-annotations.jar");
 		File out = new File("target/test-classes/tests.manipulation-annotations-manipulated.jar");
 		out.delete();
@@ -32,6 +34,7 @@ public class PojoizationTest extends TestCase {
 
 	public void testJarManipulationJava5() {
 		Pojoization pojoization = new Pojoization();
+        pojoization.setUseLocalXSD();
 		File in = new File("target/test-classes/tests.manipulation.java5.jar");
 		File out = new File("target/test-classes/tests.manipulation.java5-manipulated.jar");
 		out.delete();

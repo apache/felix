@@ -46,10 +46,21 @@
         </exclusion>
       </exclusions>
     </dependency>
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.ipojo.metadata</artifactId>
+        <version>1.4.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+        <version>1.8.0</version>
+      </dependency>
     <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.ipojo.metadata</artifactId>
-      <version>1.4.0</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.8.5</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -65,7 +76,7 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Vendor> The Apache Software Foundation </Bundle-Vendor>
             <Bundle-Description> iPOJO Manipulator </Bundle-Description>
-            <Export-Package> org.apache.felix.ipojo.manipulator
+            <Export-Package> org.apache.felix.ipojo.manipulator.*
             </Export-Package>
             <Private-Package> org.apache.felix.ipojo.manipulation,
               org.apache.felix.ipojo.manipulation.annotations,
@@ -75,8 +86,8 @@
               META-INF/LICENSE=LICENSE,
               META-INF/LICENSE.asm=LICENSE.asm,
               META-INF/NOTICE=NOTICE,
-              xsd=src/main/resources,
-              META-INF/DEPENDENCIES=DEPENDENCIES
+              META-INF/DEPENDENCIES=DEPENDENCIES,
+              {maven-resources}
             </Include-Resource>
             <Import-Package>!org.objectweb.asm.tree, *</Import-Package>
           </instructions>

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.felix.ipojo.manipulator.Pojoization;
+import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -222,7 +223,8 @@ public class ManipulatorMojo extends AbstractMojo {
 
         File out = new File(m_buildDirectory + File.separator + "_out.jar");
 
-        Pojoization pojo = new Pojoization();
+        Reporter reporter = new MavenReporter(getLog());
+        Pojoization pojo = new Pojoization(reporter);
         if (m_ignoreAnnotations) { pojo.disableAnnotationProcessing(); }
         if (!m_ignoreEmbeddedXSD) { pojo.setUseLocalXSD(); }
 
@@ -237,10 +239,12 @@ public class ManipulatorMojo extends AbstractMojo {
             pojo.pojoization(in, out, is);
         }
 
-        for (int i = 0; i < pojo.getWarnings().size(); i++) {
-            getLog().warn((String) pojo.getWarnings().get(i));
+        for (int i = 0; i < reporter.getWarnings().size(); i++) {
+            getLog().warn((String) reporter.getWarnings().get(i));
         }
-        if (pojo.getErrors().size() > 0) { throw new MojoExecutionException((String) pojo.getErrors().get(0)); }
+        if (reporter.getErrors().size() > 0) {
+            throw new MojoExecutionException((String) reporter.getErrors().get(0));
+        }
 
         if (m_classifier != null) {
             // The user want to attach the resulting jar

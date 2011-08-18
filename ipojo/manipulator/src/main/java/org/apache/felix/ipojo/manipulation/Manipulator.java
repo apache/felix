@@ -59,7 +59,7 @@ public class Manipulator {
     /**
      * List of owned inner classed.
      */
-    private List m_inners;
+    private List<String> m_inners;
 
     /**
      * Manipulate the given byte array.
@@ -150,7 +150,7 @@ public class Manipulator {
         return m_fields;
     }
 
-    public List getInnerClasses() {
+    public List<String> getInnerClasses() {
         return m_inners;
     }
 

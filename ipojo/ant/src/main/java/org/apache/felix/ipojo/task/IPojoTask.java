@@ -24,6 +24,7 @@ import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+import sun.awt.geom.AreaOp;
 
 /**
  * iPOJO Ant Task. This Ant task manipulates an input bundle.
@@ -192,7 +193,8 @@ public class IPojoTask extends Task {
             }
         }
 
-        Pojoization pojo = new Pojoization();
+        AntReporter reporter = new AntReporter(getProject());
+        Pojoization pojo = new Pojoization(reporter);
         if (m_ignoreAnnotations) {
             pojo.disableAnnotationProcessing();
         }
@@ -204,10 +206,12 @@ public class IPojoTask extends Task {
         } else {
             pojo.directoryPojoization(m_directory, m_metadata, m_manifest);
         }
-        for (int i = 0; i < pojo.getWarnings().size(); i++) {
-            log((String) pojo.getWarnings().get(i), Project.MSG_WARN);
+        for (int i = 0; i < reporter.getWarnings().size(); i++) {
+            log((String) reporter.getWarnings().get(i), Project.MSG_WARN);
         }
-        if (pojo.getErrors().size() > 0) { throw new BuildException((String) pojo.getErrors().get(0)); }
+        if (reporter.getErrors().size() > 0) {
+            throw new BuildException((String) reporter.getErrors().get(0));
+        }
 
         if (m_input != null) {
             String out;
