@@ -35,6 +35,7 @@
     <module>metadata</module>
     <module>manipulator</module>
     <module>plugin</module>
+    <module>bnd-ipojo-plugin</module>
     <module>core</module>
     <module>composite</module>
     <module>arch</module>
