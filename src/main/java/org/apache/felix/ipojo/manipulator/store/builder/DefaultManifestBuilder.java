@@ -102,8 +102,8 @@ public class DefaultManifestBuilder implements ManifestBuilder {
      * @param att : the manifest attribute list to modify.
      */
     private void setImports(Attributes att) {
-        Map imports = parseHeader(att.getValue("Import-Package"));
-        Map ver = new TreeMap();
+        Map<String, Map<String, String>> imports = parseHeader(att.getValue("Import-Package"));
+        Map<String, String> ver = new TreeMap<String, String>();
         ver.put("version", Pojoization.IPOJO_PACKAGE_VERSION);
         if (!imports.containsKey("org.apache.felix.ipojo")) {
             imports.put("org.apache.felix.ipojo", ver);
@@ -112,12 +112,12 @@ public class DefaultManifestBuilder implements ManifestBuilder {
             imports.put("org.apache.felix.ipojo.architecture", ver);
         }
         if (!imports.containsKey("org.osgi.service.cm")) {
-            Map verCM = new TreeMap();
+            Map<String, String> verCM = new TreeMap<String, String>();
             verCM.put("version", "1.2");
             imports.put("org.osgi.service.cm", verCM);
         }
         if (!imports.containsKey("org.osgi.service.log")) {
-            Map verCM = new TreeMap();
+            Map<String, String> verCM = new TreeMap<String, String>();
             verCM.put("version", "1.3");
             imports.put("org.osgi.service.log", verCM);
         }
@@ -175,18 +175,18 @@ public class DefaultManifestBuilder implements ManifestBuilder {
      * @param value String to parse.
      * @return parsed map.
      */
-    private Map parseHeader(String value) {
+    private Map<String, Map<String, String>> parseHeader(String value) {
         if (value == null || value.trim().length() == 0) {
-            return new HashMap();
+            return new HashMap<String, Map<String, String>>();
         }
 
-        Map result = new HashMap();
+        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
         QuotedTokenizer qt = new QuotedTokenizer(value, ";=,");
         char del;
         do {
             boolean hadAttribute = false;
-            Map clause = new HashMap();
-            List aliases = new ArrayList();
+            Map<String, String> clause = new HashMap<String, String>();
+            List<String> aliases = new ArrayList<String>();
             aliases.add(qt.nextToken());
             del = qt.getSeparator();
             while (del == ';') {
@@ -203,7 +203,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
                     hadAttribute = true;
                 }
             }
-            for (Iterator i = aliases.iterator(); i.hasNext();) {
+            for (Iterator<String> i = aliases.iterator(); i.hasNext();) {
                 result.put(i.next(), clause);
             }
         } while (del == ',');
@@ -217,7 +217,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
      * @param allowedDirectives list of allowed directives.
      * @return the clauses
      */
-    private String printClauses(Map exports, String allowedDirectives) {
+    private String printClauses(Map<String, Map<String, String>> exports, String allowedDirectives) {
         StringBuffer sb = new StringBuffer();
         String del = "";
 

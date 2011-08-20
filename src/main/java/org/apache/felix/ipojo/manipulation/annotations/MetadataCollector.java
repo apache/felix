@@ -74,14 +74,14 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * Map of [element ids, element].
      * This map is used to easily get an already created element.
      */
-    private Map m_ids = new HashMap();
+    private Map<String, Element> m_ids = new HashMap<String, Element>();
 
     /**
      * Map of [element, referto].
      * This map is used to recreate the element hierarchy.
      * Stored element are added under referred element.
      */
-    private Map m_elements = new HashMap();
+    private Map<Element, String> m_elements = new HashMap<Element, String>();
 
     /**
      * Instance declaration.
@@ -126,8 +126,8 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * @see org.objectweb.asm.ClassAdapter#visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        m_ids = new HashMap();
-        m_elements = new HashMap();
+        m_ids = new HashMap<String, Element>();
+        m_elements = new HashMap<Element, String>();
         m_className = name;
     }
 
@@ -225,16 +225,16 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
         }
 
         if (! m_containsComponentAnnotation) {
-        	m_ignoredBecauseOfMissingComponent = true;
+            m_ignoredBecauseOfMissingComponent = true;
             return;
         }
 
         // Recompute the tree
-        Set elems = getElements().keySet();
-        Iterator it = elems.iterator();
+        Set<Element> elems = getElements().keySet();
+        Iterator<Element> it = elems.iterator();
         while (it.hasNext()) {
-            Element current = (Element) it.next();
-            String reference = (String) getElements().get(current);
+            Element current = it.next();
+            String reference = getElements().get(current);
             if (reference == null) {
                 m_elem.addElement(current);
             } else {
@@ -249,11 +249,11 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
         }
     }
 
-    protected Map getIds() {
+    protected Map<String, Element> getIds() {
         return m_ids;
     }
 
-    protected Map getElements() {
+    protected Map<Element, String> getElements() {
         return m_elements;
     }
 
@@ -317,13 +317,13 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
             if (arg0.equals("specifications")) {
                 return new InterfaceArrayVisitor();
             } else if (arg0.equals("properties")) {
-            	// Create a new simple visitor to visit the nested ServiceProperty annotations
-            	// Collected properties are collected in m_prov
-            	return new EmptyVisitor() {
-            		public AnnotationVisitor visitAnnotation(String ignored, String desc) {
-                    	return new PropertyAnnotationParser(m_prov);
-        			}
-            	};
+                // Create a new simple visitor to visit the nested ServiceProperty annotations
+                // Collected properties are collected in m_prov
+                return new EmptyVisitor() {
+                    public AnnotationVisitor visitAnnotation(String ignored, String desc) {
+                        return new PropertyAnnotationParser(m_prov);
+                    }
+                };
             } else {
                 return null;
             }
@@ -469,7 +469,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
          */
         public void visit(String arg0, Object arg1) {
             if (arg0.equals("public_factory")  || arg0.equals("publicFactory")) {
-            	// public_factory is deprecated, but must sill be supported
+                // public_factory is deprecated, but must sill be supported
                 m_factory = arg1.toString();
                 return;
             }
@@ -494,7 +494,7 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
                 return;
             }
             if (arg0.equals("factory_method")  || arg0.equals("factoryMethod")) {
-            	// factory_method is deprecated, but must still be supported.
+                // factory_method is deprecated, but must still be supported.
                 m_method = arg1.toString();
                 return;
             }

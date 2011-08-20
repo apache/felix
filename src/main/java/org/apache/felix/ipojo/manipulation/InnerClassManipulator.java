@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,18 +37,18 @@ public class InnerClassManipulator {
      * Outer class class name.
      */
     private String m_outer;
-    
+
     /**
      * Component class fields.
      */
-    private Set m_fields;
+    private Set<String> m_fields;
 
     /**
      * Creates an inner class manipulator.
      * @param classname : class name
      * @param fields : fields
      */
-    public InnerClassManipulator(String classname, Set fields) {
+    public InnerClassManipulator(String classname, Set<String> fields) {
         m_outer = classname;
         m_fields = fields;
     }

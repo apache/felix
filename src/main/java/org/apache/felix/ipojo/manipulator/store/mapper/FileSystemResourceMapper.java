@@ -18,10 +18,9 @@
  */
 package org.apache.felix.ipojo.manipulator.store.mapper;
 
-import org.apache.felix.ipojo.manipulator.store.ResourceMapper;
-import org.apache.felix.ipojo.manipulator.util.Strings;
-
 import java.io.File;
+
+import org.apache.felix.ipojo.manipulator.store.ResourceMapper;
 
 /**
  * ResourceMapper mapping from and to system specific path..

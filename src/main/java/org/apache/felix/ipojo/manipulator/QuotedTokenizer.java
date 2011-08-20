@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Parse on OSGi Manifest clause. 
+ * Parse on OSGi Manifest clause.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class QuotedTokenizer {
@@ -45,7 +45,7 @@ public class QuotedTokenizer {
      * Does the tokenizer returns token.
      */
     boolean m_returnTokens;
-    
+
     /**
      * Peek.
      */
@@ -187,8 +187,8 @@ public class QuotedTokenizer {
      * Get token list.
      * @return the list of token.
      */
-    public List getTokenSet() {
-        List list = new ArrayList();
+    public List<String> getTokenSet() {
+        List<String> list = new ArrayList<String>();
         String token = nextToken();
         while (token != null) {
             list.add(token);

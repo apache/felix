@@ -18,15 +18,6 @@
  */
 package org.apache.felix.ipojo.manipulator.store;
 
-import org.apache.felix.ipojo.manipulator.ResourceStore;
-import org.apache.felix.ipojo.manipulator.ResourceVisitor;
-import org.apache.felix.ipojo.manipulator.store.mapper.FileSystemResourceMapper;
-import org.apache.felix.ipojo.manipulator.store.mapper.IdentityResourceMapper;
-import org.apache.felix.ipojo.manipulator.util.Metadatas;
-import org.apache.felix.ipojo.manipulator.util.Streams;
-import org.apache.felix.ipojo.manipulator.util.Strings;
-import org.apache.felix.ipojo.metadata.Element;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,6 +25,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.jar.Manifest;
+
+import org.apache.felix.ipojo.manipulator.ResourceStore;
+import org.apache.felix.ipojo.manipulator.ResourceVisitor;
+import org.apache.felix.ipojo.manipulator.store.mapper.FileSystemResourceMapper;
+import org.apache.felix.ipojo.manipulator.store.mapper.IdentityResourceMapper;
+import org.apache.felix.ipojo.manipulator.util.Metadatas;
+import org.apache.felix.ipojo.manipulator.util.Streams;
+import org.apache.felix.ipojo.metadata.Element;
 
 /**
  * A {@link DirectoryResourceStore} knows how to read and write

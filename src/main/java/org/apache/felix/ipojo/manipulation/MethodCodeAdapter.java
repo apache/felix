@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,14 +36,14 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
      * The owner class of the field. m_owner : String
      */
     private String m_owner;
-    
+
     /**
      * Contained fields.
      */
-    private Set m_fields;
+    private Set<String> m_fields;
 
     /**
-     * MethodCodeAdapter constructor. 
+     * MethodCodeAdapter constructor.
      * @param mv : MethodVisitor
      * @param owner : Name of the class
      * @param access : Method access
@@ -51,7 +51,7 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
      * @param desc : Method descriptor
      * @param fields : Contained fields
      */
-    public MethodCodeAdapter(final MethodVisitor mv, final String owner, int access, String name, String desc, Set fields) {
+    public MethodCodeAdapter(final MethodVisitor mv, final String owner, int access, String name, String desc, Set<String> fields) {
         super(mv, access, name, desc);
         m_owner = owner;
         m_fields = fields;
@@ -79,7 +79,7 @@ public class MethodCodeAdapter extends GeneratorAdapter implements Opcodes {
         }
         super.visitFieldInsn(opcode, owner, name, desc);
     }
-    
+
     /**
      * Visits an annotation.
      * If the annotation is visible, the annotation is removed. In fact

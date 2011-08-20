@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,16 +31,16 @@ import org.objectweb.asm.Opcodes;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InnerClassAdapter extends ClassAdapter implements Opcodes {
-    
+
     /**
      * Implementation class name.
      */
     private String m_outer;
-    
+
     /**
-     * List of fields of the implementation class. 
+     * List of fields of the implementation class.
      */
-    private Set m_fields;
+    private Set<String> m_fields;
 
     /**
      * Creates the inner class adapter.
@@ -48,12 +48,12 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
      * @param outerClass outer class (implementation class)
      * @param fields fields of the implementation class
      */
-    public InnerClassAdapter(ClassVisitor arg0, String outerClass, Set fields) {
+    public InnerClassAdapter(ClassVisitor arg0, String outerClass, Set<String> fields) {
         super(arg0);
         m_outer = outerClass;
         m_fields = fields;
     }
-    
+
     /**
      * Visits a method.
      * This methods create a code visitor manipulating outer class field accesses.
@@ -68,7 +68,7 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         return new MethodCodeAdapter(mv, m_outer, access, name, desc, m_fields);
-    }    
-    
+    }
+
 
 }

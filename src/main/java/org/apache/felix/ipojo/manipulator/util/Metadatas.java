@@ -18,17 +18,11 @@
  */
 package org.apache.felix.ipojo.manipulator.util;
 
-import org.apache.felix.ipojo.metadata.Element;
-
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.felix.ipojo.metadata.Element;
 
 /**
  * {@code Streams} is a utility class that helps to manipulate streams.

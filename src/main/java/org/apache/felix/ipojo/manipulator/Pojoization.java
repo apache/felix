@@ -98,7 +98,7 @@ public class Pojoization {
     /**
      * @return all the errors (fatal) reported by the manipulation process.
      */
-    public List getErrors() {
+    public List<String> getErrors() {
         // Simple delegation for backward compatibility
         return m_reporter.getErrors();
     }
@@ -106,7 +106,7 @@ public class Pojoization {
     /**
      * @return all the warnings (non fatal) reported by the manipulation process.
      */
-    public List getWarnings() {
+    public List<String> getWarnings() {
         // Simple delegation for backward compatibility
         return m_reporter.getWarnings();
     }
@@ -207,7 +207,7 @@ public class Pojoization {
      * @param manifestFile the manifest file. <code>null</code> to use directory/META-INF/MANIFEST.mf
      */
     public void directoryPojoization(File directory, File metadataFile, File manifestFile) {
-    	// Get the metadata.xml location if not null
+        // Get the metadata.xml location if not null
         MetadataProvider provider = new EmptyMetadataProvider();
         if (metadataFile != null) {
             FileMetadataProvider fileMetadataProvider = new FileMetadataProvider(metadataFile, m_reporter);
