@@ -36,12 +36,12 @@ public class EmptyReporter implements Reporter {
     /**
      * List of warnings
      */
-    private List<String> warnings = new ArrayList<String>();
+    private List<String> m_warnings = new ArrayList<String>();
 
     /**
      * List of errors
      */
-    private List<String> errors = new ArrayList<String>();
+    private List<String> m_errors = new ArrayList<String>();
 
     public void trace(String message, Object... args) {}
 
@@ -52,11 +52,11 @@ public class EmptyReporter implements Reporter {
     public void error(String message, Object... args) {}
 
     public List<String> getErrors() {
-        return errors;
+        return m_errors;
     }
 
     public List<String> getWarnings() {
-        return warnings;
+        return m_warnings;
     }
 
     protected Object[] getMessageArguments(Object... args) {

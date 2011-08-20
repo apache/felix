@@ -45,51 +45,51 @@ public class DirectoryResourceStore implements ResourceStore {
     /**
      * Source directory where bytecode is read.
      */
-    private File source;
+    private File m_source;
 
     /**
      * Target directory.
      */
-    private File target;
+    private File m_target;
 
     /**
      * The builder of the updated manifest.
      */
-    private ManifestBuilder manifestBuilder;
+    private ManifestBuilder m_manifestBuilder;
 
     /**
      * Original manifest to be updated.
      */
-    private Manifest manifest;
+    private Manifest m_manifest;
 
     /**
      * Resource Mapper.
      */
-    private ResourceMapper mapper = new FileSystemResourceMapper(new IdentityResourceMapper());
+    private ResourceMapper m_mapper = new FileSystemResourceMapper(new IdentityResourceMapper());
 
     public DirectoryResourceStore(File source) {
         this(source, source);
     }
 
     public DirectoryResourceStore(File source, File target) {
-        this.source = source;
-        this.target = target;
+        m_source = source;
+        m_target = target;
     }
 
     public void setResourceMapper(ResourceMapper mapper) {
-        this.mapper = new FileSystemResourceMapper(mapper);
+        m_mapper = new FileSystemResourceMapper(mapper);
     }
 
     public void setManifestBuilder(ManifestBuilder manifestBuilder) {
-        this.manifestBuilder = manifestBuilder;
+        m_manifestBuilder = manifestBuilder;
     }
 
     public void setManifest(Manifest manifest) {
-        this.manifest = manifest;
+        m_manifest = manifest;
     }
 
     public byte[] read(String path) throws IOException {
-        File resource = new File(source, mapper.internalize(path));
+        File resource = new File(m_source, m_mapper.internalize(path));
         if (!resource.isFile()) {
             throw new IOException("File '" + resource + "' is not found (for class " + path + ").");
         }
@@ -97,7 +97,7 @@ public class DirectoryResourceStore implements ResourceStore {
     }
 
     public void accept(ResourceVisitor visitor) {
-        traverseDirectory(source, visitor);
+        traverseDirectory(m_source, visitor);
     }
 
     private void traverseDirectory(File directory, ResourceVisitor visitor) {
@@ -111,17 +111,17 @@ public class DirectoryResourceStore implements ResourceStore {
     }
 
     private String getRelativeName(File file) {
-        String relative = file.getPath().substring(source.getPath().length());
-        return mapper.externalize(relative);
+        String relative = file.getPath().substring(m_source.getPath().length());
+        return m_mapper.externalize(relative);
     }
 
     public void open() throws IOException {
 
         // Update the manifest
-        Manifest updated = manifestBuilder.build(manifest);
+        Manifest updated = m_manifestBuilder.build(m_manifest);
 
         // Write it on disk
-        File metaInf = new File(target, "META-INF");
+        File metaInf = new File(m_target, "META-INF");
         File resource = new File(metaInf, "MANIFEST.MF");
         OutputStream os = new FileOutputStream(resource);
         try {
@@ -133,14 +133,14 @@ public class DirectoryResourceStore implements ResourceStore {
     }
 
     public void writeMetadata(Element metadata) {
-        manifestBuilder.addMetada(Collections.singletonList(metadata));
-        manifestBuilder.addReferredPackage(Metadatas.findReferredPackages(metadata));
+        m_manifestBuilder.addMetada(Collections.singletonList(metadata));
+        m_manifestBuilder.addReferredPackage(Metadatas.findReferredPackages(metadata));
     }
 
     public void write(String resourcePath, byte[] bytecode) throws IOException {
 
         // Internalize the name
-        File resource = new File(target, mapper.internalize(resourcePath));
+        File resource = new File(m_target, m_mapper.internalize(resourcePath));
 
         // Create intermediate directories if needed
         if (!resource.getParentFile().exists()) {

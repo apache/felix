@@ -37,14 +37,14 @@ import org.objectweb.asm.ClassReader;
  */
 public class AnnotationMetadataProvider implements MetadataProvider {
 
-    private ResourceStore store;
+    private ResourceStore m_store;
 
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     public AnnotationMetadataProvider(final ResourceStore store,
                                       final Reporter reporter) {
-        this.store = store;
-        this.reporter = reporter;
+        this.m_store = store;
+        this.m_reporter = reporter;
     }
 
     public List<Element> getMetadatas() throws IOException {
@@ -52,16 +52,16 @@ public class AnnotationMetadataProvider implements MetadataProvider {
         final List<Element> metadata = new ArrayList<Element>();
 
 
-        store.accept(new ResourceVisitor() {
+        m_store.accept(new ResourceVisitor() {
             public void visit(String name) {
                 if (name.endsWith(".class")) {
 
                     // Read file's content
                     byte[] data = null;
                     try {
-                        data = store.read(name);
+                        data = m_store.read(name);
                     } catch (IOException e) {
-                        reporter.warn("Cannot read content of " + name);
+                        m_reporter.warn("Cannot read content of " + name);
                     }
 
                     // We check the array size to avoid manipulating empty files
@@ -69,7 +69,7 @@ public class AnnotationMetadataProvider implements MetadataProvider {
                     if (data != null && data.length > 0) {
                         computeAnnotations(data, metadata);
                     } else {
-                        reporter.error("Cannot compute annotations from " + name + " : Empty file");
+                        m_reporter.error("Cannot compute annotations from " + name + " : Empty file");
                     }
                 }
             }
@@ -90,7 +90,7 @@ public class AnnotationMetadataProvider implements MetadataProvider {
         cr.accept(collector, 0);
 
         if (collector.isIgnoredBecauseOfMissingComponent()) {
-        	// No @Component, just skip.
+            // No @Component, just skip.
             //warn("Annotation processing ignored in " + collector.getClassName() + " - @Component missing");
         } else if (collector.isComponentType()) {
 

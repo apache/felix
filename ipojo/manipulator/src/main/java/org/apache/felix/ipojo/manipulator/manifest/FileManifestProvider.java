@@ -37,7 +37,7 @@ public class FileManifestProvider implements ManifestProvider {
     /**
      * Read manifest.
      */
-    private Manifest manifest;
+    private Manifest m_manifest;
 
     /**
      * Read the manifest from the given input file
@@ -46,17 +46,17 @@ public class FileManifestProvider implements ManifestProvider {
      *         or if the file is not a valid manifest.
      */
     public FileManifestProvider(File resource) throws IOException {
-        manifest = new Manifest();
+        m_manifest = new Manifest();
         InputStream is = null;
         try {
             is = new FileInputStream(resource);
-            manifest.read(is);
+            m_manifest.read(is);
         } finally {
             Streams.close(is);
         }
     }
 
     public Manifest getManifest() {
-        return manifest;
+        return m_manifest;
     }
 }

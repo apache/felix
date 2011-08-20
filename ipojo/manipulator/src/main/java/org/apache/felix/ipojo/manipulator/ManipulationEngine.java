@@ -36,7 +36,7 @@ public class ManipulationEngine {
     /**
      * List of component types.
      */
-    private List<ManipulationUnit> manipulationUnits = new ArrayList<ManipulationUnit>();
+    private List<ManipulationUnit> m_manipulationUnits = new ArrayList<ManipulationUnit>();
 
     /**
      * Error reporting.
@@ -51,25 +51,25 @@ public class ManipulationEngine {
     /**
      * The visitor handling output result.
      */
-    private ManipulationVisitor manipulationVisitor;
+    private ManipulationVisitor m_manipulationVisitor;
 
     /**
      * Add information related to a discovered component that will be manipulated.
      * @param component additional component
      */
     public void addManipulationUnit(ManipulationUnit component) {
-        manipulationUnits.add(component);
+        m_manipulationUnits.add(component);
     }
 
     public void setManipulationVisitor(ManipulationVisitor manipulationVisitor) {
-        this.manipulationVisitor = manipulationVisitor;
+        m_manipulationVisitor = manipulationVisitor;
     }
 
     /**
      * @param reporter Feedback reporter.
      */
     public void setReporter(Reporter reporter) {
-        this.m_reporter = reporter;
+        m_reporter = reporter;
     }
 
     /**
@@ -78,7 +78,7 @@ public class ManipulationEngine {
      * @param store Helps to locate bytecode for classes.
      */
     public void setResourceStore(ResourceStore store) {
-        this.m_store = store;
+        m_store = store;
     }
 
     /**
@@ -89,7 +89,7 @@ public class ManipulationEngine {
         // Iterates over the list of discovered components
         // Note that this list includes components from metadata.xml AND from annotations
 
-        for (ManipulationUnit info : manipulationUnits) {
+        for (ManipulationUnit info : m_manipulationUnits) {
 
             byte[] bytecode;
             try {
@@ -100,7 +100,7 @@ public class ManipulationEngine {
             }
 
             // Is the visitor interested in this component ?
-            ManipulationResultVisitor result = manipulationVisitor.visitManipulationResult(info.getComponentMetadata());
+            ManipulationResultVisitor result = m_manipulationVisitor.visitManipulationResult(info.getComponentMetadata());
 
             if (result != null) {
                 // Should always be the case

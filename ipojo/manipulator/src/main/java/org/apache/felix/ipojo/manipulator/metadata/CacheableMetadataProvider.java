@@ -38,24 +38,24 @@ public class CacheableMetadataProvider implements MetadataProvider {
     /**
      * Delegate.
      */
-    private MetadataProvider delegate;
+    private MetadataProvider m_delegate;
 
     /**
      * Cached elements.
      */
-    private List<Element> cached;
+    private List<Element> m_cached;
 
     public CacheableMetadataProvider(MetadataProvider delegate) {
-        this.delegate = delegate;
+        m_delegate = delegate;
     }
 
     public List<Element> getMetadatas() throws IOException {
 
         // Only ask the delegate if cache is empty
-        if (cached == null) {
-            cached = new ArrayList<Element>();
-            cached.addAll(delegate.getMetadatas());
+        if (m_cached == null) {
+            m_cached = new ArrayList<Element>();
+            m_cached.addAll(m_delegate.getMetadatas());
         }
-        return cached;
+        return m_cached;
     }
 }

@@ -29,26 +29,26 @@ import org.apache.felix.ipojo.manipulator.store.ResourceMapper;
  */
 public class FileSystemResourceMapper implements ResourceMapper {
 
-    private ResourceMapper delegate;
-    private char separator;
+    private ResourceMapper m_delegate;
+    private char m_separator;
 
     public FileSystemResourceMapper(ResourceMapper delegate) {
         this(delegate, File.separatorChar);
     }
 
     public FileSystemResourceMapper(ResourceMapper delegate, char separator) {
-        this.delegate = delegate;
-        this.separator = separator;
+        m_delegate = delegate;
+        m_separator = separator;
     }
 
     public String internalize(String name) {
         // transform as system path the result of the internalization operation
-        return systemPath(delegate.internalize(name));
+        return systemPath(m_delegate.internalize(name));
     }
 
     public String externalize(String name) {
         // normalize he path before giving it to the delegate mapper
-        return delegate.externalize(normalizePath(name));
+        return m_delegate.externalize(normalizePath(name));
     }
 
     /**
@@ -58,7 +58,7 @@ public class FileSystemResourceMapper implements ResourceMapper {
      * @return normalized path
      */
     private String normalizePath(String path) {
-        return path.replace(separator, '/');
+        return path.replace(m_separator, '/');
     }
 
     /**
@@ -67,7 +67,7 @@ public class FileSystemResourceMapper implements ResourceMapper {
      * @return system path
      */
     private String systemPath(String path) {
-        return path.replace('/', separator);
+        return path.replace('/', m_separator);
     }
 
 
