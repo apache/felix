@@ -28,7 +28,7 @@ import org.apache.felix.ipojo.manipulator.reporter.EmptyReporter;
 /**
  * A {@code BndReporter} knows how to wrap a Bnd Reporter into an iPOJO Reporter.
  *
- * @author Guillaume Sauthier
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BndReporter extends EmptyReporter {
 

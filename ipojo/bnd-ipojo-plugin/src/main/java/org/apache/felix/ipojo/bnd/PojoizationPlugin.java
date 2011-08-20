@@ -42,7 +42,7 @@ import org.apache.felix.ipojo.metadata.Element;
 /**
  * A {@code BndIpojoPlugin} is ...
  *
- * @author Guillaume Sauthier
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
 

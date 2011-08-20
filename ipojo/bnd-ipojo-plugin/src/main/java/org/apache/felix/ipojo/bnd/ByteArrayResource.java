@@ -23,7 +23,7 @@ import aQute.lib.osgi.AbstractResource;
 /**
  * A {@code ByteArrayResource} is ...
  *
- * @author Guillaume Sauthier
+ *  @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ByteArrayResource extends AbstractResource {
 

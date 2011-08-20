@@ -37,13 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: guillaume
- * Date: 11/08/11
- * Time: 22:40
- * To change this template use File | Settings | File Templates.
- */
 public class BndJarResourceStore implements ResourceStore {
 
     private Analyzer analyzer;

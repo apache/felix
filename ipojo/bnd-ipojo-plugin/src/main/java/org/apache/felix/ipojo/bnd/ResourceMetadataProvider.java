@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.metadata.Element;
 /**
  * A {@code ResourceMetadataProvider} is ...
  *
- * @author Guillaume Sauthier
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ResourceMetadataProvider implements MetadataProvider {
 
