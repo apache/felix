@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * Checks that a POJO is already manipulated or not.
- * Moreover it allows to get manipulation data about this class. 
+ * Moreover it allows to get manipulation data about this class.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes {
@@ -46,33 +46,33 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * Interfaces implemented by the component.
      */
-    private List m_itfs = new ArrayList();
+    private List<String> m_itfs = new ArrayList<String>();
 
     /**
      * Field map [field name, type] discovered in the component class.
      */
-    private Map m_fields = new HashMap();
+    private Map<String, String> m_fields = new HashMap<String, String>();
 
     /**
      * Method List of method descriptor discovered in the component class.
      */
-    private List m_methods = new ArrayList()/* <MethodDesciptor> */;
-    
+    private List<MethodDescriptor> m_methods = new ArrayList<MethodDescriptor>();
+
     /**
      * Super class if not java.lang.Object.
      */
     private String m_superClass;
-    
+
     /**
      * Class name.
      */
     private String m_className;
-    
+
     /**
      * List of visited inner class owned by the implementation class.
      */
-    private List m_inners = new ArrayList();
-    
+    private List<String> m_inners = new ArrayList<String>();
+
     /**
      * <code>true</code> if the class supports annotations.
      * This enables the analysis of the code to find and moves annotations.
@@ -101,7 +101,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         } else if ((access & ACC_STATIC) == ACC_STATIC) {
             return null;
         }
-        
+
         Type type = Type.getType(desc);
         if (type.getSort() == Type.ARRAY) {
             if (type.getInternalName().startsWith("L")) {
@@ -119,7 +119,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         return null;
     }
-    
+
     /**
      * Add the inner class to the list of inner class to manipulate.
      * The method checks that the inner class is really owned by the implementation class.
@@ -159,17 +159,17 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             String superName, String[] interfaces) {
 
         m_supportAnnotation = version > V1_4 && version < V1_1;
-        
+
         if (! superName.equals("java/lang/Object")) {
             m_superClass = superName.replace('/', '.');
         }
-        
+
         for (int i = 0; i < interfaces.length; i++) {
             if (! interfaces[i].equals("org/apache/felix/ipojo/Pojo")) {
                 m_itfs.add(interfaces[i].replace('/', '.'));
             }
         }
-        
+
         m_className = name;
     }
 
@@ -186,13 +186,13 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      */
     public MethodVisitor visitMethod(int access, String name, String desc,
             String signature, String[] exceptions) {
-        if (!name.equals("<clinit>")) { 
-            
+        if (!name.equals("<clinit>")) {
+
             if (name.equals("<init>")) {
                 final MethodDescriptor md = new MethodDescriptor("$init", desc);
                 m_methods.add(md);
                 if (m_supportAnnotation) {
-                    return new AnnotationCollector(md); 
+                    return new AnnotationCollector(md);
                 }
             } else {
                 // no constructors.
@@ -203,21 +203,21 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
                     final MethodDescriptor md = new MethodDescriptor(name, desc);
                     m_methods.add(md);
                     if (m_supportAnnotation) {
-                        return new AnnotationCollector(md); 
+                        return new AnnotationCollector(md);
                     }
                 }
             }
-            
-        }        
-        
+
+        }
+
         return null;
     }
-    
+
     /**
      * Get collected interfaces.
      * @return the interfaces implemented by the component class.
      */
-    public List getInterfaces() {
+    public List<String> getInterfaces() {
         return m_itfs;
     }
 
@@ -225,7 +225,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * Get collected fields.
      * @return the field map [field_name, type].
      */
-    public Map getFields() {
+    public Map<String, String> getFields() {
         return m_fields;
     }
 
@@ -233,21 +233,21 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * Get collected methods.
      * @return the method list of [method, signature].
      */
-    public List getMethods() {
+    public List<MethodDescriptor> getMethods() {
         return m_methods;
     }
-    
+
     public String getSuperClass() {
         return m_superClass;
     }
-    
-    public List getInnerClasses() {
+
+    public List<String> getInnerClasses() {
         return m_inners;
     }
-    
+
     /**
      * This class collects annotations in a method.
-     * This class creates an {@link AnnotationDescriptor} 
+     * This class creates an {@link AnnotationDescriptor}
      * if an annotation is found during the visit.
      *  @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
@@ -256,7 +256,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * The method descriptor of the visited method.
          */
         private MethodDescriptor m_method;
-        
+
         /**
          * Creates an annotation collector.
          * @param md the method descriptor of the visited method.
@@ -264,7 +264,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         private AnnotationCollector(MethodDescriptor md) {
             m_method = md;
         }
-        
+
         /**
          * Visits an annotation.
          * This class checks the visibility. If the annotation is visible,
@@ -295,10 +295,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             }
             return null;
         }
-        
-        
+
+
     }
-    
+
     /**
      * Describes a method or constructor annotation.
      * This allows creating a copy of the annotations found in the original class
@@ -325,24 +325,24 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         /**
          * The list of 'simple' attributes.
          */
-        private List m_simples = new ArrayList(0);
+        private List<SimpleAttribute> m_simples = new ArrayList<SimpleAttribute>(0);
         /**
          * The list of attribute containing an
          * enumeration value.
          */
-        private List m_enums = new ArrayList(0);
+        private List<EnumAttribute> m_enums = new ArrayList<EnumAttribute>(0);
         /**
          * The list of attribute which are
          * annotations.
          */
-        private List m_nested = new ArrayList(0);
+        private List<AnnotationDescriptor> m_nested = new ArrayList<AnnotationDescriptor>(0);
         /**
          * The list of attribute which are
-         * arrays. 
+         * arrays.
          */
-        private List m_arrays = new ArrayList(0);
-        
-        
+        private List<ArrayAttribute> m_arrays = new ArrayList<ArrayAttribute>(0);
+
+
         /**
          * Creates an annotation descriptor.
          * This constructor is used for 'root' annotations.
@@ -353,7 +353,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             m_name = name;
             m_visible = visible;
         }
-        
+
         /**
          * Creates an annotation descriptor.
          * This constructor is used for nested annotations.
@@ -423,35 +423,35 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         public void visitEnum(String arg0, String arg1, String arg2) {
             m_enums.add(new EnumAttribute(arg0, arg1, arg2));
         }
-        
+
         /**
          * Methods allowing to recreate the visited (stored) annotation
          * into the destination method.
-         * This method recreate the annotations itself and any other 
+         * This method recreate the annotations itself and any other
          * attributes.
          * @param mv the method visitor visiting the destination method.
          */
         public void visitAnnotation(MethodVisitor mv) {
             AnnotationVisitor av = mv.visitAnnotation(m_name, m_visible);
             for (int i = 0; i < m_simples.size(); i++) {
-                ((SimpleAttribute) m_simples.get(i)).visit(av);
+                m_simples.get(i).visit(av);
             }
             for (int i = 0; i < m_enums.size(); i++) {
-                ((EnumAttribute) m_enums.get(i)).visit(av);
+                m_enums.get(i).visit(av);
             }
             for (int i = 0; i < m_nested.size(); i++) {
-                ((AnnotationDescriptor) m_nested.get(i)).visit(av);
+                m_nested.get(i).visit(av);
             }
             for (int i = 0; i < m_arrays.size(); i++) {
-                ((ArrayAttribute) m_arrays.get(i)).visit(av);
+                m_arrays.get(i).visit(av);
             }
             av.visitEnd();
         }
-        
+
         /**
          * Methods allowing to recreate the visited (stored) parameter annotations
          * into the destination method.
-         * This method recreate the annotations itself and any other 
+         * This method recreate the annotations itself and any other
          * attributes.
          * @param id the paramter id
          * @param mv the method visitor visiting the destination method.
@@ -459,20 +459,20 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         public void visitParameterAnnotation(int id, MethodVisitor mv) {
             AnnotationVisitor av = mv.visitParameterAnnotation(id, m_name, m_visible);
             for (int i = 0; i < m_simples.size(); i++) {
-                ((SimpleAttribute) m_simples.get(i)).visit(av);
+                m_simples.get(i).visit(av);
             }
             for (int i = 0; i < m_enums.size(); i++) {
-                ((EnumAttribute) m_enums.get(i)).visit(av);
+                m_enums.get(i).visit(av);
             }
             for (int i = 0; i < m_nested.size(); i++) {
-                ((AnnotationDescriptor) m_nested.get(i)).visit(av);
+                m_nested.get(i).visit(av);
             }
             for (int i = 0; i < m_arrays.size(); i++) {
-                ((ArrayAttribute) m_arrays.get(i)).visit(av);
+                m_arrays.get(i).visit(av);
             }
             av.visitEnd();
         }
-        
+
         /**
          * Method allowing to recreate the visited (stored) annotation
          * into the destination annotation. This method is used only
@@ -483,23 +483,23 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         public void visit(AnnotationVisitor mv) {
             AnnotationVisitor av = mv.visitAnnotation(m_name, m_desc);
             for (int i = 0; i < m_simples.size(); i++) {
-                ((SimpleAttribute) m_simples.get(i)).visit(av);
+                m_simples.get(i).visit(av);
             }
             for (int i = 0; i < m_enums.size(); i++) {
-                ((EnumAttribute) m_enums.get(i)).visit(av);
+                m_enums.get(i).visit(av);
             }
             for (int i = 0; i < m_nested.size(); i++) {
-                ((AnnotationDescriptor) m_nested.get(i)).visit(av);
+                m_nested.get(i).visit(av);
             }
             for (int i = 0; i < m_arrays.size(); i++) {
-                ((ArrayAttribute) m_arrays.get(i)).visit(av);
+                m_arrays.get(i).visit(av);
             }
             av.visitEnd();
         }
-        
-        
+
+
     }
-    
+
     /**
      * Describes an array attribute.
      * This class is able to visit an annotation array attribute, and to
@@ -514,8 +514,8 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         /**
          * The content of the parsed array.
          */
-        private List m_content = new ArrayList();
-        
+        private List<Object> m_content = new ArrayList<Object>();
+
         /**
          * Creates an array attribute.
          * @param name the name of the attribute.
@@ -525,8 +525,8 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         }
 
         /**
-         * Visits the content of the array. This method is called for 
-         * simple values. 
+         * Visits the content of the array. This method is called for
+         * simple values.
          * @param arg0 <code>null</code>
          * @param arg1 the value
          * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
@@ -536,8 +536,8 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         }
 
         /**
-         * Visits the content of the array. This method is called for 
-         * nested annotations (annotations contained in the array). 
+         * Visits the content of the array. This method is called for
+         * nested annotations (annotations contained in the array).
          * @param arg0 <code>null</code>
          * @param arg1 the annotation descriptor
          * @return an {@link AnnotationDescriptor} which creates a copy of
@@ -551,8 +551,8 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         }
 
         /**
-         * Visits the content of the array. This method is called for 
-         * nested arrays (arrays contained in the array). 
+         * Visits the content of the array. This method is called for
+         * nested arrays (arrays contained in the array).
          * @param arg0 <code>null</code>
          * @return an {@link ArrayDescriptor} which creates a copy of
          * the contained array.
@@ -571,8 +571,8 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         public void visitEnd() {  }
 
         /**
-         * Visits the content of the array. This method is called for 
-         * enumeration values. 
+         * Visits the content of the array. This method is called for
+         * enumeration values.
          * @param arg0 <code>null</code>
          * @param arg1 the enumeration descriptor
          * @param arg2 the value
@@ -582,7 +582,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             EnumAttribute ea = new EnumAttribute(null, arg1, arg2);
             m_content.add(ea);
         }
-        
+
         /**
          * Recreates the visited array attribute. This method
          * handle the generation of the object embedded in the
@@ -606,9 +606,9 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             }
             content.visitEnd();
         }
-                
+
     }
-    
+
     /**
      * Describes a simple attribute.
      * This class is able to visit an annotation simple attribute, and to
@@ -624,7 +624,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * The value of the attribute.
          */
         private Object m_value;
-        
+
         /**
          * Creates a simple attribute.
          * @param name the name of the attribute
@@ -634,7 +634,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             m_name = name;
             m_value = object;
         }
-        
+
         /**
          * Recreates the attribute on the given annotation.
          * @param visitor the visitor on which the attribute needs
@@ -644,7 +644,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             visitor.visit(m_name, m_value);
         }
     }
-    
+
     /**
      * Describes an attribute. The value of this attribute is an enumerated
      * value.
@@ -665,7 +665,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * The value of the attribute.
          */
         private String m_value;
-        
+
         /**
          * Creates a enumeration attribute.
          * @param name the name of the attribute.
@@ -677,7 +677,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             m_value = value;
             m_desc = desc;
         }
-        
+
         /**
          * Recreates the attribute on the given annotation.
          * @param visitor the visitor on which the attribute needs
@@ -686,7 +686,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         public void visit(AnnotationVisitor visitor) {
             visitor.visitEnum(m_name, m_desc, m_value);
         }
-        
+
     }
 
 

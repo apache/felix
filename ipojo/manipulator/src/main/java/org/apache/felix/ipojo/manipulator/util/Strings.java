@@ -18,7 +18,6 @@
  */
 package org.apache.felix.ipojo.manipulator.util;
 
-import java.io.File;
 
 /**
  * {@code Strings} is a utility class that helps to manipulate String.

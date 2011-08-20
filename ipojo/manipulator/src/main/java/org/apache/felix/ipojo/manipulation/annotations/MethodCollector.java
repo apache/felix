@@ -18,8 +18,6 @@
  */
 package org.apache.felix.ipojo.manipulation.annotations;
 
-import java.awt.image.renderable.ParameterBlock;
-
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
@@ -63,9 +61,9 @@ public class MethodCollector extends EmptyVisitor {
      * @see org.objectweb.asm.commons.EmptyVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
      */
     public AnnotationVisitor visitParameterAnnotation(int index, String annotation,
-			boolean visible) {
-    	if (m_name.equals("<init>")) {
-    		if (annotation.equals("Lorg/apache/felix/ipojo/annotations/Property;")) {
+            boolean visible) {
+        if (m_name.equals("<init>")) {
+            if (annotation.equals("Lorg/apache/felix/ipojo/annotations/Property;")) {
                 return processProperty(true, index);
             }
             if (annotation.equals("Lorg/apache/felix/ipojo/annotations/Requires;")) {
@@ -77,13 +75,13 @@ public class MethodCollector extends EmptyVisitor {
                 elem.addAttribute(new Attribute("index", "" + index));
                 return new CustomAnnotationVisitor(elem, m_collector, true, false, index, m_descriptor);
             }
-    	}
-    	return super.visitParameterAnnotation(index, annotation, visible);
-	}
+        }
+        return super.visitParameterAnnotation(index, annotation, visible);
+    }
 
 
 
-	/**
+    /**
      * Visit method annotations.
      * @param arg0 : annotation name.
      * @param arg1 : is the annotation visible at runtime.
@@ -302,7 +300,7 @@ public class MethodCollector extends EmptyVisitor {
         }
 
         private BindAnnotationParser(int index) {
-        	m_index = index;
+            m_index = index;
         }
 
         /**
@@ -360,10 +358,10 @@ public class MethodCollector extends EmptyVisitor {
                 } else if (m_name != null  && m_name.startsWith("unbind")) {
                     m_id = m_name.substring("unbind".length());
                 } else if (m_name != null  && m_name.startsWith("modified")) {
-                	m_id = m_name.substring("modified".length());
+                    m_id = m_name.substring("modified".length());
                 } else if (m_index != -1) {
-                	m_id = "" + m_index;
-            	} else {
+                    m_id = "" + m_index;
+                } else {
                     System.err.println("Cannot determine the id of the " + m_type + " method : " + m_name);
                     return;
                 }
@@ -471,12 +469,12 @@ public class MethodCollector extends EmptyVisitor {
 
             }
             if (m_name != null) {
-	            Element method = new Element("callback", "");
-	            method.addAttribute(new Attribute("method", m_name));
-	            method.addAttribute(new Attribute("type", m_type));
-	            req.addElement(method);
+                Element method = new Element("callback", "");
+                method.addAttribute(new Attribute("method", m_name));
+                method.addAttribute(new Attribute("type", m_type));
+                req.addElement(method);
             } else {
-            	req.addAttribute(new Attribute("constructor-parameter", Integer.toString(m_index)));
+                req.addAttribute(new Attribute("constructor-parameter", Integer.toString(m_index)));
             }
 
             m_collector.getIds().put(m_id, req);
@@ -572,15 +570,15 @@ public class MethodCollector extends EmptyVisitor {
          * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
          */
         public void visitEnd() {
-        	// If neither name not id, try to extract the name
+            // If neither name not id, try to extract the name
             if (m_name == null && m_id == null  && m_method.startsWith("set")) {
                 m_name = m_method.substring("set".length());
                 m_id = m_name;
             // Else align the two values
             } else if (m_name != null  && m_id == null) {
-            	m_id = m_name;
+                m_id = m_name;
             } else if (m_id != null  && m_name == null) {
-            	m_name = m_id;
+                m_name = m_id;
             }
 
             Element[] props = m_parent.getElements("Property");
@@ -608,8 +606,8 @@ public class MethodCollector extends EmptyVisitor {
             }
 
             if (m_isParameterAnnotation) {
-            	String t = Type.getArgumentTypes(m_descriptor)[m_index].getClassName();
-            	prop.addAttribute(new Attribute("type", t));
+                String t = Type.getArgumentTypes(m_descriptor)[m_index].getClassName();
+                prop.addAttribute(new Attribute("type", t));
                 prop.addAttribute(new Attribute("constructor-parameter", Integer.toString(m_index)));
             } else {
                 prop.addAttribute(new Attribute("method", m_method));

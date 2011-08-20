@@ -19,11 +19,9 @@
 package org.apache.felix.ipojo.manipulator.store;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.jar.Manifest;
 
-import org.apache.felix.ipojo.manipulator.render.MetadataFilter;
 import org.apache.felix.ipojo.metadata.Element;
 
 /**

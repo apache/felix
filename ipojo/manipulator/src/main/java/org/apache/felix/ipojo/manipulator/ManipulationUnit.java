@@ -18,9 +18,6 @@
  */
 package org.apache.felix.ipojo.manipulator;
 
-import java.util.List;
-import java.util.Set;
-
 import org.apache.felix.ipojo.manipulator.util.Strings;
 import org.apache.felix.ipojo.metadata.Element;
 

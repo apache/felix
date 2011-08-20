@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,23 +48,23 @@ public class MethodDescriptor {
      * Argument types.
      */
     private String[] m_arguments;
-    
+
     /**
      * The descriptor of the method.
      */
     private String m_desc;
-    
-    
+
+
     /**
      * The list of {@link AnnotationDescriptor} attached to this
-     * method. 
+     * method.
      */
-    private List m_annotations;
-    
+    private List<AnnotationDescriptor> m_annotations;
+
     /**
-     * The association argument (number) - {@link AnnotationDescriptor}. 
+     * The association argument (number) - {@link AnnotationDescriptor}.
      */
-    private Map/*<Integer, List<AnnotationDescriptor>>*/ m_parameterAnnotations = new HashMap/*<Integer, List<AnnotationDescriptor>>*/();
+    private Map<Integer, List<AnnotationDescriptor>> m_parameterAnnotations = new HashMap<Integer, List<AnnotationDescriptor>>();
 
     /**
      * Constructor.
@@ -83,39 +83,39 @@ public class MethodDescriptor {
             m_arguments[i] = getType(args[i]);
         }
     }
-    
+
     /**
      * Add an annotation to the current method.
      * @param ann annotation to add
      */
     public void addAnnotation(AnnotationDescriptor ann) {
         if (m_annotations == null) {
-            m_annotations = new ArrayList();
+            m_annotations = new ArrayList<AnnotationDescriptor>();
         }
         m_annotations.add(ann);
     }
-    
+
     /**
      * Add an annotation to the current method.
      * @param ann annotation to add
      */
     public void addParameterAnnotation(int id, AnnotationDescriptor ann) {
-        List list = (List) m_parameterAnnotations.get(new Integer(id));
+        List<AnnotationDescriptor> list = m_parameterAnnotations.get(new Integer(id));
         if (list == null) {
-            list = new ArrayList();
+            list = new ArrayList<AnnotationDescriptor>();
             m_parameterAnnotations.put(new Integer(id), list);
         }
         list.add(ann);
     }
-    
-    public List getAnnotations() {
+
+    public List<AnnotationDescriptor> getAnnotations() {
         return m_annotations;
     }
-    
-    public Map getParameterAnnotations() {
+
+    public Map<Integer, List<AnnotationDescriptor>> getParameterAnnotations() {
         return m_parameterAnnotations;
     }
-    
+
     public String getDescriptor() {
         return m_desc;
     }

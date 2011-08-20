@@ -39,17 +39,17 @@ public class Manipulator {
     /**
      * Store the visited fields : [name of the field, type of the field].
      */
-    private Map m_fields;
+    private Map<String, String> m_fields;
 
     /**
      * Store the interface implemented by the class.
      */
-    private List m_interfaces;
+    private List<String> m_interfaces;
 
     /**
      * Store the methods list.
      */
-    private List m_methods;
+    private List<MethodDescriptor> m_methods;
 
     /**
      * Pojo super class.
@@ -127,10 +127,10 @@ public class Manipulator {
             elem.addElement(itf);
         }
 
-        for (Iterator it = m_fields.keySet().iterator(); it.hasNext();) {
+        for (Iterator<String> it = m_fields.keySet().iterator(); it.hasNext();) {
             Element field = new Element("Field", "");
-            String name = (String) it.next();
-            String type = (String) m_fields.get(name);
+            String name = it.next();
+            String type = m_fields.get(name);
             Attribute attName = new Attribute("name", name);
             Attribute attType = new Attribute("type", type);
             field.addAttribute(attName);
@@ -146,7 +146,7 @@ public class Manipulator {
         return elem;
     }
 
-    public Map getFields() {
+    public Map<String, String> getFields() {
         return m_fields;
     }
 

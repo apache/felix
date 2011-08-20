@@ -19,10 +19,9 @@
 
 package org.apache.felix.ipojo.manipulator;
 
-import org.apache.felix.ipojo.metadata.Element;
-
 import java.io.IOException;
-import java.util.jar.Manifest;
+
+import org.apache.felix.ipojo.metadata.Element;
 
 /**
  * Abstract input/output for the manipulation process.
