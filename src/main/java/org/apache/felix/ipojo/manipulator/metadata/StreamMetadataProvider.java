@@ -44,22 +44,22 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class StreamMetadataProvider implements MetadataProvider {
 
-    private InputStream stream;
+    private InputStream m_stream;
 
-    private Reporter reporter;
+    private Reporter m_reporter;
 
-    private boolean validateUsingLocalSchemas = false;
+    private boolean m_validateUsingLocalSchemas = false;
 
     public StreamMetadataProvider(InputStream stream, Reporter reporter) {
-        this.stream = stream;
-        this.reporter = reporter;
+        m_stream = stream;
+        m_reporter = reporter;
     }
 
     /**
      * Force XML schemas resolution to be performed locally
      */
     public void setValidateUsingLocalSchemas(boolean validateUsingLocalSchemas) {
-        this.validateUsingLocalSchemas = validateUsingLocalSchemas;
+        m_validateUsingLocalSchemas = validateUsingLocalSchemas;
     }
 
     public List<Element> getMetadatas() throws IOException {
@@ -75,12 +75,12 @@ public class StreamMetadataProvider implements MetadataProvider {
             parser.setFeature("http://xml.org/sax/features/validation", true);
             parser.setFeature("http://apache.org/xml/features/validation/schema", true);
             parser.setErrorHandler(handler);
-            if (validateUsingLocalSchemas) {
+            if (m_validateUsingLocalSchemas) {
                 parser.setEntityResolver(new SchemaResolver());
             }
 
             // Parse the XML
-            InputSource is = new InputSource(stream);
+            InputSource is = new InputSource(m_stream);
             parser.parse(is);
             Element[] meta = handler.getMetadata();
 
@@ -91,19 +91,19 @@ public class StreamMetadataProvider implements MetadataProvider {
 
             // Output a warning message if no metadata was found
             if (meta == null || meta.length == 0) {
-                reporter.warn("Neither component types, nor instances in the XML metadata");
+                m_reporter.warn("Neither component types, nor instances in the XML metadata");
             }
 
         } catch (IOException e) {
-            reporter.error("Cannot open the metadata input stream: " + e.getMessage());
+            m_reporter.error("Cannot open the metadata input stream: " + e.getMessage());
         } catch (ParseException e) {
-            reporter.error("Parsing error when parsing the XML file: " + e.getMessage());
+            m_reporter.error("Parsing error when parsing the XML file: " + e.getMessage());
         } catch (SAXParseException e) {
-            reporter.error("Error during metadata parsing at line " + e.getLineNumber() + " : " + e.getMessage());
+            m_reporter.error("Error during metadata parsing at line " + e.getLineNumber() + " : " + e.getMessage());
         } catch (SAXException e) {
-            reporter.error("Parsing error when parsing (Sax Error) the XML file: " + e.getMessage());
+            m_reporter.error("Parsing error when parsing (Sax Error) the XML file: " + e.getMessage());
         } finally {
-            Streams.close(stream);
+            Streams.close(m_stream);
         }
 
         return metadata;

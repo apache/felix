@@ -40,9 +40,9 @@ public class ManipulationUnit {
      * @param meta component type metadata
      */
     public ManipulationUnit(String resourcePath, Element meta) {
-        this.m_resourcePath = resourcePath;
-        this.m_componentMetadata = meta;
-        this.m_className = Strings.asClassName(resourcePath);
+        m_resourcePath = resourcePath;
+        m_componentMetadata = meta;
+        m_className = Strings.asClassName(resourcePath);
     }
 
     /**

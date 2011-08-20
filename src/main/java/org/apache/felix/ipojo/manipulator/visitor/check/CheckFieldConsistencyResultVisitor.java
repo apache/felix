@@ -38,23 +38,23 @@ public class CheckFieldConsistencyResultVisitor extends ManipulationResultAdapte
     /**
      * Component's metadata.
      */
-    private Element metadata;
+    private Element m_metadata;
 
     /**
      * Reporter for errors.
      */
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     public CheckFieldConsistencyResultVisitor(ManipulationResultVisitor visitor) {
         super(visitor);
     }
 
     public void setMetadata(Element metadata) {
-        this.metadata = metadata;
+        this.m_metadata = metadata;
     }
 
     public void setReporter(Reporter reporter) {
-        this.reporter = reporter;
+        this.m_reporter = reporter;
     }
 
     public void visitClassStructure(Element structure) {
@@ -63,7 +63,7 @@ public class CheckFieldConsistencyResultVisitor extends ManipulationResultAdapte
         collectStructuralFields(fieldsInStructure, structure);
 
         List<String> fieldsInMetadata = new ArrayList<String>();
-        Metadatas.findFields(fieldsInMetadata, metadata);
+        Metadatas.findFields(fieldsInMetadata, m_metadata);
 
         checkReferredFieldsAreInStructure(fieldsInMetadata, fieldsInStructure);
 
@@ -94,8 +94,8 @@ public class CheckFieldConsistencyResultVisitor extends ManipulationResultAdapte
         // Then, try to find each referred field in the given field map
         for (String fieldName : fieldsInMetadata) {
             if (!fieldsInStructure.contains(fieldName)) {
-                reporter.error("The field " + fieldName + " is referenced in the "
-                        + "metadata but does not exist in the " + Metadatas.getComponentType(metadata)
+                m_reporter.error("The field " + fieldName + " is referenced in the "
+                        + "metadata but does not exist in the " + Metadatas.getComponentType(m_metadata)
                         + " class");
             }
         }

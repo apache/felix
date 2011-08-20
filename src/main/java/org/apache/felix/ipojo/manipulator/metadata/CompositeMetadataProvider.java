@@ -34,20 +34,20 @@ import org.apache.felix.ipojo.metadata.Element;
  */
 public class CompositeMetadataProvider implements MetadataProvider {
 
-    private List<MetadataProvider> providers = new ArrayList<MetadataProvider>();
-    private Reporter reporter;
+    private List<MetadataProvider> m_providers = new ArrayList<MetadataProvider>();
+    private Reporter m_reporter;
 
     public CompositeMetadataProvider(Reporter reporter) {
-        this.reporter = reporter;
+        m_reporter = reporter;
     }
 
     public void addMetadataProvider(MetadataProvider provider) {
-        this.providers.add(provider);
+        m_providers.add(provider);
     }
 
     public List<Element> getMetadatas() throws IOException {
         List<Element> metadata = new ArrayList<Element>();
-        for (MetadataProvider provider : providers) {
+        for (MetadataProvider provider : m_providers) {
 
             List<Element> loaded = provider.getMetadatas();
 
@@ -65,7 +65,7 @@ public class CompositeMetadataProvider implements MetadataProvider {
                     if (name != null) {
                         if (isDuplicate(metadata, name)) {
                             // TODO Try to add more information here, but what ?
-                            reporter.warn("The component type " + name + " is duplicated.");
+                            m_reporter.warn("The component type " + name + " is duplicated.");
                         } else {
                             metadata.add(meta);
                         }

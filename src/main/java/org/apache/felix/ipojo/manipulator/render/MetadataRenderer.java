@@ -31,7 +31,7 @@ import org.apache.felix.ipojo.metadata.Element;
  */
 public class MetadataRenderer {
 
-    private List<MetadataFilter> filters = new ArrayList<MetadataFilter>();
+    private List<MetadataFilter> m_filters = new ArrayList<MetadataFilter>();
 
     public MetadataRenderer() {
         // By default, filter metadata coming from prior manipulation.
@@ -43,7 +43,7 @@ public class MetadataRenderer {
      * @param filter added filter
      */
     public void addMetadataFilter(MetadataFilter filter) {
-        this.filters.add(filter);
+        m_filters.add(filter);
     }
 
     /**
@@ -59,7 +59,7 @@ public class MetadataRenderer {
 
     private void renderElement(Element element, StringBuilder builder) {
 
-    	// If the element is already here, do not re-add the element.
+        // If the element is already here, do not re-add the element.
         if(!isFiltered(element)) {
 
             // Print the beginning of the element
@@ -127,7 +127,7 @@ public class MetadataRenderer {
     private boolean isFiltered(final Element element) {
 
         // Iterates over all the filters and return the first positive answer (if any)
-        for (MetadataFilter filter : filters) {
+        for (MetadataFilter filter : m_filters) {
             if (filter.accept(element)) {
                 return true;
             }

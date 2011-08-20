@@ -37,45 +37,45 @@ import java.util.Map;
  */
 public class ManipulatedResourcesWriter implements ManipulationVisitor {
 
-    private ResourceStore resourceStore;
-    private Reporter reporter;
-    private List<ManipulatedResultWriter> writers;
+    private ResourceStore m_resourceStore;
+    private Reporter m_reporter;
+    private List<ManipulatedResultWriter> m_writers;
 
     public ManipulatedResourcesWriter() {
-        this.writers = new ArrayList<ManipulatedResultWriter>();
+        m_writers = new ArrayList<ManipulatedResultWriter>();
     }
 
     public void setResourceStore(ResourceStore resourceStore) {
-        this.resourceStore = resourceStore;
+        m_resourceStore = resourceStore;
     }
 
     public void setReporter(Reporter reporter) {
-        this.reporter = reporter;
+        m_reporter = reporter;
     }
 
     public ManipulationResultVisitor visitManipulationResult(Element metadata) {
-        this.resourceStore.writeMetadata(metadata);
+        m_resourceStore.writeMetadata(metadata);
         ManipulatedResultWriter writer = new ManipulatedResultWriter(metadata);
-        writers.add(writer);
+        m_writers.add(writer);
         return writer;
     }
 
     public void visitMetadata(Element metadata) {
-        this.resourceStore.writeMetadata(metadata);
+        m_resourceStore.writeMetadata(metadata);
     }
 
     public void visitEnd() {
 
         try {
-            resourceStore.open();
-            for (ManipulatedResultWriter writer : writers) {
+            m_resourceStore.open();
+            for (ManipulatedResultWriter writer : m_writers) {
                 for (Map.Entry<String, byte[]> entry : writer.getResources().entrySet()) {
-                    resourceStore.write(entry.getKey(), entry.getValue());
+                    m_resourceStore.write(entry.getKey(), entry.getValue());
                 }
             }
-            resourceStore.close();
+            m_resourceStore.close();
         } catch (IOException e) {
-            reporter.error("Cannot store manipulation result: " + e.getMessage());
+            m_reporter.error("Cannot store manipulation result: " + e.getMessage());
         }
     }
 }

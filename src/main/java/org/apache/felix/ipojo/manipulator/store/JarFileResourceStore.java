@@ -50,32 +50,32 @@ public class JarFileResourceStore implements ResourceStore {
     /**
      * Source Jar.
      */
-    private JarFile source;
+    private JarFile m_source;
 
     /**
      * Target File.
      */
-    private File target;
+    private File m_target;
 
     /**
      * Modified resources.
      */
-    private Map<String, byte[]> content;
+    private Map<String, byte[]> m_content;
 
     /**
      * Resource Mapper.
      */
-    private ResourceMapper mapper = new IdentityResourceMapper();
+    private ResourceMapper m_mapper = new IdentityResourceMapper();
 
     /**
      * The builder of the updated manifest.
      */
-    private ManifestBuilder manifestBuilder;
+    private ManifestBuilder m_manifestBuilder;
 
     /**
      * Original manifest to be updated.
      */
-    private Manifest manifest;
+    private Manifest m_manifest;
 
     /**
      * Construct a {@link JarFileResourceStore} wrapping the given original bundle,
@@ -85,45 +85,45 @@ public class JarFileResourceStore implements ResourceStore {
      * @throws IOException if there is an error retrieving the Manifest from the original JarFile
      */
     public JarFileResourceStore(JarFile source, File target) throws IOException {
-        this.source = source;
-        this.target = target;
+        m_source = source;
+        m_target = target;
 
         // TODO ensure File is not null and not an existing file/directory
-        this.target = target;
+        this.m_target = target;
         if (source != null) {
-            this.manifest = source.getManifest();
+            m_manifest = source.getManifest();
         } else {
-            this.manifest = new Manifest();
+            m_manifest = new Manifest();
         }
-        this.content = new TreeMap<String, byte[]>();
+        m_content = new TreeMap<String, byte[]>();
     }
 
     public void setResourceMapper(ResourceMapper mapper) {
-        this.mapper = mapper;
+        this.m_mapper = mapper;
     }
 
     public void setManifestBuilder(ManifestBuilder manifestBuilder) {
-        this.manifestBuilder = manifestBuilder;
+        this.m_manifestBuilder = manifestBuilder;
     }
 
     public void setManifest(Manifest manifest) {
-        this.manifest = manifest;
+        this.m_manifest = manifest;
     }
 
     public byte[] read(String path) throws IOException {
-        ZipEntry entry = source.getEntry(getInternalPath(path));
+        ZipEntry entry = m_source.getEntry(getInternalPath(path));
         if (entry == null) {
             throw new IOException("Jar Entry is not found for class " + path + ".");
         }
-        return Streams.readBytes(source.getInputStream(entry));
+        return Streams.readBytes(m_source.getInputStream(entry));
     }
 
     private String getInternalPath(String path) {
-        return mapper.internalize(path);
+        return m_mapper.internalize(path);
     }
 
     public void accept(ResourceVisitor visitor) {
-        List<JarEntry> entries = Collections.list(source.entries());
+        List<JarEntry> entries = Collections.list(m_source.entries());
         for (JarEntry entry : entries) {
             String name = entry.getName();
             if (!name.endsWith("/")) {
@@ -134,7 +134,7 @@ public class JarFileResourceStore implements ResourceStore {
     }
 
     private String getExternalName(String path) {
-        return mapper.externalize(path);
+        return m_mapper.externalize(path);
     }
 
     public void open() throws IOException {
@@ -142,26 +142,26 @@ public class JarFileResourceStore implements ResourceStore {
     }
 
     public void writeMetadata(Element metadata) {
-        manifestBuilder.addMetada(Collections.singletonList(metadata));
-        manifestBuilder.addReferredPackage(Metadatas.findReferredPackages(metadata));
+        m_manifestBuilder.addMetada(Collections.singletonList(metadata));
+        m_manifestBuilder.addReferredPackage(Metadatas.findReferredPackages(metadata));
     }
 
     public void write(String resourcePath, byte[] resource) throws IOException {
-        this.content.put(resourcePath, resource);
+        this.m_content.put(resourcePath, resource);
     }
 
     public void close() throws IOException {
 
         // Update the manifest
-        Manifest updated = manifestBuilder.build(manifest);
+        Manifest updated = m_manifestBuilder.build(m_manifest);
 
         // Create a new Jar file
-        FileOutputStream fos = new FileOutputStream(target);
+        FileOutputStream fos = new FileOutputStream(m_target);
         JarOutputStream jos = new JarOutputStream(fos, updated);
 
         try {
             // Copy classes and resources
-            List<JarEntry> entries = Collections.list(source.entries());
+            List<JarEntry> entries = Collections.list(m_source.entries());
             for (JarEntry entry : entries) {
 
                 // Ignore some entries (MANIFEST, ...)
@@ -173,7 +173,7 @@ public class JarFileResourceStore implements ResourceStore {
                     // Write newer/updated resource (manipulated classes, ...)
 
                     JarEntry je = new JarEntry(entry.getName());
-                    byte[] data = content.get(getInternalPath(entry.getName()));
+                    byte[] data = m_content.get(getInternalPath(entry.getName()));
                     jos.putNextEntry(je);
                     jos.write(data);
                     jos.closeEntry();
@@ -181,7 +181,7 @@ public class JarFileResourceStore implements ResourceStore {
                     // Copy the resource as-is
 
                     jos.putNextEntry(entry);
-                    InputStream is = source.getInputStream(entry);
+                    InputStream is = m_source.getInputStream(entry);
                     try {
                         Streams.transfer(is, jos);
                     } finally {
@@ -194,7 +194,7 @@ public class JarFileResourceStore implements ResourceStore {
             }
         } finally {
             try {
-                source.close();
+                m_source.close();
             } catch (IOException e) {
                 // Ignored
             }
@@ -208,7 +208,7 @@ public class JarFileResourceStore implements ResourceStore {
         if (entry.getName().endsWith(".class")) {
             // Need to map this into an external+normalized path
             String cleaned = getExternalName(entry.getName());
-            return content.containsKey(cleaned);
+            return m_content.containsKey(cleaned);
         } else {
             return false;
         }

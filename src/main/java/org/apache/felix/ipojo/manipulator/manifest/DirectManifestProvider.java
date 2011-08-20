@@ -32,17 +32,17 @@ public class DirectManifestProvider implements ManifestProvider {
     /**
      * Served Manifest.
      */
-    private Manifest manifest;
+    private Manifest m_manifest;
 
     /**
      * Construct a provider servicing the given manifest.
      * @param manifest Manifest to be serviced
      */
     public DirectManifestProvider(Manifest manifest) {
-        this.manifest = manifest;
+        m_manifest = manifest;
     }
 
     public Manifest getManifest() {
-        return manifest;
+        return m_manifest;
     }
 }

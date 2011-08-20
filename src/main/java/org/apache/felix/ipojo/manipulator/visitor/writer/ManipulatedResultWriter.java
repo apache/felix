@@ -32,22 +32,22 @@ import java.util.Map;
  */
 public class ManipulatedResultWriter implements ManipulationResultVisitor {
 
-    private Map<String, byte[]> resources;
+    private Map<String, byte[]> m_resources;
 
-    private Element component;
+    private Element m_component;
 
     public ManipulatedResultWriter(Element component) {
-        this.component = component;
-        resources = new HashMap<String, byte[]>();
+        m_component = component;
+        m_resources = new HashMap<String, byte[]>();
     }
 
     public void visitClassStructure(Element structure) {
         // Insert the manipulation structure in the component's metadata
-        component.addElement(structure);
+        m_component.addElement(structure);
     }
 
     public void visitManipulatedResource(String type, byte[] resource) {
-        this.resources.put(type, resource);
+        m_resources.put(type, resource);
     }
 
     public void visitEnd() {
@@ -55,6 +55,6 @@ public class ManipulatedResultWriter implements ManipulationResultVisitor {
     }
 
     public Map<String, byte[]> getResources() {
-        return resources;
+        return m_resources;
     }
 }

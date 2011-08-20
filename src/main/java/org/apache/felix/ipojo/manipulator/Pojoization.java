@@ -77,7 +77,7 @@ public class Pojoization {
     }
 
     public Pojoization(Reporter m_reporter) {
-        this.m_reporter = m_reporter;
+        m_reporter = m_reporter;
     }
 
     /**

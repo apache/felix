@@ -57,7 +57,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
     /**
      * The metadata renderer used to print Elements.
      */
-    private MetadataRenderer renderer;
+    private MetadataRenderer m_renderer;
 
     /**
      * Add all given package names in the referred packages list
@@ -76,7 +76,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
     }
 
     public void setMetadataRenderer(MetadataRenderer renderer) {
-        this.renderer = renderer;
+        m_renderer = renderer;
     }
 
     /**
@@ -125,7 +125,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
         // Add referred imports from the metadata
         for (int i = 0; i < m_referredPackages.size(); i++) {
             String pack = m_referredPackages.get(i);
-            imports.put(pack, new TreeMap());
+            imports.put(pack, new TreeMap<String, String>());
         }
 
         // Write imports
@@ -141,7 +141,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
     private void setPOJOMetadata(Attributes att) {
         StringBuilder meta = new StringBuilder();
         for (Element metadata : m_metadata) {
-            meta.append(renderer.render(metadata));
+            meta.append(m_renderer.render(metadata));
         }
         if (meta.length() != 0) {
             att.putValue("iPOJO-Components", meta.toString());

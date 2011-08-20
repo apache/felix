@@ -41,17 +41,17 @@ public class FileMetadataProvider implements MetadataProvider {
     /**
      * Metadata source (file or directory).
      */
-    private File source;
+    private File m_source;
 
     /**
      * Feedback reporter.
      */
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     /**
      * Validate using local schemas or not ?
      */
-    private boolean validateUsingLocalSchemas = false;
+    private boolean m_validateUsingLocalSchemas = false;
 
     /**
      * Constructs a metadata provider using the given source File (directory
@@ -60,18 +60,18 @@ public class FileMetadataProvider implements MetadataProvider {
      * @param reporter feedback reporter
      */
     public FileMetadataProvider(File source, Reporter reporter) {
-        this.source = source;
-        this.reporter = reporter;
+        m_source = source;
+        m_reporter = reporter;
     }
 
     public void setValidateUsingLocalSchemas(boolean validateUsingLocalSchemas) {
-        this.validateUsingLocalSchemas = validateUsingLocalSchemas;
+        m_validateUsingLocalSchemas = validateUsingLocalSchemas;
     }
 
     public List<Element> getMetadatas() throws IOException {
 
         List<Element> metadata = new ArrayList<Element>();
-        traverse(source, metadata);
+        traverse(m_source, metadata);
         return metadata;
     }
 
@@ -95,17 +95,17 @@ public class FileMetadataProvider implements MetadataProvider {
             InputStream stream = null;
             URL url = file.toURI().toURL();
             if (url == null) {
-                reporter.warn("Cannot find the metadata file : " + source.getAbsolutePath());
+                m_reporter.warn("Cannot find the metadata file : " + m_source.getAbsolutePath());
             } else {
                 stream = url.openStream();
-                StreamMetadataProvider provider = new StreamMetadataProvider(stream, reporter);
-                provider.setValidateUsingLocalSchemas(validateUsingLocalSchemas);
+                StreamMetadataProvider provider = new StreamMetadataProvider(stream, m_reporter);
+                provider.setValidateUsingLocalSchemas(m_validateUsingLocalSchemas);
                 metadata.addAll(provider.getMetadatas());
             }
         } catch (MalformedURLException e) {
-            reporter.error("Cannot open the metadata input stream from " + source.getAbsolutePath() + ": " + e.getMessage());
+            m_reporter.error("Cannot open the metadata input stream from " + m_source.getAbsolutePath() + ": " + e.getMessage());
         } catch (IOException e) {
-            reporter.error("Cannot open the metadata input stream: " + source.getAbsolutePath() + ": " + e.getMessage());
+            m_reporter.error("Cannot open the metadata input stream: " + m_source.getAbsolutePath() + ": " + e.getMessage());
         }
 
     }

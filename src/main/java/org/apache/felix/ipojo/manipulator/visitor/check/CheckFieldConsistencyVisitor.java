@@ -32,20 +32,20 @@ import org.apache.felix.ipojo.metadata.Element;
  */
 public class CheckFieldConsistencyVisitor extends ManipulationAdapter {
 
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     public CheckFieldConsistencyVisitor(ManipulationVisitor visitor) {
         super(visitor);
     }
 
     public void setReporter(Reporter reporter) {
-        this.reporter = reporter;
+        this.m_reporter = reporter;
     }
 
     public ManipulationResultVisitor visitManipulationResult(Element metadata) {
         CheckFieldConsistencyResultVisitor rv = new CheckFieldConsistencyResultVisitor(super.visitManipulationResult(metadata));
         rv.setMetadata(metadata);
-        rv.setReporter(reporter);
+        rv.setReporter(m_reporter);
         return rv;
     }
 

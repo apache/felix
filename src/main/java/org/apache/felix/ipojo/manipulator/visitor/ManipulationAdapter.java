@@ -31,21 +31,21 @@ import org.apache.felix.ipojo.metadata.Element;
  */
 public class ManipulationAdapter implements ManipulationVisitor {
 
-    private ManipulationVisitor delegate;
+    private ManipulationVisitor m_delegate;
 
     public ManipulationAdapter(ManipulationVisitor delegate) {
-        this.delegate = delegate;
+        m_delegate = delegate;
     }
 
     public ManipulationResultVisitor visitManipulationResult(Element metadata) {
-        return new ManipulationResultAdapter(delegate.visitManipulationResult(metadata));
+        return new ManipulationResultAdapter(m_delegate.visitManipulationResult(metadata));
     }
 
     public void visitMetadata(Element metadata) {
-        delegate.visitMetadata(metadata);
+        m_delegate.visitMetadata(metadata);
     }
 
     public void visitEnd() {
-        delegate.visitEnd();
+        m_delegate.visitEnd();
     }
 }
