@@ -101,7 +101,7 @@ public class ManipulatorMojo extends AbstractMojo {
      * Project types which this plugin supports.
      * @parameter
      */
-    private List m_supportedProjectTypes = Arrays.asList(new String[]{"bundle", "jar", "war"});
+    private List<String> m_supportedProjectTypes = Arrays.asList(new String[]{"bundle", "jar", "war"});
 
     /**
      * Ignore annotations parameter.
@@ -128,8 +128,8 @@ public class ManipulatorMojo extends AbstractMojo {
         // ignore project types not supported, useful when the plugin is configured in the parent pom
         if (!this.m_supportedProjectTypes.contains(m_project.getArtifact().getType())) {
             this.getLog().debug("Ignoring project "
-            		+ m_project.getArtifact() + " : type " + m_project.getArtifact().getType()
-            		+ " is not supported by iPOJO plugin, supported types are " + this.m_supportedProjectTypes);
+                    + m_project.getArtifact() + " : type " + m_project.getArtifact().getType()
+                    + " is not supported by iPOJO plugin, supported types are " + this.m_supportedProjectTypes);
             return;
         }
 
@@ -145,44 +145,44 @@ public class ManipulatorMojo extends AbstractMojo {
         if (isXML()) {
             is = new ByteArrayInputStream(m_metadata.getBytes());
         } else {
-        	// If the metadata is not set,
-        	// first check if ./src/main/ipojo exists, if so look into it.
+            // If the metadata is not set,
+            // first check if ./src/main/ipojo exists, if so look into it.
             if (m_metadata == null) {
-            	File m = new File(m_project.getBasedir(), "src/main/ipojo");
-            	if (m.isDirectory()) {
-            		metadata = m;
-            		getLog().info("Metadata directory : " + metadata.getAbsolutePath());
-            	} else {
-            		// Else check target/classes/metadata.xml
-            		File meta = new File(m_outputDirectory + File.separator + "metadata.xml");
-            		if (! meta.exists()) {
-            			// If it still does not exist, try ./metadata.xml
+                File m = new File(m_project.getBasedir(), "src/main/ipojo");
+                if (m.isDirectory()) {
+                    metadata = m;
+                    getLog().info("Metadata directory : " + metadata.getAbsolutePath());
+                } else {
+                    // Else check target/classes/metadata.xml
+                    File meta = new File(m_outputDirectory + File.separator + "metadata.xml");
+                    if (! meta.exists()) {
+                        // If it still does not exist, try ./metadata.xml
                         meta = new File(m_project.getBasedir() + File.separator + "metadata.xml");
                     }
 
-            		if (meta.exists()) {
-            			metadata = meta;
-            			getLog().info("Metadata file : " + metadata.getAbsolutePath());
-            		}
+                    if (meta.exists()) {
+                        metadata = meta;
+                        getLog().info("Metadata file : " + metadata.getAbsolutePath());
+                    }
 
-            		// No metadata.
-            	}
+                    // No metadata.
+                }
             } else {
-            	// metadata path set.
-            	File m = new File(m_project.getBasedir(), m_metadata);
-            	if (! m.exists()) {
-            		throw new MojoExecutionException("The metadata file does not exist : " + m.getAbsolutePath());
-            	}
-            	metadata = m;
-            	if (m.isDirectory()) {
-            		getLog().info("Metadata directory : " + metadata.getAbsolutePath());
-            	} else {
-            		getLog().info("Metadata file : " + metadata.getAbsolutePath());
-            	}
+                // metadata path set.
+                File m = new File(m_project.getBasedir(), m_metadata);
+                if (! m.exists()) {
+                    throw new MojoExecutionException("The metadata file does not exist : " + m.getAbsolutePath());
+                }
+                metadata = m;
+                if (m.isDirectory()) {
+                    getLog().info("Metadata directory : " + metadata.getAbsolutePath());
+                } else {
+                    getLog().info("Metadata file : " + metadata.getAbsolutePath());
+                }
             }
 
             if (metadata == null) {
-            	// Verify if annotations are ignored
+                // Verify if annotations are ignored
                 if (m_ignoreAnnotations) {
                     getLog().info("No metadata file found - ignoring annotations");
                     return;
@@ -195,30 +195,31 @@ public class ManipulatorMojo extends AbstractMojo {
         // Get input bundle, we use the already create artifact.
         File in = null;
         if (m_inputClassifier == null) {
-        	in = m_project.getArtifact().getFile();
-        	getLog().info("Input Bundle File : " + in.getAbsolutePath());
-        	if (! in.exists()) {
-        		throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
-        	}
+            in = m_project.getArtifact().getFile();
+            getLog().info("Input Bundle File : " + in.getAbsolutePath());
+            if (! in.exists()) {
+                throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
+            }
         } else {
-        	// Look from attached artifacts.
-        	List attached = m_project.getAttachedArtifacts();
-        	for (int i = 0; in == null  && attached != null  && i < attached.size(); i++) {
-        		Artifact artifact = (Artifact) attached.get(i);
-        		if (artifact.hasClassifier()  && m_inputClassifier.equals(artifact.getClassifier())) {
-        			in = artifact.getFile();
-        		}
-        	}
+            // Look from attached artifacts.
+            @SuppressWarnings("unchecked")
+            List<Artifact> attached = m_project.getAttachedArtifacts();
+            for (int i = 0; in == null  && attached != null  && i < attached.size(); i++) {
+                Artifact artifact = attached.get(i);
+                if (artifact.hasClassifier()  && m_inputClassifier.equals(artifact.getClassifier())) {
+                    in = artifact.getFile();
+                }
+            }
 
-        	if (in == null) {
-        		throw new MojoExecutionException("Cannot find the file to manipulate, " +
-        				"no attached artifact with classifier " + m_inputClassifier);
-        	}
+            if (in == null) {
+                throw new MojoExecutionException("Cannot find the file to manipulate, " +
+                        "no attached artifact with classifier " + m_inputClassifier);
+            }
 
-        	getLog().info("Input Bundle File : " + in.getAbsolutePath());
-        	if (! in.exists()) {
-        		throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
-        	}
+            getLog().info("Input Bundle File : " + in.getAbsolutePath());
+            if (! in.exists()) {
+                throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
+            }
         }
 
         File out = new File(m_buildDirectory + File.separator + "_out.jar");
@@ -230,11 +231,11 @@ public class ManipulatorMojo extends AbstractMojo {
 
         // Executes the pojoization.
         if (is == null) {
-        	if (metadata == null) { // No metadata.
-        		pojo.pojoization(in, out, (File) null); // Only annotations
-        	} else {
-        		pojo.pojoization(in, out, metadata); // Metadata set
-        	}
+            if (metadata == null) { // No metadata.
+                pojo.pojoization(in, out, (File) null); // Only annotations
+            } else {
+                pojo.pojoization(in, out, metadata); // Metadata set
+            }
         } else  { // In-Pom metadata.
             pojo.pojoization(in, out, is);
         }
