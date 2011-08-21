@@ -36,38 +36,38 @@ import org.apache.felix.ipojo.metadata.Element;
  */
 public class ResourceMetadataProvider implements MetadataProvider {
 
-    private Resource resource;
+    private Resource m_resource;
 
-    private List<Element> cached;
+    private List<Element> m_cached;
 
-    private boolean validateUsingLocalSchemas = false;
+    private boolean m_validateUsingLocalSchemas = false;
 
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     public ResourceMetadataProvider(Resource resource, Reporter reporter) {
-        this.resource = resource;
-        this.reporter = reporter;
+        m_resource = resource;
+        m_reporter = reporter;
     }
 
     public void setValidateUsingLocalSchemas(boolean validateUsingLocalSchemas) {
-        this.validateUsingLocalSchemas = validateUsingLocalSchemas;
+        this.m_validateUsingLocalSchemas = validateUsingLocalSchemas;
     }
 
     public List<Element> getMetadatas() throws IOException {
-        if (cached == null) {
-            cached = new ArrayList<Element>();
+        if (m_cached == null) {
+            m_cached = new ArrayList<Element>();
             InputStream stream = null;
             try {
-                stream = resource.openInputStream();
+                stream = m_resource.openInputStream();
             } catch (Exception e) {
-                reporter.error(e.getMessage());
+                m_reporter.error(e.getMessage());
                 throw new IOException("Cannot read metadata");
             }
-            StreamMetadataProvider provider = new StreamMetadataProvider(stream, reporter);
-            provider.setValidateUsingLocalSchemas(validateUsingLocalSchemas);
-            cached.addAll(provider.getMetadatas());
+            StreamMetadataProvider provider = new StreamMetadataProvider(stream, m_reporter);
+            provider.setValidateUsingLocalSchemas(m_validateUsingLocalSchemas);
+            m_cached.addAll(provider.getMetadatas());
         }
 
-        return cached;
+        return m_cached;
     }
 }

@@ -39,18 +39,18 @@ import java.util.*;
 
 public class BndJarResourceStore implements ResourceStore {
 
-    private Analyzer analyzer;
-    private Reporter reporter;
+    private Analyzer m_analyzer;
+    private Reporter m_reporter;
 
-    private MetadataRenderer renderer = new MetadataRenderer();
+    private MetadataRenderer m_renderer = new MetadataRenderer();
 
     public BndJarResourceStore(Analyzer analyzer, Reporter reporter) {
-        this.analyzer = analyzer;
-        this.reporter = reporter;
+        m_analyzer = analyzer;
+        m_reporter = reporter;
     }
 
     public byte[] read(String path) throws IOException {
-        Resource resource = analyzer.getJar().getResource(path);
+        Resource resource = m_analyzer.getJar().getResource(path);
         InputStream is = null;
         try {
             is = resource.openInputStream();
@@ -66,7 +66,7 @@ public class BndJarResourceStore implements ResourceStore {
             // Only visit classes annotated with @Component or @Handler
             String annotations = Component.class.getName() + "|" + Handler.class.getName();
 
-            Collection<Clazz> classes = analyzer.getClasses("",
+            Collection<Clazz> classes = m_analyzer.getClasses("",
                     Clazz.QUERY.ANNOTATION.name(), annotations,
                     Clazz.QUERY.NAMED.name(), "*");
 
@@ -75,7 +75,7 @@ public class BndJarResourceStore implements ResourceStore {
                 visitor.visit(clazz.getPath());
             }
         } catch (Exception e) {
-            reporter.error("Cannot find iPOJO annotated types: " + e.getMessage());
+            m_reporter.error("Cannot find iPOJO annotated types: " + e.getMessage());
         }
     }
 
@@ -87,30 +87,30 @@ public class BndJarResourceStore implements ResourceStore {
 
         // Find referred packages and add them into Bnd
         for (String referred : Metadatas.findReferredPackages(metadata)) {
-            if (analyzer.getReferred().get(referred) == null) {
+            if (m_analyzer.getReferred().get(referred) == null) {
                 // The given package is not referred ATM
-                analyzer.getReferred().put(referred, new HashMap<String, String>());
+                m_analyzer.getReferred().put(referred, new HashMap<String, String>());
             }
         }
 
         // Write the iPOJO header
-        String components = analyzer.getProperty("IPOJO-Components");
+        String components = m_analyzer.getProperty("IPOJO-Components");
         StringBuilder builder = new StringBuilder();
 
         if (components != null) {
             builder.append(components);
         }
-        builder.append(renderer.render(metadata));
+        builder.append(m_renderer.render(metadata));
 
         if (builder.length() != 0) {
-            analyzer.setProperty("IPOJO-Components", builder.toString());
+            m_analyzer.setProperty("IPOJO-Components", builder.toString());
         }
 
 
     }
 
     public void write(String resourcePath, byte[] resource) throws IOException {
-        Jar jar = analyzer.getJar();
+        Jar jar = m_analyzer.getJar();
         jar.putResource(resourcePath, new ByteArrayResource(resource));
     }
 
@@ -120,21 +120,21 @@ public class BndJarResourceStore implements ResourceStore {
         Map<String, String> version = new TreeMap<String, String>();
         version.put("version", Pojoization.IPOJO_PACKAGE_VERSION);
 
-        if (analyzer.getReferred().get("org.apache.felix.ipojo") == null) {
-            analyzer.getReferred().put("org.apache.felix.ipojo", version);
+        if (m_analyzer.getReferred().get("org.apache.felix.ipojo") == null) {
+            m_analyzer.getReferred().put("org.apache.felix.ipojo", version);
         }
-        if (analyzer.getReferred().get("org.apache.felix.ipojo.architecture") == null) {
-            analyzer.getReferred().put("org.apache.felix.ipojo.architecture", version);
+        if (m_analyzer.getReferred().get("org.apache.felix.ipojo.architecture") == null) {
+            m_analyzer.getReferred().put("org.apache.felix.ipojo.architecture", version);
         }
-        if (analyzer.getReferred().get("org.osgi.service.cm") == null) {
+        if (m_analyzer.getReferred().get("org.osgi.service.cm") == null) {
             Map<String, String> cm = new TreeMap<String, String>();
             cm.put("version", "1.2");
-            analyzer.getReferred().put("org.osgi.service.cm", cm);
+            m_analyzer.getReferred().put("org.osgi.service.cm", cm);
         }
-        if (analyzer.getReferred().get("org.osgi.service.log") == null) {
+        if (m_analyzer.getReferred().get("org.osgi.service.log") == null) {
             Map<String, String> log = new TreeMap<String, String>();
             log.put("version", "1.3");
-            analyzer.getReferred().put("org.osgi.service.log", log);
+            m_analyzer.getReferred().put("org.osgi.service.log", log);
         }
 
     }

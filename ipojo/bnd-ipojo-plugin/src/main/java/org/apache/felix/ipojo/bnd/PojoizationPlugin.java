@@ -52,26 +52,26 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
     private static final String DEFAULT_METADATA = "META-INF/metadata.xml";
     private static final boolean DEFAULT_USE_LOCAL_SCHEMAS = false;
 
-    private String metadata = DEFAULT_METADATA;
-    private boolean useLocalSchemas = DEFAULT_USE_LOCAL_SCHEMAS;
+    private String m_metadata = DEFAULT_METADATA;
+    private boolean m_useLocalSchemas = DEFAULT_USE_LOCAL_SCHEMAS;
 
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     public void setProperties(Map<String, String> configuration) {
 
         // Use metadata file if any
         if (configuration.containsKey(PROPERTY_METADATA)) {
-            metadata = configuration.get(PROPERTY_METADATA);
+            m_metadata = configuration.get(PROPERTY_METADATA);
         }
 
         // Use local schemas ?
         if (configuration.containsKey(PROPERTY_USE_LOCAL_SCHEMAS)) {
-            useLocalSchemas = true;
+            m_useLocalSchemas = true;
         }
     }
 
     public void setReporter(Reporter reporter) {
-        this.reporter = reporter;
+        m_reporter = reporter;
     }
 
     public boolean analyzeJar(Analyzer analyzer) throws Exception {
@@ -79,26 +79,26 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         long start = System.currentTimeMillis();
 
         // Wraps the Bnd Reporter
-        BndReporter reporter = new BndReporter(this.reporter);
+        BndReporter reporter = new BndReporter(this.m_reporter);
 
         // Build ResourceStore
-        BndJarResourceStore store = new BndJarResourceStore(analyzer, this.reporter);
+        BndJarResourceStore store = new BndJarResourceStore(analyzer, this.m_reporter);
 
         // Build MetadataProvider
         CompositeMetadataProvider provider = new CompositeMetadataProvider(reporter);
 
-        File file = new File(metadata);
+        File file = new File(m_metadata);
         if (file.exists()) {
             // Absolute file system resource
             FileMetadataProvider fmp = new FileMetadataProvider(file, reporter);
-            fmp.setValidateUsingLocalSchemas(useLocalSchemas);
+            fmp.setValidateUsingLocalSchemas(m_useLocalSchemas);
             provider.addMetadataProvider(fmp);
         } else {
             // In archive resource
-            Resource resource = analyzer.getJar().getResource(metadata);
+            Resource resource = analyzer.getJar().getResource(m_metadata);
             if (resource != null) {
                 ResourceMetadataProvider rmp = new ResourceMetadataProvider(resource, reporter);
-                rmp.setValidateUsingLocalSchemas(useLocalSchemas);
+                rmp.setValidateUsingLocalSchemas(m_useLocalSchemas);
                 provider.addMetadataProvider(rmp);
             }
         }
@@ -110,7 +110,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         }
 
         Pojoization pojoization = new Pojoization(reporter);
-        if (useLocalSchemas) {
+        if (m_useLocalSchemas) {
             pojoization.setUseLocalXSD();
         }
 
@@ -118,7 +118,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
 
         int nbComponents = findElements(cache.getMetadatas(), "component").size();
         int nbHandlers = findElements(cache.getMetadatas(), "handler").size();
-        this.reporter.progress("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
+        this.m_reporter.progress("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
                                (System.currentTimeMillis() - start),
                                nbComponents,
                                nbHandlers);

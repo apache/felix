@@ -27,15 +27,15 @@ import aQute.lib.osgi.AbstractResource;
  */
 public class ByteArrayResource extends AbstractResource {
 
-    private byte[] content;
+    private byte[] m_content;
 
     public ByteArrayResource(byte[] content) {
         super(System.currentTimeMillis());
-        this.content = content;
+        m_content = content;
     }
 
     @Override
     protected byte[] getBytes() throws Exception {
-        return content;
+        return m_content;
     }
 }

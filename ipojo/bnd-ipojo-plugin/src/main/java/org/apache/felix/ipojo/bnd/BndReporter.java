@@ -35,7 +35,7 @@ public class BndReporter extends EmptyReporter {
     /**
      * Bnd reporter.
      */
-    private Reporter reporter;
+    private Reporter m_reporter;
 
     /**
      * Errors which occur during the manipulation.
@@ -48,7 +48,7 @@ public class BndReporter extends EmptyReporter {
     private List<String> m_warnings = new ArrayList<String>();
 
     public BndReporter(aQute.libg.reporter.Reporter reporter) {
-        this.reporter = reporter;
+        m_reporter = reporter;
     }
 
     public List<String> getErrors() {
@@ -61,23 +61,23 @@ public class BndReporter extends EmptyReporter {
 
     @Override
     public void trace(String message, Object... args) {
-        reporter.trace(message, args);
+        m_reporter.trace(message, args);
     }
 
     @Override
     public void info(String message, Object... args) {
-        reporter.progress(message, args);
+        m_reporter.progress(message, args);
     }
 
     @Override
     public void warn(String message, Object... args) {
-        reporter.warning(message, args);
+        m_reporter.warning(message, args);
         m_warnings.add(String.format(message, args));
     }
 
     @Override
     public void error(String message, Object... args) {
-        reporter.error(message, args);
+        m_reporter.error(message, args);
         m_errors.add(String.format(message, args));
     }
 }
