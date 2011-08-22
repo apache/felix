@@ -33,7 +33,7 @@ public class Activator implements BundleActivator
         props.put("osgi.command.scope", "felix");
         props.put("osgi.command.function", new String[] {
             "bundlelevel", "frameworklevel", "headers",
-            "help", "install", "inspect", "lb", "log", "refresh",
+            "help", "install", "in", "inspect", "lb", "log", "refresh",
             "resolve", "start", "stop", "uninstall", "update",
             "which" });
         bc.registerService(
