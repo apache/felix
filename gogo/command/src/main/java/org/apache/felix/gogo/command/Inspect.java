@@ -19,84 +19,57 @@
 package org.apache.felix.gogo.command;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
 
 public class Inspect
 {
-    public static final String PACKAGE_TYPE = "package";
-    public static final String BUNDLE_TYPE = "bundle";
-    public static final String FRAGMENT_TYPE = "fragment";
-    public static final String SERVICE_TYPE = "service";
+    public static final String LEGACY_PACKAGE_NAMESPACE = "package";
+    public static final String LEGACY_BUNDLE_NAMESPACE = "bundle";
+    public static final String LEGACY_HOST_NAMESPACE = "host";
+    public static final String NONSTANDARD_SERVICE_NAMESPACE = "service";
 
     public static final String CAPABILITY = "capability";
     public static final String REQUIREMENT = "requirement";
 
-    public static void inspect(
-        BundleContext bc, String type, String direction, Bundle[] bundles)
+    private static final String EMPTY_MESSAGE = "[EMPTY]";
+    private static final String UNUSED_MESSAGE = "[UNUSED]";
+    private static final String UNRESOLVED_MESSAGE = "[UNRESOLVED]";
+
+    public static void in(
+        BundleContext bc, String direction, String namespace, Bundle[] bundles)
     {
         // Verify arguments.
-        if (isValidType(type) && isValidDirection(direction))
+        if (isValidDirection(direction))
         {
-            // Now determine what needs to be printed.
-            if (PACKAGE_TYPE.startsWith(type))
+            bundles = ((bundles == null) || (bundles.length == 0))
+                ? bc.getBundles() : bundles;
+
+            if (CAPABILITY.startsWith(direction))
             {
-                if (CAPABILITY.startsWith(direction))
-                {
-                    printExportedPackages(bc, bundles);
-                }
-                else
-                {
-                    printImportedPackages(bc, bundles);
-                }
-            }
-            else if (BUNDLE_TYPE.startsWith(type))
-            {
-                if (CAPABILITY.startsWith(direction))
-                {
-                    printRequiringBundles(bc, bundles);
-                }
-                else
-                {
-                    printRequiredBundles(bc, bundles);
-                }
-            }
-            else if (FRAGMENT_TYPE.startsWith(type))
-            {
-                if (CAPABILITY.startsWith(direction))
-                {
-                    printFragmentHosts(bc, bundles);
-                }
-                else
-                {
-                    printHostedFragments(bc, bundles);
-                }
+                printCapabilities(bc, Util.parseSubstring(namespace), bundles);
             }
             else
             {
-                if (CAPABILITY.startsWith(direction))
-                {
-                    printExportedServices(bc, bundles);
-                }
-                else
-                {
-                    printImportedServices(bc, bundles);
-                }
+                printRequirements(bc, Util.parseSubstring(namespace), bundles);
             }
         }
         else
         {
-            if (!isValidType(type))
-            {
-                System.out.println("Invalid argument: " + type);
-            }
             if (!isValidDirection(direction))
             {
                 System.out.println("Invalid argument: " + direction);
@@ -104,199 +77,492 @@ public class Inspect
         }
     }
 
-    public static void printExportedPackages(BundleContext bc, Bundle[] bundles)
+    public static void printCapabilities(
+        BundleContext bc, List<String> namespace, Bundle[] bundles)
     {
-        // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
-
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
-        if (pa == null)
+        boolean separatorNeeded = false;
+        for (Bundle b : bundles)
         {
-            System.out.println("PackageAdmin service is unavailable.");
-        }
-        else
-        {
-            boolean separatorNeeded = false;
-
-            if ((bundles == null) || (bundles.length == 0))
+            // Print out any matching generic capabilities.
+            BundleWiring wiring = b.adapt(BundleWiring.class);
+            if (wiring != null)
             {
-                bundles = bc.getBundles();
-            }
-
-            for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
-            {
-                try
+                if (separatorNeeded)
                 {
-                    if (bundles[bundleIdx] != null)
+                    System.out.println("");
+                }
+                String title = b + " provides:";
+                System.out.println(title);
+                System.out.println(Util.getUnderlineString(title.length()));
+
+                // Print generic capabilities for matching namespaces.
+                boolean matches = printMatchingCapabilities(wiring, namespace);
+
+                // Handle service capabilities separately, since they aren't part
+                // of the generic model in OSGi.
+                if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+                {
+                    matches |= printServiceCapabilities(b);
+                }
+
+                // If there were no capabilities for the specified namespace,
+                // then say so.
+                if (!matches)
+                {
+                    System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
+                }
+                separatorNeeded = true;
+            }
+            else
+            {
+                System.out.println("Bundle "
+                    + b.getBundleId()
+                    + " is apparently not resolved.");
+            }
+        }
+    }
+
+    private static boolean printMatchingCapabilities(BundleWiring wiring, List<String> namespace)
+    {
+        List<BundleWire> wires = wiring.getProvidedWires(null);
+        Map<BundleCapability, List<BundleWire>> aggregateCaps =
+            aggregateCapabilities(namespace, wires);
+        List<BundleCapability> allCaps = wiring.getCapabilities(null);
+        boolean matches = false;
+        for (BundleCapability cap : allCaps)
+        {
+            if (matchNamespace(namespace, cap.getNamespace()))
+            {
+                matches = true;
+                List<BundleWire> dependents = aggregateCaps.get(cap);
+                Object keyAttr =
+                    cap.getAttributes().get(cap.getNamespace());
+                if (dependents != null)
+                {
+                    String msg;
+                    if (keyAttr != null)
                     {
-                        ExportedPackage[] exports = pa.getExportedPackages(bundles[bundleIdx]);
-                        if (separatorNeeded)
+                        msg = cap.getNamespace()
+                            + "; "
+                            + keyAttr
+                            + getVersionFromCapability(cap);
+                    }
+                    else
+                    {
+                        msg = cap.toString();
+                    }
+                    msg = msg + " required by:";
+                    System.out.println(msg);
+                    for (BundleWire wire : dependents)
+                    {
+                        System.out.println("   " + wire.getRequirerWiring().getBundle());
+                    }
+                }
+                else if (keyAttr != null)
+                {
+                    System.out.println(cap.getNamespace()
+                        + "; "
+                        + cap.getAttributes().get(cap.getNamespace())
+                        + getVersionFromCapability(cap)
+                        + " "
+                        + UNUSED_MESSAGE);
+                }
+                else
+                {
+                    System.out.println(cap + " " + UNUSED_MESSAGE);
+                }
+            }
+        }
+        return matches;
+    }
+
+    private static Map<BundleCapability, List<BundleWire>> aggregateCapabilities(
+        List<String> namespace, List<BundleWire> wires)
+    {
+        // Aggregate matching capabilities.
+        Map<BundleCapability, List<BundleWire>> map =
+            new HashMap<BundleCapability, List<BundleWire>>();
+        for (BundleWire wire : wires)
+        {
+            if (matchNamespace(namespace, wire.getCapability().getNamespace()))
+            {
+                List<BundleWire> dependents = map.get(wire.getCapability());
+                if (dependents == null)
+                {
+                    dependents = new ArrayList<BundleWire>();
+                    map.put(wire.getCapability(), dependents);
+                }
+                dependents.add(wire);
+            }
+        }
+        return map;
+    }
+
+    private static boolean printServiceCapabilities(Bundle b)
+    {
+        boolean matches = false;
+
+        try
+        {
+            ServiceReference[] refs = b.getRegisteredServices();
+
+            if ((refs != null) && (refs.length > 0))
+            {
+                matches = true;
+                // Print properties for each service.
+                for (ServiceReference ref : refs)
+                {
+                    // Print object class with "namespace".
+                    System.out.println(
+                        NONSTANDARD_SERVICE_NAMESPACE
+                        + "; "
+                        + Util.getValueString(ref.getProperty("objectClass"))
+                        + " with properties:");
+                    // Print service properties.
+                    String[] keys = ref.getPropertyKeys();
+                    for (String key : keys)
+                    {
+                        if (!key.equalsIgnoreCase(Constants.OBJECTCLASS))
                         {
-                            System.out.println("");
+                            Object v = ref.getProperty(key);
+                            System.out.println("   "
+                                + key + " = " + Util.getValueString(v));
                         }
-                        String title = bundles[bundleIdx] + " exports packages:";
-                        System.out.println(title);
-                        System.out.println(Util.getUnderlineString(title.length()));
-                        if ((exports != null) && (exports.length > 0))
+                    }
+                    Bundle[] users = ref.getUsingBundles();
+                    if ((users != null) && (users.length > 0))
+                    {
+                        System.out.println("   Used by:");
+                        for (Bundle user : users)
                         {
-                            for (int expIdx = 0; expIdx < exports.length; expIdx++)
-                            {
-                                System.out.print(exports[expIdx]);
-                                Bundle[] importers = exports[expIdx].getImportingBundles();
-                                if ((importers == null) || (importers.length == 0))
-                                {
-                                    System.out.println(" UNUSED");
-                                }
-                                else
-                                {
-                                    System.out.println(" imported by:");
-                                    for (int impIdx = 0; impIdx < importers.length; impIdx++)
-                                    {
-                                        System.out.println("   " + importers[impIdx]);
-                                    }
-                                }
-                            }
+                            System.out.println("      " + user);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.err.println(ex.toString());
+        }
+
+        return matches;
+    }
+
+    public static void printRequirements(
+        BundleContext bc, List<String> namespace, Bundle[] bundles)
+    {
+        boolean separatorNeeded = false;
+        for (Bundle b : bundles)
+        {
+            // Print out any matching generic requirements.
+            BundleWiring wiring = b.adapt(BundleWiring.class);
+            if (wiring != null)
+            {
+                if (separatorNeeded)
+                {
+                    System.out.println("");
+                }
+                String title = b + " requires:";
+                System.out.println(title);
+                System.out.println(Util.getUnderlineString(title.length()));
+                boolean matches = printMatchingRequirements(wiring, namespace);
+
+                // Handle service requirements separately, since they aren't part
+                // of the generic model in OSGi.
+                if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+                {
+                    matches |= printServiceRequirements(b);
+                }
+
+                // If there were no requirements for the specified namespace,
+                // then say so.
+                if (!matches)
+                {
+                    System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
+                }
+                separatorNeeded = true;
+            }
+            else
+            {
+                System.out.println("Bundle "
+                    + b.getBundleId()
+                    + " is apparently not resolved.");
+            }
+        }
+    }
+
+    private static boolean printMatchingRequirements(BundleWiring wiring, List<String> namespace)
+    {
+        List<BundleWire> wires = wiring.getRequiredWires(null);
+        Map<BundleRequirement, List<BundleWire>> aggregateReqs =
+            aggregateRequirements(namespace, wires);
+        List<BundleRequirement> allReqs = wiring.getRequirements(null);
+        boolean matches = false;
+        for (BundleRequirement req : allReqs)
+        {
+            if (matchNamespace(namespace, req.getNamespace()))
+            {
+                matches = true;
+                List<BundleWire> providers = aggregateReqs.get(req);
+                if (providers != null)
+                {
+                    System.out.println(
+                        req.getNamespace()
+                        + "; "
+                        + req.getDirectives().get(Constants.FILTER_DIRECTIVE)
+                        + " resolved by:");
+                    for (BundleWire wire : providers)
+                    {
+                        String msg;
+                        Object keyAttr =
+                            wire.getCapability().getAttributes()
+                                .get(wire.getCapability().getNamespace());
+                        if (keyAttr != null)
+                        {
+                            msg = wire.getCapability().getNamespace()
+                                + "; "
+                                + keyAttr
+                                + getVersionFromCapability(wire.getCapability());
                         }
                         else
                         {
-                            System.out.println("Nothing");
+                            msg = wire.getCapability().toString();
                         }
-                        separatorNeeded = true;
+                        msg = "   " + msg + " from "
+                            + wire.getProviderWiring().getBundle();
+                        System.out.println(msg);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    System.err.println(ex.toString());
+                    System.out.println(
+                        req.getNamespace()
+                        + "; "
+                        + req.getDirectives().get(Constants.FILTER_DIRECTIVE)
+                        + " "
+                        + UNRESOLVED_MESSAGE);
                 }
             }
-            Util.ungetServices(bc, refs);
+        }
+        return matches;
+    }
+
+    private static Map<BundleRequirement, List<BundleWire>> aggregateRequirements(
+        List<String> namespace, List<BundleWire> wires)
+    {
+        // Aggregate matching capabilities.
+        Map<BundleRequirement, List<BundleWire>> map =
+            new HashMap<BundleRequirement, List<BundleWire>>();
+        for (BundleWire wire : wires)
+        {
+            if (matchNamespace(namespace, wire.getRequirement().getNamespace()))
+            {
+                List<BundleWire> providers = map.get(wire.getRequirement());
+                if (providers == null)
+                {
+                    providers = new ArrayList<BundleWire>();
+                    map.put(wire.getRequirement(), providers);
+                }
+                providers.add(wire);
+            }
+        }
+        return map;
+    }
+
+    private static boolean printServiceRequirements(Bundle b)
+    {
+        boolean matches = false;
+
+        try
+        {
+            ServiceReference[] refs = b.getServicesInUse();
+
+            if ((refs != null) && (refs.length > 0))
+            {
+                matches = true;
+                // Print properties for each service.
+                for (ServiceReference ref : refs)
+                {
+                    // Print object class with "namespace".
+                    System.out.println(
+                        NONSTANDARD_SERVICE_NAMESPACE
+                        + "; "
+                        + Util.getValueString(ref.getProperty("objectClass"))
+                        + " provided by:");
+                    System.out.println("   " + ref.getBundle());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.err.println(ex.toString());
+        }
+
+        return matches;
+    }
+
+    public static void inspect(
+        BundleContext bc, String direction, String namespace, Bundle[] bundles)
+    {
+        // Verify arguments.
+        if (isValidDirection(direction))
+        {
+            bundles = ((bundles == null) || (bundles.length == 0))
+                ? bc.getBundles() : bundles;
+
+            if (CAPABILITY.startsWith(direction))
+            {
+                printNonstandardCapabilities(bc, Util.parseSubstring(namespace), bundles);
+            }
+            else
+            {
+                printNonstandardRequirements(bc, Util.parseSubstring(namespace), bundles);
+            }
+        }
+        else
+        {
+            if (!isValidDirection(direction))
+            {
+                System.out.println("Invalid argument: " + direction);
+            }
         }
     }
 
-    public static void printImportedPackages(BundleContext bc, Bundle[] bundles)
+    private static void printNonstandardCapabilities(
+        BundleContext bc, List<String> namespace, Bundle[] bundles)
     {
         boolean separatorNeeded = false;
-
-        if ((bundles == null) || (bundles.length == 0))
+        for (Bundle b : bundles)
         {
-            bundles = bc.getBundles();
-        }
-
-        for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
-        {
-            try
+            if (separatorNeeded)
             {
-                if (bundles[bundleIdx] != null)
-                {
-                    if (separatorNeeded)
-                    {
-                        System.out.println("");
-                    }
-                    _printImportedPackages(bc, bundles[bundleIdx]);
-                    separatorNeeded = true;
-                }
+                System.out.println("");
             }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
-        }
-    }
-
-    private static void _printImportedPackages(BundleContext bc, Bundle bundle)
-    {
-        // Keep track of service references.
-        List<ServiceReference> refs = new ArrayList();
-
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
-        if (pa == null)
-        {
-            System.out.println("PackageAdmin service is unavailable.");
-        }
-        else
-        {
-            ExportedPackage[] exports = pa.getExportedPackages((Bundle) null);
-            String title = bundle + " imports packages:";
+            String title = b + " provides:";
             System.out.println(title);
             System.out.println(Util.getUnderlineString(title.length()));
-            boolean found = false;
-            for (int expIdx = 0; expIdx < exports.length; expIdx++)
+            boolean matches = false;
+
+            if (matchNamespace(namespace, LEGACY_BUNDLE_NAMESPACE))
             {
-                Bundle[] importers = exports[expIdx].getImportingBundles();
-                for (int impIdx = 0; (importers != null) && (impIdx < importers.length); impIdx++)
-                {
-                    if (importers[impIdx] == bundle)
-                    {
-                        System.out.println(exports[expIdx]
-                            + " -> " + exports[expIdx].getExportingBundle());
-                        found = true;
-                    }
-                }
+                matches |= printRequiringBundles(bc, b);
             }
-            if (!found)
+            if (matchNamespace(namespace, LEGACY_HOST_NAMESPACE))
             {
-                System.out.println("Nothing");
+                matches |= printHostedFragments(bc, b);
             }
-            Util.ungetServices(bc, refs);
+            if (matchNamespace(namespace, LEGACY_PACKAGE_NAMESPACE))
+            {
+                matches |= printExportedPackages(bc, b);
+            }
+            if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+            {
+                matches |= printServiceCapabilities(b);
+            }
+
+            // If there were no capabilities for the specified namespace,
+            // then say so.
+            if (!matches)
+            {
+                System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
+            }
+            separatorNeeded = true;
         }
     }
 
-    public static void printRequiringBundles(BundleContext bc, Bundle[] bundles)
+    private static void printNonstandardRequirements(
+        BundleContext bc, List<String> namespace, Bundle[] bundles)
     {
+        boolean separatorNeeded = false;
+        for (Bundle b : bundles)
+        {
+            if (separatorNeeded)
+            {
+                System.out.println("");
+            }
+            String title = b + " requires:";
+            System.out.println(title);
+            System.out.println(Util.getUnderlineString(title.length()));
+            boolean matches = false;
+            if (matchNamespace(namespace, LEGACY_BUNDLE_NAMESPACE))
+            {
+                matches |= printRequiredBundles(bc, b);
+            }
+            if (matchNamespace(namespace, LEGACY_HOST_NAMESPACE))
+            {
+                matches |= printFragmentHosts(bc, b);
+            }
+            if (matchNamespace(namespace, LEGACY_PACKAGE_NAMESPACE))
+            {
+                matches |= printImportedPackages(bc, b);
+            }
+            if (matchNamespace(namespace, NONSTANDARD_SERVICE_NAMESPACE))
+            {
+                matches |= printServiceRequirements(b);
+            }
+
+            // If there were no capabilities for the specified namespace,
+            // then say so.
+            if (!matches)
+            {
+                System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
+            }
+            separatorNeeded = true;
+        }
+    }
+
+    public static boolean printExportedPackages(BundleContext bc, Bundle b)
+    {
+        boolean matches = false;
+
         // Keep track of service references.
         List<ServiceReference> refs = new ArrayList();
 
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
-        if (pa == null)
+        // Fragments cannot export packages.
+        if (!isFragment(b))
         {
-            System.out.println("PackageAdmin service is unavailable.");
-        }
-        else
-        {
-            boolean separatorNeeded = false;
-
-            if ((bundles == null) || (bundles.length == 0))
+            // Get package admin service.
+            PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
+            if (pa == null)
             {
-                bundles = bc.getBundles();
+                System.out.println("PackageAdmin service is unavailable.");
             }
-
-            for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
+            else
             {
                 try
                 {
-                    if (bundles[bundleIdx] != null)
+                    ExportedPackage[] exports = pa.getExportedPackages(b);
+                    if (exports != null)
                     {
-                        RequiredBundle[] rbs = pa.getRequiredBundles(
-                            bundles[bundleIdx].getSymbolicName());
-                        for (int rbIdx = 0; (rbs != null) && (rbIdx < rbs.length); rbIdx++)
+                        for (ExportedPackage ep : exports)
                         {
-                            if (rbs[rbIdx].getBundle() == bundles[bundleIdx])
+                            matches = true;
+                            Bundle[] importers = ep.getImportingBundles();
+                            if ((importers != null) && (importers.length > 0))
                             {
-                                if (separatorNeeded)
+                                String msg = LEGACY_PACKAGE_NAMESPACE
+                                    + "; "
+                                    + ep.getName()
+                                    + "; "
+                                    + ep.getVersion().toString()
+                                    + " required by:";
+                                System.out.println(msg);
+                                for (Bundle importer : importers)
                                 {
-                                    System.out.println("");
+                                    System.out.println("   " + importer);
                                 }
-                                String title = bundles[bundleIdx] + " is required by:";
-                                System.out.println(title);
-                                System.out.println(Util.getUnderlineString(title.length()));
-                                if ((rbs[rbIdx].getRequiringBundles() != null)
-                                    && (rbs[rbIdx].getRequiringBundles().length > 0))
-                                {
-                                    for (int reqIdx = 0;
-                                        reqIdx < rbs[rbIdx].getRequiringBundles().length;
-                                        reqIdx++)
-                                    {
-                                        System.out.println(rbs[rbIdx].getRequiringBundles()[reqIdx]);
-                                    }
-                                }
-                                else
-                                {
-                                    System.out.println("Nothing");
-                                }
-                                separatorNeeded = true;
+                            }
+                            else
+                            {
+                                System.out.println(
+                                    LEGACY_PACKAGE_NAMESPACE
+                                    + "; "
+                                    + ep.getName()
+                                    + "; "
+                                    + ep.getVersion().toString()
+                                    + " "
+                                    + UNUSED_MESSAGE);
                             }
                         }
                     }
@@ -306,139 +572,196 @@ public class Inspect
                     System.err.println(ex.toString());
                 }
             }
-            Util.ungetServices(bc, refs);
         }
+
+        Util.ungetServices(bc, refs);
+
+        return matches;
     }
 
-    public static void printRequiredBundles(BundleContext bc, Bundle[] bundles)
+    private static boolean printImportedPackages(BundleContext bc, Bundle b)
     {
-        boolean separatorNeeded = false;
+        boolean matches = false;
 
-        if ((bundles == null) || (bundles.length == 0))
-        {
-            bundles = bc.getBundles();
-        }
-
-        for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
-        {
-            try
-            {
-                if (bundles[bundleIdx] != null)
-                {
-                    if (separatorNeeded)
-                    {
-                        System.out.println("");
-                    }
-                    _printRequiredBundles(bc, bundles[bundleIdx]);
-                    separatorNeeded = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
-        }
-    }
-
-    private static void _printRequiredBundles(BundleContext bc, Bundle bundle)
-    {
         // Keep track of service references.
         List<ServiceReference> refs = new ArrayList();
 
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
-        if (pa == null)
+        // Fragments cannot import packages.
+        if (!isFragment(b))
         {
-            System.out.println("PackageAdmin service is unavailable.");
-        }
-        else
-        {
-            RequiredBundle[] rbs = pa.getRequiredBundles(null);
-            String title = bundle + " requires bundles:";
-            System.out.println(title);
-            System.out.println(Util.getUnderlineString(title.length()));
-            boolean found = false;
-            for (int rbIdx = 0; rbIdx < rbs.length; rbIdx++)
+            // Get package admin service.
+            PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
+            if (pa == null)
             {
-                Bundle[] requirers = rbs[rbIdx].getRequiringBundles();
-                for (int reqIdx = 0; (requirers != null) && (reqIdx < requirers.length); reqIdx++)
+                System.out.println("PackageAdmin service is unavailable.");
+            }
+            else
+            {
+                ExportedPackage[] exports = pa.getExportedPackages((Bundle) null);
+                if (exports != null)
                 {
-                    if (requirers[reqIdx] == bundle)
+                    for (ExportedPackage ep : exports)
                     {
-                        System.out.println(rbs[reqIdx]);
-                        found = true;
+                        Bundle[] importers = ep.getImportingBundles();
+                        if (importers != null)
+                        {
+                            for (Bundle importer : importers)
+                            {
+                                if (importer == b)
+                                {
+                                    matches = true;
+                                    System.out.println(
+                                        LEGACY_PACKAGE_NAMESPACE
+                                        + "; "
+                                        + ep.getName()
+                                        + " resolved by:");
+                                    System.out.println(
+                                        "   "
+                                        + ep.getName()
+                                        + "; "
+                                        + ep.getVersion().toString()
+                                        + " from "
+                                        + ep.getExportingBundle());
+                                }
+                            }
+                        }
                     }
                 }
             }
-            if (!found)
-            {
-                System.out.println("Nothing");
-            }
-            Util.ungetServices(bc, refs);
         }
+
+        Util.ungetServices(bc, refs);
+
+        return matches;
     }
 
-    public static void printFragmentHosts(BundleContext bc, Bundle[] bundles)
+    public static boolean printRequiringBundles(BundleContext bc, Bundle b)
     {
+        boolean matches = false;
+
         // Keep track of service references.
         List<ServiceReference> refs = new ArrayList();
 
-        // Get package admin service.
-        PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
-        if (pa == null)
+        // Fragments cannot be required.
+        if (!isFragment(b))
         {
-            System.out.println("PackageAdmin service is unavailable.");
-        }
-        else
-        {
-            if ((bundles == null) || (bundles.length == 0))
+            // Get package admin service.
+            PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
+            if (pa == null)
             {
-                bundles = bc.getBundles();
+                System.out.println("PackageAdmin service is unavailable.");
             }
-
-            for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
+            else
             {
-                // Print a separator for some whitespace.
-                if (bundleIdx > 0)
-                {
-                    System.out.println("");
-                }
-
                 try
                 {
-                    if ((bundles[bundleIdx] != null) && isFragment(bundles[bundleIdx]))
+                    RequiredBundle[] rbs = pa.getRequiredBundles(b.getSymbolicName());
+                    if (rbs != null)
                     {
-                        String title = bundles[bundleIdx] + " is attached to:";
-                        System.out.println(title);
-                        System.out.println(Util.getUnderlineString(title.length()));
-                        Bundle[] hosts = pa.getHosts(bundles[bundleIdx]);
-                        for (int hostIdx = 0;
-                            (hosts != null) && (hostIdx < hosts.length);
-                            hostIdx++)
+                        for (RequiredBundle rb : rbs)
                         {
-                            System.out.println(hosts[hostIdx]);
-                        }
-                        if ((hosts == null) || (hosts.length == 0))
-                        {
-                            System.out.println("Nothing");
+                            if (rb.getBundle() == b)
+                            {
+                                Bundle[] requires = rb.getRequiringBundles();
+                                if ((requires != null) && (requires.length > 0))
+                                {
+                                    matches = true;
+                                    System.out.println(
+                                        LEGACY_BUNDLE_NAMESPACE
+                                        + "; "
+                                        + b.getSymbolicName()
+                                        + "; "
+                                        + b.getVersion().toString()
+                                        + " required by:");
+                                    for (Bundle requirer : requires)
+                                    {
+                                        System.out.println("   " + requirer);
+                                    }
+                                }
+                            }
                         }
                     }
-                    else if ((bundles[bundleIdx] != null) && !isFragment(bundles[bundleIdx]))
+
+                    if (!matches)
                     {
-                        System.out.println("Bundle " + bundles[bundleIdx] + " is not a fragment.");
+                        matches = true;
+                        System.out.println(
+                            LEGACY_BUNDLE_NAMESPACE
+                            + "; "
+                            + b.getSymbolicName()
+                            + "; "
+                            + b.getVersion().toString()
+                            + " "
+                            + UNUSED_MESSAGE);
                     }
+
                 }
                 catch (Exception ex)
                 {
                     System.err.println(ex.toString());
                 }
             }
-            Util.ungetServices(bc, refs);
         }
+
+        Util.ungetServices(bc, refs);
+
+        return matches;
     }
 
-    public static void printHostedFragments(BundleContext bc, Bundle[] bundles)
+    private static boolean printRequiredBundles(BundleContext bc, Bundle b)
     {
+        boolean matches = false;
+
+        // Keep track of service references.
+        List<ServiceReference> refs = new ArrayList();
+
+        // Fragments cannot require bundles.
+        if (!isFragment(b))
+        {
+            // Get package admin service.
+            PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
+            if (pa == null)
+            {
+                System.out.println("PackageAdmin service is unavailable.");
+            }
+            else
+            {
+                RequiredBundle[] rbs = pa.getRequiredBundles(null);
+                if (rbs != null)
+                {
+                    for (RequiredBundle rb : rbs)
+                    {
+                        Bundle[] requirers = rb.getRequiringBundles();
+                        if (requirers != null)
+                        {
+                            for (Bundle requirer : requirers)
+                            {
+                                if (requirer == b)
+                                {
+                                    matches = true;
+                                    System.out.println(
+                                        LEGACY_BUNDLE_NAMESPACE
+                                        + "; "
+                                        + rb.getSymbolicName()
+                                        + " resolved by:");
+                                    System.out.println("   " + rb.getBundle());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Util.ungetServices(bc, refs);
+
+        return matches;
+    }
+
+    public static boolean printHostedFragments(BundleContext bc, Bundle b)
+    {
+        boolean matches = false;
+
         // Keep track of service references.
         List<ServiceReference> refs = new ArrayList();
 
@@ -450,104 +773,92 @@ public class Inspect
         }
         else
         {
-            if ((bundles == null) || (bundles.length == 0))
+            try
             {
-                bundles = bc.getBundles();
-            }
-
-            for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
-            {
-                // Print a separator for some whitespace.
-                if (bundleIdx > 0)
+                if (!isFragment(b))
                 {
-                    System.out.println("");
-                }
-
-                try
-                {
-                    if ((bundles[bundleIdx] != null) && !isFragment(bundles[bundleIdx]))
+                    matches = true;
+                    Bundle[] fragments = pa.getFragments(b);
+                    if ((fragments != null) && (fragments.length > 0))
                     {
-                        String title = bundles[bundleIdx] + " hosts:";
-                        System.out.println(title);
-                        System.out.println(Util.getUnderlineString(title.length()));
-                        Bundle[] fragments = pa.getFragments(bundles[bundleIdx]);
-                        for (int fragIdx = 0;
-                            (fragments != null) && (fragIdx < fragments.length);
-                            fragIdx++)
+                        System.out.println(
+                            LEGACY_HOST_NAMESPACE
+                            + "; "
+                            + b.getSymbolicName()
+                            + "; "
+                            + b.getVersion().toString()
+                            + " required by:");
+                        for (Bundle fragment : fragments)
                         {
-                            System.out.println(fragments[fragIdx]);
-                        }
-                        if ((fragments == null) || (fragments.length == 0))
-                        {
-                            System.out.println("Nothing");
+                            System.out.println("   " + fragment);
                         }
                     }
-                    else if ((bundles[bundleIdx] != null) && isFragment(bundles[bundleIdx]))
+                    else
                     {
-                        System.out.println("Bundle " + bundles[bundleIdx] + " is a fragment.");
+                        System.out.println(
+                            LEGACY_HOST_NAMESPACE
+                            + "; "
+                            + b.getSymbolicName()
+                            + "; "
+                            + b.getVersion().toString()
+                            + " "
+                            + UNUSED_MESSAGE);
                     }
                 }
-                catch (Exception ex)
-                {
-                    System.err.println(ex.toString());
-                }
             }
+            catch (Exception ex)
+            {
+                System.err.println(ex.toString());
+            }
+
             Util.ungetServices(bc, refs);
         }
+
+        return matches;
     }
 
-    public static void printExportedServices(BundleContext bc, Bundle[] bundles)
+    public static boolean printFragmentHosts(BundleContext bc, Bundle b)
     {
-        if ((bundles == null) || (bundles.length == 0))
+        boolean matches = false;
+
+        // Keep track of service references.
+        List<ServiceReference> refs = new ArrayList();
+
+        // Get package admin service.
+        PackageAdmin pa = Util.getService(bc, PackageAdmin.class, refs);
+        if (pa == null)
         {
-            bundles = bc.getBundles();
+            System.out.println("PackageAdmin service is unavailable.");
         }
-
-        for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
+        else
         {
-            // Print a separator for some whitespace.
-            if (bundleIdx > 0)
-            {
-                System.out.println("");
-            }
-
             try
             {
-                if (bundles[bundleIdx] != null)
+                if (isFragment(b))
                 {
-                    ServiceReference[] refs = bundles[bundleIdx].getRegisteredServices();
+                    matches = true;
 
-                    // Print header if we have not already done so.
-                    String title = Util.getBundleName(bundles[bundleIdx]) + " provides services:";
-                    System.out.println(title);
-                    System.out.println(Util.getUnderlineString(title.length()));
-
-                    if ((refs == null) || (refs.length == 0))
+                    Bundle[] hosts = pa.getHosts(b);
+                    if ((hosts != null) && (hosts.length > 0))
                     {
-                        System.out.println("Nothing");
+                        System.out.println(
+                            LEGACY_HOST_NAMESPACE
+                            + "; "
+                            + b.getHeaders().get(Constants.FRAGMENT_HOST)
+                            + " resolved by:");
+                        for (Bundle host : hosts)
+                        {
+                            System.out.println("   " + host);
+                        }
                     }
-
-                    // Print properties for each service.
-                    for (int refIdx = 0;
-                        (refs != null) && (refIdx < refs.length);
-                        refIdx++)
+                    else
                     {
-                        // Print service properties.
-                        String[] keys = refs[refIdx].getPropertyKeys();
-                        for (int keyIdx = 0;
-                            (keys != null) && (keyIdx < keys.length);
-                            keyIdx++)
-                        {
-                            Object v = refs[refIdx].getProperty(keys[keyIdx]);
-                            System.out.println(
-                                keys[keyIdx] + " = " + Util.getValueString(v));
-                        }
-
-                        // Print service separator if necessary.
-                        if ((refIdx + 1) < refs.length)
-                        {
-                            System.out.println("----");
-                        }
+                        System.out.println(
+                            LEGACY_HOST_NAMESPACE
+                            + "; "
+                            + b.getHeaders().get(Constants.FRAGMENT_HOST)
+                            + " "
+                            + UNRESOLVED_MESSAGE);
                     }
                 }
             }
@@ -555,77 +866,26 @@ public class Inspect
             {
                 System.err.println(ex.toString());
             }
+
+            Util.ungetServices(bc, refs);
         }
+
+        return matches;
     }
 
-    public static void printImportedServices(BundleContext bc, Bundle[] bundles)
+    private static String getVersionFromCapability(BundleCapability c)
     {
-        if ((bundles == null) || (bundles.length == 0))
+        Object o = c.getAttributes().get(Constants.VERSION_ATTRIBUTE);
+        if (o == null)
         {
-            bundles = bc.getBundles();
+            o = c.getAttributes().get(Constants.BUNDLE_VERSION_ATTRIBUTE);
         }
-
-        for (int bundleIdx = 0; bundleIdx < bundles.length; bundleIdx++)
-        {
-            // Print a separator for some whitespace.
-            if (bundleIdx > 0)
-            {
-                System.out.println("");
-            }
-
-            try
-            {
-                if (bundles[bundleIdx] != null)
-                {
-                    ServiceReference[] refs = bundles[bundleIdx].getServicesInUse();
-
-                    // Print header if we have not already done so.
-                    String title = Util.getBundleName(bundles[bundleIdx]) + " requires services:";
-                    System.out.println(title);
-                    System.out.println(Util.getUnderlineString(title.length()));
-
-                    if ((refs == null) || (refs.length == 0))
-                    {
-                        System.out.println("Nothing");
-                    }
-
-                    // Print properties for each service.
-                    for (int refIdx = 0;
-                        (refs != null) && (refIdx < refs.length);
-                        refIdx++)
-                    {
-                        // Print the registering bundle.
-                        System.out.println("Registering bundle = " + refs[refIdx].getBundle());
-                        // Print service properties.
-                        String[] keys = refs[refIdx].getPropertyKeys();
-                        for (int keyIdx = 0;
-                            (keys != null) && (keyIdx < keys.length);
-                            keyIdx++)
-                        {
-                            Object v = refs[refIdx].getProperty(keys[keyIdx]);
-                            System.out.println(
-                                keys[keyIdx] + " = " + Util.getValueString(v));
-                        }
-
-                        // Print service separator if necessary.
-                        if ((refIdx + 1) < refs.length)
-                        {
-                            System.out.println("----");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.err.println(ex.toString());
-            }
-        }
+        return (o == null) ? "" : o.toString();
     }
 
-    private static boolean isValidType(String type)
+    private static boolean matchNamespace(List<String> namespace, String actual)
     {
-        return (PACKAGE_TYPE.startsWith(type) || BUNDLE_TYPE.startsWith(type)
-            || FRAGMENT_TYPE.startsWith(type) || SERVICE_TYPE.startsWith(type));
+        return Util.compareSubstring(namespace, actual);
     }
 
     private static boolean isValidDirection(String direction)
