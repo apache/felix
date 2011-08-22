@@ -414,13 +414,22 @@ public class Basic
         return commands;
     }
 
-    @Descriptor("inspects bundle dependency information")
-    public void inspect(
-        @Descriptor("(package | bundle | fragment | service)") String type,
-        @Descriptor("(capability | requirement)") String direction,
+    @Descriptor("inspects bundle capabilities and requirements")
+    public void in(
+        @Descriptor("('capability' | 'requirement')") String direction,
+        @Descriptor("(<namespace> | 'service')") String namespace,
         @Descriptor("target bundles") Bundle[] bundles)
     {
-        Inspect.inspect(m_bc, type, direction, bundles);
+        Inspect.in(m_bc, direction, namespace, bundles);
+    }
+
+    @Descriptor("inspects bundle capabilities and requirements")
+    public void inspect(
+        @Descriptor("('capability' | 'requirement')") String direction,
+        @Descriptor("('package' | 'bundle' | 'host' | 'service')") String namespace,
+        @Descriptor("target bundles") Bundle[] bundles)
+    {
+        Inspect.inspect(m_bc, direction, namespace, bundles);
     }
 
     @Descriptor("install bundle using URLs")
