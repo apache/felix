@@ -33,15 +33,30 @@ public class Activator implements BundleActivator
         props.put("osgi.command.scope", "felix");
         props.put("osgi.command.function", new String[] {
             "bundlelevel", "frameworklevel", "headers",
-            "help", "install", "in", "inspect", "lb", "log", "refresh",
+            "help", "install", "lb", "log", "refresh",
             "resolve", "start", "stop", "uninstall", "update",
             "which" });
         bc.registerService(
             Basic.class.getName(), new Basic(bc), props);
 
+        // Register "inspect" command for R4.3 or R4.2 depending
+        // on the underlying framework.
         props.put("osgi.command.scope", "felix");
-        props.put("osgi.command.function", new String[] {
-            "cd", "ls" });
+        props.put("osgi.command.function", new String[] { "inspect" });
+        try
+        {
+            getClass().getClassLoader().loadClass("org.osgi.framework.wiring.BundleWiring");
+            bc.registerService(
+                Inspect.class.getName(), new Inspect(bc), props);
+        }
+        catch (Throwable th)
+        {
+            bc.registerService(
+                Inspect42.class.getName(), new Inspect42(bc), props);
+        }
+
+        props.put("osgi.command.scope", "felix");
+        props.put("osgi.command.function", new String[] { "cd", "ls" });
         bc.registerService(
             Files.class.getName(), new Files(bc), props);
 
