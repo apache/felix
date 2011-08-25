@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
@@ -77,6 +78,7 @@ public class BundleArchive
 
     private final Logger m_logger;
     private final Map m_configMap;
+    private final WeakZipFileFactory m_zipFactory;
     private final File m_archiveRootDir;
     private final boolean m_isSingleBundleFile;
 
@@ -121,11 +123,13 @@ public class BundleArchive
      * @param is input stream from which to read the bundle content.
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, File archiveRootDir, long id,
-        int startLevel, String location, InputStream is) throws Exception
+    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        File archiveRootDir, long id, int startLevel, String location, InputStream is)
+        throws Exception
     {
         m_logger = logger;
         m_configMap = configMap;
+        m_zipFactory = zipFactory;
         m_archiveRootDir = archiveRootDir;
         m_id = id;
         if (m_id <= 0)
@@ -161,11 +165,13 @@ public class BundleArchive
      * @param configMap configMap for BundleArchive
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, File archiveRootDir)
+    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        File archiveRootDir)
         throws Exception
     {
         m_logger = logger;
         m_configMap = configMap;
+        m_zipFactory = zipFactory;
         m_archiveRootDir = archiveRootDir;
 
         String s = (String) m_configMap.get(BundleCache.CACHE_SINGLEBUNDLEFILE_PROP);
@@ -852,25 +858,25 @@ public class BundleArchive
                 if (BundleCache.getSecureAction().isFileDirectory(file))
                 {
                     result = new DirectoryRevision(m_logger, m_configMap,
-                        revisionRootDir, location);
+                        m_zipFactory, revisionRootDir, location);
                 }
                 else
                 {
-                    result = new JarRevision(m_logger, m_configMap, revisionRootDir,
-                        location, true);
+                    result = new JarRevision(m_logger, m_configMap,
+                        m_zipFactory, revisionRootDir, location, true, null);
                 }
             }
             else if (location.startsWith(INPUTSTREAM_PROTOCOL))
             {
                 // Assume all input streams point to JAR files.
-                result = new JarRevision(m_logger, m_configMap, revisionRootDir,
-                    location, false, is);
+                result = new JarRevision(m_logger, m_configMap,
+                    m_zipFactory, revisionRootDir, location, false, is);
             }
             else
             {
                 // Anything else is assumed to be a URL to a JAR file.
-                result = new JarRevision(m_logger, m_configMap, revisionRootDir,
-                    location, false);
+                result = new JarRevision(m_logger, m_configMap,
+                    m_zipFactory, revisionRootDir, location, false, null);
             }
         }
         catch (Exception ex)

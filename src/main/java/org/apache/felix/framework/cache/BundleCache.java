@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Constants;
 
 /**
@@ -74,19 +75,22 @@ public class BundleCache
     public static final String CACHE_BUFSIZE_PROP = "felix.cache.bufsize";
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
     public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
+    public static final String CACHE_FILELIMIT_PROP = "felix.cache.filelimit";
     // TODO: CACHE - Remove this once we migrate the cache format.
     public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
 
     protected static transient int BUFSIZE = 4096;
-    protected static transient final String CACHE_DIR_NAME = "felix-cache";
-    protected static transient final String CACHE_ROOTDIR_DEFAULT = ".";
-    protected static transient final String CACHE_LOCK_NAME = "cache.lock";
-    protected static transient final String BUNDLE_DIR_PREFIX = "bundle";
+
+    private static transient final String CACHE_DIR_NAME = "felix-cache";
+    private static transient final String CACHE_ROOTDIR_DEFAULT = ".";
+    private static transient final String CACHE_LOCK_NAME = "cache.lock";
+    static transient final String BUNDLE_DIR_PREFIX = "bundle";
 
     private static final SecureAction m_secureAction = new SecureAction();
 
     private final Logger m_logger;
     private final Map m_configMap;
+    private final WeakZipFileFactory m_zipFactory;
     private final Object m_lock;
 
     public BundleCache(Logger logger, Map configMap)
@@ -94,6 +98,19 @@ public class BundleCache
     {
         m_logger = logger;
         m_configMap = configMap;
+
+        String limitStr = (String) m_configMap.get(CACHE_FILELIMIT_PROP);
+        limitStr = (limitStr == null) ? "10" : limitStr;
+        int limit;
+        try
+        {
+            limit = Integer.parseInt(limitStr);
+        }
+        catch (NumberFormatException ex)
+        {
+            limit = 10;
+        }
+        m_zipFactory = new WeakZipFileFactory(limit);
 
         // Create the cache directory, if it does not exist.
         File cacheDir = determineCacheDir(m_configMap);
@@ -220,7 +237,9 @@ public class BundleCache
                 // Recreate the bundle archive.
                 try
                 {
-                    archiveList.add(new BundleArchive(m_logger, m_configMap, children[i]));
+                    archiveList.add(
+                        new BundleArchive(
+                            m_logger, m_configMap, m_zipFactory, children[i]));
                 }
                 catch (Exception ex)
                 {
@@ -250,7 +269,8 @@ public class BundleCache
             // Create the archive and add it to the list of archives.
             BundleArchive ba =
                 new BundleArchive(
-                    m_logger, m_configMap, archiveRootDir, id, startLevel, location, is);
+                    m_logger, m_configMap, m_zipFactory, archiveRootDir,
+                    id, startLevel, location, is);
             return ba;
         }
         catch (Exception ex)
@@ -346,8 +366,8 @@ public class BundleCache
             // We might be talking windows and native libs -- hence,
             // try to trigger a gc and try again. The hope is that
             // this releases the classloader that loaded the native
-            // lib and allows us to delete it because it then 
-            // would not be used anymore. 
+            // lib and allows us to delete it because it then
+            // would not be used anymore.
             System.gc();
             System.gc();
             return deleteDirectoryTreeRecursive(target);
