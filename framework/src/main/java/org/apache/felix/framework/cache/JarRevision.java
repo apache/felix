@@ -29,9 +29,10 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 
 import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.util.ZipFileX;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.WeakZipFileFactory;
+import org.apache.felix.framework.util.WeakZipFileFactory.WeakZipFile;
 
 /**
  * <p>
@@ -48,23 +49,18 @@ class JarRevision extends BundleArchiveRevision
 {
     private static final transient String BUNDLE_JAR_FILE = "bundle.jar";
 
-    private File m_bundleFile = null;
-    private final ZipFileX m_zipFile;
+    private final WeakZipFileFactory m_zipFactory;
+    private final File m_bundleFile;
+    private final WeakZipFile m_zipFile;
 
     public JarRevision(
-        Logger logger, Map configMap, File revisionRootDir,
-        String location, boolean byReference)
-        throws Exception
-    {
-        this(logger, configMap, revisionRootDir, location, byReference, null);
-    }
-
-    public JarRevision(
-        Logger logger, Map configMap, File revisionRootDir, String location,
-        boolean byReference, InputStream is)
+        Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        File revisionRootDir, String location, boolean byReference, InputStream is)
         throws Exception
     {
         super(logger, configMap, revisionRootDir, location);
+
+        m_zipFactory = zipFactory;
 
         if (byReference)
         {
@@ -81,11 +77,11 @@ class JarRevision extends BundleArchiveRevision
         initialize(byReference, is);
 
         // Open shared copy of the JAR file.
-        ZipFileX zipFile = null;
+        WeakZipFile zipFile = null;
         try
         {
             // Open bundle JAR file.
-            zipFile = BundleCache.getSecureAction().openZipFile(m_bundleFile);
+            zipFile = m_zipFactory.create(m_bundleFile);
             // Error if no jar file.
             if (zipFile == null)
             {
@@ -111,8 +107,8 @@ class JarRevision extends BundleArchiveRevision
 
     public synchronized Content getContent() throws Exception
     {
-        return new JarContent(getLogger(), getConfig(), this, getRevisionRootDir(),
-            m_bundleFile, m_zipFile);
+        return new JarContent(getLogger(), getConfig(), m_zipFactory,
+            this, getRevisionRootDir(), m_bundleFile, m_zipFile);
     }
 
     protected void close() throws Exception
@@ -198,7 +194,7 @@ class JarRevision extends BundleArchiveRevision
     // The idea is to not open the jar file as a java.util.jarfile but
     // read the mainfest from the zipfile directly and parse it manually
     // to use less memory and be faster.
-    private static void getMainAttributes(Map result, ZipFileX zipFile) throws Exception
+    private static void getMainAttributes(Map result, WeakZipFile zipFile) throws Exception
     {
         ZipEntry entry = zipFile.getEntry("META-INF/MANIFEST.MF");
 
