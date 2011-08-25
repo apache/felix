@@ -44,6 +44,8 @@ public class BndJarResourceStore implements ResourceStore {
 
     private MetadataRenderer m_renderer = new MetadataRenderer();
 
+    private Element m_metadata;
+
     public BndJarResourceStore(Analyzer analyzer, Reporter reporter) {
         m_analyzer = analyzer;
         m_reporter = reporter;
@@ -84,6 +86,7 @@ public class BndJarResourceStore implements ResourceStore {
     }
 
     public void writeMetadata(Element metadata) {
+        m_metadata = metadata;
 
         // Find referred packages and add them into Bnd
         for (String referred : Metadatas.findReferredPackages(metadata)) {
@@ -93,19 +96,7 @@ public class BndJarResourceStore implements ResourceStore {
             }
         }
 
-        // Write the iPOJO header
-        String components = m_analyzer.getProperty("IPOJO-Components");
-        StringBuilder builder = new StringBuilder();
-
-        if (components != null) {
-            builder.append(components);
-        }
-        builder.append(m_renderer.render(metadata));
-
-        if (builder.length() != 0) {
-            m_analyzer.setProperty("IPOJO-Components", builder.toString());
-        }
-
+        // IPOJO-Components will be written during the close method.
 
     }
 
@@ -115,6 +106,18 @@ public class BndJarResourceStore implements ResourceStore {
     }
 
     public void close() throws IOException {
+        // Write the iPOJO header (including manipulation metadata)
+        String components = m_analyzer.getProperty("IPOJO-Components");
+        StringBuilder builder = new StringBuilder();
+
+        if (components != null) {
+            builder.append(components);
+        }
+        builder.append(m_renderer.render(m_metadata));
+
+        if (builder.length() != 0) {
+            m_analyzer.setProperty("IPOJO-Components", builder.toString());
+        }
 
         // Add some mandatory imported packages
         Map<String, String> version = new TreeMap<String, String>();
@@ -136,6 +139,7 @@ public class BndJarResourceStore implements ResourceStore {
             log.put("version", "1.3");
             m_analyzer.getReferred().put("org.osgi.service.log", log);
         }
+
 
     }
 }
