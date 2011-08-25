@@ -26,6 +26,7 @@ import java.util.jar.Manifest;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.StringMap;
+import org.apache.felix.framework.util.WeakZipFileFactory;
 
 /**
  * <p>
@@ -36,12 +37,15 @@ import org.apache.felix.framework.util.StringMap;
 **/
 class DirectoryRevision extends BundleArchiveRevision
 {
+    private final WeakZipFileFactory m_zipFactory;
     private final File m_refDir;
 
     public DirectoryRevision(
-        Logger logger, Map configMap, File revisionRootDir, String location) throws Exception
+        Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        File revisionRootDir, String location) throws Exception
     {
         super(logger, configMap, revisionRootDir, location);
+        m_zipFactory = zipFactory;
         m_refDir = new File(location.substring(
             location.indexOf(BundleArchive.FILE_PROTOCOL)
                 + BundleArchive.FILE_PROTOCOL.length()));
@@ -95,7 +99,8 @@ class DirectoryRevision extends BundleArchiveRevision
 
     public synchronized Content getContent() throws Exception
     {
-        return new DirectoryContent(getLogger(), getConfig(), this, getRevisionRootDir(), m_refDir);
+        return new DirectoryContent(getLogger(), getConfig(), m_zipFactory,
+            this, getRevisionRootDir(), m_refDir);
     }
 
     protected void close() throws Exception

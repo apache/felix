@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.zip.ZipFile;
 import org.osgi.framework.Bundle;
 
 import org.osgi.framework.BundleActivator;
@@ -594,7 +595,7 @@ public class SecureAction
         }
     }
 
-    public ZipFileX openZipFile(File file) throws IOException
+    public ZipFile openZipFile(File file) throws IOException
     {
         if (System.getSecurityManager() != null)
         {
@@ -602,7 +603,7 @@ public class SecureAction
             {
                 Actions actions = (Actions) m_actions.get();
                 actions.set(Actions.OPEN_ZIPFILE_ACTION, file);
-                return (ZipFileX) AccessController.doPrivileged(actions, m_acc);
+                return (ZipFile) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
             {
@@ -615,7 +616,7 @@ public class SecureAction
         }
         else
         {
-            return new ZipFileX(file);
+            return new ZipFile(file);
         }
     }
 
@@ -1587,7 +1588,7 @@ public class SecureAction
                 case MAKE_DIRECTORY_ACTION:
                     return ((File) arg1).mkdir() ? Boolean.TRUE : Boolean.FALSE;
                 case OPEN_ZIPFILE_ACTION:
-                    return new ZipFileX((File) arg1);
+                    return new ZipFile((File) arg1);
                 case OPEN_URLCONNECTION_ACTION:
                     return ((URL) arg1).openConnection();
                 case RENAME_FILE_ACTION:

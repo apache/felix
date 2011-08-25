@@ -25,6 +25,7 @@ import java.util.*;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Constants;
 
 public class DirectoryContent implements Content
@@ -35,16 +36,18 @@ public class DirectoryContent implements Content
 
     private final Logger m_logger;
     private final Map m_configMap;
+    private final WeakZipFileFactory m_zipFactory;
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_dir;
     private Map m_nativeLibMap;
 
-    public DirectoryContent(Logger logger, Map configMap, Object revisionLock,
-        File rootDir, File dir)
+    public DirectoryContent(Logger logger, Map configMap,
+        WeakZipFileFactory zipFactory, Object revisionLock, File rootDir, File dir)
     {
         m_logger = logger;
         m_configMap = configMap;
+        m_zipFactory = zipFactory;
         m_revisionLock = revisionLock;
         m_rootDir = rootDir;
         m_dir = dir;
@@ -163,7 +166,7 @@ public class DirectoryContent implements Content
         if (entryName.equals(FelixConstants.CLASS_PATH_DOT))
         {
             return new DirectoryContent(
-                m_logger, m_configMap, m_revisionLock, m_rootDir, m_dir);
+                m_logger, m_configMap, m_zipFactory, m_revisionLock, m_rootDir, m_dir);
         }
 
         // Remove any leading slash, since all bundle class path
@@ -180,7 +183,7 @@ public class DirectoryContent implements Content
         if (BundleCache.getSecureAction().isFileDirectory(file))
         {
             return new DirectoryContent(
-                m_logger, m_configMap, m_revisionLock, m_rootDir, file);
+                m_logger, m_configMap, m_zipFactory, m_revisionLock, m_rootDir, file);
         }
         else if (BundleCache.getSecureAction().fileExists(file)
             && entryName.endsWith(".jar"))
@@ -202,7 +205,8 @@ public class DirectoryContent implements Content
                 }
             }
             return new JarContent(
-                m_logger, m_configMap, m_revisionLock, extractDir, file, null);
+                m_logger, m_configMap, m_zipFactory, m_revisionLock,
+                extractDir, file, null);
         }
 
         // The entry could not be found, so return null.

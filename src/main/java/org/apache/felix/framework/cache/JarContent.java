@@ -32,8 +32,9 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.ZipFileX;
 import org.apache.felix.framework.util.Util;
+import org.apache.felix.framework.util.WeakZipFileFactory;
+import org.apache.felix.framework.util.WeakZipFileFactory.WeakZipFile;
 import org.osgi.framework.Constants;
 
 public class JarContent implements Content
@@ -44,22 +45,39 @@ public class JarContent implements Content
 
     private final Logger m_logger;
     private final Map m_configMap;
+    private final WeakZipFileFactory m_zipFactory;
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_file;
-    private final ZipFileX m_zipFile;
+    private final WeakZipFile m_zipFile;
     private final boolean m_isZipFileOwner;
     private Map m_nativeLibMap;
 
-    public JarContent(Logger logger, Map configMap, Object revisionLock, File rootDir,
-        File file, ZipFileX zipFile)
+    public JarContent(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+        Object revisionLock, File rootDir, File file, WeakZipFile zipFile)
     {
         m_logger = logger;
         m_configMap = configMap;
+        m_zipFactory = zipFactory;
         m_revisionLock = revisionLock;
         m_rootDir = rootDir;
         m_file = file;
-        m_zipFile = (zipFile == null) ? openZipFile(m_file) : zipFile;
+        if (zipFile == null)
+        {
+            try
+            {
+                m_zipFile = m_zipFactory.create(m_file);
+            }
+            catch (IOException ex)
+            {
+                throw new RuntimeException(
+                    "Unable to open JAR file, probably deleted: " + ex.getMessage());
+            }
+        }
+        else
+        {
+            m_zipFile = zipFile;
+        }
         m_isZipFileOwner = (zipFile == null);
     }
 
@@ -209,7 +227,7 @@ public class JarContent implements Content
         // just return it immediately.
         if (entryName.equals(FelixConstants.CLASS_PATH_DOT))
         {
-            return new JarContent(m_logger, m_configMap, m_revisionLock,
+            return new JarContent(m_logger, m_configMap, m_zipFactory, m_revisionLock,
                 m_rootDir, m_file, m_zipFile);
         }
 
@@ -272,7 +290,7 @@ public class JarContent implements Content
                 }
             }
             return new JarContent(
-                m_logger, m_configMap, m_revisionLock,
+                m_logger, m_configMap, m_zipFactory, m_revisionLock,
                 extractJar.getParentFile(), extractJar, null);
         }
 
@@ -474,19 +492,6 @@ public class JarContent implements Content
             {
                 if (is != null) is.close();
             }
-        }
-    }
-
-    private static ZipFileX openZipFile(File file) throws RuntimeException
-    {
-        try
-        {
-            return BundleCache.getSecureAction().openZipFile(file);
-        }
-        catch (IOException ex)
-        {
-            throw new RuntimeException(
-                "Unable to open JAR file, probably deleted: " + ex.getMessage());
         }
     }
 
