@@ -2394,6 +2394,13 @@ public class Felix extends BundleImpl implements Framework
                 // Clean up the bundle activator.
                 bundle.setActivator(null);
 
+                // Clean up the bundle context.
+                // We invalidate this first to make sure it cannot be used
+                // after stopping the activator.
+                BundleContextImpl bci = (BundleContextImpl) bundle._getBundleContext();
+                bci.invalidate();
+                bundle.setBundleContext(null);
+
                 // Unregister any services offered by this bundle.
                 m_registry.unregisterServices(bundle);
 
@@ -2402,11 +2409,7 @@ public class Felix extends BundleImpl implements Framework
 
                 // The spec says that we must remove all event
                 // listeners for a bundle when it is stopped.
-                m_dispatcher.removeListeners(bundle._getBundleContext());
-
-                // Clean up the bundle context.
-                ((BundleContextImpl) bundle._getBundleContext()).invalidate();
-                bundle.setBundleContext(null);
+                m_dispatcher.removeListeners(bci);
 
                 setBundleStateAndNotify(bundle, Bundle.RESOLVED);
 
@@ -3073,7 +3076,7 @@ public class Felix extends BundleImpl implements Framework
         // Acquire bundle lock.
         try
         {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE);
+            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
@@ -3113,7 +3116,7 @@ public class Felix extends BundleImpl implements Framework
         // Acquire bundle lock.
         try
         {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE);
+            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
@@ -3237,7 +3240,7 @@ public class Felix extends BundleImpl implements Framework
         // Acquire bundle lock.
         try
         {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE);
+            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
@@ -3288,7 +3291,7 @@ public class Felix extends BundleImpl implements Framework
         // Acquire bundle lock.
         try
         {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE);
+            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
         }
         catch (IllegalStateException ex)
         {
