@@ -51,6 +51,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -363,7 +364,7 @@ public class Junit4osgiPlugin extends AbstractMojo {
             getLog().debug("Service List");
             for (int i = 0; i < refs.length; i++) {
                 String[] itfs = (String[]) refs[i].getProperty(Constants.OBJECTCLASS);
-                List list = Arrays.asList(itfs); 
+                List list = Arrays.asList(itfs);
                 if (list.contains("org.apache.felix.ipojo.architecture.Architecture")) {
                     getLog().debug(list.toString() + " - " + refs[i].getProperty("architecture.instance"));
                 } else {
@@ -468,6 +469,9 @@ public class Junit4osgiPlugin extends AbstractMojo {
             return bc.getService(ref);
         }
         getLog().error("Junit Runner service unavailable");
+
+        dumpServices(bc);
+
         return null;
     }
 
@@ -627,6 +631,25 @@ public class Junit4osgiPlugin extends AbstractMojo {
         Bundle[] bundles = bc.getBundles();
         for (int i = 0; i < bundles.length; i++) {
             getLog().info(bundles[i].getSymbolicName() + " - " + bundles[i].getState());
+        }
+    }
+
+    /**
+     * Prints the service list.
+     * @param bc the bundle context.
+     */
+    public void dumpServices(BundleContext bc) {
+        getLog().info("Services:");
+        ServiceReference[] refs = null;
+        try {
+            refs = bc.getAllServiceReferences(null, null);
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        }
+        for (int i = 0; i < refs.length; i++) {
+            String[] itfs = (String[]) refs[i].getProperty(Constants.OBJECTCLASS);
+            String bundle = refs[i].getBundle().getSymbolicName();
+            getLog().info(bundle + " : " + Arrays.toString(itfs));
         }
     }
 
