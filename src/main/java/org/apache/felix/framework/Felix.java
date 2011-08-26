@@ -2017,6 +2017,13 @@ public class Felix extends BundleImpl implements Framework
                 // Clean up the bundle activator
                 bundle.setActivator(null);
 
+                // Clean up the bundle context.
+                // We invalidate this first to make sure it cannot be used
+                // after stopping the activator.
+                BundleContextImpl bci = (BundleContextImpl) bundle._getBundleContext();
+                bci.invalidate();
+                bundle.setBundleContext(null);
+
                 // Unregister any services offered by this bundle.
                 m_registry.unregisterServices(bundle);
 
@@ -2024,11 +2031,7 @@ public class Felix extends BundleImpl implements Framework
                 m_registry.ungetServices(bundle);
 
                 // Remove any listeners registered by this bundle.
-                m_dispatcher.removeListeners(bundle._getBundleContext());
-
-                // Clean up the bundle context.
-                ((BundleContextImpl) bundle._getBundleContext()).invalidate();
-                bundle.setBundleContext(null);
+                m_dispatcher.removeListeners(bci);
 
                 // The spec says to expect BundleException or
                 // SecurityException, so rethrow these exceptions.
