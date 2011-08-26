@@ -99,6 +99,7 @@ public class ServiceRegistry
         return null;
     }
 
+    // Caller is expected to fire REGISTERED event.
     public ServiceRegistration registerService(
         Bundle bundle, String[] classNames, Object svcObj, Dictionary dict)
     {
@@ -119,12 +120,6 @@ public class ServiceRegistry
             m_regCapSet.addCapability((BundleCapabilityImpl) reg.getReference());
         }
 
-        // Notify callback objects about registered service.
-        if (m_callbacks != null)
-        {
-            m_callbacks.serviceChanged(
-                new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null);
-        }
         return reg;
     }
 

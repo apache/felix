@@ -3363,12 +3363,8 @@ public class Felix extends BundleImpl implements Framework
             }
         }
 
-        // TODO: CONCURRENCY - Reconsider firing event here, outside of the
-        // bundle lock.
-
-        // NOTE: The service registered event is fired from the service
-        // registry to the framework, where it is then redistributed to
-        // interested service event listeners.
+        // Fire service event.
+        fireServiceEvent(new ServiceEvent(ServiceEvent.REGISTERED, reg.getReference()), null);
 
         return reg;
     }
