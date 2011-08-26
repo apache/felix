@@ -673,7 +673,10 @@ public class Basic
             System.out.println("Package Admin service is unavailable.");
         }
 
-        pa.resolveBundles((bundles == null) ? null : bundles);
+        if (!pa.resolveBundles((bundles == null) ? null : bundles))
+        {
+            System.out.println("Not all bundles could be resolved.");
+        }
 
         Util.ungetServices(m_bc, refs);
     }
