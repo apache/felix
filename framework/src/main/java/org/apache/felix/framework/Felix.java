@@ -3997,70 +3997,65 @@ public class Felix extends BundleImpl implements Framework
             {
                 for (Bundle b : bundles)
                 {
-                    if (systemBundle == b)
+                    if ((systemBundle == b) || ((BundleImpl) b).isExtension())
                     {
-                        Bundle[] allBundles = getBundles();
-                        for (int j = 0; !restart && j < allBundles.length; j++)
+                        restart = true;
+                        break;
+                    }
+                }
+
+                // If we need to restart the framework, then no reason to
+                // do a refresh.
+                if (!restart)
+                {
+                    // Now we actually need to refresh the affected bundles.
+                    // At this point the collection contains every bundle that has
+                    // been updated and/or removed as well as all bundles that import
+                    // packages from these bundles.
+
+                    // Create refresh helpers for each bundle.
+                    List<RefreshHelper> helpers = new ArrayList<RefreshHelper>(bundles.size());
+                    for (Bundle b : bundles)
+                    {
+                        // Remove any targeted bundles from the uninstalled bundles
+                        // array, since they will be removed from the system after
+                        // the refresh.
+                        // TODO: FRAMEWORK - Is this correct?
+                        forgetUninstalledBundle((BundleImpl) b);
+
+                        // Create refresh helper for bundle.
+                        helpers.add(new RefreshHelper(b));
+                    }
+
+                    // Stop, purge or remove, and reinitialize all bundles first.
+                    for (RefreshHelper helper : helpers)
+                    {
+                        if (helper != null)
                         {
-                            if (((BundleImpl) allBundles[j]).isExtension() &&
-                                (allBundles[j].getState() == Bundle.INSTALLED))
-                            {
-                                restart = true;
-                                break;
-                            }
+                            helper.stop();
+                            helper.refreshOrRemove();
                         }
                     }
 
-                    // Remove any targeted bundles from the uninstalled bundles
-                    // array, since they will be removed from the system after
-                    // the refresh.
-                    // TODO: FRAMEWORK - Is this correct?
-                    forgetUninstalledBundle((BundleImpl) b);
-                }
-
-                // Now we actually need to refresh the affected bundles.
-                // At this point the collection contains every bundle that has
-                // been updated and/or removed as well as all bundles that import
-                // packages from these bundles.
-
-                // Create refresh helpers for each bundle.
-                List<RefreshHelper> helpers = new ArrayList<RefreshHelper>(bundles.size());
-                for (Bundle b : bundles)
-                {
-                    helpers.add(new RefreshHelper(b));
-                }
-
-                // Stop, purge or remove, and reinitialize all bundles first.
-                // TODO: FRAMEWORK - this will stop the system bundle if
-                // somebody called refresh 0. Is this what we want?
-                for (RefreshHelper helper : helpers)
-                {
-                    if (helper != null)
+                    // Then restart all bundles that were previously running.
+                    for (RefreshHelper helper : helpers)
                     {
-                        helper.stop();
-                        helper.refreshOrRemove();
+                        if (helper != null)
+                        {
+                            helper.restart();
+                        }
                     }
                 }
-
-                // Then restart all bundles that were previously running.
-                for (RefreshHelper helper : helpers)
+                else
                 {
-                    if (helper != null)
+                    try
                     {
-                        helper.restart();
+                        update();
                     }
-                }
-            }
-
-            if (restart)
-            {
-                try
-                {
-                    update();
-                }
-                catch (BundleException ex)
-                {
-                    m_logger.log(Logger.LOG_ERROR, "Framework restart error.", ex);
+                    catch (BundleException ex)
+                    {
+                        m_logger.log(Logger.LOG_ERROR, "Framework restart error.", ex);
+                    }
                 }
             }
         }
