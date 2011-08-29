@@ -44,8 +44,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.container.def.PaxRunnerOptions;
 import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
-import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -108,7 +106,7 @@ public abstract class ComponentTestBase
         final Option[] base = options(
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
-                mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" ),
+                mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.1.0" ),
                 mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" )
              ),
              systemProperty( "ds.factory.enabled" ).value( "true" )
@@ -322,7 +320,7 @@ public abstract class ComponentTestBase
     protected Bundle installBundle( final String descriptorFile ) throws BundleException
     {
         final InputStream bundleStream = new MyTinyBundle()
-            .addResource( "OSGI-INF/components.xml", getClass().getResource( descriptorFile ) )
+            .add( "OSGI-INF/components.xml", getClass().getResource( descriptorFile ) )
             .prepare(
                 withBnd()
                 .set( Constants.BUNDLE_SYMBOLICNAME, "simplecomponent" )
@@ -331,7 +329,7 @@ public abstract class ComponentTestBase
                     "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature" )
                 .set( "Service-Component", "OSGI-INF/components.xml" )
             )
-            .build( TinyBundles.asStream() );
+            .build();
 
         try
         {

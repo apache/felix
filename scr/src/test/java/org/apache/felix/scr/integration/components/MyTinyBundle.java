@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scr.integration.components;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,18 +32,26 @@ public class MyTinyBundle implements TinyBundle {
     private Map<String, URL> m_resources = new HashMap<String, URL>();
 
     @SuppressWarnings("unchecked")
-    public TinyBundle addClass( Class clazz )
+    public TinyBundle add( Class clazz )
     {
         String name = clazz.getName().replaceAll( "\\.", "/" ) + ".class";
-        addResource( name, clazz.getResource( "/" + name ) );
+        add( name, clazz.getResource( "/" + name ) );
         return this;
     }
 
-    public TinyBundle addResource( String name, URL url )
+    public TinyBundle add( String name, URL url )
     {
         m_resources.put( name, url );
         return this;
     }
+
+
+    public TinyBundle add( String name, InputStream input )
+    {
+        // we don't currently support adding InputStream resources...
+        throw new UnsupportedOperationException();
+    }
+
 
     public BuildableBundle prepare( BuildableBundle builder )
     {
@@ -53,5 +62,6 @@ public class MyTinyBundle implements TinyBundle {
     {
         return new RawBuilder().setResources( m_resources );
     }
+
 
 }
