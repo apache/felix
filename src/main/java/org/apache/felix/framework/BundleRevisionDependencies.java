@@ -82,12 +82,12 @@ class BundleRevisionDependencies
             }
         }
     }
-
+*/
     public synchronized void removeDependents(BundleRevision provider)
     {
         m_dependentsMap.remove(provider);
     }
-*/
+
     public synchronized Map<BundleCapability, Set<BundleWire>>
         getDependents(BundleRevision provider)
     {

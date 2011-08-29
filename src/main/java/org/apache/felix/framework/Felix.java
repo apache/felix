@@ -4647,6 +4647,8 @@ public class Felix extends BundleImpl implements Framework
                 m_securityManager = null;
             }
 
+            m_dependencies.removeDependents(adapt(BundleRevision.class));
+
             if (m_extensionManager != null)
             {
                 m_extensionManager.removeExtensions(Felix.this);
