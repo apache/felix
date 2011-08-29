@@ -298,7 +298,9 @@ public class Main
                 // Wait for framework to stop to exit the VM.
                 event = m_fwk.waitForStop(0);
             }
+            // If the framework was updated, then restart it.
             while (event.getType() == FrameworkEvent.STOPPED_UPDATE);
+            // Otherwise, exit.
             System.exit(0);
         }
         catch (Exception ex)
