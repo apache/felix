@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.*;
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
@@ -289,10 +290,15 @@ public class Main
             // Use the system bundle context to process the auto-deploy
             // and auto-install/auto-start properties.
             AutoProcessor.process(configProps, m_fwk.getBundleContext());
-            // Start the framework.
-            m_fwk.start();
-            // Wait for framework to stop to exit the VM.
-            m_fwk.waitForStop(0);
+            FrameworkEvent event;
+            do
+            {
+                // Start the framework.
+                m_fwk.start();
+                // Wait for framework to stop to exit the VM.
+                event = m_fwk.waitForStop(0);
+            }
+            while (event.getType() == FrameworkEvent.STOPPED_UPDATE);
             System.exit(0);
         }
         catch (Exception ex)
