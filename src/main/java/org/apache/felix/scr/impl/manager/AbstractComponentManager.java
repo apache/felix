@@ -618,9 +618,20 @@ public abstract class AbstractComponentManager implements Component
             if ( !dm.hasGetPermission() )
             {
                 // bundle has no service get permission
-                log( LogService.LOG_DEBUG, "No permission to get dependency: {0}", new Object[]
-                    { dm.getName() }, null );
-                satisfied = false;
+                if ( dm.isOptional() )
+                {
+                    log( LogService.LOG_DEBUG, "No permission to get optional dependency: {0}; assuming satisfied",
+                        new Object[]
+                            { dm.getName() }, null );
+                    satisfied = true;
+                }
+                else
+                {
+                    log( LogService.LOG_DEBUG, "No permission to get mandatory dependency: {0}; assuming unsatisfied",
+                        new Object[]
+                            { dm.getName() }, null );
+                    satisfied = false;
+                }
             }
             else if ( !dm.isSatisfied() )
             {
