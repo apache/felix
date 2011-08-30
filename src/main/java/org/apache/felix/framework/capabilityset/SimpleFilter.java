@@ -401,12 +401,7 @@ loop:   for (;;)
 
             // Read the next character and account for escapes.
             char c = value.charAt(idx++);
-            if (!escaped && ((c == '(') || (c == ')')))
-            {
-                throw new IllegalArgumentException(
-                    "Illegal value: " + value);
-            }
-            else if (!escaped && (c == '*'))
+            if (!escaped && (c == '*'))
             {
                 if (wasStar)
                 {

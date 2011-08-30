@@ -70,5 +70,8 @@ public class SimpleFilterTest extends TestCase
         assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "sdffoobsdfbar"));
         assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "sdffoobsdfbarlj"));
         assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "sdffobsdfbarlj"));
+
+        pieces = SimpleFilter.parseSubstring("*foo(*bar*");
+        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "foo()bar"));
     }
 }
