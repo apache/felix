@@ -355,6 +355,14 @@ public class ManifestParser
                         throw new BundleException(
                             "Importing java.* packages not allowed: " + pkgName);
                     }
+                    // The character "." has no meaning in the OSGi spec except
+                    // when placed on the bundle class path. Some people, however,
+                    // mistakenly think it means the default package when imported
+                    // or exported. This is not correct. It is invalid.
+                    else if (pkgName.equals("."))
+                    {
+                        throw new BundleException("Imporing '.' is invalid.");
+                    }
                     // Make sure a package name was specified.
                     else if (pkgName.length() == 0)
                     {
@@ -741,6 +749,15 @@ public class ManifestParser
                         "Exporting java.* packages not allowed: "
                         + pkgName);
                 }
+                // The character "." has no meaning in the OSGi spec except
+                // when placed on the bundle class path. Some people, however,
+                // mistakenly think it means the default package when imported
+                // or exported. This is not correct. It is invalid.
+                else if (pkgName.equals("."))
+                {
+                    throw new BundleException("Exporing '.' is invalid.");
+                }
+                // Make sure a package name was specified.
                 else if (pkgName.length() == 0)
                 {
                     throw new BundleException(
