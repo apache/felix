@@ -427,4 +427,32 @@ public class XmlHandlerTest extends TestCase
         // none found
         return null;
     }
+
+    public void test_properties_11() throws Exception
+    {
+        final List metadataList11 = readMetadata( "/components_properties_11.xml" );
+        assertEquals( "Component Descriptors", 1, metadataList11.size() );
+        final ComponentMetadata cm11 = ( ComponentMetadata ) metadataList11.get( 0 );
+
+        // dont validate this, we test the raw reading
+
+        // ds namespace
+        assertEquals( "DS Version 1.1", XmlHandler.DS_VERSION_1_1, cm11.getNamespaceCode() );
+        assertTrue( "DS Version 1.1", cm11.isDS11() );
+
+        assertEquals( "component name", "DummyClass", cm11.getName() );
+        assertEquals( "component name", "DummyClass", cm11.getImplementationClassName() );
+
+        // property setting
+        final PropertyMetadata prop = getPropertyMetadata( cm11, "char_array_property" );
+        assertNotNull( "prop exists", prop );
+        assertEquals( "prop type", "Character", prop.getType() );
+        Object value = prop.getValue();
+        assertTrue( "prop arry", value instanceof char[] );
+        char[] chars = (char[]) value;
+        assertEquals( "prop number of values", 2, chars.length);
+        assertEquals( "prop value 0", 'a', chars[0] );
+        assertEquals( "prop value 1", 'b', chars[1] );
+    }
+
 }

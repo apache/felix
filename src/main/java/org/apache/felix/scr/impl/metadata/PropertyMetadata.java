@@ -136,7 +136,8 @@ public class PropertyMetadata {
             }
             m_value = array;
         }
-        else if(m_type.equals("Char")) {
+        else if ( m_type.equals( "Char" ) || m_type.equals( "Character" ) ) {
+            // DS 1.1 changes the "Char" type to "Character", here we support both
             //TODO: verify if this is adequate for Characters
             char[] array = new char[valueList.size()];
             for (int i=0; i < array.length; i++) {
