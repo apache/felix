@@ -76,8 +76,8 @@ public class Pojoization {
         this(new SystemReporter());
     }
 
-    public Pojoization(Reporter m_reporter) {
-        m_reporter = m_reporter;
+    public Pojoization(Reporter reporter) {
+        m_reporter = reporter;
     }
 
     /**
