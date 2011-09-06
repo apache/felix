@@ -741,9 +741,13 @@ class Candidates
                     for (BundleRequirement hostReq : versionEntry.getValue())
                     {
                         // Select the highest version of the fragment that
-                        // is not removal pending.
-                        if (isFirst
-                            && !((BundleRevisionImpl) hostReq.getRevision()).isRemovalPending())
+                        // is not removal pending. If the fragment revision
+                        // is removal pending, then its current revision will
+                        // be null or won't match the existing revision.
+                        BundleRevision currentFragmentRevision =
+                            hostReq.getRevision().getBundle()
+                                .adapt(BundleRevision.class);
+                        if (isFirst && (currentFragmentRevision == hostReq.getRevision()))
                         {
                             selectedFragments.add(hostReq.getRevision());
                             isFirst = false;
