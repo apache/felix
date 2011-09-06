@@ -1119,6 +1119,7 @@ class StatefulResolver
                                 m_fragments.add(selected);
                             }
                             indexCapabilities(selected);
+                            m_revisions.add(selected);
                         }
                         else
                         {
