@@ -310,16 +310,6 @@ public class BundleRevisionImpl implements BundleRevision
         return m_protectionDomain;
     }
 
-    // TODO: FRAGMENT RESOLVER - Technically, this is only necessary for fragments.
-    //       When we refactoring for the new R4.3 framework API, we'll have to see
-    //       if this is still necessary, since the new BundleWirings API will give
-    //       us another way to detect it.
-    public boolean isRemovalPending()
-    {
-        return (m_bundle.getState() == Bundle.UNINSTALLED)
-            || (this != m_bundle.adapt(BundleRevision.class));
-    }
-
     //
     // Content access methods.
     //
