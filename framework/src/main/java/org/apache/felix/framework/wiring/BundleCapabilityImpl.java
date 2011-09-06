@@ -34,8 +34,6 @@ import org.osgi.framework.wiring.BundleRevision;
 
 public class BundleCapabilityImpl implements BundleCapability
 {
-    public static final String SINGLETON_NAMESPACE = "singleton";
-
     public static final String VERSION_ATTR = "version";
 
     private final BundleRevision m_revision;

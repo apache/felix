@@ -612,7 +612,7 @@ class Candidates
      * @throws ResolveException if the removal of any unselected fragments result
      *         in the root module being unable to resolve.
     **/
-    public void prepare(List<BundleRevision> existingSingletons)
+    public void prepare()
     {
         boolean init = false;
 
@@ -620,51 +620,6 @@ class Candidates
         {
             populateDependents();
             init = true;
-        }
-
-        final Map<String, BundleRevision> singletons = new HashMap<String, BundleRevision>();
-
-        for (Iterator<BundleRevision> it = m_involvedRevisions.iterator(); it.hasNext(); )
-        {
-            BundleRevision br = it.next();
-            if (isSingleton(br))
-            {
-                if (!init)
-                {
-                    populateDependents();
-                    init = true;
-                }
-
-                // See if there is an existing singleton for the
-                // revision's symbolic name.
-                BundleRevision singleton = singletons.get(br.getSymbolicName());
-                // If there is no existing singleton or this revision is
-                // a resolved singleton or this revision has a higher version
-                // and the existing singleton is not resolved, then select
-                // this revision as the singleton.
-                if ((singleton == null)
-                    || (br.getWiring() != null)
-                    || ((br.getVersion().compareTo(singleton.getVersion()) > 0)
-                        && (singleton.getWiring() == null)))
-                {
-                    singletons.put(br.getSymbolicName(), br);
-                    // Remove the singleton revision from the candidates
-                    // if it wasn't selected.
-                    if (singleton != null)
-                    {
-                        removeRevision(
-                            singleton,
-                            new ResolveException(
-                                "Conflict with another singleton.", singleton, null));
-                    }
-                }
-                else
-                {
-                    removeRevision(br,
-                        new ResolveException(
-                            "Conflict with another singleton.", br, null));
-                }
-            }
         }
 
         // If the root is a singleton, then prefer it over any other singleton.
@@ -690,22 +645,6 @@ class Candidates
             }
         }
 */
-
-        // Make sure selected singletons do not conflict with existing
-        // singletons passed into this method.
-        for (int i = 0; (existingSingletons != null) && (i < existingSingletons.size()); i++)
-        {
-            BundleRevision existing = existingSingletons.get(i);
-            BundleRevision singleton = singletons.get(existing.getSymbolicName());
-            if ((singleton != null) && (singleton != existing))
-            {
-                singletons.remove(singleton.getSymbolicName());
-                removeRevision(singleton,
-                    new ResolveException(
-                        "Conflict with another singleton.", singleton, null));
-            }
-        }
-
         // This method performs the following steps:
         // 1. Select the fragments to attach to a given host.
         // 2. Wrap hosts and attach fragments.

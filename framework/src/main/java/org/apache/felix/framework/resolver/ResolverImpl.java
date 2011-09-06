@@ -117,7 +117,7 @@ public class ResolverImpl implements Resolver
                 }
 
                 // Merge any fragments into hosts.
-                allCandidates.prepare(getResolvedSingletons(state));
+                allCandidates.prepare();
 
                 // Create a combined list of populated revisions; for
                 // optional revisions. We do not need to consider ondemand
@@ -303,7 +303,7 @@ public class ResolverImpl implements Resolver
                     }
 
                     // Merge any fragments into hosts.
-                    allCandidates.prepare(getResolvedSingletons(state));
+                    allCandidates.prepare();
 
                     // Record the initial candidate permutation.
                     m_usesPermutations.add(allCandidates);
@@ -391,25 +391,6 @@ public class ResolverImpl implements Resolver
         }
 
         return null;
-    }
-
-    private static List<BundleRevision> getResolvedSingletons(ResolverState state)
-    {
-        BundleRequirementImpl req = new BundleRequirementImpl(
-            null,
-            BundleCapabilityImpl.SINGLETON_NAMESPACE,
-            Collections.EMPTY_MAP,
-            Collections.EMPTY_MAP);
-        SortedSet<BundleCapability> caps = state.getCandidates(req, true);
-        List<BundleRevision> singletons = new ArrayList();
-        for (BundleCapability cap : caps)
-        {
-            if (cap.getRevision().getWiring() != null)
-            {
-                singletons.add(cap.getRevision());
-            }
-        }
-        return singletons;
     }
 
     private static Candidates getDynamicImportCandidates(
