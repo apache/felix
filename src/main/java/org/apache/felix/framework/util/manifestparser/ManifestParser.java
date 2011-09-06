@@ -131,26 +131,6 @@ public class ManifestParser
                         hostAttrs));
                 }
             }
-
-            // Add a singleton capability if the bundle is a singleton.
-            // This is sort of a hack, but we need this for the resolver
-            // to be able to resolve singletons. It is not possible to
-            // attach this information to the bundle or host capabilities
-            // because fragments don't have those capabilities, but fragments
-            // can be singletons too.
-// TODO: OSGi R4.4 - Eventually we will have an identity capability from OBR
-//       that we can use instead of this custom singleton capability.
-            if (isSingleton(bundleCap))
-            {
-                Map<String, Object> singletonAttrs =
-                    new HashMap<String, Object>(bundleCap.getAttributes());
-                Object value = singletonAttrs.remove(BundleRevision.BUNDLE_NAMESPACE);
-                singletonAttrs.put(BundleCapabilityImpl.SINGLETON_NAMESPACE, value);
-                capList.add(new BundleCapabilityImpl(
-                    owner, BundleCapabilityImpl.SINGLETON_NAMESPACE,
-                    Collections.EMPTY_MAP,
-                    singletonAttrs));
-            }
         }
 
         // Verify that bundle symbolic name is specified.
@@ -286,19 +266,6 @@ public class ManifestParser
         parseActivationPolicy(headerMap);
 
         m_isExtension = checkExtensionBundle(headerMap);
-    }
-
-    private static boolean isSingleton(BundleCapabilityImpl cap)
-    {
-        if (cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
-        {
-            String value = cap.getDirectives().get(Constants.SINGLETON_DIRECTIVE);
-            if ((value != null) && Boolean.valueOf(value))
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static List<ParsedHeaderClause> normalizeImportClauses(

@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
@@ -607,6 +608,35 @@ public class Util
 
         // Return the value.
         return val;
+    }
+
+    /**
+     * Returns true if the specified bundle revision is a singleton
+     * (i.e., directive singleton:=true in Bundle-SymbolicName).
+     *
+     * @param revision the revision to check for singleton status.
+     * @return true if the revision is a singleton, false otherwise.
+    **/
+    public static boolean isSingleton(BundleRevision revision)
+    {
+        final List<BundleCapability> caps = revision.getDeclaredCapabilities(null);
+        for (BundleCapability cap : caps)
+        {
+            // Find the bundle capability and check its directives.
+            if (cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
+            {
+                for (Entry<String, String> entry : cap.getDirectives().entrySet())
+                {
+                    if (entry.getKey().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE))
+                    {
+                        return Boolean.valueOf((String) entry.getValue());
+                    }
+                }
+                // Can only have one bundle capability, so break.
+                break;
+            }
+        }
+        return false;
     }
 
     /**

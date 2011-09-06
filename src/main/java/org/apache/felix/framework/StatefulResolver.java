@@ -50,6 +50,7 @@ import org.osgi.framework.BundlePermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 import org.osgi.framework.hooks.resolver.ResolverHook;
 import org.osgi.framework.hooks.resolver.ResolverHookFactory;
 import org.osgi.framework.wiring.BundleCapability;
@@ -126,16 +127,26 @@ class StatefulResolver
             // Extensions are resolved differently.
             for (Iterator<BundleRevision> it = mandatoryRevisions.iterator(); it.hasNext(); )
             {
-                BundleImpl bundle = (BundleImpl) it.next().getBundle();
+                BundleRevision br = it.next();
+                BundleImpl bundle = (BundleImpl) br.getBundle();
                 if (bundle.isExtension())
                 {
                     it.remove();
                 }
+                else if (Util.isSingleton(br) && !m_resolverState.isSelectedSingleton(br))
+                {
+                    throw new ResolveException("Singleton conflict.", br, null);
+                }
             }
             for (Iterator<BundleRevision> it = optionalRevisions.iterator(); it.hasNext(); )
             {
-                BundleImpl bundle = (BundleImpl) it.next().getBundle();
+                BundleRevision br = it.next();
+                BundleImpl bundle = (BundleImpl) br.getBundle();
                 if (bundle.isExtension())
+                {
+                    it.remove();
+                }
+                else if (Util.isSingleton(br) && !m_resolverState.isSelectedSingleton(br))
                 {
                     it.remove();
                 }
@@ -918,6 +929,10 @@ class StatefulResolver
         private final Set<BundleRevision> m_fragments;
         // Capability sets.
         private final Map<String, CapabilitySet> m_capSets;
+        // Maps singleton symbolic names to list of bundle revisions sorted by version.
+        private final Map<String, List<BundleRevision>> m_singletons;
+        // Maps singleton symbolic names to selected bundle revision.
+        private final Map<String, BundleRevision> m_selectedSingleton;
         // Execution environment.
         private final String m_fwkExecEnvStr;
         // Parsed framework environments
@@ -938,6 +953,8 @@ class StatefulResolver
             m_revisions = new HashSet<BundleRevision>();
             m_fragments = new HashSet<BundleRevision>();
             m_capSets = new HashMap<String, CapabilitySet>();
+            m_singletons = new HashMap<String, List<BundleRevision>>();
+            m_selectedSingleton = new HashMap<String, BundleRevision>();
 
             m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
             m_fwkExecEnvSet = parseExecutionEnvironments(fwkExecEnvStr);
@@ -975,10 +992,52 @@ class StatefulResolver
             // after it has been resolved.
             removeRevision(br);
 
-            // Add the revision and index its declared or resolved
-            // capabilities depending on whether it is resolved or
-            // not.
-            m_revisions.add(br);
+            if (Util.isSingleton(br))
+            {
+                // Index the new singleton.
+                indexSingleton(m_singletons, br);
+                // Get the currently selected singleton.
+                BundleRevision selected = m_selectedSingleton.get(br.getSymbolicName());
+                // Get the highest singleton version.
+                BundleRevision highest = m_singletons.get(br.getSymbolicName()).get(0);
+                // Select the highest version if not already selected or resolved.
+                if ((selected == null)
+                    || ((selected.getWiring() == null) && (selected != highest)))
+                {
+                    m_selectedSingleton.put(br.getSymbolicName(), highest);
+                    if (selected != null)
+                    {
+                        deindexCapabilities(selected);
+                        m_revisions.remove(selected);
+                        if (Util.isFragment(selected))
+                        {
+                            m_fragments.remove(selected);
+                        }
+                    }
+                    br = highest;
+                }
+                else if (selected != null)
+                {
+                    // Since the newly added singleton was not selected, null
+                    // it out so that it is ignored.
+                    br = null;
+                }
+            }
+
+            // Add the revision and index its capabilities.
+            if (br != null)
+            {
+                m_revisions.add(br);
+                if (Util.isFragment(br))
+                {
+                    m_fragments.add(br);
+                }
+                indexCapabilities(br);
+            }
+        }
+
+        private synchronized void indexCapabilities(BundleRevision br)
+        {
             List<BundleCapability> caps = (br.getWiring() == null)
                 ? br.getDeclaredCapabilities(null)
                 : br.getWiring().getCapabilities(null);
@@ -989,6 +1048,8 @@ class StatefulResolver
                     // If the capability is from a different revision, then
                     // don't index it since it is a capability from a fragment.
                     // In that case, the fragment capability is still indexed.
+                    // It will be the resolver's responsibility to find all
+                    // attached hosts for fragments.
                     if (cap.getRevision() == br)
                     {
                         CapabilitySet capSet = m_capSets.get(cap.getNamespace());
@@ -1001,10 +1062,24 @@ class StatefulResolver
                     }
                 }
             }
+        }
 
-            if (Util.isFragment(br))
+        private synchronized void deindexCapabilities(BundleRevision br)
+        {
+            // We only need be concerned with declared capabilities here,
+            // because resolved capabilities will be a subset, since fragment
+            // capabilities are not considered to be part of the host.
+            List<BundleCapability> caps = br.getDeclaredCapabilities(null);
+            if (caps != null)
             {
-                m_fragments.add(br);
+                for (BundleCapability cap : caps)
+                {
+                    CapabilitySet capSet = m_capSets.get(cap.getNamespace());
+                    if (capSet != null)
+                    {
+                        capSet.removeCapability(cap);
+                    }
+                }
             }
         }
 
@@ -1012,24 +1087,44 @@ class StatefulResolver
         {
             if (m_revisions.remove(br))
             {
-                // We only need be concerned with declared capabilities here,
-                // because resolved capabilities will be a subset.
-                List<BundleCapability> caps = br.getDeclaredCapabilities(null);
-                if (caps != null)
-                {
-                    for (BundleCapability cap : caps)
-                    {
-                        CapabilitySet capSet = m_capSets.get(cap.getNamespace());
-                        if (capSet != null)
-                        {
-                            capSet.removeCapability(cap);
-                        }
-                    }
-                }
+                deindexCapabilities(br);
 
                 if (Util.isFragment(br))
                 {
                     m_fragments.remove(br);
+                }
+
+                // If this module is a singleton, then remove it from the
+                // singleton map and potentially select a new singleton.
+                List<BundleRevision> revisions = m_singletons.get(br.getSymbolicName());
+                if (revisions != null)
+                {
+                    BundleRevision selected = m_selectedSingleton.get(br.getSymbolicName());
+                    revisions.remove(br);
+                    if (revisions.isEmpty())
+                    {
+                        m_singletons.remove(br.getSymbolicName());
+                    }
+
+                    // If this was the selected singleton, then we have to
+                    // select another.
+                    if (selected == br)
+                    {
+                        if (!revisions.isEmpty())
+                        {
+                            selected = revisions.get(0);
+                            m_selectedSingleton.put(br.getSymbolicName(), selected);
+                            if (Util.isFragment(selected))
+                            {
+                                m_fragments.add(selected);
+                            }
+                            indexCapabilities(selected);
+                        }
+                        else
+                        {
+                            m_selectedSingleton.remove(br.getSymbolicName());
+                        }
+                    }
                 }
             }
         }
@@ -1037,6 +1132,11 @@ class StatefulResolver
         synchronized Set<BundleRevision> getFragments()
         {
             return new HashSet(m_fragments);
+        }
+
+        synchronized boolean isSelectedSingleton(BundleRevision br)
+        {
+            return (m_selectedSingleton.get(br.getSymbolicName()) == br);
         }
 
         //
@@ -1266,5 +1366,63 @@ class StatefulResolver
             }
         }
         return newSet;
+    }
+
+    private static void indexSingleton(
+        Map<String, List<BundleRevision>> singletons, BundleRevision br)
+    {
+        List<BundleRevision> revisions = singletons.get(br.getSymbolicName());
+
+        // We want to add the fragment into the list of matching
+        // fragments in sorted order (descending version and
+        // ascending bundle identifier). Insert using a simple
+        // binary search algorithm.
+        if (revisions == null)
+        {
+            revisions = new ArrayList<BundleRevision>();
+            revisions.add(br);
+        }
+        else
+        {
+            Version version = br.getVersion();
+            int top = 0, bottom = revisions.size() - 1;
+            while (top <= bottom)
+            {
+                int middle = (bottom - top) / 2 + top;
+                Version middleVersion = revisions.get(middle).getVersion();
+                // Sort in reverse version order.
+                int cmp = middleVersion.compareTo(version);
+                if (cmp < 0)
+                {
+                    bottom = middle - 1;
+                }
+                else if (cmp == 0)
+                {
+                    // Sort further by ascending bundle ID.
+                    long middleId = revisions.get(middle).getBundle().getBundleId();
+                    long exportId = br.getBundle().getBundleId();
+                    if (middleId < exportId)
+                    {
+                        top = middle + 1;
+                    }
+                    else
+                    {
+                        bottom = middle - 1;
+                    }
+                }
+                else
+                {
+                    top = middle + 1;
+                }
+            }
+
+            // Ignore duplicates.
+            if ((top >= revisions.size()) || (revisions.get(top) != br))
+            {
+                revisions.add(top, br);
+            }
+        }
+
+        singletons.put(br.getSymbolicName(), revisions);
     }
 }
