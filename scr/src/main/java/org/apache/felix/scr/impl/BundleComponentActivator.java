@@ -218,7 +218,7 @@ public class BundleComponentActivator implements Logger
         {
             stream = descriptorURL.openStream();
 
-            BufferedReader in = new BufferedReader( new InputStreamReader( stream ) );
+            BufferedReader in = new BufferedReader( new InputStreamReader( stream, "UTF-8" ) );
             XmlHandler handler = new XmlHandler( m_context.getBundle(), this );
             KXml2SAXParser parser;
 
