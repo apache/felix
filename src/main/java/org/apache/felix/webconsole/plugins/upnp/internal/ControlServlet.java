@@ -55,7 +55,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
 {
 
     private static final SimpleDateFormat DATA_FORMAT = new SimpleDateFormat(
-        "EEE, d MMM yyyy HH:mm:ss Z");
+        "EEE, d MMM yyyy HH:mm:ss Z"); //$NON-NLS-1$
 
     final HashMap icons = new HashMap(10);
     final HashMap sessions = new HashMap(10);
@@ -73,7 +73,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         throws ServletException, IOException
     {
 
-        String udn = request.getParameter("icon");
+        String udn = request.getParameter("icon"); //$NON-NLS-1$
 
         if (udn != null)
         {
@@ -84,7 +84,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             }
             else
             {
-                if (request.getDateHeader("If-Modified-Since") > 0)
+                if (request.getDateHeader("If-Modified-Since") > 0) //$NON-NLS-1$
                 {
                     // if it is already in cache - don't bother to go further
                     response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
@@ -92,7 +92,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 else
                 {
                     // enable caching
-                    response.setDateHeader("Last-Modified", LAST_MODIFIED);
+                    response.setDateHeader("Last-Modified", LAST_MODIFIED); //$NON-NLS-1$
 
                     String mime = icon.getMimeType();
                     if (mime != null)
@@ -124,9 +124,9 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         {
             JSONObject json = new JSONObject();
 
-            String method = request.getParameter("action");
+            String method = request.getParameter("action"); //$NON-NLS-1$
 
-            if ("listDevices".equals(method))
+            if ("listDevices".equals(method)) //$NON-NLS-1$
             {
                 getSession(request).unsubscribe();
 
@@ -137,35 +137,35 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                     if (refs[i] != null
                         && refs[i].getProperty(UPnPDevice.PARENT_UDN) == null)
                     {
-                        json.append("devices", deviceTreeToJSON(refs[i]));
+                        json.append("devices", deviceTreeToJSON(refs[i])); //$NON-NLS-1$
                     }
                 }
             }
-            else if ("serviceDetails".equals(method))
+            else if ("serviceDetails".equals(method)) //$NON-NLS-1$
             {
                 UPnPService service = requireService(request);
                 SessionObject session = getSession(request)//
-                .subscribe(require("udn", request), service.getId());
+                .subscribe(require("udn", request), service.getId()); //$NON-NLS-1$
 
                 json = serviceToJSON(service, session);
             }
-            else if ("invokeAction".equals(method))
+            else if ("invokeAction".equals(method)) //$NON-NLS-1$
             {
                 UPnPService service = requireService(request);
-                UPnPAction action = service.getAction(require("actionID", request));
+                UPnPAction action = service.getAction(require("actionID", request)); //$NON-NLS-1$
 
                 json = invoke(
                     action, //
-                    request.getParameterValues("names"),
-                    request.getParameterValues("vals"));
+                    request.getParameterValues("names"), //$NON-NLS-1$
+                    request.getParameterValues("vals")); //$NON-NLS-1$
             }
             else
             {
                 throw new ServletException("Invalid action: " + method);
             }
 
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json"); //$NON-NLS-1$
+            response.setCharacterEncoding("UTF-8"); //$NON-NLS-1$
             response.getWriter().print(json.toString(2));
         }
         catch (ServletException e)
@@ -186,7 +186,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         if (ret == null)
         {
             ret = new SessionObject(bc, sessionID, sessions);
-            request.getSession().setAttribute("___upnp.session.object", ret);
+            request.getSession().setAttribute("___upnp.session.object", ret); //$NON-NLS-1$
         }
         return ret;
     }
@@ -203,8 +203,8 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     private final UPnPService requireService(HttpServletRequest request)
         throws ServletException
     {
-        String deviceUdn = require("udn", request);
-        String serviceUrn = require("urn", request);
+        String deviceUdn = require("udn", request); //$NON-NLS-1$
+        String serviceUrn = require("urn", request); //$NON-NLS-1$
 
         UPnPDevice device = getDevice(deviceUdn);
         return getService(device, serviceUrn);
@@ -236,7 +236,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             else if (parentUdn.equals(parent))
             {
                 device = (UPnPDevice) tracker.getService(ref);
-                json.append("children", deviceTreeToJSON(ref));
+                json.append("children", deviceTreeToJSON(ref)); //$NON-NLS-1$
             }
         }
         return json;
@@ -246,7 +246,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         throws JSONException
     {
         JSONObject json = new JSONObject();
-        json.put("icon", device.getIcons(null) != null);
+        json.put("icon", device.getIcons(null) != null); //$NON-NLS-1$
 
         // add properties
         String[] props = ref.getPropertyKeys();
@@ -255,12 +255,12 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         {
             _props.put(props[i], ref.getProperty(props[i]));
         }
-        json.put("props", _props);
+        json.put("props", _props); //$NON-NLS-1$
 
         UPnPService[] services = device.getServices();
         for (int i = 0; services != null && i < services.length; i++)
         {
-            json.append("services", services[i].getType());
+            json.append("services", services[i].getType()); //$NON-NLS-1$
         }
 
         return json;
@@ -272,8 +272,8 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         JSONObject json = new JSONObject();
 
         // add service properties
-        json.put("type", service.getType());
-        json.put("id", service.getId());
+        json.put("type", service.getType()); //$NON-NLS-1$
+        json.put("id", service.getId()); //$NON-NLS-1$
 
         // add state variables
         UPnPStateVariable[] vars = service.getStateVariables();
@@ -288,17 +288,17 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             if (value == null)
                 value = session.getValue(vars[i].getName());
             if (value == null)
-                value = "---";
+                value = "---"; //$NON-NLS-1$
 
-            json.append("variables", new JSONObject() //
-            .put("name", vars[i].getName()) //
-            .put("value", value) //
-            .put("defalt", vars[i].getDefaultValue()) //
-            .put("min", vars[i].getMinimum()) //
-            .put("max", vars[i].getMaximum()) //
-            .put("step", vars[i].getStep()) //
-            .put("allowed", vars[i].getAllowedValues()) //
-            .put("sendsEvents", vars[i].sendsEvents()) //
+            json.append("variables", new JSONObject() // //$NON-NLS-1$
+                .put("name", vars[i].getName()) // //$NON-NLS-1$
+                .put("value", value) // //$NON-NLS-1$
+                .put("defalt", vars[i].getDefaultValue()) // //$NON-NLS-1$
+                .put("min", vars[i].getMinimum()) // //$NON-NLS-1$
+                .put("max", vars[i].getMaximum()) // //$NON-NLS-1$
+                .put("step", vars[i].getStep()) // //$NON-NLS-1$
+                .put("allowed", vars[i].getAllowedValues()) // //$NON-NLS-1$
+                .put("sendsEvents", vars[i].sendsEvents()) // //$NON-NLS-1$
             );
         }
 
@@ -306,7 +306,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         UPnPAction[] actions = service.getActions();
         for (int i = 0; actions != null && i < actions.length; i++)
         {
-            json.append("actions", actionToJSON(actions[i]));
+            json.append("actions", actionToJSON(actions[i])); //$NON-NLS-1$
         }
 
         return json;
@@ -315,14 +315,14 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     private static final JSONObject actionToJSON(UPnPAction action) throws JSONException
     {
         JSONObject json = new JSONObject();
-        json.put("name", action.getName());
+        json.put("name", action.getName()); //$NON-NLS-1$
         String[] names = action.getInputArgumentNames();
         for (int i = 0; names != null && i < names.length; i++)
         {
             UPnPStateVariable variable = action.getStateVariable(names[i]);
-            json.append("inVars", new JSONObject()//
-            .put("name", names[i])//
-            .put("type", variable.getUPnPDataType()));
+            json.append("inVars", new JSONObject()// //$NON-NLS-1$
+            .put("name", names[i])// //$NON-NLS-1$
+            .put("type", variable.getUPnPDataType())); //$NON-NLS-1$
         }
 
         return json;
@@ -342,10 +342,22 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             inputArgs = new Hashtable(names.length);
             for (int i = 0; i < names.length; i++)
             {
-                UPnPStateVariable var = action.getStateVariable(names[i]);
-                Class javaType = var.getJavaDataType();
-                Constructor constructor = javaType.getConstructor(new Class[] { String.class });
-                Object argObj = constructor.newInstance(new Object[] { vals[i] });
+                final UPnPStateVariable var = action.getStateVariable(names[i]);
+                final String upnpType = var.getUPnPDataType();
+                final Object argObj;
+                if (UPnPStateVariable.TYPE_STRING.equals(upnpType)) {
+                    argObj = vals[i];
+                } else if (UPnPStateVariable.TYPE_CHAR.equals(upnpType)) {
+                    argObj = new Character(vals[i].charAt(0));
+                } else if (UPnPStateVariable.TYPE_BIN_BASE64.equals(upnpType)) {
+                    argObj = Base64.decodeBase64(vals[i]); 
+                } else if (UPnPStateVariable.TYPE_BIN_HEX.equals(upnpType)) {
+                    argObj = Hex.decode(vals[i]);
+                } else {
+                    Class javaType = var.getJavaDataType();
+                    Constructor constructor = javaType.getConstructor(new Class[] { String.class });
+                    argObj = constructor.newInstance(new Object[] { vals[i] });
+                }
 
                 inputArgs.put(names[i], argObj);
             }
@@ -375,10 +387,10 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                     value = hex((byte[]) value);
                 }
 
-                json.append("output", new JSONObject() //
-                .put("name", key)//
-                .put("type", var.getUPnPDataType()) //
-                .put("value", value));
+                json.append("output", new JSONObject() // //$NON-NLS-1$
+                    .put("name", key)// //$NON-NLS-1$
+                    .put("type", var.getUPnPDataType()) // //$NON-NLS-1$
+                    .put("value", value)); //$NON-NLS-1$
             }
         }
         return json;
@@ -387,7 +399,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     private static final String hex(byte[] data)
     {
         if (data == null)
-            return "null";
+            return "null"; //$NON-NLS-1$
         StringBuffer sb = new StringBuffer(data.length * 3);
         synchronized (sb)
         {
