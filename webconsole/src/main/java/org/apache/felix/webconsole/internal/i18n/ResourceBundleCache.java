@@ -98,7 +98,7 @@ class ResourceBundleCache
 
     private ResourceBundle loadResourceBundle( final ResourceBundle parent, final Locale locale )
     {
-        final String path = "_" + locale.toString();
+        final String path = "_" + locale.toString(); //$NON-NLS-1$
         final URL source = ( URL ) getResourceBundleEntries().get( path );
         return new ConsolePropertyResourceBundle( parent, source );
     }
@@ -115,7 +115,7 @@ class ResourceBundleCache
             }
 
             // remove leading slash
-            if ( file.startsWith( "/" ) )
+            if ( file.startsWith( "/" ) ) //$NON-NLS-1$
             {
                 file = file.substring( 1 );
             }
@@ -123,11 +123,11 @@ class ResourceBundleCache
             // split path and base name
             int slash = file.lastIndexOf( '/' );
             String fileName = file.substring( slash + 1 );
-            String path = ( slash <= 0 ) ? "/" : file.substring( 0, slash );
+            String path = ( slash <= 0 ) ? "/" : file.substring( 0, slash ); //$NON-NLS-1$
 
             HashMap resourceBundleEntries = new HashMap();
 
-            Enumeration locales = bundle.findEntries( path, fileName + "*.properties", false );
+            Enumeration locales = bundle.findEntries( path, fileName + "*.properties", false ); //$NON-NLS-1$
             if ( locales != null )
             {
                 while ( locales.hasMoreElements() )
@@ -143,7 +143,7 @@ class ResourceBundleCache
                     // the default language is "name.properties" thus the entry
                     // path is empty and must default to "_"+DEFAULT_LOCALE
                     if (entryPath.length() == 0) {
-                        entryPath = "_" + DEFAULT_LOCALE;
+                        entryPath = "_" + DEFAULT_LOCALE; //$NON-NLS-1$
                     }
 
                     // only add this entry, if the "language" is not provided
