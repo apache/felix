@@ -95,7 +95,7 @@ public class DefaultBrandingPlugin implements BrandingPlugin
      * The name of the bundle entry providing branding properties for this
      * default branding plugin (value is "/META-INF/webconsole.properties").
      */
-    private static final String BRANDING_PROPERTIES = "/META-INF/webconsole.properties";
+    private static final String BRANDING_PROPERTIES = "/META-INF/webconsole.properties"; //$NON-NLS-1$
 
     private static DefaultBrandingPlugin instance;
 
@@ -140,15 +140,15 @@ public class DefaultBrandingPlugin implements BrandingPlugin
         }
 
         // set the fields from the properties now
-        brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" );
-        productName = props.getProperty( "webconsole.product.name", "Apache Felix" );
-        productURL = props.getProperty( "webconsole.product.url", "http://felix.apache.org" );
-        productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" );
-        vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" );
-        vendorURL = props.getProperty( "webconsole.vendor.url", "http://www.apache.org" );
-        vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" );
-        favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" );
-        mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" );
+        brandName = props.getProperty( "webconsole.brand.name", "Apache Felix Web Console" ); //$NON-NLS-1$
+        productName = props.getProperty( "webconsole.product.name", "Apache Felix" ); //$NON-NLS-1$
+        productURL = props.getProperty( "webconsole.product.url", "http://felix.apache.org" ); //$NON-NLS-1$
+        productImage = props.getProperty( "webconsole.product.image", "/res/imgs/logo.png" ); //$NON-NLS-1$
+        vendorName = props.getProperty( "webconsole.vendor.name", "The Apache Software Foundation" ); //$NON-NLS-1$
+        vendorURL = props.getProperty( "webconsole.vendor.url", "http://www.apache.org" ); //$NON-NLS-1$
+        vendorImage = props.getProperty( "webconsole.vendor.image", "/res/imgs/logo.png" ); //$NON-NLS-1$
+        favIcon = props.getProperty( "webconsole.favicon", "/res/imgs/favicon.ico" ); //$NON-NLS-1$
+        mainStyleSheet = props.getProperty( "webconsole.stylesheet", "/res/ui/webconsole.css" ); //$NON-NLS-1$
     }
 
 

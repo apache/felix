@@ -83,8 +83,9 @@ public final class WebConsoleUtil
         }
 
         final DefaultVariableResolver resolver = new DefaultVariableResolver();
-        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) );
-        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) );
+        // FIXME: don't we need a constant for the values below?
+        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ); //$NON-NLS-1$
+        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) ); //$NON-NLS-1$
         setVariableResolver( request, resolver );
         return resolver;
     }
@@ -205,16 +206,16 @@ public final class WebConsoleUtil
                                 final HttpServletResponse response,
                                 String redirectUrl) throws IOException {
         // check for relative URL
-        if ( !redirectUrl.startsWith("/") ) {
+        if ( !redirectUrl.startsWith("/") ) { //$NON-NLS-1$
             String base = request.getContextPath() + request.getServletPath() + request.getPathInfo();
             int i = base.lastIndexOf('/');
             if (i > -1) {
                 base = base.substring(0, i);
             } else {
                 i = base.indexOf(':');
-                base = (i > -1) ? base.substring(i + 1, base.length()) : "";
+                base = (i > -1) ? base.substring(i + 1, base.length()) : ""; //$NON-NLS-1$
             }
-            if (!base.startsWith("/")) {
+            if (!base.startsWith("/")) { //$NON-NLS-1$
                 base = '/' + base;
             }
             redirectUrl = base + '/' + redirectUrl;
@@ -234,12 +235,12 @@ public final class WebConsoleUtil
      * @param response The response for which to set the cache prevention
      */
     public static final void setNoCache(final HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-cache");
-        response.addHeader("Cache-Control", "no-store");
-        response.addHeader("Cache-Control", "must-revalidate");
-        response.addHeader("Cache-Control", "max-age=0");
-        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT");
-        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Cache-Control", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.addHeader("Cache-Control", "no-store"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.addHeader("Cache-Control", "must-revalidate"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.addHeader("Cache-Control", "max-age=0"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.setHeader("Expires", "Thu, 01 Jan 1970 01:00:00 GMT"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.setHeader("Pragma", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -346,8 +347,8 @@ public final class WebConsoleUtil
      * because the platforms before 1.4 and most notably some OSGi Execution
      * Environments (such as Minimum EE) do not provide the newer method.
      *
-     * @param value
-     * @return
+     * @param value the value to decode
+     * @return the decoded string
      */
     public static String urlDecode( final String value )
     {
@@ -359,7 +360,7 @@ public final class WebConsoleUtil
 
         try
         {
-            return URLDecoder.decode( value, "UTF-8" );
+            return URLDecoder.decode( value, "UTF-8" ); //$NON-NLS-1$
         }
         catch ( Throwable t )
         {
@@ -383,7 +384,7 @@ public final class WebConsoleUtil
     {
         if (value == null)
         {
-            return "n/a";
+            return "n/a"; //$NON-NLS-1$
         }
         else if (value.getClass().isArray())
         {
@@ -398,7 +399,7 @@ public final class WebConsoleUtil
                     if (element instanceof Byte)
                     {
                         // convert byte[] to hex string
-                        sb.append("0x");
+                        sb.append("0x"); //$NON-NLS-1$
                         final String x = Integer.toHexString(((Byte) element).intValue() & 0xff);
                         if (1 == x.length())
                         {
@@ -413,7 +414,7 @@ public final class WebConsoleUtil
 
                     if (i < len - 1)
                     {
-                        sb.append(", ");
+                        sb.append(", "); //$NON-NLS-1$
                     }
                 }
                 return sb.append(']').toString();
