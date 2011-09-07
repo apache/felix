@@ -47,7 +47,7 @@ public interface ConfigurationPrinter
      *
      * @since 3.0
      */
-    String MODE_ALWAYS = "always";
+    String MODE_ALWAYS = "always"; //$NON-NLS-1$
 
     /**
      * The web mode - this printer is used in the web console.
@@ -58,21 +58,21 @@ public interface ConfigurationPrinter
      *
      * @since 3.0
      */
-    String MODE_WEB = "web";
+    String MODE_WEB = "web"; //$NON-NLS-1$
 
     /**
      * The zip mode - this printer is used in the zip.
      *
      * @since 3.0
      */
-    String MODE_ZIP = "zip";
+    String MODE_ZIP = "zip"; //$NON-NLS-1$
 
     /**
      * The txt mode - this printer is used in the txt.
      *
      * @since 3.0
      */
-    String MODE_TXT = "txt";
+    String MODE_TXT = "txt"; //$NON-NLS-1$
 
     /**
      * The optional service property specifying the modes of the printer.
@@ -84,7 +84,7 @@ public interface ConfigurationPrinter
      * @since 3.0
      * @deprecated Use {@link WebConsoleConstants#CONFIG_PRINTER_MODES}
      */
-    String PROPERTY_MODES = "modes";
+    String PROPERTY_MODES = "modes"; //$NON-NLS-1$
 
     /**
      * Returns a human readable title string to be placed in front of the configuration

@@ -44,7 +44,7 @@ public interface WebConsoleSecurityProvider2 extends WebConsoleSecurityProvider
      * {@link WebConsoleSecurityProvider#authorize(Object, String)} to
      * authorize access for certain roles.
      */
-    String USER_ATTRIBUTE = "org.apache.felix.webconsole.user";
+    String USER_ATTRIBUTE = "org.apache.felix.webconsole.user"; //$NON-NLS-1$
 
 
     /**

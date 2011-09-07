@@ -18,6 +18,7 @@
  */
 package org.apache.felix.webconsole;
 
+
 /**
  * WebConsoleConstants provides some common constants that are used by plugin
  * developers.
@@ -29,7 +30,7 @@ public interface WebConsoleConstants
      * The name of the service to register as to be used as a "plugin" for
      * the OSGi Manager (value is "javax.servlet.Servlet").
      */
-    public static final String SERVICE_NAME = "javax.servlet.Servlet";
+    public static final String SERVICE_NAME = "javax.servlet.Servlet"; //$NON-NLS-1$
 
     /**
      * The URI address label under which the OSGi Manager plugin is called by
@@ -39,7 +40,7 @@ public interface WebConsoleConstants
      * String value. Otherwise the {@link #SERVICE_NAME Servlet} services will
      * be ignored by the Felix Web Console and not be used as a plugin.
      */
-    public static final String PLUGIN_LABEL = "felix.webconsole.label";
+    public static final String PLUGIN_LABEL = "felix.webconsole.label"; //$NON-NLS-1$
 
     /**
      * The title under which the OSGi Manager plugin is called by
@@ -58,7 +59,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String PLUGIN_TITLE = "felix.webconsole.title";
+    public static final String PLUGIN_TITLE = "felix.webconsole.title"; //$NON-NLS-1$
 
     /**
      * The property marking a service as a configuration printer.
@@ -68,23 +69,23 @@ public interface WebConsoleConstants
      * interfaces.
      *
      * If a service has a {@link #PLUGIN_LABEL}, {@link #PLUGIN_TITLE} and
-     * this property, it is treated as a configuration printer servce.
+     * this property, it is treated as a configuration printer service.
      *
      * @since 3.1.2; Web Console Bundle 3.1.4
      */
-    public static final String CONFIG_PRINTER_MODES = "felix.webconsole.configprinter.modes";
+    public static final String CONFIG_PRINTER_MODES = "felix.webconsole.configprinter.modes"; //$NON-NLS-1$
 
     /**
      * Name of the optional service registration property indicating that a
      * {@link ConfigurationPrinter} service will provide HTML output when used
      * in {@link ConfigurationPrinter#MODE_WEB web} mode. If this property is
      * set to <code>true</code> the configuration printer is expected to
-     * generate HTML output which will not be escaped. Otheriwse output in web
+     * generate HTML output which will not be escaped. Otherwise output in web
      * mode is escaped for plain text use.
      *
      * @since 3.1.2; Web Console Bundle 3.1.4
      */
-    public static final String CONFIG_PRINTER_WEB_UNESCAPED = "felix.webconsole.configprinter.web.unescaped";
+    public static final String CONFIG_PRINTER_WEB_UNESCAPED = "felix.webconsole.configprinter.web.unescaped"; //$NON-NLS-1$
 
     /**
      * The name of the service registration properties providing references
@@ -103,7 +104,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String PLUGIN_CSS_REFERENCES = "felix.webconsole.css";
+    public static final String PLUGIN_CSS_REFERENCES = "felix.webconsole.css"; //$NON-NLS-1$
 
     /**
      * The name of the request attribute providing the absolute path of the
@@ -117,7 +118,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String ATTR_APP_ROOT = "felix.webconsole.appRoot";
+    public static final String ATTR_APP_ROOT = "felix.webconsole.appRoot"; //$NON-NLS-1$
 
     /**
      * The name of the request attribute providing the absolute path of the
@@ -130,7 +131,7 @@ public interface WebConsoleConstants
      *
      * @since 1.2.12
      */
-    public static final String ATTR_PLUGIN_ROOT = "felix.webconsole.pluginRoot";
+    public static final String ATTR_PLUGIN_ROOT = "felix.webconsole.pluginRoot"; //$NON-NLS-1$
 
     /**
      * The name of the request attribute providing a mapping of labels to page
@@ -143,7 +144,7 @@ public interface WebConsoleConstants
      *
      * @since 2.0.0
      */
-    public static final String ATTR_LABEL_MAP = "felix.webconsole.labelMap";
+    public static final String ATTR_LABEL_MAP = "felix.webconsole.labelMap"; //$NON-NLS-1$
 
     /**
      * The name of the request attribute holding the {@link VariableResolver}
@@ -154,16 +155,16 @@ public interface WebConsoleConstants
      * @see WebConsoleUtil#setVariableResolver(javax.servlet.ServletRequest, VariableResolver)
      * @since 3.0
      */
-    static final String ATTR_CONSOLE_VARIABLE_RESOLVER = "felix.webconsole.variable.resolver";
+    static final String ATTR_CONSOLE_VARIABLE_RESOLVER = "felix.webconsole.variable.resolver"; //$NON-NLS-1$
 
     /**
-     * The name of the request attribute holding the language {@link Map}
+     * The name of the request attribute holding the language {@link java.util.Map}
      * for the request (value is "felix.webconsole.langMap").
      *
      * This map contains the web console supported languages, which are automatically detected.
      * The keys of the map are the language codes, like "en", "en_US" .. and so-on.
      * The value for each key is the locale user-friendly name - exactly the same as
-     * returned by {@link Locale#getDisplayLanguage()}.
+     * returned by {@link java.util.Locale#getDisplayLanguage()}.
      *
      * The automatic detection of languages is very simple. It relies on having a
      * 'res/flags/[lang].gif' file in the bundle. So translators should not only provide
