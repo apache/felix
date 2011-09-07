@@ -16,7 +16,6 @@
  */
 package org.apache.felix.webconsole.internal.servlet;
 
-
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -41,7 +40,6 @@ import org.osgi.service.http.HttpService;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
-
 /**
  * The <code>OSGi Manager</code> is the actual Web Console Servlet which
  * is registered with the OSGi Http Service and which maintains registered
@@ -60,7 +58,8 @@ public class OsgiManager extends GenericServlet
      *
      * @deprecated use {@link WebConsoleConstants#ATTR_APP_ROOT} instead
      */
-    private static final String ATTR_APP_ROOT_OLD = OsgiManager.class.getName() + ".appRoot";
+    private static final String ATTR_APP_ROOT_OLD = OsgiManager.class.getName()
+        + ".appRoot";
 
     /**
      * Old name of the request attribute providing the mappings from label to
@@ -69,7 +68,8 @@ public class OsgiManager extends GenericServlet
      *
      * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP} instead
      */
-    private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName() + ".labelMap";
+    private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName()
+        + ".labelMap";
 
     /**
      * The name and value of a parameter which will prevent redirection to a
@@ -82,68 +82,66 @@ public class OsgiManager extends GenericServlet
      * The name of the cookie storing user-configured locale
      * See https://issues.apache.org/jira/browse/FELIX-2267
      */
-    private static final String COOKIE_LOCALE = "felix.webconsole.locale";
+    private static final String COOKIE_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
 
+    static final String PROP_MANAGER_ROOT = "manager.root"; //$NON-NLS-1$
 
-    static final String PROP_MANAGER_ROOT = "manager.root";
+    static final String PROP_DEFAULT_RENDER = "default.render"; //$NON-NLS-1$
 
-    static final String PROP_DEFAULT_RENDER = "default.render";
+    static final String PROP_REALM = "realm"; //$NON-NLS-1$
 
-    static final String PROP_REALM = "realm";
+    static final String PROP_USER_NAME = "username"; //$NON-NLS-1$
 
-    static final String PROP_USER_NAME = "username";
+    static final String PROP_PASSWORD = "password"; //$NON-NLS-1$
 
-    static final String PROP_PASSWORD = "password";
+    static final String PROP_ENABLED_PLUGINS = "plugins"; //$NON-NLS-1$
 
-    static final String PROP_ENABLED_PLUGINS = "plugins";
+    static final String PROP_LOG_LEVEL = "loglevel"; //$NON-NLS-1$
 
-    static final String PROP_LOG_LEVEL = "loglevel";
+    static final String PROP_LOCALE = "locale"; //$NON-NLS-1$
 
-    static final String PROP_LOCALE = "locale";
-
-    static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter";
+    static final String PROP_HTTP_SERVICE_SELECTOR = "http.service.filter"; //$NON-NLS-1$
 
     public static final int DEFAULT_LOG_LEVEL = LogService.LOG_WARNING;
 
     static final String DEFAULT_PAGE = BundlesServlet.NAME;
 
-    static final String DEFAULT_REALM = "OSGi Management Console";
+    static final String DEFAULT_REALM = "OSGi Management Console"; //$NON-NLS-1$
 
-    static final String DEFAULT_USER_NAME = "admin";
+    static final String DEFAULT_USER_NAME = "admin"; //$NON-NLS-1$
 
-    static final String DEFAULT_PASSWORD = "admin";
+    static final String DEFAULT_PASSWORD = "admin"; //$NON-NLS-1$
 
-    static final String DEFAULT_HTTP_SERVICE_SELECTOR = "";
+    static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
 
     /**
      * The default value for the {@link #PROP_MANAGER_ROOT} configuration
      * property (value is "/system/console").
      */
-    static final String DEFAULT_MANAGER_ROOT = "/system/console";
+    static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
 
-    static final String[] PLUGIN_CLASSES =
-        { "org.apache.felix.webconsole.internal.compendium.ComponentConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.compendium.ConfigurationAdminConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter",
-            "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter",
-            "org.apache.felix.webconsole.internal.misc.ThreadPrinter",
-        };
+    static final String[] PLUGIN_CLASSES = {
+            "org.apache.felix.webconsole.internal.compendium.ComponentConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.compendium.ConfigurationAdminConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.core.PermissionsConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.core.ServicesConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.misc.SystemPropertiesPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.misc.ThreadPrinter", }; //$NON-NLS-1$
 
     static final String[] PLUGIN_MAP = {
-        "org.apache.felix.webconsole.internal.compendium.ComponentsServlet", "components", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.compendium.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.deppack.DepPackServlet", "deppack", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.misc.ShellServlet", "shell", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.obr.BundleRepositoryRender", "obr", //$NON-NLS-1$ //$NON-NLS-2$
-        "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat",  //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.compendium.ComponentsServlet", "components", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.compendium.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.deppack.DepPackServlet", "deppack", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.misc.ShellServlet", "shell", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.obr.BundleRepositoryRender", "obr", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat", //$NON-NLS-1$ //$NON-NLS-2$
     };
 
     private BundleContext bundleContext;
@@ -183,14 +181,13 @@ public class OsgiManager extends GenericServlet
 
     private int logLevel = DEFAULT_LOG_LEVEL;
 
-
-    public OsgiManager( BundleContext bundleContext )
+    public OsgiManager(BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
-        this.holder = new PluginHolder( bundleContext );
+        this.holder = new PluginHolder(bundleContext);
 
         // new plugins setup
-        for (int i = 0; i < PLUGIN_MAP.length; i++ )
+        for (int i = 0; i < PLUGIN_MAP.length; i++)
         {
             final String pluginClassName = PLUGIN_MAP[i++];
             final String label = PLUGIN_MAP[i];
@@ -199,88 +196,90 @@ public class OsgiManager extends GenericServlet
 
         // setup the included plugins
         ClassLoader classLoader = getClass().getClassLoader();
-        for ( int i = 0; i < PLUGIN_CLASSES.length; i++ )
+        for (int i = 0; i < PLUGIN_CLASSES.length; i++)
         {
             String pluginClassName = PLUGIN_CLASSES[i];
 
             try
             {
-                Class pluginClass = classLoader.loadClass( pluginClassName );
+                Class pluginClass = classLoader.loadClass(pluginClassName);
                 Object plugin = pluginClass.newInstance();
 
-                if ( plugin instanceof OsgiManagerPlugin )
+                if (plugin instanceof OsgiManagerPlugin)
                 {
-                    ( ( OsgiManagerPlugin ) plugin ).activate( bundleContext );
-                    osgiManagerPlugins.add( plugin );
+                    ((OsgiManagerPlugin) plugin).activate(bundleContext);
+                    osgiManagerPlugins.add(plugin);
                 }
-                if ( plugin instanceof BrandingPlugin )
+                if (plugin instanceof BrandingPlugin)
                 {
-                    AbstractWebConsolePlugin.setBrandingPlugin( ( BrandingPlugin ) plugin );
+                    AbstractWebConsolePlugin.setBrandingPlugin((BrandingPlugin) plugin);
                 }
             }
-            catch ( NoClassDefFoundError ncdfe )
+            catch (NoClassDefFoundError ncdfe)
             {
                 String message = ncdfe.getMessage();
-                if ( message == null )
+                if (message == null)
                 {
                     // no message, construct it
                     message = "Class definition not found (NoClassDefFoundError)";
                 }
-                else if ( message.indexOf( ' ' ) < 0 )
+                else if (message.indexOf(' ') < 0)
                 {
                     // message is just a class name, try to be more descriptive
                     message = "Class " + message + " missing";
                 }
-                log( LogService.LOG_INFO, pluginClassName + " not enabled. Reason: " + message );
+                log(LogService.LOG_INFO, pluginClassName + " not enabled. Reason: "
+                    + message);
             }
-            catch ( Throwable t )
+            catch (Throwable t)
             {
-                log( LogService.LOG_INFO, "Failed to instantiate plugin " + pluginClassName + ". Reason: " + t );
+                log(LogService.LOG_INFO, "Failed to instantiate plugin "
+                    + pluginClassName + ". Reason: " + t);
             }
         }
 
         // the resource bundle manager
-        resourceBundleManager = new ResourceBundleManager( getBundleContext() );
+        resourceBundleManager = new ResourceBundleManager(getBundleContext());
 
         // start the configuration render, providing the resource bundle manager
-        ConfigurationRender cr = new ConfigurationRender( resourceBundleManager );
-        cr.activate( bundleContext );
-        osgiManagerPlugins.add( cr );
-        holder.addOsgiManagerPlugin( cr );
+        ConfigurationRender cr = new ConfigurationRender(resourceBundleManager);
+        cr.activate(bundleContext);
+        osgiManagerPlugins.add(cr);
+        holder.addOsgiManagerPlugin(cr);
 
         // start tracking external plugins after setting up our own plugins
         holder.open();
 
         // accept new console branding service
-        brandingTracker = new BrandingServiceTracker( this );
+        brandingTracker = new BrandingServiceTracker(this);
         brandingTracker.open();
 
         // add support for pluggable security
-        securityProviderTracker = new ServiceTracker( bundleContext, WebConsoleSecurityProvider.class.getName(), null );
+        securityProviderTracker = new ServiceTracker(bundleContext,
+            WebConsoleSecurityProvider.class.getName(), null);
         securityProviderTracker.open();
 
         // configure and start listening for configuration
-        updateConfiguration( null );
+        updateConfiguration(null);
 
         try
         {
-            this.configurationListener = ConfigurationListener2.create( this );
+            this.configurationListener = ConfigurationListener2.create(this);
         }
-        catch ( Throwable t2 )
+        catch (Throwable t2)
         {
             // might be caused by Metatype API not available
             // try without MetaTypeProvider
             try
             {
-                this.configurationListener = ConfigurationListener.create( this );
+                this.configurationListener = ConfigurationListener.create(this);
             }
-            catch ( Throwable t )
+            catch (Throwable t)
             {
                 // might be caused by CM API not available
             }
         }
     }
-
 
     public void dispose()
     {
@@ -288,45 +287,45 @@ public class OsgiManager extends GenericServlet
         holder.close();
 
         // dispose off the resource bundle manager
-        if ( resourceBundleManager != null )
+        if (resourceBundleManager != null)
         {
             resourceBundleManager.dispose();
             resourceBundleManager = null;
         }
 
         // stop listening for brandings
-        if ( brandingTracker != null )
+        if (brandingTracker != null)
         {
             brandingTracker.close();
             brandingTracker = null;
         }
 
         // deactivate any remaining plugins
-        for ( Iterator pi = osgiManagerPlugins.iterator(); pi.hasNext(); )
+        for (Iterator pi = osgiManagerPlugins.iterator(); pi.hasNext();)
         {
             Object plugin = pi.next();
-            ( ( OsgiManagerPlugin ) plugin ).deactivate();
+            ((OsgiManagerPlugin) plugin).deactivate();
         }
 
         // simply remove all operations, we should not be used anymore
         this.osgiManagerPlugins.clear();
 
         // now drop the HttpService and continue with further destroyals
-        if ( httpServiceTracker != null )
+        if (httpServiceTracker != null)
         {
             httpServiceTracker.close();
             httpServiceTracker = null;
         }
 
         // stop listening for configuration
-        if ( configurationListener != null )
+        if (configurationListener != null)
         {
             configurationListener.unregister();
             configurationListener = null;
         }
 
         // stop tracking security provider
-        if ( securityProviderTracker != null )
+        if (securityProviderTracker != null)
         {
             securityProviderTracker.close();
             securityProviderTracker = null;
@@ -334,7 +333,6 @@ public class OsgiManager extends GenericServlet
 
         this.bundleContext = null;
     }
-
 
     //---------- Servlet API
 
@@ -346,102 +344,102 @@ public class OsgiManager extends GenericServlet
         // base class initialization not needed, since the GenericServlet.init
         // is an empty method
 
-        holder.setServletContext( getServletContext() );
+        holder.setServletContext(getServletContext());
 
     }
-
 
     /**
      * @see javax.servlet.GenericServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
      */
-    public void service( final ServletRequest req, final ServletResponse res ) throws ServletException, IOException
+    public void service(final ServletRequest req, final ServletResponse res)
+        throws ServletException, IOException
     {
         // don't really expect to be called within a non-HTTP environment
-        service( ( HttpServletRequest ) req, ( HttpServletResponse ) res );
+        service((HttpServletRequest) req, (HttpServletResponse) res);
 
         // ensure response has been sent back and response is committed
         // (we are authorative for our URL space and no other servlet should interfere)
         res.flushBuffer();
     }
 
-
-    private void service( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
+    private void service(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException
     {
         // check whether we are not at .../{webManagerRoot}
         final String pathInfo = request.getPathInfo();
-        if ( pathInfo == null || pathInfo.equals( "/" ) )
+        if (pathInfo == null || pathInfo.equals("/")) //$NON-NLS-1$
         {
             String path = request.getRequestURI();
-            if ( !path.endsWith( "/" ) )
+            if (!path.endsWith("/")) //$NON-NLS-1$
             {
-                path = path.concat( "/" );
+                path = path.concat("/"); //$NON-NLS-1$
             }
-            path = path.concat( holder.getDefaultPluginLabel() );
-            response.sendRedirect( path );
+            path = path.concat(holder.getDefaultPluginLabel());
+            response.sendRedirect(path);
             return;
         }
 
-        int slash = pathInfo.indexOf( "/", 1 );
-        if ( slash < 2 )
+        int slash = pathInfo.indexOf("/", 1);
+        if (slash < 2)
         {
             slash = pathInfo.length();
         }
 
-        final Locale locale = getConfiguredLocale( request );
-        final String label = pathInfo.substring( 1, slash );
-        AbstractWebConsolePlugin plugin = getConsolePlugin( label );
-        if ( plugin != null )
+        final Locale locale = getConfiguredLocale(request);
+        final String label = pathInfo.substring(1, slash);
+        AbstractWebConsolePlugin plugin = getConsolePlugin(label);
+        if (plugin != null)
         {
-            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale );
+            final Map labelMap = holder.getLocalizedLabelMap(resourceBundleManager,
+                locale);
 
             // the official request attributes
-            request.setAttribute( WebConsoleConstants.ATTR_LANG_MAP, getLangMap() );
-            request.setAttribute( WebConsoleConstants.ATTR_LABEL_MAP, labelMap );
-            request.setAttribute( WebConsoleConstants.ATTR_APP_ROOT, request.getContextPath() + request.getServletPath() );
-            request.setAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT, request.getContextPath() + request.getServletPath()
-                + '/' + label );
+            request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
+            request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, labelMap);
+            request.setAttribute(WebConsoleConstants.ATTR_APP_ROOT,
+                request.getContextPath() + request.getServletPath());
+            request.setAttribute(WebConsoleConstants.ATTR_PLUGIN_ROOT,
+                request.getContextPath() + request.getServletPath() + '/' + label);
 
             // deprecated request attributes
-            request.setAttribute( ATTR_LABEL_MAP_OLD, labelMap );
-            request.setAttribute( ATTR_APP_ROOT_OLD, request.getContextPath() + request.getServletPath() );
+            request.setAttribute(ATTR_LABEL_MAP_OLD, labelMap);
+            request.setAttribute(ATTR_APP_ROOT_OLD,
+                request.getContextPath() + request.getServletPath());
 
             // wrap the response for localization and template variable replacement
-            request = wrapRequest( request, locale );
-            response = wrapResponse( request, response, plugin );
+            request = wrapRequest(request, locale);
+            response = wrapResponse(request, response, plugin);
 
-            plugin.service( request, response );
+            plugin.service(request, response);
         }
         else
         {
             final String body404 = MessageFormat.format(
                 resourceBundleManager.getResourceBundle(bundleContext.getBundle(), locale).getString(
-                    "404"), new Object[] {
-                    request.getContextPath() + request.getServletPath() + '/' + BundlesServlet.NAME
-                });
-            response.setCharacterEncoding( "utf-8" );
-            response.setContentType( "text/html" );
-            response.setStatus( HttpServletResponse.SC_NOT_FOUND );
-            response.getWriter().println( body404 );
+                    "404"), //$NON-NLS-1$
+                new Object[] { request.getContextPath() + request.getServletPath() + '/'
+                    + BundlesServlet.NAME });
+            response.setCharacterEncoding("utf-8"); //$NON-NLS-1$
+            response.setContentType("text/html"); //$NON-NLS-1$
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().println(body404);
         }
     }
 
-
-    private final AbstractWebConsolePlugin getConsolePlugin( final String label )
+    private final AbstractWebConsolePlugin getConsolePlugin(final String label)
     {
         // backwards compatibility for the former "install" action which is
         // used by the Maven Sling Plugin
-        if ( "install".equals( label ) )
+        if ("install".equals(label)) //$NON-NLS-1$
         {
-            return holder.getPlugin( BundlesServlet.NAME );
+            return holder.getPlugin(BundlesServlet.NAME);
         }
 
-        return holder.getPlugin( label );
+        return holder.getPlugin(label);
     }
 
-
     // See https://issues.apache.org/jira/browse/FELIX-2267
-    private final Locale getConfiguredLocale( HttpServletRequest request )
+    private final Locale getConfiguredLocale(HttpServletRequest request)
     {
         Locale locale = null;
 
@@ -473,9 +471,8 @@ public class OsgiManager extends GenericServlet
         // base class destroy not needed, since the GenericServlet.destroy
         // is an empty method
 
-        holder.setServletContext( null );
+        holder.setServletContext(null);
     }
-
 
     //---------- internal
 
@@ -483,7 +480,6 @@ public class OsgiManager extends GenericServlet
     {
         return bundleContext;
     }
-
 
     /**
      * Returns the Service PID used to retrieve configuration and to describe
@@ -493,7 +489,6 @@ public class OsgiManager extends GenericServlet
     {
         return getClass().getName();
     }
-
 
     /**
      * Calls the <code>GenericServlet.log(String)</code> method if the
@@ -507,14 +502,13 @@ public class OsgiManager extends GenericServlet
      * @param level The log level at which to log the message
      * @param message The message to log
      */
-    void log( int level, String message )
+    void log(int level, String message)
     {
-        if ( logLevel >= level )
+        if (logLevel >= level)
         {
-            log( message );
+            log(message);
         }
     }
-
 
     /**
      * Calls the <code>GenericServlet.log(String, Throwable)</code> method if
@@ -530,16 +524,19 @@ public class OsgiManager extends GenericServlet
      * @param message The message to log
      * @param t The <code>Throwable</code> to log with the message
      */
-    void log( int level, String message, Throwable t )
+    void log(int level, String message, Throwable t)
     {
-        if ( logLevel >= level )
+        if (logLevel >= level)
         {
-            log( message, t );
+            log(message, t);
         }
     }
 
-    private HttpServletRequest wrapRequest( final HttpServletRequest request, final Locale locale ) {
-        return new HttpServletRequestWrapper( request ) {
+    private HttpServletRequest wrapRequest(final HttpServletRequest request,
+        final Locale locale)
+    {
+        return new HttpServletRequestWrapper(request)
+        {
             /**
              * @see javax.servlet.ServletRequestWrapper#getLocale()
              */
@@ -550,93 +547,90 @@ public class OsgiManager extends GenericServlet
         };
     }
 
-    private HttpServletResponse wrapResponse( final HttpServletRequest request, final HttpServletResponse response,
-        final AbstractWebConsolePlugin plugin )
+    private HttpServletResponse wrapResponse(final HttpServletRequest request,
+        final HttpServletResponse response, final AbstractWebConsolePlugin plugin)
     {
         final Locale locale = request.getLocale();
-        final ResourceBundle resourceBundle = resourceBundleManager.getResourceBundle( plugin.getBundle(), locale );
-        return new FilteringResponseWrapper( response, resourceBundle, request );
+        final ResourceBundle resourceBundle = resourceBundleManager.getResourceBundle(
+            plugin.getBundle(), locale);
+        return new FilteringResponseWrapper(response, resourceBundle, request);
     }
 
     private static class HttpServiceTracker extends ServiceTracker
     {
 
-        private static final String HTTP_SERVICE = "org.osgi.service.http.HttpService";
+        private static final String HTTP_SERVICE = "org.osgi.service.http.HttpService"; //$NON-NLS-1$
 
         private final OsgiManager osgiManager;
 
         private final String httpServiceSelector;
 
-
-        static HttpServiceTracker create( OsgiManager osgiManager, String httpServiceSelector )
+        static HttpServiceTracker create(OsgiManager osgiManager,
+            String httpServiceSelector)
         {
             // got a service selector filter
-            if ( httpServiceSelector != null && httpServiceSelector.length() > 0 )
+            if (httpServiceSelector != null && httpServiceSelector.length() > 0)
             {
                 try
                 {
-                    final String filterString = "(&(" + Constants.OBJECTCLASS + "=" + HTTP_SERVICE + ")("
-                        + httpServiceSelector + "))";
-                    Filter filter = osgiManager.getBundleContext().createFilter( filterString );
-                    return new HttpServiceTracker( osgiManager, httpServiceSelector, filter );
+                    final String filterString = "(&(" + Constants.OBJECTCLASS + "=" //$NON-NLS-1$ //$NON-NLS-2$
+                        + HTTP_SERVICE + ")(" + httpServiceSelector + "))"; //$NON-NLS-1$ //$NON-NLS-2$
+                    Filter filter = osgiManager.getBundleContext().createFilter(
+                        filterString);
+                    return new HttpServiceTracker(osgiManager, httpServiceSelector,
+                        filter);
                 }
-                catch ( InvalidSyntaxException ise )
+                catch (InvalidSyntaxException ise)
                 {
                     // TODO: log or throw or ignore ....
                 }
             }
 
             // no filter or illegal filter string
-            return new HttpServiceTracker( osgiManager );
+            return new HttpServiceTracker(osgiManager);
         }
 
-
-        private HttpServiceTracker( final OsgiManager osgiManager )
+        private HttpServiceTracker(final OsgiManager osgiManager)
         {
-            super( osgiManager.getBundleContext(), HTTP_SERVICE, null );
+            super(osgiManager.getBundleContext(), HTTP_SERVICE, null);
             this.osgiManager = osgiManager;
             this.httpServiceSelector = null;
         }
 
-
-        private HttpServiceTracker( final OsgiManager osgiManager, final String httpServiceSelector,
-            final Filter httpServiceFilter )
+        private HttpServiceTracker(final OsgiManager osgiManager, final String httpServiceSelector, final Filter httpServiceFilter)
         {
-            super( osgiManager.getBundleContext(), httpServiceFilter, null );
+            super(osgiManager.getBundleContext(), httpServiceFilter, null);
             this.osgiManager = osgiManager;
             this.httpServiceSelector = httpServiceSelector;
         }
 
-
-        boolean isSameSelector( final String newHttpServiceSelector )
+        boolean isSameSelector(final String newHttpServiceSelector)
         {
-            if ( newHttpServiceSelector != null )
+            if (newHttpServiceSelector != null)
             {
-                return newHttpServiceSelector.equals( httpServiceSelector );
+                return newHttpServiceSelector.equals(httpServiceSelector);
             }
             return httpServiceSelector == null;
         }
 
-
-        public Object addingService( ServiceReference reference )
+        public Object addingService(ServiceReference reference)
         {
-            Object service = super.addingService( reference );
-            if ( service instanceof HttpService )
+            Object service = super.addingService(reference);
+            if (service instanceof HttpService)
             {
-                osgiManager.bindHttpService( ( HttpService ) service );
+                osgiManager.bindHttpService((HttpService) service);
             }
             return service;
         }
 
-
-        public void removedService( ServiceReference reference, Object service )
+        public void removedService(ServiceReference reference, Object service)
         {
-            if ( service instanceof HttpService )
+            if (service instanceof HttpService)
             {
-                osgiManager.unbindHttpService( ( HttpService ) service );
+                osgiManager.unbindHttpService((HttpService) service);
             }
 
-            super.removedService( reference, service );
+            super.removedService(reference, service);
         }
     }
 
@@ -644,193 +638,177 @@ public class OsgiManager extends GenericServlet
     {
         private final OsgiManager osgiManager; // FIXME: never read locally
 
-
-        BrandingServiceTracker( OsgiManager osgiManager )
+        BrandingServiceTracker(OsgiManager osgiManager)
         {
-            super( osgiManager.getBundleContext(), BrandingPlugin.class.getName(), null );
+            super(osgiManager.getBundleContext(), BrandingPlugin.class.getName(), null);
             this.osgiManager = osgiManager;
         }
 
-
-        public Object addingService( ServiceReference reference )
+        public Object addingService(ServiceReference reference)
         {
-            Object plugin = super.addingService( reference );
-            if ( plugin instanceof BrandingPlugin )
+            Object plugin = super.addingService(reference);
+            if (plugin instanceof BrandingPlugin)
             {
-                AbstractWebConsolePlugin.setBrandingPlugin( ( BrandingPlugin ) plugin );
+                AbstractWebConsolePlugin.setBrandingPlugin((BrandingPlugin) plugin);
             }
             return plugin;
         }
 
-
-        public void removedService( ServiceReference reference, Object service )
+        public void removedService(ServiceReference reference, Object service)
         {
-            if ( service instanceof BrandingPlugin )
+            if (service instanceof BrandingPlugin)
             {
-                AbstractWebConsolePlugin.setBrandingPlugin( null );
+                AbstractWebConsolePlugin.setBrandingPlugin(null);
             }
-            super.removedService( reference, service );
+            super.removedService(reference, service);
         }
 
     }
 
-    protected synchronized void bindHttpService( HttpService httpService )
+    protected synchronized void bindHttpService(HttpService httpService)
     {
         // do not bind service, when we are already bound
-        if ( this.httpService != null )
+        if (this.httpService != null)
         {
-            log( LogService.LOG_DEBUG, "bindHttpService: Already bound to an HTTP Service, ignoring further services" );
+            log(LogService.LOG_DEBUG,
+                "bindHttpService: Already bound to an HTTP Service, ignoring further services");
             return;
         }
 
         Dictionary config = getConfiguration();
 
         // get authentication details
-        String realm = this.getProperty( config, PROP_REALM, DEFAULT_REALM );
-        String userId = this.getProperty( config, PROP_USER_NAME, DEFAULT_USER_NAME );
-        String password = this.getProperty( config, PROP_PASSWORD, DEFAULT_PASSWORD );
+        String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
+        String userId = ConfigurationUtil.getProperty(config, PROP_USER_NAME, DEFAULT_USER_NAME);
+        String password = ConfigurationUtil.getProperty(config, PROP_PASSWORD, DEFAULT_PASSWORD);
 
         // register the servlet and resources
         try
         {
-            HttpContext httpContext = new OsgiManagerHttpContext( httpService, securityProviderTracker, userId,
-                password, realm );
+            HttpContext httpContext = new OsgiManagerHttpContext(httpService,
+                securityProviderTracker, userId, password, realm);
 
-            Dictionary servletConfig = toStringConfig( config );
+            Dictionary servletConfig = toStringConfig(config);
 
             // register this servlet and take note of this
-            httpService.registerServlet( this.webManagerRoot, this, servletConfig, httpContext );
+            httpService.registerServlet(this.webManagerRoot, this, servletConfig,
+                httpContext);
             httpServletRegistered = true;
 
             // register resources and take of this
-            httpService.registerResources( this.webManagerRoot + "/res", "/res", httpContext );
+            httpService.registerResources(this.webManagerRoot + "/res", "/res",
+                httpContext);
             httpResourcesRegistered = true;
 
         }
-        catch ( Exception e )
+        catch (Exception e)
         {
-            log( LogService.LOG_ERROR, "bindHttpService: Problem setting up", e );
+            log(LogService.LOG_ERROR, "bindHttpService: Problem setting up", e);
         }
 
         this.httpService = httpService;
     }
 
-
-    protected synchronized void unbindHttpService( HttpService httpService )
+    protected synchronized void unbindHttpService(HttpService httpService)
     {
-        if ( this.httpService != httpService )
+        if (this.httpService != httpService)
         {
-            log( LogService.LOG_DEBUG,
-                "unbindHttpService: Ignoring unbind of an HttpService to which we are not registered" );
+            log(LogService.LOG_DEBUG,
+                "unbindHttpService: Ignoring unbind of an HttpService to which we are not registered");
             return;
         }
 
         // drop the service reference
         this.httpService = null;
 
-        if ( httpResourcesRegistered )
+        if (httpResourcesRegistered)
         {
             try
             {
-                httpService.unregister( this.webManagerRoot + "/res" );
+                httpService.unregister(this.webManagerRoot + "/res");
             }
-            catch ( Throwable t )
+            catch (Throwable t)
             {
-                log( LogService.LOG_WARNING, "unbindHttpService: Failed unregistering Resources", t );
+                log(LogService.LOG_WARNING,
+                    "unbindHttpService: Failed unregistering Resources", t);
             }
             httpResourcesRegistered = false;
         }
 
-        if ( httpServletRegistered )
+        if (httpServletRegistered)
         {
             try
             {
-                httpService.unregister( this.webManagerRoot );
+                httpService.unregister(this.webManagerRoot);
             }
-            catch ( Throwable t )
+            catch (Throwable t)
             {
-                log( LogService.LOG_WARNING, "unbindHttpService: Failed unregistering Servlet", t );
+                log(LogService.LOG_WARNING,
+                    "unbindHttpService: Failed unregistering Servlet", t);
             }
             httpServletRegistered = false;
         }
     }
-
 
     private Dictionary getConfiguration()
     {
         return configuration;
     }
 
-
-    synchronized void updateConfiguration( Dictionary config )
+    synchronized void updateConfiguration(Dictionary config)
     {
-        if ( config == null )
+        if (config == null)
         {
             config = new Hashtable();
         }
 
         configuration = config;
 
-        final Object locale = config.get( PROP_LOCALE );
+        final Object locale = config.get(PROP_LOCALE);
         configuredLocale = locale == null || locale.toString().trim().length() == 0 //
-            ? null : Util.parseLocaleString( locale.toString().trim() );
+        ? null : Util.parseLocaleString(locale.toString().trim());
 
-        logLevel = getProperty( config, PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL );
-        AbstractWebConsolePlugin.setLogLevel( logLevel );
+        logLevel = ConfigurationUtil.getProperty(config, PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL);
+        AbstractWebConsolePlugin.setLogLevel(logLevel);
 
         // default plugin page configuration
-        holder.setDefaultPluginLabel( getProperty( config, PROP_DEFAULT_RENDER, DEFAULT_PAGE ) );
+        holder.setDefaultPluginLabel(ConfigurationUtil.getProperty(config, PROP_DEFAULT_RENDER, DEFAULT_PAGE));
 
         // get the web manager root path
-        String newWebManagerRoot = this.getProperty( config, PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT );
-        if ( !newWebManagerRoot.startsWith( "/" ) )
+        String newWebManagerRoot = ConfigurationUtil.getProperty(config, PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT);
+        if (!newWebManagerRoot.startsWith("/")) //$NON-NLS-1$
         {
-            newWebManagerRoot = "/" + newWebManagerRoot;
+            newWebManagerRoot = "/" + newWebManagerRoot; //$NON-NLS-1$
         }
 
         // get the HTTP Service selector (and dispose tracker for later
         // recreation)
-        final String newHttpServiceSelector = getProperty( config, PROP_HTTP_SERVICE_SELECTOR,
-            DEFAULT_HTTP_SERVICE_SELECTOR );
-        if ( httpServiceTracker != null && !httpServiceTracker.isSameSelector( newHttpServiceSelector ) )
+        final String newHttpServiceSelector = ConfigurationUtil.getProperty(config,
+            PROP_HTTP_SERVICE_SELECTOR, DEFAULT_HTTP_SERVICE_SELECTOR);
+        if (httpServiceTracker != null
+            && !httpServiceTracker.isSameSelector(newHttpServiceSelector))
         {
             httpServiceTracker.close();
             httpServiceTracker = null;
         }
 
         // get enabled plugins
-        Object pluginValue = config.get( PROP_ENABLED_PLUGINS );
-        if ( pluginValue == null )
-        {
-            enabledPlugins = null;
-        }
-        else if ( pluginValue.getClass().isArray() )
-        {
-            final Object[] names = ( Object[] ) pluginValue;
-            enabledPlugins = new HashSet();
-            for ( int i = 0; i < names.length; i++ )
-            {
-                enabledPlugins.add( String.valueOf( names[i] ) );
-            }
-        }
-        else if ( pluginValue instanceof Collection )
-        {
-            enabledPlugins = new HashSet();
-            enabledPlugins.addAll( ( Collection ) pluginValue );
-        }
+        String[] plugins = ConfigurationUtil.getStringArrayProperty(config, PROP_ENABLED_PLUGINS);
+        enabledPlugins = null == plugins ? null : new HashSet(Arrays.asList(plugins));
+        initInternalPlugins();
 
-        // might update http service registration
+        // might update HTTP service registration
         HttpService httpService = this.httpService;
-        if ( httpService != null )
+        if (httpService != null)
         {
             // unbind old location first
-            unbindHttpService( httpService );
+            unbindHttpService(httpService);
 
             // switch location
             this.webManagerRoot = newWebManagerRoot;
 
             // bind new location now
-            bindHttpService( httpService );
+            bindHttpService(httpService);
         }
         else
         {
@@ -839,76 +817,37 @@ public class OsgiManager extends GenericServlet
         }
 
         // create or recreate the HTTP service tracker with the new selector
-        if ( httpServiceTracker == null )
+        if (httpServiceTracker == null)
         {
-            httpServiceTracker = HttpServiceTracker.create( this, newHttpServiceSelector );
+            httpServiceTracker = HttpServiceTracker.create(this, newHttpServiceSelector);
             httpServiceTracker.open();
         }
     }
 
-
-    /**
-     * Returns the named property from the configuration. If the property does
-     * not exist, the default value <code>def</code> is returned.
-     *
-     * @param config The properties from which to returned the named one
-     * @param name The name of the property to return
-     * @param def The default value if the named property does not exist
-     * @return The value of the named property as a string or <code>def</code>
-     *         if the property does not exist
-     */
-    private String getProperty( Dictionary config, String name, String def )
+    private void initInternalPlugins()
     {
-        Object value = config.get( name );
-        if ( value instanceof String )
+        for (int i = 0; i < PLUGIN_MAP.length; i++)
         {
-            return ( String ) value;
-        }
-
-        if ( value == null )
-        {
-            return def;
-        }
-
-        return String.valueOf( value );
-    }
-
-
-    /**
-     * Returns the named property from the configuration. If the property does
-     * not exist, the default value <code>def</code> is returned.
-     *
-     * @param config The properties from which to returned the named one
-     * @param name The name of the property to return
-     * @param def The default value if the named property does not exist
-     * @return The value of the named property as a string or <code>def</code>
-     *         if the property does not exist
-     */
-    private int getProperty( Dictionary config, String name, int def )
-    {
-        Object value = config.get( name );
-        if ( value instanceof Number )
-        {
-            return ( ( Number ) value ).intValue();
-        }
-
-        // try to convert the value to a number
-        if ( value != null )
-        {
-            try
+            final String pluginClassName = PLUGIN_MAP[i++];
+            final String label = PLUGIN_MAP[i];
+            boolean active = holder.getPlugin(label) != null;
+            boolean disabled = isPluginDisabled(pluginClassName);
+            if (disabled)
             {
-                return Integer.parseInt( value.toString() );
+                if (active)
+                {
+                    holder.removeOsgiManagerPlugin(label);
+                }
             }
-            catch ( NumberFormatException nfe )
+            else
             {
-                // don't care
+                if (!active)
+                {
+                    holder.addInternalPlugin(this, pluginClassName, label);
+                }
             }
         }
-
-        // not a number, not convertible, not set, use default
-        return def;
     }
-
 
     /**
      * Returns <code>true</code> if the list of enabled plugins is
@@ -916,19 +855,18 @@ public class OsgiManager extends GenericServlet
      * <p>
      * This method is intended to be used only for {@link InternalPlugin#isEnabled()}
      */
-    boolean isPluginDisabled( String pluginClass )
+    boolean isPluginDisabled(String pluginClass)
     {
-        return enabledPlugins != null && !enabledPlugins.contains( pluginClass );
+        return enabledPlugins != null && !enabledPlugins.contains(pluginClass);
     }
 
-
-    private Dictionary toStringConfig( Dictionary config )
+    private Dictionary toStringConfig(Dictionary config)
     {
         Dictionary stringConfig = new Hashtable();
-        for ( Enumeration ke = config.keys(); ke.hasMoreElements(); )
+        for (Enumeration ke = config.keys(); ke.hasMoreElements();)
         {
             Object key = ke.nextElement();
-            stringConfig.put( key.toString(), String.valueOf( config.get( key ) ) );
+            stringConfig.put(key.toString(), String.valueOf(config.get(key)));
         }
         return stringConfig;
     }
@@ -937,10 +875,11 @@ public class OsgiManager extends GenericServlet
 
     private final Map getLangMap()
     {
-        if (null != langMap) return langMap;
+        if (null != langMap)
+            return langMap;
         final Map map = new HashMap();
         final Bundle bundle = bundleContext.getBundle();
-        final Enumeration e = bundle.findEntries("res/flags", null, false);
+        final Enumeration e = bundle.findEntries("res/flags", null, false); //$NON-NLS-1$
         while (e != null && e.hasMoreElements())
         {
             final URL img = (URL) e.nextElement();
