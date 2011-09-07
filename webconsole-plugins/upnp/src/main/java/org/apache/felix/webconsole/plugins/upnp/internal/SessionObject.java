@@ -111,8 +111,8 @@ final class SessionObject implements HttpSessionBindingListener, UPnPEventListen
             try
             {
                 regProps.put(UPnPEventListener.UPNP_FILTER, bc.createFilter(//
-                "(&(" + UPnPDevice.UDN + '=' + udn + ")(" + //
-                    UPnPService.ID + '=' + urn + "))"));
+                "(&(" + UPnPDevice.UDN + '=' + udn + ")(" + //$NON-NLS-1$ //$NON-NLS-2$
+                    UPnPService.ID + '=' + urn + "))")); //$NON-NLS-1$
             }
             catch (InvalidSyntaxException e)
             { /* will not happen */
@@ -156,8 +156,11 @@ final class SessionObject implements HttpSessionBindingListener, UPnPEventListen
     public final String toString()
     {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("SessionObject [sessionID=").append(sessionID).append(", udn=").append(
-            udn).append(", urn=").append(urn).append(", vars=").append(vars).append("]");
+        buffer.append("SessionObject [sessionID=").append(sessionID) //$NON-NLS-1$
+            .append(", udn=").append(udn) //$NON-NLS-1$
+            .append(", urn=").append(urn) //$NON-NLS-1$
+            .append(", vars=").append(vars) //$NON-NLS-1$
+            .append(']');
         return buffer.toString();
     }
 
