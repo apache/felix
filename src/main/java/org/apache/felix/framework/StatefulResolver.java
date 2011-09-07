@@ -152,90 +152,9 @@ class StatefulResolver
                 }
             }
 
-            // Get resolver hook factories.
+            // Prepare resolver hooks, if any.
             Set<ServiceReference<ResolverHookFactory>> hookRefs =
-                m_felix.getHooks(ResolverHookFactory.class);
-            if (!hookRefs.isEmpty())
-            {
-                // Create triggers list.
-                Set<BundleRevision> triggers;
-                if (!mandatoryRevisions.isEmpty() && !optionalRevisions.isEmpty())
-                {
-                    triggers = new HashSet<BundleRevision>(mandatoryRevisions);
-                    triggers.addAll(optionalRevisions);
-                }
-                else
-                {
-                    triggers = (mandatoryRevisions.isEmpty())
-                        ? optionalRevisions : mandatoryRevisions;
-                }
-                triggers = Collections.unmodifiableSet(triggers);
-
-                // Create resolver hook objects by calling begin() on factory.
-                for (ServiceReference<ResolverHookFactory> ref : hookRefs)
-                {
-                    try
-                    {
-                        ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
-                        if (rhf != null)
-                        {
-                            ResolverHook hook =
-                                Felix.m_secureAction
-                                    .invokeResolverHookFactory(rhf, triggers);
-                            if (hook != null)
-                            {
-                                m_hooks.add(hook);
-                            }
-                        }
-                    }
-                    catch (Throwable ex)
-                    {
-                        throw new BundleException(
-                            "Resolver hook exception: " + ex.getMessage(),
-                            BundleException.REJECTED_BY_HOOK,
-                            ex);
-                    }
-                }
-
-                // Ask hooks to indicate which revisions should not be resolved.
-                m_whitelist =
-                    new ShrinkableCollection<BundleRevision>(
-                        m_resolverState.getUnresolvedRevisions());
-                int originalSize = m_whitelist.size();
-                for (ResolverHook hook : m_hooks)
-                {
-                    try
-                    {
-                        Felix.m_secureAction
-                            .invokeResolverHookResolvable(hook, m_whitelist);
-                    }
-                    catch (Throwable ex)
-                    {
-                        throw new BundleException(
-                            "Resolver hook exception: " + ex.getMessage(),
-                            BundleException.REJECTED_BY_HOOK,
-                            ex);
-                    }
-                }
-                // If nothing was removed, then just null the whitelist
-                // as an optimization.
-                if (m_whitelist.size() == originalSize)
-                {
-                    m_whitelist = null;
-                }
-
-                // Check to make sure the target revision is allowed to resolve.
-                if (m_whitelist != null)
-                {
-                    mandatoryRevisions.retainAll(m_whitelist);
-                    optionalRevisions.retainAll(m_whitelist);
-                    if (mandatoryRevisions.isEmpty() && optionalRevisions.isEmpty())
-                    {
-                        throw new ResolveException(
-                            "Resolver hook prevented resolution.", null, null);
-                    }
-                }
-            }
+                prepareResolverHooks(mandatoryRevisions, optionalRevisions);
 
             // Catch any resolve exception to rethrow later because
             // we may need to call end() on resolver hooks.
@@ -254,44 +173,8 @@ class StatefulResolver
                 rethrow = ex;
             }
 
-            // If we have resolver hooks, we must call end() on them.
-            if (!hookRefs.isEmpty())
-            {
-                // Verify that all resolver hook service references are still valid
-                // Call end() on resolver hooks.
-                for (ResolverHook hook : m_hooks)
-                {
-// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
-//       to their svc ref since we aren't supposed to call end() on unregistered
-//       but currently we call end() on all.
-                    try
-                    {
-                        Felix.m_secureAction.invokeResolverHookEnd(hook);
-                    }
-                    catch (Throwable th)
-                    {
-                        m_logger.log(
-                            Logger.LOG_WARNING, "Resolver hook exception.", th);
-                    }
-                }
-                // Verify that all hook service references are still valid
-                // and unget all resolver hook factories.
-                boolean invalid = false;
-                for (ServiceReference<ResolverHookFactory> ref : hookRefs)
-                {
-                    if (ref.getBundle() == null)
-                    {
-                        invalid = true;
-                    }
-                    m_felix.ungetService(m_felix, ref);
-                }
-                if (invalid)
-                {
-                    throw new BundleException(
-                        "Resolver hook service unregistered during resolve.",
-                        BundleException.REJECTED_BY_HOOK);
-                }
-            }
+            // Release resolver hooks, if any.
+            releaseResolverHooks(hookRefs);
 
             // If the resolve failed, rethrow the exception.
             if (rethrow != null)
@@ -357,73 +240,10 @@ class StatefulResolver
                     .getImportedPackageSource(pkgName);
                 if (provider == null)
                 {
-                    // Get resolver hook factories.
+                    // Prepare resolver hooks, if any.
                     Set<ServiceReference<ResolverHookFactory>> hookRefs =
-                        m_felix.getHooks(ResolverHookFactory.class);
-                    if (!hookRefs.isEmpty())
-                    {
-                        // Create triggers list.
-                        List<BundleRevision> triggers = new ArrayList<BundleRevision>(1);
-                        triggers.add(revision);
-                        triggers = Collections.unmodifiableList(triggers);
-
-                        // Create resolver hook objects by calling begin() on factory.
-                        for (ServiceReference<ResolverHookFactory> ref : hookRefs)
-                        {
-                            try
-                            {
-                                ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
-                                if (rhf != null)
-                                {
-                                    ResolverHook hook =
-                                        Felix.m_secureAction
-                                            .invokeResolverHookFactory(rhf, triggers);
-                                    if (hook != null)
-                                    {
-                                        m_hooks.add(hook);
-                                    }
-                                }
-                            }
-                            catch (Throwable ex)
-                            {
-                                throw new BundleException(
-                                    "Resolver hook exception: " + ex.getMessage(),
-                                    BundleException.REJECTED_BY_HOOK,
-                                    ex);
-                            }
-                        }
-
-                        // Ask hooks to indicate which revisions should not be resolved.
-                        m_whitelist =
-                            new ShrinkableCollection<BundleRevision>(
-                                m_resolverState.getUnresolvedRevisions());
-                        int originalSize = m_whitelist.size();
-                        for (ResolverHook hook : m_hooks)
-                        {
-                            try
-                            {
-                                Felix.m_secureAction
-                                    .invokeResolverHookResolvable(hook, m_whitelist);
-                            }
-                            catch (Throwable ex)
-                            {
-                                throw new BundleException(
-                                    "Resolver hook exception: " + ex.getMessage(),
-                                    BundleException.REJECTED_BY_HOOK,
-                                    ex);
-                            }
-                        }
-                        // If nothing was removed, then just null the whitelist
-                        // as an optimization.
-                        if (m_whitelist.size() == originalSize)
-                        {
-                            m_whitelist = null;
-                        }
-
-                        // Since this is a dynamic import, the root revision is
-                        // already resolved, so we don't need to check it against
-                        // the whitelist as we do in other cases.
-                    }
+                        prepareResolverHooks(
+                            Collections.singleton(revision), Collections.EMPTY_SET);
 
                     // Catch any resolve exception to rethrow later because
                     // we may need to call end() on resolver hooks.
@@ -439,44 +259,8 @@ class StatefulResolver
                         rethrow = ex;
                     }
 
-                    // If we have resolver hooks, we must call end() on them.
-                    if (!hookRefs.isEmpty())
-                    {
-                        // Verify that all resolver hook service references are still valid
-                        // Call end() on resolver hooks.
-                        for (ResolverHook hook : m_hooks)
-                        {
-// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
-//       to their svc ref since we aren't supposed to call end() on unregistered
-//       but currently we call end() on all.
-                            try
-                            {
-                                Felix.m_secureAction.invokeResolverHookEnd(hook);
-                            }
-                            catch (Throwable th)
-                            {
-                                m_logger.log(
-                                    Logger.LOG_WARNING, "Resolver hook exception.", th);
-                            }
-                        }
-                        // Verify that all hook service references are still valid
-                        // and unget all resolver hook factories.
-                        boolean invalid = false;
-                        for (ServiceReference<ResolverHookFactory> ref : hookRefs)
-                        {
-                            if (ref.getBundle() == null)
-                            {
-                                invalid = true;
-                            }
-                            m_felix.ungetService(m_felix, ref);
-                        }
-                        if (invalid)
-                        {
-                            throw new BundleException(
-                                "Resolver hook service unregistered during resolve.",
-                                BundleException.REJECTED_BY_HOOK);
-                        }
-                    }
+                    // Release resolver hooks, if any.
+                    releaseResolverHooks(hookRefs);
 
                     // If the resolve failed, rethrow the exception.
                     if (rethrow != null)
@@ -531,6 +315,153 @@ class StatefulResolver
         }
 
         return provider;
+    }
+
+    private Set<ServiceReference<ResolverHookFactory>> prepareResolverHooks(
+        Set<BundleRevision> mandatory, Set<BundleRevision> optional)
+        throws BundleException
+    {
+        // Get resolver hook factories.
+        Set<ServiceReference<ResolverHookFactory>> hookRefs =
+            m_felix.getHooks(ResolverHookFactory.class);
+        if (!hookRefs.isEmpty())
+        {
+            // Create triggers list.
+            Set<BundleRevision> triggers;
+            if (!mandatory.isEmpty() && !optional.isEmpty())
+            {
+                triggers = new HashSet<BundleRevision>(mandatory);
+                triggers.addAll(optional);
+            }
+            else
+            {
+                triggers = (mandatory.isEmpty())
+                    ? optional : mandatory;
+            }
+            triggers = Collections.unmodifiableSet(triggers);
+
+            // Create resolver hook objects by calling begin() on factory.
+            for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+            {
+                try
+                {
+                    ResolverHookFactory rhf = m_felix.getService(m_felix, ref);
+                    if (rhf != null)
+                    {
+                        ResolverHook hook =
+                            Felix.m_secureAction
+                                .invokeResolverHookFactory(rhf, triggers);
+                        if (hook != null)
+                        {
+                            m_hooks.add(hook);
+                        }
+                    }
+                }
+                catch (Throwable ex)
+                {
+                    throw new BundleException(
+                        "Resolver hook exception: " + ex.getMessage(),
+                        BundleException.REJECTED_BY_HOOK,
+                        ex);
+                }
+            }
+
+            // Ask hooks to indicate which revisions should not be resolved.
+            m_whitelist =
+                new ShrinkableCollection<BundleRevision>(
+                    m_resolverState.getUnresolvedRevisions());
+            int originalSize = m_whitelist.size();
+            for (ResolverHook hook : m_hooks)
+            {
+                try
+                {
+                    Felix.m_secureAction
+                        .invokeResolverHookResolvable(hook, m_whitelist);
+                }
+                catch (Throwable ex)
+                {
+                    throw new BundleException(
+                        "Resolver hook exception: " + ex.getMessage(),
+                        BundleException.REJECTED_BY_HOOK,
+                        ex);
+                }
+            }
+            // If nothing was removed, then just null the whitelist
+            // as an optimization.
+            if (m_whitelist.size() == originalSize)
+            {
+                m_whitelist = null;
+            }
+
+            // Check to make sure the target revisions are allowed to resolve.
+            if (m_whitelist != null)
+            {
+                // We only need to check this for the non-dynamic import
+                // case. The dynamic import case will only have one resolved
+                // trigger revision in the mandatory set, so ignore that case.
+                if (mandatory.isEmpty()
+                    || !optional.isEmpty()
+                    || (mandatory.iterator().next().getWiring() == null))
+                {
+                    mandatory.retainAll(m_whitelist);
+                    optional.retainAll(m_whitelist);
+                    if (mandatory.isEmpty() && optional.isEmpty())
+                    {
+                        throw new ResolveException(
+                            "Resolver hook prevented resolution.", null, null);
+                    }
+                }
+            }
+        }
+        else
+        {
+            m_hooks.clear();
+        }
+
+        return hookRefs;
+    }
+
+    private void releaseResolverHooks(Set<ServiceReference<ResolverHookFactory>> hookRefs)
+        throws BundleException
+    {
+        // If we have resolver hooks, we must call end() on them.
+        if (!hookRefs.isEmpty())
+        {
+            // Verify that all resolver hook service references are still valid
+            // Call end() on resolver hooks.
+            for (ResolverHook hook : m_hooks)
+            {
+// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
+//       to their svc ref since we aren't supposed to call end() on unregistered
+//       but currently we call end() on all.
+                try
+                {
+                    Felix.m_secureAction.invokeResolverHookEnd(hook);
+                }
+                catch (Throwable th)
+                {
+                    m_logger.log(
+                        Logger.LOG_WARNING, "Resolver hook exception.", th);
+                }
+            }
+            // Verify that all hook service references are still valid
+            // and unget all resolver hook factories.
+            boolean invalid = false;
+            for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+            {
+                if (ref.getBundle() == null)
+                {
+                    invalid = true;
+                }
+                m_felix.ungetService(m_felix, ref);
+            }
+            if (invalid)
+            {
+                throw new BundleException(
+                    "Resolver hook service unregistered during resolve.",
+                    BundleException.REJECTED_BY_HOOK);
+            }
+        }
     }
 
     // This method duplicates a lot of logic from:
