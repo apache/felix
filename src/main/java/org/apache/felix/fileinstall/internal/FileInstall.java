@@ -267,6 +267,7 @@ public class FileInstall implements BundleActivator
         synchronized (listeners)
         {
             List l = new ArrayList(listeners.values());
+            Collections.reverse(l);
             l.add(bundleTransformer);
             return l;
         }
