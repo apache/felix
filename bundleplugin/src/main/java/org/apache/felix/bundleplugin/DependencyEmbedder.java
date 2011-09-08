@@ -47,6 +47,8 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     public static final String EMBED_STRIP_VERSION = "Embed-StripVersion";
     public static final String EMBED_TRANSITIVE = "Embed-Transitive";
 
+    public static final String EMBEDDED_ARTIFACTS = "Embedded-Artifacts";
+
     private static final String MAVEN_DEPENDENCIES = "{maven-dependencies}";
 
     private String m_embedDirectory;
@@ -84,6 +86,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     {
         StringBuffer includeResource = new StringBuffer();
         StringBuffer bundleClassPath = new StringBuffer();
+        StringBuffer embeddedArtifacts = new StringBuffer();
 
         m_inlinedPaths.clear();
         m_embeddedArtifacts.clear();
@@ -104,7 +107,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             }
             for ( Iterator i = m_embeddedArtifacts.iterator(); i.hasNext(); )
             {
-                embedDependency( ( Artifact ) i.next(), includeResource, bundleClassPath );
+                embedDependency( ( Artifact ) i.next(), includeResource, bundleClassPath, embeddedArtifacts );
             }
         }
 
@@ -119,6 +122,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
 
         appendDependencies( analyzer, Analyzer.INCLUDE_RESOURCE, includeResource.toString() );
         appendDependencies( analyzer, Analyzer.BUNDLE_CLASSPATH, bundleClassPath.toString() );
+        appendDependencies( analyzer, EMBEDDED_ARTIFACTS, embeddedArtifacts.toString() );
     }
 
 
@@ -168,7 +172,8 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
     }
 
 
-    private void embedDependency( Artifact dependency, StringBuffer includeResource, StringBuffer bundleClassPath )
+    private void embedDependency( Artifact dependency, StringBuffer includeResource, StringBuffer bundleClassPath,
+        StringBuffer embeddedArtifacts )
     {
         File sourceFile = dependency.getFile();
         if ( null != sourceFile && sourceFile.exists() )
@@ -184,23 +189,23 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
                 embedDirectory = new File( embedDirectory, dependency.getGroupId() ).getPath();
             }
 
-            File targetFile;
-            if ( Boolean.valueOf( m_embedStripVersion ).booleanValue() )
+            StringBuffer targetFileName = new StringBuffer();
+            targetFileName.append( dependency.getArtifactId() );
+            if ( false == Boolean.valueOf( m_embedStripVersion ).booleanValue() )
             {
-                String extension = dependency.getArtifactHandler().getExtension();
-                if ( extension != null )
+                targetFileName.append( '-' ).append( dependency.getVersion() );
+                if ( dependency.getClassifier() != null )
                 {
-                    targetFile = new File( embedDirectory, dependency.getArtifactId() + "." + extension );
-                }
-                else
-                {
-                    targetFile = new File( embedDirectory, dependency.getArtifactId() );
+                    targetFileName.append( '-' ).append( dependency.getClassifier() );
                 }
             }
-            else
+            String extension = dependency.getArtifactHandler().getExtension();
+            if ( extension != null )
             {
-                targetFile = new File( embedDirectory, sourceFile.getName() );
+                targetFileName.append( '.' ).append( extension );
             }
+
+            File targetFile = new File( embedDirectory, targetFileName.toString() );
 
             String targetFilePath = targetFile.getPath();
 
@@ -225,6 +230,20 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             }
 
             bundleClassPath.append( targetFilePath );
+
+            if ( embeddedArtifacts.length() > 0 )
+            {
+                embeddedArtifacts.append( ',' );
+            }
+
+            embeddedArtifacts.append( targetFilePath ).append( ';' );
+            embeddedArtifacts.append( "g=\"" ).append( dependency.getGroupId() ).append( '"' );
+            embeddedArtifacts.append( ";a=\"" ).append( dependency.getArtifactId() ).append( '"' );
+            embeddedArtifacts.append( ";v=\"" ).append( dependency.getBaseVersion() ).append( '"' );
+            if ( dependency.getClassifier() != null )
+            {
+                embeddedArtifacts.append( ";c=\"" ).append( dependency.getClassifier() ).append( '"' );
+            }
         }
     }
 
