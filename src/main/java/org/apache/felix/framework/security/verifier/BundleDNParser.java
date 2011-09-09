@@ -34,14 +34,14 @@ import java.util.WeakHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.security.util.BundleInputStream;
 import org.apache.felix.framework.security.util.TrustManager;
 /*
 import org.apache.felix.moduleloader.IContent;
 import org.apache.felix.moduleloader.IModule;
 */
-import org.apache.felix.framework.resolver.Content;
-import org.apache.felix.framework.resolver.Module;
+import org.apache.felix.framework.cache.Content;
 
 
 import org.osgi.framework.Bundle;
@@ -104,7 +104,7 @@ public final class BundleDNParser
         }
     }
 
-    public void checkDNChains(Module root, Content content, int signersType)
+    public void checkDNChains(BundleRevisionImpl root, Content content, int signersType)
         throws Exception
     {
         if (signersType == Bundle.SIGNERS_TRUSTED)
@@ -171,7 +171,7 @@ public final class BundleDNParser
         }
     }
 
-    public Map getDNChains(Module root, Content bundleRevision,
+    public Map getDNChains(BundleRevisionImpl root, Content bundleRevision,
         int signersType)
     {
         if (signersType == Bundle.SIGNERS_TRUSTED)

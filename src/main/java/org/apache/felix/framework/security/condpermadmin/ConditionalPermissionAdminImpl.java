@@ -18,6 +18,7 @@
  */
 package org.apache.felix.framework.security.condpermadmin;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -49,6 +50,7 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 
 import org.apache.felix.framework.BundleProtectionDomain;
+import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.security.permissionadmin.PermissionAdminImpl;
 import org.apache.felix.framework.security.util.Conditions;
 import org.apache.felix.framework.security.util.LocalPermissions;
@@ -63,11 +65,7 @@ import org.apache.felix.moduleloader.IModule;
 import org.apache.felix.moduleloader.IRequirement;
 import org.apache.felix.moduleloader.IWire;
 */
-import org.apache.felix.framework.capabilityset.Capability;
-import org.apache.felix.framework.capabilityset.Requirement;
-import org.apache.felix.framework.resolver.Content;
-import org.apache.felix.framework.resolver.Module;
-import org.apache.felix.framework.resolver.Wire;
+import org.apache.felix.framework.cache.Content;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -457,6 +455,21 @@ public final class ConditionalPermissionAdminImpl implements
         {
             return System.identityHashCode(this);
         }
+
+		public int compareTo(Bundle o) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		public <A> A adapt(Class<A> arg0) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public File getDataFile(String arg0) {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     private static class FakeCert extends X509Certificate
@@ -662,132 +675,7 @@ public final class ConditionalPermissionAdminImpl implements
                 {
                     return result.booleanValue();
                 }
-                if (eval(posts, new Module()
-                {
-
-                    public Bundle getBundle()
-                    {
-                        return fake;
-                    }
-
-                    public List<Capability> getCapabilities()
-                    {
-                        return null;
-                    }
-
-                    public Class getClassByDelegation(String arg0)
-                        throws ClassNotFoundException
-                    {
-                        return null;
-                    }
-
-                    public Content getContent()
-                    {
-                        return null;
-                    }
-
-                    public int getDeclaredActivationPolicy()
-                    {
-                        return 0;
-                    }
-
-                    public List<Requirement> getDynamicRequirements()
-                    {
-                        return null;
-                    }
-
-                    public URL getEntry(String arg0)
-                    {
-                        return null;
-                    }
-
-                    public Map getHeaders()
-                    {
-                        return null;
-                    }
-
-                    public String getId()
-                    {
-                        return null;
-                    }
-
-                    public InputStream getInputStream(int arg0, String arg1)
-                        throws IOException
-                    {
-                        return null;
-                    }
-
-                    public List<R4Library> getNativeLibraries()
-                    {
-                        return null;
-                    }
-
-                    public List<Requirement> getRequirements()
-                    {
-                        return null;
-                    }
-
-                    public URL getResourceByDelegation(String arg0)
-                    {
-                        return null;
-                    }
-
-                    public Enumeration getResourcesByDelegation(String arg0)
-                    {
-                        return null;
-                    }
-
-                    public Object getSecurityContext()
-                    {
-                        return null;
-                    }
-
-                    public String getSymbolicName()
-                    {
-                        return null;
-                    }
-
-                    public Version getVersion()
-                    {
-                        return null;
-                    }
-
-                    public List<Wire> getWires()
-                    {
-                        return null;
-                    }
-
-                    public boolean hasInputStream(int arg0, String arg1)
-                        throws IOException
-                    {
-                        return false;
-                    }
-
-                    public boolean isExtension()
-                    {
-                        return false;
-                    }
-
-                    public boolean isResolved()
-                    {
-                        return false;
-                    }
-
-                    public void setSecurityContext(Object arg0)
-                    {
-                    }
-
-                    public URL getLocalURL(int arg0, String arg1)
-                    {
-                        // TODO Auto-generated method stub
-                        return null;
-                    }
-
-                    public boolean isRemovalPending()
-                    {
-                        return false;
-                    }
-                }, permission, m_pai))
+                if (eval(posts, new BundleRevisionImpl(fake, Long.toString(fake.getBundleId())), permission, m_pai))
                 {
                     if (!posts.isEmpty())
                     {
@@ -940,7 +828,7 @@ public final class ConditionalPermissionAdminImpl implements
      * @return true in case the permission is granted or there are postponed
      *         tuples false if not. Again, see the spec for more explanations.
      */
-    public boolean hasPermission(Module module, Content content,
+    public boolean hasPermission(BundleRevisionImpl module, Content content,
         ProtectionDomain pd, Permission permission, boolean direct, Object admin)
     {
         // System.out.println(felixBundle + "-" + permission);
@@ -1043,7 +931,7 @@ public final class ConditionalPermissionAdminImpl implements
     // then we make sure their permissions imply the permission and add them
     // to the list of posts. Return true in case we pass or have posts
     // else falls and clear the posts first.
-    private boolean eval(List posts, Module module, Permission permission,
+    private boolean eval(List posts, BundleRevisionImpl module, Permission permission,
         Object admin)
     {
         List condPermInfos = null;

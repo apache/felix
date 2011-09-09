@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 //import org.apache.felix.moduleloader.IContent;
-import org.apache.felix.framework.resolver.Content;
+import org.apache.felix.framework.cache.Content;
 import org.osgi.framework.Bundle;
 import org.osgi.service.permissionadmin.PermissionInfo;
 

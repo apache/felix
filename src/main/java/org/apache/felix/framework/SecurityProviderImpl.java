@@ -27,9 +27,8 @@ import org.apache.felix.framework.security.permissionadmin.PermissionAdminImpl;
 import org.apache.felix.framework.security.util.TrustManager;
 import org.apache.felix.framework.security.verifier.BundleDNParser;
 import org.apache.felix.framework.util.SecureAction;
-//import org.apache.felix.moduleloader.IModule;
-import org.apache.felix.framework.resolver.Module;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.wiring.BundleRevision;
 
 /**
  * This class is the entry point to the security. It is used to determine
@@ -60,7 +59,7 @@ public final class SecurityProviderImpl implements SecurityProvider
      */
     public void checkBundle(Bundle bundle) throws Exception
     {
-        Module module = ((BundleImpl) bundle).getCurrentModule();
+        BundleRevisionImpl module = (BundleRevisionImpl) bundle.adapt(BundleRevision.class);
         m_parser.checkDNChains(module, module.getContent(),
             Bundle.SIGNERS_TRUSTED);
     }
@@ -70,7 +69,7 @@ public final class SecurityProviderImpl implements SecurityProvider
      */
     public Object getSignerMatcher(final Bundle bundle, int signersType)
     {
-        Module module = ((BundleImpl) bundle).getCurrentModule();
+        BundleRevisionImpl module = ((BundleRevisionImpl) bundle.adapt(BundleRevision.class));
         return m_parser.getDNChains(module, module.getContent(), signersType);
     }
 
@@ -85,7 +84,7 @@ public final class SecurityProviderImpl implements SecurityProvider
     {
         BundleProtectionDomain pd = (BundleProtectionDomain) bundleProtectionDomain;
         BundleImpl bundle = pd.getBundle();
-        Module module = pd.getModule();
+        BundleRevisionImpl module = (BundleRevisionImpl) pd.getRevision();
 
         if (bundle.getBundleId() == 0)
         {
@@ -98,7 +97,7 @@ public final class SecurityProviderImpl implements SecurityProvider
         if (m_pai != null)
         {
             result = m_pai.hasPermission(bundle._getLocation(), pd.getBundle(),
-                permission, m_cpai, pd, bundle.getCurrentModule().getContent());
+                permission, m_cpai, pd, module.getContent());
         }
 
         if (result != null)

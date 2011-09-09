@@ -32,7 +32,7 @@ import org.apache.felix.framework.security.util.Permissions;
 import org.apache.felix.framework.security.util.PropertiesCache;
 
 //import org.apache.felix.moduleloader.IContent;
-import org.apache.felix.framework.resolver.Content;
+import org.apache.felix.framework.cache.Content;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.permissionadmin.PermissionAdmin;

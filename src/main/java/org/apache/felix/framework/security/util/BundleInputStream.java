@@ -31,7 +31,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 //import org.apache.felix.moduleloader.IContent;
-import org.apache.felix.framework.resolver.Content;
+import org.apache.felix.framework.cache.Content;
 
 /**
  * This class makes a given content available as a inputstream with a jar
