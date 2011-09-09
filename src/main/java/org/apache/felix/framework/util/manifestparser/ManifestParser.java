@@ -19,7 +19,6 @@
 package org.apache.felix.framework.util.manifestparser;
 
 import java.util.*;
-import java.util.ArrayList;
 import java.util.Map.Entry;
 import org.apache.felix.framework.BundleRevisionImpl;
 
@@ -1538,7 +1537,7 @@ public class ManifestParser
     public static void main(String[] headers)
     {
         String header = headers[0];
-
+        
         if (header != null)
         {
             if (header.length() == 0)
@@ -1546,8 +1545,8 @@ public class ManifestParser
                 throw new IllegalArgumentException(
                     "A header cannot be an empty string.");
             }
-
             List<ParsedHeaderClause> clauses = parseStandardHeader(header);
+            
             for (ParsedHeaderClause clause : clauses)
             {
                 System.out.println("PATHS " + clause.m_paths);
@@ -1555,266 +1554,158 @@ public class ManifestParser
                 System.out.println("    ATTRS " + clause.m_attrs);
                 System.out.println("    TYPES " + clause.m_types);
             }
+            
         }
-
-//        return clauses;
     }
-
-    private static List<ParsedHeaderClause> parseStandardHeader(String header)
+    
+    private static final char EOF = (char) -1;
+    
+    private static char charAt(int pos, String headers, int length) 
+    {
+        if (pos >= length) 
+        {
+            return EOF;
+        }
+        return headers.charAt(pos);
+    }
+    
+    private static final int CLAUSE_START = 0;
+    private static final int PARAMETER_START = 1;
+    private static final int KEY = 2;
+    private static final int DIRECTIVE_OR_TYPEDATTRIBUTE = 4;
+    private static final int ARGUMENT = 8;
+    private static final int VALUE = 16;
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static List<ParsedHeaderClause> parseStandardHeader(String header) 
     {
         List<ParsedHeaderClause> clauses = new ArrayList<ParsedHeaderClause>();
-        if (header != null)
+        if (header == null) 
         {
-            int[] startIdx = new int[1];
-            startIdx[0] = 0;
-            for (int i = 0; i < header.length(); i++)
+            return clauses;
+        }
+        ParsedHeaderClause clause = null;
+        String key = null;
+        Map targetMap = null;
+        int state = CLAUSE_START;
+        int currentPosition = 0;
+        int startPosition = 0;
+        int length = header.length();
+        boolean quoted = false;
+        boolean escaped = false;
+        
+        char currentChar = EOF;
+        do  
+        {
+            currentChar = charAt(currentPosition, header, length);
+            switch (state) 
             {
-                clauses.add(parseClause(startIdx, header));
-                i = startIdx[0];
-            }
+                case CLAUSE_START:
+                    clause = new ParsedHeaderClause(
+                            new ArrayList<String>(),
+                            new HashMap<String, String>(),
+                            new HashMap<String, Object>(),
+                            new HashMap<String, String>());
+                    clauses.add(clause);
+                    state = PARAMETER_START;
+                case PARAMETER_START:
+                    startPosition = currentPosition;
+                    state = KEY;
+                case KEY:
+                    switch (currentChar) 
+                    {
+                        case ':':
+                        case '=': 
+                            key = header.substring(startPosition, currentPosition).trim();
+                            startPosition = currentPosition + 1;
+                            targetMap = clause.m_attrs;
+                            state = currentChar == ':' ? DIRECTIVE_OR_TYPEDATTRIBUTE : ARGUMENT;
+                            break;
+                        case EOF:
+                        case ',':
+                        case ';':
+                            clause.m_paths.add(header.substring(startPosition, currentPosition).trim());
+                            state = currentChar == ',' ? CLAUSE_START : PARAMETER_START;
+                            break;
+                        default:
+                            break;
+                    }
+                    currentPosition++;
+                    break;
+                case DIRECTIVE_OR_TYPEDATTRIBUTE:
+                    switch(currentChar) 
+                    {
+                        case '=':
+                            if (startPosition != currentPosition) 
+                            {
+                                clause.m_types.put(key, header.substring(startPosition, currentPosition).trim());
+                            }
+                            else 
+                            {
+                                targetMap = clause.m_dirs;
+                            }
+                            state = ARGUMENT;
+                            startPosition = currentPosition + 1;
+                            break;
+                        default:
+                            break;
+                    }
+                    currentPosition++;
+                    break;
+                case ARGUMENT:
+                    if (currentChar == '\"') 
+                    {
+                        quoted = true;
+                        currentPosition++;
+                    }
+                    else 
+                    {
+                        quoted = false;
+                    }
+                    state = VALUE;
+                    break;
+                case VALUE:
+                    escaped = currentChar == '\\';
+                    if (quoted && !escaped && currentChar == '\"') 
+                    {
+                        quoted = false;
+                    } 
+                    else if (!quoted)
+                    {
+                        String value = null;
+                        switch(currentChar) 
+                        {
+                            case EOF:
+                            case ';':
+                            case ',':
+                                value = header.substring(startPosition, currentPosition).trim();
+                                if (value.startsWith("\"") && value.endsWith("\"")) 
+                                {
+                                    value = value.substring(1, value.length() - 1);
+                                }
+                                if (targetMap.put(key, value) != null) 
+                                {
+                                    throw new IllegalArgumentException(
+                                            "Duplicate '" + key + "' in: " + header);
+                                }
+                                state = currentChar == ';' ? PARAMETER_START : CLAUSE_START;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    currentPosition++;
+                    break;
+                default:
+                    break;
+            }   
+        } while ( currentChar != EOF);
+        
+        if (state > PARAMETER_START) 
+        {
+            throw new IllegalArgumentException("Unable to parse header: " + header);
         }
         return clauses;
-    }
-
-    private static ParsedHeaderClause parseClause(int[] startIdx, String header)
-    {
-        ParsedHeaderClause clause = new ParsedHeaderClause(
-            new ArrayList<String>(),
-            new HashMap<String, String>(),
-            new HashMap<String, Object>(),
-            new HashMap<String, String>());
-        for (int i = startIdx[0]; i < header.length(); i++)
-        {
-            char c = header.charAt(i);
-            if ((c == ':') || (c == '='))
-            {
-                parseClauseParameters(startIdx, header, clause);
-                i = startIdx[0];
-                break;
-            }
-            else if ((c == ';') || (c == ',') || (i == (header.length() - 1)))
-            {
-                String path;
-                if (i == (header.length() - 1))
-                {
-                    path = header.substring(startIdx[0], header.length());
-                }
-                else
-                {
-                    path = header.substring(startIdx[0], i);
-                }
-                clause.m_paths.add(path.trim());
-                startIdx[0] = i + 1;
-                if (c == ',')
-                {
-                    break;
-                }
-            }
-        }
-        return clause;
-    }
-
-    private static void parseClauseParameters(
-        int[] startIdx, String header, ParsedHeaderClause clause)
-    {
-        for (int i = startIdx[0]; i < header.length(); i++)
-        {
-            char c = header.charAt(i);
-            if ((c == ':') && (header.charAt(i + 1) == '='))
-            {
-                parseClauseDirective(startIdx, header, clause);
-                i = startIdx[0];
-            }
-            else if ((c == ':') || (c == '='))
-            {
-                parseClauseAttribute(startIdx, header, clause);
-                i = startIdx[0];
-            }
-            else if (c == ',')
-            {
-                startIdx[0] = i + 1;
-                break;
-            }
-        }
-    }
-
-    private static void parseClauseDirective(
-        int[] startIdx, String header, ParsedHeaderClause clause)
-    {
-        String name = null;
-        String value = null;
-        boolean isQuoted = false;
-        boolean isEscaped = false;
-        for (int i = startIdx[0]; i < header.length(); i++)
-        {
-            char c = header.charAt(i);
-            if (!isEscaped && (c == '"'))
-            {
-                isQuoted = !isQuoted;
-            }
-
-            if (!isEscaped
-                && !isQuoted && (c == ':'))
-            {
-                name = header.substring(startIdx[0], i);
-                startIdx[0] = i + 2;
-            }
-            else if (!isEscaped
-                && !isQuoted && ((c == ';') || (c == ',') || (i == (header.length() - 1))))
-            {
-                if (i == (header.length() - 1))
-                {
-                    value = header.substring(startIdx[0], header.length());
-                }
-                else
-                {
-                    value = header.substring(startIdx[0], i);
-                }
-                if (c == ',')
-                {
-                    startIdx[0] = i - 1;
-                }
-                else
-                {
-                    startIdx[0] = i + 1;
-                }
-                break;
-            }
-
-            isEscaped = (c == '\\');
-        }
-
-        // Trim whitespace.
-        name = name.trim();
-        value = value.trim();
-
-        // Remove quotes, if value is quoted.
-        if (value.startsWith("\"") && value.endsWith("\""))
-        {
-            value = value.substring(1, value.length() - 1);
-        }
-
-        // Check for dupes.
-        if (clause.m_dirs.get(name) != null)
-        {
-            throw new IllegalArgumentException(
-                "Duplicate directive '" + name + "' in: " + header);
-        }
-
-        clause.m_dirs.put(name, value);
-    }
-
-    private static void parseClauseAttribute(
-        int[] startIdx, String header, ParsedHeaderClause clause)
-    {
-        String type = null;
-
-        String name = parseClauseAttributeName(startIdx, header);
-        char c = header.charAt(startIdx[0]);
-        startIdx[0]++;
-        if (c == ':')
-        {
-            type = parseClauseAttributeType(startIdx, header);
-        }
-
-        String value = parseClauseAttributeValue(startIdx, header);
-
-        // Trim whitespace.
-        name = name.trim();
-        value = value.trim();
-        if (type != null)
-        {
-            type = type.trim();
-        }
-
-        // Remove quotes, if value is quoted.
-        if (value.startsWith("\"") && value.endsWith("\""))
-        {
-            value = value.substring(1, value.length() - 1);
-        }
-
-        // Check for dupes.
-        if (clause.m_attrs.get(name) != null)
-        {
-            throw new IllegalArgumentException(
-                "Duplicate attribute '" + name + "' in: " + header);
-        }
-
-        clause.m_attrs.put(name, value);
-        if (type != null)
-        {
-            clause.m_types.put(name, type);
-        }
-    }
-
-    private static String parseClauseAttributeName(int[] startIdx, String header)
-    {
-        for (int i = startIdx[0]; i < header.length(); i++)
-        {
-            char c = header.charAt(i);
-            if ((c == '=') || (c == ':'))
-            {
-                String name = header.substring(startIdx[0], i);
-                startIdx[0] = i;
-                return name;
-            }
-        }
-        return null;
-    }
-
-    private static String parseClauseAttributeType(int[] startIdx, String header)
-    {
-        for (int i = startIdx[0]; i < header.length(); i++)
-        {
-            char c = header.charAt(i);
-            if (c == '=')
-            {
-                String type = header.substring(startIdx[0], i);
-                startIdx[0] = i + 1;
-                return type;
-            }
-        }
-        return null;
-    }
-
-    private static String parseClauseAttributeValue(int[] startIdx, String header)
-    {
-        boolean isQuoted = false;
-        boolean isEscaped = false;
-        for (int i = startIdx[0]; i < header.length(); i++)
-        {
-            char c = header.charAt(i);
-            if (!isEscaped && (c == '"'))
-            {
-                isQuoted = !isQuoted;
-            }
-
-            if (!isEscaped &&
-                !isQuoted && ((c == ';') || (c == ',') || (i == (header.length() - 1))))
-            {
-                String value;
-                if (i == (header.length() - 1))
-                {
-                    value = header.substring(startIdx[0], header.length());
-                }
-                else
-                {
-                    value = header.substring(startIdx[0], i);
-                }
-                if (c == ',')
-                {
-                    startIdx[0] = i - 1;
-                }
-                else
-                {
-                    startIdx[0] = i + 1;
-                }
-                return value;
-            }
-
-            isEscaped = (c == '\\');
-        }
-        return null;
     }
 
     public static List<String> parseDelimitedString(String value, String delim)
