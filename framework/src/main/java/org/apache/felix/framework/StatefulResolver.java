@@ -50,7 +50,6 @@ import org.osgi.framework.BundlePermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Version;
 import org.osgi.framework.hooks.resolver.ResolverHook;
 import org.osgi.framework.hooks.resolver.ResolverHookFactory;
 import org.osgi.framework.wiring.BundleCapability;
@@ -94,8 +93,8 @@ class StatefulResolver
     }
 
     void resolve(
-        Set<BundleRevision> mandatoryRevisions,
-        Set<BundleRevision> optionalRevisions)
+        Set<BundleRevision> mandatory,
+        Set<BundleRevision> optional)
         throws ResolveException, BundleException
     {
         // Acquire global lock.
@@ -119,13 +118,20 @@ class StatefulResolver
         try
         {
             // Make our own copy of revisions.
-            mandatoryRevisions = (mandatoryRevisions.isEmpty())
-                ? mandatoryRevisions : new HashSet<BundleRevision>(mandatoryRevisions);
-            optionalRevisions = (optionalRevisions.isEmpty())
-                ? optionalRevisions : new HashSet<BundleRevision>(optionalRevisions);
+            mandatory = (mandatory.isEmpty())
+                ? mandatory : new HashSet<BundleRevision>(mandatory);
+            optional = (optional.isEmpty())
+                ? optional : new HashSet<BundleRevision>(optional);
+
+            // Prepare resolver hooks, if any.
+            Set<ServiceReference<ResolverHookFactory>> hookRefs =
+                prepareResolverHooks(mandatory, optional);
+
+            // Select any singletons in the resolver state.
+            m_resolverState.selectSingletons();
 
             // Extensions are resolved differently.
-            for (Iterator<BundleRevision> it = mandatoryRevisions.iterator(); it.hasNext(); )
+            for (Iterator<BundleRevision> it = mandatory.iterator(); it.hasNext(); )
             {
                 BundleRevision br = it.next();
                 BundleImpl bundle = (BundleImpl) br.getBundle();
@@ -138,7 +144,7 @@ class StatefulResolver
                     throw new ResolveException("Singleton conflict.", br, null);
                 }
             }
-            for (Iterator<BundleRevision> it = optionalRevisions.iterator(); it.hasNext(); )
+            for (Iterator<BundleRevision> it = optional.iterator(); it.hasNext(); )
             {
                 BundleRevision br = it.next();
                 BundleImpl bundle = (BundleImpl) br.getBundle();
@@ -152,10 +158,6 @@ class StatefulResolver
                 }
             }
 
-            // Prepare resolver hooks, if any.
-            Set<ServiceReference<ResolverHookFactory>> hookRefs =
-                prepareResolverHooks(mandatoryRevisions, optionalRevisions);
-
             // Catch any resolve exception to rethrow later because
             // we may need to call end() on resolver hooks.
             ResolveException rethrow = null;
@@ -164,8 +166,8 @@ class StatefulResolver
                 // Resolve the revision.
                 wireMap = m_resolver.resolve(
                     m_resolverState,
-                    mandatoryRevisions,
-                    optionalRevisions,
+                    mandatory,
+                    optional,
                     m_resolverState.getFragments());
             }
             catch (ResolveException ex)
@@ -244,6 +246,9 @@ class StatefulResolver
                     Set<ServiceReference<ResolverHookFactory>> hookRefs =
                         prepareResolverHooks(
                             Collections.singleton(revision), Collections.EMPTY_SET);
+
+                    // Select any singletons in the resolver state.
+                    m_resolverState.selectSingletons();
 
                     // Catch any resolve exception to rethrow later because
                     // we may need to call end() on resolver hooks.
@@ -704,13 +709,10 @@ class StatefulResolver
                     m_felix.getDependencies().addDependent(bw);
                 }
 
-                // Update resolver state to remove substituted capabilities.
-                if (!Util.isFragment(revision))
-                {
-                    // Reindex the revision's capabilities since its resolved
-                    // capabilities could be different than its declared ones.
-                    m_resolverState.addRevision(revision);
-                }
+                // Reindex the revision's capabilities since its resolved
+                // capabilities could be different than its declared ones
+                // (e.g., due to substitutable exports).
+                m_resolverState.addRevision(revision);
 
                 // Update the state of the revision's bundle to resolved as well.
                 markBundleResolved(revision);
@@ -862,8 +864,8 @@ class StatefulResolver
         private final Map<String, CapabilitySet> m_capSets;
         // Maps singleton symbolic names to list of bundle revisions sorted by version.
         private final Map<String, List<BundleRevision>> m_singletons;
-        // Maps singleton symbolic names to selected bundle revision.
-        private final Map<String, BundleRevision> m_selectedSingleton;
+        // Selected singleton bundle revisions.
+        private final Set<BundleRevision> m_selectedSingletons;
         // Execution environment.
         private final String m_fwkExecEnvStr;
         // Parsed framework environments
@@ -885,7 +887,7 @@ class StatefulResolver
             m_fragments = new HashSet<BundleRevision>();
             m_capSets = new HashMap<String, CapabilitySet>();
             m_singletons = new HashMap<String, List<BundleRevision>>();
-            m_selectedSingleton = new HashMap<String, BundleRevision>();
+            m_selectedSingletons = new HashSet<BundleRevision>();
 
             m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
             m_fwkExecEnvSet = parseExecutionEnvironments(fwkExecEnvStr);
@@ -923,42 +925,15 @@ class StatefulResolver
             // after it has been resolved.
             removeRevision(br);
 
+            m_revisions.add(br);
+
             if (Util.isSingleton(br))
             {
                 // Index the new singleton.
-                indexSingleton(m_singletons, br);
-                // Get the currently selected singleton.
-                BundleRevision selected = m_selectedSingleton.get(br.getSymbolicName());
-                // Get the highest singleton version.
-                BundleRevision highest = m_singletons.get(br.getSymbolicName()).get(0);
-                // Select the highest version if not already selected or resolved.
-                if ((selected == null)
-                    || ((selected.getWiring() == null) && (selected != highest)))
-                {
-                    m_selectedSingleton.put(br.getSymbolicName(), highest);
-                    if (selected != null)
-                    {
-                        deindexCapabilities(selected);
-                        m_revisions.remove(selected);
-                        if (Util.isFragment(selected))
-                        {
-                            m_fragments.remove(selected);
-                        }
-                    }
-                    br = highest;
-                }
-                else if (selected != null)
-                {
-                    // Since the newly added singleton was not selected, null
-                    // it out so that it is ignored.
-                    br = null;
-                }
+                addToSingletonMap(m_singletons, br);
             }
-
-            // Add the revision and index its capabilities.
-            if (br != null)
+            else
             {
-                m_revisions.add(br);
                 if (Util.isFragment(br))
                 {
                     m_fragments.add(br);
@@ -969,9 +944,10 @@ class StatefulResolver
 
         private synchronized void indexCapabilities(BundleRevision br)
         {
-            List<BundleCapability> caps = (br.getWiring() == null)
-                ? br.getDeclaredCapabilities(null)
-                : br.getWiring().getCapabilities(null);
+            List<BundleCapability> caps =
+                (Util.isFragment(br) || (br.getWiring() == null))
+                    ? br.getDeclaredCapabilities(null)
+                    : br.getWiring().getCapabilities(null);
             if (caps != null)
             {
                 for (BundleCapability cap : caps)
@@ -1018,44 +994,18 @@ class StatefulResolver
         {
             if (m_revisions.remove(br))
             {
+                m_fragments.remove(br);
                 deindexCapabilities(br);
 
-                if (Util.isFragment(br))
-                {
-                    m_fragments.remove(br);
-                }
-
                 // If this module is a singleton, then remove it from the
-                // singleton map and potentially select a new singleton.
+                // singleton map.
                 List<BundleRevision> revisions = m_singletons.get(br.getSymbolicName());
                 if (revisions != null)
                 {
-                    BundleRevision selected = m_selectedSingleton.get(br.getSymbolicName());
                     revisions.remove(br);
                     if (revisions.isEmpty())
                     {
                         m_singletons.remove(br.getSymbolicName());
-                    }
-
-                    // If this was the selected singleton, then we have to
-                    // select another.
-                    if (selected == br)
-                    {
-                        if (!revisions.isEmpty())
-                        {
-                            selected = revisions.get(0);
-                            m_selectedSingleton.put(br.getSymbolicName(), selected);
-                            if (Util.isFragment(selected))
-                            {
-                                m_fragments.add(selected);
-                            }
-                            indexCapabilities(selected);
-                            m_revisions.add(selected);
-                        }
-                        else
-                        {
-                            m_selectedSingleton.remove(br.getSymbolicName());
-                        }
                     }
                 }
             }
@@ -1068,7 +1018,213 @@ class StatefulResolver
 
         synchronized boolean isSelectedSingleton(BundleRevision br)
         {
-            return (m_selectedSingleton.get(br.getSymbolicName()) == br);
+            return m_selectedSingletons.contains(br);
+        }
+
+        synchronized void selectSingletons()
+            throws BundleException
+        {
+            // First deindex any unresolved singletons to make sure
+            // there aren't any available from previous resolves.
+            // Also remove them from the fragment list, for the same
+            // reason.
+            m_selectedSingletons.clear();
+            for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
+            {
+                for (BundleRevision singleton : entry.getValue())
+                {
+                    if (singleton.getWiring() == null)
+                    {
+                        deindexCapabilities(singleton);
+                        m_fragments.remove(singleton);
+                    }
+                }
+            }
+
+            // If no resolver hooks, then use default singleton selection
+            // algorithm, otherwise defer to the resolver hooks.
+            if (m_hooks.isEmpty())
+            {
+                selectDefaultSingletons();
+            }
+            else
+            {
+                selectSingletonsUsingHooks();
+            }
+        }
+
+        /*
+         * Selects the singleton with the highest version from groupings
+         * based on the symbolic name. No selection is made if the group
+         * already has a resolved singleton.
+         */
+        private void selectDefaultSingletons()
+        {
+            // Now select the singletons available for this resolve operation.
+            for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
+            {
+                selectSingleton(entry.getValue());
+            }
+        }
+
+        /*
+         * Groups singletons based on resolver hook filtering and then selects
+         * the singleton from each group with the highest version that is in
+         * the resolver hook whitelist. No selection is made if a group already
+         * has a resolved singleton in it.
+         */
+        private void selectSingletonsUsingHooks()
+            throws BundleException
+        {
+            // Convert singleton bundle revision map into a map using
+            // bundle capabilities instead, since this is what the resolver
+            // hooks require.
+            Map<BundleCapability, Collection<BundleCapability>> allCollisions
+                = new HashMap<BundleCapability, Collection<BundleCapability>>();
+            for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
+            {
+                Collection<BundleCapability> bundleCaps =
+                    new ArrayList<BundleCapability>();
+                for (BundleRevision br : entry.getValue())
+                {
+                    List<BundleCapability> caps =
+                        br.getDeclaredCapabilities(BundleRevision.BUNDLE_NAMESPACE);
+                    if (!caps.isEmpty())
+                    {
+                        bundleCaps.add(caps.get(0));
+                    }
+                }
+
+                for (BundleCapability bc : bundleCaps)
+                {
+                    Collection<BundleCapability> capCopy =
+                        new ShrinkableCollection<BundleCapability>(
+                            new ArrayList<BundleCapability>(bundleCaps));
+                    capCopy.remove(bc);
+                    allCollisions.put(bc, capCopy);
+                }
+            }
+
+            // Invoke hooks to allow them to filter singleton collisions.
+            for (ResolverHook hook : m_hooks)
+            {
+                for (Entry<BundleCapability, Collection<BundleCapability>> entry
+                    : allCollisions.entrySet())
+                {
+                    try
+                    {
+                        Felix.m_secureAction
+                            .invokeResolverHookSingleton(hook, entry.getKey(), entry.getValue());
+                    }
+                    catch (Throwable ex)
+                    {
+                        throw new BundleException(
+                            "Resolver hook exception: " + ex.getMessage(),
+                            BundleException.REJECTED_BY_HOOK,
+                            ex);
+                    }
+                }
+            }
+
+            // Create groups according to how the resolver hooks filtered the
+            // collisions.
+            List<List<BundleRevision>> groups = new ArrayList<List<BundleRevision>>();
+            while (!allCollisions.isEmpty())
+            {
+                BundleCapability target = allCollisions.entrySet().iterator().next().getKey();
+                groups.add(groupSingletons(allCollisions, target, new ArrayList<BundleRevision>()));
+            }
+
+            // Now select the singletons available for this resolve operation.
+            for (List<BundleRevision> group : groups)
+            {
+                selectSingleton(group);
+            }
+        }
+
+        private List<BundleRevision> groupSingletons(
+            Map<BundleCapability, Collection<BundleCapability>> allCollisions,
+            BundleCapability target, List<BundleRevision> group)
+        {
+            if (!group.contains(target.getRevision()))
+            {
+                // Add the target since it is implicitly part of the group.
+                group.add(target.getRevision());
+
+                // Recursively add the revisions of any singleton's in the
+                // target's collisions.
+                Collection<BundleCapability> collisions = allCollisions.remove(target);
+                for (BundleCapability collision : collisions)
+                {
+                    groupSingletons(allCollisions, collision, group);
+                }
+
+                // Need to check the values of other collisions for this target
+                // and add those to the target's group too, since collisions are
+                // treated as two-way relationships. Repeat until there are no
+                // collision groups left that contain the target capability.
+                boolean repeat;
+                do
+                {
+                    repeat = false;
+                    for (Entry<BundleCapability, Collection<BundleCapability>> entry:
+                        allCollisions.entrySet())
+                    {
+                        if (entry.getValue().contains(target))
+                        {
+                            repeat = true;
+                            groupSingletons(allCollisions, entry.getKey(), group);
+                            break;
+                        }
+                    }
+                }
+                while (repeat);
+            }
+            return group;
+        }
+
+        /*
+         * Selects the highest bundle revision from the group that is
+         * in the resolver hook whitelist (if there are hooks). No
+         * selection is made if there is an already resolved singleton
+         * in the group, since it is already indexed.
+         */
+        private void selectSingleton(List<BundleRevision> singletons)
+        {
+            BundleRevision selected = null;
+            for (BundleRevision singleton : singletons)
+            {
+                // If a singleton is already resolved,
+                // then there is nothing to do.
+                if (singleton.getWiring() != null)
+                {
+                    selected = null;
+                    break;
+                }
+                // If this singleton is not in the whitelist, then it cannot
+                // be selected. If it is, in can only be selected if it has
+                // a higher version than the currently selected singleton, if
+                // there is one.
+                if (((m_whitelist == null) || m_whitelist.contains(singleton))
+                    && ((selected == null)
+                        || (selected.getVersion().compareTo(singleton.getVersion()) > 0)))
+                {
+                    selected = singleton;
+                }
+            }
+            if (selected != null)
+            {
+                // Record the selected singleton.
+                m_selectedSingletons.add(selected);
+                // Index its capabilities.
+                indexCapabilities(selected);
+                // If the selected singleton is a fragment, then
+                // add it to the list of fragments.
+                if (Util.isFragment(selected))
+                {
+                    m_fragments.add(selected);
+                }
+            }
         }
 
         //
@@ -1300,61 +1456,15 @@ class StatefulResolver
         return newSet;
     }
 
-    private static void indexSingleton(
+    private static void addToSingletonMap(
         Map<String, List<BundleRevision>> singletons, BundleRevision br)
     {
         List<BundleRevision> revisions = singletons.get(br.getSymbolicName());
-
-        // We want to add the fragment into the list of matching
-        // fragments in sorted order (descending version and
-        // ascending bundle identifier). Insert using a simple
-        // binary search algorithm.
         if (revisions == null)
         {
             revisions = new ArrayList<BundleRevision>();
-            revisions.add(br);
         }
-        else
-        {
-            Version version = br.getVersion();
-            int top = 0, bottom = revisions.size() - 1;
-            while (top <= bottom)
-            {
-                int middle = (bottom - top) / 2 + top;
-                Version middleVersion = revisions.get(middle).getVersion();
-                // Sort in reverse version order.
-                int cmp = middleVersion.compareTo(version);
-                if (cmp < 0)
-                {
-                    bottom = middle - 1;
-                }
-                else if (cmp == 0)
-                {
-                    // Sort further by ascending bundle ID.
-                    long middleId = revisions.get(middle).getBundle().getBundleId();
-                    long exportId = br.getBundle().getBundleId();
-                    if (middleId < exportId)
-                    {
-                        top = middle + 1;
-                    }
-                    else
-                    {
-                        bottom = middle - 1;
-                    }
-                }
-                else
-                {
-                    top = middle + 1;
-                }
-            }
-
-            // Ignore duplicates.
-            if ((top >= revisions.size()) || (revisions.get(top) != br))
-            {
-                revisions.add(top, br);
-            }
-        }
-
+        revisions.add(br);
         singletons.put(br.getSymbolicName(), revisions);
     }
 }
