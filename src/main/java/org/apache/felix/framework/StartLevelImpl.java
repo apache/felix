@@ -19,7 +19,6 @@
 package org.apache.felix.framework;
 
 
-import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
@@ -33,7 +32,7 @@ public class StartLevelImpl implements StartLevel
 {
     private final Felix m_felix;
 
-    public StartLevelImpl(Felix felix)
+    StartLevelImpl(Felix felix)
     {
         m_felix = felix;
     }

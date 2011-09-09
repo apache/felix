@@ -33,7 +33,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
 
 
-class PackageAdminImpl implements PackageAdmin
+public class PackageAdminImpl implements PackageAdmin
 {
     private static final Comparator COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2)
@@ -46,7 +46,7 @@ class PackageAdminImpl implements PackageAdmin
 
     private Felix m_felix = null;
 
-    public PackageAdminImpl(Felix felix)
+    PackageAdminImpl(Felix felix)
     {
         m_felix = felix;
     }
