@@ -1537,7 +1537,6 @@ public class ManifestParser
     public static void main(String[] headers)
     {
         String header = headers[0];
-        
         if (header != null)
         {
             if (header.length() == 0)
@@ -1662,10 +1661,25 @@ public class ManifestParser
                     {
                         quoted = false;
                     }
-                    state = VALUE;
+                    if (!Character.isWhitespace(currentChar)) {
+                    	state = VALUE;
+                    }
+                    else {
+                    	currentPosition++;
+                    }
                     break;
                 case VALUE:
-                    escaped = currentChar == '\\';
+                    if (currentChar == '\\' ) 
+                    {
+                        if (escaped) 
+                        {
+                            escaped = false;
+                        }
+                        else 
+                        {
+                            escaped = true;
+                        }
+                    }
                     if (quoted && !escaped && currentChar == '\"') 
                     {
                         quoted = false;
