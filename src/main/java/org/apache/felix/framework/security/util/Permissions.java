@@ -505,7 +505,7 @@ public final class Permissions
             {
                 inner = new HashMap();
                 m_permissionCache.put(encoded,
-                    new SoftReference(inner, m_queue));
+                    new SoftReference(inner));
             }
 
             inner.put(new Entry(permission.getClass()), new Entry(permission));
