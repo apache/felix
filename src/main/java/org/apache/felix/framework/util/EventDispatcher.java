@@ -188,6 +188,16 @@ public class EventDispatcher
         // Lock the object to add the listener.
         synchronized (this)
         {
+            // Verify that the bundle context is still valid.
+            try
+            {
+                bc.getBundle();
+            }
+            catch (IllegalStateException ex)
+            {
+                // Bundle context is no longer valid, so just return.
+            }
+
             Map<BundleContext, List<ListenerInfo>> listeners = null;
             Object acc = null;
 
@@ -384,6 +394,16 @@ public class EventDispatcher
         {
             synchronized (this)
             {
+                // Verify that the bundle context is still valid.
+                try
+                {
+                    bc.getBundle();
+                }
+                catch (IllegalStateException ex)
+                {
+                    // Bundle context is no longer valid, so just return.
+                }
+
                 // See if the service listener is already registered; if so then
                 // update its filter per the spec.
                 List<ListenerInfo> infos = m_svcListeners.get(bc);
