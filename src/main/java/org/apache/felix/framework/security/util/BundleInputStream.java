@@ -57,7 +57,11 @@ public final class BundleInputStream extends InputStream
         for (Enumeration e = m_root.getEntries(); e.hasMoreElements();)
         {
             String entry = (String) e.nextElement();
-            if (entry.equalsIgnoreCase("META-INF/MANIFEST.MF"))
+            if (entry.endsWith("/")) 
+            {
+                // ignore
+            } 
+            else if (entry.equalsIgnoreCase("META-INF/MANIFEST.MF"))
             {
                 if (manifest == null)
                 {
