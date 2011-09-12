@@ -40,8 +40,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.apache.felix.framework.cache.JarContent;
+
 import org.apache.felix.framework.cache.Content;
+import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.ResolveException;
 import org.apache.felix.framework.resolver.ResourceNotFoundException;
@@ -55,8 +56,10 @@ import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleReference;
+import org.osgi.framework.CapabilityPermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
@@ -339,6 +342,30 @@ public class BundleWiringImpl implements BundleWiring
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        if (System.getSecurityManager() != null)
+        {
+            for (Iterator<BundleCapability> iter = capList.iterator();iter.hasNext();)
+            {
+                BundleCapability cap = iter.next();
+                if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                {
+                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                        new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE), PackagePermission.EXPORTONLY)))
+                    {
+                        iter.remove();
+                    }
+                }
+                else if (!cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE) && !cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) && 
+                    !cap.getNamespace().equals("osgi.ee")) 
+                {
+                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                        new CapabilityPermission(cap.getNamespace(), CapabilityPermission.PROVIDE)))
+                    {
+                        iter.remove();
                     }
                 }
             }
@@ -1954,7 +1981,7 @@ public class BundleWiringImpl implements BundleWiring
                                 // we used to define the class.
                                 if (wci != null)
                                 {
-                                    bytes = wovenBytes = wci.getBytes();
+                                    bytes = wovenBytes = wci._getBytes();
                                     wovenImports = wci.getDynamicImportsInternal();
 
                                     // Try to add any woven dynamic imports, since they

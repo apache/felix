@@ -368,7 +368,7 @@ class BundleContextImpl implements FelixBundleContext
 
     public <S> ServiceReference<S> getServiceReference(Class<S> clazz)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (ServiceReference<S>) getServiceReference(clazz.getName());
     }
 
     private ServiceReference getBestServiceReference(ServiceReference[] refs)
