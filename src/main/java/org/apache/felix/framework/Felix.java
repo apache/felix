@@ -469,6 +469,7 @@ public class Felix extends BundleImpl implements Framework
     @Override
     public <A> A adapt(Class<A> type)
     {
+        checkAdapt(type);
         if ((type == FrameworkWiring.class)
             || (type == FrameworkWiringImpl.class))
         {

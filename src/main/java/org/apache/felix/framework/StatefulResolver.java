@@ -47,6 +47,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundlePermission;
+import org.osgi.framework.CapabilityPermission;
 import org.osgi.framework.Constants;
 import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
@@ -1272,47 +1273,10 @@ class StatefulResolver
                 Set<BundleCapability> matches = capSet.match(sf, obeyMandatory);
                 for (BundleCapability cap : matches)
                 {
-                    if (System.getSecurityManager() != null)
+                    if (filteredBySecurity(req, cap)) 
                     {
-                        if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE) && (
-                            !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                                new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                                PackagePermission.EXPORTONLY)) ||
-                                !((reqRevision == null) ||
-                                    ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                                        new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                                        cap.getRevision().getBundle(),PackagePermission.IMPORT))
-                                )))
-                        {
-                            if (reqRevision != cap.getRevision())
-                            {
-                                continue;
-                            }
-                        }
-                        else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) && (
-                            !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                                new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
-                                !((reqRevision == null) ||
-                                    ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                                        new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
-                                )))
-                        {
-                            continue;
-                        }
-                        else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE) &&
-                            (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
-                                .impliesDirect(new BundlePermission(
-                                    reqRevision.getSymbolicName(),
-                                    BundlePermission.FRAGMENT))
-                            || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
-                                .impliesDirect(new BundlePermission(
-                                    cap.getRevision().getSymbolicName(),
-                                    BundlePermission.HOST))))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
-
                     if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
                         && (cap.getRevision().getWiring() != null))
                     {
@@ -1358,6 +1322,68 @@ class StatefulResolver
             }
 
             return result;
+        }
+
+        private boolean filteredBySecurity(BundleRequirement req, BundleCapability cap) {
+            if (System.getSecurityManager() != null)
+            {
+                BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
+               
+                if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+                {
+                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                        new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                        PackagePermission.EXPORTONLY)) ||
+                        !((reqRevision == null) ||
+                            ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                                new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                                cap.getRevision().getBundle(),PackagePermission.IMPORT))
+                        ))
+                    {
+                        if (reqRevision != cap.getRevision())
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
+                {   if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                        new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
+                        !((reqRevision == null) ||
+                            ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                                new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
+                        ))
+                    {
+                        return true;
+                    }
+                }
+                else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)) 
+                { 
+                    if (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
+                        .impliesDirect(new BundlePermission(
+                            reqRevision.getSymbolicName(),
+                            BundlePermission.FRAGMENT))
+                    || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
+                        .impliesDirect(new BundlePermission(
+                            cap.getRevision().getSymbolicName(),
+                            BundlePermission.HOST)))
+                    {
+                        return true;
+                    }
+                } 
+                else  if (!req.getNamespace().equals("osgi.ee"))
+                {
+                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                        new CapabilityPermission(req.getNamespace(), CapabilityPermission.PROVIDE))
+                        || 
+                        !((reqRevision == null) || ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                        new CapabilityPermission(req.getNamespace(), cap.getAttributes(), cap.getRevision().getBundle(), CapabilityPermission.REQUIRE)))) 
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public void checkExecutionEnvironment(BundleRevision revision) throws ResolveException
@@ -1467,4 +1493,5 @@ class StatefulResolver
         revisions.add(br);
         singletons.put(br.getSymbolicName(), revisions);
     }
+
 }

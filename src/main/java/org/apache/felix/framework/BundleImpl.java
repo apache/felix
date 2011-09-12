@@ -27,8 +27,10 @@ import java.util.*;
 
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.ext.SecurityProvider;
+import org.apache.felix.framework.util.SecurityManagerEx;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
+import org.osgi.framework.AdaptPermission;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -46,7 +48,7 @@ import org.osgi.framework.wiring.BundleWiring;
 
 class BundleImpl implements Bundle, BundleRevisions
 {
-    // No one should use this field directlhttp://www.youtube.com/watch?v=zQwxwPDU4bwy, use getFramework() instead.
+    // No one should use this field directly, use getFramework() instead.
     private final Felix __m_felix;
 
     private final BundleArchive m_archive;
@@ -1009,9 +1011,26 @@ class BundleImpl implements Bundle, BundleRevisions
         // Uninstall the bundle.
         getFramework().uninstallBundle(this);
     }
-
+    private static final SecurityManagerEx m_smEx = new SecurityManagerEx();
+    private static final ClassLoader m_classloader = Felix.class.getClassLoader();
+    
+    <A> void checkAdapt(Class<A> type) 
+    {
+        Object sm = System.getSecurityManager();
+        if ((sm != null) && (getFramework().getSecurityProvider() != null))
+        {
+            Class caller = m_smEx.getClassContext()[3];
+            if (((Felix.m_secureAction.getClassLoader(caller) != m_classloader) ||
+                !caller.getName().startsWith("org.apache.felix.framework."))) 
+            {
+                ((SecurityManager) sm).checkPermission(
+                    new AdaptPermission(type.getName(), this, AdaptPermission.ADAPT));
+            }
+        }
+    }
     public synchronized <A> A adapt(Class<A> type)
     {
+        checkAdapt(type);
         if (type == BundleStartLevel.class)
         {
             return (A) getFramework().adapt(FrameworkStartLevelImpl.class)
