@@ -121,7 +121,6 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
 
     static final String[] PLUGIN_CLASSES = {
-            "org.apache.felix.webconsole.internal.compendium.ComponentConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.ConfigurationAdminConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter", //$NON-NLS-1$
@@ -132,15 +131,11 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.misc.ThreadPrinter", }; //$NON-NLS-1$
 
     static final String[] PLUGIN_MAP = {
-            "org.apache.felix.webconsole.internal.compendium.ComponentsServlet", "components", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.compendium.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.deppack.DepPackServlet", "deppack", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.misc.LicenseServlet", "licenses", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.misc.ShellServlet", "shell", //$NON-NLS-1$ //$NON-NLS-2$
-            "org.apache.felix.webconsole.internal.obr.BundleRepositoryRender", "obr", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.system.VMStatPlugin", "vmstat", //$NON-NLS-1$ //$NON-NLS-2$
     };
 

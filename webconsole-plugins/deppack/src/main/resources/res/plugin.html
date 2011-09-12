@@ -1,0 +1,55 @@
+﻿<script type="text/javascript" src="${pluginRoot}/res/plugin.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+var i18n = {
+	status_no_data : "${deppack.status.no_data}",
+	status_no_serv : "${deppack.status.no_service}",
+	status_ok      : "${deppack.status.ok}",
+	package_name   : "${deppack.package.name}",
+	version        : "${version}",
+	bundles        : "${deppack.bundles}",
+	uninstall      : "${deppack.uninstall}"
+}
+var packageListData = ${__data__};
+// ]]>
+</script>
+
+<p class="statline">&nbsp;</p>
+
+<div id="dps1"> <!-- will be hidden if no DP service available -->
+<!-- top header -->
+<form method="post" enctype="multipart/form-data" action="${pluginRoot}">
+	<div class="ui-widget-header ui-corner-top buttonGroup" style="text-align: right">
+		<input name="action"  type="hidden" value="deploydp" />
+		<input name="pckfile" type="file" size="50" />
+		<input type="submit" value="${deppack.install_update}" />
+	</div>
+</form>
+
+<div id="dps2"> <!-- will be hidden if no data available -->
+	<table id="plugin_table" class="nicetable">
+	<thead>
+		<tr>
+			<th>${id}</th>
+			<th style="width:100%">${deppack.details}</th>
+			<th>${version}</th>
+			<th colspan="1">${deppack.actions}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td colspan="5">&nbsp;</td>
+		</tr>
+	</tbody>
+	</table>
+
+	<!-- bottom header -->
+	<form method="post" enctype="multipart/form-data" action="${pluginRoot}">
+		<div class="ui-widget-header ui-corner-bottom buttonGroup" style="text-align: right">
+			<input name="action"  type="hidden" value="deploydp" />
+			<input name="pckfile" type="file" size="50" />
+			<input type="submit" value="${deppack.install_update}" />
+		</div>
+	</form>
+</div><!--dps2-->
+</div><!--dps1-->
