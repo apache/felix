@@ -1013,21 +1013,22 @@ class BundleImpl implements Bundle, BundleRevisions
     }
     private static final SecurityManagerEx m_smEx = new SecurityManagerEx();
     private static final ClassLoader m_classloader = Felix.class.getClassLoader();
-    
-    <A> void checkAdapt(Class<A> type) 
+
+    <A> void checkAdapt(Class<A> type)
     {
         Object sm = System.getSecurityManager();
         if ((sm != null) && (getFramework().getSecurityProvider() != null))
         {
             Class caller = m_smEx.getClassContext()[3];
             if (((Felix.m_secureAction.getClassLoader(caller) != m_classloader) ||
-                !caller.getName().startsWith("org.apache.felix.framework."))) 
+                !caller.getName().startsWith("org.apache.felix.framework.")))
             {
                 ((SecurityManager) sm).checkPermission(
                     new AdaptPermission(type.getName(), this, AdaptPermission.ADAPT));
             }
         }
     }
+
     public synchronized <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
