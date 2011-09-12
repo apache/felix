@@ -1273,7 +1273,7 @@ class StatefulResolver
                 Set<BundleCapability> matches = capSet.match(sf, obeyMandatory);
                 for (BundleCapability cap : matches)
                 {
-                    if (filteredBySecurity(req, cap)) 
+                    if (filteredBySecurity(req, cap))
                     {
                         continue;
                     }
@@ -1328,7 +1328,7 @@ class StatefulResolver
             if (System.getSecurityManager() != null)
             {
                 BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
-               
+
                 if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                 {
                     if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
@@ -1357,8 +1357,8 @@ class StatefulResolver
                         return true;
                     }
                 }
-                else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)) 
-                { 
+                else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+                {
                     if (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
                         .impliesDirect(new BundlePermission(
                             reqRevision.getSymbolicName(),
@@ -1370,14 +1370,14 @@ class StatefulResolver
                     {
                         return true;
                     }
-                } 
+                }
                 else  if (!req.getNamespace().equals("osgi.ee"))
                 {
                     if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                         new CapabilityPermission(req.getNamespace(), CapabilityPermission.PROVIDE))
-                        || 
+                        ||
                         !((reqRevision == null) || ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                        new CapabilityPermission(req.getNamespace(), cap.getAttributes(), cap.getRevision().getBundle(), CapabilityPermission.REQUIRE)))) 
+                        new CapabilityPermission(req.getNamespace(), cap.getAttributes(), cap.getRevision().getBundle(), CapabilityPermission.REQUIRE))))
                     {
                         return true;
                     }
@@ -1493,5 +1493,4 @@ class StatefulResolver
         revisions.add(br);
         singletons.put(br.getSymbolicName(), revisions);
     }
-
 }
