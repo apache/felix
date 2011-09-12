@@ -20,7 +20,9 @@ package org.apache.felix.framework;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 
 import org.apache.felix.framework.ext.FelixBundleContext;
@@ -429,7 +431,11 @@ class BundleContextImpl implements FelixBundleContext
         Class<S> clazz, String filter)
         throws InvalidSyntaxException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        ServiceReference<S>[] refs =
+            (ServiceReference<S>[]) getServiceReferences(clazz.getName(), null);
+        return (refs == null)
+            ? Collections.EMPTY_LIST
+            : (Collection<ServiceReference<S>>) Arrays.asList(refs);
     }
 
     public <S> S getService(ServiceReference<S> ref)
