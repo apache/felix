@@ -129,6 +129,10 @@ public final class Conditions
     public boolean isSatisfied(List posts, Permissions permissions,
         Permission permission)
     {
+        if (m_conditionInfos == null)
+        {
+            return true;
+        }
         boolean check = true;
         for (int i = 0; i < m_conditionInfos.length; i++)
         {

@@ -18,7 +18,9 @@
  */
 package org.apache.felix.framework.security.util;
 
+import java.io.File;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
@@ -119,7 +121,7 @@ public final class TrustManager
 
     private void initCaCerts() throws Exception
     {
-        final Collection result = new ArrayList();
+    	final Collection result = new ArrayList();
 
         if (m_storeList.trim().length() != 0)
         {

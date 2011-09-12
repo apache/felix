@@ -69,7 +69,7 @@ public final class SecurityProviderImpl implements SecurityProvider
      */
     public Object getSignerMatcher(final Bundle bundle, int signersType)
     {
-        BundleRevisionImpl module = ((BundleRevisionImpl) bundle.adapt(BundleRevision.class));
+        BundleRevisionImpl module = (BundleRevisionImpl) bundle.adapt(BundleRevision.class);
         return m_parser.getDNChains(module, module.getContent(), signersType);
     }
 
