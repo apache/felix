@@ -70,7 +70,6 @@ import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
-import org.osgi.service.startlevel.StartLevel;
 
 public class Felix extends BundleImpl implements Framework
 {
@@ -840,29 +839,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                 }
 
-                // Set the start level using the start level service;
-                // this ensures that all start level requests are
-                // serialized.
-                StartLevel sl = null;
-                try
-                {
-                    sl = (StartLevel) getService(
-                        getBundle(0), getServiceReferences((BundleImpl) getBundle(0),
-                        StartLevel.class.getName(), null, true)[0]);
-                }
-                catch (InvalidSyntaxException ex)
-                {
-                    // Should never happen.
-                }
-
-                if (sl instanceof StartLevelImpl)
-                {
-                    m_fwkStartLevel.setStartLevelAndWait(startLevel);
-                }
-                else
-                {
-                    sl.setStartLevel(startLevel);
-                }
+                m_fwkStartLevel.setStartLevelAndWait(startLevel);
 
                 // The framework is now running.
                 setBundleStateAndNotify(this, Bundle.ACTIVE);
@@ -3077,26 +3054,8 @@ public class Felix extends BundleImpl implements Framework
 
     void addBundleListener(BundleImpl bundle, BundleListener l)
     {
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only add listeners while bundle is active or activating.");
-        }
-
-        try
-        {
-            m_dispatcher.addListener(
-                bundle._getBundleContext(), BundleListener.class, l, null);
-        }
-        finally
-        {
-            releaseBundleLock(bundle);
-        }
+        m_dispatcher.addListener(
+            bundle._getBundleContext(), BundleListener.class, l, null);
     }
 
     void removeBundleListener(BundleImpl bundle, BundleListener l)
@@ -3117,29 +3076,11 @@ public class Felix extends BundleImpl implements Framework
     void addServiceListener(BundleImpl bundle, ServiceListener l, String f)
         throws InvalidSyntaxException
     {
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only add listeners while bundle is active or activating.");
-        }
-
         Filter oldFilter;
         Filter newFilter = (f == null) ? null : FrameworkUtil.createFilter(f);
 
-        try
-        {
-            oldFilter = m_dispatcher.addListener(
-                bundle._getBundleContext(), ServiceListener.class, l, newFilter);
-        }
-        finally
-        {
-            releaseBundleLock(bundle);
-        }
+        oldFilter = m_dispatcher.addListener(
+            bundle._getBundleContext(), ServiceListener.class, l, newFilter);
 
         // Invoke ListenerHook.removed() if filter updated.
         Set<ServiceReference<org.osgi.framework.hooks.service.ListenerHook>> listenerHooks =
@@ -3241,26 +3182,8 @@ public class Felix extends BundleImpl implements Framework
 
     void addFrameworkListener(BundleImpl bundle, FrameworkListener l)
     {
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only add listeners while bundle is active or activating.");
-        }
-
-        try
-        {
-            m_dispatcher.addListener(
-                bundle._getBundleContext(), FrameworkListener.class, l, null);
-        }
-        finally
-        {
-            releaseBundleLock(bundle);
-        }
+        m_dispatcher.addListener(
+            bundle._getBundleContext(), FrameworkListener.class, l, null);
     }
 
     void removeFrameworkListener(BundleImpl bundle, FrameworkListener l)

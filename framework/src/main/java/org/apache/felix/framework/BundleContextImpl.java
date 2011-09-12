@@ -208,9 +208,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
-        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
-        // because internally the framework acquires the bundle state
-        // lock to ensure state consistency.
+        // CONCURRENCY NOTE: This is a check-then-act situation, but
+        // internally the event dispatcher double checks whether or not
+        // the bundle context is valid before adding the service listener
+        // while holding the event queue lock, so it will either succeed
+        // or fail.
 
         Object sm = System.getSecurityManager();
 
@@ -266,9 +268,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
-        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
-        // because internally the framework acquires the bundle state
-        // lock to ensure state consistency.
+        // CONCURRENCY NOTE: This is a check-then-act situation, but
+        // internally the event dispatcher double checks whether or not
+        // the bundle context is valid before adding the service listener
+        // while holding the event queue lock, so it will either succeed
+        // or fail.
 
         m_felix.addServiceListener(m_bundle, l, s);
     }
@@ -289,9 +293,11 @@ class BundleContextImpl implements FelixBundleContext
     {
         checkValidity();
 
-        // CONCURRENCY NOTE: This is a NOT a check-then-act situation,
-        // because internally the framework acquires the bundle state
-        // lock to ensure state consistency.
+        // CONCURRENCY NOTE: This is a check-then-act situation, but
+        // internally the event dispatcher double checks whether or not
+        // the bundle context is valid before adding the service listener
+        // while holding the event queue lock, so it will either succeed
+        // or fail.
 
         m_felix.addFrameworkListener(m_bundle, l);
     }
