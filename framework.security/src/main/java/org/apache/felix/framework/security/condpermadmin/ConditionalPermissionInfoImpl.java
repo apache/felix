@@ -253,11 +253,12 @@ public final class ConditionalPermissionInfoImpl implements
     public ConditionalPermissionInfoImpl(String encoded)
     {
         encoded = encoded.trim();
-        if (!(encoded.startsWith("ALLOW {") || encoded.startsWith("DENY {")))
+        String toUpper = encoded.toUpperCase();
+        if (!(toUpper.startsWith("ALLOW {") || toUpper.startsWith("DENY {")))
         {
             throw new IllegalArgumentException();
         }
-        m_allow = encoded.startsWith("ALLOW {");
+        m_allow = toUpper.startsWith("ALLOW {");
         m_cpai = null;
         List conditions = new ArrayList();
         List permissions = new ArrayList();
@@ -302,7 +303,7 @@ public final class ConditionalPermissionInfoImpl implements
             m_name = unescapeString(chars, begin, idx);
         }
         else {
-            throw new IllegalArgumentException("Expected conditional permission info name");
+            m_name = Long.toString(RANDOM.nextLong() ^ System.currentTimeMillis());
         }
         } catch (ArrayIndexOutOfBoundsException ex) {
             ex.printStackTrace();
@@ -333,8 +334,8 @@ public final class ConditionalPermissionInfoImpl implements
         m_allow = access;
         m_name = Long.toString(RANDOM.nextLong() ^ System.currentTimeMillis());
         m_cpai = cpai;
-        m_conditions = conditions;
-        m_permissions = permisions;
+        m_conditions = conditions == null ? CONDITION_INFO : conditions;
+        m_permissions = permisions == null ? PERMISSION_INFO : permisions;
     }
 
     public ConditionalPermissionInfoImpl(String name,
@@ -344,8 +345,8 @@ public final class ConditionalPermissionInfoImpl implements
         m_allow = access;
         m_name = (name != null) ? name : Long.toString(RANDOM.nextLong()
             ^ System.currentTimeMillis());
-        m_conditions = conditions;
-        m_permissions = permisions;
+        m_conditions = conditions == null ? CONDITION_INFO : conditions;
+        m_permissions = permisions == null ? PERMISSION_INFO : permisions;
         m_cpai = cpai;
     }
 
