@@ -19,6 +19,7 @@ package org.apache.felix.webconsole.internal.misc;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.*;
@@ -218,7 +219,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
             {
                 final String label = desc.label;
                 final String title = desc.title;
-                pw.print("<li><a href='" + pluginRoot + label + ".nfo'>" + title + "</a></li>" );
+                pw.print("<li><a href='" + pluginRoot + URLEncoder.encode(label) + ".nfo'>" + title + "</a></li>" );
             }
         }
         pw.println("</ul> <!-- end tabs on top -->");

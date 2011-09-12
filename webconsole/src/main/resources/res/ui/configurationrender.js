@@ -14,11 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var _tabs = false;
+
 function pad(value) {
 	if ( value < 10 ) {
 		return "0" + value;
 	}
 	return "" + value;
+}
+
+function setSelectedTab() {
+	var anchor =  window.location.hash;
+	if (anchor) {
+		anchor = pluginRoot + '/' + anchor.substring(1) + '.nfo';
+		_tabs.find('ul > li > a').each( function(index, element) {
+			if (anchor == $(element).data('href.tabs')) {
+				_tabs.tabs('select', index);
+				return false;
+			}
+			return true;
+		});
+	}
 }
 
 function downloadDump(ext) {
@@ -28,6 +44,7 @@ function downloadDump(ext) {
 }
 
 $(document).ready(function() {
+	$(window).bind( 'hashchange', setSelectedTab);
 	var dlg = $('#waitDlg').dialog({
 		modal    : true,
 		autoOpen : false,
@@ -36,10 +53,12 @@ $(document).ready(function() {
 		closeOnEscape: false
 	});
 
-	$('#tabs').tabs({ajaxOptions: {
+	_tabs = $('#tabs').tabs({ajaxOptions: {
 		beforeSend : function() { dlg.dialog('open') },
-		complete   : function() { dlg.dialog('close')}
+		complete   : function() { dlg.dialog('close')},
 	}}).tabs('paging');
+
+	setTimeout(setSelectedTab, 1000);
 
 	$('.downloadTxt').click(function() { downloadDump('txt')});
 	$('.downloadZip').click(function() { downloadDump('zip')});
