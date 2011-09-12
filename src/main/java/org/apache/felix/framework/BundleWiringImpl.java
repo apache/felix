@@ -346,6 +346,7 @@ public class BundleWiringImpl implements BundleWiring
                 }
             }
         }
+
         if (System.getSecurityManager() != null)
         {
             for (Iterator<BundleCapability> iter = capList.iterator();iter.hasNext();)
@@ -359,8 +360,8 @@ public class BundleWiringImpl implements BundleWiring
                         iter.remove();
                     }
                 }
-                else if (!cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE) && !cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) && 
-                    !cap.getNamespace().equals("osgi.ee")) 
+                else if (!cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE) && !cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE) &&
+                    !cap.getNamespace().equals("osgi.ee"))
                 {
                     if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
                         new CapabilityPermission(cap.getNamespace(), CapabilityPermission.PROVIDE)))
@@ -370,6 +371,7 @@ public class BundleWiringImpl implements BundleWiring
                 }
             }
         }
+
         m_resolvedCaps = Collections.unmodifiableList(capList);
         m_includedPkgFilters = (includedPkgFilters.isEmpty())
             ? Collections.EMPTY_MAP : includedPkgFilters;
