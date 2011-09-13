@@ -48,7 +48,7 @@ public class WeakZipFileFactory
 
     /**
      * Constructs a weak zip file factory with the specified file limit. A limit
-     * of zero signified no limit.
+     * of zero signifies no limit.
      * @param limit maximum number of open zip files at any given time.
      */
     public WeakZipFileFactory(int limit)
@@ -61,7 +61,7 @@ public class WeakZipFileFactory
     }
 
     /**
-     * Factory method used to create weak zip file.
+     * Factory method used to create weak zip files.
      * @param file the target zip file.
      * @return the created weak zip file.
      * @throws IOException if the zip file could not be opened.
