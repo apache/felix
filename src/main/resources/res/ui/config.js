@@ -535,9 +535,11 @@ $(document).ready(function() {
 	    	unbindConfig($(this).attr('__pid'), $(this).attr('__location'));
 	}
 	_buttons[i18n.save] = function() {
-		$.post(pluginRoot + '/' + $(this).attr('__pid') + '?' + $(this).find('form').serialize());
+		$.post(pluginRoot + '/' + $(this).attr('__pid') + '?' + $(this).find('form').serialize(), function() {
+			// reload on success - prevents AJAX errors - see FELIX-3116
+			document.location.href = pluginRoot; 
+		});
 		$(this).dialog('close');
-		document.location.href = pluginRoot;
 	}
 	// prepare editor, but don't open yet!
 	editor = $('#editor').dialog({
