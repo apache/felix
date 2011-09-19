@@ -25,3 +25,12 @@
 table.propTable, table.propTable tr, table.propTable td { border: none !important }
 td.propName { padding: 0 4px 0 0; text-align: right !important; text-decoration: underline }
 td.propVal   { padding: 0 0 0 4px }
+td.time { white-space: nowrap }
+
+/* send dialog styling */
+.addremove button { width: 16px; height: 16px; line-height: 10px; font-size: 10px; margin: 2px 2px }
+.addremove_inner { display: inline }
+.propeditor_entry select {	margin-left: 4px }
+#sendTopic { width: 100% }
+#sendDialog table { margin-left: auto; margin-right: auto }
+#sendDialog table th { text-align: right; font-weight: bold; padding-right: .5em }

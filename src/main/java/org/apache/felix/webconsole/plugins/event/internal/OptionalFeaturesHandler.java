@@ -21,6 +21,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.osgi.framework.*;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * This class handles all optional stuff.
@@ -30,15 +31,16 @@ import org.osgi.framework.*;
 public class OptionalFeaturesHandler
     implements ServiceListener
 {
-    private static final String EVENT_ADMIN_CLASS_NAME = "org.osgi.service.event.EventAdmin";
-    private static final String CONFIGURATION_ADMIN_CLASS_NAME = "org.osgi.service.cm.ConfigurationAdmin";
-    private static final String EVENT_HANDLER_CLASS_NAME = "org.osgi.service.event.EventHandler";
+    private static final String EVENT_ADMIN_CLASS_NAME = "org.osgi.service.event.EventAdmin"; //$NON-NLS-1$
+    private static final String CONFIGURATION_ADMIN_CLASS_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
+    private static final String EVENT_HANDLER_CLASS_NAME = "org.osgi.service.event.EventHandler"; //$NON-NLS-1$
 
     private static final String FILTER = "(|(" + Constants.OBJECTCLASS + "=" + EVENT_ADMIN_CLASS_NAME + ")"
                                         +"(" + Constants.OBJECTCLASS + "=" + CONFIGURATION_ADMIN_CLASS_NAME + "))";
 
     /** Event admin service id */
-    private Long eventAdminServiceId;
+    //private Long eventAdminServiceId;
+    private ServiceReference eventAdminServiceRef;
 
     /** Registration for the event handler. */
     private ServiceRegistration eventHandlerRegistration;
@@ -60,12 +62,10 @@ public class OptionalFeaturesHandler
         this.plugin = plugin;
         this.bundleContext = context;
         // check if event admin is already available
-        this.eventAdminServiceId = null;
         final ServiceReference ref = this.bundleContext.getServiceReference(EVENT_ADMIN_CLASS_NAME);
         if ( ref != null )
         {
-            final Long id = (Long)ref.getProperty(Constants.SERVICE_ID);
-            bindEventAdmin(id);
+            bindEventAdmin(ref);
         }
 
         // check if config admin is already available
@@ -91,7 +91,7 @@ public class OptionalFeaturesHandler
     public void destroy()
     {
         this.bundleContext.removeServiceListener(this);
-        this.unbindEventAdmin(this.eventAdminServiceId);
+        this.unbindEventAdmin(this.eventAdminServiceRef);
         this.unbindConfigAdmin(this.configAdminServiceId);
     }
 
@@ -100,14 +100,14 @@ public class OptionalFeaturesHandler
      */
     public void serviceChanged(final ServiceEvent event)
     {
-        final String[] objectClasses =  (String[])event.getServiceReference().getProperty(Constants.OBJECTCLASS);
+        final ServiceReference ref = event.getServiceReference();
+        final String[] objectClasses =  (String[])ref.getProperty(Constants.OBJECTCLASS);
         if ( objectClasses != null)
         {
             for(int i=0; i<objectClasses.length; i++)
             {
                 if ( objectClasses[i].equals(EVENT_ADMIN_CLASS_NAME) )
                 {
-                    final Long id = (Long)event.getServiceReference().getProperty(Constants.SERVICE_ID);
                     if ( event.getType() == ServiceEvent.REGISTERED )
                     {
                         new Thread()
@@ -117,7 +117,7 @@ public class OptionalFeaturesHandler
                                 try {
                                     Thread.sleep(500);
                                 } catch (InterruptedException ignore) {}
-                                bindEventAdmin(id);
+                                bindEventAdmin(ref);
                             }
                         }.start();
                     }
@@ -130,7 +130,7 @@ public class OptionalFeaturesHandler
                                 try {
                                     Thread.sleep(500);
                                 } catch (InterruptedException ignore) {}
-                                unbindEventAdmin(id);
+                                unbindEventAdmin(ref);
                             }
                         }.start();
                     }
@@ -169,29 +169,30 @@ public class OptionalFeaturesHandler
         }
     }
 
-    private synchronized void bindEventAdmin(final Long id)
+    synchronized void bindEventAdmin(ServiceReference ref)
     {
-        if ( this.eventAdminServiceId != null)
+        if ( this.eventAdminServiceRef != null)
         {
-            this.unbindEventAdmin(this.eventAdminServiceId);
+            this.unbindEventAdmin(this.eventAdminServiceRef);
         }
-        this.eventAdminServiceId = id;
+        this.eventAdminServiceRef = ref;
         final Dictionary props = new Hashtable();
         props.put( Constants.SERVICE_DESCRIPTION, "Event handler for the Apache Felix Web Console" );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
-        props.put( "event.topics", "*");
-        this.plugin.setEventAdminAvailable(true);
+        props.put( "event.topics", "*"); //$NON-NLS-1$ //$NON-NLS-2$
+        this.plugin.setEventAdmin((EventAdmin) bundleContext.getService(ref));
 
         this.eventHandlerRegistration = this.bundleContext.registerService(EVENT_HANDLER_CLASS_NAME,
                 new EventHandler(this.plugin.getCollector()), props);
     }
 
-    private synchronized void unbindEventAdmin(final Long id)
+    synchronized void unbindEventAdmin(ServiceReference ref)
     {
-        if ( this.eventAdminServiceId != null && this.eventAdminServiceId.equals(id) )
+        if ( this.eventAdminServiceRef != null && this.eventAdminServiceRef.equals(ref) )
         {
-            this.eventAdminServiceId = null;
-            this.plugin.setEventAdminAvailable(false);
+            bundleContext.ungetService(ref);
+            this.eventAdminServiceRef = null;
+            this.plugin.setEventAdmin(null);
             if ( this.eventHandlerRegistration != null )
             {
                 this.eventHandlerRegistration.unregister();
@@ -200,7 +201,7 @@ public class OptionalFeaturesHandler
         }
     }
 
-    private synchronized void bindConfigAdmin(final Long id)
+    synchronized void bindConfigAdmin(final Long id)
     {
         if ( this.configAdminServiceId != null )
         {
@@ -211,7 +212,7 @@ public class OptionalFeaturesHandler
         this.configListenerRegistration = ConfigurationListener.create(this.bundleContext, this.plugin);
     }
 
-    private synchronized void unbindConfigAdmin(final Long id)
+    synchronized void unbindConfigAdmin(final Long id)
     {
         if ( this.configAdminServiceId != null && this.configAdminServiceId.equals(id) )
         {

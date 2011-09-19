@@ -62,9 +62,9 @@ function entry( /* Object */ dataEntry ) {
     }
 
 	$(tr( null, { id: 'entry' + dataEntry.id }, [
-		td( null, null, [ text( printDate(dataEntry.received) ) ] ),
-		td( null, null, [ text( dataEntry.topic ) ] ),
-		td( null, null, [ propE ] )
+		td( 'time', null, [ text( printDate(dataEntry.received) ) ] ),
+		td( 'topic', null, [ text( dataEntry.topic ) ] ),
+		td( 'detailes', null, [ propE ] )
 	])).appendTo(eventsBody);
 }
 
@@ -96,4 +96,60 @@ $(document).ready(function(){
 	$('#reload').click(function() {
 		$.get(pluginRoot + '/data.json', null, renderData, 'json');
 	}).click();
+
+	function sendData(action) {
+		// check topic
+		var topic = sendTopic.val();
+		var topicOk = topic.match(/^[\w-]+(\/[\w-]+)*$/g) != null;
+		if (topicOk) {
+			sendTopic.removeClass('ui-state-error');
+		} else {
+			addTopic.removeClass('ui-state-error');
+		}
+		var data = sendProperties.propeditor('serialize');
+		if (topicOk && data != false) {
+			$.post(pluginRoot,
+				data.concat([
+					{name : 'action', value : action},
+					{name : 'topic', value : topic}
+				]),
+				renderData,
+				'json'
+			);
+			sendDialog.dialog("close");
+		}
+	}
+
+	/* send dialog code */
+	var sendButtons = {};
+	sendButtons[i18n.close] = function() {
+		$(this).dialog("close");
+	}
+	sendButtons[i18n.send] = function() {
+		sendData('send');
+	}
+	sendButtons[i18n.post] = function() {
+		sendData('post');
+	}
+	var sendDialog = $('#sendDialog').dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : '40%',
+		buttons : sendButtons,
+		open    : function() {
+			sendTopic.val('');
+			sendProperties.propeditor('reset');
+		}
+	});
+	var sendTopic = $('#sendTopic');
+	var sendProperties = $('#sendProperties').propeditor({
+		add: function(el) {
+			el.find('select').addClass('dynhover');
+			initStaticWidgets(el);
+		}
+	});
+	$('#sendButton').click(function() {
+		sendDialog.dialog('open');
+	});
+
 });
