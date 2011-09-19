@@ -20,7 +20,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
+import com.sun.org.apache.xerces.internal.impl.dv.ValidatedInfo;
 import junit.framework.TestCase;
 
 /**
@@ -33,6 +36,13 @@ import junit.framework.TestCase;
 public class PropertiesTest extends TestCase {
 
     private final static String TEST_PROPERTIES_FILE = "test.properties";
+    private final static String LINE_SEPARATOR = System.getProperty("line.separator");
+    private static final String COMMENT = "# comment";
+    private static final String KEY1 = "mvn:foo/bar";
+    private static final String KEY1A = "mvn\\:foo/bar";
+    private static final String KEY2 = "foo:bar:version:type:classifier";
+    private static final String KEY2A = "foo\\:bar\\:version\\:type\\:classifier";
+    private static final String VALUE1 = "value";
 
     private Properties properties;
 
@@ -104,5 +114,45 @@ public class PropertiesTest extends TestCase {
 
         properties.store(System.err, null);
         System.err.println("====");
+    }
+
+    private static final String RESULT1 = COMMENT + LINE_SEPARATOR + KEY1A + " = " + VALUE1 + LINE_SEPARATOR;
+
+    public void testSaveComment1() throws Exception {
+        properties.put(KEY1, COMMENT, VALUE1);
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertTrue(sw.toString(), sw.toString().endsWith(RESULT1));
+    }
+
+    private static final String RESULT1A = COMMENT + LINE_SEPARATOR + KEY2A + " = " + VALUE1 + LINE_SEPARATOR;
+
+    public void testSaveComment1a() throws Exception {
+        properties.put(KEY2, COMMENT, VALUE1);
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertTrue(sw.toString(), sw.toString().endsWith(RESULT1A));
+    }
+
+    private static final String RESULT2 = COMMENT + LINE_SEPARATOR + COMMENT + LINE_SEPARATOR + KEY1A + " = " + VALUE1 + LINE_SEPARATOR;
+
+    public void testSaveComment2() throws Exception {
+        properties.put(KEY1, Arrays.asList(new String[] {COMMENT, COMMENT}), VALUE1);
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertTrue(sw.toString(), sw.toString().endsWith(RESULT2));
+    }
+
+    private static final String RESULT3 = COMMENT + LINE_SEPARATOR + COMMENT + LINE_SEPARATOR + KEY1A + " = " + VALUE1 + "\\" + LINE_SEPARATOR+ VALUE1 + LINE_SEPARATOR;
+
+    public void testSaveComment3() throws Exception {
+        properties.put(KEY1, Arrays.asList(new String[] {COMMENT, COMMENT}), Arrays.asList(new String[] {VALUE1, VALUE1}));
+        StringWriter sw = new StringWriter();
+        properties.save(sw);
+        assertTrue(sw.toString(), sw.toString().endsWith(RESULT3));
+        List<String> rawValue = properties.getRaw(KEY1);
+        assertEquals(2, rawValue.size());
+        assertEquals(KEY1A + " = " + VALUE1 + "\\", rawValue.get(0));
+        assertEquals(VALUE1, rawValue.get(1));
     }
 }

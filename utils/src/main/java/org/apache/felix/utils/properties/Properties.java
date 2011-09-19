@@ -29,7 +29,17 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
-import java.util.*;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -57,7 +67,11 @@ public class Properties extends AbstractMap<String, String> {
     private static final String DEFAULT_ENCODING = "ISO-8859-1";
 
     /** Constant for the platform specific line separator.*/
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    private static final String LINE_SEPARATOR = AccessController.doPrivileged(new PrivilegedAction<String>() {
+            public String run() {
+                return System.getProperty("line.separator");
+            }
+        });
 
     /** Constant for the radix of hex numbers.*/
     private static final int HEX_RADIX = 16;
@@ -65,8 +79,8 @@ public class Properties extends AbstractMap<String, String> {
     /** Constant for the length of a unicode literal.*/
     private static final int UNICODE_LEN = 4;
 
-    private Map<String,String> storage = new LinkedHashMap<String,String>();
-    private Map<String,Layout> layout = new LinkedHashMap<String,Layout>();
+    private final Map<String,String> storage = new LinkedHashMap<String,String>();
+    private final Map<String,Layout> layout = new LinkedHashMap<String,Layout>();
     private List<String> header;
     private List<String> footer;
     private File location;
@@ -201,6 +215,50 @@ public class Properties extends AbstractMap<String, String> {
             }
         }
         return old;
+    }
+
+    public String put(String key, List<String> commentLines, List<String> valueLines) {
+        commentLines = new ArrayList<String>(commentLines);
+        valueLines = new ArrayList<String>(valueLines);
+        String escapedKey = escapeKey(key);
+        int lastLine = valueLines.size() - 1;
+        if (valueLines.isEmpty()) {
+            valueLines.add(escapedKey + "=");
+        } else if (!valueLines.get(0).trim().startsWith(escapedKey)) {
+            valueLines.set(0, escapedKey + " = " + escapeJava(valueLines.get(0)) + (0 < lastLine? "\\": ""));
+        }
+        for (int i = 1; i < valueLines.size(); i++) {
+            valueLines.set(i, escapeJava(valueLines.get(i)) + (i < lastLine? "\\": ""));
+        }
+        StringBuilder value = new StringBuilder();
+        for (String line: valueLines) {
+            value.append(line);
+        }
+        this.layout.put(key, new Layout(commentLines, valueLines));
+        return storage.put(key, unescapeJava(value.toString()));
+    }
+
+    public String put(String key, List<String> commentLines, String value) {
+        commentLines = new ArrayList<String>(commentLines);
+        this.layout.put(key, new Layout(commentLines, null));
+        return storage.put(key, value);
+    }
+
+    public String put(String key, String comment, String value) {
+        return put(key, Collections.singletonList(comment), value);
+    }
+
+    public List<String> getRaw(String key) {
+        if (layout.containsKey(key)) {
+            if (layout.get(key).getValueLines() != null) {
+                return new ArrayList<String>(layout.get(key).getValueLines());
+            }
+        }
+        List<String> result = new ArrayList<String>();
+        if (storage.containsKey(key)) {
+            result.add(storage.get(key));
+        }
+        return result;
     }
 
     @Override
@@ -589,6 +647,35 @@ public class Properties extends AbstractMap<String, String> {
     }
 
     /**
+     * Escape the separators in the key.
+     *
+     * @param key the key
+     * @return the escaped key
+     */
+    private static String escapeKey(String key)
+    {
+        StringBuffer newkey = new StringBuffer();
+
+        for (int i = 0; i < key.length(); i++)
+        {
+            char c = key.charAt(i);
+
+            if (contains(SEPARATORS, c) || contains(WHITE_SPACE, c))
+            {
+                // escape the separator
+                newkey.append('\\');
+                newkey.append(c);
+            }
+            else
+            {
+                newkey.append(c);
+            }
+        }
+
+        return newkey.toString();
+    }
+
+    /**
      * This class is used to read properties lines. These lines do
      * not terminate with new-line chars but rather when there is no
      * backslash sign a the end of the line.  This is used to
@@ -597,10 +684,10 @@ public class Properties extends AbstractMap<String, String> {
     public static class PropertiesReader extends LineNumberReader
     {
         /** Stores the comment lines for the currently processed property.*/
-        private List<String> commentLines;
+        private final List<String> commentLines;
 
         /** Stores the value lines for the currently processed property.*/
-        private List<String> valueLines;
+        private final List<String> valueLines;
 
         /** Stores the name of the last read property.*/
         private String propertyName;
@@ -891,35 +978,6 @@ public class Properties extends AbstractMap<String, String> {
             write(" = ");
             write(escapeJava(value));
             writeln(null);
-        }
-
-        /**
-         * Escape the separators in the key.
-         *
-         * @param key the key
-         * @return the escaped key
-         */
-        private String escapeKey(String key)
-        {
-            StringBuffer newkey = new StringBuffer();
-
-            for (int i = 0; i < key.length(); i++)
-            {
-                char c = key.charAt(i);
-
-                if (contains(SEPARATORS, c) || contains(WHITE_SPACE, c))
-                {
-                    // escape the separator
-                    newkey.append('\\');
-                    newkey.append(c);
-                }
-                else
-                {
-                    newkey.append(c);
-                }
-            }
-
-            return newkey.toString();
         }
 
         /**
