@@ -23,9 +23,7 @@ import java.util.List;
 
 public final class Parser
 {
-
     private Parser() { }
-
 
     public static Clause[] parseHeader(String header) throws IllegalArgumentException
     {
@@ -201,12 +199,12 @@ public final class Parser
             }
         }
 
-        if (sb.length() > 0)
+        String s = sb.toString().trim();
+        if (s.length() > 0)
         {
-            list.add(sb.toString().trim());
+            list.add(s);
         }
 
         return (String[]) list.toArray(new String[list.size()]);
     }
-
 }
