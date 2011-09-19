@@ -1720,6 +1720,16 @@ public class Felix extends BundleImpl implements Framework
                 throw new ClassNotFoundException(name, ex);
             }
         }
+
+        // We do not call getClassLoader().loadClass() for arrays because
+        // it does not correctly handle array types, which is necessary in
+        // cases like deserialization using a wrapper class loader.
+        if ((name != null) && (name.length() > 0) && (name.charAt(0) == '['))
+        {
+            return Class.forName(name, false,
+                ((BundleWiringImpl) bundle.adapt(BundleWiring.class)).getClassLoader());
+        }
+
         return ((BundleWiringImpl)
             bundle.adapt(BundleWiring.class)).getClassLoader().loadClass(name);
     }
