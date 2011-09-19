@@ -295,6 +295,9 @@ public class OBR
         @Descriptor("start deployed bundles")
         @Parameter(names={ "-s", "--start" }, presentValue="true",
             absentValue="false") boolean start,
+        @Descriptor("deploy required bundles only")
+        @Parameter(names={ "-r", "--required" }, presentValue="true",
+            absentValue="false") boolean required,
         @Descriptor("( <bundle-name> | <symbolic-name> | <bundle-id> )[@<version>] ...")
             String[] args)
         throws IOException, InvalidSyntaxException
@@ -354,22 +357,34 @@ public class OBR
                             + " (" + resources[resIdx].getVersion() + ")");
                     }
                 }
-                resources = resolver.getOptionalResources();
-                if ((resources != null) && (resources.length > 0))
+                if (!required)
                 {
-                    System.out.println("\nOptional resource(s):");
-                    System.out.println(Util.getUnderlineString(21));
-                    for (int resIdx = 0; resIdx < resources.length; resIdx++)
+                    resources = resolver.getOptionalResources();
+                    if ((resources != null) && (resources.length > 0))
                     {
-                        System.out.println("   " + resources[resIdx].getPresentationName()
-                            + " (" + resources[resIdx].getVersion() + ")");
+                        System.out.println("\nOptional resource(s):");
+                        System.out.println(Util.getUnderlineString(21));
+                        for (int resIdx = 0; resIdx < resources.length; resIdx++)
+                        {
+                            System.out.println("   " + resources[resIdx].getPresentationName()
+                                + " (" + resources[resIdx].getVersion() + ")");
+                        }
                     }
                 }
 
                 try
                 {
-                    System.out.print("\nDeploying...");
-                    resolver.deploy(start ? Resolver.START : 0);
+                    System.out.print("\nDeploying...\n");
+                    int options = 0;
+                    if (start)
+                    {
+                        options |= Resolver.START;
+                    }
+                    if (required)
+                    {
+                        options |= Resolver.NO_OPTIONAL_RESOURCES;
+                    }
+                    resolver.deploy(options);
                     System.out.println("done.");
                 }
                 catch (IllegalStateException ex)
