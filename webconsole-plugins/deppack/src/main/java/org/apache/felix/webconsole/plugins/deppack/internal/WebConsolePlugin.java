@@ -52,8 +52,6 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     private static final String ACTION_UNINSTALL = "uninstalldp"; //$NON-NLS-1$
     private static final String PARAMETER_PCK_FILE = "pckfile"; //$NON-NLS-1$
 
-    private static final String DEPL_SERVICE = "org.osgi.service.deploymentadmin.DeploymentAdmin"; //$NON-NLS-1$
-
     // templates
     private final String TEMPLATE;
 
@@ -108,7 +106,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 req.getPathInfo().lastIndexOf('/') + 1);
             if (pckId != null && pckId.length() > 0)
             {
-                final DeploymentAdmin admin = (DeploymentAdmin) this.getService(DEPL_SERVICE);
+                final DeploymentAdmin admin = (DeploymentAdmin) adminTracker.getService();
                 if (admin != null)
                 {
                     try
@@ -159,7 +157,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         throws ServletException, IOException
     {
 
-        final DeploymentAdmin admin = (DeploymentAdmin) this.getService(DEPL_SERVICE);
+        final DeploymentAdmin admin = (DeploymentAdmin) adminTracker.getService();
 
         StringWriter w = new StringWriter();
         PrintWriter w2 = new PrintWriter(w);
