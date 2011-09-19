@@ -581,24 +581,7 @@ public class Felix extends BundleImpl implements Framework
                     security = security.trim();
                     if (Constants.FRAMEWORK_SECURITY_OSGI.equalsIgnoreCase(security) || (security.length() == 0))
                     {
-                        // TODO: SECURITY - we only need our own security manager to convert the exceptions
-                        //       because the 4.2.0 ct does expect them like this in one case.
-                        System.setSecurityManager(m_securityManager = new SecurityManager()
-                        {
-                            public void checkPermission(Permission perm)
-                            {
-                                try
-                                {
-                                    super.checkPermission(perm);
-                                }
-                                catch (AccessControlException ex)
-                                {
-                                    SecurityException se = new SecurityException(ex.getMessage());
-                                    se.initCause(ex);
-                                    throw se;
-                                }
-                            }
-                        });
+                        System.setSecurityManager(m_securityManager = new SecurityManager());
                     }
                     else
                     {
