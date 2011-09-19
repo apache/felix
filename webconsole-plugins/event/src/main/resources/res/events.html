@@ -1,8 +1,13 @@
-﻿<script type="text/javascript" src="${pluginRoot}/res/ui/events.js"></script>
+﻿<script type="text/javascript" src="${pluginRoot}/res/ui/addremove.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/ui/propeditor.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/ui/events.js"></script>
 <script type="text/javascript">
 var i18n = {
 	displayTimeline: '${displayTimeline}',
-	displayList    : '${displayList}'
+	displayList    : '${displayList}',
+	close          : '${close}',
+	send           : '${send}',
+	post           : '${post}'
 }
 </script>
 
@@ -13,6 +18,7 @@ var i18n = {
 <div class="ui-widget-header ui-corner-top buttonGroup">
 	<button id="switch">${displayTimeline}</button>
 	<button id="clear">${clear}</button>
+	<button id="sendButton">${sendEvent}</button>
 	<button id="reload">${reload}</button>
 </div>
 
@@ -35,9 +41,27 @@ var i18n = {
 </table>
 
 <div id="timeline" class="ui-helper-hidden">&nbsp;</div>
+
 <div id="timelineLegend" class="ui-helper-hidden">
 	<span class="event eventservice">Service Event</span>
 	<span class="event eventbundle">Bundle Event</span>
 	<span class="event eventconfig">Config Event</span>
 	<span class="event eventframework">Framework Event</span>
+</div>
+
+<div id="sendDialog" title="${sendEvent}" class="ui-helper-hidden">
+	<table>
+	<tbody>
+		<tr>
+			<th>${topic}:</th>
+			<td><input id="sendTopic"/></td>
+		</tr>
+		<tr>
+			<th>${properties}:</th>
+			<td>
+				<div id="sendProperties">&nbsp;</div>
+			</td>
+		</tr>
+	</tbody>
+	</table>
 </div>

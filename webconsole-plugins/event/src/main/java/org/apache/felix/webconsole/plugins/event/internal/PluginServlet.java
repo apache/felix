@@ -28,30 +28,35 @@ import java.util.Map.Entry;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+
 /**
  * The Event Plugin
  */
 public class PluginServlet extends HttpServlet
 {
-    private static final String ACTION_CLEAR = "clear";
+    
+    private static final String ACTION_POST = "post"; //$NON-NLS-1$
+    private static final String ACTION_SEND = "send"; //$NON-NLS-1$
+    private static final String ACTION_CLEAR = "clear"; //$NON-NLS-1$
 
-    private static final String PARAMETER_ACTION = "action";
+    private static final String PARAMETER_ACTION = "action"; //$NON-NLS-1$
 
     /** The event collector. */
     private final EventCollector collector;
 
-    /** Is the event admin available? */
-    private volatile boolean eventAdminAvailable = false;
-
     /** Is the config admin available? */
     private volatile boolean configAdminAvailable = false;
     
+    private EventAdmin eventAdmin;
+
     private final String TEMPLATE;
 
     public PluginServlet()
     {
         this.collector = new EventCollector(null);
-        TEMPLATE = readTemplateFile(getClass(), "/res/events.html");
+        TEMPLATE = readTemplateFile(getClass(), "/res/events.html"); //$NON-NLS-1$
     }
     
     private final String readTemplateFile(final Class clazz, final String templateFile)
@@ -68,7 +73,7 @@ public class PluginServlet extends HttpServlet
                 {
                     baos.write(data, 0, len);
                 }
-                return baos.toString("UTF-8");
+                return baos.toString("UTF-8"); //$NON-NLS-1$
             }
             catch (IOException e)
             {
@@ -93,9 +98,17 @@ public class PluginServlet extends HttpServlet
         // template file does not exist, return an empty string
         log("readTemplateFile: File '" + templateFile + "' not found through class "
             + clazz);
-        return "";
+        return ""; //$NON-NLS-1$
     }
+    
+    private static final Event newEvent(HttpServletRequest request)
+    {
+        String topic = request.getParameter("topic"); //$NON-NLS-1$
 
+        return new Event(topic, (Dictionary)PropertiesEditorSupport.convertProperties(request));
+    }
+    
+   
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -103,14 +116,18 @@ public class PluginServlet extends HttpServlet
     throws ServletException, IOException
     {
         final String action = req.getParameter( PARAMETER_ACTION );
-        // for now we only have the clear action
-        if ( ACTION_CLEAR.equals( action ) )
-        {
+        if ( ACTION_POST.equals(action) ) {
+            final Event event = newEvent(req);
+            eventAdmin.postEvent(event);
+        } else if (ACTION_SEND.equals(action)) {
+            final Event event = newEvent(req);
+            eventAdmin.sendEvent(event);
+        } else if ( ACTION_CLEAR.equals( action ) ) {
             this.collector.clear();
         }
         // we always send back the json data
-        resp.setContentType( "application/json" );
-        resp.setCharacterEncoding( "utf-8" );
+        resp.setContentType( "application/json" ); //$NON-NLS-1$
+        resp.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
 
         renderJSON( resp.getWriter() );
     }
@@ -135,7 +152,7 @@ public class PluginServlet extends HttpServlet
             statusLine.append( d );
         }
         statusLine.append( ". (Event admin: " );
-        if ( !this.eventAdminAvailable )
+        if ( this.eventAdmin == null )
         {
             statusLine.append("un");
         }
@@ -172,7 +189,7 @@ public class PluginServlet extends HttpServlet
 
         pw.write(']');
 
-        pw.write("}");
+        pw.write("}"); //$NON-NLS-1$
     }
 
 
@@ -181,10 +198,10 @@ public class PluginServlet extends HttpServlet
     {
 
         final String info = request.getPathInfo();
-        if ( info.endsWith( ".json" ) )
+        if ( info.endsWith( ".json" ) ) //$NON-NLS-1$
         {
-            response.setContentType( "application/json" );
-            response.setCharacterEncoding( "UTF-8" );
+            response.setContentType( "application/json" ); //$NON-NLS-1$
+            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
 
             PrintWriter pw = response.getWriter();
             this.renderJSON( pw );
@@ -208,7 +225,7 @@ public class PluginServlet extends HttpServlet
 
     public URL getResource(String path)
     {
-        if ( path.startsWith("/events/res/ui/") )
+        if ( path.startsWith("/events/res/ui/") ) //$NON-NLS-1$
         {
             return this.getClass().getResource(path.substring(7));
         }
@@ -374,9 +391,9 @@ public class PluginServlet extends HttpServlet
         return this.collector;
     }
 
-    public void setEventAdminAvailable(final boolean flag)
+    public void setEventAdmin(final EventAdmin eventAdmin)
     {
-        this.eventAdminAvailable = flag;
+        this.eventAdmin = eventAdmin;
     }
 
     public void setConfigAdminAvailable(final boolean flag)
