@@ -309,16 +309,8 @@ class ExtensionManager extends URLStreamHandler implements Content
         Object sm = System.getSecurityManager();
         if (sm != null)
         {
-            try
-            {
                 ((SecurityManager) sm).checkPermission(
                     new AdminPermission(bundle, AdminPermission.EXTENSIONLIFECYCLE));
-            }
-            catch (SecurityException ex)
-            {
-                // TODO: SECURITY - we need to throw this exception because of the 4.2.0 ct
-                throw new AccessControlException(ex.getMessage());
-            }
         }
 
         if (!((BundleProtectionDomain) bundle.getProtectionDomain()).impliesDirect(new AllPermission()))
