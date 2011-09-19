@@ -160,7 +160,7 @@ class Candidates
         // However, for on-demand fragments only populate if their host
         // is already populated.
         if ((resolution != ON_DEMAND)
-            || (isFragment && populateFragment(state, revision)))
+            || (isFragment && populateFragmentOndemand(state, revision)))
         {
             if (resolution == MANDATORY)
             {
@@ -284,96 +284,11 @@ class Candidates
                 continue;
             }
 
-            // Get satisfying candidates and populate their candidates if necessary.
-            ResolveException rethrow = null;
+            // Process the candidates, removing any candidates that
+            // cannot resolve.
             SortedSet<BundleCapability> candidates =
                 state.getCandidates((BundleRequirementImpl) req, true);
-            Set<BundleCapability> fragmentCands = null;
-            for (Iterator<BundleCapability> itCandCap = candidates.iterator();
-                itCandCap.hasNext(); )
-            {
-                BundleCapability candCap = itCandCap.next();
-
-                boolean isFragment = Util.isFragment(candCap.getRevision());
-
-                // If the capability is from a fragment, then record it
-                // because we have to insert associated host capabilities
-                // if the fragment is already attached to any hosts.
-                if (isFragment)
-                {
-                    if (fragmentCands == null)
-                    {
-                        fragmentCands = new HashSet<BundleCapability>();
-                    }
-                    fragmentCands.add(candCap);
-                }
-
-                // If the candidate revision is a fragment, then always attempt
-                // to populate candidates for its dependency, since it must be
-                // attached to a host to be used. Otherwise, if the candidate
-                // revision is not already resolved and is not the current version
-                // we are trying to populate, then populate the candidates for
-                // its dependencies as well.
-                // NOTE: Technically, we don't have to check to see if the
-                // candidate revision is equal to the current revision, but this
-                // saves us from recursing and also simplifies exceptions messages
-                // since we effectively chain exception messages for each level
-                // of recursion; thus, any avoided recursion results in fewer
-                // exceptions to chain when an error does occur.
-                if (isFragment
-                    || ((candCap.getRevision().getWiring() == null)
-                        && !candCap.getRevision().equals(revision)))
-                {
-                    try
-                    {
-                        populateRevision(state, candCap.getRevision());
-                    }
-                    catch (ResolveException ex)
-                    {
-                        if (rethrow == null)
-                        {
-                            rethrow = ex;
-                        }
-                        // Remove the candidate since we weren't able to
-                        // populate its candidates.
-                        itCandCap.remove();
-                    }
-                }
-            }
-
-            // If any of the candidates for the requirement were from a fragment,
-            // then also insert synthesized hosted capabilities for any other host
-            // to which the fragment is attached since they are all effectively
-            // unique capabilities.
-            if (fragmentCands != null)
-            {
-                for (BundleCapability fragCand : fragmentCands)
-                {
-                    // Only necessary for resolved fragments.
-                    BundleWiring wiring = fragCand.getRevision().getWiring();
-                    if (wiring != null)
-                    {
-                        // Fragments only have host wire, so each wire represents
-                        // an attached host.
-                        for (BundleWire wire : wiring.getRequiredWires(null))
-                        {
-                            // If the capability is a package, then make sure the
-                            // host actually provides it in its resolved capabilities,
-                            // since it may be a substitutable export.
-                            if (!fragCand.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                                || wire.getProviderWiring().getCapabilities(null).contains(fragCand))
-                            {
-                                // Note that we can just add this as a candidate
-                                // directly, since we know it is already resolved.
-                                candidates.add(
-                                    new HostedCapability(
-                                        wire.getCapability().getRevision(),
-                                        (BundleCapabilityImpl) fragCand));
-                            }
-                        }
-                    }
-                }
-            }
+            ResolveException rethrow = processCandidates(state, revision, candidates);
 
             // If there are no candidates for the current requirement
             // and it is not optional, then create, cache, and throw
@@ -420,7 +335,7 @@ class Candidates
         }
     }
 
-    private boolean populateFragment(ResolverState state, BundleRevision revision)
+    private boolean populateFragmentOndemand(ResolverState state, BundleRevision revision)
         throws ResolveException
     {
         // Create a modifiable list of the revision's requirements.
@@ -480,19 +395,6 @@ class Candidates
         return true;
     }
 
-    public boolean isPopulated(BundleRevision revision)
-    {
-        Object value = m_populateResultCache.get(revision);
-        return ((value != null) && (value instanceof Boolean));
-    }
-
-    public ResolveException getResolveException(BundleRevision revision)
-    {
-        Object value = m_populateResultCache.get(revision);
-        return ((value != null) && (value instanceof ResolveException))
-            ? (ResolveException) value : null;
-    }
-
     public void populateDynamic(
         ResolverState state, BundleRevision revision,
         BundleRequirement req, SortedSet<BundleCapability> candidates)
@@ -504,28 +406,9 @@ class Candidates
         // Add the dynamic imports candidates.
         add(req, candidates);
 
-        // Populate the candidates for the dynamic import.
-        ResolveException rethrow = null;
-        for (Iterator<BundleCapability> itCandCap = candidates.iterator();
-            itCandCap.hasNext(); )
-        {
-            BundleCapability candCap = itCandCap.next();
-            if (candCap.getRevision().getWiring() == null)
-            {
-                try
-                {
-                    populateRevision(state, candCap.getRevision());
-                }
-                catch (ResolveException ex)
-                {
-                    if (rethrow == null)
-                    {
-                        rethrow = ex;
-                    }
-                    itCandCap.remove();
-                }
-            }
-        }
+        // Process the candidates, removing any candidates that
+        // cannot resolve.
+        ResolveException rethrow = processCandidates(state, revision, candidates);
 
         if (candidates.isEmpty())
         {
@@ -537,6 +420,127 @@ class Candidates
         }
 
         m_populateResultCache.put(revision, Boolean.TRUE);
+    }
+
+    /**
+     * This method performs common processing on the given set of candidates.
+     * Specifically, it removes any candidates which cannot resolve and it
+     * synthesizes candidates for any candidates coming from any attached
+     * fragments, since fragment capabilities only appear once, but technically
+     * each host represents a unique capability.
+     * @param state the resolver state.
+     * @param revision the revision being resolved.
+     * @param candidates the candidates to process.
+     * @return a resolve exception to be re-thrown, if any, or null.
+     */
+    private ResolveException processCandidates(
+        ResolverState state,
+        BundleRevision revision,
+        SortedSet<BundleCapability> candidates)
+    {
+        // Get satisfying candidates and populate their candidates if necessary.
+        ResolveException rethrow = null;
+        Set<BundleCapability> fragmentCands = null;
+        for (Iterator<BundleCapability> itCandCap = candidates.iterator();
+            itCandCap.hasNext(); )
+        {
+            BundleCapability candCap = itCandCap.next();
+
+            boolean isFragment = Util.isFragment(candCap.getRevision());
+
+            // If the capability is from a fragment, then record it
+            // because we have to insert associated host capabilities
+            // if the fragment is already attached to any hosts.
+            if (isFragment)
+            {
+                if (fragmentCands == null)
+                {
+                    fragmentCands = new HashSet<BundleCapability>();
+                }
+                fragmentCands.add(candCap);
+            }
+
+            // If the candidate revision is a fragment, then always attempt
+            // to populate candidates for its dependency, since it must be
+            // attached to a host to be used. Otherwise, if the candidate
+            // revision is not already resolved and is not the current version
+            // we are trying to populate, then populate the candidates for
+            // its dependencies as well.
+            // NOTE: Technically, we don't have to check to see if the
+            // candidate revision is equal to the current revision, but this
+            // saves us from recursing and also simplifies exceptions messages
+            // since we effectively chain exception messages for each level
+            // of recursion; thus, any avoided recursion results in fewer
+            // exceptions to chain when an error does occur.
+            if (isFragment
+                || ((candCap.getRevision().getWiring() == null)
+                    && !candCap.getRevision().equals(revision)))
+            {
+                try
+                {
+                    populateRevision(state, candCap.getRevision());
+                }
+                catch (ResolveException ex)
+                {
+                    if (rethrow == null)
+                    {
+                        rethrow = ex;
+                    }
+                    // Remove the candidate since we weren't able to
+                    // populate its candidates.
+                    itCandCap.remove();
+                }
+            }
+        }
+
+        // If any of the candidates for the requirement were from a fragment,
+        // then also insert synthesized hosted capabilities for any other host
+        // to which the fragment is attached since they are all effectively
+        // unique capabilities.
+        if (fragmentCands != null)
+        {
+            for (BundleCapability fragCand : fragmentCands)
+            {
+                // Only necessary for resolved fragments.
+                BundleWiring wiring = fragCand.getRevision().getWiring();
+                if (wiring != null)
+                {
+                    // Fragments only have host wire, so each wire represents
+                    // an attached host.
+                    for (BundleWire wire : wiring.getRequiredWires(null))
+                    {
+                        // If the capability is a package, then make sure the
+                        // host actually provides it in its resolved capabilities,
+                        // since it may be a substitutable export.
+                        if (!fragCand.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                            || wire.getProviderWiring().getCapabilities(null).contains(fragCand))
+                        {
+                            // Note that we can just add this as a candidate
+                            // directly, since we know it is already resolved.
+                            candidates.add(
+                                new HostedCapability(
+                                    wire.getCapability().getRevision(),
+                                    (BundleCapabilityImpl) fragCand));
+                        }
+                    }
+                }
+            }
+        }
+
+        return rethrow;
+    }
+
+    public boolean isPopulated(BundleRevision revision)
+    {
+        Object value = m_populateResultCache.get(revision);
+        return ((value != null) && (value instanceof Boolean));
+    }
+
+    public ResolveException getResolveException(BundleRevision revision)
+    {
+        Object value = m_populateResultCache.get(revision);
+        return ((value != null) && (value instanceof ResolveException))
+            ? (ResolveException) value : null;
     }
 
     /**
@@ -614,37 +618,11 @@ class Candidates
     **/
     public void prepare()
     {
-        boolean init = false;
-
         if (m_fragmentsPresent)
         {
             populateDependents();
-            init = true;
         }
 
-        // If the root is a singleton, then prefer it over any other singleton.
-// TODO: OSGi R4.3/SINGLETON - How do we prefer the root as a singleton?
-/*
-        if ((m_root != null) && isSingleton(m_root))
-        {
-            BundleRevision singleton = singletons.get(m_root.getSymbolicName());
-            singletons.put(m_root.getSymbolicName(), m_root);
-            if ((singleton != null) && !singleton.equals(m_root))
-            {
-                if (singleton.getWiring() != null)
-                {
-                    throw new ResolveException(
-                        "Cannot resolve singleton "
-                        + m_root
-                        + " because "
-                        + singleton
-                        + " singleton is already resolved.",
-                        m_root, null);
-                }
-                removeRevision(singleton);
-            }
-        }
-*/
         // This method performs the following steps:
         // 1. Select the fragments to attach to a given host.
         // 2. Wrap hosts and attach fragments.
