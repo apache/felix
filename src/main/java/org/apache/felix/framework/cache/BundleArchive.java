@@ -144,7 +144,7 @@ public class BundleArchive
         m_refreshCount = 0;
 
         String s = (String) m_configMap.get(BundleCache.CACHE_SINGLEBUNDLEFILE_PROP);
-        m_isSingleBundleFile = (s == null) || (!s.equalsIgnoreCase("true")) ? false : true;
+        m_isSingleBundleFile = ((s == null) || s.equalsIgnoreCase("true")) ? true : false;
 
         // Save state.
         initialize();
@@ -175,7 +175,7 @@ public class BundleArchive
         m_archiveRootDir = archiveRootDir;
 
         String s = (String) m_configMap.get(BundleCache.CACHE_SINGLEBUNDLEFILE_PROP);
-        m_isSingleBundleFile = (s == null) || (!s.equalsIgnoreCase("true")) ? false : true;
+        m_isSingleBundleFile = ((s == null) || s.equalsIgnoreCase("true")) ? true : false;
 
         if (m_isSingleBundleFile)
         {

@@ -80,7 +80,8 @@ public class BundleCache
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
     public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
     public static final String CACHE_FILELIMIT_PROP = "felix.cache.filelimit";
-    // TODO: KARL/CACHE - Remove this once we migrate the cache format.
+    // TODO: CACHE - This should eventually be removed along with the code
+    //       supporting the old multi-file bundle cache format.
     public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
 
     protected static transient int BUFSIZE = 4096;
