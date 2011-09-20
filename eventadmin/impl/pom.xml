@@ -98,6 +98,14 @@
                         </Import-Package>
                         <Export-Package>org.osgi.service.event</Export-Package>
                         <Private-Package>org.apache.felix.eventadmin.impl.*</Private-Package>
+                        <Import-Service>
+                            org.osgi.service.event.EventHandler;availability:=optional;multiple:=true,
+                            org.osgi.service.log.LogService;availability:=optional;multiple:=false,
+                            org.osgi.service.log.LogReaderService;availability:=optional;multiple:=false
+                        </Import-Service>
+                        <Export-Service>
+                            org.osgi.service.event.EventAdmin
+                        </Export-Service>
                         <!-- Include concurrent lib but not sub packages -->
                         <Embed-Dependency>
                             concurrent;inline="EDU/oswego/cs/dl/util/concurrent/[A-Z]*"
