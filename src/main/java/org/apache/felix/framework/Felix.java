@@ -600,6 +600,13 @@ public class Felix extends BundleImpl implements Framework
                         }
                     }
                 }
+
+                // Generate a framework UUID.
+                // Spec says we get a new UUID for each invocation of init().
+                m_configMutableMap.put(
+                    FelixConstants.FRAMEWORK_UUID,
+                    Util.randomUUID());
+
                 // Get any system bundle activators.
                 m_activatorList = (List) m_configMutableMap.get(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP);
                 m_activatorList = (m_activatorList == null) ? new ArrayList() : new ArrayList(m_activatorList);
