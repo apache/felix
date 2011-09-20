@@ -21,6 +21,7 @@ package org.apache.felix.framework.util;
 import java.io.*;
 import java.net.URL;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -675,5 +676,114 @@ public class Util
             }
         }
         return fragments;
+    }
+
+    //
+    // UUID code copied from Apache Harmony java.util.UUID
+    //
+
+    /**
+     * <p>
+     * Generates a variant 2, version 4 (randomly generated number) UUID as per
+     * <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
+     *
+     * @return an UUID instance.
+     */
+    public static String randomUUID() {
+        byte[] data;
+        // lock on the class to protect lazy init
+        SecureRandom rng = new SecureRandom();
+        rng.nextBytes(data = new byte[16]);
+        long mostSigBits = (data[0] & 0xFFL) << 56;
+        mostSigBits |= (data[1] & 0xFFL) << 48;
+        mostSigBits |= (data[2] & 0xFFL) << 40;
+        mostSigBits |= (data[3] & 0xFFL) << 32;
+        mostSigBits |= (data[4] & 0xFFL) << 24;
+        mostSigBits |= (data[5] & 0xFFL) << 16;
+        mostSigBits |= (data[6] & 0x0FL) << 8;
+        mostSigBits |= (0x4L << 12); // set the version to 4
+        mostSigBits |= (data[7] & 0xFFL);
+
+        long leastSigBits = (data[8] & 0x3FL) << 56;
+        leastSigBits |= (0x2L << 62); // set the variant to bits 01
+        leastSigBits |= (data[9] & 0xFFL) << 48;
+        leastSigBits |= (data[10] & 0xFFL) << 40;
+        leastSigBits |= (data[11] & 0xFFL) << 32;
+        leastSigBits |= (data[12] & 0xFFL) << 24;
+        leastSigBits |= (data[13] & 0xFFL) << 16;
+        leastSigBits |= (data[14] & 0xFFL) << 8;
+        leastSigBits |= (data[15] & 0xFFL);
+
+        //
+        // UUID.init()
+        //
+
+        int variant;
+        int version;
+        long timestamp;
+        int clockSequence;
+        long node;
+        int hash;
+
+        // setup hash field
+        int msbHash = (int) (mostSigBits ^ (mostSigBits >>> 32));
+        int lsbHash = (int) (leastSigBits ^ (leastSigBits >>> 32));
+        hash = msbHash ^ lsbHash;
+
+        // setup variant field
+        if ((leastSigBits & 0x8000000000000000L) == 0) {
+            // MSB0 not set, NCS backwards compatibility variant
+            variant = 0;
+        } else if ((leastSigBits & 0x4000000000000000L) != 0) {
+            // MSB1 set, either MS reserved or future reserved
+            variant = (int) ((leastSigBits & 0xE000000000000000L) >>> 61);
+        } else {
+            // MSB1 not set, RFC 4122 variant
+            variant = 2;
+        }
+
+        // setup version field
+        version = (int) ((mostSigBits & 0x000000000000F000) >>> 12);
+
+        if (!(variant != 2 && version != 1)) {
+            // setup timestamp field
+            long timeLow = (mostSigBits & 0xFFFFFFFF00000000L) >>> 32;
+            long timeMid = (mostSigBits & 0x00000000FFFF0000L) << 16;
+            long timeHigh = (mostSigBits & 0x0000000000000FFFL) << 48;
+            timestamp = timeLow | timeMid | timeHigh;
+
+            // setup clock sequence field
+            clockSequence = (int) ((leastSigBits & 0x3FFF000000000000L) >>> 48);
+
+            // setup node field
+            node = (leastSigBits & 0x0000FFFFFFFFFFFFL);
+        }
+
+        //
+        // UUID.toString()
+        //
+
+        StringBuffer builder = new StringBuffer(36);
+        String msbStr = Long.toHexString(mostSigBits);
+        if (msbStr.length() < 16) {
+            int diff = 16 - msbStr.length();
+            for (int i = 0; i < diff; i++) {
+                builder.append('0');
+            }
+        }
+        builder.append(msbStr);
+        builder.insert(8, '-');
+        builder.insert(13, '-');
+        builder.append('-');
+        String lsbStr = Long.toHexString(leastSigBits);
+        if (lsbStr.length() < 16) {
+            int diff = 16 - lsbStr.length();
+            for (int i = 0; i < diff; i++) {
+                builder.append('0');
+            }
+        }
+        builder.append(lsbStr);
+        builder.insert(23, '-');
+        return builder.toString();
     }
 }
