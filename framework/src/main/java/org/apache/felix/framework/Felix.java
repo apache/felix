@@ -217,6 +217,10 @@ public class Felix extends BundleImpl implements Framework
      *       property is set, then it will be calculated as being relative to
      *       the specified root directory.
      *   </li>
+     *   <li><tt>felix.cache.filelimit</tt> - The integer value of this string
+     *       sets an upper limit on how many files the cache will open. The default
+     *       value is zero, which means there is no limit.
+     *   </li>
      *   <li><tt>felix.cache.locking</tt> - Enables or disables bundle cache locking,
      *       which is used to prevent concurrent access to the bundle cache. This is
      *       enabled by default, but on older/smaller JVMs file channel locking is
@@ -849,8 +853,6 @@ public class Felix extends BundleImpl implements Framework
 
     public void start(int options) throws BundleException
     {
-        // TODO: FRAMEWORK - For now, ignore all options when starting the
-        //       system bundle.
         start();
     }
 
@@ -893,8 +895,6 @@ public class Felix extends BundleImpl implements Framework
 
     public void stop(int options) throws BundleException
     {
-        // TODO: FRAMEWORK - For now, ignore all options when stopping the
-        //       system bundle.
         stop();
     }
 
@@ -2618,17 +2618,28 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 bundle = new BundleImpl(this, ba);
+
+                // Extensions are handled as a special case.
+                if (bundle.isExtension())
+                {
+                    m_extensionManager.addExtensionBundle(this, bundle);
+                    m_resolver.addRevision(m_extensionManager.getRevision());
+                }
+
+                // Use a copy-on-write approach to add the bundle
+                // to the installed maps.
+                Map[] maps = new Map[] {
+                    new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
+                    new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
+                };
+                maps[LOCATION_MAP_IDX].put(bundle._getLocation(), bundle);
+                maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
+                m_installedBundles = maps;
             }
             finally
             {
                 // Always release the global lock.
                 releaseGlobalLock();
-            }
-
-            if (bundle.isExtension())
-            {
-                m_extensionManager.addExtensionBundle(this, bundle);
-                m_resolver.addRevision(m_extensionManager.getRevision());
             }
         }
         catch (Throwable ex)
@@ -2645,33 +2656,6 @@ public class Felix extends BundleImpl implements Framework
             {
                 throw new BundleException("Could not create bundle object.", ex);
             }
-        }
-
-        // Acquire global lock.
-// TODO: OSGi R4.3 - Could we do this in the above lock block?
-        boolean locked = acquireGlobalLock();
-        if (!locked)
-        {
-            // If the calling thread holds bundle locks, then we might not
-            // be able to get the global lock.
-            throw new IllegalStateException(
-                "Unable to acquire global lock to add bundle.");
-        }
-        try
-        {
-            // Use a copy-on-write approach to add the bundle
-            // to the installed maps.
-            Map[] maps = new Map[] {
-                new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
-                new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
-            };
-            maps[LOCATION_MAP_IDX].put(bundle._getLocation(), bundle);
-            maps[IDENTIFIER_MAP_IDX].put(new Long(bundle.getBundleId()), bundle);
-            m_installedBundles = maps;
-        }
-        finally
-        {
-            releaseGlobalLock();
         }
 
         if (bundle.isExtension())

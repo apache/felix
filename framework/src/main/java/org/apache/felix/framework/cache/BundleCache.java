@@ -39,6 +39,10 @@ import org.osgi.framework.Constants;
  * properties):
  * </p>
  * <ul>
+ *   <li><tt>felix.cache.filelimit</tt> - The integer value of this string
+ *       sets an upper limit on how many files the cache will open. The default
+ *       value is zero, which means there is no limit.
+ *   </li>
  *   <li><tt>org.osgi.framework.storage</tt> - Sets the directory to use as
  *       the bundle cache; by default bundle cache directory is
  *       <tt>felix-cache</tt> in the current working directory. The value
@@ -76,7 +80,7 @@ public class BundleCache
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
     public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
     public static final String CACHE_FILELIMIT_PROP = "felix.cache.filelimit";
-    // TODO: CACHE - Remove this once we migrate the cache format.
+    // TODO: KARL/CACHE - Remove this once we migrate the cache format.
     public static final String CACHE_SINGLEBUNDLEFILE_PROP = "felix.cache.singlebundlefile";
 
     protected static transient int BUFSIZE = 4096;
