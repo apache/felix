@@ -1198,8 +1198,15 @@ class BundleImpl implements Bundle, BundleRevisions
             headerMap,
             m_archive.getCurrentRevision().getContent());
 
-        // Verify that the bundle symbolic name + version is unique.
-        if (revision.getManifestVersion().equals("2"))
+        // For R4 bundles, verify that the bundle symbolic name + version
+        // is unique unless this check has been disabled.
+        String allowMultiple =
+            (String) getFramework().getConfig().get(Constants.FRAMEWORK_BSNVERSION);
+        allowMultiple = (allowMultiple == null)
+            ? Constants.FRAMEWORK_BSNVERSION_SINGLE
+            : allowMultiple;
+        if (revision.getManifestVersion().equals("2")
+            && !allowMultiple.equals(Constants.FRAMEWORK_BSNVERSION_MULTIPLE))
         {
             Version bundleVersion = revision.getVersion();
             bundleVersion = (bundleVersion == null) ? Version.emptyVersion : bundleVersion;
