@@ -42,7 +42,7 @@
     <gogo.runtime.version>0.10.0</gogo.runtime.version>
     <gogo.shell.version>0.10.0</gogo.shell.version>
     <gogo.command.version>0.11.0-SNAPSHOT</gogo.command.version>
-    <obr.version>1.6.2</obr.version>
+    <obr.version>1.6.6</obr.version>
   </properties>
   <profiles>
     <profile>
