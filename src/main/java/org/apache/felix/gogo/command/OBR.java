@@ -296,8 +296,8 @@ public class OBR
         @Parameter(names={ "-s", "--start" }, presentValue="true",
             absentValue="false") boolean start,
         @Descriptor("deploy required bundles only")
-        @Parameter(names={ "-r", "--required" }, presentValue="true",
-            absentValue="false") boolean required,
+        @Parameter(names={ "-ro", "--required-only" }, presentValue="true",
+            absentValue="false") boolean requiredOnly,
         @Descriptor("( <bundle-name> | <symbolic-name> | <bundle-id> )[@<version>] ...")
             String[] args)
         throws IOException, InvalidSyntaxException
@@ -357,7 +357,7 @@ public class OBR
                             + " (" + resources[resIdx].getVersion() + ")");
                     }
                 }
-                if (!required)
+                if (!requiredOnly)
                 {
                     resources = resolver.getOptionalResources();
                     if ((resources != null) && (resources.length > 0))
@@ -380,7 +380,7 @@ public class OBR
                     {
                         options |= Resolver.START;
                     }
-                    if (required)
+                    if (requiredOnly)
                     {
                         options |= Resolver.NO_OPTIONAL_RESOURCES;
                     }
