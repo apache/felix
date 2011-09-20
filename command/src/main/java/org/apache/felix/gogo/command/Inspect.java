@@ -96,14 +96,15 @@ public class Inspect
         boolean separatorNeeded = false;
         for (Bundle b : bundles)
         {
+            if (separatorNeeded)
+            {
+                System.out.println("");
+            }
+
             // Print out any matching generic capabilities.
             BundleWiring wiring = b.adapt(BundleWiring.class);
             if (wiring != null)
             {
-                if (separatorNeeded)
-                {
-                    System.out.println("");
-                }
                 String title = b + " provides:";
                 System.out.println(title);
                 System.out.println(Util.getUnderlineString(title.length()));
@@ -124,14 +125,14 @@ public class Inspect
                 {
                     System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
                 }
-                separatorNeeded = true;
             }
             else
             {
                 System.out.println("Bundle "
                     + b.getBundleId()
-                    + " is apparently not resolved.");
+                    + " is not resolved.");
             }
+            separatorNeeded = true;
         }
     }
 
@@ -158,6 +159,7 @@ public class Inspect
                         msg = cap.getNamespace()
                             + "; "
                             + keyAttr
+                            + " "
                             + getVersionFromCapability(cap);
                     }
                     else
@@ -176,6 +178,7 @@ public class Inspect
                     System.out.println(cap.getNamespace()
                         + "; "
                         + cap.getAttributes().get(cap.getNamespace())
+                        + " "
                         + getVersionFromCapability(cap)
                         + " "
                         + UNUSED_MESSAGE);
@@ -268,14 +271,15 @@ public class Inspect
         boolean separatorNeeded = false;
         for (Bundle b : bundles)
         {
+            if (separatorNeeded)
+            {
+                System.out.println("");
+            }
+
             // Print out any matching generic requirements.
             BundleWiring wiring = b.adapt(BundleWiring.class);
             if (wiring != null)
             {
-                if (separatorNeeded)
-                {
-                    System.out.println("");
-                }
                 String title = b + " requires:";
                 System.out.println(title);
                 System.out.println(Util.getUnderlineString(title.length()));
@@ -294,14 +298,15 @@ public class Inspect
                 {
                     System.out.println(Util.unparseSubstring(namespace) + " " + EMPTY_MESSAGE);
                 }
-                separatorNeeded = true;
             }
             else
             {
                 System.out.println("Bundle "
                     + b.getBundleId()
-                    + " is apparently not resolved.");
+                    + " is not resolved.");
             }
+
+            separatorNeeded = true;
         }
     }
 
@@ -336,6 +341,7 @@ public class Inspect
                             msg = wire.getCapability().getNamespace()
                                 + "; "
                                 + keyAttr
+                                + " "
                                 + getVersionFromCapability(wire.getCapability());
                         }
                         else
