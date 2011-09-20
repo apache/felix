@@ -674,10 +674,10 @@ public class BundleWiringImpl implements BundleWiring
         return null;
     }
 
-// TODO: OSGi R4.3 - Should this be synchronized or should we take a snapshot?
     // Thread local to detect class loading cycles.
     private final ThreadLocal m_listResourcesCycleCheck = new ThreadLocal();
 
+// TODO: OSGi R4.3 - Should this be synchronized or should we take a snapshot?
     public synchronized Collection<String> listResources(
         String path, String filePattern, int options)
     {
