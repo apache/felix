@@ -103,16 +103,18 @@ public class BundleCache
         m_logger = logger;
         m_configMap = configMap;
 
+        int limit = 0;
         String limitStr = (String) m_configMap.get(CACHE_FILELIMIT_PROP);
-        limitStr = (limitStr == null) ? "10" : limitStr;
-        int limit;
-        try
+        if (limitStr != null)
         {
-            limit = Integer.parseInt(limitStr);
-        }
-        catch (NumberFormatException ex)
-        {
-            limit = 10;
+            try
+            {
+                limit = Integer.parseInt(limitStr);
+            }
+            catch (NumberFormatException ex)
+            {
+                limit = 0;
+            }
         }
         m_zipFactory = new WeakZipFileFactory(limit);
 
