@@ -73,6 +73,9 @@ import org.osgi.service.packageadmin.ExportedPackage;
 
 public class Felix extends BundleImpl implements Framework
 {
+    // This value is substituted by maven when building the framework.
+    private static final String m_frameworkVersion = "${pom.version}";
+
     // The secure action used to do privileged calls
     static final SecureAction m_secureAction = new SecureAction();
 
@@ -4304,27 +4307,9 @@ public class Felix extends BundleImpl implements Framework
     **/
     private static String getFrameworkVersion()
     {
-        // The framework version property.
-        Properties props = new Properties();
-        InputStream in = Felix.class.getResourceAsStream("Felix.properties");
-        if (in != null)
-        {
-            try
-            {
-                props.load(in);
-            }
-            catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
-
         // Maven uses a '-' to separate the version qualifier,
         // while OSGi uses a '.', so we need to convert to a '.'
-        StringBuffer sb =
-            new StringBuffer(
-                props.getProperty(
-                    FelixConstants.FELIX_VERSION_PROPERTY, "0.0.0"));
+        StringBuffer sb = new StringBuffer(m_frameworkVersion);
         if (sb.toString().indexOf("-") >= 0)
         {
             sb.setCharAt(sb.toString().indexOf("-"), '.');
