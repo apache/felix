@@ -38,7 +38,7 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.1-SNAPSHOT</version>
       <optional>true</optional>
     </dependency>
     <dependency>
