@@ -1,3 +1,14 @@
+Changes from 1.4.2 to 2.0.0
+---------------------------
+** Bug
+    * [FELIX-2648] - Incompatible security provider state when switching from 2.0.4 to 3.0.3
+    * [FELIX-2922] - ArrayIndexOutOfBoundsException when specifying no name
+    * [FELIX-3004] - felix.security does not work with exploded jars 
+    * [FELIX-3101] - ClassCastException in Permissions class
+
+** Improvement
+    * Update to latest framework version 4.0.0
+
 Changes from 1.4.1 to 1.4.2
 ---------------------------
 
