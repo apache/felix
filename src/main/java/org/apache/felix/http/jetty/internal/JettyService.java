@@ -142,6 +142,10 @@ public final class JettyService
             StringBuffer message = new StringBuffer("Started jetty ").append(Server.getVersion()).append(" at port(s)");
             HashUserRealm realm = new HashUserRealm("OSGi HTTP Service Realm");
             this.server = new Server();
+
+            // HTTP/1.1 requires Date header if possible (it is)
+            this.server.setSendDateHeader(true);
+            
             this.server.addUserRealm(realm);
 
             if (this.config.isUseHttp())
