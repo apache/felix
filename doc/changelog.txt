@@ -1,3 +1,14 @@
+Changes from 3.2.2 to 4.0.0
+---------------------------
+** Improvement
+    * [FELIX-3094] - [Main] Launcher should attempt to restart framework if the system bundle was updated
+    * [FELIX-3123] - [Main] Integrate OBR 1.6.6
+    * [FELIX-3125] - Update to latest framework version 4.0.0
+
+** Task
+    * [FELIX-3051] - [Main] Integrate latest Gogo Command bundle to support inspecting generic capabilities/requirements
+
+
 Changes from 3.2.1 to 3.2.2
 ---------------------------
 
