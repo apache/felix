@@ -20,7 +20,7 @@
  <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>1.2.1</version>
+    <version>2.1</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -72,23 +72,7 @@
             <Private-Package>org.apache.felix.main.*</Private-Package>
             <Export-Package>!org.osgi.service.log, !org.osgi.service.obr,org.osgi.*</Export-Package>
             <Import-Package>!*</Import-Package>
-            <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES,{src/main/resources/}</Include-Resource>
           </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>rat-maven-plugin</artifactId>
-        <configuration>
-          <excludeSubProjects>false</excludeSubProjects>
-          <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-          <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-          <excludes>
-            <param>doc/*</param>
-            <param>maven-eclipse.xml</param>
-            <param>.checkstyle</param>
-            <param>.externalToolBuilders/*</param>
-          </excludes>
         </configuration>
       </plugin>
       <plugin>
@@ -167,15 +151,6 @@
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
       </resource>
-      <resource>
-      <directory>.</directory>
-      <targetPath>META-INF</targetPath>
-      <includes>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
-        <include>DEPENDENCIES*</include>
-      </includes>
-    </resource>
     </resources> 
   </build>
 </project>
