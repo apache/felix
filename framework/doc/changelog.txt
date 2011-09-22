@@ -20,7 +20,6 @@ Changes from 3.2.2 to 3.2.1
     * [FELIX-2950] - [Framework] Adopt OSGi R4.3 API as framework internal API
     * [FELIX-2998] - [Framework] OSGi R4.3 changed filter handling of exceptions when calling equals()/compare() to return false
     * [FELIX-3000] - Move sending service registered event out of bundle lock
-    * [FELIX-3035] - Make Felix version a compile time constant
     * [FELIX-3071] - [Framework] It should be possible to limit number of open JAR files
     * [FELIX-3125] - [Framework] Use single file per bundle in bundle cache by default
 
