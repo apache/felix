@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Framework</name>
   <artifactId>org.apache.felix.framework</artifactId>
-  <version>4.0.0</version>
+  <version>3.3.0-SNAPSHOT</version>
   <dependencies>
   </dependencies>
   <properties>
@@ -92,10 +92,4 @@
       </resource>
     </resources>
   </build>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-4.0.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.framework-4.0.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.framework-4.0.0</url>
-  </scm>
 </project>
