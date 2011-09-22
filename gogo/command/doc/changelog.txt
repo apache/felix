@@ -1,3 +1,11 @@
+Changes from 0.10.0 to 0.12.0
+-----------------------------
+
+** Improvement
+    * [FELIX-3050] - [Gogo Command] Update "inspect" command to work with OSGi R4.3 generic capabilities/requirements
+    * [FELIX-3088] - [Gogo Command] The "resolve" command should print some message if not all bundles could be resolved
+    * [FELIX-3118] - obr:deploy should allow user to specify whether optional bundles are deployed or not
+
 Changes from 0.8.0 to 0.10.0
 ----------------------------
 
