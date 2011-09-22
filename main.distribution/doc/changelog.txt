@@ -4,6 +4,7 @@ Changes from 3.2.2 to 4.0.0
 ** Improvement
     * Update to framework and main 4.0.0
     * Update to gogo command 0.12.0
+    * Update to OBR 1.6.6
 
 Changes from 3.2.1 to 3.2.2
 ---------------------------
