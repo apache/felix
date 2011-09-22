@@ -1,3 +1,46 @@
+Changes from 3.2.2 to 3.2.1
+---------------------------
+
+** Bug
+    * [FELIX-2762] - Substring parser incorrectly disallowing use of parentheses characters
+    * [FELIX-2990] - [Framework] Bug introduced into handling of native libraries during a fresh
+    * [FELIX-3015] - [Framework] Provide org.osgi.util.tracker version 1.5
+    * [FELIX-3033] - [Framework] Service registry hooks are not correctly filtering bundle contexts for event hook
+    * [FELIX-3038] - Framework does not offer J2SE-1.2 Execution Environment
+    * [FELIX-3043] - [Framework] Resolver is not correctly resolving fragments in all cases
+    * [FELIX-3059] - Reexported packages are not calculate correctly leading to resolver and class loading bugs
+    * [FELIX-3062] - [Framework] Resolver gets into infinite loop in the face of a require-bundle cycle
+    * [FELIX-3082] - [Framework] Bundles not allowed to add listeners while in STOPPING state
+    * [FELIX-3085] - Importing/exporting "." should not be allowed
+    * [FELIX-3096] - Could not add FrameworkListener from ServiceListener
+
+** Improvement
+    * [FELIX-2467] - The framework extensions should be returned when invoking the method PackageAdmin#getFragments with the system bundle
+    * [FELIX-2572] - JRE system packages should include "uses" constraints
+    * [FELIX-2950] - [Framework] Adopt OSGi R4.3 API as framework internal API
+    * [FELIX-2998] - [Framework] OSGi R4.3 changed filter handling of exceptions when calling equals()/compare() to return false
+    * [FELIX-3000] - Move sending service registered event out of bundle lock
+    * [FELIX-3035] - Make Felix version a compile time constant
+    * [FELIX-3071] - [Framework] It should be possible to limit number of open JAR files
+    * [FELIX-3125] - [Framework] Use single file per bundle in bundle cache by default
+
+** New Feature
+    * [FELIX-2959] - [Framework] Implement OSGi R4.3 class loader byte-code weaving hook
+    * [FELIX-2969] - [Framework] Implement OSGi R4.3 framework wiring object
+    * [FELIX-2973] - [Framework] Implement OSGi R4.3 generic capabilities and requirements
+    * [FELIX-2975] - [Framework] Implement OSGi R4.3 framework start level object
+    * [FELIX-2986] - [Framework] Implement OSGi R4.3 resolver hooks
+    * [FELIX-2999] - [Framework] OSGi R4.3 now specifies that number types should be trimmed when evaluating filters
+    * [FELIX-3032] - [Framework] Implement OSGi R4.3 bundle hooks
+    * [FELIX-3052] - [Framework] Implement OSGi R4.3 system bundle generic capabilities
+    * [FELIX-3056] - [Framework] Implement OSGi R4.3 event listener service registry hook
+    * [FELIX-3122] - [Framework] Implement OSGi R4.3 framework UUID
+    * [FELIX-3124] - [Framework] Implement OSGi R4.3 property to allow installing bundles with the same BSN and version
+
+** Task
+    * [FELIX-3110] - [Framework] Implement 4.3 security checks
+
+
 Changes from 3.2.1 to 3.2.2
 ---------------------------
 
