@@ -80,36 +80,16 @@
                   <exclude>src/main/appended-resources/**</exclude>
                   <exclude>src/**/packageinfo</exclude>
                   <exclude>src/main/resources/META-INF/services/org.osgi.framework.launch.FrameworkFactory</exclude>
+                  <exclude>src/main/resources/org/apache/felix/framework/Felix.properties</exclude>
               </excludes>
             </configuration>
       </plugin>
     </plugins>
     <resources>
-      <!-- Add back in the default resources, since we are overriding resources. -->
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
       </resource>
-      <!-- Copy Felix.java with property substitution enabled to get version. -->
-      <resource>
-        <directory>src/main/java</directory>
-        <includes>
-            <include>org/apache/felix/framework/Felix.java</include>
-        </includes>
-        <filtering>true</filtering>
-        <targetPath>../filtered-sources/java</targetPath>
-      </resource>
-      <!-- Copy other source files with no property substitution. -->
-      <resource>
-        <directory>src/main/java</directory>
-        <excludes>
-            <exclude>org/apache/felix/framework/Felix.java</exclude>
-        </excludes>
-        <filtering>false</filtering>
-        <targetPath>../filtered-sources/java</targetPath>
-      </resource>
     </resources>
-    <!-- Set the source directory to be the filtered source files. -->
-    <sourceDirectory>target/filtered-sources/java</sourceDirectory>
   </build>
 </project>
