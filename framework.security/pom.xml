@@ -31,6 +31,11 @@
   <description>
     This bundle provides an implementation of the OSGi security for Apache Felix.
   </description>
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/framework.security</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/framework.security</developerConnection>
+      <url>http://svn.apache.org/repos/asf/felix/framework.security</url>
+    </scm>
   <dependencies>
      <dependency>
       <groupId>org.osgi</groupId>
@@ -40,7 +45,7 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>3.3.0-SNAPSHOT</version>
+      <version>4.0.0</version>
     </dependency>
   </dependencies>
   <build>
