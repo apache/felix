@@ -51,6 +51,7 @@ public final class JettyService
     private DispatcherServlet dispatcher;
     private EventDispatcher eventDispatcher;
     private final HttpServiceController controller;
+    private MBeanServerTracker mbeanServerTracker;
 
     public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher,
         HttpServiceController controller)
@@ -131,6 +132,12 @@ public final class JettyService
             {
                 SystemLogger.error("Exception while stopping Jetty.", e);
             }
+
+            if (this.mbeanServerTracker != null)
+            {
+                this.mbeanServerTracker.close();
+                this.mbeanServerTracker = null;
+            }
         }
     }
 
@@ -145,7 +152,13 @@ public final class JettyService
 
             // HTTP/1.1 requires Date header if possible (it is)
             this.server.setSendDateHeader(true);
-            
+
+            if (this.config.isRegisterMBeans())
+            {
+                this.mbeanServerTracker = new MBeanServerTracker(this.context, this.server);
+                this.mbeanServerTracker.open();
+            }
+
             this.server.addUserRealm(realm);
 
             if (this.config.isUseHttp())
