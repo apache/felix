@@ -67,6 +67,9 @@ public final class JettyConfig
     /** Felix specific property to control whether Jetty uses NIO or not for HTTPS. Valid values are "true", "false". Default is the value of org.apache.felix.http.nio */
     public static final String  FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
 
+    /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
+    public static final String  FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
+
     private final BundleContext context;
     private boolean debug;
     private int httpPort;
@@ -81,6 +84,7 @@ public final class JettyConfig
     private String clientcert;
     private boolean useHttpNio;
     private boolean useHttpsNio;
+    private boolean registerMBeans;
 
     public JettyConfig(BundleContext context)
     {
@@ -121,6 +125,11 @@ public final class JettyConfig
     public boolean isUseHttpsNio()
     {
         return this.useHttpsNio;
+    }
+
+    public boolean isRegisterMBeans()
+    {
+        return this.registerMBeans;
     }
 
     public int getHttpPort()
@@ -187,6 +196,7 @@ public final class JettyConfig
         this.clientcert = getProperty(props, FELIX_HTTPS_CLIENT_CERT, "none");
         this.useHttpNio = getBooleanProperty(props, FELIX_HTTP_NIO, true);
         this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
+        this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
     }
 
     private String getProperty(Dictionary props, String name, String defValue)
