@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.http.api;
+package org.apache.felix.http.cometd;
 
 import javax.servlet.ServletException;
 import org.cometd.Bayeux;

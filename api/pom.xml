@@ -53,12 +53,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.cometd.java</groupId>
-            <artifactId>cometd-api</artifactId>
-            <version>1.0.beta7</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <scope>provided</scope>
