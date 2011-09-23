@@ -7,6 +7,7 @@
         <AD id="org.apache.felix.https.enable" type="Boolean" default="false" name="%org.apache.felix.https.enable.name" description="%org.apache.felix.https.enable.description"/>
         <AD id="org.osgi.service.http.port.secure" type="Integer" default="433" name="%org.osgi.service.http.port.secure.name" description="%org.osgi.service.http.port.secure.description"/>
         <AD id="org.apache.felix.https.nio" type="Boolean" default="true" name="%org.apache.felix.https.nio.name" description="%org.apache.felix.https.nio.description"/>
+        <AD id="org.apache.felix.http.mbeans" type="Boolean" default="false" name="%org.apache.felix.http.mbeans.name" description="%org.apache.felix.http.mbeans.description"/>
         <AD id="org.apache.felix.https.keystore" type="String" name="%org.apache.felix.https.keystore.name" description="%org.apache.felix.https.keystore.description"/>
         <AD id="org.apache.felix.https.keystore.password" type="String" name="%org.apache.felix.https.keystore.password.name" description="%org.apache.felix.https.keystore.password.description"/>
         <AD id="org.apache.felix.https.keystore.key.password" type="String" name="%org.apache.felix.https.keystore.key.password.name" description="%org.apache.felix.https.keystore.key.password.description"/>
