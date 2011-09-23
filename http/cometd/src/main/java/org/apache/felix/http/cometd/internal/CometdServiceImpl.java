@@ -16,7 +16,7 @@
  */
 package org.apache.felix.http.cometd.internal;
 
-import org.apache.felix.http.api.CometdService;
+import org.apache.felix.http.cometd.CometdService;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.cometd.Bayeux;
 import org.mortbay.cometd.continuation.ContinuationCometdServlet;

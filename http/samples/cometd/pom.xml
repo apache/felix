@@ -83,7 +83,7 @@
         </dependency>
         <dependency>
             <groupId>${pom.groupId}</groupId>
-            <artifactId>org.apache.felix.http.api</artifactId>
+            <artifactId>org.apache.felix.http.cometd</artifactId>
             <version>${pom.version}</version>
         </dependency>
     </dependencies>

@@ -41,22 +41,18 @@
                             org.apache.felix.http.cometd.internal.CometdActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${pom.version},
-                            org.cometd;version=1.0.beta7,
-                            org.mortbay.*;-split-package:=merge-first,
-                            org.osgi.service.http,
-                            javax.servlet.*;version=2.5;-split-package:=merge-first
+                            org.apache.felix.http.cometd;version=${project.version},
+                            org.cometd;version=1.1.4
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
-                            org.apache.felix.http.cometd.*
+                            org.apache.felix.http.cometd.internal
                         </Private-Package>
-                        <Import-Package>
-                            org.osgi.service.http.*,
-                            org.cometd,
-                            org.apache.felix.http.api,
-                            *;resolution:=optional
-                        </Import-Package>
+                        <Embed-Dependency>
+                            cometd-jetty;inline=true,
+                            jetty-util;inline=true,
+                            jetty-util5;inline=true
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -77,27 +73,17 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>jetty</artifactId>
-            <version>6.1.24</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>jetty-util</artifactId>
-            <version>6.1.24</version>
+            <version>6.1.26</version>
         </dependency>
         <dependency>
             <groupId>org.mortbay.jetty</groupId>
-            <artifactId>jetty-sslengine</artifactId>
-            <version>6.1.24</version>
-        </dependency>
-        <dependency>
-            <groupId>org.cometd.java</groupId>
-            <artifactId>cometd-api</artifactId>
-            <version>1.0.beta7</version>
+            <artifactId>jetty-util5</artifactId>
+            <version>6.1.26</version>
         </dependency>
         <dependency>
             <groupId>org.mortbay.jetty</groupId>
@@ -105,14 +91,14 @@
             <version>6.1.15</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
-            <artifactId>org.apache.felix.http.api</artifactId>
-            <version>${pom.version}</version>
+            <groupId>org.cometd.java</groupId>
+            <artifactId>cometd-api</artifactId>
+            <version>1.1.4</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

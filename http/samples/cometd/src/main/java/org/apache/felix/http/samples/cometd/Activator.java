@@ -26,7 +26,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.util.Hashtable;
-import org.apache.felix.http.api.CometdService;
+import org.apache.felix.http.cometd.CometdService;
 import org.cometd.Bayeux;
 
 public final class Activator
