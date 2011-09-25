@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,14 +50,14 @@ public class Element {
      * The map key is the qualified name of the attribute (<code>ns:name</code>)
      * The value is the attribute object.
      */
-    private Map m_attributes = new HashMap();
+    private Map m_attributes = new LinkedHashMap();
 
     /**
      * The map of the sub-element of the element (element name -> {@link Element}.
      * The map key is the element qualified name (ns:name).
      * The value is the array of element of this name.
      */
-    private Map m_elements = new HashMap();
+    private Map m_elements = new LinkedHashMap();
 
     /**
      * Creates an Element.
@@ -133,14 +134,14 @@ public class Element {
      * Returns the value of the attribute "name" of the namespace "ns".
      * @param name the name of the attribute to find
      * @param ns the namespace of the attribute to find
-     * @return the String value of the attribute, or 
+     * @return the String value of the attribute, or
      * <code>null</code> if the attribute is not found.
      */
     public String getAttribute(String name, String ns) {
         name = ns.toLowerCase() + ":" + name.toLowerCase();
         return getAttribute(name);
     }
-    
+
     /**
      * Gets the qualified name of the current element.
      * @return the qualified name of the current element.
@@ -226,7 +227,7 @@ public class Element {
     }
 
     /**
-     * Gets the elements array of the element type given in parameter. 
+     * Gets the elements array of the element type given in parameter.
      * This method looks for an empty namespace.
      * @param name the type of the element to find (element name)
      * @return the resulting element array (<code>null</code> if the search failed)
@@ -260,7 +261,7 @@ public class Element {
     }
 
     /**
-     * Does the element contain a sub-element of the type given in parameter. 
+     * Does the element contain a sub-element of the type given in parameter.
      * @param name the type of the element to check.
      * @param ns the namespace of the element to check.
      * @return <code>true</code> if the element contains an element of the type "name"
@@ -280,7 +281,7 @@ public class Element {
     public boolean containsAttribute(String name) {
         return m_attributes.containsKey(name.toLowerCase());
     }
-    
+
     /**
      * Gets the XML form of this element.
      * @return the XML snippet representing this element.
@@ -308,7 +309,7 @@ public class Element {
         } else {
             xml.append("<" + m_nameSpace + ":" + m_name);
         }
-        
+
         Set keys = m_attributes.keySet();
         Iterator it = keys.iterator();
         while (it.hasNext()) {
