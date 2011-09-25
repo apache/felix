@@ -27,7 +27,6 @@
   <packaging>bundle</packaging>
   <name>Apache Felix iPOJO</name>
   <artifactId>org.apache.felix.ipojo</artifactId>
-  <groupId>org.apache.felix</groupId>
   <version>1.9.0-SNAPSHOT</version>
 
   <properties>
@@ -55,7 +54,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.metadata</artifactId>
-      <version>1.4.0</version>
+      <version>1.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>asm</groupId>
@@ -170,19 +169,19 @@
     </plugins>
 
     <resources>
-		<resource>
-			<directory>src/main/resources</directory>
-		</resource>
-		<resource>
-			<directory>.</directory>
-			<targetPath>META-INF</targetPath>
-			<includes>
-				<include>LICENSE*</include>
-				<include>NOTICE*</include>
-				<include>DEPENDENCIES*</include>
-			</includes>
-		</resource>
-	</resources>
+    <resource>
+      <directory>src/main/resources</directory>
+    </resource>
+    <resource>
+      <directory>.</directory>
+      <targetPath>META-INF</targetPath>
+      <includes>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+        <include>DEPENDENCIES*</include>
+      </includes>
+    </resource>
+  </resources>
 
   </build>
 </project>
