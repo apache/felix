@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,14 +76,14 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * Map of [element ids, element].
      * This map is used to easily get an already created element.
      */
-    private Map<String, Element> m_ids = new HashMap<String, Element>();
+    private Map<String, Element> m_ids = new TreeMap<String, Element>();
 
     /**
      * Map of [element, referto].
      * This map is used to recreate the element hierarchy.
      * Stored element are added under referred element.
      */
-    private Map<Element, String> m_elements = new HashMap<Element, String>();
+    private Map<Element, String> m_elements = new LinkedHashMap<Element, String>();
 
     /**
      * Instance declaration.
@@ -126,8 +128,8 @@ public class MetadataCollector extends EmptyVisitor implements Opcodes {
      * @see org.objectweb.asm.ClassAdapter#visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        m_ids = new HashMap<String, Element>();
-        m_elements = new HashMap<Element, String>();
+        m_ids = new TreeMap<String, Element>();
+        m_elements = new LinkedHashMap<Element, String>();
         m_className = name;
     }
 

@@ -19,9 +19,9 @@
 package org.apache.felix.ipojo.manipulation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -51,7 +51,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * Field map [field name, type] discovered in the component class.
      */
-    private Map<String, String> m_fields = new HashMap<String, String>();
+    private Map<String, String> m_fields = new TreeMap<String, String>();
 
     /**
      * Method List of method descriptor discovered in the component class.
