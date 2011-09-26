@@ -179,8 +179,8 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         String className = factory.getComponentDescription().getClassName();
         for (int i = 0; i < m_configurations.length; i++) {
             if (m_configurations[i].getInstance() == null
-            		&& (m_configurations[i].getNeededFactoryName().equals(factName)
-            				|| m_configurations[i].getNeededFactoryName().equals(className))) {
+                    && (m_configurations[i].getNeededFactoryName().equals(factName)
+                            || m_configurations[i].getNeededFactoryName().equals(className))) {
                 createInstance(factory, m_configurations[i]);
                 implicated = true;
             }
@@ -239,11 +239,11 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         Properties toAppend = new Properties();
         Enumeration keys = configuration.keys();
         while(keys.hasMoreElements()) {
-        	String key = (String) keys.nextElement();
-        	if (! key.equals("instance.name")
-        			|| key.equals("component")) { // Remove instance.name and component
-        		toAppend.put(key, configuration.get(key));
-        	}
+            String key = (String) keys.nextElement();
+            if (! (key.equals("instance.name")
+                    || key.equals("component"))) { // Remove instance.name and component
+                toAppend.put(key, configuration.get(key));
+            }
         }
 
         Element[] instances = metadata.getElements("instance");
@@ -257,8 +257,8 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
                 throw new ConfigurationException("An instance cannot be parsed correctly : " + e.getMessage());
             }
 
-        	Properties instanceConfiguration = new Properties();
-         	instanceConfiguration.putAll(conf);
+            Properties instanceConfiguration = new Properties();
+             instanceConfiguration.putAll(conf);
             instanceConfiguration.putAll(toAppend);
             m_configurations[i] = new ManagedConfiguration(instanceConfiguration);
         }
@@ -273,7 +273,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * @throws ParseException : occurs when a configuration cannot be parse correctly.
      */
     public static Properties parseInstance(Element instance) throws ParseException {
-    	Properties dict = new Properties();
+        Properties dict = new Properties();
         String name = instance.getAttribute("name");
         if (name != null) {
             dict.put("name", name);
