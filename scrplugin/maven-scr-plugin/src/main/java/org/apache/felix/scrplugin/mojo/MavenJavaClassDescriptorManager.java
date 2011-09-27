@@ -25,7 +25,6 @@ import java.util.*;
 import org.apache.felix.scrplugin.*;
 import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 
@@ -120,8 +119,7 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
         ArrayList<File> dependencies = new ArrayList<File>();
 
         @SuppressWarnings("unchecked")
-        final Map<String, Artifact> resolved = project.getArtifactMap();
-        final Iterator<Artifact> it = resolved.values().iterator();
+        final Iterator<Artifact> it = project.getArtifacts().iterator();
         while ( it.hasNext() )
         {
             final Artifact declared = it.next();
@@ -134,10 +132,9 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
                     || Artifact.SCOPE_SYSTEM.equals( declared.getScope() ) )
                 {
                     this.log.debug( "Resolving artifact " + declared );
-                    final Artifact artifact = resolved.get( ArtifactUtils.versionlessKey( declared ) );
-                    if ( artifact != null )
+                    if ( declared.getFile() != null )
                     {
-                        dependencies.add( artifact.getFile() );
+                        dependencies.add( declared.getFile() );
                     }
                     else
                     {
