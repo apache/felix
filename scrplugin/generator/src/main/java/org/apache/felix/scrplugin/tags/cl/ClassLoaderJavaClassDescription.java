@@ -234,14 +234,16 @@ public class ClassLoaderJavaClassDescription implements JavaClassDescription {
             return true;
         }
 
-        try {
-            Class<?> typeClass = this.clazz.getClassLoader().loadClass( type );
-            return typeClass.isAssignableFrom( this.clazz );
-        } catch (ClassNotFoundException cnfe) {
-            // cannot load the check type through the class' class loader
-            // thus we assume clazz is not a type
-            return false;
+        if ( this.clazz.getClassLoader() != null ) {
+            try {
+                Class<?> typeClass = this.clazz.getClassLoader().loadClass( type );
+                return typeClass.isAssignableFrom( this.clazz );
+            } catch (ClassNotFoundException cnfe) {
+                // cannot load the check type through the class' class loader
+                // thus we assume clazz is not a type
+            }
         }
+        return false;
     }
 
     /**
