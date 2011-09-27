@@ -24,7 +24,6 @@ import java.util.*;
 
 import org.apache.felix.scrplugin.*;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.om.Component;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.project.MavenProject;
@@ -37,12 +36,8 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
     private final MavenProject project;
 
     private final String includeString;
-    
+
     private final String excludeString;
-
-    /** The component definitions from other bundles hashed by classname. */
-    private Map<String, Component> componentDescriptions;
-
 
     public MavenJavaClassDescriptorManager( MavenProject project, Log log, ClassLoader classLoader,
         String[] annotationTagProviders, String includeString, String excludeString, boolean parseJavadocs, boolean processAnnotations )
@@ -75,7 +70,7 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
         if ( includeString != null ) {
         	includes = StringUtils.split( includeString, "," );
         }
-        
+
         final String[] excludes;
         if ( excludeString != null )
         {
