@@ -43,7 +43,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>4.0.0</framework.version>
+    <framework.version>4.1.0-SNAPSHOT</framework.version>
     <gogo.runtime.version>0.10.0</gogo.runtime.version>
     <gogo.shell.version>0.10.0</gogo.shell.version>
     <gogo.command.version>0.12.0</gogo.command.version>
