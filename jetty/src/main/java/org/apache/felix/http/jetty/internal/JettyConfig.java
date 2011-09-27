@@ -185,7 +185,7 @@ public final class JettyConfig
 
         this.debug = getBooleanProperty(props, FELIX_HTTP_DEBUG, getBooleanProperty(props, HTTP_DEBUG, false));
         this.httpPort = getIntProperty(props, HTTP_PORT, 8080);
-        this.httpsPort = getIntProperty(props, HTTPS_PORT, 433);
+        this.httpsPort = getIntProperty(props, HTTPS_PORT, 8443);
         this.keystore = getProperty(props, FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
         this.password = getProperty(props, FELIX_KEYSTORE_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_PASSWORD));
         this.keyPassword = getProperty(props, FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
