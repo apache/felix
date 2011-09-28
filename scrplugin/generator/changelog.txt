@@ -5,7 +5,8 @@ Changes from 1.1.2 to 1.1.4
     * [FELIX-2963] - scr annotations @Activate @Deactivate @Modified are not detected with class inheritance
     * [FELIX-3117] - NullPointerException when not implementing interface that is defined with @Service
     * [FELIX-3136] - Endless loop: JavaClassDescriptorManager.getJavaClassDescription()
-
+    * [FELIX-3113] - NPE in multi-module Maven project
+    
 
 Changes from 1.1.0 to 1.1.2
 ---------------------------
