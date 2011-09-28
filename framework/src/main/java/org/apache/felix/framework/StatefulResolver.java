@@ -928,12 +928,19 @@ class StatefulResolver
 
             m_revisions.add(br);
 
-            if (Util.isSingleton(br))
+            // Add singletons to the singleton map.
+            boolean isSingleton = Util.isSingleton(br);
+            if (isSingleton)
             {
                 // Index the new singleton.
                 addToSingletonMap(m_singletons, br);
             }
-            else
+
+            // We always need to index non-singleton bundle capabilities, but
+            // singleton bundles only need to be index if they are resolved.
+            // Unresolved singleton capabilities are only indexed before a
+            // resolve operation when singleton selection is performed.
+            if (!isSingleton || (br.getWiring() != null))
             {
                 if (Util.isFragment(br))
                 {
