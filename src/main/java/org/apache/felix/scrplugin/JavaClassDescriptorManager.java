@@ -243,12 +243,12 @@ public abstract class JavaClassDescriptorManager
                     }
                 }
 
-                // now create map with component descriptions
-                this.componentDescriptions = new HashMap<String, Component>();
-                for ( final Component component : components )
-                {
-                    this.componentDescriptions.put( component.getImplementation().getClassame(), component );
-                }
+            }
+            // now create map with component descriptions
+            this.componentDescriptions = new HashMap<String, Component>();
+            for ( final Component component : components )
+            {
+                this.componentDescriptions.put( component.getImplementation().getClassame(), component );
             }
         }
 
