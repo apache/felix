@@ -470,7 +470,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 final MetaTypeInformation mti = mts.getMetaTypeInformation(providingBundle);
                 if (mti != null)
                 {
-                    return mti.getObjectClassDefinition(pid, null) != null;
+                    try {
+                        return mti.getObjectClassDefinition(pid, null) != null;
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
                 }
             }
         }
