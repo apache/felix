@@ -52,18 +52,10 @@ class Candidates
 
     // Set of all mandatory bundle revisions.
     private final Set<BundleRevision> m_mandatoryRevisions;
-    // Set of all involved bundle revisions.
-    private final Set<BundleRevision> m_involvedRevisions;
     // Maps a capability to requirements that match it.
     private final Map<BundleCapability, Set<BundleRequirement>> m_dependentMap;
     // Maps a requirement to the capability it matches.
     private final Map<BundleRequirement, SortedSet<BundleCapability>> m_candidateMap;
-    // Maps a host capability to a map containing its potential fragments;
-    // the fragment map maps a fragment symbolic name to a map that maps
-    // a version to a list of fragments requirements matching that symbolic
-    // name and version.
-    private final Map<BundleCapability,
-        Map<String, Map<Version, List<BundleRequirement>>>> m_hostFragments;
     // Maps a bundle revision to its associated wrapped revision; this only happens
     // when a revision being resolved has fragments to attach to it.
     private final Map<BundleRevision, HostBundleRevision> m_allWrappedHosts;
@@ -81,18 +73,15 @@ class Candidates
      * @param wrappedHosts the wrapped hosts map.
     **/
     private Candidates(
-        Set<BundleRevision> mandatoryRevisions, Set<BundleRevision> involvedRevisions,
+        Set<BundleRevision> mandatoryRevisions,
         Map<BundleCapability, Set<BundleRequirement>> dependentMap,
         Map<BundleRequirement, SortedSet<BundleCapability>> candidateMap,
-        Map<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>> hostFragments,
         Map<BundleRevision, HostBundleRevision> wrappedHosts, Map<BundleRevision, Object> populateResultCache,
         boolean fragmentsPresent)
     {
         m_mandatoryRevisions = mandatoryRevisions;
-        m_involvedRevisions = involvedRevisions;
         m_dependentMap = dependentMap;
         m_candidateMap = candidateMap;
-        m_hostFragments = hostFragments;
         m_allWrappedHosts = wrappedHosts;
         m_populateResultCache = populateResultCache;
         m_fragmentsPresent = fragmentsPresent;
@@ -104,11 +93,8 @@ class Candidates
     public Candidates()
     {
         m_mandatoryRevisions = new HashSet<BundleRevision>();
-        m_involvedRevisions = new HashSet<BundleRevision>();
         m_dependentMap = new HashMap<BundleCapability, Set<BundleRequirement>>();
         m_candidateMap = new HashMap<BundleRequirement, SortedSet<BundleCapability>>();
-        m_hostFragments =
-            new HashMap<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>();
         m_allWrappedHosts = new HashMap<BundleRevision, HostBundleRevision>();
         m_populateResultCache = new HashMap<BundleRevision, Object>();
     }
@@ -321,9 +307,6 @@ class Candidates
         }
         else if (cycleCount.intValue() == 0)
         {
-            // Record invoved revision.
-            m_involvedRevisions.add(revision);
-
             // Record that the revision was successfully populated.
             m_populateResultCache.put(revision, Boolean.TRUE);
 
@@ -618,9 +601,15 @@ class Candidates
     **/
     public void prepare()
     {
+        // Maps a host capability to a map containing its potential fragments;
+        // the fragment map maps a fragment symbolic name to a map that maps
+        // a version to a list of fragments requirements matching that symbolic
+        // name and version.
+        Map<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>
+            hostFragments = Collections.EMPTY_MAP;
         if (m_fragmentsPresent)
         {
-            populateDependents();
+            hostFragments = populateDependents();
         }
 
         // This method performs the following steps:
@@ -641,7 +630,7 @@ class Candidates
         List<HostBundleRevision> hostRevisions = new ArrayList<HostBundleRevision>();
         List<BundleRevision> unselectedFragments = new ArrayList<BundleRevision>();
         for (Entry<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>
-            hostEntry : m_hostFragments.entrySet())
+            hostEntry : hostFragments.entrySet())
         {
             // Step 1
             BundleCapability hostCap = hostEntry.getKey();
@@ -766,8 +755,16 @@ class Candidates
         }
     }
 
-    private void populateDependents()
+    // Maps a host capability to a map containing its potential fragments;
+    // the fragment map maps a fragment symbolic name to a map that maps
+    // a version to a list of fragments requirements matching that symbolic
+    // name and version.
+    private Map<BundleCapability,
+        Map<String, Map<Version, List<BundleRequirement>>>> populateDependents()
     {
+        Map<BundleCapability, Map<String, Map<Version, List<BundleRequirement>>>>
+            hostFragments = new HashMap<BundleCapability,
+                Map<String, Map<Version, List<BundleRequirement>>>>();
         for (Entry<BundleRequirement, SortedSet<BundleCapability>> entry
             : m_candidateMap.entrySet())
         {
@@ -788,11 +785,11 @@ class Candidates
                 if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                 {
                     Map<String, Map<Version, List<BundleRequirement>>>
-                        fragments = m_hostFragments.get(cap);
+                        fragments = hostFragments.get(cap);
                     if (fragments == null)
                     {
                         fragments = new HashMap<String, Map<Version, List<BundleRequirement>>>();
-                        m_hostFragments.put(cap, fragments);
+                        hostFragments.put(cap, fragments);
                     }
                     Map<Version, List<BundleRequirement>> fragmentVersions =
                         fragments.get(req.getRevision().getSymbolicName());
@@ -812,6 +809,8 @@ class Candidates
                 }
             }
         }
+
+        return hostFragments;
     }
 
     /**
@@ -881,38 +880,6 @@ class Candidates
                 {
                     dependents.remove(req);
                 }
-
-                if (isFragment)
-                {
-                    Map<String, Map<Version, List<BundleRequirement>>>
-                        fragments = m_hostFragments.get(cap);
-                    if (fragments != null)
-                    {
-                        Map<Version, List<BundleRequirement>> fragmentVersions =
-                            fragments.get(req.getRevision().getSymbolicName());
-                        if (fragmentVersions != null)
-                        {
-                            List<BundleRequirement> actual =
-                                fragmentVersions.get(req.getRevision().getVersion());
-                            if (actual != null)
-                            {
-                                actual.remove(req);
-                                if (actual.isEmpty())
-                                {
-                                    fragmentVersions.remove(req.getRevision().getVersion());
-                                    if (fragmentVersions.isEmpty())
-                                    {
-                                        fragments.remove(req.getRevision().getSymbolicName());
-                                        if (fragments.isEmpty())
-                                        {
-                                            m_hostFragments.remove(cap);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -978,9 +945,8 @@ class Candidates
         }
 
         return new Candidates(
-            m_mandatoryRevisions, m_involvedRevisions, dependentMap, candidateMap,
-            m_hostFragments, m_allWrappedHosts, m_populateResultCache,
-            m_fragmentsPresent);
+            m_mandatoryRevisions, dependentMap, candidateMap,
+            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent);
     }
 
     public void dump()
@@ -1022,29 +988,5 @@ class Candidates
             }
         }
         System.out.println("=== END CANDIDATE MAP ===");
-    }
-
-    /**
-     * Returns true if the specified module is a singleton
-     * (i.e., directive singleton:=true).
-     *
-     * @param revision the module to check for singleton status.
-     * @return true if the module is a singleton, false otherwise.
-    **/
-    private static boolean isSingleton(BundleRevision revision)
-    {
-        final List<BundleCapability> modCaps =
-            Util.getCapabilityByNamespace(
-                revision, BundleRevision.BUNDLE_NAMESPACE);
-        if (modCaps == null || modCaps.isEmpty())
-        {
-            return false;
-        }
-        String value = modCaps.get(0).getDirectives().get(Constants.SINGLETON_DIRECTIVE);
-        if (value != null)
-        {
-            return Boolean.valueOf(value);
-        }
-        return false;
     }
 }

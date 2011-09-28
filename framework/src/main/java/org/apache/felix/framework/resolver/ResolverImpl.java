@@ -760,9 +760,6 @@ public class ResolverImpl implements Resolver
             }
             else
             {
-                List<BundleRequirement> reqs = (candCap.getRevision().getWiring() != null)
-                    ? candCap.getRevision().getWiring().getRequirements(null)
-                    : candCap.getRevision().getDeclaredRequirements(null);
                 for (BundleRequirement req
                     : candCap.getRevision().getDeclaredRequirements(null))
                 {
