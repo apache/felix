@@ -5,6 +5,7 @@ Changes from 1.7.2 to 1.7.4
     * [FELIX-2963] - scr annotations @Activate @Deactivate @Modified are not detected with class inheritance
     * [FELIX-3117] - NullPointerException when not implementing interface that is defined with @Service
     * [FELIX-3070} - SCR Plugin and dependencies with classifier cause issue depending on the order of dependency in pom.xml
+    * [FELIX-3136] - Endless loop: JavaClassDescriptorManager.getJavaClassDescription()
 
 
 ** Improvement
