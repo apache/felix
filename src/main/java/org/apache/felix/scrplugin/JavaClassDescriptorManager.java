@@ -408,13 +408,17 @@ public abstract class JavaClassDescriptorManager
                         if ( this.processAnnotations && !doingHasScrPluginAnnotationCheck
                             && hasScrPluginAnnotation(clazz, javaClass) )
                         {
-                            this.log.debug( "Found java annotation description for: " + className );
+                            this.log.debug( "Generating java annotation description for: " + className );
                             result = new AnnotationJavaClassDescription( clazz, javaClass, this );
                         }
                         else if ( this.parseJavadocs )
                         {
-                            this.log.debug( "Found qdox description for: " + className );
+                            this.log.debug( "Generating qdox description for: " + className );
                             result = new QDoxJavaClassDescription( clazz, javaClass, this );
+                        }
+                        else
+                        {
+                            index++;
                         }
                     }
                     catch ( ClassNotFoundException e )
