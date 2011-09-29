@@ -21,7 +21,6 @@ package org.apache.felix.deploymentadmin.spi;
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
 import org.apache.felix.deploymentadmin.BundleInfoImpl;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
@@ -32,21 +31,19 @@ import org.osgi.service.packageadmin.PackageAdmin;
  * Command that starts all bundles described in the source deployment package of a deployment session.
  */
 public class StartBundleCommand extends Command {
-
     private final RefreshPackagesMonitor m_refreshMonitor = new RefreshPackagesMonitor();
     private static final int REFRESH_TIMEOUT = 10000;
 
     public void execute(DeploymentSessionImpl session) {
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
-        BundleContext context = session.getBundleContext();
         PackageAdmin packageAdmin = session.getPackageAdmin();
         RefreshPackagesListener listener = new RefreshPackagesListener();
         LogService log = session.getLog();
 
-        context.addFrameworkListener(listener);
+        session.getBundleContext().addFrameworkListener(listener);
         packageAdmin.refreshPackages(null);
         m_refreshMonitor.waitForRefresh();
-        context.removeFrameworkListener(listener);
+        session.getBundleContext().removeFrameworkListener(listener);
 
         // start source bundles
         BundleInfoImpl[] bundleInfos = source.getOrderedBundleInfos();
@@ -76,7 +73,6 @@ public class StartBundleCommand extends Command {
     private class RefreshPackagesListener implements FrameworkListener {
         public void frameworkEvent(FrameworkEvent event) {
             if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
-                // TODO: m_log.log(LogService.LOG_INFO, "Packages refreshed event received");
                 m_refreshMonitor.proceed();
             }
         }
@@ -97,20 +93,16 @@ public class StartBundleCommand extends Command {
          */
         public synchronized void waitForRefresh() {
             if (!m_alreadyNotified) {
-             // TODO: m_log.log(LogService.LOG_DEBUG, "wait for Packages refreshed event");
                 try {
                     wait(REFRESH_TIMEOUT);
                 }
                 catch (InterruptedException ie) {
-                 // TODO: m_log.log(LogService.LOG_INFO, "interrupted while waiting for packages refreshed event", ie);
                 }
                 finally {
-                    // just reset the misted notification variable, this Monitor object might be reused.
                     m_alreadyNotified = false;
                 }
             }
             else {
-                // TODO: m_log.log(LogService.LOG_DEBUG, "won't wait for Packages refreshed event, event is already received");
                 // just reset the misted notification variable, this Monitor object might be reused.
                 m_alreadyNotified = false;
             }
@@ -125,5 +117,4 @@ public class StartBundleCommand extends Command {
             notifyAll();
         }
     }
-
 }

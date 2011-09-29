@@ -104,7 +104,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                     try {
                         File index = new File(packages[i], PACKAGEINDEX_FILE);
                         File contents = new File(packages[i], PACKAGECONTENTS_DIR);
-                        FileDeploymentPackage dp = new FileDeploymentPackage(index, contents, m_context);
+                        FileDeploymentPackage dp = new FileDeploymentPackage(index, contents, m_context, this);
                         m_packages.put(dp.getName(), dp);
                     }
                     catch (IOException e) {
@@ -155,7 +155,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
         }
         try {
             if (!m_semaphore.tryAcquire(TIMEOUT)) {
-                throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Timeout exceeded while waiting to install deployment package (" + TIMEOUT + "msec)");
+                throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Timeout exceeded while waiting to install deployment package (" + TIMEOUT + " ms)");
             }
         }
         catch (InterruptedException ie) {
@@ -191,13 +191,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 m_log.log(LogService.LOG_ERROR, "Stream does not contain a valid Jar", e);
                 throw new DeploymentException(DeploymentException.CODE_NOT_A_JAR, "Stream does not contain a valid Jar", e);
             }
-            source = new StreamDeploymentPackage(jarInput, m_context);
+            source = new StreamDeploymentPackage(jarInput, m_context, this);
             sendStartedEvent(source.getName());
             
             AbstractDeploymentPackage target = (AbstractDeploymentPackage) getDeploymentPackage(source.getName());
             boolean newPackage = (target == null);
             if (newPackage) {
-                target = AbstractDeploymentPackage.emptyPackage;
+                target = AbstractDeploymentPackage.EMPTY_PACKAGE;
             }
             if (source.isFixPackage() && ((newPackage) || (!source.getVersionRange().isInRange(target.getVersion())))) {
                 succeeded = false;
@@ -238,7 +238,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             }
             FileDeploymentPackage fileDeploymentPackage = null;
             try {
-                fileDeploymentPackage = new FileDeploymentPackage(targetIndex, targetContents, m_context);
+                fileDeploymentPackage = new FileDeploymentPackage(targetIndex, targetContents, m_context, this);
                 m_packages.put(source.getName(), fileDeploymentPackage);
             }
             catch (IOException e) {
@@ -256,6 +256,41 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
         	if (source != null) {
         	    sendCompleteEvent(source.getName(), succeeded);
         	}
+            m_semaphore.release();
+        }
+    }
+    
+    public void uninstallDeploymentPackage(DeploymentPackage dp) throws DeploymentException {
+        try {
+            if (!m_semaphore.tryAcquire(TIMEOUT)) {
+                throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Timeout exceeded while waiting to uninstall deployment package (" + TIMEOUT + " ms)");
+            }
+        }
+        catch (InterruptedException ie) {
+            throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Thread interrupted");
+        }
+        boolean succeeded = false;
+        AbstractDeploymentPackage source = AbstractDeploymentPackage.EMPTY_PACKAGE;
+        AbstractDeploymentPackage target = (AbstractDeploymentPackage) dp;
+        try {
+            try {
+                m_session = new DeploymentSessionImpl(source, target, m_commandChain, this);
+                m_session.call();
+            }
+            catch (DeploymentException de) {
+                succeeded = false;
+                throw de;
+            }
+
+            File targetPackage = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName());
+            delete(targetPackage);
+            m_packages.remove(dp.getName());
+            succeeded = true;
+        }
+        finally {
+            if (source != null) {
+                sendCompleteEvent(source.getName(), succeeded);
+            }
             m_semaphore.release();
         }
     }

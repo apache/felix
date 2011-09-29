@@ -32,8 +32,7 @@ import org.osgi.service.deploymentadmin.DeploymentException;
 /**
  * This class represents a deployment package that is read from a jar stream.
  */
-class StreamDeploymentPackage extends AbstractDeploymentPackage {
-
+public class StreamDeploymentPackage extends AbstractDeploymentPackage {
     private final JarInputStream m_input;
     private final List m_names = new ArrayList();
 
@@ -44,8 +43,8 @@ class StreamDeploymentPackage extends AbstractDeploymentPackage {
      * @param bundleContext The bundle context.
      * @throws DeploymentException If it was not possible to read a valid deployment package from the specified stream.
      */
-    public StreamDeploymentPackage(JarInputStream input, BundleContext bundleContext) throws DeploymentException {
-        super(input.getManifest(), bundleContext);
+    public StreamDeploymentPackage(JarInputStream input, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException {
+        super(input.getManifest(), bundleContext, deploymentAdmin);
         m_input = input;
     }
 
@@ -94,5 +93,4 @@ class StreamDeploymentPackage extends AbstractDeploymentPackage {
     public InputStream getCurrentEntryStream() {
         return new NonCloseableStream(m_input);
     }
-
 }
