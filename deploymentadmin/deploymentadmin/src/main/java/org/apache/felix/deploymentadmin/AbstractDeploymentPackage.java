@@ -41,7 +41,11 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
  * deployment package data is obtained, this should be handled by extending classes.
  */
 public abstract class AbstractDeploymentPackage implements DeploymentPackage {
+    private static final String[] STRINGS = new String[] {};
+    private static final ResourceInfoImpl[] RESOURCE_INFO_IMPLS = new ResourceInfoImpl[] {};
+    private static final BundleInfoImpl[] BUNDLE_INFO_IMPLS = new BundleInfoImpl[] {};
     private final BundleContext m_bundleContext;
+    private final DeploymentAdminImpl m_deploymentAdmin;
     private final DeploymentPackageManifest m_manifest;
     private final Map m_nameToBundleInfo = new HashMap();
     private final Map m_pathToEntry = new HashMap();
@@ -49,26 +53,28 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
     private final ResourceInfoImpl[] m_resourceInfos;
     private final String[] m_resourcePaths;
     private final boolean m_isFixPackage;
-    protected static final AbstractDeploymentPackage emptyPackage = new AbstractDeploymentPackage() {
+    private boolean m_isStale;
+    protected static final AbstractDeploymentPackage EMPTY_PACKAGE = new AbstractDeploymentPackage() {
         public String getHeader(String header) {
             if (Constants.DEPLOYMENTPACKAGE_SYMBOLICMAME.equals(header)) { return ""; }
             else if (Constants.DEPLOYMENTPACKAGE_VERSION.equals(header)) { return Version.emptyVersion.toString(); }
             else { return null; }
         }
         public Bundle getBundle(String symbolicName) { return null; }
-        public BundleInfo[] getBundleInfos() { return new BundleInfoImpl[] {}; }
-        public BundleInfoImpl[] getBundleInfoImpls() { return new BundleInfoImpl[] {}; }
+        public BundleInfo[] getBundleInfos() { return BUNDLE_INFO_IMPLS; }
+        public BundleInfoImpl[] getBundleInfoImpls() { return BUNDLE_INFO_IMPLS; }
+        public ResourceInfoImpl[] getResourceInfos() { return RESOURCE_INFO_IMPLS; }
         public String getName() { return ""; }
         public String getResourceHeader(String resource, String header) { return null; }
         public ServiceReference getResourceProcessor(String resource) { return null; }
-        public String[] getResources() { return new String[] {}; }
+        public String[] getResources() { return STRINGS; }
         public Version getVersion() { return Version.emptyVersion; }
         public boolean isStale() { return true; }
         public void uninstall() throws DeploymentException { throw new IllegalStateException("Can not uninstall stale DeploymentPackage"); }
         public boolean uninstallForced() throws DeploymentException { throw new IllegalStateException("Can not uninstall stale DeploymentPackage"); }
         public InputStream getBundleStream(String symbolicName) throws IOException { return null; }
-        public BundleInfoImpl[] getOrderedBundleInfos() { return new BundleInfoImpl[] {}; }
-        public ResourceInfoImpl[] getOrderedResourceInfos() { return new ResourceInfoImpl[] {}; }
+        public BundleInfoImpl[] getOrderedBundleInfos() { return BUNDLE_INFO_IMPLS; }
+        public ResourceInfoImpl[] getOrderedResourceInfos() { return RESOURCE_INFO_IMPLS; }
         public InputStream getCurrentEntryStream() { throw new UnsupportedOperationException(); }
         public AbstractInfo getNextEntry() throws IOException { throw new UnsupportedOperationException(); }
         public String getDisplayName() { return ""; }
@@ -83,6 +89,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
         m_resourceInfos = null;
         m_resourcePaths = null;
         m_isFixPackage = false;
+        m_deploymentAdmin = null;
     }
 
     /**
@@ -92,10 +99,11 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
      * @param bundleContext The bundle context.
      * @throws DeploymentException Thrown if the specified manifest does not describe a valid deployment package.
      */
-    public AbstractDeploymentPackage(Manifest manifest, BundleContext bundleContext) throws DeploymentException {
+    public AbstractDeploymentPackage(Manifest manifest, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException {
         m_manifest = new DeploymentPackageManifest(manifest);
         m_isFixPackage = m_manifest.getFixPackage() != null;
         m_bundleContext = bundleContext;
+        m_deploymentAdmin = deploymentAdmin;
         m_bundleInfos = (BundleInfoImpl[]) m_manifest.getBundleInfos().toArray(new BundleInfoImpl[0]);
         for(int i = 0; i < m_bundleInfos.length; i++) {
             m_nameToBundleInfo.put(m_bundleInfos[i].getSymbolicName(), m_bundleInfos[i]);
@@ -115,7 +123,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
         if (m_nameToBundleInfo.containsKey(symbolicName)) {
             Bundle[] bundles = m_bundleContext.getBundles();
             for (int i = 0; i < bundles.length; i++) {
-                if (bundles[i].getSymbolicName().equals(symbolicName)) {
+                if (symbolicName.equals(bundles[i].getSymbolicName())) {
                     return bundles[i];
                 }
             }
@@ -236,15 +244,23 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
     }
 
     public boolean isStale() {
-        return false;
+        return m_isStale;
+    }
+    
+    public void setStale(boolean isStale) {
+        m_isStale = isStale;
     }
 
     public void uninstall() throws DeploymentException {
-        throw new IllegalStateException("Not implemented");
+        if (isStale()) {
+            throw new IllegalStateException("Deployment package is stale, cannot uninstall.");
+        }
+        m_deploymentAdmin.uninstallDeploymentPackage(this);
+        setStale(true);
     }
 
     public boolean uninstallForced() throws DeploymentException {
-        throw new IllegalStateException("Not implemented");
+        throw new IllegalStateException("Not implemented, use uninstall() for now.");
     }
 
     /**

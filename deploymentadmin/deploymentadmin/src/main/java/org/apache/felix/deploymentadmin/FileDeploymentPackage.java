@@ -34,8 +34,7 @@ import org.osgi.service.deploymentadmin.DeploymentException;
 /**
  * Implementation of a <code>DeploymentPackage</code> that is persisted on disk.
  */
-class FileDeploymentPackage extends AbstractDeploymentPackage {
-
+public class FileDeploymentPackage extends AbstractDeploymentPackage {
     private final List m_index;
     private final File m_contentsDir;
 
@@ -48,12 +47,12 @@ class FileDeploymentPackage extends AbstractDeploymentPackage {
      * @throws DeploymentException Thrown if the disk contents do not resemble a valid deployment package.
      * @throws IOException Thrown if there was a problem reading the resources from disk.
      */
-    public FileDeploymentPackage(File index, File packageDir, BundleContext bundleContext) throws DeploymentException, IOException {
-        this(ExplodingOutputtingInputStream.readIndex(index), packageDir, bundleContext);
+    public FileDeploymentPackage(File index, File packageDir, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException, IOException {
+        this(ExplodingOutputtingInputStream.readIndex(index), packageDir, bundleContext, deploymentAdmin);
     }
 
-    private FileDeploymentPackage(List index, File packageDir, BundleContext bundleContext) throws DeploymentException, IOException {
-        super(new Manifest(new GZIPInputStream(new FileInputStream(new File(packageDir, (String) index.remove(0))))), bundleContext);
+    private FileDeploymentPackage(List index, File packageDir, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException, IOException {
+        super(new Manifest(new GZIPInputStream(new FileInputStream(new File(packageDir, (String) index.remove(0))))), bundleContext, deploymentAdmin);
         m_index = index;
         m_contentsDir = packageDir;
     }
@@ -95,5 +94,4 @@ class FileDeploymentPackage extends AbstractDeploymentPackage {
     public AbstractInfo getNextEntry() throws IOException {
         throw new UnsupportedOperationException("Not implemented for file-based deployment package");
     }
-
 }
