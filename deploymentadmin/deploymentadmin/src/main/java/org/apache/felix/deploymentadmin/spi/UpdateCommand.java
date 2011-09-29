@@ -67,7 +67,7 @@ public class UpdateCommand extends Command {
                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
                 }
 
-                Bundle bundle = source.getBundle(bundleInfo.getSymbolicName());
+                Bundle bundle = targetPackage.getBundle(bundleInfo.getSymbolicName());
                 try {
                     if (bundle == null) {
                         // new bundle, install it
