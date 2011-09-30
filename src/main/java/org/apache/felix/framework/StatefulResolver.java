@@ -1021,7 +1021,19 @@ class StatefulResolver
 
         synchronized Set<BundleRevision> getFragments()
         {
-            return new HashSet(m_fragments);
+            Set<BundleRevision> fragments = new HashSet(m_fragments);
+            // Filter out any fragments that are not the current revision.
+            for (Iterator<BundleRevision> it = fragments.iterator(); it.hasNext(); )
+            {
+                BundleRevision fragment = it.next();
+                BundleRevision currentFragmentRevision =
+                    fragment.getBundle().adapt(BundleRevision.class);
+                if (fragment != currentFragmentRevision)
+                {
+                    it.remove();
+                }
+            }
+            return fragments;
         }
 
         synchronized boolean isSelectedSingleton(BundleRevision br)
@@ -1278,12 +1290,16 @@ class StatefulResolver
 
                 // Find the matching candidates.
                 Set<BundleCapability> matches = capSet.match(sf, obeyMandatory);
+                // Filter matching candidates.
                 for (BundleCapability cap : matches)
                 {
+                    // Filter according to security.
                     if (filteredBySecurity(req, cap))
                     {
                         continue;
                     }
+                    // Filter already resolved hosts, since we don't support
+                    // dynamic attachment of fragments.
                     if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
                         && (cap.getRevision().getWiring() != null))
                     {
@@ -1331,7 +1347,8 @@ class StatefulResolver
             return result;
         }
 
-        private boolean filteredBySecurity(BundleRequirement req, BundleCapability cap) {
+        private boolean filteredBySecurity(BundleRequirement req, BundleCapability cap)
+        {
             if (System.getSecurityManager() != null)
             {
                 BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
