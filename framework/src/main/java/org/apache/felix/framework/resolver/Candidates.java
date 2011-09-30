@@ -646,14 +646,10 @@ class Candidates
                 {
                     for (BundleRequirement hostReq : versionEntry.getValue())
                     {
-                        // Select the highest version of the fragment that
-                        // is not removal pending. If the fragment revision
-                        // is removal pending, then its current revision will
-                        // be null or won't match the existing revision.
-                        BundleRevision currentFragmentRevision =
-                            hostReq.getRevision().getBundle()
-                                .adapt(BundleRevision.class);
-                        if (isFirst && (currentFragmentRevision == hostReq.getRevision()))
+                        // Selecting the first fragment in each entry, which
+                        // is equivalent to selecting the highest version of
+                        // each fragment with a given symbolic name.
+                        if (isFirst)
                         {
                             selectedFragments.add(hostReq.getRevision());
                             isFirst = false;
