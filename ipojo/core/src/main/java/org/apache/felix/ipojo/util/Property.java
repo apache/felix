@@ -75,6 +75,11 @@ public class Property implements FieldInterceptor, ConstructorInjector {
     private Object m_value = NO_VALUE;
 
     /**
+     * The default value of the property.
+     */
+    private Object m_defaultValue = NO_VALUE;
+
+    /**
      * Flag tracking is the method was
      * already called for the current value.
      */
@@ -126,6 +131,7 @@ public class Property implements FieldInterceptor, ConstructorInjector {
         m_type = computeType(type, manager.getGlobalContext());
         if (value != null) {
             m_value = create(m_type, value);
+            m_defaultValue = m_value;
         }
 
         if (method != null) {
@@ -136,9 +142,9 @@ public class Property implements FieldInterceptor, ConstructorInjector {
     }
 
     public Property(String name, String field, String method, int index,
-    		String value, String type, InstanceManager manager, Handler handler) throws ConfigurationException {
-    	this(name, field, method, value, type, manager, handler);
-    	m_index = index;
+            String value, String type, InstanceManager manager, Handler handler) throws ConfigurationException {
+        this(name, field, method, value, type, manager, handler);
+        m_index = index;
     }
 
     /**
@@ -277,7 +283,7 @@ public class Property implements FieldInterceptor, ConstructorInjector {
      * parameter.
      */
     public int getParameterIndex() {
-    	return m_index;
+        return m_index;
     }
 
     /**
@@ -292,6 +298,17 @@ public class Property implements FieldInterceptor, ConstructorInjector {
         return m_value;
     }
 
+    /**
+     * Gets the initial value of the property.
+     * @return the default value.
+     */
+    public Object getDefaultValue() {
+        if (m_defaultValue == NO_VALUE) {
+            return getNoValue(m_type);
+        }
+
+        return m_defaultValue;
+    }
 
     /**
      * Gets the NO VALUE Object.
@@ -523,7 +540,7 @@ public class Property implements FieldInterceptor, ConstructorInjector {
      * it will be invoked another times.
      */
     public synchronized void reset() {
-    	m_invoked = false;
+        m_invoked = false;
     }
 
     /**
@@ -596,30 +613,30 @@ public class Property implements FieldInterceptor, ConstructorInjector {
      * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
      */
     public Object getConstructorParameter(int index) {
-    	if (m_index != index) {
-    		return null;
-    	}
+        if (m_index != index) {
+            return null;
+        }
 
-    	if (m_value  == NO_VALUE) {
+        if (m_value  == NO_VALUE) {
            return getNoValue(m_type);
         }
         return m_value;
-	}
+    }
 
-	/**
-	 * Gets the type of the constructor parameter to inject.
-	 * @param index the parameter index
-	 * @return the Class of the property.
-	 * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
-	 */
-	public Class getConstructorParameterType(int index) {
-		if (m_index != index) {
-    		return null;
-    	}
-		return m_type;
-	}
+    /**
+     * Gets the type of the constructor parameter to inject.
+     * @param index the parameter index
+     * @return the Class of the property.
+     * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
+     */
+    public Class getConstructorParameterType(int index) {
+        if (m_index != index) {
+            return null;
+        }
+        return m_type;
+    }
 
-	/**
+    /**
      * Gets the handler managing the property.
      * @return the configuration handler.
      */
