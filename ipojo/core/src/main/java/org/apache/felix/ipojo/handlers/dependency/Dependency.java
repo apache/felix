@@ -22,6 +22,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Dependency extends DependencyModel implements FieldInterceptor, MethodInterceptor,
-	ConstructorInjector {
+    ConstructorInjector {
 
     /**
      * Reference on the Dependency Handler.
@@ -213,9 +214,9 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
 
     protected void addConstructorInjection(int index) throws ConfigurationException {
-    	m_index = index;
-    	m_usage = new ServiceUsage();
-    	m_handler.getInstanceManager().register(index, this);
+        m_index = index;
+        m_usage = new ServiceUsage();
+        m_handler.getInstanceManager().register(index, this);
     }
 
     /**
@@ -268,7 +269,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         // This may happen during refresh.
         // So we just return.
         if (refs == null) {
-        	return;
+            return;
         }
 
         // Call bind callback.
@@ -358,9 +359,9 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     }
 
     private Object createNullableObject() {
-    	 // To load the proxy we use the POJO class loader. Indeed, this classloader imports iPOJO (so can access to Nullable) and has
+         // To load the proxy we use the POJO class loader. Indeed, this classloader imports iPOJO (so can access to Nullable) and has
         // access to the service specification.
-    	try {
+        try {
             ClassLoader cl = new NullableClassLoader(
                     getHandler().getInstanceManager().getClazz().getClassLoader(),
                     getSpecification().getClassLoader());
@@ -391,7 +392,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             if (m_di == null) {
                 // If nullable are supported, create the nullable object.
                 if (m_supportNullable) {
-                	createNullableObject();
+                    createNullableObject();
                 }
             } else {
                 // Create the default-implementation object.
@@ -414,20 +415,20 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             if (isAggregate()) {
                 m_proxyObject = new ServiceCollection(this);
             } else {
-            	// Can we really proxy ? We can proxy only interfaces.
-            	if (getSpecification().isInterface()) {
-	                String type = getHandler().getInstanceManager().getContext().getProperty(DependencyHandler.PROXY_TYPE_PROPERTY);
-	                if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
-	                    SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
-	                    m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
-	                } else {
-	                    DynamicProxyFactory proxyFactory = new DynamicProxyFactory();
-	                    m_proxyObject = proxyFactory.getProxy(getSpecification());
-	                }
-            	} else {
-            		m_handler.warn("Cannot create a proxy for a service dependency which is not an interface " +
-            				"- disabling proxy for " + getId());
-            	}
+                // Can we really proxy ? We can proxy only interfaces.
+                if (getSpecification().isInterface()) {
+                    String type = getHandler().getInstanceManager().getContext().getProperty(DependencyHandler.PROXY_TYPE_PROPERTY);
+                    if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
+                        SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
+                        m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
+                    } else {
+                        DynamicProxyFactory proxyFactory = new DynamicProxyFactory();
+                        m_proxyObject = proxyFactory.getProxy(getSpecification());
+                    }
+                } else {
+                    m_handler.warn("Cannot create a proxy for a service dependency which is not an interface " +
+                            "- disabling proxy for " + getId());
+                }
             }
         }
 
@@ -737,7 +738,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param args : arguments
      * @see org.apache.felix.ipojo.MethodInterceptor#onEntry(java.lang.Object, java.lang.reflect.Method, java.lang.Object[])
      */
-    public void onEntry(Object pojo, Method method, Object[] args) {
+    public void onEntry(Object pojo, Member method, Object[] args) {
         if (m_usage != null) {
             Usage usage = (Usage) m_usage.get();
             usage.incComponentStack(); // Increment the number of component access.
@@ -756,7 +757,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param throwable : thrown error
      * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Method, java.lang.Throwable)
      */
-    public void onError(Object pojo, Method method, Throwable throwable) {
+    public void onError(Object pojo, Member method, Throwable throwable) {
         // Nothing to do  : wait onFinally
     }
 
@@ -767,7 +768,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param returnedObj : returned object (null for void method)
      * @see org.apache.felix.ipojo.MethodInterceptor#onExit(java.lang.Object, java.lang.reflect.Method, java.lang.Object)
      */
-    public void onExit(Object pojo, Method method, Object returnedObj) {
+    public void onExit(Object pojo, Member method, Object returnedObj) {
         // Nothing to do  : wait onFinally
     }
 
@@ -777,7 +778,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param method : Method object.
      * @see org.apache.felix.ipojo.MethodInterceptor#onFinally(java.lang.Object, java.lang.reflect.Method)
      */
-    public void onFinally(Object pojo, Method method) {
+    public void onFinally(Object pojo, Member method) {
         if (m_usage != null) {
             Usage usage = (Usage) m_usage.get();
             usage.decComponentStack();
@@ -891,10 +892,10 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
          */
         protected Class getProxyClass(Class clazz) {
             byte[] clz = ProxyGenerator.dumpProxy(clazz); // Generate the proxy.
-        	// Turn around the VM changes (FELIX-2716) about java.* classes.
+            // Turn around the VM changes (FELIX-2716) about java.* classes.
             String cn = clazz.getName();
             if (cn.startsWith("java.")) {
-            	cn = "$" + cn;
+                cn = "$" + cn;
             }
             return defineClass(cn + "$$Proxy", clz, 0, clz.length);
         }
@@ -1015,52 +1016,52 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
     }
 
-	/**
-	 * Gets the constructor parameter.
-	 * @return the index of the constructor parameter,
-	 * or <code>-1</code> if not set.
-	 */
-	public int getConstructorParameterIndex() {
-		return m_index;
-	}
+    /**
+     * Gets the constructor parameter.
+     * @return the index of the constructor parameter,
+     * or <code>-1</code> if not set.
+     */
+    public int getConstructorParameterIndex() {
+        return m_index;
+    }
 
-	/**
-	 * Gets the object to inject in the constructor parameter.
-	 * @param index the index of the parameter
-	 * @return the created proxy object
-	 * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
-	 */
-	public Object getConstructorParameter(int index) {
-		if (m_index == index  && m_proxyObject != null) {
-			return m_proxyObject;
-		}
-		return null;
-	}
+    /**
+     * Gets the object to inject in the constructor parameter.
+     * @param index the index of the parameter
+     * @return the created proxy object
+     * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
+     */
+    public Object getConstructorParameter(int index) {
+        if (m_index == index  && m_proxyObject != null) {
+            return m_proxyObject;
+        }
+        return null;
+    }
 
-	/**
-	 * Gets the type of the constructor parameter.
-	 * @param index the parameter index
-	 * @return the class of the object. For scalar dependency, it's the
-	 * specification, for aggregate it depends of the container object:
-	 * {@link List} or {@link Set}.
-	 * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
-	 */
-	public Class getConstructorParameterType(int index) {
-		if (m_index == index  && m_proxyObject != null) {
-			if (isAggregate()) {
-				switch (m_type) {
-				case DependencyHandler.LIST: return List.class;
-				case DependencyHandler.SET : return Set.class;
-				//TODO We should also manage the Collection type.
-				default: return null; // Should never happen, it was checked before.
-				}
-			} else {
-				return getSpecification();
-			}
-		} else {
-			return null;
-		}
-	}
+    /**
+     * Gets the type of the constructor parameter.
+     * @param index the parameter index
+     * @return the class of the object. For scalar dependency, it's the
+     * specification, for aggregate it depends of the container object:
+     * {@link List} or {@link Set}.
+     * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
+     */
+    public Class getConstructorParameterType(int index) {
+        if (m_index == index  && m_proxyObject != null) {
+            if (isAggregate()) {
+                switch (m_type) {
+                case DependencyHandler.LIST: return List.class;
+                case DependencyHandler.SET : return Set.class;
+                //TODO We should also manage the Collection type.
+                default: return null; // Should never happen, it was checked before.
+                }
+            } else {
+                return getSpecification();
+            }
+        } else {
+            return null;
+        }
+    }
 
 
 

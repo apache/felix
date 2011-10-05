@@ -18,6 +18,7 @@
  */
 package org.apache.felix.ipojo;
 
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 import org.apache.felix.ipojo.parser.PojoMetadata;
@@ -34,7 +35,7 @@ import org.apache.felix.ipojo.util.Logger;
 * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
 */
 public abstract class PrimitiveHandler extends Handler implements FieldInterceptor, MethodInterceptor,
-	ConstructorInjector {
+    ConstructorInjector {
 
     /**
      * The "Primitive" Handler type (value).
@@ -52,10 +53,10 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      */
     private ComponentFactory m_factory;
 
-	/**
-	 * Instance Logger used by the handler.
-	 */
-	private Logger m_instanceLogger;
+    /**
+     * Instance Logger used by the handler.
+     */
+    private Logger m_instanceLogger;
 
     /**
      * Attaches the current handler to the given instance.
@@ -83,9 +84,9 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @see org.apache.felix.ipojo.Handler#getLogger()
      */
     public Logger getLogger() {
-    	if (m_instanceLogger == null) {
-    		return m_factory.getLogger();
-    	}
+        if (m_instanceLogger == null) {
+            return m_factory.getLogger();
+        }
         return m_instanceLogger;
     }
 
@@ -167,7 +168,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameter(int)
      */
     public Object getConstructorParameter(int index) {
-    	return null;
+        return null;
     }
 
     /**
@@ -182,7 +183,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @see org.apache.felix.ipojo.ConstructorInjector#getConstructorParameterType(int)
      */
     public Class getConstructorParameterType(int index) {
-    	return null;
+        return null;
     }
 
     /**
@@ -193,7 +194,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param args the arguments array.
      * @see MethodInterceptor#onEntry(Object, Method, Object[])
      */
-    public void onEntry(Object pojo, Method method, Object[] args) {
+    public void onEntry(Object pojo, Member method, Object[] args) {
         // Nothing to do in the default implementation
     }
 
@@ -209,7 +210,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param returnedObj the returned object (boxed for primitive type)
      * @see MethodInterceptor#onExit(Object, Method, Object)
      */
-    public void onExit(Object pojo, Method method, Object returnedObj) {
+    public void onExit(Object pojo, Member method, Object returnedObj) {
         // Nothing to do in the default implementation
     }
 
@@ -223,7 +224,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param throwable the thrown exception
      * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Method, java.lang.Throwable)
      */
-    public void onError(Object pojo, Method method, Throwable throwable) {
+    public void onError(Object pojo, Member method, Throwable throwable) {
         // Nothing to do in the default implementation
     }
 
@@ -237,7 +238,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param pojo the pojo on which the method was accessed.
      * @param method the invoked method.
      */
-    public void onFinally(Object pojo, Method method) {
+    public void onFinally(Object pojo, Member method) {
         // Nothing to do in the default implementation
     }
 

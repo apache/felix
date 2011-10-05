@@ -21,6 +21,7 @@ package org.apache.felix.ipojo;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -1090,7 +1091,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             return;
         }
         MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(methodId);
-        Method method = getMethodById(methodId);
+        Member method = getMethodById(methodId);
         // In case of a constructor, the method is null, and the list is null too.
         for (int i = 0; list != null && i < list.length; i++) {
             list[i].onEntry(pojo, method, args); // Outside a synchronized block.
@@ -1113,7 +1114,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             return;
         }
         MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(methodId);
-        Method method = getMethodById(methodId);
+        Member method = getMethodById(methodId);
         for (int i = 0; list != null && i < list.length; i++) {
             list[i].onExit(pojo, method, result);
         }
@@ -1137,7 +1138,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             return;
         }
         MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(methodId);
-        Method method = getMethodById(methodId);
+        Member method = getMethodById(methodId);
         for (int i = 0; list != null && i < list.length; i++) {
             list[i].onError(pojo, method, error);
         }
@@ -1153,10 +1154,12 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @param methodId the method id
      * @return the method object or <code>null</code> if the method cannot be found.
      */
-    private Method getMethodById(String methodId) {
+    private Member getMethodById(String methodId) {
         // Not necessary synchronized as recomputing the methodID will give the same Method twice.
-        Method method = (Method) m_methods.get(methodId);
-        if (method == null  && m_clazz != null) {
+        Member member = (Member) m_methods.get(methodId);
+        if (member == null  && m_clazz != null) {
+
+            // First try on methods.
             Method[] mets = m_clazz.getDeclaredMethods();
             for (int i = 0; i < mets.length; i++) {
                 // Check if the method was not already computed. If not, compute the Id and check.
@@ -1166,16 +1169,25 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     return mets[i];
                 }
             }
-            // If not found, it is a constructor, return null in this case.
+
+            // If not found, it is a constructor, return the constructor object in this case.
             if (methodId.startsWith(MethodMetadata.CONSTRUCTOR_PREFIX)) {
-                // Constructor.
-                return null;
+                Constructor[] constructors = m_clazz.getDeclaredConstructors();
+                for (int i = 0; i < constructors.length; i++) {
+                    // Check if the constructor was not already computed. If not, compute the Id and check.
+                    if (!m_methods.containsValue(constructors[i]) && (MethodMetadata.computeMethodId(constructors[i]).equals(methodId))) {
+                        // Store the new methodId
+                        m_methods.put(methodId, constructors[i]);
+                        return constructors[i];
+                    }
+                }
             }
+
             // Cannot happen
-            m_logger.log(Logger.ERROR, "A methodID cannot be associated with a method from the POJO class: " + methodId);
+            m_logger.log(Logger.INFO, "A methodID cannot be associated with a method from the POJO class: " + methodId);
             return null;
         } else {
-            return method;
+            return member;
         }
     }
 
