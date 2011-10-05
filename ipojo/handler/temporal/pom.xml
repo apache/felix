@@ -29,12 +29,12 @@
   <groupId>org.apache.felix</groupId>
   <version>1.7.0-SNAPSHOT</version>
   <name>Apache Felix iPOJO Temporal Service Dependency Handler</name>
-  
+
   <description>
   iPOJO extension to inject temporal service dependencies.
   </description>
   <url>http://felix.apache.org/site/temporal-service-dependency.html</url>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -49,7 +49,7 @@
     <dependency>
       <groupId>asm</groupId>
       <artifactId>asm-all</artifactId>
-      <version>3.0</version>
+      <version>3.3.1</version>
       <exclusions>
         <exclusion>
           <groupId>asm</groupId>
@@ -80,7 +80,7 @@
             <Bundle-DocURL>
               http://felix.apache.org/site/temporal-service-dependency.html
             </Bundle-DocURL>
-            <Include-Resource> 
+            <Include-Resource>
               META-INF/LICENSE=LICENSE,
               META-INF/LICENSE.asm=LICENSE.asm,
               META-INF/NOTICE=NOTICE,
