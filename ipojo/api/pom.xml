@@ -58,8 +58,9 @@
               org.apache.felix.ipojo.api.composite,
               org.apache.felix.ipojo.manipulation,
               org.apache.felix.ipojo.manipulation.annotations,
-              org.objectweb.asm.commons;version=3.0,
-              org.objectweb.asm;version=3.0
+              org.objectweb.asm.commons;version=3.3.1,
+              org.objectweb.asm;version=3.3.1,
+              org.objectweb.asm.signature;version=3.3.1
             </Export-Package>
             <Include-Resource>
               META-INF/LICENSE=LICENSE,
