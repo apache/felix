@@ -303,10 +303,6 @@ public class Property implements FieldInterceptor, ConstructorInjector {
      * @return the default value.
      */
     public Object getDefaultValue() {
-        if (m_defaultValue == NO_VALUE) {
-            return getNoValue(m_type);
-        }
-
         return m_defaultValue;
     }
 
@@ -364,7 +360,7 @@ public class Property implements FieldInterceptor, ConstructorInjector {
      * @return <code>true</code> if the object is assignable in the property of type 'type'.
      */
     public static boolean isAssignable(Class type, Object value) {
-        if (value == null || type.isInstance(value)) { // When the value is null, the assign works necessary.
+        if (value == null || type.isInstance(value) || value == Property.NO_VALUE) { // When the value is null, the assign works necessary.
             return true;
         } else if (type.isPrimitive()) {
             // Manage all boxing types.
