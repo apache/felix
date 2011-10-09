@@ -239,11 +239,13 @@ public class XmlHandlerTest extends TestCase
 
         // property setting
         final PropertyMetadata prop = getPropertyMetadata( cm10, "prop" );
+        prop.validate( cm10 ); // property value requires validation
         assertNotNull( "prop exists", prop );
         assertEquals( "prop type", "Integer", prop.getType() );
         assertEquals( "prop value", 1234, ( ( Integer ) prop.getValue() ).intValue() );
 
         final PropertyMetadata file_property = getPropertyMetadata( cm10, "file.property" );
+        file_property.validate( cm10 ); // property value requires validation
         assertNotNull( "file.property exists", file_property );
         assertEquals( "file.property type", "String", file_property.getType() );
         assertEquals( "file.property value", "Property from File", file_property.getValue() );
@@ -447,12 +449,13 @@ public class XmlHandlerTest extends TestCase
         final PropertyMetadata prop = getPropertyMetadata( cm11, "char_array_property" );
         assertNotNull( "prop exists", prop );
         assertEquals( "prop type", "Character", prop.getType() );
+        prop.validate( cm11 ); // property value conversion requires validation
         Object value = prop.getValue();
-        assertTrue( "prop arry", value instanceof char[] );
-        char[] chars = (char[]) value;
-        assertEquals( "prop number of values", 2, chars.length);
-        assertEquals( "prop value 0", 'a', chars[0] );
-        assertEquals( "prop value 1", 'b', chars[1] );
+        assertTrue( "prop array", value instanceof char[] );
+        char[] chars = ( char[] ) value;
+        assertEquals( "prop number of values", 2, chars.length );
+        assertEquals( "prop value 0", 'A', chars[0] );
+        assertEquals( "prop value 1", 'B', chars[1] );
     }
 
 }

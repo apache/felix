@@ -20,7 +20,7 @@
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"> 
   <implementation class="DummyClass" /> 
   <property name="char_array_property" type="Character"> 
-    a 
-    b 
+    65 
+    66
   </property> 
 </scr:component> 
