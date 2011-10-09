@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.metadata;
 
 
+import java.lang.reflect.Array;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.MockLogger;
@@ -265,8 +266,8 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
         cm1.setName( null );
         cm1.validate( logger );
-        assertEquals( "Expected name to equal implementation class name", cm1.getImplementationClassName(), cm1
-            .getName() );
+        assertEquals( "Expected name to equal implementation class name", cm1.getImplementationClassName(),
+            cm1.getName() );
     }
 
 
@@ -355,8 +356,8 @@ public class ComponentMetadataTest extends TestCase
     {
         final ComponentMetadata cm1 = createComponentMetadata( Boolean.TRUE, null );
         cm1.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm1
-            .getConfigurationPolicy() );
+        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL,
+            cm1.getConfigurationPolicy() );
 
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_IGNORE );
@@ -380,26 +381,26 @@ public class ComponentMetadataTest extends TestCase
     {
         final ComponentMetadata cm1 = createComponentMetadata11( Boolean.TRUE, null );
         cm1.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm1
-            .getConfigurationPolicy() );
+        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL,
+            cm1.getConfigurationPolicy() );
 
         final ComponentMetadata cm2 = createComponentMetadata11( Boolean.TRUE, null );
         cm2.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_IGNORE );
         cm2.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_IGNORE, cm2
-            .getConfigurationPolicy() );
+        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_IGNORE,
+            cm2.getConfigurationPolicy() );
 
         final ComponentMetadata cm3 = createComponentMetadata11( Boolean.TRUE, null );
         cm3.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL );
         cm3.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL, cm3
-            .getConfigurationPolicy() );
+        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_OPTIONAL,
+            cm3.getConfigurationPolicy() );
 
         final ComponentMetadata cm4 = createComponentMetadata11( Boolean.TRUE, null );
         cm4.setConfigurationPolicy( ComponentMetadata.CONFIGURATION_POLICY_REQUIRE );
         cm4.validate( logger );
-        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_REQUIRE, cm4
-            .getConfigurationPolicy() );
+        assertEquals( "Configuration policy", ComponentMetadata.CONFIGURATION_POLICY_REQUIRE,
+            cm4.getConfigurationPolicy() );
 
         final ComponentMetadata cm5 = createComponentMetadata11( Boolean.TRUE, null );
         cm5.setConfigurationPolicy( "undefined" );
@@ -432,8 +433,8 @@ public class ComponentMetadataTest extends TestCase
         cm2.addDependency( createReferenceMetadata( "name1" ) );
         cm2.addDependency( createReferenceMetadata( "name1" ) );
         cm2.validate( logger );
-        assertTrue( "Expected warning for duplicate reference name", logger
-            .messageContains( "Detected duplicate reference name" ) );
+        assertTrue( "Expected warning for duplicate reference name",
+            logger.messageContains( "Detected duplicate reference name" ) );
     }
 
 
@@ -476,8 +477,8 @@ public class ComponentMetadataTest extends TestCase
         // validates fine (though logging a warning) and sets field to null
         cm3.validate( logger );
 
-        assertTrue( "Expected warning for unsupported updated method name", logger
-            .messageContains( "Ignoring updated method definition" ) );
+        assertTrue( "Expected warning for unsupported updated method name",
+            logger.messageContains( "Ignoring updated method definition" ) );
         assertNull( rm3.getUpdated() );
     }
 
@@ -493,8 +494,8 @@ public class ComponentMetadataTest extends TestCase
         // validates fine (though logging a warning) and sets field to null
         cm3.validate( logger );
 
-        assertTrue( "Expected warning for unsupported updated method name", logger
-            .messageContains( "Ignoring updated method definition" ) );
+        assertTrue( "Expected warning for unsupported updated method name",
+            logger.messageContains( "Ignoring updated method definition" ) );
         assertNull( rm3.getUpdated() );
     }
 
@@ -615,7 +616,7 @@ public class ComponentMetadataTest extends TestCase
     public void test_property_char_ds10() throws ComponentException
     {
         final ComponentMetadata cm = createComponentMetadata( null, null );
-        PropertyMetadata prop = createPropertyMetadata( "x", "Char", "x" );
+        PropertyMetadata prop = createPropertyMetadata( "x", "Char", Integer.toString( 'x' ) );
         cm.addProperty( prop );
         cm.validate( logger );
         assertTrue( prop.getValue() instanceof Character );
@@ -639,13 +640,55 @@ public class ComponentMetadataTest extends TestCase
     }
 
 
+    public void test_property_non_character()
+    {
+        final ComponentMetadata cm = createComponentMetadata( null, null );
+
+        assertProperty( "String", "Ein String", cm );
+        assertProperty( "Double", new Double( 2.5 ), cm );
+        assertProperty( "Float", new Float( 2.5 ), cm );
+        assertProperty( "Long", new Long( 2 ), cm );
+        assertProperty( "Integer", new Integer( 2 ), cm );
+        assertProperty( "Short", new Short( ( short ) 2 ), cm );
+        assertProperty( "Byte", new Byte( ( byte ) 2 ), cm );
+        assertProperty( "Boolean", Boolean.TRUE, cm );
+
+        assertPropertyFail( "Double", "x", cm );
+        assertPropertyFail( "Float", "x", cm );
+        assertPropertyFail( "Long", "x", cm );
+        assertPropertyFail( "Integer", "x", cm );
+        assertPropertyFail( "Short", "x", cm );
+        assertPropertyFail( "Byte", "x", cm );
+    }
+
+
+    public void test_property_array_non_character()
+    {
+        final ComponentMetadata cm = createComponentMetadata( null, null );
+        assertPropertyArray( "String", "Ein String", cm );
+        assertPropertyArray( "Double", new Double( 2.5 ), cm );
+        assertPropertyArray( "Float", new Float( 2.5 ), cm );
+        assertPropertyArray( "Long", new Long( 2 ), cm );
+        assertPropertyArray( "Integer", new Integer( 2 ), cm );
+        assertPropertyArray( "Short", new Short( ( short ) 2 ), cm );
+        assertPropertyArray( "Byte", new Byte( ( byte ) 2 ), cm );
+        assertPropertyArray( "Boolean", Boolean.TRUE, cm );
+
+        assertPropertyArrayFail( "Double", "x", cm );
+        assertPropertyArrayFail( "Float", "x", cm );
+        assertPropertyArrayFail( "Long", "x", cm );
+        assertPropertyArrayFail( "Integer", "x", cm );
+        assertPropertyArrayFail( "Short", "x", cm );
+        assertPropertyArrayFail( "Byte", "x", cm );
+    }
+
+
     public void test_property_character_ds10()
     {
         final ComponentMetadata cm = createComponentMetadata( null, null );
-        cm.addProperty( createPropertyMetadata( "x", "Character", "x" ) );
         try
         {
-            cm.validate( logger );
+            createPropertyMetadata( "x", "Character", Integer.toString( 'x' ) ).validate( cm );
             fail( "Expect validation failure for illegal property type Character" );
         }
         catch ( ComponentException ce )
@@ -658,7 +701,7 @@ public class ComponentMetadataTest extends TestCase
     public void test_property_character_ds11() throws ComponentException
     {
         final ComponentMetadata cm = createComponentMetadata11( null, null );
-        PropertyMetadata prop = createPropertyMetadata( "x", "Character", "x" );
+        PropertyMetadata prop = createPropertyMetadata( "x", "Character", Integer.toString( 'x' ) );
         cm.addProperty( prop );
         cm.validate( logger );
         assertTrue( prop.getValue() instanceof Character );
@@ -680,10 +723,12 @@ public class ComponentMetadataTest extends TestCase
         }
         catch ( ComponentException ce )
         {
-            assertTrue( "Expected validation reason to contain '" + expectedValidationReason + "': actual: "
-                + ce.getMessage(), ce.getMessage().indexOf( expectedValidationReason ) >= 0 );
+            assertTrue(
+                "Expected validation reason to contain '" + expectedValidationReason + "': actual: " + ce.getMessage(),
+                ce.getMessage().indexOf( expectedValidationReason ) >= 0 );
         }
     }
+
 
     // Creates Component Metadata for the given namespace
     private ComponentMetadata createComponentMetadata( int nameSpaceCode, Boolean immediate, String factory )
@@ -701,6 +746,7 @@ public class ComponentMetadataTest extends TestCase
         }
         return meta;
     }
+
 
     // Creates DS 1.0 Component Metadata
     private ComponentMetadata createComponentMetadata( Boolean immediate, String factory )
@@ -753,5 +799,100 @@ public class ComponentMetadataTest extends TestCase
             meta.setValue( value );
         }
         return meta;
+    }
+
+
+    private void assertProperty( String type, Object value, ComponentMetadata cmeta )
+    {
+        PropertyMetadata meta = createPropertyMetadata( "dummy", type, String.valueOf( value ) );
+        meta.validate( cmeta );
+        assertSame( value.getClass(), meta.getValue().getClass() );
+        assertEquals( value, meta.getValue() );
+    }
+
+
+    private void assertPropertyArray( String type, Object value, ComponentMetadata cmeta )
+    {
+        PropertyMetadata meta = createPropertyMetadata( "dummy", type, null );
+        meta.setValues( String.valueOf( value ) );
+        meta.validate( cmeta );
+
+        Object propVal = meta.getValue();
+        assertTrue( propVal.getClass().isArray() );
+        assertPrimitiveType( value.getClass(), propVal.getClass().getComponentType() );
+        assertEquals( 1, Array.getLength( propVal ) );
+        assertEquals( value, Array.get( propVal, 0 ) );
+    }
+
+
+    private void assertPropertyFail( String type, String value, ComponentMetadata cmeta )
+    {
+        try
+        {
+            PropertyMetadata meta = createPropertyMetadata( "dummy", type, value );
+            meta.validate( cmeta );
+            fail( "Expected validation failure for " + type + "=" + value );
+        }
+        catch ( ComponentException ce )
+        {
+            // expected
+        }
+    }
+
+
+    private void assertPropertyArrayFail( String type, String value, ComponentMetadata cmeta )
+    {
+        try
+        {
+            PropertyMetadata meta = createPropertyMetadata( "dummy", type, null );
+            meta.setValues( value );
+            meta.validate( cmeta );
+            fail( "Expected validation failure for " + type + "=" + value );
+        }
+        catch ( ComponentException ce )
+        {
+            // expected
+        }
+    }
+
+
+    private void assertPrimitiveType( final Class expectedBoxClass, final Class actualClass )
+    {
+        if ( expectedBoxClass == String.class )
+        {
+            assertEquals( expectedBoxClass, actualClass );
+        }
+        else if ( expectedBoxClass == Double.class )
+        {
+            assertEquals( Double.TYPE, actualClass );
+        }
+        else if ( expectedBoxClass == Float.class )
+        {
+            assertEquals( Float.TYPE, actualClass );
+        }
+        else if ( expectedBoxClass == Long.class )
+        {
+            assertEquals( Long.TYPE, actualClass );
+        }
+        else if ( expectedBoxClass == Integer.class )
+        {
+            assertEquals( Integer.TYPE, actualClass );
+        }
+        else if ( expectedBoxClass == Short.class )
+        {
+            assertEquals( Short.TYPE, actualClass );
+        }
+        else if ( expectedBoxClass == Byte.class )
+        {
+            assertEquals( Byte.TYPE, actualClass );
+        }
+        else if ( expectedBoxClass == Boolean.class )
+        {
+            assertEquals( Boolean.TYPE, actualClass );
+        }
+        else
+        {
+            fail( "Unexpected box class " + expectedBoxClass );
+        }
     }
 }
