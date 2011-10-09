@@ -164,18 +164,6 @@ public class BundleComponentActivator implements Logger
             return new URL[0];
         }
 
-        // for compatibility with previoues versions (<= 1.0.8) use getResource() for non wildcarded entries
-        if ( descriptorLocation.indexOf( "*" ) == -1 )
-        {
-            final URL descriptor = bundle.getResource( descriptorLocation );
-            if ( descriptor == null )
-            {
-                return new URL[0];
-            }
-            return new URL[]
-                { descriptor };
-        }
-
         // split pattern and path
         final int lios = descriptorLocation.lastIndexOf( "/" );
         final String path;

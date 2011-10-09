@@ -78,21 +78,25 @@ public class BundleComponentActivatorTest extends TestCase
      *
      * @throws MalformedURLException unexpected
      */
-    public void test_findDescriptors_withNonWildcardLocation()
-        throws MalformedURLException
+    public void test_findDescriptors_withNonWildcardLocation() throws MalformedURLException
     {
-        URL descriptor = new URL( "file:foo.xml" );
-        final Bundle bundle = (Bundle) EasyMock.createNiceMock( Bundle.class );
-        EasyMock.expect( bundle.getResource( "/some/location/foo.xml" ) ).andReturn( descriptor );
+        final URL[] descriptors = new URL[]
+            { new URL( "file:foo.xml" ) };
+        final Enumeration de = new Vector( Arrays.asList( descriptors ) ).elements();
+        final Bundle bundle = ( Bundle ) EasyMock.createNiceMock( Bundle.class );
+        EasyMock.expect( bundle.findEntries( "/some/location", "foo.xml", false ) ).andReturn( de );
 
-        EasyMock.replay( new Object[]{ bundle } );
+        EasyMock.replay( new Object[]
+            { bundle } );
         final URL[] urls = BundleComponentActivator.findDescriptors( bundle, "/some/location/foo.xml" );
-        EasyMock.verify( new Object[]{ bundle } );
+        EasyMock.verify( new Object[]
+            { bundle } );
 
         assertNotNull( "Descriptor array is not null", urls );
         assertEquals( "Descriptor length", 1, urls.length );
-        assertEquals( "Descriptor", descriptor, urls[ 0 ] );
+        assertEquals( "Descriptor", descriptors[0], urls[0] );
     }
+
 
     public void findDescriptors_withWildcardLocation( final String location,
                                                       final String path,
