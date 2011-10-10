@@ -1,5 +1,12 @@
+Changes from 4.0.0 to 4.0.1
+---------------------------
+
+** Improvement
+    * Update to latest framework version 4.0.1
+
 Changes from 3.2.2 to 4.0.0
 ---------------------------
+
 ** Improvement
     * [FELIX-3094] - [Main] Launcher should attempt to restart framework if the system bundle was updated
     * [FELIX-3123] - [Main] Integrate OBR 1.6.6
