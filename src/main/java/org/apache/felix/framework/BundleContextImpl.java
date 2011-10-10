@@ -438,7 +438,7 @@ class BundleContextImpl implements FelixBundleContext
         throws InvalidSyntaxException
     {
         ServiceReference<S>[] refs =
-            (ServiceReference<S>[]) getServiceReferences(clazz.getName(), null);
+            (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
         return (refs == null)
             ? Collections.EMPTY_LIST
             : (Collection<ServiceReference<S>>) Arrays.asList(refs);
