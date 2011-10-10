@@ -4,6 +4,7 @@ Changes from 4.0.0 to 4.0.1
 ** Bug
     * [FELIX-3137] - [Framework] Capabilities from resolved singleton bundles are not indexed correctly
     * [FELIX-3150] - Filter parameter is ignored at getServiceReferences
+    * [FELIX-3153] - [Framework] refreshPackages() should stop bundles in one pass and refresh them in a second pass
 
 ** Improvement
     * [FELIX-3138] - [Framework] Refactor some unnecessary code in the resolver
