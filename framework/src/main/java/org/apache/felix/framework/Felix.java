@@ -3935,17 +3935,25 @@ public class Felix extends BundleImpl implements Framework
                         helpers.add(new RefreshHelper(b));
                     }
 
-                    // Stop, purge or remove, and reinitialize all bundles first.
+                    // Stop all refreshing bundles.
                     for (RefreshHelper helper : helpers)
                     {
                         if (helper != null)
                         {
                             helper.stop();
+                        }
+                    }
+
+                    // Refresh or remove all refreshing bundles first.
+                    for (RefreshHelper helper : helpers)
+                    {
+                        if (helper != null)
+                        {
                             helper.refreshOrRemove();
                         }
                     }
 
-                    // Then restart all bundles that were previously running.
+                    // Restart all refreshed bundles that were previously running.
                     for (RefreshHelper helper : helpers)
                     {
                         if (helper != null)
