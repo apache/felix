@@ -1,3 +1,14 @@
+Changes from 4.0.0 to 4.0.1
+---------------------------
+
+** Bug
+    * [FELIX-3137] - [Framework] Capabilities from resolved singleton bundles are not indexed correctly
+    * [FELIX-3150] - Filter parameter is ignored at getServiceReferences
+
+** Improvement
+    * [FELIX-3138] - [Framework] Refactor some unnecessary code in the resolver
+    * [FELIX-3141] - [Framework] Framework should filter removal pending fragments not the resolver
+
 Changes from 3.2.2 to 4.0.0
 ---------------------------
 
