@@ -1,3 +1,15 @@
+Changes from 4.0.0 to 4.0.1
+---------------------------
+
+** Bug
+    * [FELIX-3137] - [Framework] Capabilities from resolved singleton bundles are not indexed correctly
+    * [FELIX-3150] - Filter parameter is ignored at getServiceReferences
+    * [FELIX-3153] - [Framework] refreshPackages() should stop bundles in one pass and refresh them in a second pass
+
+** Improvement
+    * [FELIX-3138] - [Framework] Refactor some unnecessary code in the resolver
+    * [FELIX-3141] - [Framework] Framework should filter removal pending fragments not the resolver
+
 Changes from 3.2.2 to 4.0.0
 ---------------------------
 
@@ -20,7 +32,6 @@ Changes from 3.2.2 to 4.0.0
     * [FELIX-2950] - [Framework] Adopt OSGi R4.3 API as framework internal API
     * [FELIX-2998] - [Framework] OSGi R4.3 changed filter handling of exceptions when calling equals()/compare() to return false
     * [FELIX-3000] - Move sending service registered event out of bundle lock
-    * [FELIX-3035] - Make Felix version a compile time constant
     * [FELIX-3071] - [Framework] It should be possible to limit number of open JAR files
     * [FELIX-3125] - [Framework] Use single file per bundle in bundle cache by default
 
