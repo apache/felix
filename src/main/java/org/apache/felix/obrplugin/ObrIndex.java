@@ -209,25 +209,36 @@ public final class ObrIndex extends AbstractMojo
         }
         else if ( urlTemplate != null )
         {
-            String dir = path.getParentFile().toURI().toURL().toString();
-            if ( dir.endsWith( "/" ) )
-                dir = dir.substring( 0, dir.length() - 1 );
+            URI parentDir = path.getParentFile().toURI();
 
-            if ( dir.startsWith( root.toString() ) )
-                dir = dir.substring( root.toString().length() );
+            String absoluteDir = trim( root.toString(), parentDir.toURL().toString() );
+            String relativeDir = trim( root.toString(), root.relativize( parentDir ).toString() );
 
             String url = urlTemplate.replaceAll( "%v", "" + resource.getVersion() );
             url = url.replaceAll( "%s", resource.getSymbolicName() );
             url = url.replaceAll( "%f", path.getName() );
-            url = url.replaceAll( "%p", dir );
+            url = url.replaceAll( "%p", absoluteDir );
+            url = url.replaceAll( "%rp", relativeDir );
             finalUri = url;
         }
         resource.put( Resource.URI, finalUri, Property.URI );
     }
 
+
+    private String trim( String prefix, String path )
+    {
+        if ( path.endsWith( "/" ) )
+            path = path.substring( 0, path.length() - 1 );
+
+        if ( path.startsWith( prefix ) )
+            path = path.substring( prefix.length() );
+
+        return path;
+    }
+
+
     private final FileFilter filter = new FileFilter()
     {
-
         public boolean accept( File pathname )
         {
             return pathname.getName().endsWith( "ar" );
