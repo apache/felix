@@ -333,12 +333,13 @@ public class BundleComponentActivator implements Logger
 
 
     /**
-     * Returns <true> if this instance is active, that is if components may be
-     * activated for this component. As soon as the {@link #dispose()} is called
-     * which means this instance is being shutdown. After the call to <code>dispose</code>
-     * this method always returns <code>false</code>.
+     * Returns <true> if this instance is active, that is if components
+     * may be activated for this component. The active flag is set early
+     * in the constructor indicating the activator is basically active
+     * (not fully setup, though) and reset early in the process of
+     * {@link #dispose(int) disposing} this instance.
      */
-    boolean isActive()
+    public boolean isActive()
     {
         return m_active;
     }
