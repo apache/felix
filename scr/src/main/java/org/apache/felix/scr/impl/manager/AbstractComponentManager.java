@@ -479,6 +479,14 @@ public abstract class AbstractComponentManager implements Component
         return m_activator;
     }
 
+
+    boolean isActivatorActive()
+    {
+        BundleComponentActivator activator = getActivator();
+        return activator != null && activator.isActive();
+    }
+
+
     final ServiceRegistration getServiceRegistration()
     {
         return m_serviceRegistration;
@@ -919,6 +927,13 @@ public abstract class AbstractComponentManager implements Component
 
         void enable( AbstractComponentManager acm )
         {
+            if ( !acm.isActivatorActive() )
+            {
+                acm.log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not enabling component",
+                    null );
+                return;
+            }
+
             acm.changeState( Enabling.getInstance() );
             acm.registerComponentId();
             try
@@ -985,6 +1000,13 @@ public abstract class AbstractComponentManager implements Component
 
         void activate( AbstractComponentManager acm )
         {
+            if ( !acm.isActivatorActive() )
+            {
+                acm.log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component",
+                    null );
+                return;
+            }
+
             acm.changeState( Activating.getInstance() );
 
             acm.log( LogService.LOG_DEBUG, "Activating component", null );
