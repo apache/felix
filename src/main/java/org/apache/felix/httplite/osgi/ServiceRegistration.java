@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.osgi;
+package org.apache.felix.httplite.osgi;
 
 import java.util.Dictionary;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 
-import org.apache.felix.http.lightweight.servlet.ServletConfigImpl;
-import org.apache.felix.http.lightweight.servlet.ServletContextImpl;
+import org.apache.felix.httplite.servlet.ServletConfigImpl;
+import org.apache.felix.httplite.servlet.ServletContextImpl;
 import org.osgi.service.http.HttpContext;
 
 /**

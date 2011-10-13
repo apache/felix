@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.server;
+package org.apache.felix.httplite.server;
 
 /**
  * This class implements a simple one-shot gate for threads. The gate

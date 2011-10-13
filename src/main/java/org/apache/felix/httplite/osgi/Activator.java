@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.osgi;
+package org.apache.felix.httplite.osgi;
 
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.felix.http.lightweight.server.Server;
-import org.apache.felix.http.lightweight.servlet.HttpConstants;
+import org.apache.felix.httplite.server.Server;
+import org.apache.felix.httplite.servlet.HttpConstants;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.servlet;
+package org.apache.felix.httplite.servlet;
 
 import java.io.CharConversionException;
 import java.io.OutputStream;

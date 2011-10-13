@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.osgi;
+package org.apache.felix.httplite.osgi;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,11 +29,11 @@ import java.util.Map;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.http.lightweight.server.ResourceHandler;
-import org.apache.felix.http.lightweight.server.Server;
-import org.apache.felix.http.lightweight.server.ServletHandler;
-import org.apache.felix.http.lightweight.servlet.HttpServletRequestImpl;
-import org.apache.felix.http.lightweight.servlet.HttpServletResponseImpl;
+import org.apache.felix.httplite.server.ResourceHandler;
+import org.apache.felix.httplite.server.Server;
+import org.apache.felix.httplite.server.ServletHandler;
+import org.apache.felix.httplite.servlet.HttpServletRequestImpl;
+import org.apache.felix.httplite.servlet.HttpServletResponseImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;

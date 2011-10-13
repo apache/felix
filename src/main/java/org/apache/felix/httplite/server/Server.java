@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.server;
+package org.apache.felix.httplite.server;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -26,8 +26,8 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.http.lightweight.osgi.Logger;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistrationResolver;
+import org.apache.felix.httplite.osgi.Logger;
+import org.apache.felix.httplite.osgi.ServiceRegistrationResolver;
 
 /**
  * This class implements a simple multi-threaded web server. It
