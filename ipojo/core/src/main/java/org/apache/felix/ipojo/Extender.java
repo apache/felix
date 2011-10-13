@@ -253,7 +253,14 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         String[] arr = ParseUtils.split(header, ",");
         for (int i = 0; arr != null && i < arr.length; i++) {
             String[] arr2 = ParseUtils.split(arr[i], ":");
-            String type = arr2[0];
+            
+            /*
+             * Get the fully qualified type name.
+             * type = [namespace] name  
+             */
+            String[] nameparts = ParseUtils.split(arr2[0].trim(), " \t");
+            String type = nameparts.length == 1 ? nameparts[0] : nameparts[0]+":"+nameparts[1];
+            
             Class clazz;
             try {
                 clazz = bundle.loadClass(arr2[1]);
@@ -288,7 +295,8 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
         ManifestMetadataParser parser = new ManifestMetadataParser();
         parser.parseHeader(components);
 
-        Element[] metadata = parser.getComponentsMetadata(); // Get the component type declaration
+        // Get the component type declaration
+        Element[] metadata = parser.getComponentsMetadata();
         for (int i = 0; i < metadata.length; i++) {
             createAbstractFactory(bundle, metadata[i]);
         }
@@ -465,9 +473,13 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
     private void createAbstractFactory(Bundle bundle, Element metadata) {
         ManagedAbstractFactoryType factoryType = null;
         // First, look for factory-type (component, handler, composite ...)
+        
+        // TODO : Should Element.getQualifiedName() be public ?
+        String typeName = metadata.getNameSpace() == null ? metadata.getName() : metadata.getNameSpace()+":"+metadata.getName();
+        
         for (int i = 0; i < m_factoryTypes.size(); i++) {
             ManagedAbstractFactoryType type = (ManagedAbstractFactoryType) m_factoryTypes.get(i);
-            if (type.m_type.equals(metadata.getName())) {
+            if (type.m_type.equals(typeName)) {
                 factoryType = type;
                 break;
             }
@@ -475,8 +487,8 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
 
         // If not found, return. It will wait for a new component type factory.
         if (factoryType == null) {
-            m_logger.log(Logger.WARNING, "Type of component not available: " + metadata.getName());
-            m_unboundTypes.add(new UnboundComponentType(metadata.getName(), metadata, bundle));
+            m_logger.log(Logger.WARNING, "Type of component not available: " + typeName);
+            m_unboundTypes.add(new UnboundComponentType(typeName, metadata, bundle));
             return;
         }
 

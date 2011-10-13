@@ -543,7 +543,6 @@ public class Property implements FieldInterceptor, ConstructorInjector {
      * Invokes the setter method on the given pojo object.
      * If no specified pojo object, it calls on each created pojo object.
      * @param instance the created object (could be <code>null</code>)
-     * @see org.apache.felix.ipojo.Handler#onCreation(java.lang.Object)
      */
     public synchronized void invoke(Object instance) {
         if (m_invoked) {
