@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.servlet;
+package org.apache.felix.httplite.servlet;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -48,9 +48,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.felix.http.lightweight.osgi.Logger;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistration;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistrationResolver;
+import org.apache.felix.httplite.osgi.Logger;
+import org.apache.felix.httplite.osgi.ServiceRegistration;
+import org.apache.felix.httplite.osgi.ServiceRegistrationResolver;
 
 /**
  * This class represents an HTTP request, which is parses from a given input

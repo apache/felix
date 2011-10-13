@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.osgi;
+package org.apache.felix.httplite.osgi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.server;
+package org.apache.felix.httplite.server;
 
 import java.io.IOException;
 
 import javax.servlet.ServletException;
 
-import org.apache.felix.http.lightweight.osgi.Logger;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistration;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistrationHandler;
-import org.apache.felix.http.lightweight.servlet.HttpServletRequestImpl;
-import org.apache.felix.http.lightweight.servlet.HttpServletResponseImpl;
+import org.apache.felix.httplite.osgi.Logger;
+import org.apache.felix.httplite.osgi.ServiceRegistration;
+import org.apache.felix.httplite.osgi.ServiceRegistrationHandler;
+import org.apache.felix.httplite.servlet.HttpServletRequestImpl;
+import org.apache.felix.httplite.servlet.HttpServletResponseImpl;
 
 /**
  *  Handles servlet processing.  

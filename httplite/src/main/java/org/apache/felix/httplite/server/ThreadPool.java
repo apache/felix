@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.server;
+package org.apache.felix.httplite.server;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.http.lightweight.osgi.Logger;
+import org.apache.felix.httplite.osgi.Logger;
 
 /**
  * This class implements a simple thread pool for servicing HTTP connections.

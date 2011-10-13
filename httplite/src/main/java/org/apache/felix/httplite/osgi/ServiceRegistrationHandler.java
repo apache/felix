@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,35 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.servlet;
+package org.apache.felix.httplite.osgi;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
-import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletException;
 
 /**
- * ServletOutputStream Implementation.
- * 
+ * Represents either a Resource or a Servlet that should be processed 
+ * with a valid client connection provided by the server.
+ *
  */
-public class ServletOutputStreamImpl extends ServletOutputStream
+public interface ServiceRegistrationHandler
 {
-
-    private final OutputStream m_outputStream;
-
     /**
-     * @param outputStream OutputStream
+     * Process the request against the registered provider.  
+     * 
+     * @throws IOException on I/O error
+     * @throws ServletException on Servlet error
      */
-    public ServletOutputStreamImpl(OutputStream outputStream)
-    {
-        this.m_outputStream = outputStream;
-    }
-
-    /* (non-Javadoc)
-     * @see java.io.OutputStream#write(int)
-     */
-    public void write(int i) throws IOException
-    {
-        m_outputStream.write(i);
-    }
+    void handle(boolean closeConnection) throws IOException, ServletException;
 }

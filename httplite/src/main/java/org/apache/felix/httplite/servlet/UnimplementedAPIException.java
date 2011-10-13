@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.servlet;
+package org.apache.felix.httplite.servlet;
 
 /**
  * A specific exception for unimplemented features.  Used rather than RuntimeException()

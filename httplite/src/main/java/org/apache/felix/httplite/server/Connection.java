@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.http.lightweight.server;
+package org.apache.felix.httplite.server;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -27,13 +27,13 @@ import java.net.Socket;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.felix.http.lightweight.osgi.Logger;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistrationHandler;
-import org.apache.felix.http.lightweight.osgi.ServiceRegistrationResolver;
-import org.apache.felix.http.lightweight.servlet.ConcreteServletInputStream;
-import org.apache.felix.http.lightweight.servlet.HttpConstants;
-import org.apache.felix.http.lightweight.servlet.HttpServletRequestImpl;
-import org.apache.felix.http.lightweight.servlet.HttpServletResponseImpl;
+import org.apache.felix.httplite.osgi.Logger;
+import org.apache.felix.httplite.osgi.ServiceRegistrationHandler;
+import org.apache.felix.httplite.osgi.ServiceRegistrationResolver;
+import org.apache.felix.httplite.servlet.ConcreteServletInputStream;
+import org.apache.felix.httplite.servlet.HttpConstants;
+import org.apache.felix.httplite.servlet.HttpServletRequestImpl;
+import org.apache.felix.httplite.servlet.HttpServletResponseImpl;
 
 /**
  * This class represents an accepted connection between the server and
