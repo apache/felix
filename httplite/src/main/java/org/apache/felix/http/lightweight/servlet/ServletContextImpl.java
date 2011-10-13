@@ -67,7 +67,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getContext(java.lang.String)
      */
-    public ServletContext getContext(String uripath)
+    @Override
+	public ServletContext getContext(String uripath)
     {
         return null;
     }
@@ -75,7 +76,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getMajorVersion()
      */
-    public int getMajorVersion()
+    @Override
+	public int getMajorVersion()
     {
         return 2;
     }
@@ -83,7 +85,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getMinorVersion()
      */
-    public int getMinorVersion()
+    @Override
+	public int getMinorVersion()
     {
         return 4;
     }
@@ -91,7 +94,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getMimeType(java.lang.String)
      */
-    public String getMimeType(String file)
+    @Override
+	public String getMimeType(String file)
     {
         return m_httpContext.getMimeType(file);
     }
@@ -99,7 +103,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getResourcePaths(java.lang.String)
      */
-    public Set getResourcePaths(String path)
+    @Override
+	public Set getResourcePaths(String path)
     {
         return null;
     }
@@ -107,7 +112,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getResource(java.lang.String)
      */
-    public URL getResource(String path) throws MalformedURLException
+    @Override
+	public URL getResource(String path) throws MalformedURLException
     {
         return m_httpContext.getResource(path);
     }
@@ -115,7 +121,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getResourceAsStream(java.lang.String)
      */
-    public InputStream getResourceAsStream(String path)
+    @Override
+	public InputStream getResourceAsStream(String path)
     {
         try
         {
@@ -132,7 +139,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getRequestDispatcher(java.lang.String)
      */
-    public RequestDispatcher getRequestDispatcher(String path)
+    @Override
+	public RequestDispatcher getRequestDispatcher(String path)
     {
         return null;
     }
@@ -140,7 +148,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getNamedDispatcher(java.lang.String)
      */
-    public RequestDispatcher getNamedDispatcher(String name)
+    @Override
+	public RequestDispatcher getNamedDispatcher(String name)
     {
         return null;
     }
@@ -148,32 +157,38 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getServlet(java.lang.String)
      */
-    public Servlet getServlet(String name) throws ServletException
+    @Override
+	public Servlet getServlet(String name) throws ServletException
     {
         return null;
     }
 
-    public Enumeration getServlets()
+    @Override
+	public Enumeration getServlets()
     {
         return null;
     }
 
-    public Enumeration getServletNames()
+    @Override
+	public Enumeration getServletNames()
     {
         return null;
     }
 
-    public void log(String msg)
+    @Override
+	public void log(String msg)
     {
         m_logger.log(Logger.LOG_INFO, msg);
     }
 
-    public void log(Exception exception, String msg)
+    @Override
+	public void log(Exception exception, String msg)
     {
         m_logger.log(Logger.LOG_ERROR, msg, exception);
     }
 
-    public void log(String message, Throwable throwable)
+    @Override
+	public void log(String message, Throwable throwable)
     {
         m_logger.log(Logger.LOG_ERROR, message, throwable);
     }
@@ -181,7 +196,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getRealPath(java.lang.String)
      */
-    public String getRealPath(String path)
+    @Override
+	public String getRealPath(String path)
     {
         return path;
     }
@@ -189,7 +205,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getServerInfo()
      */
-    public String getServerInfo()
+    @Override
+	public String getServerInfo()
     {
         return HttpConstants.SERVER_INFO;
     }
@@ -197,7 +214,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getInitParameter(java.lang.String)
      */
-    public String getInitParameter(String name)
+    @Override
+	public String getInitParameter(String name)
     {
         if (m_initparams != null)
         {
@@ -215,7 +233,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getInitParameterNames()
      */
-    public Enumeration getInitParameterNames()
+    @Override
+	public Enumeration getInitParameterNames()
     {
         if (m_initparams != null)
         {
@@ -228,7 +247,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getAttribute(java.lang.String)
      */
-    public Object getAttribute(String name)
+    @Override
+	public Object getAttribute(String name)
     {
         if (m_attributes != null)
         {
@@ -241,7 +261,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getAttributeNames()
      */
-    public Enumeration getAttributeNames()
+    @Override
+	public Enumeration getAttributeNames()
     {
         if (m_attributes != null)
         {
@@ -254,7 +275,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#setAttribute(java.lang.String, java.lang.Object)
      */
-    public void setAttribute(String name, Object object)
+    @Override
+	public void setAttribute(String name, Object object)
     {
         if (m_attributes == null)
         {
@@ -267,7 +289,8 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#removeAttribute(java.lang.String)
      */
-    public void removeAttribute(String name)
+    @Override
+	public void removeAttribute(String name)
     {
         if (m_attributes != null)
         {
@@ -278,8 +301,17 @@ public class ServletContextImpl implements ServletContext
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getServletContextName()
      */
-    public String getServletContextName()
+    @Override
+	public String getServletContextName()
     {
         return m_name;
     }
+
+	/* (non-Javadoc)
+	 * @see javax.servlet.ServletContext#getContextPath()
+	 */
+	@Override
+	public String getContextPath() {	
+		return m_name;
+	}
 }
