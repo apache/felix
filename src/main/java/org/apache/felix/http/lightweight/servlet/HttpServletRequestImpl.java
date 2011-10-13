@@ -132,7 +132,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getInputStream()
      */
-    @Override
     public ServletInputStream getInputStream() throws IOException
     {
 
@@ -156,7 +155,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getReader()
      */
-    @Override
     public BufferedReader getReader() throws IOException
     {
         if (m_getInputStreamCalled)
@@ -328,7 +326,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getMethod()
      */
-    @Override
+
     public String getMethod()
     {
         return m_method;
@@ -342,7 +340,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * @return The value of the specified header or <tt>null</tt>.
      **/
 
-    @Override
     public String getHeader(final String header)
     {
         Object value = m_headers.get(header.toLowerCase());
@@ -355,7 +352,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
         return value.toString();
     }
 
-    @Override
     public Enumeration getHeaders(final String name)
     {
         Object v = m_headers.get(name);
@@ -379,7 +375,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
             + v.getClass().getName());
     }
 
-    @Override
     public Enumeration getHeaderNames()
     {
         if (m_headers.isEmpty())
@@ -395,7 +390,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getAttribute(java.lang.String)
      */
-    @Override
     public Object getAttribute(final String arg0)
     {
         if (m_attributes != null)
@@ -412,7 +406,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * @see javax.servlet.ServletRequest#getAttributeNames()
      */
 
-    @Override
     public Enumeration getAttributeNames()
     {
         if (m_attributes != null)
@@ -428,14 +421,11 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getCharacterEncoding()
      */
-
-    @Override
     public String getCharacterEncoding()
     {
         return getHeader("Accept-Encoding");
     }
 
-    @Override
     public int getContentLength()
     {
         int len = 0;
@@ -457,8 +447,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getContentType()
      */
-
-    @Override
     public String getContentType()
     {
         return getHeader("Content-Type");
@@ -469,8 +457,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getLocale()
      */
-
-    @Override
     public Locale getLocale()
     {
         return m_locale;
@@ -481,8 +467,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getLocales()
      */
-
-    @Override
     public Enumeration getLocales()
     {
         return Collections.enumeration(Arrays.asList(new Object[] { m_locale }));
@@ -493,8 +477,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getParameter(java.lang.String)
      */
-
-    @Override
     public String getParameter(final String arg0)
     {
         if (m_parameters == null)
@@ -518,8 +500,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getParameterMap()
      */
-
-    @Override
     public Map getParameterMap()
     {
         return m_parameters;
@@ -530,8 +510,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getParameterNames()
      */
-
-    @Override
     public Enumeration getParameterNames()
     {
         return Collections.enumeration(m_parameters.keySet());
@@ -542,8 +520,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getParameterValues(java.lang.String)
      */
-
-    @Override
     public String[] getParameterValues(String arg0)
     {
         return (String[]) m_parameters.values().toArray(new String[m_parameters.size()]);
@@ -554,7 +530,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getProtocol()
      */
-    @Override
     public String getProtocol()
     {
         return m_version;
@@ -565,7 +540,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getRealPath(java.lang.String)
      */
-    @Override
     public String getRealPath(final String arg0)
     {
         throw new UnimplementedAPIException();
@@ -576,7 +550,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.ServletRequest#getRemoteAddr()
      */
-    @Override
     public String getRemoteAddr()
     {
         return getSocket().getRemoteSocketAddress().toString();
@@ -585,7 +558,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getRemoteHost()
      */
-    @Override
+
     public String getRemoteHost()
     {
         return getSocket().getRemoteSocketAddress().toString();
@@ -594,7 +567,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getRequestDispatcher(java.lang.String)
      */
-    @Override
     public RequestDispatcher getRequestDispatcher(String arg0)
     {
         return null;
@@ -603,7 +575,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getScheme()
      */
-    @Override
     public String getScheme()
     {
         return HttpConstants.HTTP_SCHEME;
@@ -612,7 +583,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getServerName()
      */
-    @Override
     public String getServerName()
     {
         return HttpConstants.SERVER_INFO;
@@ -621,7 +591,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getServerPort()
      */
-    @Override
     public int getServerPort()
     {
         return getSocket().getLocalPort();
@@ -630,7 +599,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#isSecure()
      */
-    @Override
     public boolean isSecure()
     {
         return false;
@@ -639,7 +607,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#removeAttribute(java.lang.String)
      */
-    @Override
     public void removeAttribute(String arg0)
     {
         if (m_attributes != null)
@@ -651,7 +618,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#setAttribute(java.lang.String, java.lang.Object)
      */
-    @Override
     public void setAttribute(String arg0, Object arg1)
     {
         if (m_attributes == null)
@@ -665,7 +631,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#setCharacterEncoding(java.lang.String)
      */
-    @Override
+
     public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException
     {
         throw new UnimplementedAPIException();
@@ -676,8 +642,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getAuthType()
      */
-
-    @Override
     public String getAuthType()
     {
         return null;
@@ -688,8 +652,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getCookies()
      */
-
-    @Override
     public Cookie[] getCookies()
     {
         if (m_cookies == null)
@@ -728,8 +690,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * @see
      * javax.servlet.http.HttpServletRequest#getDateHeader(java.lang.String)
      */
-
-    @Override
     public long getDateHeader(final String name)
     {
         String headerValue = getHeader(name);
@@ -757,8 +717,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getIntHeader(java.lang.String)
      */
-
-    @Override
     public int getIntHeader(final String name)
     {
         String value = getHeader(name);
@@ -776,8 +734,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getPathInfo()
      */
-
-    @Override
     public String getPathInfo()
     {
         String alias = getAlias();
@@ -795,14 +751,12 @@ public class HttpServletRequestImpl implements HttpServletRequest
         return null;
     }
 
-    @Override
     public String getPathTranslated()
     {
         // TODO: Always returning null may be incorrect.
         return null;
     }
 
-    @Override
     public String getContextPath()
     {
         return "";
@@ -813,32 +767,26 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getQueryString()
      */
-
-    @Override
     public String getQueryString()
     {
         return m_queryString;
     }
 
-    @Override
     public String getRemoteUser()
     {
         return null;
     }
 
-    @Override
     public boolean isUserInRole(String role)
     {
         return false;
     }
 
-    @Override
     public Principal getUserPrincipal()
     {
         return null;
     }
 
-    @Override
     public String getRequestedSessionId()
     {
         return null;
@@ -849,7 +797,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getRequestURI()
      */
-    @Override
     public String getRequestURI()
     {
         return m_uri;
@@ -860,7 +807,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getRequestURL()
      */
-    @Override
     public StringBuffer getRequestURL()
     {
         StringBuffer sb = new StringBuffer();
@@ -875,8 +821,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * 
      * @see javax.servlet.http.HttpServletRequest#getServletPath()
      */
-
-    @Override
     public String getServletPath()
     {
         if (m_servletPath == null)
@@ -911,37 +855,31 @@ public class HttpServletRequestImpl implements HttpServletRequest
         return element.getAlias();
     }
 
-    @Override
     public HttpSession getSession(boolean create)
     {
         throw new UnimplementedAPIException();
     }
 
-    @Override
     public HttpSession getSession()
     {
         throw new UnimplementedAPIException();
     }
 
-    @Override
     public boolean isRequestedSessionIdValid()
     {
         throw new UnimplementedAPIException();
     }
 
-    @Override
     public boolean isRequestedSessionIdFromCookie()
     {
         throw new UnimplementedAPIException();
     }
 
-    @Override
     public boolean isRequestedSessionIdFromURL()
     {
         throw new UnimplementedAPIException();
     }
 
-    @Override
     public boolean isRequestedSessionIdFromUrl()
     {
         throw new UnimplementedAPIException();
@@ -1015,7 +953,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString()
     {
         if (m_method != null && m_uri != null)
@@ -1029,7 +966,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getLocalAddr()
      */
-    @Override
     public String getLocalAddr()
     {
         return m_socket.getLocalAddress().getHostAddress();
@@ -1038,7 +974,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getLocalName()
      */
-    @Override
     public String getLocalName()
     {
         return m_socket.getLocalAddress().getHostName();
@@ -1047,18 +982,16 @@ public class HttpServletRequestImpl implements HttpServletRequest
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getLocalPort()
      */
-    @Override
     public int getLocalPort()
-    {        
+    {
         return m_socket.getLocalPort();
     }
 
     /* (non-Javadoc)
      * @see javax.servlet.ServletRequest#getRemotePort()
      */
-    @Override
     public int getRemotePort()
-    {        
+    {
         return m_socket.getPort();
     }
 }
