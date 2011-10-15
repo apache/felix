@@ -3434,6 +3434,14 @@ public class Felix extends BundleImpl implements Framework
 
     File getDataFile(BundleImpl bundle, String s)
     {
+        if (bundle.getState() == Bundle.UNINSTALLED)
+        {
+            throw new IllegalStateException("Bundle has been uninstalled");
+        }
+        else if (Util.isFragment(adapt(BundleRevision.class)))
+        {
+            return null;
+        }
         try
         {
             if (bundle == this)

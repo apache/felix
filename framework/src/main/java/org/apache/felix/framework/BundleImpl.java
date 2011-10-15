@@ -1069,12 +1069,14 @@ class BundleImpl implements Bundle, BundleRevisions
 
     public File getDataFile(String filename)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getFramework().getDataFile(this, filename);
     }
 
     public int compareTo(Bundle t)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        long thisBundleId = this.getBundleId();
+        long thatBundleId = t.getBundleId();
+        return (thisBundleId < thatBundleId ? -1 : (thisBundleId == thatBundleId ? 0 : 1));
     }
 
     public String toString()
