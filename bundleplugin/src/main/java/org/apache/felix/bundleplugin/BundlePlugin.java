@@ -544,7 +544,7 @@ public class BundlePlugin extends AbstractMojo
         {
             buf.append( "#-----------------------------------------------------------------------" + NL );
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            manifest.write( out ); // manifest encoding is UTF8
+            Jar.writeManifest( manifest, out ); // manifest encoding is UTF8
             buf.append( out.toString( "UTF8" ) );
             buf.append( "#-----------------------------------------------------------------------" + NL );
         }
