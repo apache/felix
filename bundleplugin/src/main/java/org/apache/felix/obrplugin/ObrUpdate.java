@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.util.regex.Pattern;
 
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.bundlerepository.impl.DataModelHelperImpl;
@@ -48,6 +49,8 @@ import org.xmlpull.v1.XmlPullParser;
  */
 public class ObrUpdate
 {
+    private Pattern TIMESTAMP = Pattern.compile( "-[0-9]{8}\\.[0-9]{6}-[0-9]+" );
+
     /**
      * logger for this plugin.
      */
@@ -135,6 +138,7 @@ public class ObrUpdate
         m_logger.debug( " (f) repositoryXml = " + m_repositoryXml );
         m_logger.debug( " (f) bundleJar = " + bundleJar );
         m_logger.debug( " (f) sourceJar = " + sourceJar );
+        m_logger.debug( " (f) docJar = " + docJar );
         m_logger.debug( " (f) obrXml = " + m_obrXml );
 
         if ( m_repository == null )
@@ -144,6 +148,11 @@ public class ObrUpdate
 
         // get the file size
         File bundleFile = new File( bundleJar );
+        if ( !bundleFile.exists() )
+        {
+            String snapshot = TIMESTAMP.matcher( bundleFile.getName() ).replaceFirst( "-SNAPSHOT" );
+            bundleFile = new File( bundleFile.getParentFile(), snapshot );
+        }
         if ( bundleFile.exists() )
         {
             URI resourceURI = m_userConfig.getRemoteBundle();
@@ -167,7 +176,7 @@ public class ObrUpdate
 
             try
             {
-                m_resourceBundle = ( ResourceImpl ) new DataModelHelperImpl().createResource( bundleJar.toURL() );
+                m_resourceBundle = ( ResourceImpl ) new DataModelHelperImpl().createResource( bundleFile.toURL() );
                 if ( m_resourceBundle == null )
                 {
                     return;
