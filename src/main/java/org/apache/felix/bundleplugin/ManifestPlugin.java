@@ -179,7 +179,7 @@ public class ManifestPlugin extends BundlePlugin
         os = new FileOutputStream( outputFile );
         try
         {
-            manifest.write( os );
+            Jar.writeManifest( manifest, os );
         }
         finally
         {
