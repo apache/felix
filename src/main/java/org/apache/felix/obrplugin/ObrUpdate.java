@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.regex.Pattern;
 
@@ -49,7 +50,22 @@ import org.xmlpull.v1.XmlPullParser;
  */
 public class ObrUpdate
 {
-    private Pattern TIMESTAMP = Pattern.compile( "-[0-9]{8}\\.[0-9]{6}-[0-9]+" );
+    private static Pattern TIMESTAMP = Pattern.compile( "-[0-9]{8}\\.[0-9]{6}-[0-9]+" );
+
+    private static Method setURI;
+
+    static
+    {
+        try
+        {
+            setURI = RepositoryImpl.class.getDeclaredMethod( "setURI", String.class );
+            setURI.setAccessible( true );
+        }
+        catch ( Exception e )
+        {
+            setURI = null;
+        }
+    }
 
     /**
      * logger for this plugin.
@@ -298,6 +314,10 @@ public class ObrUpdate
             try
             {
                 m_repository = ( RepositoryImpl ) new DataModelHelperImpl().repository( m_repositoryXml.toURL() );
+                if ( setURI != null )
+                {
+                    setURI.invoke( m_repository, ( String ) null );
+                }
             }
             catch ( Exception e )
             {
