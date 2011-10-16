@@ -23,8 +23,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
@@ -35,6 +37,7 @@ import org.apache.maven.project.MavenProject;
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
 import aQute.lib.osgi.Jar;
+import aQute.lib.osgi.Resource;
 
 
 /**
@@ -47,22 +50,14 @@ import aQute.lib.osgi.Jar;
  */
 public class ManifestPlugin extends BundlePlugin
 {
+    @Override
     protected void execute( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
     {
         Manifest manifest;
         try
         {
-            if ( supportedProjectTypes.contains( getProject().getArtifact().getType() ) )
-            {
-                Builder builder = buildOSGiBundle( project, instructions, properties, classpath );
-                manifest = builder.getJar().getManifest();
-                builder.close();
-            }
-            else
-            {
-                manifest = getManifest( project, instructions, properties, classpath );
-            }
+            manifest = getManifest( project, instructions, properties, classpath );
         }
         catch ( FileNotFoundException e )
         {
@@ -118,7 +113,25 @@ public class ManifestPlugin extends BundlePlugin
             }
         }
 
-        Manifest manifest = analyzer.getJar().getManifest();
+        Jar jar = analyzer.getJar();
+
+        if ( unpackBundle )
+        {
+            File outputFile = getOutputDirectory();
+            for ( Entry<String, Resource> entry : jar.getResources().entrySet() )
+            {
+                File entryFile = new File( outputFile, entry.getKey() );
+                if ( !entryFile.exists() )
+                {
+                    entryFile.getParentFile().mkdirs();
+                    OutputStream os = new FileOutputStream( entryFile );
+                    entry.getValue().write( os );
+                    os.close();
+                }
+            }
+        }
+
+        Manifest manifest = jar.getManifest();
 
         // cleanup...
         analyzer.close();
@@ -137,6 +150,11 @@ public class ManifestPlugin extends BundlePlugin
     protected Analyzer getAnalyzer( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
         throws IOException, MojoExecutionException, Exception
     {
+        if ( supportedProjectTypes.contains( project.getArtifact().getType() ) )
+        {
+            return buildOSGiBundle( project, instructions, properties, classpath );
+        }
+
         File file = project.getArtifact().getFile();
         if ( file == null )
         {
