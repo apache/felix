@@ -83,14 +83,24 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                 { "4", "3", "2", "1" }));
 
         adList
-            .add(new AttributeDefinitionImpl(
-                ScrConfiguration.PROP_FACTORY_ENABLED,
-                "Extended Factory Components",
-                "Whether or not to enable the support for creating Factory Component instances based on factory configuration."
-                    + " This is an Apache Felix SCR specific extension, explicitly not supported by the Declarative Services "
-                    + "specification. Reliance on this feature prevent the component from being used with other Declarative "
-                    + "Services implementations. The default value is false to disable this feature.", this
-                    .getScrConfiguration().isFactoryEnabled()));
+        .add(new AttributeDefinitionImpl(
+            ScrConfiguration.PROP_FACTORY_ENABLED,
+            "Extended Factory Components",
+            "Whether or not to enable the support for creating Factory Component instances based on factory configuration."
+                + " This is an Apache Felix SCR specific extension, explicitly not supported by the Declarative Services "
+                + "specification. Reliance on this feature prevent the component from being used with other Declarative "
+                + "Services implementations. The default value is false to disable this feature.", this
+                .getScrConfiguration().isFactoryEnabled()));
+
+        adList.add( new AttributeDefinitionImpl(
+            ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES,
+            "Keep Component Instances",
+            "Whether or not to keep instances of delayed components once they are not referred to any more. The "
+                + "Declarative Services specifications suggests that instances of delayed components are disposed off "
+                + "if there is not used any longer. Setting this flag causes the components to not be disposed off "
+                + "and thus prevent them from being constantly recreated if often used. Examples of such components "
+                + "may be EventHandler services. The default is to dispose off unused components.", this
+                .getScrConfiguration().keepInstances() ) );
 
         return new ObjectClassDefinition()
         {
