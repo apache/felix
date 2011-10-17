@@ -863,7 +863,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 		addTo(properties, m_serviceProperties);
 		for (int i = 0; i < m_dependencies.size(); i++) {
 			Dependency d = (Dependency) m_dependencies.get(i);
-			if (d.isPropagated()) {
+			if (d.isPropagated() && d.isAvailable()) {
 				Dictionary dict = d.getProperties();
 				addTo(properties, dict);
 			}
