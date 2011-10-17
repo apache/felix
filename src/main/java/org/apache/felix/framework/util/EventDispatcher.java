@@ -640,15 +640,15 @@ public class EventDispatcher
         return listeners;
     }
 
-    private Set<BundleContext> createWhitelistFromHooks(
+    private <T> Set<BundleContext> createWhitelistFromHooks(
         EventObject event, Framework felix,
         Map<BundleContext, List<ListenerInfo>> listeners1,
         Map<BundleContext, List<ListenerInfo>> listeners2,
-        Class hookClass)
+        Class<T> hookClass)
     {
         // Create a whitelist of bundle context, if we have hooks.
         Set<BundleContext> whitelist = null;
-        Set<ServiceReference> hooks = m_registry.getHooks(hookClass);
+        Set<ServiceReference<T>> hooks = m_registry.getHooks(hookClass);
         if ((hooks != null) && !hooks.isEmpty())
         {
             whitelist = new HashSet<BundleContext>();
@@ -667,11 +667,11 @@ public class EventDispatcher
             int originalSize = whitelist.size();
             ShrinkableCollection<BundleContext> shrinkable =
                 new ShrinkableCollection<BundleContext>(whitelist);
-            for (ServiceReference sr : hooks)
+            for (ServiceReference<T> sr : hooks)
             {
                 if (felix != null)
                 {
-                    Object eh = null;
+                    T eh = null;
                     try
                     {
                         eh = m_registry.getService(felix, sr);
