@@ -699,7 +699,7 @@ public class BundlePlugin extends AbstractMojo
                         options.put( "resolution:", "optional" );
                     }
                 }
-                String result = Processor.printClauses( values, "resolution:" );
+                String result = Processor.printClauses( values );
                 bundleManifest.getMainAttributes().putValue( "Import-Package", result );
             }
 
