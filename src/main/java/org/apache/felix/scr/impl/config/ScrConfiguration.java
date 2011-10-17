@@ -53,11 +53,15 @@ import org.osgi.service.log.LogService;
 public class ScrConfiguration
 {
 
-    private static final String VALUE_TRUE = "true";
+    private static final String VALUE_TRUE = Boolean.TRUE.toString();
 
-    static final String PROP_FACTORY_ENABLED = "ds.factory.enabled";
+    public static final String PID = "org.apache.felix.scr.ScrService";
 
-    static final String PROP_LOGLEVEL = "ds.loglevel";
+    public static final String PROP_FACTORY_ENABLED = "ds.factory.enabled";
+
+    public static final String PROP_DELAYED_KEEP_INSTANCES = "ds.delayed.keepInstances";
+
+    public static final String PROP_LOGLEVEL = "ds.loglevel";
 
     // framework property to enable the CT workarounds (see FELIX-2526)
     private static final String PROP_CT_WORKAROUND = "ds.ctworkaround";
@@ -80,7 +84,7 @@ public class ScrConfiguration
 
     private boolean factoryEnabled;
 
-    static final String PID = "org.apache.felix.scr.ScrService";
+    private boolean keepInstances;
 
     public ScrConfiguration( BundleContext bundleContext )
     {
@@ -105,11 +109,13 @@ public class ScrConfiguration
         {
             logLevel = getDefaultLogLevel();
             factoryEnabled = getDefaultFactoryEnabled();
+            keepInstances = getDefaultKeepInstances();
         }
         else
         {
             logLevel = getLogLevel( config.get( PROP_LOGLEVEL ) );
-            factoryEnabled = VALUE_TRUE.equals( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
+            factoryEnabled = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
+            keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
         }
     }
 
@@ -126,6 +132,12 @@ public class ScrConfiguration
     public boolean isFactoryEnabled()
     {
         return factoryEnabled;
+    }
+
+
+    public boolean keepInstances()
+    {
+        return keepInstances;
     }
 
 
@@ -154,6 +166,12 @@ public class ScrConfiguration
     private boolean getDefaultFactoryEnabled()
     {
         return VALUE_TRUE.equals( bundleContext.getProperty( PROP_FACTORY_ENABLED ) );
+    }
+
+
+    private boolean getDefaultKeepInstances()
+    {
+        return VALUE_TRUE.equals( bundleContext.getProperty( PROP_DELAYED_KEEP_INSTANCES ) );
     }
 
 

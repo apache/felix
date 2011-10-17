@@ -107,8 +107,9 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
                 m_useCount--;
 
                 // unget the service instance if no bundle is using it
-                // any longer
-                if ( m_useCount == 0 )
+                // any longer unless delayed component instances have to
+                // be kept (FELIX-3039)
+                if ( m_useCount == 0 && !getActivator().getConfiguration().keepInstances() )
                 {
                     state().ungetService( this );
                 }

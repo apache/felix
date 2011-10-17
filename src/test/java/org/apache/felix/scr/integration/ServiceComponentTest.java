@@ -19,15 +19,21 @@
 package org.apache.felix.scr.integration;
 
 
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
+import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -169,5 +175,59 @@ public class ServiceComponentTest extends ComponentTestBase
         bundleContext.ungetService( reference1 );
         TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
+    }
+
+    @Test
+    public void test_DelayedSimpleComponent_service_keep_instance() throws IOException
+    {
+        // configure SCR to keep instances
+        Configuration scrConfig = getConfigurationAdmin().getConfiguration( ScrConfiguration.PID, null );
+        Dictionary props = scrConfig.getProperties();
+        if ( props == null )
+        {
+            props = new Hashtable();
+        }
+        props.put( ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES, Boolean.TRUE.toString() );
+        scrConfig.update( props );
+        delay();
+
+        final String pid = "DelayedServiceComponent";
+
+        // one single component exists without configuration
+        final Component component = findComponentByName( pid );
+        TestCase.assertNotNull( component );
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        component.enable();
+        delay();
+
+        // the delayed service is expected to only be registered before use
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        // get the service
+        ServiceReference reference = bundleContext.getServiceReference( "java.lang.Object" );
+        TestCase.assertNotNull( reference );
+        try
+        {
+            final Object theService = bundleContext.getService( reference );
+
+            // service must now be active
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+
+            // and of course we expect the instance
+            TestCase.assertEquals( SimpleComponent.INSTANCE, theService );
+        }
+        finally
+        {
+            bundleContext.ungetService( reference );
+        }
+
+        // component instance must not be disposed off (due to config)
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        TestCase.assertNotNull( SimpleComponent.INSTANCE );
+
+        // delete the SCR configuration again
+        scrConfig.delete();
     }
 }
