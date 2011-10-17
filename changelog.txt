@@ -1,3 +1,38 @@
+Changes from 1.6.0 to 1.6.2
+---------------------------
+
+** Bug
+    * [FELIX-2578] - Declarative Services bundle does not start without Configuration Admin API wired
+    * [FELIX-2821] - Component service references not unbound in reverse order (breaks compendium spec 112.5.15)
+    * [FELIX-2823] - Uncaught exception in case of circular service reference
+    * [FELIX-2824] - Components that have a ConfigurationPolicy value of REQUIRE fail to activate
+    * [FELIX-2926] - No log message on missing activate method
+    * [FELIX-2944] - SCR/ spec version 1.1-felix is causing NPE in XmlHandler
+    * [FELIX-2962] - SCR doesn't detect invalid XML
+    * [FELIX-3039] - SCR cleans up delayed service components too aggressively
+    * [FELIX-3086] - IllegalArgumentException in PropertyMetadata.setValues()
+    * [FELIX-3087] - Given invalid value, but the property isn't invalid.
+    * [FELIX-3089] - A component without ServicePermissions cannot be registered as a service
+    * [FELIX-3093] - SCR project does not build on machines with empty M2 repository
+    * [FELIX-3108] - SCR doesn't cope when the DS xml is not encoded using the default platform encoding.
+    * [FELIX-3126] - SCR activates a service component while the containing bundle is stopping.
+
+** Improvement
+    * [FELIX-2895] - Allow the use of a property to tell SCR to always discover Service Component files even if there's no wildcard in the name
+
+** New Feature
+    * [FELIX-2712] - [SCR] Add Gogo command support
+
+** Task
+    * [FELIX-2539] - Include DEPENDENCIES file in distributables
+    * [FELIX-2553] - Reconsider logging/log levels
+    * [FELIX-2903] - Inline required KXml classes
+    * [FELIX-3158] - Upgrade to Felix parent POM 2.1 and use managed ant plugin version
+
+** Wish
+    * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
+
+
 Changes from 1.4.0 to 1.6.0
 ---------------------------
 
