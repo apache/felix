@@ -121,7 +121,7 @@ public class ManifestPlugin extends BundlePlugin
             for ( Entry<String, Resource> entry : jar.getResources().entrySet() )
             {
                 File entryFile = new File( outputFile, entry.getKey() );
-                if ( !entryFile.exists() )
+                if ( !entryFile.exists() || entry.getValue().lastModified() == 0 )
                 {
                     entryFile.getParentFile().mkdirs();
                     OutputStream os = new FileOutputStream( entryFile );
