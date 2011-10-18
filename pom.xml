@@ -179,6 +179,9 @@
                                 <configuration>
                                     <classifier>bare</classifier>
                                     <instructions>
+                                        <Bundle-Name>
+                                            ${project.name} (Bare)
+                                        </Bundle-Name>
                                         <Bundle-SymbolicName>
                                             ${project.artifactId}.bare
                                         </Bundle-SymbolicName>
