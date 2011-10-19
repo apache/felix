@@ -213,8 +213,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      * @param metadata the metadata of the component
      * @param configuration the instance configuration
      * @throws ConfigurationException one property metadata is not correct
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager,
-     * org.apache.felix.ipojo.metadata.Element)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         // Build the map
@@ -354,7 +353,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             // Security Check
             if (SecurityHelper.hasPermissionToRegisterService(ManagedService.class.getName(),
                     getInstanceManager().getContext())) {
-                m_sr = getInstanceManager().getContext().registerService(ManagedService.class.getName(), this, props);
+                m_sr = getInstanceManager().getContext().registerService(ManagedService.class.getName(), this, (Dictionary) props);
             } else {
                 error("Cannot register the ManagedService - The bundle "
                         + getInstanceManager().getContext().getBundle().getBundleId()
@@ -449,7 +448,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
     /**
      * Reconfigures the given property with the given value.
-     * This methods handles {@link InstanceManager#onSet(Object, String, Object)}
+     * This methods handles {@link org.apache.felix.ipojo.InstanceManager#onSet(Object, String, Object)}
      * call and the callback invocation.
      * The reconfiguration occurs only if the value changes.
      * @param prop the property object to reconfigure
@@ -496,7 +495,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      * This method is override to allow delayed callback invocation.
      * Invokes the updated method is needed.
      * @param instance : the created object
-     * @see org.apache.felix.ipojo.Handler#onCreation(java.lang.Object)
+     * @see org.apache.felix.ipojo.PrimitiveHandler#onCreation(Object)
      */
     public void onCreation(Object instance) {
         for (int i = 0; i < m_configurableProperties.size(); i++) {

@@ -134,7 +134,7 @@ public class ProvidedService implements ServiceFactory {
     /**
      * The published properties.
      */
-    private Properties m_publishedProperties = new Properties();
+    private Dictionary m_publishedProperties = new Properties();
 
     /**
      * Creates a provided service object.
@@ -361,7 +361,7 @@ public class ProvidedService implements ServiceFactory {
                                 serviceProperties);
                         m_serviceRegistration = bc.registerService(
                                 getServiceSpecificationsToRegister(), this,
-                                serviceProperties);
+                                (Dictionary) serviceProperties);
                         reg = m_serviceRegistration; // Stack confinement
                     } else {
                         throw new SecurityException("The bundle "
@@ -378,7 +378,7 @@ public class ProvidedService implements ServiceFactory {
         // This must be call outside the synchronized block.
         if (reg != null && m_wasUpdated) {
             Properties updated = getServiceProperties();
-            reg.setProperties(updated);
+            reg.setProperties((Dictionary) updated);
             m_publishedProperties = updated;
             m_wasUpdated = false;
         }
@@ -481,8 +481,8 @@ public class ProvidedService implements ServiceFactory {
         // Update the service registration
         if (m_serviceRegistration != null) {
             Properties updated = getServiceProperties();
-            Properties oldProps = (Properties) m_publishedProperties.clone();
-            Properties newProps = (Properties) updated.clone();
+            Dictionary oldProps = (Dictionary) ((Properties) m_publishedProperties).clone();
+            Dictionary newProps = (Dictionary) (updated.clone());
 
             // Remove keys that must not be compared
             newProps.remove("instance.name");
@@ -502,7 +502,7 @@ public class ProvidedService implements ServiceFactory {
             if (oldProps.size() != newProps.size()) {
                 m_handler.info("Updating Registration : " + oldProps.size() + " / " + newProps.size());
                 m_publishedProperties = updated;
-                m_serviceRegistration.setProperties(updated);
+                m_serviceRegistration.setProperties((Dictionary) updated);
             } else {
                 // Check changes
                 Enumeration keys = oldProps.keys();
@@ -512,7 +512,7 @@ public class ProvidedService implements ServiceFactory {
                     if (! val.equals(updated.get(k))) {
                         m_handler.info("Updating Registration : " + k);
                         m_publishedProperties = updated;
-                        m_serviceRegistration.setProperties(updated);
+                        m_serviceRegistration.setProperties((Dictionary) updated);
                         return;
                     }
                 }

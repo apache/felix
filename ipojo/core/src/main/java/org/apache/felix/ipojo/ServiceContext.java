@@ -79,7 +79,7 @@ public interface ServiceContext extends BundleContext {
      * @return the service object or null if the service reference is no more valid or if the service object is not accessible
      * @see org.osgi.framework.BundleContext#getService(org.osgi.framework.ServiceReference)
      */
-    Object getService(ServiceReference reference);
+    <S> S getService(ServiceReference<S> reference);
 
     /**
      * Gets a service reference for the given interface.
@@ -114,7 +114,7 @@ public interface ServiceContext extends BundleContext {
      * and does not have any meaning in other contexts.
      * @see org.apache.felix.ipojo.ServiceContext#registerService(java.lang.String[], java.lang.Object, java.util.Dictionary)
      */
-    ServiceRegistration registerService(String[] clazzes, Object service, Dictionary properties);
+    ServiceRegistration registerService(String[] clazzes, Object service, Dictionary<String, ?> properties);
 
     /**
      * Registers a service inside this service context.
@@ -127,7 +127,7 @@ public interface ServiceContext extends BundleContext {
      * and does not have any meaning in other contexts.
      * @see org.osgi.framework.BundleContext#registerService(java.lang.String, java.lang.Object, java.util.Dictionary)
      */
-    ServiceRegistration registerService(String clazz, Object service, Dictionary properties);
+    ServiceRegistration registerService(String clazz, Object service, Dictionary<String, ?> properties);
 
     /**
      * Removes a service listener.
@@ -144,6 +144,6 @@ public interface ServiceContext extends BundleContext {
      * @return <code>true</code> if you are the last user of the reference.
      * @see org.osgi.framework.BundleContext#ungetService(org.osgi.framework.ServiceReference)
      */
-    boolean ungetService(ServiceReference reference);
+    boolean ungetService(ServiceReference<?> reference);
 
 }

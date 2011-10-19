@@ -20,6 +20,7 @@ package org.apache.felix.ipojo;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Dictionary;
 
 import org.osgi.framework.Bundle;
@@ -175,6 +176,15 @@ public class IPojoContext implements BundleContext, ServiceContext {
     }
 
     /**
+     * Gets a bundle by symbolic name
+     * @param s the name
+     * @return the matching bundle or <code>null</code> if not found
+     */
+    public Bundle getBundle(String s) {
+        return m_bundleContext.getBundle(s);
+    }
+
+    /**
      * Gets the service references matching with the given query.
      * Uses the service context if specified, used the bundle context
      * otherwise.
@@ -250,16 +260,16 @@ public class IPojoContext implements BundleContext, ServiceContext {
      * context otherwise.
      * This method may throw {@link IllegalStateException} if the used bundle
      * context is no more valid (because we're leaving).
-     * @param reference the required service reference 
+     * @param ref the required service reference
      * @return the service object or <code>null</code> if the service reference 
      * is no more valid or if the service object is not accessible.
      * @see org.osgi.framework.BundleContext#getService(org.osgi.framework.ServiceReference)
      */
-    public Object getService(ServiceReference reference) {
+    public <S> S getService(ServiceReference<S> ref) {
         if (m_serviceContext == null) {
-            return m_bundleContext.getService(reference);
+            return m_bundleContext.getService(ref);
         } else {
-            return m_serviceContext.getService(reference);
+            return (S) m_serviceContext.getService(ref);
         }
     }
 
@@ -277,6 +287,43 @@ public class IPojoContext implements BundleContext, ServiceContext {
             return m_bundleContext.getServiceReference(clazz);
         } else {
             return m_serviceContext.getServiceReference(clazz);
+        }
+    }
+
+     /**
+     * Gets a service reference for the given interface.
+     * This method uses the service context if specified, the bundle
+     * context otherwise.
+     * @param sClass the required interface class
+     * @param <S> the service class
+     * @return a service reference on a available provider or <code>null</code>
+     * if no providers available
+     * @see org.osgi.framework.BundleContext#getServiceReference(java.lang.String)
+     */
+    public <S> ServiceReference<S> getServiceReference(Class<S> sClass) {
+        if (m_serviceContext == null) {
+            return m_bundleContext.getServiceReference(sClass);
+        } else {
+            return m_serviceContext.getServiceReference(sClass);
+        }
+    }
+
+    /**
+     * Gets service reference list for the given query.
+     * This method uses the service context if specified, the bundle
+     * context otherwise.
+     * @param sClass the name of the required service interface
+     * @param filter the LDAP filter to apply on service provider
+     * @param <S> the service class
+     *  @return the array of consistent service reference or <code>null</code>
+     * if no available providers
+     * @throws InvalidSyntaxException if the LDAP filter is malformed
+     */
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> sClass, String filter) throws InvalidSyntaxException {
+        if (m_serviceContext == null) {
+            return m_bundleContext.getServiceReferences(sClass, filter);
+        } else {
+            return m_serviceContext.getServiceReferences(sClass, filter);
         }
     }
 
@@ -376,6 +423,22 @@ public class IPojoContext implements BundleContext, ServiceContext {
      */
     public void removeFrameworkListener(FrameworkListener listener) {
         m_bundleContext.removeFrameworkListener(listener);
+    }
+
+    /**
+     * Registers a service
+     * @param sClass  the service class
+     * @param s the service object (must implement sClass)
+     * @param stringDictionary service properties
+     * @param <S> the Service Class (specification)
+     * @return the service registration
+     */
+    public <S> ServiceRegistration<S> registerService(Class<S> sClass, S s, Dictionary<String, ?> stringDictionary) {
+        if (m_serviceContext == null) {
+            return m_bundleContext.registerService(sClass, s, stringDictionary);
+        } else {
+            return m_serviceContext.registerService(sClass, s, stringDictionary);
+        }
     }
 
     /**

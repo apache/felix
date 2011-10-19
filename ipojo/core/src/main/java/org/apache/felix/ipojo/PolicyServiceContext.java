@@ -20,6 +20,9 @@ package org.apache.felix.ipojo;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 
 import org.osgi.framework.Bundle;
@@ -217,6 +220,35 @@ public class PolicyServiceContext implements ServiceContext {
     }
 
     /**
+     * Gets a service reference.
+     * This method is delegated on PolicyServiceContext#getServiceReference(String)
+     * @param sClass the service interface class
+     * @param <S> the service interface class
+     * @return the service reference of <code>null</code> if not found
+     * @see PolicyServiceContext#getServiceReference(String)
+     */
+    public <S> ServiceReference<S> getServiceReference(Class<S> sClass) {
+        return (ServiceReference<S>) getServiceReference(sClass.getName());
+    }
+
+    /**
+     * Gets a collection of service references
+     * @param clazz the service interface class
+     * @param filter the filter
+     * @param <S> the service interface class
+     * @return the set of service reference
+     * @throws InvalidSyntaxException the filter is invalid
+     * @see PolicyServiceContext#getServiceReferences(String, String)
+     */
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
+         ServiceReference<S>[] refs =
+            (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
+        return (refs == null)
+            ? Collections.EMPTY_LIST
+            : (Collection<ServiceReference<S>>) Arrays.asList(refs);
+    }
+
+    /**
      * Get a service reference for the required service specification.
      * The services are looked inside the context according to the policy.
      * @param clazz the required service specification
@@ -347,6 +379,15 @@ public class PolicyServiceContext implements ServiceContext {
     }
 
     /**
+     * Gets a bundle by name
+     * @param s the name
+     * @return the matching bundle or <code>null</code> if not found
+     */
+    public Bundle getBundle(String s) {
+        return m_global.getBundle(s);
+    }
+
+    /**
      * Gets the current bundle.
      * @return the current bundle
      * @see org.osgi.framework.BundleContext#getBundle()
@@ -435,6 +476,19 @@ public class PolicyServiceContext implements ServiceContext {
      */
     public void removeFrameworkListener(FrameworkListener listener) {
         m_global.removeFrameworkListener(listener);
+    }
+
+    /**
+     * Registers a service.
+     * Operation not supported.
+     * @param sClass
+     * @param s
+     * @param stringDictionary
+     * @param <S>
+     * @return
+     */
+    public <S> ServiceRegistration<S> registerService(Class<S> sClass, S s, Dictionary<String, ?> stringDictionary) {
+        throw new UnsupportedOperationException("PolicyServiceContext can only be used for service dependency and not to provide services");
     }
 
 }
