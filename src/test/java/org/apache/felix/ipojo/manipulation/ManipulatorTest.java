@@ -1,11 +1,8 @@
 package org.apache.felix.ipojo.manipulation;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -44,7 +41,7 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    public void _testManipulatingTheSimplePojo() throws Exception {
+    public void testManipulatingTheSimplePojo() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/SimplePojo.class")));
         TestClassLoader classloader = new TestClassLoader("test.SimplePojo", clazz);
@@ -95,7 +92,7 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    public void _testManipulatingChild() throws Exception {
+    public void testManipulatingChild() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
         TestClassLoader classloader = new TestClassLoader("test.Child", clazz);
@@ -141,7 +138,7 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    public void _testManipulatingTheInner() throws Exception {
+    public void testManipulatingTheInner() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/PojoWithInner.class")));
         TestClassLoader classloader = new TestClassLoader("test.PojoWithInner", clazz);
@@ -195,7 +192,7 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    public void _testManipulatingWithConstructorModification() throws Exception {
+    public void testManipulatingWithConstructorModification() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
         TestClassLoader classloader = new TestClassLoader("test.Child", clazz);
@@ -260,7 +257,7 @@ public class ManipulatorTest extends TestCase {
     }
 
 
-    public void _testManipulatingWithNoValidConstructor() throws Exception {
+    public void testManipulatingWithNoValidConstructor() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/NoValidConstructor.class")));
         TestClassLoader classloader = new TestClassLoader("test.NoValidConstructor", clazz);
@@ -297,17 +294,29 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-//	public void test() throws Exception {
-//
-//
-//		byte[] clazz = getBytesFromFile(new File("target/test-classes/test/Constructor.class"));
-//		ClassReader cr = new ClassReader(clazz);
-//        MetadataCollector collector = new MetadataCollector();
-//        cr.accept(collector, 0);
-//
-//        System.out.println(collector.getComponentTypeDeclaration());
-//
-//	}
+     public void testConstructor() throws Exception {
+        Manipulator manipulator = new Manipulator();
+        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/ConstructorCheck.class")));
+
+//        File out = new File("target/ManipulatedConstructorCheck.class");
+//        FileOutputStream fos = new FileOutputStream(out);
+//        fos.write(clazz);
+//        fos.close();
+
+        TestClassLoader classloader = new TestClassLoader("test.ConstructorCheck", clazz);
+        Class cl = classloader.findClass("test.ConstructorCheck");
+        Assert.assertNotNull(cl);
+        Assert.assertNotNull(manipulator.getManipulationMetadata());
+
+        System.out.println(manipulator.getManipulationMetadata());
+
+        Constructor c = cl.getConstructor(new Class[] {String.class });
+        Assert.assertNotNull(c);
+
+        Object o = c.newInstance("toto");
+        Field f = o.getClass().getField("m_foo");
+        Assert.assertEquals("toto", f.get(o));
+     }
 
     public static byte[] getBytesFromFile(File file) throws IOException {
         InputStream is = new FileInputStream(file);
