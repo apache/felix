@@ -953,6 +953,54 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         TestCase.assertEquals( 2, testerB1.numManagedServiceFactoryUpdatedCalls );
     }
 
+
+    @Test
+    public void test_location_changed_events() throws BundleException, IOException
+    {
+        String pid = "test_location_changed_events";
+        configure( pid );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
+
+        // ensure configuration is unbound
+        final Configuration config = getConfiguration( pid );
+        TestCase.assertNull( config.getBundleLocation() );
+
+        bundle = installBundle( pid );
+        bundle.start();
+        delay();
+
+        // ensure no configuration bound before start
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
+        // uninstall the bundle, dynamic location changed
+        bundle.uninstall();
+        bundle = null;
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
+        // change the location
+        config.setBundleLocation( "some_location_1" );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
+        // change the location
+        config.setBundleLocation( "some_location_2" );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
+        // remove configuration, delete event
+        config.delete();
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_DELETED, 1 );
+
+        // no more events
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_DELETED, 0 );
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 0 );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
+    }
+
     private static class ConfigListener implements ConfigurationListener {
 
         private int[] events = new int[3];
