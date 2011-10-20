@@ -23,66 +23,88 @@ import java.util.Comparator;
 
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationPlugin;
 
 
 /**
- * The <code>RankingComparator</code> TODO
+ * The <code>RankingComparator</code> may be used to maintain sorted
+ * sets or to sort arrays such that the first element in the set or
+ * array is the one to use first and the last elementis the one to
+ * use last.
  */
-public class RankingComparator implements Comparator
+abstract class RankingComparator implements Comparator
 {
 
-    private final boolean naturalOrder;
-    private final String rankProperty;
-
-
-    public RankingComparator(boolean naturalOrder)
+    /**
+     * Implements a comparator to sort arrays and sets according to the
+     * specification of the <code>service.ranking</code> property. This
+     * results in collections whose first element has the highest ranking
+     * and the last element has the lowest ranking. Thus the results of
+     * this comparator are as follows:
+     * <ul>
+     * <li><code>&lt; 0</code> if obj1 has higher ranking than obj2</li>
+     * <li><code>== 0</code> if obj1 and obj2 reference the same service</li>
+     * <li><code>&gt; 0</code> if obj1 has lower ranking than obj2</li>
+     * </ul>
+     */
+    static Comparator SRV_RANKING = new RankingComparator()
     {
-        this( naturalOrder, Constants.SERVICE_RANKING );
-    }
+        public int compare( Object obj1, Object obj2 )
+        {
+            final long id1 = this.getLong( ( ServiceReference ) obj1, Constants.SERVICE_ID );
+            final long id2 = this.getLong( ( ServiceReference ) obj2, Constants.SERVICE_ID );
+
+            if ( id1 == id2 )
+            {
+                return 0;
+            }
+
+            final long rank1 = this.getLong( ( ServiceReference ) obj1, Constants.SERVICE_RANKING );
+            final long rank2 = this.getLong( ( ServiceReference ) obj2, Constants.SERVICE_RANKING );
+
+            if ( rank1 == rank2 )
+            {
+                return ( id1 < id2 ) ? -1 : 1;
+            }
+
+            return ( rank1 > rank2 ) ? -1 : 1;
+        }
+
+    };
 
 
-    public RankingComparator( boolean naturalOrder, String rankProperty )
+    /**
+     * Implements a comparator to sort arrays and sets according to the
+     * specification of the <code>service.cmRanking</code> property in
+     * the Configuration Admin specification. This results in collections
+     * where the first element has the lowest ranking value and the last
+     * element has the highest ranking value. Order amongst elements with
+     * the same ranking value is left undefined. Thus the results of this
+     * comparator are as follows:
+     * <ul>
+     * <li><code>&lt; 0</code> if obj1 has lower ranking than obj2</li>
+     * <li><code>== 0</code> if obj1 and obj2 have the same ranking</li>
+     * <li><code>&gt; 0</code> if obj1 has higher ranking than obj2</li>
+     * </ul>
+     */
+    static Comparator CM_RANKING = new RankingComparator()
     {
-        this.naturalOrder = naturalOrder;
-        this.rankProperty = rankProperty;
-    }
-
-
-    public int compare( Object obj1, Object obj2 )
-    {
-        if ( obj1.equals( obj2 ) )
+        public int compare( Object obj1, Object obj2 )
         {
-            return 0;
+            final long rank1 = this.getLong( ( ServiceReference ) obj1, ConfigurationPlugin.CM_RANKING );
+            final long rank2 = this.getLong( ( ServiceReference ) obj2, ConfigurationPlugin.CM_RANKING );
+
+            if ( rank1 == rank2 )
+            {
+                return 0;
+            }
+
+            return ( rank1 < rank2 ) ? -1 : 1;
         }
 
-        long rank1 = this.getLong( ( ServiceReference ) obj1, rankProperty );
-        long rank2 = this.getLong( ( ServiceReference ) obj2, rankProperty );
-        boolean order = naturalOrder;
+    };
 
-        // use service id, if rankings are equal
-        if ( rank1 == rank2 )
-        {
-            rank1 = this.getLong( ( ServiceReference ) obj1, Constants.SERVICE_ID );
-            rank2 = this.getLong( ( ServiceReference ) obj2, Constants.SERVICE_ID );
-            order = false; // always order lower service.id before higher
-        }
-
-        if ( rank1 == rank2 )
-        {
-            return 0;
-        }
-        else if ( order )
-        {
-            return ( rank1 > rank2 ) ? 1 : -1;
-        }
-        else
-        {
-            return ( rank1 < rank2 ) ? 1 : -1;
-        }
-    }
-
-
-    private long getLong( ServiceReference sr, String property )
+    protected long getLong( ServiceReference sr, String property )
     {
         Object rankObj = sr.getProperty( property );
         if ( rankObj instanceof Number )
