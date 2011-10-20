@@ -63,28 +63,31 @@ class CaseInsensitiveDictionary extends Dictionary
     {
         this();
 
-        Enumeration keys = props.keys();
-        while ( keys.hasMoreElements() )
+        if ( props != null )
         {
-            Object key = keys.nextElement();
-
-            // check the correct syntax of the key
-            checkKey( key );
-
-            // check uniqueness of key
-            String lowerCase = ( ( String ) key ).toLowerCase();
-            if ( internalMap.containsKey( lowerCase ) )
+            Enumeration keys = props.keys();
+            while ( keys.hasMoreElements() )
             {
-                throw new IllegalArgumentException( "Key [" + key + "] already present in different case" );
+                Object key = keys.nextElement();
+
+                // check the correct syntax of the key
+                checkKey( key );
+
+                // check uniqueness of key
+                String lowerCase = ( ( String ) key ).toLowerCase();
+                if ( internalMap.containsKey( lowerCase ) )
+                {
+                    throw new IllegalArgumentException( "Key [" + key + "] already present in different case" );
+                }
+
+                // check the value
+                Object value = props.get( key );
+                value = checkValue( value );
+
+                // add the key/value pair
+                internalMap.put( lowerCase, value );
+                originalKeys.put( lowerCase, key );
             }
-
-            // check the value
-            Object value = props.get( key );
-            value = checkValue( value );
-
-            // add the key/value pair
-            internalMap.put( lowerCase, value );
-            originalKeys.put( lowerCase, key );
         }
     }
 

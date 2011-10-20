@@ -29,7 +29,9 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -60,24 +62,6 @@ import org.osgi.util.tracker.ServiceTracker;
 public abstract class ConfigurationTestBase
 {
 
-    /**
-     * There is currently an open issue in the specification in whether a
-     * call to Configuration.setBundleLocation() might trigger a configuration
-     * update or not.
-     * We have test cases in our integration test suite for both cases. To
-     * enable the respective tests set this field accordingly:
-     * <dl>
-     * <dt>false</dt>
-     * <dd>Expect configuration to <b>NOT</b> be redispatched. That is existing
-     * configurations are kept and other services are not updated</dd>
-     * <dt>true</dt>
-     * <dd>Expect configuration to be redispatched. That is existing configuration
-     * is revoked (update(null) or delete calls) and new matching services are
-     * updated.</dd>
-     * </dl>
-     */
-    public static final boolean REDISPATCH_CONFIGURATION_ON_SET_BUNDLE_LOCATION = false;
-
     // the name of the system property providing the bundle file to be installed and tested
     protected static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
@@ -98,6 +82,8 @@ public abstract class ConfigurationTestBase
     protected Bundle bundle;
 
     protected ServiceTracker configAdminTracker;
+
+    private Set<String> configurations = new HashSet<String>();
 
     protected static final String PROP_NAME = "theValue";
     protected static final Dictionary<String, String> theConfig;
@@ -121,6 +107,7 @@ public abstract class ConfigurationTestBase
         }
 
         final Option[] base = options(
+            /* CoreOptions.allFrameworks(), */
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
                 mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" )
@@ -146,6 +133,11 @@ public abstract class ConfigurationTestBase
         if ( bundle != null )
         {
             bundle.uninstall();
+        }
+
+        for ( String pid : configurations )
+        {
+            deleteConfig( pid );
         }
 
         configAdminTracker.close();
@@ -299,7 +291,7 @@ public abstract class ConfigurationTestBase
         final ConfigurationAdmin ca = getConfigurationAdmin();
         try
         {
-            final Configuration config = ca.createFactoryConfiguration( factoryPid, null );
+            final Configuration config = ca.createFactoryConfiguration( factoryPid, location );
             if ( withProps )
             {
                 config.update( theConfig );
@@ -345,6 +337,7 @@ public abstract class ConfigurationTestBase
         final ConfigurationAdmin ca = getConfigurationAdmin();
         try
         {
+            configurations.remove( pid );
             final Configuration config = ca.getConfiguration( pid );
             config.delete();
         }
@@ -366,6 +359,7 @@ public abstract class ConfigurationTestBase
             {
                 for ( Configuration configuration : configs )
                 {
+                    configurations.remove( configuration.getPid() );
                     configuration.delete();
                 }
             }

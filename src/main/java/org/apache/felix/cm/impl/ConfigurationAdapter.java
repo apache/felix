@@ -70,7 +70,8 @@ public class ConfigurationAdapter implements Configuration
      */
     public String getBundleLocation()
     {
-        configurationAdmin.checkPermission();
+        // CM 1.4 / 104.13.2.4
+        configurationAdmin.checkPermission( delegatee.getBundleLocation() );
         checkDeleted();
         return delegatee.getBundleLocation();
     }
@@ -82,7 +83,9 @@ public class ConfigurationAdapter implements Configuration
      */
     public void setBundleLocation( String bundleLocation )
     {
-        configurationAdmin.checkPermission();
+        // CM 1.4 / 104.13.2.4
+        configurationAdmin.checkPermission( delegatee.getBundleLocation() );
+        configurationAdmin.checkPermission( bundleLocation );
         checkDeleted();
         delegatee.setStaticBundleLocation( bundleLocation );
     }

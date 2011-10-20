@@ -79,7 +79,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
-        this.checkPermission();
+        // CM 1.4 / 104.13.2.3
+        this.checkPermission( location );
 
         return this.wrap( configurationManager.createFactoryConfiguration( factoryPid, location ) );
     }
@@ -98,7 +99,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         }
         else if ( !config.getBundleLocation().equals( this.getBundle().getLocation() ) )
         {
-            this.checkPermission();
+            // CM 1.4 / 104.13.2.3
+            this.checkPermission( config.getBundleLocation() );
         }
 
         return this.wrap( config );
@@ -110,9 +112,17 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration getConfiguration( String pid, String location ) throws IOException
     {
-        this.checkPermission();
+        // CM 1.4 / 104.13.2.3
+        this.checkPermission( location );
 
-        return this.wrap( configurationManager.getConfiguration( pid, location ) );
+        ConfigurationImpl config = configurationManager.getConfiguration( pid, location );
+        if ( config.getBundleLocation() != null )
+        {
+            // CM 1.4 / 104.13.2.3
+            this.checkPermission( config.getBundleLocation() );
+        }
+
+        return this.wrap( config );
     }
 
 
@@ -149,11 +159,11 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * Returns <code>true</code> if the current access control context (call
      * stack) has the CONFIGURE permission.
      */
-    boolean hasPermission()
+    boolean hasPermission(String name)
     {
         try
         {
-            checkPermission();
+            checkPermission(name);
             return true;
         }
         catch ( SecurityException se )
@@ -164,20 +174,30 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
 
 
     /**
-     * Checks whether the current access control context (call stack) has the
-     * <code>CONFIGURE</code> permission and throws a
+     * Checks whether the current access control context (call stack) has
+     * the given permission for the given bundle location and throws a
      * <code>SecurityException</code> if this is not the case.
      *
-     * @throws SecurityException if the access control context does not have the
-     *             <code>CONFIGURE</code> permission.
+     * @param name The bundle location to check for permission. If
+     *   <code>null</code> assumes <code>*</code>.
+     * @param permission The actual permission to check. This must be one
+     *    of the constants defined in the
+     *    <code>ConfigurationPermission</code> class.
+     *
+     * @throws SecurityException if the access control context does not
+     *      have the appropriate permission
      */
-    void checkPermission()
+    void checkPermission( String name )
     {
         // the caller's permission must be checked
         final SecurityManager sm = System.getSecurityManager();
         if ( sm != null )
         {
-            sm.checkPermission( new ConfigurationPermission( "*", ConfigurationPermission.CONFIGURE ) );
+            if (name == null) {
+                name = "*";
+            }
+
+            sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
         }
     }
 

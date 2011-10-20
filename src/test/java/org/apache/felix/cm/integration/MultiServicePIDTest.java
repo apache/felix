@@ -39,6 +39,11 @@ import org.osgi.service.cm.Configuration;
 @RunWith(JUnit4TestRunner.class)
 public class MultiServicePIDTest extends ConfigurationTestBase
 {
+    static
+    {
+        // uncomment to enable debugging of this test class
+        // paxRunnerVmOption = DEBUG_VM_OPTION;
+    }
 
     @Test
     public void test_two_services_same_pid_in_same_bundle_configure_before_registration() throws BundleException
@@ -150,7 +155,7 @@ public class MultiServicePIDTest extends ConfigurationTestBase
 
             // expect first activator to have received properties
 
-            // assert first bundle has configuration (two calls, one per srv)
+            // assert first bundle has configuration (one calls, one per srv)
             TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
             TestCase.assertEquals( "Expect a single update call", 1, tester.numManagedServiceUpdatedCalls );
 
@@ -166,23 +171,16 @@ public class MultiServicePIDTest extends ConfigurationTestBase
 
             delay();
 
-            /*
-             * According to BJ Hargrave configuration is not re-dispatched
-             * due to setting the bundle location.
-             * <p>
-             * Therefore, we have two sets one with re-dispatch expectation and
-             * one without re-dispatch expectation.
-             */
-            if ( REDISPATCH_CONFIGURATION_ON_SET_BUNDLE_LOCATION )
-            {
-                // expect configuration reassigned
-                TestCase.assertEquals( bundle2.getLocation(), config.getBundleLocation() );
-            }
-            else
-            {
-                // expected configuration unbound
-                TestCase.assertNull( config.getBundleLocation() );
-            }
+            // after uninstallation, the configuration is redispatched
+            // due to the dynamic binding being removed
+
+            // expect configuration reassigned
+            TestCase.assertEquals( bundle2.getLocation(), config.getBundleLocation() );
+
+            // assert second bundle now has the configuration
+            TestCase.assertNotNull( "Expect Properties after Configuration redispatch", tester2.props );
+            TestCase.assertEquals( "Expect a single update call after Configuration redispatch", 1,
+                tester2.numManagedServiceUpdatedCalls );
 
             // remove the configuration for good
             deleteConfig( pid );
@@ -231,78 +229,33 @@ public class MultiServicePIDTest extends ConfigurationTestBase
 
             final Configuration config = getConfiguration( pid );
             TestCase.assertEquals( pid, config.getPid() );
-            TestCase.assertNotNull( config.getBundleLocation() );
 
-            if ( bundle.getLocation().equals( config.getBundleLocation() ) )
-            {
-                // configuration assigned to the first bundle
-                TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
-                TestCase.assertEquals( "Expect a single update call", 2, tester.numManagedServiceUpdatedCalls );
+            TestCase.assertEquals(
+                "Configuration must be bound to first bundle because the service has higher ranking",
+                bundle.getLocation(), config.getBundleLocation() );
 
-                TestCase.assertNull( "Expect Properties after Service Registration", tester2.props );
-                TestCase.assertEquals( "Expect a single update call", 1, tester2.numManagedServiceUpdatedCalls );
+            // configuration assigned to the first bundle
+            TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
+            TestCase.assertEquals( "Expect a single update call", 2, tester.numManagedServiceUpdatedCalls );
 
-                bundle.uninstall();
-                bundle = null;
+            TestCase.assertNull( "Expect Properties after Service Registration", tester2.props );
+            TestCase.assertEquals( "Expect a single update call", 1, tester2.numManagedServiceUpdatedCalls );
 
-                delay();
+            bundle.uninstall();
+            bundle = null;
 
-                /*
-                 * According to BJ Hargrave configuration is not re-dispatched
-                 * due to setting the bundle location.
-                 * <p>
-                 * Therefore, we have two sets one with re-dispatch expectation and
-                 * one without re-dispatch expectation.
-                 */
-                if ( REDISPATCH_CONFIGURATION_ON_SET_BUNDLE_LOCATION )
-                {
-                    // expect configuration reassigned
-                    TestCase.assertEquals( bundle2.getLocation(), config.getBundleLocation() );
-                }
-                else
-                {
-                    // expected configuration unbound
-                    TestCase.assertNull( config.getBundleLocation() );
-                }
-            }
-            else if ( bundle2.getLocation().equals( config.getBundleLocation() ) )
-            {
-                // configuration assigned to the second bundle
-                // assert activater has configuration (two calls, one per pid)
-                TestCase.assertNotNull( "Expect Properties after Service Registration", tester2.props );
-                TestCase.assertEquals( "Expect a single update call", 2, tester2.numManagedServiceUpdatedCalls );
+            delay();
 
-                TestCase.assertNull( "Expect Properties after Service Registration", tester.props );
-                TestCase.assertEquals( "Expect a single update call", 1, tester.numManagedServiceUpdatedCalls );
+            // after uninstallation, the configuration is redispatched
+            // due to the dynamic binding being removed
 
-                bundle2.uninstall();
-                bundle2 = null;
+            // expect configuration reassigned
+            TestCase.assertEquals( bundle2.getLocation(), config.getBundleLocation() );
 
-                delay();
-
-                /*
-                 * According to BJ Hargrave configuration is not re-dispatched
-                 * due to setting the bundle location.
-                 * <p>
-                 * Therefore, we have two sets one with re-dispatch expectation and
-                 * one without re-dispatch expectation.
-                 */
-                if ( REDISPATCH_CONFIGURATION_ON_SET_BUNDLE_LOCATION )
-                {
-                    // expect configuration reassigned
-                    TestCase.assertEquals( bundle.getLocation(), config.getBundleLocation() );
-                }
-                else
-                {
-                    // expected configuration unbound
-                    TestCase.assertNull( config.getBundleLocation() );
-                }
-            }
-            else
-            {
-                // configuration assigned to some other bundle ... fail
-                TestCase.fail( "Configuration assigned to unexpected bundle " + config.getBundleLocation() );
-            }
+            // assert second bundle now has the configuration
+            TestCase.assertNotNull( "Expect Properties after Configuration redispatch", tester2.props );
+            TestCase.assertEquals( "Expect a single update call after Configuration redispatch", 2,
+                tester2.numManagedServiceUpdatedCalls );
 
             // remove the configuration for good
             deleteConfig( pid );
