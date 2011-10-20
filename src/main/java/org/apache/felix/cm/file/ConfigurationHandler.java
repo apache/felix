@@ -96,8 +96,8 @@ public class ConfigurationHandler
 
     protected static final String CRLF = "\r\n";
 
-    protected static final Map type2Code;
     protected static final Map code2Type;
+    protected static final Map type2Code;
 
     // set of valid characters for "symblic-name"
     private static final BitSet NAME_CHARS;
@@ -336,23 +336,23 @@ public class ConfigurationHandler
         List list = new ArrayList();
         for ( ;; )
         {
-            if ( !checkNext( pr, TOKEN_VAL_OPEN ) )
+            int c = read(pr);
+            if ( c == TOKEN_VAL_OPEN )
             {
-                return null;
+                Object value = readSimple( typeCode, pr );
+                if ( value == null )
+                {
+                    // abort due to error
+                    return null;
+                }
+
+                ensureNext( pr, TOKEN_VAL_CLOS );
+
+                list.add( value );
+
+                c = read( pr );
             }
 
-            Object value = readSimple( typeCode, pr );
-            if ( value == null )
-            {
-                // abort due to error
-                return null;
-            }
-
-            ensureNext( pr, TOKEN_VAL_CLOS );
-
-            list.add( value );
-
-            int c = read( pr );
             if ( c == TOKEN_ARR_CLOS )
             {
                 Class type = ( Class ) code2Type.get( new Integer( typeCode ) );
@@ -380,23 +380,23 @@ public class ConfigurationHandler
         Collection collection = new ArrayList();
         for ( ;; )
         {
-            if ( !checkNext( pr, TOKEN_VAL_OPEN ) )
-            {
-                return null;
-            }
-
-            Object value = readSimple( typeCode, pr );
-            if ( value == null )
-            {
-                // abort due to error
-                return null;
-            }
-
-            ensureNext( pr, TOKEN_VAL_CLOS );
-
-            collection.add( value );
-
             int c = read( pr );
+            if ( c == TOKEN_VAL_OPEN )
+            {
+                Object value = readSimple( typeCode, pr );
+                if ( value == null )
+                {
+                    // abort due to error
+                    return null;
+                }
+
+                ensureNext( pr, TOKEN_VAL_CLOS );
+
+                collection.add( value );
+
+                c = read( pr );
+            }
+
             if ( c == TOKEN_VEC_CLOS )
             {
                 return collection;
@@ -676,11 +676,6 @@ public class ConfigurationHandler
     private static void writeArray( Writer out, Object arrayValue ) throws IOException
     {
         int size = Array.getLength( arrayValue );
-        if ( size == 0 )
-        {
-            return;
-        }
-
         writeType( out, arrayValue.getClass().getComponentType() );
         out.write( TOKEN_ARR_OPEN );
         for ( int i = 0; i < size; i++ )
@@ -697,22 +692,25 @@ public class ConfigurationHandler
     {
         if ( collection.isEmpty() )
         {
-            return;
+            out.write( TOKEN_VEC_OPEN );
+            out.write( TOKEN_VEC_CLOS );
         }
-
-        Iterator ci = collection.iterator();
-        Object firstElement = ci.next();
-
-        writeType( out, firstElement.getClass() );
-        out.write( TOKEN_VEC_OPEN );
-        writeSimple( out, firstElement );
-
-        while ( ci.hasNext() )
+        else
         {
-            out.write( TOKEN_COMMA );
-            writeSimple( out, ci.next() );
+            Iterator ci = collection.iterator();
+            Object firstElement = ci.next();
+
+            writeType( out, firstElement.getClass() );
+            out.write( TOKEN_VEC_OPEN );
+            writeSimple( out, firstElement );
+
+            while ( ci.hasNext() )
+            {
+                out.write( TOKEN_COMMA );
+                writeSimple( out, ci.next() );
+            }
+            out.write( TOKEN_VEC_CLOS );
         }
-        out.write( TOKEN_VEC_CLOS );
     }
 
 
