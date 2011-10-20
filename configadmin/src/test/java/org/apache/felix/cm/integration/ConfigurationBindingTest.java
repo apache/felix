@@ -32,7 +32,10 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -46,11 +49,40 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
     }
 
 
+    private ConfigListener configListener;
+    private ServiceRegistration configListenerReg;
+
+
+    @Override
+    public void setUp()
+    {
+        super.setUp();
+
+        configListener = new ConfigListener();
+        configListenerReg = bundleContext.registerService( ConfigurationListener.class.getName(), configListener, null );
+    }
+
+
+    @Override
+    public void tearDown() throws BundleException
+    {
+        if ( configListenerReg != null )
+        {
+            configListenerReg.unregister();
+            configListenerReg = null;
+        }
+        configListener = null;
+
+        super.tearDown();
+    }
+
+
      @Test
     public void test_configuration_unbound_on_uninstall() throws BundleException
     {
         String pid = "test_configuration_unbound_on_uninstall";
         configure( pid );
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
 
         // ensure configuration is unbound
         final Configuration beforeInstall = getConfiguration( pid );
@@ -62,6 +94,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         final Configuration beforeStart = getConfiguration( pid );
         TestCase.assertNull( beforeInstall.getBundleLocation() );
         TestCase.assertNull( beforeStart.getBundleLocation() );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
 
         bundle.start();
         final ManagedServiceTestActivator tester = ManagedServiceTestActivator.INSTANCE;
@@ -73,6 +106,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         // assert activater has configuration
         TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
         TestCase.assertEquals( "Expect a single update call", 1, tester.numManagedServiceUpdatedCalls );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
 
         // ensure a freshly retrieved object also has the location
         final Configuration beforeStop = getConfiguration( pid );
@@ -105,6 +139,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         TestCase.assertNull( beforeStart.getBundleLocation() );
         TestCase.assertNull( beforeStop.getBundleLocation() );
         TestCase.assertNull( beforeUninstall.getBundleLocation() );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
 
         // ensure a freshly retrieved object also does not have the location
         final Configuration atEnd = getConfiguration( pid );
@@ -112,6 +147,8 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // remove the configuration for good
         deleteConfig( pid );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_DELETED, 1 );
     }
 
 
@@ -302,6 +339,10 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         // ensure configuration is settled before starting the bundle
         delay();
 
+        // expect single config update and location change
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
+
         bundle.start();
 
         // give cm time for distribution
@@ -316,6 +357,9 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         TestCase.assertEquals( location, config.getBundleLocation() );
 
+        // config already statically bound, no change event
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
+
         bundle.uninstall();
         bundle = null;
 
@@ -325,8 +369,16 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         // uninstall
         TestCase.assertEquals( location, config.getBundleLocation() );
 
+        // configuration statically bound, no change event
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
+
         // remove the configuration for good
         deleteConfig( pid );
+
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_DELETED, 1 );
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 0 );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
     }
 
 
@@ -342,9 +394,15 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         TestCase.assertEquals( pid, config.getPid() );
         TestCase.assertNull( config.getBundleLocation() );
 
+        // first configuration updated event
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
+
         // bind the configuration
         config.setBundleLocation( location );
         TestCase.assertEquals( location, config.getBundleLocation() );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
 
         // restart CM bundle
         final Bundle cmBundle = getCmBundle();
@@ -360,6 +418,8 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         // unbind the configuration
         configAfterRestart.setBundleLocation( null );
         TestCase.assertNull( configAfterRestart.getBundleLocation() );
+        delay();
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
 
         // restart CM bundle
         cmBundle.stop();
@@ -370,6 +430,10 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         final Configuration configUnboundAfterRestart = getConfiguration( pid );
         TestCase.assertEquals( pid, configUnboundAfterRestart.getPid() );
         TestCase.assertNull( configUnboundAfterRestart.getBundleLocation() );
+
+        configListener.assertEvents( ConfigurationEvent.CM_DELETED, 0 );
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 0 );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 0 );
     }
 
 
@@ -438,11 +502,13 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // ensure configuration is settled before starting the bundle
         delay();
+        configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
 
         // start the bundle
         bundle.start();
         delay();
         TestCase.assertEquals( location, config.getBundleLocation() );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
 
         // assert the configuration is supplied
         final ManagedServiceTestActivator tester = ManagedServiceTestActivator.INSTANCE;
@@ -450,16 +516,18 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
         TestCase.assertEquals( "Expect a single update call", 1, tester.numManagedServiceUpdatedCalls );
 
-        // remove the static binding and assert still bound
+        // remove the static binding and assert bound (again)
         config.setBundleLocation( null );
         delay();
         TestCase.assertEquals( location, config.getBundleLocation() );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 2 );
 
         // uninstall bundle and assert configuration unbound
         bundle.uninstall();
         bundle = null;
         delay();
         TestCase.assertNull( config.getBundleLocation() );
+        configListener.assertEvents( ConfigurationEvent.CM_LOCATION_CHANGED, 1 );
     }
 
 
@@ -883,5 +951,22 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         // ==> configuration supplied to the service ms2
         TestCase.assertNotNull( testerB1.configs.get( pid ) );
         TestCase.assertEquals( 2, testerB1.numManagedServiceFactoryUpdatedCalls );
+    }
+
+    private static class ConfigListener implements ConfigurationListener {
+
+        private int[] events = new int[3];
+
+        public void configurationEvent( ConfigurationEvent event )
+        {
+            events[event.getType()-1]++;
+        }
+
+
+        void assertEvents( final int type, final int numEvents )
+        {
+            TestCase.assertEquals( "Events of type " + type, numEvents, events[type - 1] );
+            events[type - 1] = 0;
+        }
     }
 }
