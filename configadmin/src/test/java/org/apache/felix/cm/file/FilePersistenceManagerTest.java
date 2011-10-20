@@ -22,6 +22,7 @@ package org.apache.felix.cm.file;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -115,6 +116,15 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    public void testEmptyArray() throws IOException
+    {
+        check( "StringArray", new String[0] );
+        check( "IntArray", new int[0] );
+        check( "CharArray", new char[0] );
+        check( "ShortArray", new short[0] );
+    }
+
+
     public void testVector() throws IOException
     {
         check( "StringVector", new Vector( Arrays.asList( new String[]
@@ -124,12 +134,30 @@ public class FilePersistenceManagerTest extends TestCase
     }
 
 
+    public void testEmptyVector() throws IOException
+    {
+        check( "StringArray", new Vector() );
+        check( "IntArray", new Vector() );
+        check( "CharArray", new Vector() );
+        check( "ShortArray", new Vector() );
+    }
+
+
     public void testList() throws IOException
     {
         check( "StringList", Arrays.asList( new String[]
             { "one", "two", "three" } ) );
         check( "IntegerList", Arrays.asList( new Integer[]
             { new Integer( 0 ), new Integer( 1 ), new Integer( 2 ) } ) );
+    }
+
+
+    public void testEmptyList() throws IOException
+    {
+        check( "StringArray", new ArrayList(0) );
+        check( "IntArray", new ArrayList(0) );
+        check( "CharArray", new ArrayList(0) );
+        check( "ShortArray", new ArrayList(0) );
     }
 
 
