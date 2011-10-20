@@ -1,4 +1,4 @@
-Changes from 1.2.8 to 1.2.10
+Changes from 1.2.8 to 1.4.0
 ----------------------------
 
 ** Bug
@@ -7,6 +7,14 @@ Changes from 1.2.8 to 1.2.10
     * [FELIX-2813] - NPE in UpdateThread when updating a configuration right after ConfigurationAdmin service starts
     * [FELIX-2847] - NPE in ConfigurationManager.java:1003 (static String toString( ServiceReference ref ))
     * [FELIX-2885] - The config admin bundle does not indicate its provided and required services dependencies
+    * [FELIX-3046] - Empty array configuration value is read as null after restart
+    * [FELIX-3175] - RankingComparator results in wrong results
+
+** Task
+    * [FELIX-3176] - Implement Configuration Admin 1.4 changes
+
+** Wish
+    * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
 
 
 Changes from 1.2.4 to 1.2.8
