@@ -555,9 +555,20 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     void locationChanged( ConfigurationImpl config, String oldLocation )
     {
         fireConfigurationEvent( ConfigurationEvent.CM_LOCATION_CHANGED, config.getPid(), config.getFactoryPid() );
-        if ( oldLocation != null )
+        if ( oldLocation != null && !config.isNew() )
         {
             updateThread.schedule( new LocationChanged( config, oldLocation ) );
+            if ( isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                log( LogService.LOG_DEBUG,
+                    "LocationChanged(" + config.getPid() + ", " + oldLocation + "=>" + config.getBundleLocation()
+                        + ") scheduled", null );
+            }
+        }
+        else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            log( LogService.LOG_DEBUG,
+                "LocationChanged not scheduled if old location is null or for new configuration", null );
         }
     }
 
@@ -1744,11 +1755,30 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     {
                         // call deleted method
                         helper.remove( sr );
+
+                        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                        {
+                            log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " revoked from "
+                                + ConfigurationManager.toString( sr ) + " (no more visibility)", null );
+                        }
+
                     }
                     else if ( !wasVisible && isVisible )
                     {
                         // call updated method
                         helper.provide( sr );
+
+                        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                        {
+                            log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " provided to "
+                                + ConfigurationManager.toString( sr ) + " (new visibility)", null );
+                        }
+                    }
+                    else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        // same visibility as before
+                        log( LogService.LOG_DEBUG, "Unmodified visibility to configuration " + config.getPid() + " to "
+                            + ConfigurationManager.toString( sr ), null );
                     }
                 }
             }
