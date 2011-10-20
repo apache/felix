@@ -26,7 +26,6 @@ import java.util.Hashtable;
 import java.util.Set;
 
 import org.apache.felix.cm.PersistenceManager;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 
 /**
@@ -66,14 +65,14 @@ class Factory extends ConfigurationBase
 
     Factory( ConfigurationManager configurationManager, PersistenceManager persistenceManager, String factoryPid )
     {
-        super(configurationManager, persistenceManager, factoryPid, null);
+        super( configurationManager, persistenceManager, factoryPid );
     }
 
 
-    Factory( ConfigurationManager configurationManager, PersistenceManager persistenceManager, String factoryPid, Dictionary props )
+    Factory( ConfigurationManager configurationManager, PersistenceManager persistenceManager, String factoryPid,
+        Dictionary props )
     {
-        super( configurationManager, persistenceManager, factoryPid, ( String ) props
-            .get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        super( configurationManager, persistenceManager, factoryPid );
 
         // set pids
         String[] pidList = ( String[] ) props.get( FACTORY_PID_LIST );
@@ -114,8 +113,6 @@ class Factory extends ConfigurationBase
     void store() throws IOException
     {
         Hashtable props = new Hashtable();
-
-        replaceProperty( props, ConfigurationAdmin.SERVICE_BUNDLELOCATION, getStaticBundleLocation() );
 
         if ( !pids.isEmpty() )
         {

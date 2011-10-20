@@ -95,9 +95,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // configurations
     private static Random numberGenerator;
 
-    // comparator used to keep the ordered persistence manager map
-    private static final Comparator cmRankComp = new RankingComparator( true, ConfigurationPlugin.CM_RANKING );
-
     // the BundleContext of the Configuration Admin Service bundle
     private BundleContext bundleContext;
 
@@ -418,45 +415,16 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
-    // ---------- ConfigurationAdminImpl support
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration(java.lang.String)
-     */
     ConfigurationImpl createFactoryConfiguration( ConfigurationAdminImpl configurationAdmin, String factoryPid )
         throws IOException
     {
-        // check Persmission if factory is bound to another bundle
-        Factory factory = getFactory( factoryPid );
-        if ( factory.getBundleLocation() != null
-            && !factory.getBundleLocation().equals( configurationAdmin.getBundle().getLocation() ) )
-        {
-            configurationAdmin.checkPermission();
-        }
-
-        // create the configuration
-        String pid = createPid( factoryPid );
-        ConfigurationImpl config = createConfiguration( pid, factoryPid, configurationAdmin.getBundle().getLocation() );
-
-        return config;
+        return createFactoryConfiguration( factoryPid, configurationAdmin.getBundle().getLocation() );
     }
 
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration(java.lang.String,
-     *      java.lang.String)
-     */
     ConfigurationImpl createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
-        // create the configuration
-        String pid = createPid( factoryPid );
-        ConfigurationImpl config = createConfiguration( pid, factoryPid, location );
-
-        return config;
+        return createConfiguration( createPid( factoryPid ), factoryPid, location );
     }
 
 
@@ -509,9 +477,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             filter = bundleContext.createFilter( filterString );
         }
 
-        boolean unprivileged = configurationAdmin != null && !configurationAdmin.hasPermission();
-        String location = unprivileged ? configurationAdmin.getBundle().getLocation() : null;
-
         List configList = new ArrayList();
 
         PersistenceManager[] pmList = getPersistenceManagers();
@@ -529,14 +494,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     continue;
                 }
 
-                // ignore this config if not privileged and not bound to bundle
-                if ( unprivileged )
+                // CM 1.4 / 104.13.2.3 Permission required
+                if ( !configurationAdmin.hasPermission( ( String ) config
+                    .get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
                 {
-                    Object boundLocation = config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
-                    if ( !location.equals( boundLocation ) )
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
                 // check filter
@@ -590,6 +552,16 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
+    void locationChanged( ConfigurationImpl config, String oldLocation )
+    {
+        fireConfigurationEvent( ConfigurationEvent.CM_LOCATION_CHANGED, config.getPid(), config.getFactoryPid() );
+        if ( oldLocation != null )
+        {
+            updateThread.schedule( new LocationChanged( config, oldLocation ) );
+        }
+    }
+
+
     void fireConfigurationEvent( int type, String pid, String factoryPid )
     {
         FireConfigurationEvent event = new FireConfigurationEvent( type, pid, factoryPid );
@@ -620,19 +592,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 final ConfigurationImpl cfg = configs[i];
                 if ( location.equals( cfg.getDynamicBundleLocation() ) )
                 {
-                    cfg.setDynamicBundleLocation( null );
-                }
-            }
-
-            // we only reset dynamic bindings, which are only present in
-            // cached factories, hence only consider cached factories here
-            final Factory[] factories = getCachedFactories();
-            for ( int i = 0; i < factories.length; i++ )
-            {
-                final Factory factory = factories[i];
-                if ( location.equals( factory.getDynamicBundleLocation() ) )
-                {
-                    factory.setDynamicBundleLocation( null );
+                    cfg.setDynamicBundleLocation( null, true );
                 }
             }
         }
@@ -658,18 +618,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             else
             {
                 // sort the references according to the cmRanking property
-                SortedSet pms = new TreeSet( new RankingComparator( false ) );
-                for ( int i = 0; i < refs.length; i++ )
+                if ( refs.length > 1 )
                 {
-                    pms.add( refs[i] );
+                    Arrays.sort( refs, RankingComparator.SRV_RANKING );
                 }
 
                 // create the service array from the sorted set of referenecs
-                int pmIndex = 0;
-                for ( Iterator pi = pms.iterator(); pi.hasNext(); pmIndex++ )
+                for ( int i = 0; i < refs.length; i++ )
                 {
-                    ServiceReference ref = ( ServiceReference ) pi.next();
-                    Object service = persistenceManagerTracker.getService( ref );
+                    Object service = persistenceManagerTracker.getService( refs[i] );
                     if ( service != null )
                     {
                         pmList.add( new CachingPersistenceManagerProxy( ( PersistenceManager ) service ) );
@@ -832,32 +789,34 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
         // sort the plugins by their service.cmRanking
-        SortedSet pluginSet = new TreeSet( cmRankComp );
-        for ( int i = 0; i < plugins.length; i++ )
+        if ( plugins.length > 1 )
         {
-            pluginSet.add( plugins[i] );
+            Arrays.sort( plugins, RankingComparator.CM_RANKING );
         }
 
         // call the plugins in order
-        for ( Iterator pi = pluginSet.iterator(); pi.hasNext(); )
+        for ( int i = 0; i < plugins.length; i++ )
         {
-            ServiceReference pluginRef = ( ServiceReference ) pi.next();
+            ServiceReference pluginRef = plugins[i];
             ConfigurationPlugin plugin = ( ConfigurationPlugin ) bundleContext.getService( pluginRef );
-            try
+            if ( plugin != null )
             {
-                plugin.modifyConfiguration( sr, props );
+                try
+                {
+                    plugin.modifyConfiguration( sr, props );
+                }
+                catch ( Throwable t )
+                {
+                    log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin "
+                        + toString( pluginRef ), t );
+                }
+                finally
+                {
+                    // ensure ungetting the plugin
+                    bundleContext.ungetService( pluginRef );
+                }
+                cfg.setAutoProperties( props, false );
             }
-            catch ( Throwable t )
-            {
-                log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin " + toString( pluginRef ),
-                    t );
-            }
-            finally
-            {
-                // ensure ungetting the plugin
-                bundleContext.ungetService( pluginRef );
-            }
-            cfg.setAutoProperties( props, false );
         }
     }
 
@@ -1056,8 +1015,225 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
     }
 
-    // ---------- inner classes ------------------------------------------------
 
+    /**
+     * Checks whether the bundle is allowed to receive the configuration
+     * with the given location binding.
+     * <p>
+     * This method implements the logic defined CM 1.4 / 104.4.1:
+     * <ul>
+     * <li>If the location is <code>null</code> (the configuration is not
+     * bound yet), assume the bundle is allowed</li>
+     * <li>If the location is a single location (no leading "?"), require
+     * the bundle's location to match</li>
+     * <li>If the location is a multi-location (leading "?"), assume the
+     * bundle is allowed if there is no security manager. If there is a
+     * security manager, check whether the bundle has "target" permission
+     * on this location.</li>
+     * </ul>
+     */
+    boolean canReceive( final Bundle bundle, final String location )
+    {
+        if ( location == null )
+        {
+            return true;
+        }
+        else if ( location.startsWith( "?" ) )
+        {
+            // multi-location
+            if ( System.getSecurityManager() != null )
+            {
+                return bundle.hasPermission( new ConfigurationPermission( location, ConfigurationPermission.TARGET ) );
+            }
+            return true;
+        }
+        else
+        {
+            // single location, must match
+            return location.equals( bundle.getLocation() );
+        }
+    }
+
+    // ---------- inner classes
+
+    private ServiceHelper createServiceHelper( ConfigurationImpl config )
+    {
+        if ( config.getFactoryPid() == null )
+        {
+            return new ManagedServiceHelper( config );
+        }
+        return new ManagedServiceFactoryHelper( config );
+    }
+
+    private abstract class ServiceHelper
+    {
+        protected final ConfigurationImpl config;
+
+        private final Dictionary properties;
+
+        protected ServiceHelper( ConfigurationImpl config )
+        {
+            this.config = config;
+            this.properties = config.getProperties( true );
+        }
+
+        final ServiceReference[] getServices( )
+        {
+            try
+            {
+                ServiceReference[] refs = doGetServices();
+                if ( refs != null && refs.length > 1 )
+                {
+                    Arrays.sort( refs, RankingComparator.SRV_RANKING );
+                }
+                return refs;
+            }
+            catch ( InvalidSyntaxException ise )
+            {
+                log( LogService.LOG_ERROR, "Service selection filter is invalid to update " + config, ise );
+            }
+            return null;
+        }
+
+
+        protected abstract ServiceReference[] doGetServices() throws InvalidSyntaxException;
+
+
+        abstract void provide( ServiceReference service );
+
+
+        abstract void remove( ServiceReference service );
+
+
+        protected Dictionary getProperties( String targetPid, ServiceReference service )
+        {
+            Dictionary props = new CaseInsensitiveDictionary( this.properties );
+            callPlugins( props, targetPid, service, config );
+            return props;
+        }
+    }
+
+    private class ManagedServiceHelper extends ServiceHelper
+    {
+
+        protected ManagedServiceHelper( ConfigurationImpl config )
+        {
+            super( config );
+        }
+
+
+        public ServiceReference[] doGetServices() throws InvalidSyntaxException
+        {
+            return bundleContext.getServiceReferences( ManagedService.class.getName(), "(" + Constants.SERVICE_PID
+                + "=" + config.getPid() + ")" );
+        }
+
+
+        public void provide( ServiceReference service )
+        {
+            ManagedService srv = ( ManagedService ) bundleContext.getService( service );
+            if ( srv != null )
+            {
+                try
+                {
+                    Dictionary props = getProperties( this.config.getPid(), service );
+                    srv.updated( props );
+                }
+                catch ( Throwable t )
+                {
+                    handleCallBackError( t, service, config );
+                }
+                finally
+                {
+                    bundleContext.ungetService( service );
+                }
+            }
+        }
+
+
+        public void remove( ServiceReference service )
+        {
+            ManagedService srv = ( ManagedService ) bundleContext.getService( service );
+            try
+            {
+                srv.updated( null );
+            }
+            catch ( Throwable t )
+            {
+                handleCallBackError( t, service, config );
+            }
+            finally
+            {
+                bundleContext.ungetService( service );
+            }
+        }
+
+    }
+
+    private class ManagedServiceFactoryHelper extends ServiceHelper
+    {
+
+        protected ManagedServiceFactoryHelper( ConfigurationImpl config )
+        {
+            super( config );
+            // TODO Auto-generated constructor stub
+        }
+
+
+        public ServiceReference[] doGetServices() throws InvalidSyntaxException
+        {
+            return bundleContext.getServiceReferences( ManagedServiceFactory.class.getName(), "("
+                + Constants.SERVICE_PID + "=" + config.getFactoryPid() + ")" );
+        }
+
+
+        public void provide( ServiceReference service )
+        {
+            ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext.getService( service );
+            if ( srv != null )
+            {
+                try
+                {
+                    Dictionary props = getProperties( this.config.getFactoryPid(), service );
+                    srv.updated( config.getPid(), props );
+                }
+                catch ( Throwable t )
+                {
+                    handleCallBackError( t, service, config );
+                }
+                finally
+                {
+                    bundleContext.ungetService( service );
+                }
+            }
+        }
+
+
+        public void remove( ServiceReference service )
+        {
+            ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext.getService( service );
+            try
+            {
+                srv.deleted( config.getPid() );
+            }
+            catch ( Throwable t )
+            {
+                handleCallBackError( t, service, config );
+            }
+            finally
+            {
+                bundleContext.ungetService( service );
+            }
+        }
+
+    }
+
+    /**
+     * The <code>ManagedServiceUpdate</code> updates a freshly registered
+     * <code>ManagedService</code> with a specific configuration. If a
+     * ManagedService is registered with multiple PIDs an instance of this
+     * class is used for each registered PID.
+     */
     private class ManagedServiceUpdate implements Runnable
     {
         private final String pid;
@@ -1110,8 +1286,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             // only update configuration if lastModificationTime is less than
             // lastUpdateTime
             Dictionary properties = rawProperties;
-            if ( properties != null && config != null && lastModificationTime <= config.getLastUpdatedTime()
-                && sr.equals( config.getServiceReference() ) )
+            if ( properties != null && config != null && lastModificationTime < config.getLastUpdatedTime() )
             {
                 if ( isLogEnabled( LogService.LOG_DEBUG ) )
                 {
@@ -1127,7 +1302,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 if ( isLogEnabled( LogService.LOG_DEBUG ) )
                 {
-                    log( LogService.LOG_DEBUG, "Updating configuration " + config.getPid() + " to modification #"
+                    log( LogService.LOG_DEBUG, "Updating configuration " + pid + " to modification #"
                         + config.getLastModificationTime(), null );
                 }
 
@@ -1142,32 +1317,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     return;
                 }
 
-                // 104.3 Ignore duplicate PIDs from other bundles and report
-                // them to the log
-                // 104.4.1 No update call back for PID already bound to another
-                // bundle location
-                // 104.4.1 assign configuration to bundle if unassigned
-                if ( !config.tryBindLocation( serviceBundle.getLocation() ) )
+                // CM 1.4 / 104.13.2.2
+                if ( !canReceive( serviceBundle, config.getBundleLocation() ) )
                 {
-                    log( LogService.LOG_ERROR, "Cannot use configuration " + pid + " for "
-                        + ConfigurationManager.toString( sr ) + ": Configuration bound to bundle "
-                        + config.getBundleLocation(), null );
+                    log( LogService.LOG_ERROR,
+                        "Cannot use configuration " + pid + " for " + ConfigurationManager.toString( sr )
+                            + ": No visibility to configuration bound to " + config.getBundleLocation(), null );
                     return;
                 }
 
-                // 104.3 Report an error in the log if more than one service
-                // with the same PID asks for the configuration
-                if ( config.getServiceReference() == null )
-                {
-                    // assign the configuration to the service
-                    config.setServiceReference( sr );
-                }
-                else if ( !sr.equals( config.getServiceReference() ) )
-                {
-                    log( LogService.LOG_ERROR, "Configuration for " + pid + " has already been used for service "
-                        + ConfigurationManager.toString( config.getServiceReference() )
-                        + " and will now also be given to " + ConfigurationManager.toString( sr ), null );
-                }
+                // 104.4.2 Dynamic Binding
+                config.tryBindLocation( serviceBundle.getLocation() );
 
                 // prepare the configuration for the service (call plugins)
                 callPlugins( properties, pid, sr, config );
@@ -1207,6 +1367,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
     }
 
+    /**
+     * The <code>ManagedServiceFactoryUpdate</code> updates a freshly
+     * registered <code>ManagedServiceFactory</code> with a specific
+     * configuration. If a ManagedServiceFactory is registered with
+     * multiple PIDs an instance of this class is used for each registered
+     * PID.
+     */
     private class ManagedServiceFactoryUpdate implements Runnable
     {
         private final String factoryPid;
@@ -1214,8 +1381,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         private final ServiceReference sr;
 
         private final ManagedServiceFactory service;
-
-        private final Factory factory;
 
         private final Map configs;
 
@@ -1293,7 +1458,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID " + factoryPid, ioe );
             }
 
-            this.factory = factory;
             this.configs = configs;
             this.stamps = stamps;
         }
@@ -1312,17 +1476,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 return;
             }
 
-            final String serviceBundleLocation = serviceBundle.getLocation();
-            if ( !factory.tryBindLocation( serviceBundleLocation ) )
-            {
-                // factory PID is bound to another bundle
-                log( LogService.LOG_ERROR, "Cannot use factory configuration " + factoryPid + " for "
-                    + ConfigurationManager.toString( sr ) + ": Configuration bound to bundle "
-                    + factory.getBundleLocation(), null );
-
-                return;
-            }
-
             for ( Iterator ci=configs.entrySet().iterator(); ci.hasNext(); )
             {
                 final Map.Entry entry = (Map.Entry) ci.next();
@@ -1330,7 +1483,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 final Dictionary properties = (Dictionary) entry.getValue();
                 final long lastModificationTime = ( ( Long ) stamps.get( cfg ) ).longValue();
 
-                if ( lastModificationTime <= cfg.getLastUpdatedTime() && sr.equals( cfg.getServiceReference() ) )
+                if ( lastModificationTime <= cfg.getLastUpdatedTime() )
                 {
                     if ( isLogEnabled( LogService.LOG_DEBUG ) )
                     {
@@ -1338,7 +1491,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             + cfg.getLastModificationTime() + " has already been updated to update #"
                             + cfg.getLastUpdatedTime() + ", nothing to be done anymore.", null );
                     }
-                    return;
+                    continue;
                 }
 
                 if ( isLogEnabled( LogService.LOG_DEBUG ) )
@@ -1347,31 +1500,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         + cfg.getLastModificationTime(), null );
                 }
 
-                // check bundle location of configuration
-                if ( !cfg.tryBindLocation( serviceBundleLocation ) )
+                // CM 1.4 / 104.13.2.1
+                if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
                 {
-                    // configuration is bound to another bundle
-                    log( LogService.LOG_ERROR, "Cannot use configuration " + cfg.getPid() + " (factory " + factoryPid
-                        + ") for " + ConfigurationManager.toString( sr ) + ": Configuration bound to bundle "
-                        + cfg.getBundleLocation(), null );
-
+                    log( LogService.LOG_ERROR,
+                        "Cannot use configuration " + cfg.getPid() + " for " + ConfigurationManager.toString( sr )
+                            + ": No visibility to configuration bound to " + cfg.getBundleLocation(), null );
                     continue;
                 }
 
-                // 104.3 Report an error in the log if more than one service
-                // with the same PID asks for the configuration
-                if ( cfg.getServiceReference() == null )
-                {
-                    // assign the configuration to the service
-                    cfg.setServiceReference( sr );
-                }
-                else if ( !sr.equals( cfg.getServiceReference() ) )
-                {
-                    log( LogService.LOG_ERROR, "Configuration for " + cfg.getPid() + " (factory " + factoryPid
-                        + ") has already been used for service "
-                        + ConfigurationManager.toString( cfg.getServiceReference() )
-                        + " and will now also be given to " + ConfigurationManager.toString( sr ), null );
-                }
+                // 104.4.2 Dynamic Binding
+                cfg.tryBindLocation( serviceBundle.getLocation() );
 
                 // prepare the configuration for the service (call plugins)
                 // call the plugins with cm.target set to the service's factory PID
@@ -1414,11 +1553,18 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
     }
 
+
+    /**
+     * The <code>UpdateConfiguration</code> is used to update
+     * <code>ManagedService[Factory]</code> services with the configuration
+     * they are subscribed to. This may cause the configuration to be
+     * supplied to multiple services.
+     */
     private class UpdateConfiguration implements Runnable
     {
 
         private final ConfigurationImpl config;
-        private final Dictionary properties;
+        private final ServiceHelper helper;
         private final long lastModificationTime;
 
 
@@ -1427,13 +1573,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             this.config = config;
             synchronized ( config )
             {
-                Dictionary props = config.getProperties( true );
-                if ( props == null )
-                {
-                    props = new Hashtable();
-                }
-
-                this.properties = props;
+                this.helper = createServiceHelper( config );
                 this.lastModificationTime = config.getLastModificationTime();
             }
         }
@@ -1441,227 +1581,62 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         public void run()
         {
-            try
+            if ( lastModificationTime <= config.getLastUpdatedTime() )
             {
-                // only update configuration if lastModificationTime is
-                // less than lastUpdateTime
-                // (this must be inside the try-catch-finally to ensure
-                // the event is sent regardless of ManagedService[Factory]
-                // update)
-                if ( lastModificationTime <= config.getLastUpdatedTime() )
-                {
-                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " at modification #"
-                            + config.getLastModificationTime() + " has already been updated to update #"
-                            + config.getLastUpdatedTime() + ", nothing to be done anymore.", null );
-                    }
-                    return;
-                }
-
                 if ( isLogEnabled( LogService.LOG_DEBUG ) )
                 {
-                    log( LogService.LOG_DEBUG, "Updating configuration " + config.getPid() + " to modification #"
+                    log( LogService.LOG_DEBUG,
+                        "Configuration " + config.getPid() + " at modification #" + config.getLastModificationTime()
+                            + " has already been updated to update #" + config.getLastUpdatedTime()
+                            + ", nothing to be done anymore.", null );
+                }
+                return;
+            }
+
+            if ( isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                log(
+                    LogService.LOG_DEBUG,
+                    "Updating configuration " + config.getPid() + " to modification #"
                         + config.getLastModificationTime(), null );
-                }
-
-                if ( config.getFactoryPid() == null )
-                {
-                    final ServiceReference[] srList = bundleContext.getServiceReferences( ManagedService.class
-                        .getName(), "(" + Constants.SERVICE_PID + "=" + config.getPid() + ")" );
-                    if ( srList != null )
-                    {
-                        // find the primary configuration owner
-                        final ServiceReference ownerRef = getOwner( config, srList );
-                        final String bundleLocation = ( ownerRef != null ) ? ownerRef.getBundle().getLocation()
-                            : config.getBoundBundleLocation();
-
-                        // if the configuration is unbound, bind to owner
-                        if ( config.getBundleLocation() == null )
-                        {
-                            config.setDynamicBundleLocation( bundleLocation );
-                        }
-                        final String configBundleLocation = config.getBundleLocation();
-
-                        // provide configuration to all services from the
-                        // correct bundle
-                        for ( int i = 0; i < srList.length; i++ )
-                        {
-
-                            final ServiceReference userRef = srList[i];
-                            final String userRefLocation = userRef.getBundle().getLocation();
-
-                            // only consider the entry if in the same bundle
-                            if ( !userRefLocation.equals( configBundleLocation ) )
-                            {
-                                log( LogService.LOG_ERROR, "Cannot use configuration " + config.getPid() + " for "
-                                    + ConfigurationManager.toString( userRef ) + ": Configuration bound to bundle "
-                                    + configBundleLocation, null );
-
-                                continue;
-                            }
-
-                            // 104.3 Report an error in the log if more than one
-                            // service with the same PID asks for the
-                            // configuration
-                            if ( userRef != ownerRef )
-                            {
-                                log( LogService.LOG_ERROR, "Configuration for " + config.getPid()
-                                    + " has already been used for service " + ConfigurationManager.toString( ownerRef )
-                                    + " and will now also be given to " + ConfigurationManager.toString( userRef ), null );
-                            }
-
-                            try
-                            {
-                                final ManagedService srv = ( ManagedService ) bundleContext.getService( userRef );
-                                if ( srv != null )
-                                {
-                                    Dictionary props = new CaseInsensitiveDictionary( properties );
-                                    callPlugins( props, config.getPid(), userRef, config );
-                                    srv.updated( props );
-                                }
-                            }
-                            catch ( Throwable t )
-                            {
-                                handleCallBackError( t, userRef, config );
-                            }
-                            finally
-                            {
-                                bundleContext.ungetService( userRef );
-                            }
-
-                            // update the lastUpdatedTime
-                            config.setLastUpdatedTime( lastModificationTime );
-
-                            if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                            {
-                                log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
-                                    + config.getLastUpdatedTime(), null );
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    ServiceReference[] srList = bundleContext.getServiceReferences( ManagedServiceFactory.class
-                        .getName(), "(" + Constants.SERVICE_PID + "=" + config.getFactoryPid() + ")" );
-                    if ( srList != null && srList.length > 0 )
-                    {
-                        // find the primary configuration owner
-                        final ServiceReference ownerRef = getOwner( config, srList );
-                        final String bundleLocation = ( ownerRef != null ) ? ownerRef.getBundle().getLocation()
-                            : config.getBoundBundleLocation();
-
-                        // if the configuration is unbound, bind to owner
-                        if ( config.getBundleLocation() == null )
-                        {
-                            config.setDynamicBundleLocation( bundleLocation );
-                        }
-                        final String configBundleLocation = config.getBundleLocation();
-
-                        // provide configuration to all services from the
-                        // correct bundle
-                        for ( int i = 0; i < srList.length; i++ )
-                        {
-                            final ServiceReference ref = srList[i];
-                            final String refLocation = ref.getBundle().getLocation();
-
-                            // only consider the entry if in the same bundle
-                            if ( !refLocation.equals( configBundleLocation ) )
-                            {
-                                log( LogService.LOG_ERROR, "Cannot use configuration " + config.getPid() + " (factory "
-                                    + config.getFactoryPid() + ") for " + ConfigurationManager.toString( ref )
-                                    + ": Configuration bound to bundle " + configBundleLocation, null );
-
-                                continue;
-                            }
-
-                            // 104.3 Report an error in the log if more than one
-                            // service with the same PID asks for the
-                            // configuration
-                            if ( ref != ownerRef )
-                            {
-                                log( LogService.LOG_ERROR, "Configuration for " + config.getPid() + " (factory "
-                                    + config.getFactoryPid() + ") has already been used for service "
-                                    + ConfigurationManager.toString( ownerRef ) + " and will now also be given to "
-                                    + ConfigurationManager.toString( ref ), null );
-                            }
-
-                            try
-                            {
-                                final ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext
-                                    .getService( ref );
-                                if ( srv != null )
-                                {
-                                    Dictionary props = new CaseInsensitiveDictionary( properties );
-                                    callPlugins( props, config.getFactoryPid(), ref, config );
-                                    srv.updated( config.getPid(), props );
-                                }
-                            }
-                            catch ( Throwable t )
-                            {
-                                handleCallBackError( t, ref, config );
-                            }
-                            finally
-                            {
-                                bundleContext.ungetService( ref );
-                            }
-
-                            // update the lastUpdatedTime
-                            config.setLastUpdatedTime( lastModificationTime );
-
-                            if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                            {
-                                log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
-                                    + config.getLastUpdatedTime(), null );
-                            }
-                        }
-                    }
-                }
             }
-            catch ( InvalidSyntaxException ise )
-            {
-                log( LogService.LOG_ERROR, "Service selection filter is invalid to update " + config, ise );
-            }
-        }
 
-
-        private ServiceReference getOwner( ConfigurationImpl config, ServiceReference[] srList )
-        {
-            // find the current owner among the references (if any)
-            if ( config.getServiceReference() != null )
+            final ServiceReference[] srList = helper.getServices();
+            if ( srList != null )
             {
+                // optionally bind dynamically to the first service
+                config.tryBindLocation( srList[0].getBundle().getLocation() );
+
+                final String configBundleLocation = config.getBundleLocation();
+
+                // provide configuration to all services from the
+                // correct bundle
                 for ( int i = 0; i < srList.length; i++ )
                 {
-                    if ( srList[i].equals( config.getServiceReference() ) )
+                    final ServiceReference ref = srList[i];
+
+                    // CM 1.4 / 104.13.2.2
+                    if ( !canReceive( ref.getBundle(), configBundleLocation ) )
                     {
-                        return srList[i];
+                        log( LogService.LOG_ERROR, "Cannot use configuration " + config.getPid() + " for "
+                            + ConfigurationManager.toString( ref ) + ": No visibility to configuration bound to "
+                            + configBundleLocation, null );
+                        continue;
+                    }
+
+                    helper.provide( ref );
+
+                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    {
+                        log( LogService.LOG_DEBUG,
+                            "Updated configuration " + config.getPid() + " to update #" + config.getLastUpdatedTime(),
+                            null );
                     }
                 }
-            }
-            // configuration has never been supplied or the binding is stale
 
-            // if the configuration is location bound, find a service reference
-            // from the same bundle
-            final String configLocation = config.getBoundBundleLocation();
-            if (configLocation != null) {
-                for ( int i = 0; i < srList.length; i++ )
-                {
-                    if ( configLocation.equals(srList[i].getBundle().getLocation() ) )
-                    {
-                        return srList[i];
-                    }
-                }
-                // no service from the same bundle found, thus we cannot
-                // find a new owner !!
-                return null;
+                // update the lastUpdatedTime
+                config.setLastUpdatedTime( lastModificationTime );
             }
-            // configuration is not location bound (yet)
-
-            // just use the first entry in the list as the new owner
-            final ServiceReference ownerRef = srList[0];
-            config.setServiceReference( ownerRef );
-            return ownerRef;
         }
 
 
@@ -1671,6 +1646,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
     }
 
+
+    /**
+     * The <code>DeleteConfiguration</code> class is used to inform
+     * <code>ManagedService[Factory]</code> services of a configuration
+     * being deleted.
+     */
     private class DeleteConfiguration implements Runnable
     {
 
@@ -1686,7 +1667,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
              * final and cannot be reset.
              */
             this.config = config;
-            this.configLocation = config.getBoundBundleLocation();
+            this.configLocation = config.getBundleLocation();
         }
 
 
@@ -1694,90 +1675,90 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         {
             final String pid = config.getPid();
             final String factoryPid = config.getFactoryPid();
+            final ServiceHelper helper = createServiceHelper( config );
 
-            try
+            ServiceReference[] srList = helper.getServices( );
+            if ( srList != null )
             {
-                if ( factoryPid == null )
+                for ( int i = 0; i < srList.length; i++ )
                 {
-                    ServiceReference[] srList = bundleContext.getServiceReferences( ManagedService.class.getName(), "("
-                        + Constants.SERVICE_PID + "=" + pid + ")" );
-                    if ( srList != null )
+                    final ServiceReference sr = srList[i];
+                    if ( canReceive( sr.getBundle(), configLocation ) )
                     {
-                        for ( int i = 0; i < srList.length; i++ )
-                        {
-                            final ServiceReference sr = srList[i];
-                            if ( sr.getBundle().getLocation().equals( configLocation ) )
-                            {
-                                // only if the service is from the bound bundle
-                                final ManagedService srv = ( ManagedService ) bundleContext.getService( sr );
-                                try
-                                {
-                                    srv.updated( null );
-                                }
-                                catch ( Throwable t )
-                                {
-                                    handleCallBackError( t, sr, config );
-                                }
-                                finally
-                                {
-                                   bundleContext.ungetService( sr );
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // remove the pid from the factory
-                    try
-                    {
-                        Factory factory = getFactory( factoryPid );
-                        factory.removePID( pid );
-                        factory.store();
-                    }
-                    catch ( IOException ioe )
-                    {
-                        log( LogService.LOG_ERROR, "Failed removing " + pid + " from the factory " + factoryPid, ioe );
-                    }
-
-                    ServiceReference[] srList = bundleContext.getServiceReferences( ManagedServiceFactory.class
-                        .getName(), "(" + Constants.SERVICE_PID + "=" + factoryPid + ")" );
-                    if ( srList != null)
-                    {
-                        for ( int i = 0; i < srList.length; i++ )
-                        {
-                            final ServiceReference sr = srList[i];
-                            if ( sr.getBundle().getLocation().equals( configLocation ) )
-                            {
-                                // only if the service is from the bound bundle
-                                final ManagedServiceFactory srv = ( ManagedServiceFactory ) bundleContext
-                                    .getService( sr );
-                                try
-                                {
-                                    srv.deleted( pid );
-                                }
-                                catch ( Throwable t )
-                                {
-                                    handleCallBackError( t, sr, config );
-                                }
-                                finally
-                                {
-                                    bundleContext.ungetService( sr );
-                                }
-                            }
-                        }
+                        helper.remove( sr );
                     }
                 }
             }
-            catch ( InvalidSyntaxException ise )
+
+            if ( factoryPid != null )
             {
-                log( LogService.LOG_ERROR, "Service selection filter is invalid to update " + config, ise );
+                // remove the pid from the factory
+                try
+                {
+                    Factory factory = getFactory( factoryPid );
+                    factory.removePID( pid );
+                    factory.store();
+                }
+                catch ( IOException ioe )
+                {
+                    log( LogService.LOG_ERROR, "Failed removing " + pid + " from the factory " + factoryPid, ioe );
+                }
             }
         }
 
         public String toString()
         {
             return "Delete: pid=" + config.getPid();
+        }
+    }
+
+    private class LocationChanged implements Runnable
+    {
+        private final ConfigurationImpl config;
+        private final String oldLocation;
+
+
+        LocationChanged( ConfigurationImpl config, String oldLocation )
+        {
+            this.config = config;
+            this.oldLocation = oldLocation;
+        }
+
+
+        public void run()
+        {
+            ServiceHelper helper = createServiceHelper( this.config );
+            ServiceReference[] srList = helper.getServices( );
+            if ( srList != null )
+            {
+                // make sure the config is dynamically bound to the first
+                // service if it has been unbound causing this update
+                config.tryBindLocation( srList[0].getBundle().getLocation() );
+
+                for ( int i = 0; i < srList.length; i++ )
+                {
+                    final ServiceReference sr = srList[i];
+                    final boolean wasVisible = canReceive( sr.getBundle(), oldLocation );
+                    final boolean isVisible = canReceive( sr.getBundle(), config.getBundleLocation() );
+                    if ( wasVisible && !isVisible )
+                    {
+                        // call deleted method
+                        helper.remove( sr );
+                    }
+                    else if ( !wasVisible && isVisible )
+                    {
+                        // call updated method
+                        helper.provide( sr );
+                    }
+                }
+            }
+        }
+
+
+        public String toString()
+        {
+            return "Location Changed (pid=" + config.getPid() + "): " + oldLocation + " ==> "
+                + config.getBundleLocation();
         }
     }
 
@@ -1837,6 +1818,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     return "CM_DELETED";
                 case ConfigurationEvent.CM_UPDATED:
                     return "CM_UPDATED";
+                case ConfigurationEvent.CM_LOCATION_CHANGED:
+                    return "CM_LOCATION_CHANGED";
                 default:
                     return "<UNKNOWN(" + type + ")>";
             }
@@ -1907,26 +1890,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
             return serviceObject;
         }
-
-
-        public void removedService( ServiceReference reference, Object service )
-        {
-            // check whether we can take back the configuration object
-            String[] pids = getServicePid( reference );
-            if ( pids != null )
-            {
-                for ( int i = 0; i < pids.length; i++ )
-                {
-                    ConfigurationImpl cfg = cm.getCachedConfiguration( pids[i] );
-                    if ( cfg != null && reference.equals( cfg.getServiceReference() ) )
-                    {
-                        cfg.setServiceReference( null );
-                    }
-                }
-            }
-
-            super.removedService( reference, service );
-        }
     }
 
     private static class ManagedServiceFactoryTracker extends ServiceTracker
@@ -1958,34 +1921,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
             return serviceObject;
         }
-
-
-        public void removedService( ServiceReference reference, Object service )
-        {
-            // check whether we can take back the configuration objects
-            String[] factoryPids = getServicePid( reference );
-            if ( factoryPids != null )
-            {
-                for ( int i = 0; i < factoryPids.length; i++ )
-                {
-                    Factory factory = cm.getCachedFactory( factoryPids[i] );
-                    if ( factory != null )
-                    {
-                        for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
-                        {
-                            String pid = ( String ) pi.next();
-                            ConfigurationImpl cfg = cm.getCachedConfiguration( pid );
-                            if ( cfg != null && reference.equals( cfg.getServiceReference() ) )
-                            {
-                                cfg.setServiceReference( null );
-                            }
-                        }
-                    }
-                }
-            }
-
-            super.removedService( reference, service );
-        }
-
     }
+
+
 }

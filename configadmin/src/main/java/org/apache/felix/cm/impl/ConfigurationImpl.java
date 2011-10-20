@@ -115,10 +115,23 @@ class ConfigurationImpl extends ConfigurationBase
     private static final String CONFIGURATION_NEW = "_felix_.cm.newConfiguration";
 
     /**
-     * The factory serviceReference PID of this configuration or <code>null</code> if this
+     * The factory PID of this configuration or <code>null</code> if this
      * is not a factory configuration.
      */
     private final String factoryPID;
+
+    /**
+     * The statically bound bundle location, which is set explicitly by calling
+     * the Configuration.setBundleLocation(String) method or when the
+     * configuration was created with the two-argument method.
+     */
+    private volatile String staticBundleLocation;
+
+    /**
+     * The bundle location from dynamic binding. This value is set as the
+     * configuration or factory is assigned to a ManagedService[Factory].
+     */
+    private volatile String dynamicBundleLocation;
 
     /**
      * The configuration data of this configuration instance. This is a private
@@ -159,12 +172,15 @@ class ConfigurationImpl extends ConfigurationBase
     ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
         Dictionary properties )
     {
-        super( configurationManager, persistenceManager, ( String ) properties.remove( Constants.SERVICE_PID ),
-            ( String ) properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        super( configurationManager, persistenceManager, ( String ) properties.remove( Constants.SERVICE_PID ) );
 
         this.factoryPID = ( String ) properties.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
         this.isDeleted = false;
         this.lastUpdatedTime = -1;
+
+        // set bundle location from persistence and/or check for dynamic binding
+        this.staticBundleLocation = ( String ) properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ;
+        this.dynamicBundleLocation = configurationManager.getDynamicBundleLocation( getBaseId() );
 
         // set the properties internally
         configureFromPersistence( properties );
@@ -174,11 +190,15 @@ class ConfigurationImpl extends ConfigurationBase
     ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager, String pid,
         String factoryPid, String bundleLocation ) throws IOException
     {
-        super( configurationManager, persistenceManager, pid, bundleLocation );
+        super( configurationManager, persistenceManager, pid );
 
         this.factoryPID = factoryPid;
         this.isDeleted = false;
         this.lastUpdatedTime = -1;
+
+        // set bundle location from persistence and/or check for dynamic binding
+        this.staticBundleLocation = bundleLocation;
+        this.dynamicBundleLocation = configurationManager.getDynamicBundleLocation( getBaseId() );
 
         // first "update"
         this.properties = null;
@@ -215,6 +235,96 @@ class ConfigurationImpl extends ConfigurationBase
     public String getFactoryPid()
     {
         return factoryPID;
+    }
+
+
+
+
+    /**
+     * Returns the "official" bundle location as visible from the outside
+     * world of code calling into the Configuration.getBundleLocation() method.
+     * <p>
+     * In other words: The {@link #getStaticBundleLocation()} is returned if
+     * not <code>null</code>. Otherwise the {@link #getDynamicBundleLocation()}
+     * is returned (which may also be <code>null</code>).
+     */
+    String getBundleLocation()
+    {
+        if ( staticBundleLocation != null )
+        {
+            return staticBundleLocation;
+        }
+
+        return dynamicBundleLocation;
+    }
+
+
+    String getDynamicBundleLocation()
+    {
+        return dynamicBundleLocation;
+    }
+
+
+    String getStaticBundleLocation()
+    {
+        return staticBundleLocation;
+    }
+
+
+    void setStaticBundleLocation( final String bundleLocation )
+    {
+        // CM 1.4; needed for bundle location change at the end
+        final String oldBundleLocation = getBundleLocation();
+
+        // 104.15.2.8 The bundle location will be set persistently
+        this.staticBundleLocation = bundleLocation;
+        storeSilently();
+
+        // check whether the dynamic bundle location is different from the
+        // static now. If so, the dynamic bundle location has to be
+        // removed.
+        if ( bundleLocation != null && getDynamicBundleLocation() != null
+            && !bundleLocation.equals( getDynamicBundleLocation() ) )
+        {
+            setDynamicBundleLocation( null, false );
+        }
+
+        // CM 1.4
+        this.getConfigurationManager().locationChanged( this, oldBundleLocation );
+    }
+
+
+    void setDynamicBundleLocation( final String bundleLocation, final boolean dispatchConfiguration )
+    {
+        // CM 1.4; needed for bundle location change at the end
+        final String oldBundleLocation = getBundleLocation();
+
+        this.dynamicBundleLocation = bundleLocation;
+        this.getConfigurationManager().setDynamicBundleLocation( this.getBaseId(), bundleLocation );
+
+        // CM 1.4
+        if ( dispatchConfiguration )
+        {
+            this.getConfigurationManager().locationChanged( this, oldBundleLocation );
+
+        }
+    }
+
+
+    /**
+     * Dynamically binds this configuration to the given location unless
+     * the configuration is already bound (statically or dynamically). In
+     * the case of this configuration to be dynamically bound a
+     * <code>CM_LOCATION_CHANGED</code> event is dispatched.
+     */
+    boolean tryBindLocation( final String bundleLocation )
+    {
+        if ( this.getBundleLocation() == null )
+        {
+            setDynamicBundleLocation( bundleLocation, true );
+        }
+
+        return true;
     }
 
 
@@ -451,7 +561,10 @@ class ConfigurationImpl extends ConfigurationBase
     {
         synchronized ( this )
         {
-            this.lastUpdatedTime = lastModificationTime;
+            if ( this.lastUpdatedTime < lastModificationTime )
+            {
+                this.lastUpdatedTime = lastModificationTime;
+            }
         }
     }
 

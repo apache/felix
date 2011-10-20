@@ -40,6 +40,12 @@ import org.osgi.service.cm.ConfigurationAdmin;
 public class ConfigurationBaseTest extends ConfigurationTestBase
 {
 
+    static
+    {
+        // uncomment to enable debugging of this test class
+        // paxRunnerVmOption = DEBUG_VM_OPTION;
+    }
+
     @Test
     public void test_basic_configuration_configure_then_start() throws BundleException, IOException
     {
