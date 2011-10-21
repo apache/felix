@@ -10,6 +10,9 @@ Changes from 1.2.8 to 1.4.0
     * [FELIX-3046] - Empty array configuration value is read as null after restart
     * [FELIX-3175] - RankingComparator results in wrong results
 
+** Improvement
+    * [FELIX-3180] - Provide MessageFormat based logging method
+
 ** Task
     * [FELIX-3176] - Implement Configuration Admin 1.4 changes
 
