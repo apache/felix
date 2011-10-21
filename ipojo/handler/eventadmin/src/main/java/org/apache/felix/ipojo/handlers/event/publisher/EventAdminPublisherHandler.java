@@ -80,15 +80,15 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
     /**
      * Initializes the component type.
      *
-     * @param cd the component type description to populate
+     * @param cd       the component type description to populate
      * @param metadata the component type metadata
      * @throws ConfigurationException if the given metadata is incorrect.
-     * @see org.apache.felix.ipojo.Handler#initializeComponentFactory(org.apache.felix.ipojo.architecture.ComponentDescription,
-     *      org.apache.felix.ipojo.metadata.Element)
+     * @see org.apache.felix.ipojo.Handler#initializeComponentFactory(
+     * org.apache.felix.ipojo.architecture.ComponentTypeDescription, org.apache.felix.ipojo.metadata.Element)
      */
     public void initializeComponentFactory(ComponentTypeDescription cd,
-            Element metadata)
-        throws ConfigurationException {
+                                           Element metadata)
+            throws ConfigurationException {
 
         // Update the current component description
         Dictionary dict = new Properties();
@@ -100,7 +100,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
         Element[] publishers = metadata.getElements("publisher", NAMESPACE);
 
         // if publisher is null, look for 'publishes' elements
-        if (publishers == null  || publishers.length == 0) {
+        if (publishers == null || publishers.length == 0) {
             publishers = metadata.getElements("publishes", NAMESPACE);
         }
 
@@ -154,8 +154,7 @@ public class EventAdminPublisherHandler extends PrimitiveHandler {
      * @param metadata the component type metadata
      * @param conf the instance configuration
      * @throws ConfigurationException if one event publication is not correct
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager,
-     *      org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary conf)
         throws ConfigurationException {

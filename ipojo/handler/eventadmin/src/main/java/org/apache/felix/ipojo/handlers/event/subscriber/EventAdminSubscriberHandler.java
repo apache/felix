@@ -112,8 +112,8 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
      * @param cd component type description to populate.
      * @param metadata component type metadata.
      * @throws ConfigurationException if the metadata are incorrect.
-     * @see org.apache.felix.ipojo.Handler#initializeComponentFactory(org.apache.felix.ipojo.architecture.ComponentDescription,
-     *      org.apache.felix.ipojo.metadata.Element)
+     * @see org.apache.felix.ipojo.Handler#initializeComponentFactory(
+     * org.apache.felix.ipojo.architecture.ComponentTypeDescription, org.apache.felix.ipojo.metadata.Element)
      */
     public void initializeComponentFactory(ComponentTypeDescription cd,
             Element metadata)
@@ -197,8 +197,7 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
      * @param metadata the omponent type metadata
      * @param conf the instance configuration
      * @throws ConfigurationException if one event subscription is not correct
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager,
-     *      org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary conf)
         throws ConfigurationException {
@@ -275,6 +274,9 @@ public class EventAdminSubscriberHandler extends PrimitiveHandler implements
                 String tmp = (String) iterator.next();
                 m_topics[i++] = tmp;
             }
+
+            m_description = new EventAdminSubscriberHandlerDescription(this,
+                    subscribers);
 
         } else {
             info(LOG_PREFIX + "No subscriber to configure");
