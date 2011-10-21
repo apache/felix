@@ -25,6 +25,7 @@ import org.mortbay.jetty.security.SslSocketConnector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.bio.SocketConnector;
+import org.mortbay.jetty.handler.StatisticsHandler;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.servlet.*;
 import org.apache.felix.http.base.internal.DispatcherServlet;
@@ -153,12 +154,6 @@ public final class JettyService
             // HTTP/1.1 requires Date header if possible (it is)
             this.server.setSendDateHeader(true);
 
-            if (this.config.isRegisterMBeans())
-            {
-                this.mbeanServerTracker = new MBeanServerTracker(this.context, this.server);
-                this.mbeanServerTracker.open();
-            }
-
             this.server.addUserRealm(realm);
 
             if (this.config.isUseHttp())
@@ -177,6 +172,13 @@ public final class JettyService
             context.addEventListener(eventDispatcher);
             context.getSessionHandler().addEventListener(eventDispatcher);
             context.addServlet(new ServletHolder(this.dispatcher), "/*");
+            
+            if (this.config.isRegisterMBeans())
+            {
+                this.mbeanServerTracker = new MBeanServerTracker(this.context, this.server);
+                this.mbeanServerTracker.open();
+                context.addHandler(new StatisticsHandler());
+            }
 
             this.server.start();
             SystemLogger.info(message.toString());
