@@ -97,10 +97,8 @@ public class UpdateThread implements Runnable
                 // set the thread name indicating the current task
                 Thread.currentThread().setName( workerBaseName + " (" + task + ")" );
 
-                if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    configurationManager.log( LogService.LOG_DEBUG, "Running task " + task, null );
-                }
+                configurationManager.log( LogService.LOG_DEBUG, "Running task {0}", new Object[]
+                    { task } );
 
                 task.run();
             }
@@ -168,8 +166,9 @@ public class UpdateThread implements Runnable
 
             if ( workerThread.isAlive() )
             {
-                this.configurationManager.log( LogService.LOG_ERROR, "Worker thread " + workerBaseName
-                    + " did not terminate within 5 seconds; trying to kill", null );
+                this.configurationManager.log( LogService.LOG_ERROR,
+                    "Worker thread {0} did not terminate within 5 seconds; trying to kill", new Object[]
+                        { workerBaseName } );
                 workerThread.stop();
             }
         }
@@ -181,10 +180,8 @@ public class UpdateThread implements Runnable
     {
         synchronized ( updateTasks )
         {
-            if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                configurationManager.log( LogService.LOG_DEBUG, "Scheduling task " + update, null );
-            }
+            configurationManager.log( LogService.LOG_DEBUG, "Scheduling task {0}", new Object[]
+                { update } );
 
             // append to the task queue
             updateTasks.add( update );

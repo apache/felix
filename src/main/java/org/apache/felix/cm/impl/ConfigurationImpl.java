@@ -398,6 +398,9 @@ class ConfigurationImpl extends ConfigurationBase
         {
             CaseInsensitiveDictionary newProperties = new CaseInsensitiveDictionary( properties );
 
+            getConfigurationManager().log( LogService.LOG_DEBUG, "Updating config {0} with {1}", new Object[]
+                { getPid(), newProperties } );
+
             setAutoProperties( newProperties, true );
 
             // persist new configuration
@@ -426,7 +429,8 @@ class ConfigurationImpl extends ConfigurationBase
                     catch ( IOException ioe )
                     {
                         getConfigurationManager().log( LogService.LOG_ERROR,
-                            "Failure storing factory " + factoryPid + " with new configuration " + getPid(), ioe );
+                            "Failure storing factory {0} with new configuration {1}", new Object[]
+                                { factoryPid, getPid(), ioe } );
                     }
                 }
             }

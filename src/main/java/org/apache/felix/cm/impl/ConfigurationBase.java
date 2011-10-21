@@ -88,7 +88,8 @@ abstract class ConfigurationBase
         }
         catch ( IOException ioe )
         {
-            configurationManager.log( LogService.LOG_ERROR, "Persisting new bundle location failed", ioe );
+            configurationManager.log( LogService.LOG_ERROR, "Persisting ID {0} failed", new Object[]
+                { getBaseId(), ioe } );
         }
     }
 

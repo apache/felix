@@ -21,6 +21,7 @@ package org.apache.felix.cm.impl;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.text.MessageFormat;
 import java.util.*;
 
 import org.apache.felix.cm.PersistenceManager;
@@ -397,8 +398,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             catch ( IOException ioe )
             {
-                log( LogService.LOG_ERROR, "Failed storing dynamic configuration binding for " + pid + " to "
-                    + location, ioe );
+                log( LogService.LOG_ERROR, "Failed storing dynamic configuration binding for {0} to {1}", new Object[]
+                    { pid, location, ioe } );
             }
         }
     }
@@ -477,6 +478,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             filter = bundleContext.createFilter( filterString );
         }
 
+        log( LogService.LOG_DEBUG, "Listing configurations matching {0}", new Object[]
+            { filterString } );
+
         List configList = new ArrayList();
 
         PersistenceManager[] pmList = getPersistenceManagers();
@@ -498,6 +502,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 if ( !configurationAdmin.hasPermission( ( String ) config
                     .get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
                 {
+                    log(
+                        LogService.LOG_DEBUG,
+                        "Omitting configuration {0}: No permission for {1} on {2}",
+                        new Object[]
+                            { config.get( Constants.SERVICE_PID ), configurationAdmin.getBundle().getLocation(),
+                                config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
                     continue;
                 }
 
@@ -514,8 +524,18 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     // FELIX-611: Ignore configuration objects without props
                     if ( !cfg.isNew() )
                     {
+                        log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
+                            { config.get( Constants.SERVICE_PID ) } );
                         configList.add( cfg );
                     }
+                    else
+                    {
+                        log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
+                            { config.get( Constants.SERVICE_PID ) } );
+                    }
+                } else {
+                    log( LogService.LOG_DEBUG, "Omitting configuration {0}: Does not match filter", new Object[]
+                        { config.get( Constants.SERVICE_PID ) } );
                 }
             }
         }
@@ -531,10 +551,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         removeConfiguration( config );
         fireConfigurationEvent( ConfigurationEvent.CM_DELETED, config.getPid(), config.getFactoryPid() );
         updateThread.schedule( new DeleteConfiguration( config ) );
-        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            log( LogService.LOG_DEBUG, "DeleteConfiguration(" + config.getPid() + ") scheduled", null );
-        }
+        log( LogService.LOG_DEBUG, "DeleteConfiguration({0}) scheduled", new Object[]
+            { config.getPid() } );
     }
 
 
@@ -545,10 +563,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPid(), config.getFactoryPid() );
         }
         updateThread.schedule( new UpdateConfiguration( config ) );
-        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            log( LogService.LOG_DEBUG, "UpdateConfiguration(" + config.getPid() + ") scheduled", null );
-        }
+        log( LogService.LOG_DEBUG, "UpdateConfiguration({0}) scheduled", new Object[]
+            { config.getPid() } );
     }
 
 
@@ -558,17 +574,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         if ( oldLocation != null && !config.isNew() )
         {
             updateThread.schedule( new LocationChanged( config, oldLocation ) );
-            if ( isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                log( LogService.LOG_DEBUG,
-                    "LocationChanged(" + config.getPid() + ", " + oldLocation + "=>" + config.getBundleLocation()
-                        + ") scheduled", null );
-            }
+            log( LogService.LOG_DEBUG, "LocationChanged({0}, {1}=>{2}) scheduled", new Object[]
+                { config.getPid(), oldLocation, config.getBundleLocation() } );
         }
-        else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        else
         {
             log( LogService.LOG_DEBUG,
-                "LocationChanged not scheduled if old location is null or for new configuration", null );
+                "LocationChanged not scheduled for {0} (old location is null or configuration is new)", new Object[]
+                    { config.getPid() } );
         }
     }
 
@@ -580,9 +593,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         {
             eventThread.schedule( event );
         }
-        else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        else
         {
-            log( LogService.LOG_DEBUG, "No ConfigurationListeners to send " + event.getTypeName() + " event to.", null );
+            log( LogService.LOG_DEBUG, "No ConfigurationListeners to send {0} event to.", new Object[]
+                { event.getTypeName() } );
         }
     }
 
@@ -671,10 +685,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 ManagedServiceUpdate update = new ManagedServiceUpdate( pids[i], sr, service );
                 updateThread.schedule( update );
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG, "ManagedServiceUpdate(" + pids[i] + ") scheduled", null );
-                }
+                log( LogService.LOG_DEBUG, "ManagedServiceUpdate({0}) scheduled", new Object[]
+                    { pids[i] } );
             }
         }
     }
@@ -689,10 +701,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 ManagedServiceFactoryUpdate update = new ManagedServiceFactoryUpdate( pids[i], sr, service );
                 updateThread.schedule( update );
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG, "ManagedServiceFactoryUpdate(" + pids[i] + ") scheduled", null );
-                }
+                log( LogService.LOG_DEBUG, "ManagedServiceFactoryUpdate({0}) scheduled", new Object[]
+                    { pids[i] } );
             }
         }
     }
@@ -722,6 +732,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     ConfigurationImpl createConfiguration( String pid, String factoryPid, String bundleLocation ) throws IOException
     {
+        log( LogService.LOG_DEBUG, "createConfiguration({0}, {1}, {2})", new Object[]
+            { pid, factoryPid, bundleLocation } );
         return new ConfigurationImpl( this, getPersistenceManagers()[0], pid, factoryPid, bundleLocation );
     }
 
@@ -818,8 +830,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 }
                 catch ( Throwable t )
                 {
-                    log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin "
-                        + toString( pluginRef ), t );
+                    log( LogService.LOG_ERROR, "Unexpected problem calling configuration plugin {0}", new Object[]
+                        { toString( pluginRef ), t } );
                 }
                 finally
                 {
@@ -888,6 +900,27 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     boolean isLogEnabled( int level )
     {
         return level <= logLevel;
+    }
+
+
+    void log( int level, String format, Object[] args )
+    {
+        if ( isLogEnabled( level ) )
+        {
+            Throwable throwable = null;
+            String message = format;
+
+            if ( args != null && args.length > 0 )
+            {
+                if ( args[args.length - 1] instanceof Throwable )
+                {
+                    throwable = ( Throwable ) args[args.length - 1];
+                }
+                message = MessageFormat.format( format, args );
+            }
+
+            log( level, message, throwable );
+        }
     }
 
 
@@ -1008,19 +1041,21 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             final ConfigurationException ce = ( ConfigurationException ) error;
             if ( ce.getProperty() != null )
             {
-                log( LogService.LOG_ERROR, toString( target ) + ": Updating configuration property " + ce.getProperty()
-                    + " caused a problem: " + ce.getReason(), ce );
+                log( LogService.LOG_ERROR, "{0}: Updating configuration property {1} caused a problem: {2}",
+                    new Object[]
+                        { toString( target ), ce.getProperty(), ce.getReason(), ce } );
             }
             else
             {
-                log( LogService.LOG_ERROR, toString( target ) + ": Updating configuration caused a problem: "
-                    + ce.getReason(), ce );
+                log( LogService.LOG_ERROR, "{0}: Updating configuration caused a problem: {1}", new Object[]
+                    { toString( target ), ce.getReason(), ce } );
             }
         }
         else
         {
             {
-                log( LogService.LOG_ERROR, toString( target ) + ": Unexpected problem updating " + config, error );
+                log( LogService.LOG_ERROR, "{0}: Unexpected problem updating {1}", new Object[]
+                    { toString( target ), config, error } );
             }
 
         }
@@ -1101,7 +1136,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             catch ( InvalidSyntaxException ise )
             {
-                log( LogService.LOG_ERROR, "Service selection filter is invalid to update " + config, ise );
+                log( LogService.LOG_ERROR, "Service selection filter is invalid to update {0}", new Object[]
+                    { config, ise } );
             }
             return null;
         }
@@ -1283,7 +1319,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             catch ( IOException ioe )
             {
-                log( LogService.LOG_ERROR, "Error loading configuration for " + pid, ioe );
+                log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                    { pid, ioe } );
             }
 
             this.config = config;
@@ -1299,32 +1336,28 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             Dictionary properties = rawProperties;
             if ( properties != null && config != null && lastModificationTime < config.getLastUpdatedTime() )
             {
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " at modification #"
-                        + config.getLastModificationTime() + " has already been updated to update #"
-                        + config.getLastUpdatedTime() + ", nothing to be done anymore.", null );
-                }
+                log(
+                    LogService.LOG_DEBUG,
+                    "Configuration {0} at modification #{1} has already been updated to update #{2}, nothing to be done anymore.",
+                    new Object[]
+                        { config.getPid(), new Long( config.getLastModificationTime() ),
+                            new Long( config.getLastUpdatedTime() ) } );
                 return;
             }
 
             // check configuration and call plugins if existing
             if ( config != null )
             {
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG, "Updating configuration " + pid + " to modification #"
-                        + config.getLastModificationTime(), null );
-                }
+                log( LogService.LOG_DEBUG, "Updating configuration {0} to modification #{1}", new Object[]
+                    { pid, new Long( config.getLastModificationTime() ) } );
 
                 Bundle serviceBundle = sr.getBundle();
                 if ( serviceBundle == null )
                 {
-                    if ( isLogEnabled( LogService.LOG_INFO ) )
-                    {
-                        log( LogService.LOG_INFO, "Service for PID " + pid
-                            + " seems to already have been unregistered, not updating with configuration", null );
-                    }
+                    log( LogService.LOG_INFO,
+                        "Service for PID {0} seems to already have been unregistered, not updating with configuration",
+                        new Object[]
+                            { pid } );
                     return;
                 }
 
@@ -1332,8 +1365,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 if ( !canReceive( serviceBundle, config.getBundleLocation() ) )
                 {
                     log( LogService.LOG_ERROR,
-                        "Cannot use configuration " + pid + " for " + ConfigurationManager.toString( sr )
-                            + ": No visibility to configuration bound to " + config.getBundleLocation(), null );
+                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                        new Object[]
+                            { pid, ConfigurationManager.toString( sr ), config.getBundleLocation() } );
                     return;
                 }
 
@@ -1364,11 +1398,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             if ( config != null && properties != null )
             {
                 config.setLastUpdatedTime( lastModificationTime );
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG, "Updated configuration " + config.getPid() + " to update #"
-                        + config.getLastUpdatedTime(), null );
-                }
+                log( LogService.LOG_DEBUG, "Updated configuration {0} to update #{1}", new Object[]
+                    { config.getPid(), new Long( config.getLastUpdatedTime() ) } );
             }
         }
 
@@ -1422,15 +1453,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         }
                         catch ( IOException ioe )
                         {
-                            log( LogService.LOG_ERROR, "Error loading configuration for " + pid, ioe );
+                            log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                                { pid, ioe } );
                             continue;
                         }
 
                         // sanity check on the configuration
                         if ( cfg == null )
                         {
-                            log( LogService.LOG_ERROR, "Configuration " + pid + " referred to by factory " + factoryPid
-                                + " does not exist", null );
+                            log( LogService.LOG_ERROR, "Configuration {0} referred to by factory {1} does not exist",
+                                new Object[]
+                                    { pid, factoryPid } );
                             factory.removePID( pid );
                             factory.storeSilently();
                             continue;
@@ -1443,13 +1476,16 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             // As of FELIX-612 (not storing new factory configurations)
                             // this should not happen. We keep this for added stability
                             // but raise the logging level to error.
-                            log( LogService.LOG_ERROR, "Ignoring new configuration pid=" + pid, null );
+                            log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
+                                { pid } );
                             continue;
                         }
                         else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
                         {
-                            log( LogService.LOG_ERROR, "Configuration " + pid + " referred to by factory " + factoryPid
-                                + " seems to belong to factory " + cfg.getFactoryPid(), null );
+                            log( LogService.LOG_ERROR,
+                                "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
+                                new Object[]
+                                    { pid, factoryPid, cfg.getFactoryPid() } );
                             factory.removePID( pid );
                             factory.storeSilently();
                             continue;
@@ -1466,7 +1502,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             catch ( IOException ioe )
             {
-                log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID " + factoryPid, ioe );
+                log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID {0}", new Object[]
+                    { factoryPid, ioe } );
             }
 
             this.configs = configs;
@@ -1479,11 +1516,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             Bundle serviceBundle = sr.getBundle();
             if ( serviceBundle == null )
             {
-                if ( isLogEnabled( LogService.LOG_INFO ) )
-                {
-                    log( LogService.LOG_INFO, "ManagedServiceFactory for factory PID " + factoryPid
-                        + " seems to already have been unregistered, not updating with factory", null );
-                }
+                log(
+                    LogService.LOG_INFO,
+                    "ManagedServiceFactory for factory PID {0} seems to already have been unregistered, not updating with factory",
+                    new Object[]
+                        { factoryPid } );
                 return;
             }
 
@@ -1496,27 +1533,25 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                 if ( lastModificationTime <= cfg.getLastUpdatedTime() )
                 {
-                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        log( LogService.LOG_DEBUG, "Configuration " + cfg.getPid() + " at modification #"
-                            + cfg.getLastModificationTime() + " has already been updated to update #"
-                            + cfg.getLastUpdatedTime() + ", nothing to be done anymore.", null );
-                    }
-                    continue;
+                    log(
+                        LogService.LOG_DEBUG,
+                        "Configuration {0} at modification #{1} has already been updated to update #{2}, nothing to be done anymore.",
+                        new Object[]
+                            { cfg.getPid(), new Long( cfg.getLastModificationTime() ),
+                                new Long( cfg.getLastUpdatedTime() ) } );
+                   continue;
                 }
 
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG, "Updating configuration " + cfg.getPid() + " to modification #"
-                        + cfg.getLastModificationTime(), null );
-                }
+                log( LogService.LOG_DEBUG, "Updating configuration {0} to modification #{1}", new Object[]
+                    { cfg.getPid(), new Long( cfg.getLastModificationTime() ) } );
 
                 // CM 1.4 / 104.13.2.1
                 if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
                 {
                     log( LogService.LOG_ERROR,
-                        "Cannot use configuration " + cfg.getPid() + " for " + ConfigurationManager.toString( sr )
-                            + ": No visibility to configuration bound to " + cfg.getBundleLocation(), null );
+                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                        new Object[]
+                            { cfg.getPid(), ConfigurationManager.toString( sr ), cfg.getBundleLocation() } );
                     continue;
                 }
 
@@ -1531,10 +1566,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 // update the service with the configuration (if non-null)
                 if ( properties != null )
                 {
-                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        log( LogService.LOG_DEBUG, sr + ": Updating configuration pid=" + cfg.getPid(), null );
-                    }
+                    log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
+                        { ConfigurationManager.toString( sr ), cfg.getPid() } );
 
                     try
                     {
@@ -1548,11 +1581,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     // update the lastUpdatedTime
                     cfg.setLastUpdatedTime( lastModificationTime );
 
-                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        log( LogService.LOG_DEBUG, "Updated configuration " + cfg.getPid() + " to update #"
-                            + cfg.getLastUpdatedTime(), null );
-                    }
+                    log( LogService.LOG_DEBUG, "Updated configuration {0} to update #{1}", new Object[]
+                        { cfg.getPid(), new Long( cfg.getLastUpdatedTime() ) } );
                 }
             }
         }
@@ -1594,23 +1624,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         {
             if ( lastModificationTime <= config.getLastUpdatedTime() )
             {
-                if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                {
-                    log( LogService.LOG_DEBUG,
-                        "Configuration " + config.getPid() + " at modification #" + config.getLastModificationTime()
-                            + " has already been updated to update #" + config.getLastUpdatedTime()
-                            + ", nothing to be done anymore.", null );
-                }
+                log(
+                    LogService.LOG_DEBUG,
+                    "Configuration {0} at modification #{1} has already been updated to update #{2}, nothing to be done anymore.",
+                    new Object[]
+                        { config.getPid(), new Long( config.getLastModificationTime() ),
+                            new Long( config.getLastUpdatedTime() ) } );
                 return;
             }
 
-            if ( isLogEnabled( LogService.LOG_DEBUG ) )
-            {
-                log(
-                    LogService.LOG_DEBUG,
-                    "Updating configuration " + config.getPid() + " to modification #"
-                        + config.getLastModificationTime(), null );
-            }
+            log( LogService.LOG_DEBUG, "Updating configuration {0} to modification #{1}", new Object[]
+                { config.getPid(), new Long( config.getLastModificationTime() ) } );
 
             final ServiceReference[] srList = helper.getServices();
             if ( srList != null )
@@ -1629,20 +1653,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     // CM 1.4 / 104.13.2.2
                     if ( !canReceive( ref.getBundle(), configBundleLocation ) )
                     {
-                        log( LogService.LOG_ERROR, "Cannot use configuration " + config.getPid() + " for "
-                            + ConfigurationManager.toString( ref ) + ": No visibility to configuration bound to "
-                            + configBundleLocation, null );
+                        log( LogService.LOG_ERROR,
+                            "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                            new Object[]
+                                { config.getPid(), ConfigurationManager.toString( ref ), configBundleLocation } );
                         continue;
                     }
 
                     helper.provide( ref );
 
-                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        log( LogService.LOG_DEBUG,
-                            "Updated configuration " + config.getPid() + " to update #" + config.getLastUpdatedTime(),
-                            null );
-                    }
+                    log( LogService.LOG_DEBUG, "Updated configuration {0} to update #{1}", new Object[]
+                        { config.getPid(), new Long( config.getLastUpdatedTime() ) } );
                 }
 
                 // update the lastUpdatedTime
@@ -1712,7 +1733,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 }
                 catch ( IOException ioe )
                 {
-                    log( LogService.LOG_ERROR, "Failed removing " + pid + " from the factory " + factoryPid, ioe );
+                    log( LogService.LOG_ERROR, "Failed removing {0} from the factory {1}", new Object[]
+                        { pid, factoryPid, ioe } );
                 }
             }
         }
@@ -1755,30 +1777,22 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     {
                         // call deleted method
                         helper.remove( sr );
-
-                        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                        {
-                            log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " revoked from "
-                                + ConfigurationManager.toString( sr ) + " (no more visibility)", null );
-                        }
-
+                        log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
+                            new Object[]
+                                { config.getPid(), ConfigurationManager.toString( sr ) } );
                     }
                     else if ( !wasVisible && isVisible )
                     {
                         // call updated method
                         helper.provide( sr );
-
-                        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                        {
-                            log( LogService.LOG_DEBUG, "Configuration " + config.getPid() + " provided to "
-                                + ConfigurationManager.toString( sr ) + " (new visibility)", null );
-                        }
+                        log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
+                            { config.getPid(), ConfigurationManager.toString( sr ) } );
                     }
-                    else if ( isLogEnabled( LogService.LOG_DEBUG ) )
+                    else
                     {
                         // same visibility as before
-                        log( LogService.LOG_DEBUG, "Unmodified visibility to configuration " + config.getPid() + " to "
-                            + ConfigurationManager.toString( sr ), null );
+                        log( LogService.LOG_DEBUG, "Unmodified visibility to configuration {0} for {1}", new Object[]
+                            { config.getPid(), ConfigurationManager.toString( sr ) } );
                     }
                 }
             }
@@ -1865,11 +1879,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 if ( listenerProvider[i].getState() == Bundle.ACTIVE )
                 {
-                    if ( isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        log( LogService.LOG_DEBUG, "Sending " + typeName + " event for " + pid + " to "
-                            + ConfigurationManager.toString( listenerReferences[i] ), null );
-                    }
+                    log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
+                        { typeName, pid, ConfigurationManager.toString( listenerReferences[i] ) } );
 
                     try
                     {
@@ -1877,8 +1888,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                     catch ( Throwable t )
                     {
-                        log( LogService.LOG_ERROR, "Unexpected problem delivery configuration event to "
-                            + ConfigurationManager.toString( listenerReferences[i] ), t );
+                        log( LogService.LOG_ERROR, "Unexpected problem delivering configuration event to {0}",
+                            new Object[]
+                                { ConfigurationManager.toString( listenerReferences[i] ), t } );
                     }
                 }
             }
@@ -1915,7 +1927,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             else
             {
-                cm.log( LogService.LOG_WARNING, "Service " + serviceObject + " is not a ManagedService", null );
+                cm.log( LogService.LOG_WARNING, "Service {0} is not a ManagedService", new Object[]
+                    { serviceObject } );
             }
 
             return serviceObject;
@@ -1946,7 +1959,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             else
             {
-                cm.log( LogService.LOG_WARNING, "Service " + serviceObject + " is not a ManagedServiceFactory", null );
+                cm.log( LogService.LOG_WARNING, "Service {0} is not a ManagedServiceFactory", new Object[]
+                    { serviceObject } );
             }
 
             return serviceObject;
