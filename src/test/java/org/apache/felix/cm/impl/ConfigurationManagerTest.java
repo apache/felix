@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 
 import org.apache.felix.cm.MockBundleContext;
 import org.apache.felix.cm.MockLogService;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -168,7 +167,7 @@ public class ConfigurationManagerTest extends TestCase
 
         // ensure the configuration data goes to target
         bundleContext.setProperty( "felix.cm.dir", "target/config" );
-        
+
         // default value is 2
         bundleContext.setProperty( "felix.cm.loglevel", null );
         configMgr.start( bundleContext );
