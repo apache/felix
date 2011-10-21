@@ -24,19 +24,24 @@ import java.util.Hashtable;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class Activator implements BundleActivator
-{
+public class Activator implements BundleActivator {
 
     private ServiceTracker pkgAdminTracker;
 
     private ServiceRegistration pkgAdminPlugin;
 
-    public void start(final BundleContext context) throws Exception
-    {
+    private ServiceRegistration depFinderPlugin;
+
+    public void start(final BundleContext context) throws Exception {
         this.pkgAdminTracker = new ServiceTracker(context,
             "org.osgi.service.packageadmin.PackageAdmin", null);
         this.pkgAdminTracker.open();
 
+        registerPackageAdminPlugin(context);
+        registerDependencyFinderPlugin(context);
+    }
+
+    private void registerPackageAdminPlugin(final BundleContext context) {
         final PackageAdminPlugin plugin = new PackageAdminPlugin(context,
             pkgAdminTracker);
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -47,15 +52,26 @@ public class Activator implements BundleActivator
             plugin, props);
     }
 
-    public void stop(final BundleContext context) throws Exception
-    {
-        if ( this.pkgAdminPlugin != null )
-        {
+    private void registerDependencyFinderPlugin(final BundleContext context) {
+        final DependencyFinderPlugin plugin = new DependencyFinderPlugin(context,
+            pkgAdminTracker);
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("felix.webconsole.label", DependencyFinderPlugin.LABEL);
+        props.put("felix.webconsole.title", DependencyFinderPlugin.TITLE);
+        this.depFinderPlugin = context.registerService("javax.servlet.Servlet",
+            plugin, props);
+    }
+
+    public void stop(final BundleContext context) throws Exception {
+        if ( this.pkgAdminPlugin != null ) {
             this.pkgAdminPlugin.unregister();
             this.pkgAdminPlugin = null;
         }
-        if ( this.pkgAdminTracker != null )
-        {
+        if ( this.depFinderPlugin != null ) {
+            this.depFinderPlugin.unregister();
+            this.depFinderPlugin = null;
+        }
+        if ( this.pkgAdminTracker != null ) {
             this.pkgAdminTracker.close();
             this.pkgAdminTracker = null;
         }
