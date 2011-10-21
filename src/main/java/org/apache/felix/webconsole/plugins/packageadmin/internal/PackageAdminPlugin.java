@@ -32,6 +32,7 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
+@SuppressWarnings("serial")
 public class PackageAdminPlugin extends GenericServlet {
 
     static final String LABEL = "pkgadmin";
