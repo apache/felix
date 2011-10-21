@@ -22,25 +22,30 @@ import java.util.SortedSet;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-public class DependencyFinderPluginTest {
-    
+public class DependencyFinderPluginTest
+{
+
     @Test
-    public void single() {
+    public void single()
+    {
         SortedSet<String> r = DependencyFinderPlugin.getPackageNames("com.foo.bar");
         assertEquals(1, r.size());
         assertEquals("com.foo.bar", r.first());
     }
-    
+
     @Test
-    public void singleClass() {
+    public void singleClass()
+    {
         SortedSet<String> r = DependencyFinderPlugin.getPackageNames("com.foo.bar.MyClass");
         assertEquals(1, r.size());
         assertEquals("com.foo.bar", r.first());
     }
-    
+
     @Test
-    public void multiple() {
-        SortedSet<String> r = DependencyFinderPlugin.getPackageNames("com.foo.bar\ncom.foo.bar2\ncom.foo.bar3.MyClass\ncom.foo.bar.MyClass");
+    public void multiple()
+    {
+        SortedSet<String> r = DependencyFinderPlugin
+            .getPackageNames("com.foo.bar\ncom.foo.bar2\ncom.foo.bar3.MyClass\ncom.foo.bar.MyClass");
         assertEquals(3, r.size());
         Iterator<String> it = r.iterator();
         assertEquals("com.foo.bar", it.next());

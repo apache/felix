@@ -38,7 +38,8 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 @SuppressWarnings("serial")
-public class DependencyFinderPlugin extends HttpServlet {
+public class DependencyFinderPlugin extends HttpServlet
+{
 
     static final String LABEL = "depfinder";
 
@@ -47,20 +48,21 @@ public class DependencyFinderPlugin extends HttpServlet {
     private static final String PARAM_FIND = "plugin.find";
 
     private static final String PARAM_SUBMIT = "plugin.submit";
-    
+
     private static final String INDENT = "    ";
-    
+
     private final BundleContext bundleContext;
 
     private final ServiceTracker pkgAdminTracker;
 
-    DependencyFinderPlugin(final BundleContext bundleContext,
-            final ServiceTracker pkgAdminTracker) {
+    DependencyFinderPlugin(final BundleContext bundleContext, final ServiceTracker pkgAdminTracker)
+    {
         this.bundleContext = bundleContext;
         this.pkgAdminTracker = pkgAdminTracker;
     }
-    
-    private void drawForm(final PrintWriter pw, String findField) {
+
+    private void drawForm(final PrintWriter pw, String findField)
+    {
         titleHtml(pw, "Dependency Finder", "Enter a list of package or class names");
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>Packages/Classes</td>");
@@ -68,60 +70,66 @@ public class DependencyFinderPlugin extends HttpServlet {
         pw.print("<form method='get'>");
         pw.println("<textarea rows='10' cols='80' name='" + PARAM_FIND + "'>" + (findField != null ? findField : "")
             + "</textarea>");
-        pw.println("&nbsp;&nbsp;<input type='submit' name='" + PARAM_SUBMIT
-            + "' value='Find' class='submit'>");
+        pw.println("&nbsp;&nbsp;<input type='submit' name='" + PARAM_SUBMIT + "' value='Find' class='submit'>");
         pw.print("</form>");
         pw.print("</td>");
         pw.println("</tr>");
     }
 
-    private void endTable(final PrintWriter pw) {
+    private void endTable(final PrintWriter pw)
+    {
         pw.println("</table>");
     }
 
-    private void startTable(final PrintWriter pw) {
+    private void startTable(final PrintWriter pw)
+    {
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
     }
-    
-    private void titleHtml(PrintWriter pw, String title, String description) {
+
+    private void titleHtml(PrintWriter pw, String title, String description)
+    {
         pw.println("<tr class='content'>");
-        pw.println("<th colspan='3'class='content container'>" + title
-            + "</th>");
+        pw.println("<th colspan='3'class='content container'>" + title + "</th>");
         pw.println("</tr>");
 
-        if (description != null) {
+        if (description != null)
+        {
             pw.println("<tr class='content'>");
-            pw.println("<td colspan='3'class='content'>" + description
-                + "</th>");
+            pw.println("<td colspan='3'class='content'>" + description + "</th>");
             pw.println("</tr>");
         }
     }
-    
-    private void printStatLine(final PrintWriter pw, final String format,
-            final Object... args) {
+
+    private void printStatLine(final PrintWriter pw, final String format, final Object... args)
+    {
         final String message = String.format(format, args);
         pw.printf("<p class=\"statline\">%s</p>%n", message);
     }
-    
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+    {
         final PrintWriter pw = resp.getWriter();
-        
+
         final PackageAdmin pa = (PackageAdmin) this.pkgAdminTracker.getService();
-        if (pa == null) {
+        if (pa == null)
+        {
             printStatLine(pw, "PackageAdmin Service not registered");
             return;
         }
-        
+
         startTable(pw);
         String findField = req.getParameter(PARAM_FIND);
-        if (findField != null) {
+        if (findField != null)
+        {
             SortedSet<String> packageNames = getPackageNames(findField);
-            if (!packageNames.isEmpty()) {
+            if (!packageNames.isEmpty())
+            {
                 Set<Bundle> exportingBundles = new LinkedHashSet<Bundle>();
-                
+
                 titleHtml(pw, "Packages", "Here are the packages you entered and by which bundle they are exported.");
-                for (String packageName : packageNames) {
+                for (String packageName : packageNames)
+                {
                     pw.println("<tr class='content'>");
                     pw.print("<td class='content'>");
                     pw.print(packageName);
@@ -130,33 +138,43 @@ public class DependencyFinderPlugin extends HttpServlet {
                     pw.print("<td class='content' colspan='2'>");
                     ExportedPackage[] exports = pa.getExportedPackages(packageName);
                     ExportedPackage export = pa.getExportedPackage(packageName);
-                    if (export == null) {
+                    if (export == null)
+                    {
                         pw.print("<span style='color: red;'>NOT EXPORTED</span>");
-                    } else {
+                    }
+                    else
+                    {
                         Bundle exportingBundle = export.getExportingBundle();
-                        pw.printf("<a href='/system/console/bundles/%s' style='text-decoration: none; color: #555;'>%s (%s)</a>", exportingBundle.getBundleId(), exportingBundle.getSymbolicName(), exportingBundle.getBundleId());
-                        if (exports.length > 1) {
+                        pw.printf(
+                            "<a href='/system/console/bundles/%s' style='text-decoration: none; color: #555;'>%s (%s)</a>",
+                            exportingBundle.getBundleId(), exportingBundle.getSymbolicName(),
+                            exportingBundle.getBundleId());
+                        if (exports.length > 1)
+                        {
                             pw.printf(" and %s others.", exports.length - 1);
                         }
                         exportingBundles.add(exportingBundle);
-                        
+
                     }
                     pw.print("</td>");
-                    
+
                     pw.println("</tr>");
                 }
-                
+
                 titleHtml(pw, "Maven Dependencies", "Here are the bundles listed above as Maven dependencies");
                 pw.println("<tr class='content'>");
                 pw.print("<td class='content' colspan='3'>");
                 pw.println("<pre>");
-                for (Bundle bundle : exportingBundles) {
+                for (Bundle bundle : exportingBundles)
+                {
                     Enumeration<?> entries = bundle.findEntries("META-INF/maven", "pom.properties", true);
-                    if (entries != null) {
+                    if (entries != null)
+                    {
                         URL u = (URL) entries.nextElement();
                         java.util.Properties props = new java.util.Properties();
                         InputStream is = null;
-                        try {
+                        try
+                        {
                             is = u.openStream();
                             props.load(u.openStream());
 
@@ -166,9 +184,14 @@ public class DependencyFinderPlugin extends HttpServlet {
                             indent(pw, 3, String.format("<version>%s</version>", props.get("version")));
                             indent(pw, 3, "<scope>provided</scope>");
                             indent(pw, 2, "</dependency>");
-                        } catch (IOException e) {
-                        } finally {
-                            if (is != null) {
+                        }
+                        catch (IOException e)
+                        {
+                        }
+                        finally
+                        {
+                            if (is != null)
+                            {
                                 is.close();
                             }
                         }
@@ -182,26 +205,35 @@ public class DependencyFinderPlugin extends HttpServlet {
         drawForm(pw, findField);
         endTable(pw);
     }
-    
-    private void indent(PrintWriter pw, int count, String string) {
-        for (int i = 0; i < count; i++) {
+
+    private void indent(PrintWriter pw, int count, String string)
+    {
+        for (int i = 0; i < count; i++)
+        {
             pw.print(INDENT);
         }
         pw.println(string.replace("<", "&lt;").replace(">", "&gt;"));
     }
 
-    static SortedSet<String> getPackageNames(String findField) {
+    static SortedSet<String> getPackageNames(String findField)
+    {
         String[] parts = findField.split("\\s");
         SortedSet<String> result = new TreeSet<String>();
-        for (String part : parts) {
+        for (String part : parts)
+        {
             part = part.trim();
-            if (part.length() > 0) {
+            if (part.length() > 0)
+            {
                 int idx = part.lastIndexOf('.');
-                if (idx != -1) {
+                if (idx != -1)
+                {
                     char firstCharAfterLastDot = part.charAt(idx + 1);
-                    if (Character.isUpperCase(firstCharAfterLastDot)) {
+                    if (Character.isUpperCase(firstCharAfterLastDot))
+                    {
                         result.add(part.substring(0, idx));
-                    } else {
+                    }
+                    else
+                    {
                         result.add(part);
                     }
                 }
