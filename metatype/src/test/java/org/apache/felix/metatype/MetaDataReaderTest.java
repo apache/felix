@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -66,40 +66,76 @@ public class MetaDataReaderTest extends TestCase
         assertNull( mti.getObjectClassDefinitions() );
     }
 
-    public void testWithNamespace() throws IOException, XmlPullParserException
+
+    public void testWithNamespace_1_0_0() throws IOException, XmlPullParserException
     {
-        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" " + 
-        	"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
         MetaData mti = read( empty );
-        
+
         assertNotNull( mti );
         assertNull( mti.getLocalePrefix() );
         assertNull( mti.getObjectClassDefinitions() );
     }
 
-    public void testWithInvalidNamespaceUri() throws IOException, XmlPullParserException
+
+    public void testWithNamespace_1_1_0() throws IOException, XmlPullParserException
     {
-        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/datatype/v1.0.0\" " + 
-        	"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
-        
-        Exception exc = null;
-        try {
-        	MetaData mti = read( empty );
-        } catch (Exception e) {
-        	exc = e;
-		}
-        assertNotNull(exc);
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.1.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+        MetaData mti = read( empty );
+
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
     }
 
-    public void testWithInvalidNamespaceName() throws IOException, XmlPullParserException
+
+    public void testWithNamespace_1_2_0() throws IOException, XmlPullParserException
     {
-        String empty = "<datatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" " + 
-        	"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></datatype:MetaData>";
-        
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.1.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
         MetaData mti = read( empty );
-        
-        assertNull( mti );
+
+        assertNotNull( mti );
+        assertNull( mti.getLocalePrefix() );
+        assertNull( mti.getObjectClassDefinitions() );
     }
+
+
+    public void testWithInvalidNamespaceUri() throws IOException
+    {
+        String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/datatype/v1.0.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
+
+        try
+        {
+            read( empty );
+            fail( "Parse failure expected for unsupported namespace URI" );
+        }
+        catch ( XmlPullParserException e )
+        {
+            // expected due to unsupported namespace URI
+        }
+    }
+
+
+    public void testWithInvalidNamespaceName() throws IOException
+    {
+        String empty = "<datatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" "
+            + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></datatype:MetaData>";
+
+        try
+        {
+            read( empty );
+            fail( "Parse failure expected for undefined namespace prefix" );
+        }
+        catch ( XmlPullParserException e )
+        {
+            // expected due to undefined namespace prefix used
+        }
+    }
+
 
     public void testEmptyLocalization() throws IOException, XmlPullParserException
     {
