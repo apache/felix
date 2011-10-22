@@ -181,6 +181,7 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
         return ( Designate ) designates.get( pid );
     }
 
+
     protected Map getObjectClassDefinitions()
     {
         return objectClassDefinitions;

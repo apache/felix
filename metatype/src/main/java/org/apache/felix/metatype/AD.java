@@ -208,7 +208,7 @@ public class AD
         }
 
         String[] optionValues = getOptionValues();
-        if ( optionValues != null && optionValues.length > 0)
+        if ( optionValues != null && optionValues.length > 0 )
         {
             for ( int i = 0; i < optionValues.length; i++ )
             {
@@ -450,7 +450,7 @@ public class AD
                 {
                     case AttributeDefinition.BOOLEAN:
                         // Boolean is only Comparable starting with Java 5
-                        return new ComparableBoolean(value);
+                        return new ComparableBoolean( value );
                     case AttributeDefinition.CHARACTER:
                         return new Character( value.charAt( 0 ) );
                     case AttributeDefinition.BYTE:
@@ -479,16 +479,21 @@ public class AD
         return null;
     }
 
-    private static class ComparableBoolean implements Comparable {
+    private static class ComparableBoolean implements Comparable
+    {
         private boolean value;
 
-        ComparableBoolean(String boolValue) {
-            value = Boolean.valueOf(boolValue).booleanValue();
+
+        ComparableBoolean( String boolValue )
+        {
+            value = Boolean.valueOf( boolValue ).booleanValue();
         }
 
-        public int compareTo(Object obj) {
-            ComparableBoolean cb = (ComparableBoolean) obj;
-            return (cb.value == value ? 0 : (value ? 1 : -1));
+
+        public int compareTo( Object obj )
+        {
+            ComparableBoolean cb = ( ComparableBoolean ) obj;
+            return ( cb.value == value ? 0 : ( value ? 1 : -1 ) );
         }
     }
 }

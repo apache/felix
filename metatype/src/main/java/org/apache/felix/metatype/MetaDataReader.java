@@ -81,8 +81,8 @@ public class MetaDataReader
         {
             ins = url.openStream();
             this.parser.setProperty( "http://xmlpull.org/v1/doc/properties.html#location", url.toString() );
-            this.parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
-            this.parser.setFeature(KXmlParser.FEATURE_REPORT_NAMESPACE_ATTRIBUTES, false);
+            this.parser.setFeature( KXmlParser.FEATURE_PROCESS_NAMESPACES, true );
+            this.parser.setFeature( KXmlParser.FEATURE_REPORT_NAMESPACE_ATTRIBUTES, false );
             MetaData md = this.parse( ins );
             if ( md != null )
             {
@@ -106,26 +106,33 @@ public class MetaDataReader
         }
     }
 
+
     /**
      * Checks if this document has a meta type name space.
      *
      * @return <code>true</code> if this document has a meta type name space
      * @throws XmlPullParserException when there the meta type name space is not valid
      */
-    private boolean hasMetaTypeNameSpace() throws XmlPullParserException {
+    private boolean hasMetaTypeNameSpace() throws XmlPullParserException
+    {
 
-    	int attrs = this.parser.getAttributeCount();
-    	for (int i = 0 ; i < attrs; i++) {
+        int attrs = this.parser.getAttributeCount();
+        for ( int i = 0; i < attrs; i++ )
+        {
 
-    		if ( this.parser.getAttributeName(i).equals("xmlns:metatype") ) {
-    			if ( !"http://www.osgi.org/xmlns/metatype/v1.0.0".equals(this.parser.getAttributeValue(i)) ) {
-    		        throw new XmlPullParserException( "invalid namespace: " + this.parser.getAttributeValue(i), this.parser, null );
-    			}
-    			return true;
-    		}
-    	}
-    	return false;
+            if ( this.parser.getAttributeName( i ).equals( "xmlns:metatype" ) )
+            {
+                if ( !"http://www.osgi.org/xmlns/metatype/v1.0.0".equals( this.parser.getAttributeValue( i ) ) )
+                {
+                    throw new XmlPullParserException( "invalid namespace: " + this.parser.getAttributeValue( i ),
+                        this.parser, null );
+                }
+                return true;
+            }
+        }
+        return false;
     }
+
 
     /**
      * Parses the XML document in the given input stream.
@@ -155,15 +162,15 @@ public class MetaDataReader
         {
             if ( eventType == XmlPullParser.START_TAG )
             {
-            	boolean nameSpaceAware = hasMetaTypeNameSpace();
+                boolean nameSpaceAware = hasMetaTypeNameSpace();
 
                 if ( nameSpaceAware && "metatype:MetaData".equals( this.parser.getName() ) )
                 {
-                    mti = this.readMetaData(nameSpaceAware);
+                    mti = this.readMetaData( nameSpaceAware );
                 }
                 else if ( "MetaData".equals( this.parser.getName() ) )
                 {
-                    mti = this.readMetaData(nameSpaceAware);
+                    mti = this.readMetaData( nameSpaceAware );
                 }
                 else
                 {
@@ -177,7 +184,7 @@ public class MetaDataReader
     }
 
 
-    private MetaData readMetaData(boolean nameSpaceAware) throws IOException, XmlPullParserException
+    private MetaData readMetaData( boolean nameSpaceAware ) throws IOException, XmlPullParserException
     {
         MetaData mti = this.createMetaData();
         mti.setLocalePrefix( this.getOptionalAttribute( "localization" ) );
