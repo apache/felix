@@ -121,8 +121,25 @@ public class MetaTypeInformationImpl implements MetaTypeInformation {
      */
     public ObjectClassDefinition getObjectClassDefinition(String id,
             String locale) {
-        MetaTypeProvider mtp = (MetaTypeProvider) this.metaTypeProviders.get(id);
-        return (mtp != null) ? mtp.getObjectClassDefinition(id, locale) : null;
+
+        if ( id == null || id.length() == 0 )
+        {
+            throw new IllegalArgumentException( "ObjectClassDefinition ID must not be null or empty" );
+        }
+
+        MetaTypeProvider mtp = ( MetaTypeProvider ) this.metaTypeProviders.get( id );
+        if ( mtp == null )
+        {
+            throw new IllegalArgumentException( "No ObjectClassDefinition for id=" + id );
+        }
+
+        ObjectClassDefinition ocd = mtp.getObjectClassDefinition( id, locale );
+        if ( ocd == null )
+        {
+            throw new IllegalArgumentException( "No localized ObjectClassDefinition for id=" + id );
+        }
+
+        return ocd;
     }
 
     // ---------- internal support for metadata -------------------------------
