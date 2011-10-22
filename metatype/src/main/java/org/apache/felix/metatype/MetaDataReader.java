@@ -103,15 +103,15 @@ public class MetaDataReader
 
     /**
      * Checks if this document has a meta type name space.
-     * 
+     *
      * @return <code>true</code> if this document has a meta type name space
      * @throws XmlPullParserException when there the meta type name space is not valid
      */
     private boolean hasMetaTypeNameSpace() throws XmlPullParserException {
-    	
+
     	int attrs = this.parser.getAttributeCount();
     	for (int i = 0 ; i < attrs; i++) {
-    		
+
     		if ( this.parser.getAttributeName(i).equals("xmlns:metatype") ) {
     			if ( !"http://www.osgi.org/xmlns/metatype/v1.0.0".equals(this.parser.getAttributeValue(i)) ) {
     		        throw new XmlPullParserException( "invalid namespace: " + this.parser.getAttributeValue(i), this.parser, null );
@@ -121,12 +121,7 @@ public class MetaDataReader
     	}
     	return false;
     }
-    
-    private String getCurrentTagName() {
-    	
-    	System.out.println("ns : '" + this.parser.getNamespace() + "'");
-    	return this.parser.getName();
-    }
+
     /**
      * Parses the XML document in the given input stream.
      * <p>
@@ -156,7 +151,7 @@ public class MetaDataReader
             if ( eventType == XmlPullParser.START_TAG )
             {
             	boolean nameSpaceAware = hasMetaTypeNameSpace();
-            	
+
                 if ( nameSpaceAware && "metatype:MetaData".equals( this.parser.getName() ) )
                 {
                     mti = this.readMetaData(nameSpaceAware);
