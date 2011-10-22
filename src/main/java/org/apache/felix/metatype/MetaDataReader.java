@@ -53,6 +53,24 @@ import org.xmlpull.v1.XmlPullParserException;
 public class MetaDataReader
 {
 
+    /**
+     * The initial XML Namespace for Metatype 1.1 descriptors. This has
+     * been replaced by the v1.1.0 namespace in the Compendium
+     * Specification 4.2. We still have to support this namespace for
+     * backwards compatibility.
+     */
+    private static final String NAMESPACE_1_0 = "http://www.osgi.org/xmlns/metatype/v1.0.0";
+
+    /**
+     * The XML Namespace for Metatype 1.1 descriptors.
+     */
+    private static final String NAMESPACE_1_1 = "http://www.osgi.org/xmlns/metatype/v1.1.0";
+
+    /**
+     * The XML Namespace for Metatype 1.2 descriptors.
+     */
+    private static final String NAMESPACE_1_2 = "http://www.osgi.org/xmlns/metatype/v1.2.0";
+
     /** The XML parser used to read the XML documents */
     private KXmlParser parser = new KXmlParser();
 
@@ -81,8 +99,6 @@ public class MetaDataReader
         {
             ins = url.openStream();
             this.parser.setProperty( "http://xmlpull.org/v1/doc/properties.html#location", url.toString() );
-            this.parser.setFeature( KXmlParser.FEATURE_PROCESS_NAMESPACES, true );
-            this.parser.setFeature( KXmlParser.FEATURE_REPORT_NAMESPACE_ATTRIBUTES, false );
             MetaData md = this.parse( ins );
             if ( md != null )
             {
@@ -110,27 +126,16 @@ public class MetaDataReader
     /**
      * Checks if this document has a meta type name space.
      *
-     * @return <code>true</code> if this document has a meta type name space
      * @throws XmlPullParserException when there the meta type name space is not valid
      */
-    private boolean hasMetaTypeNameSpace() throws XmlPullParserException
+    private void checkMetatypeNamespace() throws XmlPullParserException
     {
-
-        int attrs = this.parser.getAttributeCount();
-        for ( int i = 0; i < attrs; i++ )
+        final String namespace = this.parser.getNamespace();
+        if ( namespace != null && namespace.length() > 0 && !NAMESPACE_1_0.equals( namespace )
+            && !NAMESPACE_1_1.equals( namespace ) && !NAMESPACE_1_2.equals( namespace ) )
         {
-
-            if ( this.parser.getAttributeName( i ).equals( "xmlns:metatype" ) )
-            {
-                if ( !"http://www.osgi.org/xmlns/metatype/v1.0.0".equals( this.parser.getAttributeValue( i ) ) )
-                {
-                    throw new XmlPullParserException( "invalid namespace: " + this.parser.getAttributeValue( i ),
-                        this.parser, null );
-                }
-                return true;
-            }
+            throw new XmlPullParserException( "Unsupported Namespace " + namespace );
         }
-        return false;
     }
 
 
@@ -152,6 +157,8 @@ public class MetaDataReader
      */
     public MetaData parse( InputStream ins ) throws IOException, XmlPullParserException
     {
+        this.parser.setFeature( KXmlParser.FEATURE_PROCESS_NAMESPACES, true );
+
         // set the parser input, use null encoding to force detection with <?xml?>
         this.parser.setInput( ins, null );
 
@@ -162,15 +169,10 @@ public class MetaDataReader
         {
             if ( eventType == XmlPullParser.START_TAG )
             {
-                boolean nameSpaceAware = hasMetaTypeNameSpace();
-
-                if ( nameSpaceAware && "metatype:MetaData".equals( this.parser.getName() ) )
+                if ( "MetaData".equals( this.parser.getName() ) )
                 {
-                    mti = this.readMetaData( nameSpaceAware );
-                }
-                else if ( "MetaData".equals( this.parser.getName() ) )
-                {
-                    mti = this.readMetaData( nameSpaceAware );
+                    checkMetatypeNamespace();
+                    mti = this.readMetaData( );
                 }
                 else
                 {
@@ -184,7 +186,7 @@ public class MetaDataReader
     }
 
 
-    private MetaData readMetaData( boolean nameSpaceAware ) throws IOException, XmlPullParserException
+    private MetaData readMetaData() throws IOException, XmlPullParserException
     {
         MetaData mti = this.createMetaData();
         mti.setLocalePrefix( this.getOptionalAttribute( "localization" ) );
@@ -209,10 +211,6 @@ public class MetaDataReader
             }
             else if ( eventType == XmlPullParser.END_TAG )
             {
-                if ( nameSpaceAware && "metatype:MetaData".equals( this.parser.getName() ) )
-                {
-                    break;
-                }
                 if ( "MetaData".equals( this.parser.getName() ) )
                 {
                     break;
