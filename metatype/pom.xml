@@ -57,19 +57,20 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.5</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-Category>osgi</Bundle-Category>
                         <Bundle-SymbolicName>
-                            ${artifactId}
+                            ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-DocURL>
                             http://felix.apache.org/site/apache-felix-metatype-service.html
                         </Bundle-DocURL>
                         <Export-Package>
                             org.apache.felix.metatype; version=1.2,
-                            org.osgi.service.metatype; version=1.1
+                            org.osgi.service.metatype; version=1.1;provide:=true
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.metatype.internal,
@@ -80,7 +81,7 @@
                             org.apache.felix.metatype.internal.Activator
                         </Bundle-Activator>
                         <Embed-Dependency>
-                            kxml2
+                            kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
