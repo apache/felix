@@ -56,6 +56,13 @@ public class AD
      */
     public static final String VALIDATE_LESS_THAN_MINIMUM = "%less than minimum";
 
+    /**
+     * The message returned from the {@link #validate(String)} method if the
+     * value is null or cannot be converted to an attribute value and a value
+     * is {@link #isRequired() required} (value is "%missing required value").
+     */
+    public static final String VALIDATE_MISSING = "%missing required value";
+
     private String id;
     private String name;
     private String description;
@@ -174,6 +181,11 @@ public class AD
         Comparable value = convertToType( valueString );
         if ( value == null )
         {
+            if ( isRequired() )
+            {
+                return VALIDATE_MISSING;
+            }
+
             return ""; // accept null value
         }
 
