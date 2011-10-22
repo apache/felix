@@ -74,13 +74,14 @@ public class Attribute
         {
             if ( split )
             {
-            	addContent( AD.splitList( content ) );
+                addContent( AD.splitList( content ) );
             }
             else
             {
-            	addContent( new String[] { content } );
+                addContent( new String[]
+                    { content } );
             }
         }
     }
-    
+
 }
