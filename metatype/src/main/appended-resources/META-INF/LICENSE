@@ -1,3 +1,15 @@
+
+
+APACHE FELIX DECLARATIVE SERVICES SUBCOMPONENTS: 
+
+The Apache Felix Declarative Services includes a number of subcomponents with
+separate copyright notices and license terms. Your use of the source
+code for the these subcomponents is subject to the terms and
+conditions of the following licenses. 
+
+
+For the KXml component:
+
 Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -16,4 +28,4 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE. 
+IN THE SOFTWARE.
