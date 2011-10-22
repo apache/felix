@@ -83,7 +83,12 @@ public class MetaDataReader
             this.parser.setProperty( "http://xmlpull.org/v1/doc/properties.html#location", url.toString() );
             this.parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
             this.parser.setFeature(KXmlParser.FEATURE_REPORT_NAMESPACE_ATTRIBUTES, false);
-            return this.parse( ins );
+            MetaData md = this.parse( ins );
+            if ( md != null )
+            {
+                md.setSource( url );
+            }
+            return md;
         }
         finally
         {

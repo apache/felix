@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,6 +38,7 @@ public class OCD
     private String description;
     private Map attributes;
     private Map icons;
+    private MetaData metadata;
 
 
     public String getID()
@@ -83,7 +84,7 @@ public class OCD
 
 
     /**
-     * 
+     *
      * @param size
      * @param icon The icon, either an URL or a string designating a resource
      *      which may be a localized string
@@ -119,5 +120,17 @@ public class OCD
 
             attributes.put( attribute.getID(), attribute );
         }
+    }
+
+
+    public MetaData getMetadata()
+    {
+        return metadata;
+    }
+
+
+    public void setMetadata( MetaData metadata )
+    {
+        this.metadata = metadata;
     }
 }

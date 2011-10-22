@@ -69,7 +69,7 @@
                             http://felix.apache.org/site/apache-felix-metatype-service.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.felix.metatype; version=${pom.version},
+                            org.apache.felix.metatype; version=1.2,
                             org.osgi.service.metatype; version=1.1
                         </Export-Package>
                         <Private-Package>

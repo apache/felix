@@ -145,23 +145,18 @@ public class LocalizedObjectClassDefinition extends LocalizedBase implements Obj
             iconPath = ( String ) icons.get( selectedSize );
         }
 
-        // fail if no icon could be found
+        // localize the path
+        iconPath = localize( iconPath );
+
+        // fail if no icon could be found (or localization returned null)
         if ( iconPath == null )
         {
             return null;
         }
 
-        // localize the path
-        iconPath = localize( iconPath );
-
-        // try to resolve the path in the bundle
-        URL url = bundle.getEntry( iconPath );
-        if ( url == null )
-        {
-            return null;
-        }
-
-        // open the stream on the URL - this may throw an IOException
+        // just create an URL based on the source of the metadata
+        // see FELIX2868
+        URL url = new URL(this.ocd.getMetadata().getSource(), iconPath);
         return url.openStream();
     }
 
