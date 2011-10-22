@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@
 package org.apache.felix.metatype;
 
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * The <code>MetaData</code> class represents the <code>MetaData</code>
  * element of the meta type descriptor.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MetaData
@@ -36,7 +37,7 @@ public class MetaData
     private String localePrefix;
     private Map objectClassDefinitions;
     private Map designates;
-
+    private URL source;
 
     public String getLocalePrefix()
     {
@@ -66,6 +67,7 @@ public class MetaData
             }
 
             objectClassDefinitions.put( objectClassDefinition.getID(), objectClassDefinition );
+            objectClassDefinition.setMetadata( this );
         }
     }
 
@@ -87,5 +89,17 @@ public class MetaData
 
             designates.put( designate.getPid(), designate );
         }
+    }
+
+
+    public URL getSource()
+    {
+        return source;
+    }
+
+
+    public void setSource( URL source )
+    {
+        this.source = source;
     }
 }
