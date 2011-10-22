@@ -117,7 +117,7 @@ public class LocalizedObjectClassDefinition extends LocalizedBase implements Obj
      * @throws IOException
      * @see org.osgi.service.metatype.ObjectClassDefinition#getIcon(int)
      */
-    public InputStream getIcon( int size ) throws IOException
+    public InputStream getIcon( int desiredSize ) throws IOException
     {
         // nothing if no icons are defined
         Map icons = ocd.getIcons();
@@ -127,22 +127,22 @@ public class LocalizedObjectClassDefinition extends LocalizedBase implements Obj
         }
 
         // get exact size
-        String iconPath = ( String ) icons.get( new Integer( size ) );
+        String iconPath = ( String ) icons.get( new Integer( desiredSize ) );
+
         if ( iconPath == null )
         {
             // approximate size: largest icon smaller than requested
-            Integer selected = new Integer( Integer.MIN_VALUE );
+            Integer selectedSize = new Integer( Integer.MIN_VALUE );
             for ( Iterator ei = icons.keySet().iterator(); ei.hasNext(); )
             {
-                Map.Entry entry = ( Map.Entry ) ei.next();
-                Integer keySize = ( Integer ) entry.getKey();
-                if ( keySize.intValue() <= size && selected.compareTo( keySize ) < 0 )
+                Integer iconSize = ( Integer ) ei.next();
+                if ( iconSize.intValue() <= desiredSize && selectedSize.compareTo( iconSize ) < 0 )
                 {
-                    selected = keySize;
+                    selectedSize = iconSize;
                 }
             }
             // get the raw path, fail if no path can be found
-            iconPath = ( String ) icons.get( selected );
+            iconPath = ( String ) icons.get( selectedSize );
         }
 
         // fail if no icon could be found
