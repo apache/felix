@@ -192,7 +192,7 @@ public class ObrUpdate
 
             try
             {
-                m_resourceBundle = ( ResourceImpl ) new DataModelHelperImpl().createResource( bundleFile.toURL() );
+                m_resourceBundle = ( ResourceImpl ) new DataModelHelperImpl().createResource( bundleFile.toURI().toURL() );
                 if ( m_resourceBundle == null )
                 {
                     return;
