@@ -108,6 +108,7 @@
         <module>log</module>
         <module>eventadmin</module>
         <module>http</module>
+        <module>httplite</module>
         <module>upnp</module>
         <module>scr</module>
         <module>configadmin</module>
