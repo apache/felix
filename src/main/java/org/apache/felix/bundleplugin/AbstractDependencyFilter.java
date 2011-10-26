@@ -113,10 +113,10 @@ public abstract class AbstractDependencyFilter
             // CLAUSE: REGEXP --> { ATTRIBUTE MAP }
             Map.Entry clause = ( Map.Entry ) clauseIterator.next();
 
-            String primaryKey = ( String ) clause.getKey();
+            String primaryKey = ( ( String ) clause.getKey() ).replaceFirst( "~+$", "" );
             StringBuilder tag = new StringBuilder( primaryKey );
 
-            if ( !primaryKey.matches( "\\*~*" ) )
+            if ( !"*".equals( primaryKey ) )
             {
                 filter = new DependencyFilter( primaryKey )
                 {

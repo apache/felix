@@ -215,7 +215,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
-    public void testPositiveEmbedDependency() throws Exception
+    public void testEmbedDependencyPositiveClauses() throws Exception
     {
         ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
 
@@ -245,7 +245,36 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
-    public void testNegativeEmbedDependency() throws Exception
+    public void testEmbedDependencyDuplicateKeys() throws Exception
+    {
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+
+        artifacts.addAll( artifactFactory.getClassifiedArtifacts() );
+        artifacts.addAll( artifactFactory.getScopedArtifacts() );
+        artifacts.addAll( artifactFactory.getTypedArtifacts() );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+
+        Map instructions = new HashMap();
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "c;type=jar,c;type=sources" );
+        Properties props = new Properties();
+
+        Builder builder = plugin.buildOSGiBundle( project, instructions, props, plugin.getClasspath( project ) );
+        Manifest manifest = builder.getJar().getManifest();
+
+        String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( ".,c-1.0-three.jar," + "c-1.0.sources", bcp );
+
+        String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( "c-1.0-three.jar;g=\"g\";a=\"c\";v=\"1.0\";c=\"three\","
+            + "c-1.0.sources;g=\"g\";a=\"c\";v=\"1.0\"", eas );
+    }
+
+
+    public void testEmbedDependencyNegativeClauses() throws Exception
     {
     }
 }
