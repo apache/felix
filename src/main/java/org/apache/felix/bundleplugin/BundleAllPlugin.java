@@ -271,13 +271,13 @@ public class BundleAllPlugin extends ManifestPlugin
                     childProject.setDependencyArtifacts( childProject.createArtifacts( m_factory, null, null ) );
                 }
             }
-            catch ( ProjectBuildingException e )
-            {
-                throw new MojoExecutionException( "Unable to build project object for artifact " + artifact, e );
-            }
             catch ( InvalidDependencyVersionException e )
             {
                 throw new MojoExecutionException( "Invalid dependency version for artifact " + artifact );
+            }
+            catch ( ProjectBuildingException e )
+            {
+                throw new MojoExecutionException( "Unable to build project object for artifact " + artifact, e );
             }
 
             childProject.setArtifact( artifact );
