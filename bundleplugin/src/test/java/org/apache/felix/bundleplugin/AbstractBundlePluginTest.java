@@ -23,6 +23,7 @@ package org.apache.felix.bundleplugin;
 import java.io.File;
 
 import org.apache.maven.plugin.testing.stubs.ArtifactStub;
+import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.codehaus.plexus.PlexusTestCase;
 
 
@@ -34,6 +35,16 @@ import org.codehaus.plexus.PlexusTestCase;
  */
 public abstract class AbstractBundlePluginTest extends PlexusTestCase
 {
+
+    protected MavenProjectStub getMavenProjectStub()
+    {
+        MavenProjectStub project = new MavenProjectStub();
+        project.setGroupId( "group" );
+        project.setArtifactId( "project" );
+        project.setVersion( "1.0" );
+        return project;
+    }
+
 
     protected ArtifactStub getArtifactStub()
     {
