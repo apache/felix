@@ -41,7 +41,7 @@ public abstract class AbstractBundlePluginTest extends PlexusTestCase
         MavenProjectStub project = new MavenProjectStub();
         project.setGroupId( "group" );
         project.setArtifactId( "project" );
-        project.setVersion( "1.0" );
+        project.setVersion( "1.2.3.4" );
         return project;
     }
 
