@@ -215,7 +215,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
-    public void testEmbedDependency() throws Exception
+    public void testPositiveEmbedDependency() throws Exception
     {
         ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
 
@@ -229,18 +229,23 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         project.setDependencyArtifacts( artifacts );
 
         Map instructions = new HashMap();
-        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "!a|c|e;classifier=!four;scope=compile|runtime" );
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "*;classifier=;type=jar;scope=compile,"
+            + "*;classifier=;type=jar;scope=runtime" );
         Properties props = new Properties();
 
         Builder builder = plugin.buildOSGiBundle( project, instructions, props, plugin.getClasspath( project ) );
         Manifest manifest = builder.getJar().getManifest();
 
         String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
-        assertEquals( bcp, ".,compile-1.0.jar,runtime-1.0.jar,b-1.0.jar,b-1.0-two.jar,d-1.0.zip" );
+        assertEquals( ".,compile-1.0.jar,b-1.0.jar,runtime-1.0.jar", bcp );
 
         String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
-        assertEquals( eas, "compile-1.0.jar;g=\"g\";a=\"compile\";v=\"1.0\","
-            + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\"," + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\","
-            + "b-1.0-two.jar;g=\"g\";a=\"b\";v=\"1.0\";c=\"two\"," + "d-1.0.zip;g=\"g\";a=\"d\";v=\"1.0\"" );
+        assertEquals( "compile-1.0.jar;g=\"g\";a=\"compile\";v=\"1.0\"," + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\","
+            + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\"", eas );
+    }
+
+
+    public void testNegativeEmbedDependency() throws Exception
+    {
     }
 }

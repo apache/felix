@@ -112,12 +112,13 @@ public abstract class AbstractDependencyFilter
 
             // CLAUSE: REGEXP --> { ATTRIBUTE MAP }
             Map.Entry clause = ( Map.Entry ) clauseIterator.next();
-            StringBuilder tag = new StringBuilder();
-            tag.append( clause.getKey() );
 
-            if ( !( ( String ) clause.getKey() ).matches( "\\*~*" ) )
+            String primaryKey = ( String ) clause.getKey();
+            StringBuilder tag = new StringBuilder( primaryKey );
+
+            if ( !primaryKey.matches( "\\*~*" ) )
             {
-                filter = new DependencyFilter( ( String ) clause.getKey() )
+                filter = new DependencyFilter( primaryKey )
                 {
                     boolean matches( Artifact dependency )
                     {
