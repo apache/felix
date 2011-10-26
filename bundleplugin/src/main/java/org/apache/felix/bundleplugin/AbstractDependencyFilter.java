@@ -20,8 +20,8 @@ package org.apache.felix.bundleplugin;
 
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -39,7 +39,7 @@ import aQute.libg.header.OSGiHeader;
  */
 public abstract class AbstractDependencyFilter
 {
-    private static final Pattern MISSING_KEY_PATTERN = Pattern.compile( "^(!)?([a-zA-Z]+=)" );
+    private static final Pattern MISSING_KEY_PATTERN = Pattern.compile( "(^|,)\\p{Blank}*(!)?\\p{Blank}*([a-zA-Z]+=)" );
 
     /**
      * Dependency artifacts.
@@ -106,20 +106,27 @@ public abstract class AbstractDependencyFilter
 
     protected final void processInstructions( String header ) throws MojoExecutionException
     {
-        Map instructions = OSGiHeader.parseHeader( MISSING_KEY_PATTERN.matcher( header ).replaceFirst( "$1*;$2" ) );
+        Map instructions = OSGiHeader.parseHeader( MISSING_KEY_PATTERN.matcher( header ).replaceAll( "$1$2*;$3" ) );
+
+        Collection availableDependencies = new LinkedHashSet( m_dependencyArtifacts );
 
         DependencyFilter filter;
         for ( Iterator clauseIterator = instructions.entrySet().iterator(); clauseIterator.hasNext(); )
         {
             String inline = "false";
 
-            // must use a fresh *modifiable* collection for each unique clause
-            Collection filteredDependencies = new HashSet( m_dependencyArtifacts );
+            // always start with a fresh *modifiable* collection for each unique clause
+            Collection filteredDependencies = new LinkedHashSet( availableDependencies );
 
             // CLAUSE: REGEXP --> { ATTRIBUTE MAP }
             Map.Entry clause = ( Map.Entry ) clauseIterator.next();
-
             String primaryKey = ( ( String ) clause.getKey() ).replaceFirst( "~+$", "" );
+            boolean isNegative = primaryKey.startsWith( "!" );
+            if ( isNegative )
+            {
+                primaryKey = primaryKey.substring( 1 );
+            }
+
             if ( !"*".equals( primaryKey ) )
             {
                 filter = new DependencyFilter( primaryKey )
@@ -229,7 +236,21 @@ public abstract class AbstractDependencyFilter
                 filter.filter( filteredDependencies );
             }
 
-            processDependencies( filteredDependencies, inline );
+            if ( isNegative )
+            {
+                // negative clauses reduce the set of available artifacts
+                availableDependencies.removeAll( filteredDependencies );
+                if ( !clauseIterator.hasNext() )
+                {
+                    // assume there's an implicit * missing at the end
+                    processDependencies( availableDependencies, inline );
+                }
+            }
+            else
+            {
+                // positive clause; doesn't alter the available artifacts
+                processDependencies( filteredDependencies, inline );
+            }
         }
     }
 
