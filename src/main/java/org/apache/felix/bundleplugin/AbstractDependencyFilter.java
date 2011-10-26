@@ -23,11 +23,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import aQute.lib.osgi.Instruction;
+import aQute.libg.header.OSGiHeader;
 
 
 /**
@@ -37,6 +39,8 @@ import aQute.lib.osgi.Instruction;
  */
 public abstract class AbstractDependencyFilter
 {
+    private final Pattern MISSING_KEY_PATTERN = Pattern.compile( "^[a-zA-Z]+=" );
+
     /**
      * Dependency artifacts.
      */
@@ -100,8 +104,15 @@ public abstract class AbstractDependencyFilter
     }
 
 
-    protected final void processInstructions( Map instructions ) throws MojoExecutionException
+    protected final void processInstructions( String header ) throws MojoExecutionException
     {
+        if ( MISSING_KEY_PATTERN.matcher( header ).lookingAt() )
+        {
+            header = "*;" + header;
+        }
+
+        Map instructions = OSGiHeader.parseHeader( header );
+
         DependencyFilter filter;
         for ( Iterator clauseIterator = instructions.entrySet().iterator(); clauseIterator.hasNext(); )
         {
@@ -114,8 +125,6 @@ public abstract class AbstractDependencyFilter
             Map.Entry clause = ( Map.Entry ) clauseIterator.next();
 
             String primaryKey = ( ( String ) clause.getKey() ).replaceFirst( "~+$", "" );
-            StringBuilder tag = new StringBuilder( primaryKey );
-
             if ( !"*".equals( primaryKey ) )
             {
                 filter = new DependencyFilter( primaryKey )
@@ -133,8 +142,6 @@ public abstract class AbstractDependencyFilter
             {
                 // ATTRIBUTE: KEY --> REGEXP
                 Map.Entry attr = ( Map.Entry ) attrIterator.next();
-                tag.append( ';' ).append( attr );
-
                 if ( "groupId".equals( attr.getKey() ) )
                 {
                     filter = new DependencyFilter( ( String ) attr.getValue() )
@@ -227,10 +234,10 @@ public abstract class AbstractDependencyFilter
                 filter.filter( filteredDependencies );
             }
 
-            processDependencies( tag.toString(), inline, filteredDependencies );
+            processDependencies( filteredDependencies, inline );
         }
     }
 
 
-    protected abstract void processDependencies( String clause, String inline, Collection dependencies );
+    protected abstract void processDependencies( Collection dependencies, String inline );
 }

@@ -23,7 +23,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -31,7 +30,6 @@ import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.lib.osgi.Analyzer;
-import aQute.libg.header.OSGiHeader;
 
 
 /**
@@ -98,8 +96,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             m_embedStripGroup = analyzer.getProperty( EMBED_STRIP_GROUP, "true" );
             m_embedStripVersion = analyzer.getProperty( EMBED_STRIP_VERSION );
 
-            Map embedInstructions = OSGiHeader.parseHeader( embedDependencyHeader );
-            processInstructions( embedInstructions );
+            processInstructions( embedDependencyHeader );
 
             for ( Iterator i = m_inlinedPaths.iterator(); i.hasNext(); )
             {
@@ -127,13 +124,8 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
 
 
     @Override
-    protected void processDependencies( String tag, String inline, Collection dependencies )
+    protected void processDependencies( Collection dependencies, String inline )
     {
-        if ( dependencies.isEmpty() )
-        {
-            m_log.warn( EMBED_DEPENDENCY + ": clause \"" + tag + "\" did not match any dependencies" );
-        }
-
         if ( null == inline || "false".equalsIgnoreCase( inline ) )
         {
             m_embeddedArtifacts.addAll( dependencies );
