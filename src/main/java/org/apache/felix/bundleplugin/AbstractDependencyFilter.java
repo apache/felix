@@ -39,7 +39,7 @@ import aQute.libg.header.OSGiHeader;
  */
 public abstract class AbstractDependencyFilter
 {
-    private final Pattern MISSING_KEY_PATTERN = Pattern.compile( "^[a-zA-Z]+=" );
+    private static final Pattern MISSING_KEY_PATTERN = Pattern.compile( "^(!)?([a-zA-Z]+=)" );
 
     /**
      * Dependency artifacts.
@@ -106,12 +106,7 @@ public abstract class AbstractDependencyFilter
 
     protected final void processInstructions( String header ) throws MojoExecutionException
     {
-        if ( MISSING_KEY_PATTERN.matcher( header ).lookingAt() )
-        {
-            header = "*;" + header;
-        }
-
-        Map instructions = OSGiHeader.parseHeader( header );
+        Map instructions = OSGiHeader.parseHeader( MISSING_KEY_PATTERN.matcher( header ).replaceFirst( "$1*;$2" ) );
 
         DependencyFilter filter;
         for ( Iterator clauseIterator = instructions.entrySet().iterator(); clauseIterator.hasNext(); )

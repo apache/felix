@@ -274,7 +274,12 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
-    public void testEmbedDependencyMissingKey() throws Exception
+    public void testEmbedDependencyNegativeClauses() throws Exception
+    {
+    }
+
+
+    public void testEmbedDependencyMissingPositiveKey() throws Exception
     {
         ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
 
@@ -303,7 +308,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
-    public void testEmbedDependencyNegativeClauses() throws Exception
+    public void testEmbedDependencyMissingNegativeKey() throws Exception
     {
     }
 }
