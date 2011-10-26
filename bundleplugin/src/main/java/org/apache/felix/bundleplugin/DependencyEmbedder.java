@@ -92,7 +92,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
         m_embeddedArtifacts.clear();
 
         String embedDependencyHeader = analyzer.getProperty( EMBED_DEPENDENCY );
-        if ( null != embedDependencyHeader && embedDependencyHeader.length() > 0 )
+        if ( StringUtils.isNotEmpty( embedDependencyHeader ) )
         {
             m_embedDirectory = analyzer.getProperty( EMBED_DIRECTORY );
             m_embedStripGroup = analyzer.getProperty( EMBED_STRIP_GROUP, "true" );
@@ -194,13 +194,13 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             if ( false == Boolean.valueOf( m_embedStripVersion ).booleanValue() )
             {
                 targetFileName.append( '-' ).append( dependency.getVersion() );
-                if ( dependency.getClassifier() != null )
+                if ( StringUtils.isNotEmpty( dependency.getClassifier() ) )
                 {
                     targetFileName.append( '-' ).append( dependency.getClassifier() );
                 }
             }
             String extension = dependency.getArtifactHandler().getExtension();
-            if ( extension != null )
+            if ( StringUtils.isNotEmpty( extension ) )
             {
                 targetFileName.append( '.' ).append( extension );
             }
@@ -240,7 +240,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
             embeddedArtifacts.append( "g=\"" ).append( dependency.getGroupId() ).append( '"' );
             embeddedArtifacts.append( ";a=\"" ).append( dependency.getArtifactId() ).append( '"' );
             embeddedArtifacts.append( ";v=\"" ).append( dependency.getBaseVersion() ).append( '"' );
-            if ( dependency.getClassifier() != null )
+            if ( StringUtils.isNotEmpty( dependency.getClassifier() ) )
             {
                 embeddedArtifacts.append( ";c=\"" ).append( dependency.getClassifier() ).append( '"' );
             }
@@ -278,7 +278,7 @@ public final class DependencyEmbedder extends AbstractDependencyFilter
          * similar algorithm to {maven-resources} but default behaviour here is to append rather than override
          */
         final String instruction = analyzer.getProperty( directiveName );
-        if ( instruction != null && instruction.length() > 0 )
+        if ( StringUtils.isNotEmpty( instruction ) )
         {
             if ( instruction.indexOf( MAVEN_DEPENDENCIES ) >= 0 )
             {
