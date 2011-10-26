@@ -245,6 +245,35 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
+    public void testEmbedDependencyNegativeClauses() throws Exception
+    {
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+
+        artifacts.addAll( artifactFactory.getClassifiedArtifacts() );
+        artifacts.addAll( artifactFactory.getScopedArtifacts() );
+        artifacts.addAll( artifactFactory.getTypedArtifacts() );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+
+        Map instructions = new HashMap();
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "!type=jar, !artifactId=c" );
+        Properties props = new Properties();
+
+        Builder builder = plugin.buildOSGiBundle( project, instructions, props, plugin.getClasspath( project ) );
+        Manifest manifest = builder.getJar().getManifest();
+
+        String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( ".," + "e-1.0.rar," + "a-1.0.war," + "d-1.0.zip", bcp );
+
+        String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( "e-1.0.rar;g=\"g\";a=\"e\";v=\"1.0\"," + "a-1.0.war;g=\"g\";a=\"a\";v=\"1.0\","
+            + "d-1.0.zip;g=\"g\";a=\"d\";v=\"1.0\"", eas );
+    }
+
+
     public void testEmbedDependencyDuplicateKeys() throws Exception
     {
         ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
@@ -274,11 +303,6 @@ public class BundlePluginTest extends AbstractBundlePluginTest
     }
 
 
-    public void testEmbedDependencyNegativeClauses() throws Exception
-    {
-    }
-
-
     public void testEmbedDependencyMissingPositiveKey() throws Exception
     {
         ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
@@ -300,15 +324,51 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         Manifest manifest = builder.getJar().getManifest();
 
         String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
-        assertEquals( ".," + "a-1.0.war," + "a-1.0-one.jar," + "b-1.0.jar," + "b-1.0-two.jar", bcp );
+        assertEquals( ".," + "a-1.0-one.jar," + "b-1.0-two.jar," + "a-1.0.war," + "b-1.0.jar", bcp );
 
         String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
-        assertEquals( "a-1.0.war;g=\"g\";a=\"a\";v=\"1.0\"," + "a-1.0-one.jar;g=\"g\";a=\"a\";v=\"1.0\";c=\"one\","
-            + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\"," + "b-1.0-two.jar;g=\"g\";a=\"b\";v=\"1.0\";c=\"two\"", eas );
+        assertEquals( "a-1.0-one.jar;g=\"g\";a=\"a\";v=\"1.0\";c=\"one\","
+            + "b-1.0-two.jar;g=\"g\";a=\"b\";v=\"1.0\";c=\"two\"," + "a-1.0.war;g=\"g\";a=\"a\";v=\"1.0\","
+            + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\"", eas );
     }
 
 
     public void testEmbedDependencyMissingNegativeKey() throws Exception
     {
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+
+        artifacts.addAll( artifactFactory.getClassifiedArtifacts() );
+        artifacts.addAll( artifactFactory.getScopedArtifacts() );
+        artifacts.addAll( artifactFactory.getTypedArtifacts() );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+        Properties props = new Properties();
+
+        Map instructions1 = new HashMap();
+        instructions1.put( DependencyEmbedder.EMBED_DEPENDENCY, "!scope=compile" );
+        Builder builder1 = plugin.buildOSGiBundle( project, instructions1, props, plugin.getClasspath( project ) );
+        Manifest manifest1 = builder1.getJar().getManifest();
+
+        Map instructions2 = new HashMap();
+        instructions2.put( DependencyEmbedder.EMBED_DEPENDENCY, "scope=!compile" );
+        Builder builder2 = plugin.buildOSGiBundle( project, instructions2, props, plugin.getClasspath( project ) );
+        Manifest manifest2 = builder2.getJar().getManifest();
+
+        String bcp1 = manifest1.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( ".," + "test-1.0.jar," + "provided-1.0.jar," + "runtime-1.0.jar," + "system-1.0.jar", bcp1 );
+
+        String eas1 = manifest1.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( "test-1.0.jar;g=\"g\";a=\"test\";v=\"1.0\","
+            + "provided-1.0.jar;g=\"g\";a=\"provided\";v=\"1.0\"," + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\","
+            + "system-1.0.jar;g=\"g\";a=\"system\";v=\"1.0\"", eas1 );
+
+        String bcp2 = manifest2.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( bcp1, bcp2 );
+
+        String eas2 = manifest2.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( eas1, eas2 );
     }
 }
