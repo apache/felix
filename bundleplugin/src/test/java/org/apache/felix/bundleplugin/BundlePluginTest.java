@@ -237,7 +237,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         Manifest manifest = builder.getJar().getManifest();
 
         String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
-        assertEquals( ".,compile-1.0.jar,b-1.0.jar,runtime-1.0.jar", bcp );
+        assertEquals( ".," + "compile-1.0.jar,b-1.0.jar,runtime-1.0.jar", bcp );
 
         String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
         assertEquals( "compile-1.0.jar;g=\"g\";a=\"compile\";v=\"1.0\"," + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\","
@@ -266,11 +266,40 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         Manifest manifest = builder.getJar().getManifest();
 
         String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
-        assertEquals( ".,c-1.0-three.jar," + "c-1.0.sources", bcp );
+        assertEquals( ".," + "c-1.0-three.jar," + "c-1.0.sources", bcp );
 
         String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
         assertEquals( "c-1.0-three.jar;g=\"g\";a=\"c\";v=\"1.0\";c=\"three\","
             + "c-1.0.sources;g=\"g\";a=\"c\";v=\"1.0\"", eas );
+    }
+
+
+    public void testEmbedDependencyMissingKey() throws Exception
+    {
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+
+        artifacts.addAll( artifactFactory.getClassifiedArtifacts() );
+        artifacts.addAll( artifactFactory.getScopedArtifacts() );
+        artifacts.addAll( artifactFactory.getTypedArtifacts() );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+
+        Map instructions = new HashMap();
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "artifactId=a|b" );
+        Properties props = new Properties();
+
+        Builder builder = plugin.buildOSGiBundle( project, instructions, props, plugin.getClasspath( project ) );
+        Manifest manifest = builder.getJar().getManifest();
+
+        String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( ".," + "a-1.0.war," + "a-1.0-one.jar," + "b-1.0.jar," + "b-1.0-two.jar", bcp );
+
+        String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( "a-1.0.war;g=\"g\";a=\"a\";v=\"1.0\"," + "a-1.0-one.jar;g=\"g\";a=\"a\";v=\"1.0\";c=\"one\","
+            + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\"," + "b-1.0-two.jar;g=\"g\";a=\"b\";v=\"1.0\";c=\"two\"", eas );
     }
 
 

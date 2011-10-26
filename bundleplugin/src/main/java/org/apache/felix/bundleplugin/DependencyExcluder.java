@@ -24,8 +24,6 @@ import java.util.HashSet;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
-import aQute.libg.header.OSGiHeader;
-
 
 /**
  * Exclude selected dependencies from the classpath passed to BND.
@@ -54,13 +52,13 @@ public final class DependencyExcluder extends AbstractDependencyFilter
 
         if ( null != excludeDependencies && excludeDependencies.length() > 0 )
         {
-            processInstructions( OSGiHeader.parseHeader( excludeDependencies ) );
+            processInstructions( excludeDependencies );
         }
     }
 
 
     @Override
-    protected void processDependencies( String tag, String inline, Collection dependencies )
+    protected void processDependencies( Collection dependencies, String inline )
     {
         m_excludedArtifacts.addAll( dependencies );
     }
