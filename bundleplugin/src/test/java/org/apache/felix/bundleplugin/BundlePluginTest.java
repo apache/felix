@@ -21,14 +21,20 @@ package org.apache.felix.bundleplugin;
  */
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.jar.Manifest;
 
 import org.apache.maven.model.Organization;
+import org.apache.maven.plugin.testing.ArtifactStubFactory;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
+import org.osgi.framework.Constants;
 
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Builder;
@@ -52,7 +58,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         plugin = new BundlePlugin();
         plugin.setMaven2OsgiConverter( new DefaultMaven2OsgiConverter() );
         plugin.setBuildDirectory( "." );
-        plugin.setOutputDirectory( new File( "." ) );
+        plugin.setOutputDirectory( new File( getBasedir(), "target" + File.separatorChar + "scratch" ) );
     }
 
 
@@ -107,10 +113,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
 
         assertTrue( osgiBundleFile.exists() );
 
-        MavenProject project = new MavenProjectStub();
-        project.setGroupId( "group" );
-        project.setArtifactId( "artifact" );
-        project.setVersion( "1.1.0.0" );
+        MavenProject project = getMavenProjectStub();
 
         //        PackageVersionAnalyzer analyzer = new PackageVersionAnalyzer();
         Builder analyzer = new Builder();
@@ -182,8 +185,8 @@ public class BundlePluginTest extends AbstractBundlePluginTest
             }
         };
         project.setGroupId( "group" );
-        project.setArtifactId( "artifact" );
-        project.setVersion( "1.1.0.0" );
+        project.setArtifactId( "project" );
+        project.setVersion( "1.2.3.4" );
 
         Properties properties = plugin.getDefaultProperties( project );
         assertEquals( organization.getName(), properties.getProperty( "project.organization.name" ) );
@@ -202,12 +205,42 @@ public class BundlePluginTest extends AbstractBundlePluginTest
 
     public void testPackageInfoDetection() throws Exception
     {
-        MavenProject project = new MavenProjectStub();
+        MavenProject project = getMavenProjectStub();
         project.addCompileSourceRoot( getBasedir() + "/src/test/java" );
 
         String resourcePaths = plugin.getMavenResourcePaths( project );
 
         assertEquals( "org/apache/felix/bundleplugin/packageinfo="
             + "src/test/java/org/apache/felix/bundleplugin/packageinfo", resourcePaths );
+    }
+
+
+    public void testEmbedDependency() throws Exception
+    {
+        ArtifactStubFactory artifactFactory = new ArtifactStubFactory( plugin.getOutputDirectory(), true );
+
+        Set artifacts = new LinkedHashSet();
+
+        artifacts.addAll( artifactFactory.getClassifiedArtifacts() );
+        artifacts.addAll( artifactFactory.getScopedArtifacts() );
+        artifacts.addAll( artifactFactory.getTypedArtifacts() );
+
+        MavenProject project = getMavenProjectStub();
+        project.setDependencyArtifacts( artifacts );
+
+        Map instructions = new HashMap();
+        instructions.put( DependencyEmbedder.EMBED_DEPENDENCY, "!a|c|e;classifier=!four;scope=compile|runtime" );
+        Properties props = new Properties();
+
+        Builder builder = plugin.buildOSGiBundle( project, instructions, props, plugin.getClasspath( project ) );
+        Manifest manifest = builder.getJar().getManifest();
+
+        String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
+        assertEquals( bcp, ".,compile-1.0.jar,runtime-1.0.jar,b-1.0.jar,b-1.0-two.jar,d-1.0.zip" );
+
+        String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
+        assertEquals( eas, "compile-1.0.jar;g=\"g\";a=\"compile\";v=\"1.0\","
+            + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\"," + "b-1.0.jar;g=\"g\";a=\"b\";v=\"1.0\","
+            + "b-1.0-two.jar;g=\"g\";a=\"b\";v=\"1.0\";c=\"two\"," + "d-1.0.zip;g=\"g\";a=\"d\";v=\"1.0\"" );
     }
 }
