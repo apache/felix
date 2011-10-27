@@ -102,6 +102,6 @@ public class ResourceHandler implements ServiceRegistrationHandler
      */
     private String getResourceName(final String path)
     {
-        return m_name + path.substring(m_alias.length());
+        return m_name + "/" + path.substring(m_alias.length());
     }
 }
