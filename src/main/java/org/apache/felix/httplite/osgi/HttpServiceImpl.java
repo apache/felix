@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -73,12 +72,12 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
      *            instance of Logger
      * @throws IOException
      */
-    public HttpServiceImpl(final Bundle bundle, final Server server, final Logger logger) throws IOException
+    public HttpServiceImpl(final Bundle bundle, final Server server, final Logger logger, Map servletMap) throws IOException
     {
         this.m_bundle = bundle;
         this.m_logger = logger;
         this.m_server = server;
-        this.m_servletMap = new HashMap();
+        this.m_servletMap = servletMap;
     }
 
     /*
