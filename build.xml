@@ -117,19 +117,19 @@
 			<attribute name="Bundle-Version" value="${project.version}.${DSTAMP}${TSTAMP}" />
 		</manifest>
 
-		<jar destfile="${dist.dir}/${ant.project.name}-debug-all.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
+		<jar destfile="${dist.dir}/${ant.project.name}-debug-all-${project.version}.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
 			<fileset dir="${build.dir}-debug" includes="**/*.class,**/*.properties,**/*.dtd,**/*.xsd" />
 			<fileset dir="${src.dir}/share" includes="javax/servlet/**/*.properties,javax/servlet/**/*.dtd,javax/servlet/**/*.xsd" />
 			<fileset dir="." includes="LICENSE-2.0.txt" />
 		</jar>
 
-		<jar destfile="${dist.dir}/${ant.project.name}-all.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
+		<jar destfile="${dist.dir}/${ant.project.name}-all-${project.version}.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
 			<fileset dir="${build.dir}" includes="**/*.class,**/*.properties,**/*.dtd,**/*.xsd" />
 			<fileset dir="${src.dir}/share" includes="javax/servlet/**/*.properties,javax/servlet/**/*.dtd,javax/servlet/**/*.xsd" />
 			<fileset dir="." includes="LICENSE-2.0.txt" />
 		</jar>
 
-		<jar destfile="${dist.dir}/${ant.project.name}-min.jar" manifest="${build.dir}/META-INF-MIN/MANIFEST.MF">
+		<jar destfile="${dist.dir}/${ant.project.name}-min-${project.version}.jar" manifest="${build.dir}/META-INF-MIN/MANIFEST.MF">
 			<fileset dir="${build.dir}" includes="org/apache/felix/httplite/**/*.class" />
 			<fileset dir="." includes="LICENSE-2.0.txt" />
 		</jar>
