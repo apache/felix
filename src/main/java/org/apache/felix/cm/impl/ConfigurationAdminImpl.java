@@ -25,6 +25,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationPermission;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -95,6 +96,10 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
 
         if ( config.getBundleLocation() == null )
         {
+            configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
+                new Object[]
+                    { config.getPid(), Boolean.valueOf( config.isNew() ), getBundle().getLocation() } );
+
             config.setStaticBundleLocation( this.getBundle().getLocation() );
         }
         else if ( !config.getBundleLocation().equals( this.getBundle().getLocation() ) )
@@ -178,11 +183,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * the given permission for the given bundle location and throws a
      * <code>SecurityException</code> if this is not the case.
      *
-     * @param name The bundle location to check for permission. If
-     *   <code>null</code> assumes <code>*</code>.
-     * @param permission The actual permission to check. This must be one
-     *    of the constants defined in the
-     *    <code>ConfigurationPermission</code> class.
+     * @param name The bundle location to check for permission. If this
+     *      is <code>null</code> or exactly matches the using bundle's
+     *      location, permission is always granted.
      *
      * @throws SecurityException if the access control context does not
      *      have the appropriate permission
@@ -193,11 +196,34 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         final SecurityManager sm = System.getSecurityManager();
         if ( sm != null )
         {
-            if (name == null) {
-                name = "*";
-            }
+            // CM 1.4 / 104.11.1 Implicit permission
+            if ( name != null && !name.equals( getBundle().getLocation() ) )
+            {
+                sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
 
-            sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
+                if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+                {
+                    configurationManager.log( LogService.LOG_DEBUG,
+                        "Explicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
+                        new Object[]
+                            { name, getBundle().getLocation() } );
+                }
+            }
+            else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                configurationManager.log( LogService.LOG_DEBUG,
+                    "Implicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
+                    new Object[]
+                        { name, getBundle().getLocation() } );
+
+            }
+        }
+        else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            configurationManager.log( LogService.LOG_DEBUG,
+                "No SecurityManager installed; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
+                new Object[]
+                    { name, getBundle().getLocation() } );
         }
     }
 

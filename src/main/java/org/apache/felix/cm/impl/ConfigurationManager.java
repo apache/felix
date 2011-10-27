@@ -434,6 +434,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         ConfigurationImpl config = getCachedConfiguration( pid );
         if ( config != null )
         {
+            log( LogService.LOG_DEBUG, "Found cached configuration {0} bound to {1}", new Object[]
+                { pid, config.getBundleLocation() } );
             return config;
         }
 
@@ -444,6 +446,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 Dictionary props = pmList[i].load( pid );
                 config = new ConfigurationImpl( this, pmList[i], props );
+                log( LogService.LOG_DEBUG, "Found existing configuration {0} bound to {1}", new Object[]
+                    { pid, config.getBundleLocation() } );
                 return cacheConfiguration( config );
             }
         }
@@ -504,7 +508,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 {
                     log(
                         LogService.LOG_DEBUG,
-                        "Omitting configuration {0}: No permission for {1} on {2}",
+                        "Omitting configuration {0}: No permission for bundle {1} on configuration bound to {2}",
                         new Object[]
                             { config.get( Constants.SERVICE_PID ), configurationAdmin.getBundle().getLocation(),
                                 config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
