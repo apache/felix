@@ -58,8 +58,7 @@
 						<Private-Package>org.apache.felix.http.lightweight.*
 						</Private-Package>
 						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-						<Bundle-Activator>org.apache.felix.http.lightweight.osgi.Activator
-						</Bundle-Activator>
+						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE</Include-Resource>
 					</instructions>

@@ -105,6 +105,8 @@
 			<attribute name="Bundle-Name" value="${project.description} (Complete bundle)"/>
 			<attribute name="Bundle-SymbolicName" value="${ant.project.name}"/>		
 			<attribute name="Bundle-Version" value="${project.version}.${DSTAMP}${TSTAMP}" />
+			<attribute name="Bundle-Activator" value="org.apache.felix.httplite.osgi.Activator" />
+			<attribute name="Bundle-Vendor" value="The Apache Software Foundation" />
 		</manifest>
 
 		<manifest file="${build.dir}/META-INF-MIN/MANIFEST.MF">
@@ -115,6 +117,8 @@
 			<attribute name="Bundle-Name" value="${project.description} (Minimum bundle)"/>
 			<attribute name="Bundle-SymbolicName" value="${ant.project.name}"/>		
 			<attribute name="Bundle-Version" value="${project.version}.${DSTAMP}${TSTAMP}" />
+			<attribute name="Bundle-Activator" value="org.apache.felix.httplite.osgi.Activator" />
+			<attribute name="Bundle-Vendor" value="The Apache Software Foundation" />
 		</manifest>
 
 		<jar destfile="${dist.dir}/${ant.project.name}-debug-all-${project.version}.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
