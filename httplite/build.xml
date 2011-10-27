@@ -36,7 +36,7 @@
 	<target name="fetch" depends="clean" unless="${skip.fetch}">
 		<mkdir dir="${external.dir}" />
 		<exec executable="${wget.bin}" dir="${external.dir}">
-			<arg value="http://www.meisei-u.ac.jp/mirror/apache/dist//felix/org.apache.felix.framework-3.2.2.jar" />
+			<arg value="http://www.meisei-u.ac.jp/mirror/apache/dist/felix/org.apache.felix.framework-4.0.1.jar" />
 		</exec>
 
 		<exec executable="${svn.bin}">

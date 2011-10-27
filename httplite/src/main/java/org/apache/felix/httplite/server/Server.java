@@ -218,7 +218,7 @@ public class Server
             m_serverSocket = new ServerSocket(m_port);
             m_serverThread = new Thread(new Runnable()
             {
-                public void run()
+				public void run()
                 {
                     acceptConnections();
                 }
