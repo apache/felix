@@ -20,6 +20,7 @@ package org.apache.felix.httplite.osgi;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.felix.httplite.server.Server;
@@ -46,6 +47,10 @@ public class HttpServiceFactoryImpl implements ServiceFactory
      * List of service registrations, both Resource and Servlet.
      */
     private List m_registrations;
+	/**
+	 * Map to store the servlet and resource registrations.
+	 */
+	private final HashMap m_servletMap;
 
     /**
      * @param logger
@@ -55,6 +60,7 @@ public class HttpServiceFactoryImpl implements ServiceFactory
     {
         this.m_logger = logger;
         this.m_server = m_server;
+        this.m_servletMap = new HashMap();
     }
 
     /* (non-Javadoc)
@@ -65,7 +71,7 @@ public class HttpServiceFactoryImpl implements ServiceFactory
         HttpServiceImpl httpService = null;
         try
         {
-            httpService = new HttpServiceImpl(bundle, m_server, m_logger);
+            httpService = new HttpServiceImpl(bundle, m_server, m_logger, m_servletMap);
 
             if (m_server.getState() != Server.ACTIVE_STATE)
             {

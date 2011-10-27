@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.httplite.osgi.Logger;
 import org.apache.felix.httplite.osgi.ServiceRegistrationHandler;
@@ -75,7 +74,7 @@ public class Connection
      * @param socket The client socket.
      * @param timeout The inactivity timeout of the connection in milliseconds.
      * @param requestLimit The maximum number of consecutive requests.
-     * @param m_resolver 
+     * @param resolver resolves a request URI to a client or servlet registration via the HTTP Service.
      * @throws java.io.IOException If any I/O error occurs.
      */
     public Connection(final Socket socket, final int timeout, final int requestLimit, final ServiceRegistrationResolver resolver, final Logger logger) throws IOException
