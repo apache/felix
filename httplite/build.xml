@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
-<project name="org.apache.felix.http.lightweight" default="jar">
+<project name="org.apache.felix.httplite" default="jar">
 	<property name="src.dir" location="${basedir}/src" />
 	<property name="project.description" value="Lightweight HTTP Service for Apache Felix" />
 	<property name="project.version" value="0.1.0" />
 	<property name="external.dir" location="external" />
 	<property name="doc.dir" location="${basedir}/docs" />
 	<property name="build.dir" location="${basedir}/classes" />
+	<property name="dist.dir" location="${basedir}/target" />
 
 	<property name="wget.bin" location="/usr/bin/wget" />
 	<property name="svn.bin" location="/usr/bin/svn" />
@@ -93,7 +94,8 @@
 
 	<target name="jar" depends="compile" description="create a Jar file for the application">		
 		<mkdir dir="${build.dir}/META-INF-MIN" />			
-		<mkdir dir="${build.dir}/META-INF-ALL" />			
+		<mkdir dir="${build.dir}/META-INF-ALL" />	
+		<mkdir dir="${dist.dir}" />
 
 		<manifest file="${build.dir}/META-INF-ALL/MANIFEST.MF">
 			<attribute name="Import-Package" value="org.osgi.framework" />
@@ -102,7 +104,7 @@
 			<attribute name="Built-Date" value="${TS_NOW}" />
 			<attribute name="Bundle-Name" value="${project.description} (Complete bundle)"/>
 			<attribute name="Bundle-SymbolicName" value="${ant.project.name}"/>		
-			<attribute name="Bundle-Version" value="${project.version}" />
+			<attribute name="Bundle-Version" value="${project.version}.${DSTAMP}${TSTAMP}" />
 		</manifest>
 
 		<manifest file="${build.dir}/META-INF-MIN/MANIFEST.MF">
@@ -112,22 +114,22 @@
 			<attribute name="Built-Date" value="${TS_NOW}" />
 			<attribute name="Bundle-Name" value="${project.description} (Minimum bundle)"/>
 			<attribute name="Bundle-SymbolicName" value="${ant.project.name}"/>		
-			<attribute name="Bundle-Version" value="${project.version}" />
+			<attribute name="Bundle-Version" value="${project.version}.${DSTAMP}${TSTAMP}" />
 		</manifest>
 
-		<jar destfile="${ant.project.name}-debug-all.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
+		<jar destfile="${dist.dir}/${ant.project.name}-debug-all.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
 			<fileset dir="${build.dir}-debug" includes="**/*.class,**/*.properties,**/*.dtd,**/*.xsd" />
 			<fileset dir="${src.dir}/share" includes="javax/servlet/**/*.properties,javax/servlet/**/*.dtd,javax/servlet/**/*.xsd" />
 			<fileset dir="." includes="LICENSE-2.0.txt" />
 		</jar>
 
-		<jar destfile="${ant.project.name}-all.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
+		<jar destfile="${dist.dir}/${ant.project.name}-all.jar" manifest="${build.dir}/META-INF-ALL/MANIFEST.MF">
 			<fileset dir="${build.dir}" includes="**/*.class,**/*.properties,**/*.dtd,**/*.xsd" />
 			<fileset dir="${src.dir}/share" includes="javax/servlet/**/*.properties,javax/servlet/**/*.dtd,javax/servlet/**/*.xsd" />
 			<fileset dir="." includes="LICENSE-2.0.txt" />
 		</jar>
 
-		<jar destfile="${ant.project.name}-min.jar" manifest="${build.dir}/META-INF-MIN/MANIFEST.MF">
+		<jar destfile="${dist.dir}/${ant.project.name}-min.jar" manifest="${build.dir}/META-INF-MIN/MANIFEST.MF">
 			<fileset dir="${build.dir}" includes="org/apache/felix/httplite/**/*.class" />
 			<fileset dir="." includes="LICENSE-2.0.txt" />
 		</jar>
