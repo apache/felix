@@ -434,14 +434,13 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             }
         }
 
-        // Every removed configurable propery gets reset to its default value
+        // Every removed configurable property gets reset to its default value
         for (int i = 0; i < m_configurableProperties.size(); i++) {
             Property prop = (Property) m_configurableProperties.get(i);
             if (configuration.get(prop.getName()) == null) {
                 reconfigureProperty(prop, prop.getDefaultValue());
             }
         }
-
         return toPropagate;
 
     }

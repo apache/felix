@@ -538,6 +538,12 @@ public class ProvidedService implements ServiceFactory {
             for (int i = 0; i < m_properties.length; i++) {
                 if (key.equals(m_properties[i].getName())) {
                     alreadyExisting = true;
+                    // Check whether the value changed.
+                    if (m_properties[i].getValue() == null
+                            || ! value.equals(m_properties[i].getValue())) {
+                        m_properties[i].setValue(value);
+                        updated = true;
+                    }
                 }
             }
 
@@ -553,7 +559,7 @@ public class ProvidedService implements ServiceFactory {
         }
 
         if (updated) {
-            m_handler.info("Update trigged by adding properties " + props);
+            m_handler.info("Update triggered by adding properties " + props);
             update();
         }
     }
