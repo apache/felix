@@ -428,7 +428,7 @@ public class Junit4osgiPlugin extends AbstractMojo {
                 File file = artifact.getFile();
                 try {
                     if (file.exists()) {
-                        if (file.getName().endsWith("jar")) {
+                        if (file.getName().endsWith("jar")  && ! file.getName().startsWith("org.apache.felix.ipojo-")) {
                             JarFile jar = new JarFile(file);
                             if (jar.getManifest().getMainAttributes().getValue("Bundle-ManifestVersion") != null) {
                                 toDeploy.add(file.toURI().toURL());
