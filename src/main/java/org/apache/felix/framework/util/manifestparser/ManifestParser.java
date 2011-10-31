@@ -1545,7 +1545,7 @@ public class ManifestParser
                     "A header cannot be an empty string.");
             }
             List<ParsedHeaderClause> clauses = parseStandardHeader(header);
-            
+
             for (ParsedHeaderClause clause : clauses)
             {
                 System.out.println("PATHS " + clause.m_paths);
@@ -1553,33 +1553,33 @@ public class ManifestParser
                 System.out.println("    ATTRS " + clause.m_attrs);
                 System.out.println("    TYPES " + clause.m_types);
             }
-            
+
         }
     }
-    
+
     private static final char EOF = (char) -1;
-    
-    private static char charAt(int pos, String headers, int length) 
+
+    private static char charAt(int pos, String headers, int length)
     {
-        if (pos >= length) 
+        if (pos >= length)
         {
             return EOF;
         }
         return headers.charAt(pos);
     }
-    
+
     private static final int CLAUSE_START = 0;
     private static final int PARAMETER_START = 1;
     private static final int KEY = 2;
     private static final int DIRECTIVE_OR_TYPEDATTRIBUTE = 4;
     private static final int ARGUMENT = 8;
     private static final int VALUE = 16;
-    
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static List<ParsedHeaderClause> parseStandardHeader(String header) 
+    private static List<ParsedHeaderClause> parseStandardHeader(String header)
     {
         List<ParsedHeaderClause> clauses = new ArrayList<ParsedHeaderClause>();
-        if (header == null) 
+        if (header == null)
         {
             return clauses;
         }
@@ -1592,12 +1592,12 @@ public class ManifestParser
         int length = header.length();
         boolean quoted = false;
         boolean escaped = false;
-        
+
         char currentChar = EOF;
-        do  
+        do
         {
             currentChar = charAt(currentPosition, header, length);
-            switch (state) 
+            switch (state)
             {
                 case CLAUSE_START:
                     clause = new ParsedHeaderClause(
@@ -1611,10 +1611,10 @@ public class ManifestParser
                     startPosition = currentPosition;
                     state = KEY;
                 case KEY:
-                    switch (currentChar) 
+                    switch (currentChar)
                     {
                         case ':':
-                        case '=': 
+                        case '=':
                             key = header.substring(startPosition, currentPosition).trim();
                             startPosition = currentPosition + 1;
                             targetMap = clause.m_attrs;
@@ -1632,14 +1632,14 @@ public class ManifestParser
                     currentPosition++;
                     break;
                 case DIRECTIVE_OR_TYPEDATTRIBUTE:
-                    switch(currentChar) 
+                    switch(currentChar)
                     {
                         case '=':
-                            if (startPosition != currentPosition) 
+                            if (startPosition != currentPosition)
                             {
                                 clause.m_types.put(key, header.substring(startPosition, currentPosition).trim());
                             }
-                            else 
+                            else
                             {
                                 targetMap = clause.m_dirs;
                             }
@@ -1652,12 +1652,12 @@ public class ManifestParser
                     currentPosition++;
                     break;
                 case ARGUMENT:
-                    if (currentChar == '\"') 
+                    if (currentChar == '\"')
                     {
                         quoted = true;
                         currentPosition++;
                     }
-                    else 
+                    else
                     {
                         quoted = false;
                     }
@@ -1669,53 +1669,53 @@ public class ManifestParser
                     }
                     break;
                 case VALUE:
-                    if (currentChar == '\\' ) 
+                    if (escaped)
                     {
-                        if (escaped) 
-                        {
-                            escaped = false;
-                        }
-                        else 
+                        escaped = false;
+                    }
+                    else
+                    {
+                        if (currentChar == '\\' )
                         {
                             escaped = true;
                         }
-                    }
-                    if (quoted && !escaped && currentChar == '\"') 
-                    {
-                        quoted = false;
-                    } 
-                    else if (!quoted)
-                    {
-                        String value = null;
-                        switch(currentChar) 
+                        else if (quoted && currentChar == '\"')
                         {
-                            case EOF:
-                            case ';':
-                            case ',':
-                                value = header.substring(startPosition, currentPosition).trim();
-                                if (value.startsWith("\"") && value.endsWith("\"")) 
-                                {
-                                    value = value.substring(1, value.length() - 1);
-                                }
-                                if (targetMap.put(key, value) != null) 
-                                {
-                                    throw new IllegalArgumentException(
-                                            "Duplicate '" + key + "' in: " + header);
-                                }
-                                state = currentChar == ';' ? PARAMETER_START : CLAUSE_START;
-                                break;
-                            default:
-                                break;
+                            quoted = false;
+                        }
+                        else if (!quoted)
+                        {
+                            String value = null;
+                            switch(currentChar)
+                            {
+                                case EOF:
+                                case ';':
+                                case ',':
+                                    value = header.substring(startPosition, currentPosition).trim();
+                                    if (value.startsWith("\"") && value.endsWith("\""))
+                                    {
+                                        value = value.substring(1, value.length() - 1);
+                                    }
+                                    if (targetMap.put(key, value) != null)
+                                    {
+                                        throw new IllegalArgumentException(
+                                                "Duplicate '" + key + "' in: " + header);
+                                    }
+                                    state = currentChar == ';' ? PARAMETER_START : CLAUSE_START;
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     }
                     currentPosition++;
                     break;
                 default:
                     break;
-            }   
+            }
         } while ( currentChar != EOF);
-        
-        if (state > PARAMETER_START) 
+
+        if (state > PARAMETER_START)
         {
             throw new IllegalArgumentException("Unable to parse header: " + header);
         }
