@@ -31,7 +31,9 @@
 
   <properties>
     <!--
-        * 1.8.1 : change in the MethodInterceptor interface (FELIX-3144)
+        1.8.1:
+        * change in the MethodInterceptor interface (FELIX-3144)
+        * change in the Factory interface (FELIX-3190)
      -->
     <ipojo.package.version>1.8.1</ipojo.package.version>
   </properties>

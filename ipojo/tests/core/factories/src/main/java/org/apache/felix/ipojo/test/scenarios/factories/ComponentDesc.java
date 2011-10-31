@@ -198,6 +198,9 @@ public class ComponentDesc extends OSGiTestCase {
 		// Check Description equality
 		ComponentTypeDescription desc = (ComponentTypeDescription) sr_fooProvider2.getProperty("component.description");
         assertNotNull("check description equality", desc);
+
+        // Check that we have the complete metadata
+        assertNotNull(fooProvider2.getComponentMetadata());
 	}
 	
 	/**
@@ -263,6 +266,9 @@ public class ComponentDesc extends OSGiTestCase {
 		// Check Description equality
 		ComponentTypeDescription desc = (ComponentTypeDescription) sr_fooProviderDyn2.getProperty("component.description");
 		assertNotNull("check description equality", desc);
+
+        // Check that we have the complete metadata
+        assertNotNull(fooProvider2.getComponentMetadata());
 	}
 	
 	/**
@@ -346,6 +352,8 @@ public class ComponentDesc extends OSGiTestCase {
         ComponentTypeDescription desc = (ComponentTypeDescription) sr_foobarProvider.getProperty("component.description");
 		assertNotNull("check description equality", desc);
 
+        // Check that we have the complete metadata
+        assertNotNull(foobarProvider.getComponentMetadata());
 	}
 	
 	private boolean containsSpecification(String value, Element[] array) {

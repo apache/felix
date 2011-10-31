@@ -349,6 +349,15 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     }
 
     /**
+     * Gets the component metadata.
+     * @return the component metadata
+     * @see org.apache.felix.ipojo.Factory#getComponentMetadata()
+     */
+    public Element getComponentMetadata() {
+        return m_componentMetadata;
+    }
+
+    /**
      * Computes the list of missing handlers. This method is called with the monitor lock.
      * @return the list of missing handlers.
      * @see org.apache.felix.ipojo.Factory#getMissingHandlers()

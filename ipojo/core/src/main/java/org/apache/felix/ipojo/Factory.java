@@ -155,4 +155,10 @@ public interface Factory {
      */
     String getVersion();
 
+    /**
+     * Gets the component type metadata (Element - Attribute structure)
+     * @return the root element of the component metadata. The result must <b>not</b> be modified.
+     */
+    Element getComponentMetadata();
+
 }

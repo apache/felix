@@ -175,14 +175,13 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
 
     /**
      * Defines the handler type description.
-     * @see ComponentDescription
+     * @see ComponentTypeDescription
      */
     private class HandlerTypeDescription extends ComponentTypeDescription {
 
         /**
          * Creates the HandlerTypeDescription.
          * @param factory the factory.
-         * @see ComponentTypeDescription#ComponentTypeDescription(Factory)
          */
         public HandlerTypeDescription(IPojoFactory factory) {
             super(factory);
