@@ -18,10 +18,7 @@
  */
 package org.apache.felix.ipojo.handler.temporal;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -222,9 +219,9 @@ public class TemporalDependency extends DependencyModel implements
      * @param pojo : Pojo object
      * @param method : called method
      * @param args : arguments
-     * @see org.apache.felix.ipojo.MethodInterceptor#onEntry(java.lang.Object, java.lang.reflect.Method, java.lang.Object[])
+     * @see org.apache.felix.ipojo.MethodInterceptor#onEntry(java.lang.Object, java.lang.reflect.Member, java.lang.Object[])
      */
-    public void onEntry(Object pojo, Method method, Object[] args) {
+    public void onEntry(Object pojo, Member method, Object[] args) {
         if (m_usage != null) {
             Usage usage = (Usage) m_usage.get();
             if (usage.m_stack > 0) {
@@ -240,20 +237,20 @@ public class TemporalDependency extends DependencyModel implements
      * @param pojo : POJO object.
      * @param method : Method object.
      * @param throwable : thrown error
-     * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Method, java.lang.Throwable)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Member, java.lang.Throwable)
      */
-    public void onError(Object pojo, Method method, Throwable throwable) {
+    public void onError(Object pojo, Member method, Throwable throwable) {
         // Nothing to do  : wait onFinally
     }
 
     /**
      * A POJO method has returned.
      * @param pojo : POJO object.
-     * @param method : Method object.
+     * @param member : Method object.
      * @param returnedObj : returned object (null for void method)
-     * @see org.apache.felix.ipojo.MethodInterceptor#onExit(java.lang.Object, java.lang.reflect.Method, java.lang.Object)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onExit(java.lang.Object, java.lang.reflect.Member, java.lang.Object)
      */
-    public void onExit(Object pojo, Method method, Object returnedObj) {
+    public void onExit(Object pojo, Member member, Object returnedObj) {
         // Nothing to do  : wait onFinally        
     }
     
@@ -261,9 +258,9 @@ public class TemporalDependency extends DependencyModel implements
      * A POJO method is finished.
      * @param pojo : POJO object.
      * @param method : Method object.
-     * @see org.apache.felix.ipojo.MethodInterceptor#onFinally(java.lang.Object, java.lang.reflect.Method)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onFinally(java.lang.Object, java.lang.reflect.Member)
      */
-    public void onFinally(Object pojo, Method method) {
+    public void onFinally(Object pojo, Member method) {
         if (m_usage != null) {
             Usage usage = (Usage) m_usage.get();
             if (usage.m_stack > 0) {
