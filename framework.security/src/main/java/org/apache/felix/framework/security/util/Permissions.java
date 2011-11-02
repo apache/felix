@@ -336,48 +336,7 @@ public final class Permissions
                     Permission source = createPermission(new PermissionInfo(
                         FilePermission.class.getName(), name,
                         m_permissionInfos[i].getActions()), targetClass);
-                    postfix = "";
-                    name = target.getName();
-                    if (!"<<ALL FILES>>".equals(name))
-                    {
-                        if (name.endsWith("*") || name.endsWith("-"))
-                        {
-                            postfix = name.substring(name.length() - 1);
-                            name = name.substring(0, name.length() - 1);
-                        }
-                        if (!(new File(name)).isAbsolute())
-                        {
-                            BundleContext context = (BundleContext) AccessController
-                                .doPrivileged(new PrivilegedAction()
-                                {
-                                    public Object run()
-                                    {
-                                        return bundle.getBundleContext();
-                                    }
-                                });
-                            if (context == null)
-                            {
-                                break;
-                            }
-                            name = m_action.getAbsolutePath(new File(context
-                                .getDataFile(""), name));
-                        }
-                        if (postfix.length() > 0)
-                        {
-                            if ((name.length() > 0) && !name.endsWith("/"))
-                            {
-                                name += "/" + postfix;
-                            }
-                            else
-                            {
-                                name += postfix;
-                            }
-                        }
-                    }
-                    Permission realTarget = createPermission(
-                        new PermissionInfo(FilePermission.class.getName(),
-                            name, target.getActions()), targetClass);
-                    if (source.implies(realTarget))
+                    if (source.implies(target))
                     {
                         return true;
                     }
