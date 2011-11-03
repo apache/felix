@@ -73,6 +73,9 @@ public final class JettyConfig
     /** Felix specific property to control whether Jetty uses NIO or not for HTTPS. Valid values are "true", "false". Default is the value of org.apache.felix.http.nio */
     public static final String  FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
 
+    /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
+    public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
+
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
     public static final String  FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
 
@@ -92,6 +95,7 @@ public final class JettyConfig
     private boolean useHttpNio;
     private boolean useHttpsNio;
     private boolean registerMBeans;
+    private int sessionTimeout;
 
     /**
      * Properties from the configuration not matching any of the
@@ -194,6 +198,15 @@ public final class JettyConfig
         return this.clientcert;
     }
 
+    /**
+     * Returns the configured session timeout in minutes or zero if not
+     * configured.
+     */
+    public int getSessionTimeout()
+    {
+        return this.sessionTimeout;
+    }
+
     public void reset()
     {
         update(null);
@@ -220,6 +233,7 @@ public final class JettyConfig
         this.useHttpNio = getBooleanProperty(props, FELIX_HTTP_NIO, true);
         this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
         this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
+        this.sessionTimeout = getIntProperty(props, FELIX_SESSION_TIMEOUT, 0);
 
         // copy rest of the properties
         Enumeration keys = props.keys();
