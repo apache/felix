@@ -201,7 +201,7 @@ public final class JettyService
                 ? new SelectChannelConnector()
                 : new SocketConnector();
         connector.setPort(this.config.getHttpPort());
-        connector.setMaxIdleTime(60000);
+        configureConnector(connector);
         this.server.addConnector(connector);
     }
 
@@ -298,12 +298,24 @@ public final class JettyService
         }
 
         connector.setPort(this.config.getHttpsPort());
-        connector.setMaxIdleTime(60000);
+        configureConnector(connector);
 
         this.server.addConnector(connector);
     }
 
-    private void configureSessionManager(final Context context) {
+    private void configureConnector(final Connector connector)
+    {
+        connector.setMaxIdleTime(60000);
+        connector.setHost(this.config.getHost());
+        connector.setStatsOn(this.config.isRegisterMBeans());
+
+        // connector.setLowResourceMaxIdleTime(ms);
+        // connector.setRequestBufferSize(requestBufferSize);
+        // connector.setResponseBufferSize(responseBufferSize);
+    }
+
+    private void configureSessionManager(final Context context)
+    {
         final SessionManager manager = context.getSessionHandler().getSessionManager();
         manager.setSessionCookie(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
         manager.setSessionURL(this.config.getProperty(SessionManager.__SessionURLProperty, SessionManager.__DefaultSessionURL));
