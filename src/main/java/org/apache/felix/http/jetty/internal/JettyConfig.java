@@ -18,6 +18,9 @@ package org.apache.felix.http.jetty.internal;
 
 import org.osgi.framework.BundleContext;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Hashtable;
 
@@ -85,6 +88,16 @@ public final class JettyConfig
     private boolean useHttpNio;
     private boolean useHttpsNio;
     private boolean registerMBeans;
+
+    /**
+     * Properties from the configuration not matching any of the
+     * predefined properties. These properties can be accessed from the
+     * getProperty* methods.
+     * <p>
+     * This map is indexed by String objects (the property names) and
+     * the values are just objects as provided by the configuration.
+     */
+    private Map genericProperties = new HashMap();
 
     public JettyConfig(BundleContext context)
     {
@@ -197,11 +210,19 @@ public final class JettyConfig
         this.useHttpNio = getBooleanProperty(props, FELIX_HTTP_NIO, true);
         this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
         this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
+
+        // copy rest of the properties
+        Enumeration keys = props.keys();
+        while (keys.hasMoreElements())
+        {
+            Object key = keys.nextElement();
+            this.genericProperties.put(key, props.get(key));
+        }
     }
 
     private String getProperty(Dictionary props, String name, String defValue)
     {
-        Object value = props.get(name);
+        Object value = props.remove(name);
         if (value == null)
         {
             value = this.context.getProperty(name);
@@ -225,6 +246,51 @@ public final class JettyConfig
     {
         try {
             return Integer.parseInt(getProperty(props, name, null));
+        } catch (Exception e) {
+            return defValue;
+        }
+    }
+
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public String getProperty(String name, String defValue) {
+        Object value = this.genericProperties.get(name);
+        if (value == null)
+        {
+            value = this.context.getProperty(name);
+        }
+
+        return value != null ? String.valueOf(value) : defValue;
+    }
+
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public boolean getBooleanProperty(String name, boolean defValue)
+    {
+        String value = getProperty(name, null);
+        if (value != null)
+        {
+            return (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"));
+        }
+
+        return defValue;
+    }
+
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public int getIntProperty(String name, int defValue)
+    {
+        try {
+            return Integer.parseInt(getProperty(name, null));
         } catch (Exception e) {
             return defValue;
         }
