@@ -16,26 +16,28 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
-import org.mortbay.jetty.security.HashUserRealm;
-import org.mortbay.jetty.security.SslSelectChannelConnector;
-import org.mortbay.jetty.security.SslSocketConnector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.handler.StatisticsHandler;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.servlet.*;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Properties;
+
 import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-
-import java.util.Properties;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.SessionManager;
+import org.mortbay.jetty.bio.SocketConnector;
+import org.mortbay.jetty.handler.StatisticsHandler;
+import org.mortbay.jetty.nio.SelectChannelConnector;
+import org.mortbay.jetty.security.HashUserRealm;
+import org.mortbay.jetty.security.SslSelectChannelConnector;
+import org.mortbay.jetty.security.SslSocketConnector;
+import org.mortbay.jetty.servlet.Context;
+import org.mortbay.jetty.servlet.ServletHolder;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 
 public final class JettyService
     implements Runnable
@@ -169,10 +171,11 @@ public final class JettyService
             }
 
             Context context = new Context(this.server, "/", Context.SESSIONS);
+            configureSessionManager(context);
             context.addEventListener(eventDispatcher);
             context.getSessionHandler().addEventListener(eventDispatcher);
             context.addServlet(new ServletHolder(this.dispatcher), "/*");
-            
+
             if (this.config.isRegisterMBeans())
             {
                 this.mbeanServerTracker = new MBeanServerTracker(this.context, this.server);
@@ -298,6 +301,15 @@ public final class JettyService
         connector.setMaxIdleTime(60000);
 
         this.server.addConnector(connector);
+    }
+
+    private void configureSessionManager(final Context context) {
+        final SessionManager manager = context.getSessionHandler().getSessionManager();
+        manager.setSessionCookie(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
+        manager.setSessionURL(this.config.getProperty(SessionManager.__SessionURLProperty, SessionManager.__DefaultSessionURL));
+        manager.setSessionDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
+        manager.setSessionPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
+        manager.setMaxCookieAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));
     }
 
     public void run()
