@@ -137,7 +137,7 @@
                     <instructions>
                         <Bundle-Category>osgi</Bundle-Category>
                         <Bundle-SymbolicName>
-                            ${artifactId}
+                            ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-DocURL>
