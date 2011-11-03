@@ -26,6 +26,9 @@ import java.util.Hashtable;
 
 public final class JettyConfig
 {
+    /** Felix specific property to set the interface to listen on. Applies to both HTTP and HTTP */
+    private static final String FELIX_HOST = "org.apache.felix.http.host";
+
     /** Standard OSGi port property for HTTP service */
     private static final String HTTP_PORT = "org.osgi.service.http.port";
 
@@ -75,6 +78,7 @@ public final class JettyConfig
 
     private final BundleContext context;
     private boolean debug;
+    private String host;
     private int httpPort;
     private int httpsPort;
     private String keystore;
@@ -145,6 +149,11 @@ public final class JettyConfig
         return this.registerMBeans;
     }
 
+    public String getHost()
+    {
+        return this.host;
+    }
+
     public int getHttpPort()
     {
         return this.httpPort;
@@ -197,6 +206,7 @@ public final class JettyConfig
         }
 
         this.debug = getBooleanProperty(props, FELIX_HTTP_DEBUG, getBooleanProperty(props, HTTP_DEBUG, false));
+        this.host = getProperty(props, FELIX_HOST, null);
         this.httpPort = getIntProperty(props, HTTP_PORT, 8080);
         this.httpsPort = getIntProperty(props, HTTPS_PORT, 8443);
         this.keystore = getProperty(props, FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
