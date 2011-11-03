@@ -35,6 +35,9 @@ public final class JettyConfig
     /** Standard OSGi port property for HTTPS service */
     private static final String HTTPS_PORT = "org.osgi.service.http.port.secure";
 
+    /** Felix specific property to set http reaching timeout limit */
+    public static final String HTTP_TIMEOUT = "org.apache.felix.http.timeout";
+
     /** Felix specific property to enable debug messages */
     private static final String FELIX_HTTP_DEBUG = "org.apache.felix.http.debug";
     private static final String HTTP_DEBUG = "org.apache.felix.http.jetty.debug";
@@ -84,6 +87,7 @@ public final class JettyConfig
     private String host;
     private int httpPort;
     private int httpsPort;
+    private int httpTimeout;
     private String keystore;
     private String password;
     private String keyPassword;
@@ -168,6 +172,11 @@ public final class JettyConfig
         return this.httpsPort;
     }
 
+    public int getHttpTimeout()
+    {
+        return this.httpTimeout;
+    }
+
     public String getKeystore()
     {
         return this.keystore;
@@ -222,6 +231,7 @@ public final class JettyConfig
         this.host = getProperty(props, FELIX_HOST, null);
         this.httpPort = getIntProperty(props, HTTP_PORT, 8080);
         this.httpsPort = getIntProperty(props, HTTPS_PORT, 8443);
+        this.httpTimeout = getIntProperty(props, HTTP_TIMEOUT, 60000);
         this.keystore = getProperty(props, FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
         this.password = getProperty(props, FELIX_KEYSTORE_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_PASSWORD));
         this.keyPassword = getProperty(props, FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));

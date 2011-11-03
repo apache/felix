@@ -305,7 +305,7 @@ public final class JettyService
 
     private void configureConnector(final Connector connector)
     {
-        connector.setMaxIdleTime(60000);
+        connector.setMaxIdleTime(this.config.getHttpTimeout());
         connector.setHost(this.config.getHost());
         connector.setStatsOn(this.config.isRegisterMBeans());
 
