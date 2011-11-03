@@ -79,6 +79,15 @@ public final class JettyConfig
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
 
+    /** Felix speicific property to configure the request buffer size. Default is 16KB (instead of Jetty's default of 4KB) */
+    public static final String FELIX_JETTY_HEADER_BUFFER_SIZE = "org.apache.felix.http.jetty.headerBufferSize";
+
+    /** Felix speicific property to configure the request buffer size. Default is 8KB */
+    public static final String FELIX_JETTY_REQUEST_BUFFER_SIZE = "org.apache.felix.http.jetty.requestBufferSize";
+
+    /** Felix speicific property to configure the request buffer size. Default is 24KB */
+    public static final String FELIX_JETTY_RESPONSE_BUFFER_SIZE = "org.apache.felix.http.jetty.responseBufferSize";
+
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
     public static final String  FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
 
@@ -100,6 +109,9 @@ public final class JettyConfig
     private boolean useHttpsNio;
     private boolean registerMBeans;
     private int sessionTimeout;
+    private int headerBufferSize;
+    private int requestBufferSize;
+    private int responseBufferSize;
 
     /**
      * Properties from the configuration not matching any of the
@@ -216,6 +228,21 @@ public final class JettyConfig
         return this.sessionTimeout;
     }
 
+    public int getHeaderBufferSize()
+    {
+        return this.headerBufferSize;
+    }
+
+    public int getRequestBufferSize()
+    {
+        return this.requestBufferSize;
+    }
+
+    public int getResponseBufferSize()
+    {
+        return this.responseBufferSize;
+    }
+
     public void reset()
     {
         update(null);
@@ -244,6 +271,9 @@ public final class JettyConfig
         this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
         this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
         this.sessionTimeout = getIntProperty(props, FELIX_SESSION_TIMEOUT, 0);
+        this.headerBufferSize = getIntProperty(FELIX_JETTY_HEADER_BUFFER_SIZE, 16 * 1024);
+        this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 014);
+        this.responseBufferSize = getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
 
         // copy rest of the properties
         Enumeration keys = props.keys();
