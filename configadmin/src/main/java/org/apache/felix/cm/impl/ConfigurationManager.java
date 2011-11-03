@@ -680,9 +680,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
-    private void configure( ServiceReference sr, ManagedService service )
+    /**
+     * Configures the ManagedService and returns the service.pid
+     * service property as a String[], which may be <code>null</code> if
+     * the ManagedService does not have such a property.
+     */
+    private void configure( String[] pids, ServiceReference sr, ManagedService service )
     {
-        String[] pids = getServicePid( sr );
         if ( pids != null )
         {
             for ( int i = 0; i < pids.length; i++ )
@@ -696,9 +700,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
-    private void configure( ServiceReference sr, ManagedServiceFactory service )
+    /**
+     * Configures the ManagedServiceFactory and returns the service.pid
+     * service property as a String[], which may be <code>null</code> if
+     * the ManagedServiceFactory does not have such a property.
+     */
+    private void configure( String[] pids, ServiceReference sr, ManagedServiceFactory service )
     {
-        String[] pids = getServicePid( sr );
         if ( pids != null )
         {
             for ( int i = 0; i < pids.length; i++ )
@@ -1227,7 +1235,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         protected ManagedServiceFactoryHelper( ConfigurationImpl config )
         {
             super( config );
-            // TODO Auto-generated constructor stub
         }
 
 
@@ -1922,20 +1929,43 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         public Object addingService( ServiceReference reference )
         {
-            Object serviceObject = super.addingService( reference );
+            Object service = super.addingService( reference );
 
             // configure the managed service
-            if ( serviceObject instanceof ManagedService )
+            final String[] pids;
+            if ( service instanceof ManagedService )
             {
-                cm.configure(reference, ( ManagedService ) serviceObject);
+                pids = getServicePid( reference );
+                cm.configure( pids, reference, ( ManagedService ) service );
             }
             else
             {
                 cm.log( LogService.LOG_WARNING, "Service {0} is not a ManagedService", new Object[]
-                    { serviceObject } );
+                    { service } );
+                pids = null;
             }
 
-            return serviceObject;
+            return new ManagedServiceHolder( service, pids );
+        }
+
+
+        public void modifiedService( ServiceReference reference, Object service )
+        {
+            ManagedServiceHolder holder = ( ManagedServiceHolder ) service;
+            String[] pids = getServicePid( reference );
+
+            if ( holder.isDifferentPids( pids ) )
+            {
+                cm.configure( pids, reference, ( ManagedService ) holder.getManagedService() );
+                holder.setConfiguredPids( pids );
+            }
+        }
+
+
+        public void removedService( ServiceReference reference, Object service )
+        {
+            final Object serviceObject = ( ( ManagedServiceHolder ) service ).getManagedService();
+            super.removedService( reference, serviceObject );
         }
     }
 
@@ -1957,19 +1987,94 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             Object serviceObject = super.addingService( reference );
 
             // configure the managed service factory
+            final String[] pids;
             if ( serviceObject instanceof ManagedServiceFactory )
             {
-                cm.configure( reference, ( ManagedServiceFactory ) serviceObject );
+                pids = getServicePid( reference );
+                cm.configure( pids, reference, ( ManagedServiceFactory ) serviceObject );
             }
             else
             {
                 cm.log( LogService.LOG_WARNING, "Service {0} is not a ManagedServiceFactory", new Object[]
                     { serviceObject } );
+                pids = null;
             }
 
-            return serviceObject;
+            return new ManagedServiceHolder( serviceObject, pids );
+        }
+
+
+        public void modifiedService( ServiceReference reference, Object service )
+        {
+            ManagedServiceHolder holder = ( ManagedServiceHolder ) service;
+            String[] pids = getServicePid( reference );
+
+            if ( holder.isDifferentPids( pids ) )
+            {
+                cm.configure( pids, reference, ( ManagedServiceFactory ) holder.getManagedService() );
+                holder.setConfiguredPids( pids );
+            }
+
+            super.modifiedService( reference, service );
+        }
+
+
+        public void removedService( ServiceReference reference, Object service )
+        {
+            final Object serviceObject = ( ( ManagedServiceHolder ) service ).getManagedService();
+            super.removedService( reference, serviceObject );
         }
     }
 
+    private static class ManagedServiceHolder
+    {
+        private final Object managedService;
+        private String[] configuredPids;
 
+
+        ManagedServiceHolder( final Object managedService, final String[] configuredPids )
+        {
+            this.managedService = managedService;
+            this.configuredPids = configuredPids;
+        }
+
+
+        public Object getManagedService()
+        {
+            return managedService;
+        }
+
+
+        public void setConfiguredPids( String[] configuredPids )
+        {
+            this.configuredPids = configuredPids;
+        }
+
+
+        boolean isDifferentPids( final String[] pids )
+        {
+            if ( this.configuredPids == null && pids == null )
+            {
+                return false;
+            }
+            else if ( this.configuredPids == null )
+            {
+                return true;
+            }
+            else if ( pids == null )
+            {
+                return true;
+            }
+            else if ( this.configuredPids.length != pids.length )
+            {
+                return true;
+            }
+            else
+            {
+                HashSet thisPids = new HashSet( Arrays.asList( this.configuredPids ) );
+                HashSet otherPids = new HashSet( Arrays.asList( pids ) );
+                return !thisPids.equals( otherPids );
+            }
+        }
+    }
 }
