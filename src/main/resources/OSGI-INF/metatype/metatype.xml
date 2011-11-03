@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" localization="OSGI-INF/metatype/metatype">
     <OCD id="org.apache.felix.http" name="%org.apache.felix.http.jetty.internal.JettyConfig.name" description="%org.apache.felix.http.jetty.internal.JettyConfig.description">
+        <AD id="org.apache.felix.http.host" type="String" default="0.0.0.0" name="%org.apache.felix.http.host.name" description="%org.apache.felix.http.host.description"/>
         <AD id="org.apache.felix.http.enable" type="Boolean" default="true" name="%org.apache.felix.http.enable.name" description="%org.apache.felix.http.enable.description"/>
         <AD id="org.osgi.service.http.port" type="Integer" default="8080" name="%org.osgi.service.http.port.name" description="%org.osgi.service.http.port.description"/>
         <AD id="org.apache.felix.http.nio" type="Boolean" default="true" name="%org.apache.felix.http.nio.name" description="%org.apache.felix.http.nio.description"/>
@@ -15,6 +16,7 @@
         <AD id="org.apache.felix.https.truststore" type="String" name="%org.apache.felix.https.truststore.name" description="%org.apache.felix.https.truststore.description"/>
         <AD id="org.apache.felix.https.truststore.password" type="String" name="%org.apache.felix.https.truststore.password.name" description="%org.apache.felix.https.truststore.password.description"/>
         <AD id="org.apache.felix.https.clientcertificate" type="String" default="none" name="%org.apache.felix.https.clientcertificate.name" description="%org.apache.felix.https.clientcertificate.description">
+        <AD id="org.apache.felix.http.session.timeout" type="Integer" default="0" name="%org.apache.felix.http.session.timeout.name" description="%org.apache.felix.http.session.timeout.description">
         <AD id="org.apache.felix.http.jetty.headerBufferSize" type="Integer" default="16384" name="%org.apache.felix.http.jetty.headerBufferSize.name" description="%org.apache.felix.http.jetty.headerBufferSize.description">
         <AD id="org.apache.felix.http.jetty.requestBufferSize" type="Integer" default="8192" name="%org.apache.felix.http.jetty.requestBufferSize.name" description="%org.apache.felix.http.jetty.requestBufferSize.description">
         <AD id="org.apache.felix.http.jetty.responseBufferSize" type="Integer" default="24576" name="%org.apache.felix.http.jetty.responseBufferSize.name" description="%org.apache.felix.http.jetty.responseBufferSize.description">
