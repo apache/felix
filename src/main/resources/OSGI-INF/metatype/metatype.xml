@@ -4,6 +4,7 @@
         <AD id="org.apache.felix.http.enable" type="Boolean" default="true" name="%org.apache.felix.http.enable.name" description="%org.apache.felix.http.enable.description"/>
         <AD id="org.osgi.service.http.port" type="Integer" default="8080" name="%org.osgi.service.http.port.name" description="%org.osgi.service.http.port.description"/>
         <AD id="org.apache.felix.http.nio" type="Boolean" default="true" name="%org.apache.felix.http.nio.name" description="%org.apache.felix.http.nio.description"/>
+	    <AD id="org.apache.felix.http.timeout" type="Integer" default="60000" name="%org.apache.felix.http.timeout.name" description="%org.apache.felix.http.timeout.description"/>
         <AD id="org.apache.felix.https.enable" type="Boolean" default="false" name="%org.apache.felix.https.enable.name" description="%org.apache.felix.https.enable.description"/>
         <AD id="org.osgi.service.http.port.secure" type="Integer" default="433" name="%org.osgi.service.http.port.secure.name" description="%org.osgi.service.http.port.secure.description"/>
         <AD id="org.apache.felix.https.nio" type="Boolean" default="true" name="%org.apache.felix.https.nio.name" description="%org.apache.felix.https.nio.description"/>
