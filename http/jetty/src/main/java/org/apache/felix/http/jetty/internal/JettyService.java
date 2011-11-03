@@ -317,6 +317,9 @@ public final class JettyService
     private void configureSessionManager(final Context context)
     {
         final SessionManager manager = context.getSessionHandler().getSessionManager();
+
+        manager.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
+
         manager.setSessionCookie(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
         manager.setSessionURL(this.config.getProperty(SessionManager.__SessionURLProperty, SessionManager.__DefaultSessionURL));
         manager.setSessionDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
