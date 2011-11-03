@@ -15,6 +15,7 @@ Changes from 1.2.8 to 1.4.0
 
 ** Task
     * [FELIX-3176] - Implement Configuration Admin 1.4 changes
+    * [FELIX-3200] - Track PID changes of ManagedService[Factory] services
 
 ** Wish
     * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
