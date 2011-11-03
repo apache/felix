@@ -19,7 +19,11 @@
 package org.apache.felix.cm.integration.helper;
 
 
+import java.util.Dictionary;
+
+import org.ops4j.pax.swissbox.tinybundles.dp.Constants;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 
 
@@ -28,10 +32,13 @@ public class ManagedServiceTestActivator extends BaseTestActivator
 
     public static ManagedServiceTestActivator INSTANCE;
 
+    private Dictionary registrationProps;
+    private ServiceRegistration registration;
 
     public void start( BundleContext context ) throws Exception
     {
-        context.registerService( ManagedService.class.getName(), this, getServiceProperties( context ) );
+        this.registrationProps = getServiceProperties( context );
+        this.registration = context.registerService( ManagedService.class.getName(), this, this.registrationProps );
         INSTANCE = this;
     }
 
@@ -39,5 +46,12 @@ public class ManagedServiceTestActivator extends BaseTestActivator
     public void stop( BundleContext arg0 ) throws Exception
     {
         INSTANCE = null;
+    }
+
+
+    public void changePid( final String newPid )
+    {
+        this.registrationProps.put( Constants.SERVICE_PID, newPid );
+        this.registration.setProperties( this.registrationProps );
     }
 }
