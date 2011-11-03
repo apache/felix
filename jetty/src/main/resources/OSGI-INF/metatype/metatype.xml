@@ -15,6 +15,9 @@
         <AD id="org.apache.felix.https.truststore" type="String" name="%org.apache.felix.https.truststore.name" description="%org.apache.felix.https.truststore.description"/>
         <AD id="org.apache.felix.https.truststore.password" type="String" name="%org.apache.felix.https.truststore.password.name" description="%org.apache.felix.https.truststore.password.description"/>
         <AD id="org.apache.felix.https.clientcertificate" type="String" default="none" name="%org.apache.felix.https.clientcertificate.name" description="%org.apache.felix.https.clientcertificate.description">
+        <AD id="org.apache.felix.http.jetty.headerBufferSize" type="Integer" default="16384" name="%org.apache.felix.http.jetty.headerBufferSize.name" description="%org.apache.felix.http.jetty.headerBufferSize.description">
+        <AD id="org.apache.felix.http.jetty.requestBufferSize" type="Integer" default="8192" name="%org.apache.felix.http.jetty.requestBufferSize.name" description="%org.apache.felix.http.jetty.requestBufferSize.description">
+        <AD id="org.apache.felix.http.jetty.responseBufferSize" type="Integer" default="24576" name="%org.apache.felix.http.jetty.responseBufferSize.name" description="%org.apache.felix.http.jetty.responseBufferSize.description">
             <Option value="none" label="%clientcertificate.none"/>
             <Option value="wants" label="%clientcertificate.wants"/>
             <Option value="needs" label="%clientcertificate.needs"/>
