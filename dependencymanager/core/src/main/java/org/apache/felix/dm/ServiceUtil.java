@@ -39,11 +39,23 @@ public class ServiceUtil {
      * @return the ranking
      */
     public static int getRanking(ServiceReference ref) {
+        return getRankingAsInteger(ref).intValue();
+    }
+    
+    /**
+     * Returns the service ranking of a service, based on its service reference. If
+     * the service has a property specifying its ranking, that will be returned. If
+     * not, the default ranking of zero will be returned.
+     * 
+     * @param ref the service reference to determine the ranking for
+     * @return the ranking
+     */
+    public static Integer getRankingAsInteger(ServiceReference ref) {
         Integer rank = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
         if (rank != null) {
-            return rank.intValue();
+            return rank;
         }
-        return 0;
+        return new Integer(0);
     }
     
     /**
@@ -55,7 +67,19 @@ public class ServiceUtil {
      * @return the service ID
      */
     public static long getServiceId(ServiceReference ref) {
-        return getServiceIdObject(ref).longValue();
+        return getServiceIdAsLong(ref).longValue();
+    }
+    
+    /**
+     * Returns the service ID of a service, based on its service reference. This
+     * method is aware of service aspects as defined by the dependency manager and
+     * will return the ID of the orginal service if you give it an aspect.
+     * 
+     * @param ref the service reference to determine the service ID of
+     * @return the service ID
+     */
+    public static Long getServiceIdAsLong(ServiceReference ref) {
+    	return getServiceIdObject(ref);
     }
     
     public static Long getServiceIdObject(ServiceReference ref) {
