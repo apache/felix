@@ -71,6 +71,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration createFactoryConfiguration( String factoryPid ) throws IOException
     {
+        configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
+            { factoryPid } );
+
         return this.wrap( configurationManager.createFactoryConfiguration( this, factoryPid ) );
     }
 
@@ -80,6 +83,10 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
+        configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
+            new Object[]
+                { factoryPid, location } );
+
         // CM 1.4 / 104.13.2.3
         this.checkPermission( location );
 
@@ -92,6 +99,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration getConfiguration( String pid ) throws IOException
     {
+        configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
+            { pid } );
+
         ConfigurationImpl config = configurationManager.getConfiguration( pid, getBundle().getLocation() );
 
         if ( config.getBundleLocation() == null )
@@ -117,6 +127,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration getConfiguration( String pid, String location ) throws IOException
     {
+        configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
+            { pid, location } );
+
         // CM 1.4 / 104.13.2.3
         this.checkPermission( location );
 
@@ -136,6 +149,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration[] listConfigurations( String filter ) throws IOException, InvalidSyntaxException
     {
+        configurationManager.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
+            { filter } );
+
         ConfigurationImpl ci[] = configurationManager.listConfigurations( this, filter );
         if ( ci == null || ci.length == 0 )
         {
@@ -199,14 +215,24 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             // CM 1.4 / 104.11.1 Implicit permission
             if ( name != null && !name.equals( getBundle().getLocation() ) )
             {
-                sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
-
-                if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
+                try
                 {
+                    sm.checkPermission( new ConfigurationPermission( name, ConfigurationPermission.CONFIGURE ) );
+
                     configurationManager.log( LogService.LOG_DEBUG,
                         "Explicit Permission; grant CONFIGURE permission on configuration bound to {0} to bundle {1}",
                         new Object[]
                             { name, getBundle().getLocation() } );
+                }
+                catch ( SecurityException se )
+                {
+                    configurationManager
+                        .log(
+                            LogService.LOG_DEBUG,
+                            "No Permission; denied CONFIGURE permission on configuration bound to {0} to bundle {1}; reason: {2}",
+                            new Object[]
+                                { name, getBundle().getLocation(), se.getMessage() } );
+                    throw se;
                 }
             }
             else if ( configurationManager.isLogEnabled( LogService.LOG_DEBUG ) )
