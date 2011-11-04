@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Dictionary;
 
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -70,6 +71,8 @@ public class ConfigurationAdapter implements Configuration
      */
     public String getBundleLocation()
     {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation()", ( Throwable ) null );
+
         // CM 1.4 / 104.13.2.4
         configurationAdmin.checkPermission( delegatee.getBundleLocation() );
         checkDeleted();
@@ -83,6 +86,10 @@ public class ConfigurationAdapter implements Configuration
      */
     public void setBundleLocation( String bundleLocation )
     {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "setBundleLocation(bundleLocation={0})",
+            new Object[]
+                { bundleLocation } );
+
         // CM 1.4 / 104.13.2.4
         configurationAdmin.checkPermission( delegatee.getBundleLocation() );
         configurationAdmin.checkPermission( ( bundleLocation == null ) ? "*" : bundleLocation );
@@ -97,6 +104,8 @@ public class ConfigurationAdapter implements Configuration
      */
     public void update() throws IOException
     {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update()", ( Throwable ) null );
+
         checkDeleted();
         delegatee.update();
     }
@@ -109,6 +118,9 @@ public class ConfigurationAdapter implements Configuration
      */
     public void update( Dictionary properties ) throws IOException
     {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "update(properties={0})", new Object[]
+            { properties } );
+
         checkDeleted();
         delegatee.update( properties );
     }
@@ -119,6 +131,8 @@ public class ConfigurationAdapter implements Configuration
      */
     public Dictionary getProperties()
     {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
+
         checkDeleted();
 
         // return a deep copy since the spec says, that modification of
@@ -133,6 +147,8 @@ public class ConfigurationAdapter implements Configuration
      */
     public void delete() throws IOException
     {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "delete()", ( Throwable ) null );
+
         checkDeleted();
         delegatee.delete();
     }
