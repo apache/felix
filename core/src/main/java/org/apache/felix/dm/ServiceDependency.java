@@ -136,6 +136,20 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
 
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
+     * dependency is added, changed or removed. When you specify callbacks, the auto 
+     * configuration feature is automatically turned off, because we're assuming you don't 
+     * need it in this case.
+     * @param added the method to call when a service was added
+     * @param changed the method to call when a service was changed
+     * @param removed the method to call when a service was removed
+     * @param swapped the method to call when the service was swapped due to addition or 
+     * removal of an aspect
+     * @return this service dependency
+     */
+    public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped);
+    
+    /**
+     * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
      * dependency is added or removed. They are called on the instance you provide. When you
      * specify callbacks, the auto configuration feature is automatically turned off, because
      * we're assuming you don't need it in this case.
@@ -161,6 +175,21 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      */
 	public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed);
     
+    /**
+     * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
+     * dependency is added, changed or removed. When you specify callbacks, the auto 
+     * configuration feature is automatically turned off, because we're assuming you don't 
+     * need it in this case.
+     * @param instance the instance to call the callbacks on
+     * @param added the method to call when a service was added
+     * @param changed the method to call when a service was changed
+     * @param removed the method to call when a service was removed
+     * @param swapped the method to call when the service was swapped due to addition or 
+     * removal of an aspect
+     * @return this service dependency
+     */    
+    public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed, String swapped);
+	
     /**
      * Sets propagation of the service dependency properties to the provided service properties. Any additional
      * service properties specified directly are merged with these.
