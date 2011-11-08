@@ -1391,12 +1391,22 @@ public class ResolverImpl implements Resolver
             List<BundleCapability> caps = (cap.getRevision().getWiring() != null)
                 ? cap.getRevision().getWiring().getCapabilities(null)
                 : cap.getRevision().getDeclaredCapabilities(null);
-            for (int capIdx = 0; capIdx < caps.size(); capIdx++)
+            for (BundleCapability sourceCap : caps)
             {
-                if (caps.get(capIdx).getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
-                    && caps.get(capIdx).getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(pkgName))
+                if (sourceCap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                    && sourceCap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(pkgName))
                 {
-                    sources.add(caps.get(capIdx));
+                    // Since capabilities may come from fragments, we need to check
+                    // for that case and wrap them.
+                    if (!cap.getRevision().equals(sourceCap.getRevision()))
+                    {
+                        sources.add(
+                            new HostedCapability(cap.getRevision(), (BundleCapabilityImpl) sourceCap));
+                    }
+                    else
+                    {
+                        sources.add(sourceCap);
+                    }
                 }
             }
 
