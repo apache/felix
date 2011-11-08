@@ -241,10 +241,34 @@ class ExtensionManager extends URLStreamHandler implements Content
 
         List<BundleCapability> aliasCaps = new ArrayList<BundleCapability>(caps);
 
+        String[] aliases = {
+            FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME,
+            Constants.SYSTEM_BUNDLE_SYMBOLICNAME };
+
         for (int capIdx = 0; capIdx < aliasCaps.size(); capIdx++)
         {
-            // Get the attributes and search for bundle symbolic name.
-            for (Entry<String, Object> entry : aliasCaps.get(capIdx).getAttributes().entrySet())
+            BundleCapability cap = aliasCaps.get(capIdx);
+
+            // Need to alias bundle and host capabilities.
+            if (cap.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE)
+                || cap.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+            {
+                // Make a copy of the attribute array.
+                Map<String, Object> aliasAttrs =
+                    new HashMap<String, Object>(cap.getAttributes());
+                // Add the aliased value.
+                aliasAttrs.put(cap.getNamespace(), aliases);
+                // Create the aliased capability to replace the old capability.
+                cap = new BundleCapabilityImpl(
+                    cap.getRevision(),
+                    cap.getNamespace(),
+                    cap.getDirectives(),
+                    aliasAttrs);
+                aliasCaps.set(capIdx, cap);
+            }
+
+            // Further, search attributes for bundle symbolic name and alias it too.
+            for (Entry<String, Object> entry : cap.getAttributes().entrySet())
             {
                 // If there is a bundle symbolic name attribute, add the
                 // standard alias as a value.
@@ -252,18 +276,14 @@ class ExtensionManager extends URLStreamHandler implements Content
                 {
                     // Make a copy of the attribute array.
                     Map<String, Object> aliasAttrs =
-                        new HashMap<String, Object>(aliasCaps.get(capIdx).getAttributes());
+                        new HashMap<String, Object>(cap.getAttributes());
                     // Add the aliased value.
-                    aliasAttrs.put(
-                        Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE,
-                        new String[] {
-                            (String) entry.getValue(),
-                            Constants.SYSTEM_BUNDLE_SYMBOLICNAME});
+                    aliasAttrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, aliases);
                     // Create the aliased capability to replace the old capability.
                     aliasCaps.set(capIdx, new BundleCapabilityImpl(
-                        caps.get(capIdx).getRevision(),
-                        caps.get(capIdx).getNamespace(),
-                        caps.get(capIdx).getDirectives(),
+                        cap.getRevision(),
+                        cap.getNamespace(),
+                        cap.getDirectives(),
                         aliasAttrs));
                     // Continue with the next capability.
                     break;
