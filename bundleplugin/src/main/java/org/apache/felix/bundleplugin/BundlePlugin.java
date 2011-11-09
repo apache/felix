@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -419,13 +420,74 @@ public class BundlePlugin extends AbstractMojo
 
         Builder builder = new Builder();
         builder.setBase( getBase( currentProject ) );
-        builder.setProperties( properties );
+        builder.setProperties( sanitize( properties ) );
         if ( classpath != null )
         {
             builder.setClasspath( classpath );
         }
 
         return builder;
+    }
+
+
+    protected static Properties sanitize( Properties properties )
+    {
+        // convert any non-String keys/values to Strings
+        Properties sanitizedEntries = new Properties();
+        for ( Iterator itr = properties.entrySet().iterator(); itr.hasNext(); )
+        {
+            Map.Entry entry = ( Map.Entry ) itr.next();
+            if ( entry.getKey() instanceof String == false )
+            {
+                String key = sanitize( entry.getKey() );
+                if ( !properties.containsKey( key ) )
+                {
+                    sanitizedEntries.setProperty( key, sanitize( entry.getValue() ) );
+                }
+                itr.remove();
+            }
+            else if ( entry.getValue() instanceof String == false )
+            {
+                entry.setValue( sanitize( entry.getValue() ) );
+            }
+        }
+        properties.putAll( sanitizedEntries );
+        return properties;
+    }
+
+
+    protected static String sanitize( Object value )
+    {
+        if ( value instanceof String )
+        {
+            return ( String ) value;
+        }
+        else if ( value instanceof Iterable )
+        {
+            String delim = "";
+            StringBuilder buf = new StringBuilder();
+            for ( Object i : ( Iterable<?> ) value )
+            {
+                buf.append( delim ).append( i );
+                delim = ", ";
+            }
+            return buf.toString();
+        }
+        else if ( value.getClass().isArray() )
+        {
+            String delim = "";
+            StringBuilder buf = new StringBuilder();
+            for ( int i = 0, len = Array.getLength( value ); i < len; i++ )
+            {
+                buf.append( delim ).append( Array.get( value, i ) );
+                delim = ", ";
+            }
+            return buf.toString();
+        }
+        else
+        {
+            return String.valueOf( value );
+        }
     }
 
 
