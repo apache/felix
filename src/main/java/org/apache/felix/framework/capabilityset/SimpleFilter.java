@@ -502,9 +502,9 @@ loop:   for (int i = 0; i < len; i++)
 
             // If this is the last piece, then make sure the
             // string ends with it.
-            if (i == len - 1)
+            if (i == (len - 1))
             {
-                if (s.endsWith(piece))
+                if (s.endsWith(piece) && (s.length() >= (index + piece.length())))
                 {
                     result = true;
                 }
