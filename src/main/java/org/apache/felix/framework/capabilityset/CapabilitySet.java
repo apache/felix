@@ -366,10 +366,15 @@ public void dump()
         return false;
     }
 
-    private static final Class[] STRING_CLASS = new Class[] { String.class };
+    private static final Class<?>[] STRING_CLASS = new Class[] { String.class };
 
     private static boolean compare(Object lhs, Object rhsUnknown, int op)
     {
+        if (lhs == null)
+        {
+            return false;
+        }
+        
         // If this is a PRESENT operation, then just return true immediately
         // since we wouldn't be here if the attribute wasn't present.
         if (op == SimpleFilter.PRESENT)
