@@ -21,6 +21,8 @@ package org.apache.felix.bundleplugin;
  */
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -370,5 +372,26 @@ public class BundlePluginTest extends AbstractBundlePluginTest
 
         String eas2 = manifest2.getMainAttributes().getValue( "Embedded-Artifacts" );
         assertEquals( eas1, eas2 );
+    }
+
+
+    public void testPropertySanitizing() throws Exception
+    {
+        MavenProject project = getMavenProjectStub();
+
+        Properties props = new Properties();
+
+        props.put( new File( "A" ), new File( "B" ) );
+        props.put( new int[4], new HashMap( 2 ) );
+        props.put( Arrays.asList( 1, "two", 3.0 ), new float[5] );
+
+        props.put( "A", new File( "B" ) );
+        props.put( "4", new HashMap( 2 ) );
+        props.put( "1, two, 3.0", new char[5] );
+
+        Builder builder = plugin.getOSGiBuilder( project, new HashMap(), props, plugin.getClasspath( project ) );
+
+        File file = new File( getBasedir(), "target" + File.separatorChar + "test.props" );
+        builder.getProperties().store( new FileOutputStream( file ), "TEST" );
     }
 }
