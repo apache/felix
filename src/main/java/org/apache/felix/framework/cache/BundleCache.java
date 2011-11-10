@@ -426,9 +426,12 @@ public class BundleCache
         if (getSecureAction().isFileDirectory(target))
         {
             File[] files = getSecureAction().listDirectory(target);
-            for (int i = 0; i < files.length; i++)
+            if (files != null)
             {
-                deleteDirectoryTreeRecursive(files[i]);
+                for (int i = 0; i < files.length; i++)
+                {
+                    deleteDirectoryTreeRecursive(files[i]);
+                }
             }
         }
 
