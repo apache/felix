@@ -94,7 +94,7 @@ public class Manipulator {
             // Instrument all fields
             InputStream is2 = new ByteArrayInputStream(origin);
             ClassReader cr0 = new ClassReader(is2);
-            ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES);
             //CheckClassAdapter ch = new CheckClassAdapter(cw0);
             MethodCreator preprocess = new MethodCreator(cw0, m_fields, m_methods);
             cr0.accept(preprocess, ClassReader.SKIP_FRAMES);

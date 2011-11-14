@@ -74,7 +74,7 @@
             <Bundle-Description> iPOJO Ant Task </Bundle-Description>
             <Bundle-DocURL>http://felix.apache.org/site/ipojo-ant-task.html</Bundle-DocURL>
             <Private-Package> org.apache.felix.ipojo.metadata,
-              org.apache.felix.ipojo.manipulator,
+              org.apache.felix.ipojo.manipulator*,
               org.apache.felix.ipojo.xml.parser,
               org.apache.felix.ipojo.manipulation*,
               org.objectweb.asm.util;-split-package:=merge-first,
