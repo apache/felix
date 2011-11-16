@@ -1054,6 +1054,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         if ( provider != null )
         {
             buf.append( ", bundle=" ).append( provider.getBundleId() );
+            buf.append( '/' ).append( provider.getLocation() );
         }
         else
         {
@@ -1700,8 +1701,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                     helper.provide( ref );
 
-                    log( LogService.LOG_DEBUG, "Updated configuration {0} to update #{1}", new Object[]
-                        { config.getPid(), new Long( config.getLastUpdatedTime() ) } );
+                    log(
+                        LogService.LOG_DEBUG,
+                        "Updated {0} with configuration {1} (update #{1})",
+                        new Object[]
+                            { ConfigurationManager.toString( ref ), config.getPid(),
+                                new Long( config.getLastUpdatedTime() ) } );
                 }
 
                 // update the lastUpdatedTime
