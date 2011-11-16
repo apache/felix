@@ -159,9 +159,9 @@ public class MultiServicePIDTest extends ConfigurationTestBase
             TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
             TestCase.assertEquals( "Expect a single update call", 1, tester.numManagedServiceUpdatedCalls );
 
-            // assert second bundle has no configuration
+            // assert second bundle has no configuration (but called with null)
             TestCase.assertNull( tester2.props );
-            TestCase.assertEquals( 0, tester2.numManagedServiceUpdatedCalls );
+            TestCase.assertEquals( 1, tester2.numManagedServiceUpdatedCalls );
 
             // expect configuration bound to first bundle
             TestCase.assertEquals( bundle.getLocation(), config.getBundleLocation() );
@@ -179,7 +179,7 @@ public class MultiServicePIDTest extends ConfigurationTestBase
 
             // assert second bundle now has the configuration
             TestCase.assertNotNull( "Expect Properties after Configuration redispatch", tester2.props );
-            TestCase.assertEquals( "Expect a single update call after Configuration redispatch", 1,
+            TestCase.assertEquals( "Expect a single update call after Configuration redispatch", 2,
                 tester2.numManagedServiceUpdatedCalls );
 
             // remove the configuration for good
