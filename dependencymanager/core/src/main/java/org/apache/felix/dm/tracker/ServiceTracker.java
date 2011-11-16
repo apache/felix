@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeSet;
 
 import org.apache.felix.dm.DependencyManager;
@@ -964,14 +965,12 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
             TreeSet services = (TreeSet) m_highestHiddenCache.get(sid);
             if (services != null && services.size() > 0) {
                 ServiceReference result = (ServiceReference) services.last();
-//                System.out.println("getH " + ServiceUtil.toString(result));
                 return result;
             }
             return null;
         }
         
         private void addHighestHiddenCache(ServiceReference reference) {
-//            System.out.println("addH " + ServiceUtil.toString(reference));
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
             TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
             if (services == null) {
@@ -982,7 +981,6 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         }
         
         private void removeHighestHiddenCache(ServiceReference reference) {
-//            System.out.println("remH " + ServiceUtil.toString(reference));
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
             TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
             if (services != null) {
@@ -997,11 +995,6 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          */
         private void hide(ServiceReference ref) {
             addHighestHiddenCache(ref);
-//            if (DEBUG) { System.out.println("ServiceTracker.Tracked.hide " + ServiceUtil.toString(ref)); }
-//            synchronized (this) {
-//                if (DEBUG) { if (m_hidden.contains(ref)) { System.out.println("ServiceTracker.Tracked.hide ERROR: " + ServiceUtil.toString(ref)); }};
-//                m_hidden.add(ref);
-//            }
         }
         
         /**
@@ -1011,11 +1004,6 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
          */
         private void unhide(ServiceReference ref) {
             removeHighestHiddenCache(ref);
-//            if (DEBUG) { System.out.println("ServiceTracker.Tracked.unhide " + ServiceUtil.toString(ref)); }
-//            synchronized (this) {
-//                if (DEBUG) { if (!m_hidden.contains(ref)) { System.out.println("ServiceTracker.Tracked.unhide ERROR: " + ServiceUtil.toString(ref)); }};
-//                m_hidden.remove(ref);
-//            }
         }
 	    
 		/**
@@ -1030,51 +1018,38 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		    if (list == null) {
 		        return;
 		    }
-		    // we need to split this list into the highest matching service references for each aspect
-		    // and a list of 'hidden' service references
-		    int counter = list.length;
+		    Map highestRankedServiceMap = new HashMap(); // <Long, RankedService>
 		    for (int i = 0; i < list.length; i++) {
-		        ServiceReference sr = (ServiceReference) list[i];
-		        if (sr != null) {
-		            long sid = ServiceUtil.getServiceId(sr);
-		            long r = ServiceUtil.getRanking(sr);
-		            for (int j = i + 1; j < list.length; j++) {
-		                ServiceReference sr2 = (ServiceReference) list[j];
-		                if (sr2 != null /* && j != i */) {
-                            long sid2 = ServiceUtil.getServiceId(sr2);
-                            if (sid == sid2) {
-                                long r2 = ServiceUtil.getRanking(sr2);
-                                if (r > r2) {
-                                    if (DEBUG) { System.out.println("ServiceTracker.Tracked.setInitial: hiding " + ServiceUtil.toString(sr2)); }
-                                    hide(sr2);
-                                    list[j] = null;
-                                    counter--;
-                                }
-                                else {
-                                    if (DEBUG) { System.out.println("ServiceTracker.Tracked.setInitial: hiding " + ServiceUtil.toString(sr)); }
-                                    hide(sr);
-                                    list[i] = null;
-                                    counter--;
-                                    break;
-                                }
-                            }
-		                }
-		            }
-		        }
+		    	ServiceReference sr = (ServiceReference) list[i];
+		    	if (sr != null) {
+			    	Long serviceId = ServiceUtil.getServiceIdAsLong(sr);
+			    	int ranking = ServiceUtil.getRanking(sr);
+			    	
+			    	RankedService rs = (RankedService) highestRankedServiceMap.get(serviceId);
+			    	if (rs == null) {
+			    	    // the service did not exist yet in our map
+			    	    highestRankedServiceMap.put(serviceId, new RankedService(ranking, sr));
+			    	}
+			    	else if (ranking > rs.getRanking()) {
+                        // the service replaces a lower ranked one
+			    	    hide(rs.getServiceReference());
+			    	    rs.update(ranking, sr);
+			    	}
+			    	else {
+                        // the service does NOT replace a lower ranked one
+			    	    hide(sr);
+			    	}
+		    	}
 		    }
-		    if (counter > 0) {
-		        Object[] result = new Object[counter];
+		    if (highestRankedServiceMap.size() > 0) {
+		        Object[] result = new Object[highestRankedServiceMap.size()];
 		        int index = 0;
-		        for (int i = 0; i < list.length; i++) {
-		            if (list[i] != null) {
-                        if (DEBUG) { System.out.println("ServiceTracker.Tracked.setInitial: propagating " + ServiceUtil.toString((ServiceReference) list[i])); }
-		                result[index] = list[i];
-		                index++;
-		            }
+		        for(Iterator it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
+		        	Entry entry = (Entry) it.next();
+		        	result[index] = ((RankedService)entry.getValue()).getServiceReference();
+		        	index++;
 		        }
-		        // we only invoke super if we actually have
-		        // results in our initial list
-		        super.setInitial(result);
+		        super.setInitial(result);	    	
 		    }
 		}
 
@@ -1180,7 +1155,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 				            }
 				            higher = sr;
 				        }
-				        else if (ranking < trackedRanking) { ////////////////
+				        else if (ranking < trackedRanking) {
 				            // found lower ranked one!
                             if (DEBUG) {
                                 System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
@@ -1383,6 +1358,32 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		AllTracked() {
 			super();
             setTracked(new HashMapCache());
+		}
+	}
+	
+	/**
+	 * Holds a ranking and a service reference that can be updated if necessary.
+	 */
+	private static final class RankedService {
+		private int m_ranking;
+		private ServiceReference m_serviceReference;
+		
+		public RankedService(int ranking, ServiceReference serviceReference) {
+			m_ranking = ranking;
+			m_serviceReference = serviceReference;
+		}
+		
+        public void update(int ranking, ServiceReference serviceReference) {
+            m_ranking = ranking;
+            m_serviceReference = serviceReference;
+        }
+		
+		public int getRanking() {
+			return m_ranking;
+		}
+		
+		public ServiceReference getServiceReference() {
+			return m_serviceReference;
 		}
 	}
 }
