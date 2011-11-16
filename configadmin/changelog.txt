@@ -9,6 +9,9 @@ Changes from 1.2.8 to 1.4.0
     * [FELIX-2885] - The config admin bundle does not indicate its provided and required services dependencies
     * [FELIX-3046] - Empty array configuration value is read as null after restart
     * [FELIX-3175] - RankingComparator results in wrong results
+    * [FELIX-3227] - ManagedService.update must be called with null if configuration exists but is not visilbe
+    * [FELIX-3228] - Configuration.getBundleLocation to generous
+    * [FELIX-3229] - ConfigurationAdmin.getConfiguration(String, String) and .createConfiguration(String) to generous
 
 ** Improvement
     * [FELIX-3180] - Provide MessageFormat based logging method
