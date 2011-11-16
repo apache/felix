@@ -644,10 +644,10 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         bundleB.start();
         delay();
 
-        // ==> configuration not supplied to service ms2
+        // ==> invisible configuration supplied as null to service ms2
         final ManagedServiceTestActivator2 testerB1 = ManagedServiceTestActivator2.INSTANCE;
         TestCase.assertNull( testerB1.props );
-        TestCase.assertEquals( 0, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 1, testerB1.numManagedServiceUpdatedCalls );
 
         // 5. Call Configuration.setBundleLocation( "locationB" )
         config.setBundleLocation( locationB );
@@ -662,7 +662,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // ==> configuration supplied to the service ms2
         TestCase.assertNotNull( testerB1.props );
-        TestCase.assertEquals( 1, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 2, testerB1.numManagedServiceUpdatedCalls );
     }
 
 
@@ -694,10 +694,10 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         bundleB.start();
         delay();
 
-        // ==> configuration not supplied to service ms2
+        // ==> invisible configuration supplied as null to service ms2
         final ManagedServiceTestActivator2 testerB1 = ManagedServiceTestActivator2.INSTANCE;
         TestCase.assertNull( testerB1.props );
-        TestCase.assertEquals( 0, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 1, testerB1.numManagedServiceUpdatedCalls );
 
         // 5. Call Configuration.setBundleLocation( "locationB" )
         config.setBundleLocation( locationB );
@@ -712,7 +712,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // ==> configuration supplied to the service ms2
         TestCase.assertNotNull( testerB1.props );
-        TestCase.assertEquals( 1, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 2, testerB1.numManagedServiceUpdatedCalls );
 
         // 6. Update configuration now
         config.update();
@@ -720,7 +720,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // ==> configuration supplied to the service ms2
         TestCase.assertNotNull( testerB1.props );
-        TestCase.assertEquals( 2, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 3, testerB1.numManagedServiceUpdatedCalls );
     }
 
 
@@ -872,10 +872,10 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
         bundleB.start();
         delay();
 
-        // ==> configuration not supplied to service ms2
+        // ==> invisible configuration supplied as null to service ms2
         final ManagedServiceTestActivator2 testerB1 = ManagedServiceTestActivator2.INSTANCE;
         TestCase.assertNull( testerB1.props );
-        TestCase.assertEquals( 0, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 1, testerB1.numManagedServiceUpdatedCalls );
 
         // 5. Uninstall bundle A
         bundleA.uninstall();
@@ -886,7 +886,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // ==> configuration supplied to the service ms2
         TestCase.assertNotNull( testerB1.props );
-        TestCase.assertEquals( 1, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 2, testerB1.numManagedServiceUpdatedCalls );
 
         // 6. Update configuration now
         config.update();
@@ -894,7 +894,7 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
 
         // ==> configuration supplied to the service ms2
         TestCase.assertNotNull( testerB1.props );
-        TestCase.assertEquals( 2, testerB1.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 3, testerB1.numManagedServiceUpdatedCalls );
     }
 
 
