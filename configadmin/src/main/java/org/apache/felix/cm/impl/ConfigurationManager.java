@@ -416,20 +416,23 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
-    ConfigurationImpl createFactoryConfiguration( ConfigurationAdminImpl configurationAdmin, String factoryPid )
-        throws IOException
-    {
-        return createFactoryConfiguration( factoryPid, configurationAdmin.getBundle().getLocation() );
-    }
-
-
     ConfigurationImpl createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
         return createConfiguration( createPid( factoryPid ), factoryPid, location );
     }
 
 
-    ConfigurationImpl getExistingConfiguration( String pid ) throws IOException
+    /**
+     * Returns the {@link ConfigurationImpl} with the given PID if
+     * available in the internal cache or from any persistence manager.
+     * Otherwise <code>null</code> is returned.
+     *
+     * @param pid The PID for which to return the configuration
+     * @return The configuration or <code>null</code> if non exists
+     * @throws IOException If an error occurrs reading from a persistence
+     *      manager.
+     */
+    ConfigurationImpl getConfiguration( String pid ) throws IOException
     {
         ConfigurationImpl config = getCachedConfiguration( pid );
         if ( config != null )
@@ -457,10 +460,26 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
-    ConfigurationImpl getConfiguration( String pid, String bundleLocation ) throws IOException
+    /**
+     * Creates a regular (non-factory) configuration for the given PID
+     * setting the bundle location accordingly.
+     * <p>
+     * This method assumes the configuration to not exist yet and will
+     * create it without further checking.
+     *
+     * @param pid The PID of the new configuration
+     * @param bundleLocation The location to set on the new configuration.
+     *      This may be <code>null</code> to not bind the configuration
+     *      yet.
+     * @return The new configuration persisted in the first persistence
+     *      manager.
+     * @throws IOException If an error occurrs writing the configuration
+     *      to the persistence.
+     */
+    ConfigurationImpl createConfiguration( String pid, String bundleLocation ) throws IOException
     {
         // check for existing (cached or persistent) configuration
-        ConfigurationImpl config = getExistingConfiguration( pid );
+        ConfigurationImpl config = getConfiguration( pid );
         if ( config != null )
         {
             return config;
@@ -1318,7 +1337,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             long lastModificationTime = -1;
             try
             {
-                config = getExistingConfiguration( pid );
+                config = getConfiguration( pid );
                 if ( config != null )
                 {
                     synchronized ( config )
@@ -1468,7 +1487,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         ConfigurationImpl cfg;
                         try
                         {
-                            cfg = getExistingConfiguration( pid );
+                            cfg = getConfiguration( pid );
                         }
                         catch ( IOException ioe )
                         {

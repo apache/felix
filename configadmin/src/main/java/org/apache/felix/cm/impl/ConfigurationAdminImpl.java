@@ -74,7 +74,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
             { factoryPid } );
 
-        return this.wrap( configurationManager.createFactoryConfiguration( this, factoryPid ) );
+        ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, this.getBundle()
+            .getLocation() );
+        return this.wrap( config );
     }
 
 
@@ -88,9 +90,10 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
                 { factoryPid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( location );
+        this.checkPermission( ( location == null ) ? "*" : location );
 
-        return this.wrap( configurationManager.createFactoryConfiguration( factoryPid, location ) );
+        ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, location );
+        return this.wrap( config );
     }
 
 
@@ -102,20 +105,26 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
             { pid } );
 
-        ConfigurationImpl config = configurationManager.getConfiguration( pid, getBundle().getLocation() );
-
-        if ( config.getBundleLocation() == null )
+        ConfigurationImpl config = configurationManager.getConfiguration( pid );
+        if ( config == null )
         {
-            configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
-                new Object[]
-                    { config.getPid(), Boolean.valueOf( config.isNew() ), getBundle().getLocation() } );
-
-            config.setStaticBundleLocation( this.getBundle().getLocation() );
+            config = configurationManager.createConfiguration( pid, getBundle().getLocation() );
         }
-        else if ( !config.getBundleLocation().equals( this.getBundle().getLocation() ) )
+        else
         {
-            // CM 1.4 / 104.13.2.3
-            this.checkPermission( config.getBundleLocation() );
+            if ( config.getBundleLocation() == null )
+            {
+                configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
+                    new Object[]
+                        { config.getPid(), Boolean.valueOf( config.isNew() ), this.getBundle().getLocation() } );
+
+                config.setStaticBundleLocation( this.getBundle().getLocation() );
+            }
+            else
+            {
+                // CM 1.4 / 104.13.2.3
+                this.checkPermission( config.getBundleLocation() );
+            }
         }
 
         return this.wrap( config );
@@ -131,13 +140,17 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             { pid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( location );
+        this.checkPermission( ( location == null ) ? "*" : location );
 
-        ConfigurationImpl config = configurationManager.getConfiguration( pid, location );
-        if ( config.getBundleLocation() != null )
+        ConfigurationImpl config = configurationManager.getConfiguration( pid );
+        if ( config == null )
         {
-            // CM 1.4 / 104.13.2.3
-            this.checkPermission( config.getBundleLocation() );
+            config = configurationManager.createConfiguration( pid, location );
+        }
+        else
+        {
+            final String configLocation = config.getBundleLocation();
+            this.checkPermission( ( configLocation == null ) ? "*" : configLocation );
         }
 
         return this.wrap( config );
