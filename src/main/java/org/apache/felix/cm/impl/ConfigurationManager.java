@@ -1372,21 +1372,29 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     return;
                 }
 
-                // CM 1.4 / 104.13.2.2
-                if ( !canReceive( serviceBundle, config.getBundleLocation() ) )
+                if ( canReceive( serviceBundle, config.getBundleLocation() ) )
                 {
-                    log( LogService.LOG_ERROR,
-                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                    // 104.4.2 Dynamic Binding
+                    config.tryBindLocation( serviceBundle.getLocation() );
+
+                    // prepare the configuration for the service (call plugins)
+                    callPlugins( properties, pid, sr, config );
+                }
+                else
+                {
+                    // CM 1.4 / 104.13.2.2 / 104.5.3
+                    // act as if there is no configuration
+                    log(
+                        LogService.LOG_DEBUG,
+                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}; calling with null",
                         new Object[]
                             { pid, ConfigurationManager.toString( sr ), config.getBundleLocation() } );
-                    return;
+
+                    // CM 1.4 / 104.5.3 ManagedService.updated must be
+                    // called with null if configuration is no visible
+                    properties = null;
                 }
 
-                // 104.4.2 Dynamic Binding
-                config.tryBindLocation( serviceBundle.getLocation() );
-
-                // prepare the configuration for the service (call plugins)
-                callPlugins( properties, pid, sr, config );
             }
             else
             {
