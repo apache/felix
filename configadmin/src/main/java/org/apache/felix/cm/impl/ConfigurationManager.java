@@ -1714,7 +1714,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
             else if ( isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                log( LogService.LOG_DEBUG, "No ManagedService registered for updates to configuration {0}",
+                log( LogService.LOG_DEBUG, "No ManagedService[Factory] registered for updates to configuration {0}",
                     new Object[]
                         { config.getPid() } );
             }
