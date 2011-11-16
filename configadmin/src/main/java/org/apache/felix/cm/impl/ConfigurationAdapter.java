@@ -92,7 +92,8 @@ public class ConfigurationAdapter implements Configuration
                 { bundleLocation } );
 
         // CM 1.4 / 104.13.2.4
-        configurationAdmin.checkPermission( delegatee.getBundleLocation() );
+        final String configLocation = delegatee.getBundleLocation();
+        configurationAdmin.checkPermission( ( configLocation == null ) ? "*" : configLocation );
         configurationAdmin.checkPermission( ( bundleLocation == null ) ? "*" : bundleLocation );
         checkDeleted();
         delegatee.setStaticBundleLocation( bundleLocation );
