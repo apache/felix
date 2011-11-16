@@ -551,4 +551,21 @@ public class DependencyManager {
     public List getComponents() {
         return Collections.unmodifiableList(m_components);
     }
+
+    /**
+     * Removes all components and their dependencies.
+     */
+    public void clear() {
+        List services = getComponents();
+        for (int i = services.size() - 1; i >= 0; i--) {
+            Component service = (Component) services.get(i);
+            remove(service);
+            // remove any state listeners that are still registered
+            if (service instanceof ComponentImpl) {
+                ComponentImpl si = (ComponentImpl) service;
+                si.removeStateListeners();
+            }
+        }
+    }
+    
 }
