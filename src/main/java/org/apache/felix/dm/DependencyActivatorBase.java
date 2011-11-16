@@ -20,7 +20,6 @@ package org.apache.felix.dm;
 
 import java.util.List;
 
-import org.apache.felix.dm.impl.ComponentImpl;
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -87,7 +86,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      */
     public void stop(BundleContext context) throws Exception {
         destroy(m_context, m_manager);
-        cleanup(m_manager);
+        m_manager.clear();
         m_manager = null;
         m_context = null;
     }
@@ -286,25 +285,8 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * 
      * @return the factory configuration adapter service
      */
-   public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) {
-       return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, heading, desc, localization, propertiesMetaData);
-   }
-
-    /**
-     * Cleans up all components and their dependencies.
-     * 
-     * @param manager the dependency manager
-     */
-    private void cleanup(DependencyManager manager) {
-        List services = manager.getComponents();
-        for (int i = services.size() - 1; i >= 0; i--) {
-            Component service = (Component) services.get(i);
-            manager.remove(service);
-            // remove any state listeners that are still registered
-            if (service instanceof ComponentImpl) {
-                ComponentImpl si = (ComponentImpl) service;
-                si.removeStateListeners();
-            }
-        }
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) {
+        return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, heading, desc, localization, propertiesMetaData);
     }
+
 }
