@@ -181,7 +181,7 @@
                             <!--
                                 The Felix Shell support is optional 
                             -->
-                            org.apache.felix.shell; resolution:=optional,
+                            org.apache.felix.shell;provide:=true;resolution:=optional,
                             
                             <!--
                                 Framework version 1.4 (from R4.1) is required
@@ -199,19 +199,29 @@
 
                             <!--
                                 PackageAdmin is used to find reference types if
-                                the any component's bundle does not import it.
-                                See BindMethod.getParameterClass(Class) for details 
+                                the component's bundle does not import it.
+                                See BindMethod.getParameterClass(Class) for details.
+                                R4.0 version 1.2 is sufficient. 
                             -->
                             org.osgi.service.packageadmin;version="[1.2,2)";resolution:=optional,
                             
                             <!--
                                 SCR API is required (we also export it) and must
-                                be of any 1.1 version, because we implement that
-                                exact version. This import is only used if the
-                                framework decides to wire the bundle to another
-                                API provider. 
+                                be of the same minor version as we export, because
+                                we implement that exact version. This import is
+                                only used if the framework decides to wire the
+                                bundle to another API provider. 
                             -->
-                            org.osgi.service.component;version="[1.1,1.2)"
+                            org.osgi.service.component;provide:=true,
+
+                            <!--
+                                SCR Admin API is required (we also export it) and
+                                must be of the same minor version as we export,
+                                because we implement that exact version. This
+                                import is only used if the framework decides to
+                                wire the bundle to another API provider. 
+                            -->
+                            org.apache.felix.scr;provide:=true
                         </Import-Package>
                         <DynamicImport-Package>
                             <!--
