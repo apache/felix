@@ -67,7 +67,7 @@ public class MultiServicePIDTest extends ConfigurationTestBase
 
         // assert activater has configuration (two calls, one per pid)
         TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
-        TestCase.assertEquals( "Expect a single update call", 2, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( "Expect two update calls", 2, tester.numManagedServiceUpdatedCalls );
 
         TestCase.assertEquals( bundle.getLocation(), config.getBundleLocation() );
 
