@@ -1114,6 +1114,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( location == null )
         {
+            log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration:(unbound)", new Object[]
+                { bundle.getLocation() } );
             return true;
         }
         else if ( location.startsWith( "?" ) )
@@ -1121,16 +1123,29 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             // multi-location
             if ( System.getSecurityManager() != null )
             {
-                return bundle.hasPermission( new ConfigurationPermission( location, ConfigurationPermission.TARGET ) );
+                final boolean hasPermission = bundle.hasPermission( new ConfigurationPermission( location,
+                    ConfigurationPermission.TARGET ) );
+                log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2} (SecurityManager check)",
+                    new Object[]
+                        { new Boolean( hasPermission ), bundle.getLocation(), location } );
+                return hasPermission;
             }
+
+            log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration={1} (no SecurityManager)",
+                new Object[]
+                    { bundle.getLocation(), location } );
             return true;
         }
         else
         {
             // single location, must match
-            return location.equals( bundle.getLocation() );
+            final boolean hasPermission = location.equals( bundle.getLocation() );
+            log( LogService.LOG_DEBUG, "canReceive={0}: bundle={1}; configuration={2}", new Object[]
+                { new Boolean( hasPermission ), bundle.getLocation(), location } );
+            return hasPermission;
         }
     }
+
 
     // ---------- inner classes
 
@@ -1324,7 +1339,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final Dictionary rawProperties;
 
-        private final long lastModificationTime;
+        private final long revision;
 
         ManagedServiceUpdate( String pid, ServiceReference sr, ManagedService service )
         {
@@ -1335,7 +1350,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             // get or load configuration for the pid
             ConfigurationImpl config = null;
             Dictionary rawProperties = null;
-            long lastModificationTime = -1;
+            long revision = -1;
             try
             {
                 config = getConfiguration( pid );
@@ -1344,7 +1359,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     synchronized ( config )
                     {
                         rawProperties = config.getProperties( true );
-                        lastModificationTime = config.getLastModificationTime();
+                        revision = config.getRevision();
                     }
                 }
             }
@@ -1356,31 +1371,19 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
             this.config = config;
             this.rawProperties = rawProperties;
-            this.lastModificationTime = lastModificationTime;
+            this.revision = revision;
         }
 
 
         public void run()
         {
-            // only update configuration if lastModificationTime is less than
-            // lastUpdateTime
             Dictionary properties = rawProperties;
-            if ( properties != null && config != null && lastModificationTime < config.getLastUpdatedTime() )
-            {
-                log(
-                    LogService.LOG_DEBUG,
-                    "Configuration {0} at modification #{1} has already been updated to update #{2}, nothing to be done anymore.",
-                    new Object[]
-                        { config.getPid(), new Long( config.getLastModificationTime() ),
-                            new Long( config.getLastUpdatedTime() ) } );
-                return;
-            }
 
             // check configuration and call plugins if existing
             if ( config != null )
             {
-                log( LogService.LOG_DEBUG, "Updating configuration {0} to modification #{1}", new Object[]
-                    { pid, new Long( config.getLastModificationTime() ) } );
+                log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
+                    { pid, new Long( revision ) } );
 
                 Bundle serviceBundle = sr.getBundle();
                 if ( serviceBundle == null )
@@ -1432,14 +1435,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 handleCallBackError( t, sr, config );
             }
-
-            // update the lastUpdatedTime if there is configuration
-            if ( config != null && properties != null )
-            {
-                config.setLastUpdatedTime( lastModificationTime );
-                log( LogService.LOG_DEBUG, "Updated configuration {0} to update #{1}", new Object[]
-                    { config.getPid(), new Long( config.getLastUpdatedTime() ) } );
-            }
         }
 
         public String toString()
@@ -1465,7 +1460,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final Map configs;
 
-        private final Map stamps;
+        private final Map revisions;
 
         ManagedServiceFactoryUpdate( String factoryPid, ServiceReference sr, ManagedServiceFactory service )
         {
@@ -1475,13 +1470,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
             Factory factory = null;
             Map configs = null;
-            Map stamps = null;
+            Map revisions = null;
             try
             {
                 factory = getFactory( factoryPid );
                 if (factory != null) {
                     configs = new HashMap();
-                    stamps = new HashMap();
+                    revisions = new HashMap();
                     for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
                     {
                         final String pid = ( String ) pi.next();
@@ -1534,7 +1529,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         synchronized ( cfg )
                         {
                             configs.put( cfg, cfg.getProperties( true ) );
-                            stamps.put( cfg, new Long( cfg.getLastModificationTime() ) );
+                            revisions.put( cfg, new Long( cfg.getRevision() ) );
                         }
                     }
                 }
@@ -1546,7 +1541,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
 
             this.configs = configs;
-            this.stamps = stamps;
+            this.revisions = revisions;
         }
 
 
@@ -1568,21 +1563,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 final Map.Entry entry = (Map.Entry) ci.next();
                 final ConfigurationImpl cfg = (ConfigurationImpl) entry.getKey();
                 final Dictionary properties = (Dictionary) entry.getValue();
-                final long lastModificationTime = ( ( Long ) stamps.get( cfg ) ).longValue();
+                final long revision = ( ( Long ) revisions.get( cfg ) ).longValue();
 
-                if ( lastModificationTime <= cfg.getLastUpdatedTime() )
-                {
-                    log(
-                        LogService.LOG_DEBUG,
-                        "Configuration {0} at modification #{1} has already been updated to update #{2}, nothing to be done anymore.",
-                        new Object[]
-                            { cfg.getPid(), new Long( cfg.getLastModificationTime() ),
-                                new Long( cfg.getLastUpdatedTime() ) } );
-                   continue;
-                }
-
-                log( LogService.LOG_DEBUG, "Updating configuration {0} to modification #{1}", new Object[]
-                    { cfg.getPid(), new Long( cfg.getLastModificationTime() ) } );
+                log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
+                    { cfg.getPid(), new Long( revision ) } );
 
                 // CM 1.4 / 104.13.2.1
                 if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
@@ -1616,12 +1600,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     {
                         handleCallBackError( t, sr, cfg );
                     }
-
-                    // update the lastUpdatedTime
-                    cfg.setLastUpdatedTime( lastModificationTime );
-
-                    log( LogService.LOG_DEBUG, "Updated configuration {0} to update #{1}", new Object[]
-                        { cfg.getPid(), new Long( cfg.getLastUpdatedTime() ) } );
                 }
             }
         }
@@ -1645,7 +1623,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final ConfigurationImpl config;
         private final ServiceHelper helper;
-        private final long lastModificationTime;
+        private final long revision;
 
 
         UpdateConfiguration( final ConfigurationImpl config )
@@ -1654,26 +1632,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             synchronized ( config )
             {
                 this.helper = createServiceHelper( config );
-                this.lastModificationTime = config.getLastModificationTime();
+                this.revision = config.getRevision();
             }
         }
 
 
         public void run()
         {
-            if ( lastModificationTime <= config.getLastUpdatedTime() )
-            {
-                log(
-                    LogService.LOG_DEBUG,
-                    "Configuration {0} at modification #{1} has already been updated to update #{2}, nothing to be done anymore.",
-                    new Object[]
-                        { config.getPid(), new Long( config.getLastModificationTime() ),
-                            new Long( config.getLastUpdatedTime() ) } );
-                return;
-            }
-
-            log( LogService.LOG_DEBUG, "Updating configuration {0} to modification #{1}", new Object[]
-                { config.getPid(), new Long( config.getLastModificationTime() ) } );
+            log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
+                { config.getPid(), new Long( revision ) } );
 
             final ServiceReference[] srList = helper.getServices();
             if ( srList != null )
@@ -1700,17 +1667,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
 
                     helper.provide( ref );
-
-                    log(
-                        LogService.LOG_DEBUG,
-                        "Updated {0} with configuration {1} (update #{1})",
-                        new Object[]
-                            { ConfigurationManager.toString( ref ), config.getPid(),
-                                new Long( config.getLastUpdatedTime() ) } );
                 }
-
-                // update the lastUpdatedTime
-                config.setLastUpdatedTime( lastModificationTime );
             }
             else if ( isLogEnabled( LogService.LOG_DEBUG ) )
             {

@@ -59,7 +59,7 @@ class ConfigurationImpl extends ConfigurationBase
      *      Schedules task to update service with the configuration
      *
      *    T1. Runs again creating the UpdateConfiguration task with the
-     *         configuration persisted before being preempted
+     *      configuration persisted before being preempted
      *      Schedules task to update service
      *
      *    Update Thread:
@@ -67,33 +67,14 @@ class ConfigurationImpl extends ConfigurationBase
      *      Updates ManagedService with configuration prepared by T1
      *
      * The correct behaviour would be here, that the second call to update
-     * would not take place.
+     * would not take place. We cannot at this point in time easily fix
+     * this issue. Also, it seems that changes for this to happen are
+     * small.
      *
-     * This concurrency safety is implemented with the help of the
-     * lastModificationTime field updated by the configure(Dictionary) method
-     * when setting the properties field and the lastUpdatedTime field updated
-     * in the Update Thread after calling the update(Dictionary) method of
-     * the ManagedService[Factory] service.
-     *
-     * The UpdateConfiguration task compares the lastModificationTime to the
-     * lastUpdateTime. If the configuration has been modified after being
-     * updated the last time, it is updated in the ManagedService[Factory]. If
-     * the configuration has already been updated since being modified (as in
-     * the case above), the UpdateConfiguration thread does not call the update
-     * method (but still sends the CM_UPDATED event).
-     *
-     * See also FELIX-1542.
-     *
-     * FELIX-1545 provides further update to the concurrency situation defining
-     * three more failure cases:
-     *
-     *    (1) System.currentTimeMillis() may be too coarse graind to protect
-     *        against race condition.
-     *    (2) ManagedService update sets last update time regardless of whether
-     *        configuration was provided or not. This may cause a configuration
-     *        update to be lost.
-     *    (3) ManagedService update does not respect last update time which
-     *        in turn may cause duplicate configuration delivery.
+     * This class provides modification counter (lastModificationTime)
+     * which is incremented on each change of the configuration. This
+     * helps the update tasks in the ConfigurationManager to log the
+     * revision of the configuration supplied.
      */
 
     /**
@@ -150,23 +131,13 @@ class ConfigurationImpl extends ConfigurationBase
     private volatile boolean isDeleted;
 
     /**
-     * Current configuration modification counter. This field is incremented
-     * each time the {@link #properties} field is set (in the constructor or the
-     * {@link #configure(Dictionary)} method. field.
+     * Configuration revision counter incremented each time the
+     * {@link #properties} is set (in the constructor or the
+     * {@link #configure(Dictionary)} method. This counter is transient
+     * and not persisted. Thus it is restarted from zero each time
+     * an instance of this class is created.
      */
-    private volatile long lastModificationTime;
-
-    /**
-     * Value of the {@link #lastModificationTime} counter at the time the non-
-     * <code>null</code> properties of this configuration have been updated to a
-     * ManagedService[Factory]. This field is initialized to -1 in the
-     * constructors and set to the value of the {@link #lastModificationTime} by
-     * the {@link #setLastUpdatedTime()} method called from the respective task
-     * updating the configuration.
-     *
-     * @see #lastModificationTime
-     */
-    private volatile long lastUpdatedTime;
+    private volatile long revision;
 
 
     ConfigurationImpl( ConfigurationManager configurationManager, PersistenceManager persistenceManager,
@@ -176,7 +147,6 @@ class ConfigurationImpl extends ConfigurationBase
 
         this.factoryPID = ( String ) properties.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
         this.isDeleted = false;
-        this.lastUpdatedTime = -1;
 
         // set bundle location from persistence and/or check for dynamic binding
         this.staticBundleLocation = ( String ) properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ;
@@ -194,7 +164,6 @@ class ConfigurationImpl extends ConfigurationBase
 
         this.factoryPID = factoryPid;
         this.isDeleted = false;
-        this.lastUpdatedTime = -1;
 
         // set bundle location from persistence and/or check for dynamic binding
         this.staticBundleLocation = bundleLocation;
@@ -202,7 +171,7 @@ class ConfigurationImpl extends ConfigurationBase
 
         // first "update"
         this.properties = null;
-        setLastModificationTime();
+        this.revision = 1;
 
         // this is a new configuration object, store immediately unless
         // the new configuration object is created from a factory, in which
@@ -503,73 +472,15 @@ class ConfigurationImpl extends ConfigurationBase
 
 
     /**
-     * Increments the last modification counter of this configuration to cause
-     * the ManagedService or ManagedServiceFactory subscribed to this
-     * configuration to be updated.
+     * Returns the revision of this configuration object.
      * <p>
-     * This method is intended to only be called by the constructor(s) of this
-     * class and the {@link #update(Dictionary)} method to indicate to the
-     * update threads, the configuration is ready for distribution.
-     * <p>
-     * Setting the properties field and incrementing this counter should be
-     * done synchronized on this instance.
+     * When getting both the configuration properties and this revision
+     * counter, the two calls should be synchronized on this instance to
+     * ensure configuration values and revision counter match.
      */
-    void setLastModificationTime( )
+    long getRevision()
     {
-        this.lastModificationTime++;
-    }
-
-
-    /**
-     * Returns the modification counter of the last modification of the
-     * properties of this configuration object.
-     * <p>
-     * This value may be compared to the {@link #getLastUpdatedTime()} to decide
-     * whether to update the ManagedService[Factory] or not.
-     * <p>
-     * Getting the properties of this configuration and this counter should be
-     * done synchronized on this instance.
-     */
-    long getLastModificationTime()
-    {
-        return lastModificationTime;
-    }
-
-
-    /**
-     * Returns the modification counter of the last update of this configuration
-     * to the subscribing ManagedService or ManagedServiceFactory. This value
-     * may be compared to the {@link #getLastModificationTime()} to decide
-     * whether the configuration should be updated or not.
-     */
-    long getLastUpdatedTime()
-    {
-        return lastUpdatedTime;
-    }
-
-
-    /**
-     * Sets the last update time field to the given value of the last
-     * modification time to indicate the version of configuration properties
-     * that have been updated in a ManagedService[Factory].
-     * <p>
-     * This method should only be called from the Update Thread after supplying
-     * the configuration to the ManagedService[Factory].
-     *
-     * @param lastModificationTime The value of the
-     *      {@link #getLastModificationTime() last modification time field} at
-     *      which the properties have been extracted from the configuration to
-     *      be supplied to the service.
-     */
-    void setLastUpdatedTime( long lastModificationTime )
-    {
-        synchronized ( this )
-        {
-            if ( this.lastUpdatedTime < lastModificationTime )
-            {
-                this.lastUpdatedTime = lastModificationTime;
-            }
-        }
+        return revision;
     }
 
 
@@ -635,7 +546,7 @@ class ConfigurationImpl extends ConfigurationBase
         synchronized ( this )
         {
             this.properties = newProperties;
-            setLastModificationTime();
+            this.revision++;
         }
     }
 
