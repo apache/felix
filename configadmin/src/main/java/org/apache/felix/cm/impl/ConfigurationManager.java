@@ -1114,7 +1114,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( location == null )
         {
-            log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration:(unbound)", new Object[]
+            log( LogService.LOG_DEBUG, "canReceive=true; bundle={0}; configuration=(unbound)", new Object[]
                 { bundle.getLocation() } );
             return true;
         }
@@ -1655,18 +1655,27 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 for ( int i = 0; i < srList.length; i++ )
                 {
                     final ServiceReference ref = srList[i];
-
-                    // CM 1.4 / 104.13.2.2
-                    if ( !canReceive( ref.getBundle(), configBundleLocation ) )
+                    final Bundle refBundle = ref.getBundle();
+                    if ( refBundle == null )
                     {
+                        log( LogService.LOG_DEBUG,
+                            "Service {0} seems to be unregistered concurrently (not providing configuration)",
+                            new Object[]
+                                { ConfigurationManager.toString( ref ) } );
+                    }
+                    else if ( canReceive( refBundle, configBundleLocation ) )
+                    {
+                        helper.provide( ref );
+                    }
+                    else
+                    {
+                        // CM 1.4 / 104.13.2.2
                         log( LogService.LOG_ERROR,
                             "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
                             new Object[]
                                 { config.getPid(), ConfigurationManager.toString( ref ), configBundleLocation } );
-                        continue;
                     }
 
-                    helper.provide( ref );
                 }
             }
             else if ( isLogEnabled( LogService.LOG_DEBUG ) )
@@ -1721,9 +1730,25 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 for ( int i = 0; i < srList.length; i++ )
                 {
                     final ServiceReference sr = srList[i];
-                    if ( canReceive( sr.getBundle(), configLocation ) )
+                    final Bundle srBundle = sr.getBundle();
+                    if ( srBundle == null )
+                    {
+                        log( LogService.LOG_DEBUG,
+                            "Service {0} seems to be unregistered concurrently (not removing configuration)",
+                            new Object[]
+                                { ConfigurationManager.toString( sr ) } );
+                    }
+                    else if ( canReceive( srBundle, configLocation ) )
                     {
                         helper.remove( sr );
+                    }
+                    else
+                    {
+                        // CM 1.4 / 104.13.2.2
+                        log( LogService.LOG_ERROR,
+                            "Cannot remove configuration {0} for {1}: No visibility to configuration bound to {2}",
+                            new Object[]
+                                { config.getPid(), ConfigurationManager.toString( sr ), configLocation } );
                     }
                 }
             }
@@ -1770,15 +1795,29 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             ServiceReference[] srList = helper.getServices( );
             if ( srList != null )
             {
-                // make sure the config is dynamically bound to the first
-                // service if it has been unbound causing this update
-                config.tryBindLocation( srList[0].getBundle().getLocation() );
-
                 for ( int i = 0; i < srList.length; i++ )
                 {
                     final ServiceReference sr = srList[i];
-                    final boolean wasVisible = canReceive( sr.getBundle(), oldLocation );
-                    final boolean isVisible = canReceive( sr.getBundle(), config.getBundleLocation() );
+
+                    final Bundle srBundle = sr.getBundle();
+                    if ( srBundle == null )
+                    {
+                        log( LogService.LOG_DEBUG,
+                            "Service {0} seems to be unregistered concurrently (not processing)", new Object[]
+                                { ConfigurationManager.toString( sr ) } );
+                        continue;
+                    }
+
+                    final boolean wasVisible = canReceive( srBundle, oldLocation );
+                    final boolean isVisible = canReceive( srBundle, config.getBundleLocation() );
+
+                    // make sure the config is dynamically bound to the first
+                    // service if the config has been unbound causing this update
+                    if ( isVisible )
+                    {
+                        config.tryBindLocation( srBundle.getLocation() );
+                    }
+
                     if ( wasVisible && !isVisible )
                     {
                         // call deleted method
