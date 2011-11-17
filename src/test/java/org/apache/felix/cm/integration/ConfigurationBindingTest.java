@@ -82,6 +82,8 @@ public class ConfigurationBindingTest extends ConfigurationTestBase
     {
         String pid = "test_configuration_unbound_on_uninstall";
         configure( pid );
+
+        delay(); // for the event to be distributed
         configListener.assertEvents( ConfigurationEvent.CM_UPDATED, 1 );
 
         // ensure configuration is unbound
