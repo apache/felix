@@ -66,7 +66,7 @@ public class MultiServiceFactoryPIDTest extends ConfigurationTestBase
 
         // assert activater has configuration (two calls, one per pid)
         TestCase.assertNotNull( "Expect Properties after Service Registration", tester.configs.get( pid ) );
-        TestCase.assertEquals( "Expect a single update call", 1, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( "Expect two update calls", 2, tester.numManagedServiceFactoryUpdatedCalls );
 
         TestCase.assertEquals( bundle.getLocation(), config.getBundleLocation() );
 
