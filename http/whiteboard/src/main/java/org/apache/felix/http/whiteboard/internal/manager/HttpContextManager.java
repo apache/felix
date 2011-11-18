@@ -20,6 +20,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import java.util.HashMap;
+import java.util.Map;
 
 public final class HttpContextManager
 {
@@ -48,7 +49,7 @@ public final class HttpContextManager
             this.contextMap.put(context, id);
             SystemLogger.debug("Added context with id [" + contextId + "]");
         } else {
-            SystemLogger.debug("Reusing context with id [" + contextId + "]");            
+            SystemLogger.debug("Reusing context with id [" + contextId + "]");
         }
 
         return context;
@@ -67,5 +68,10 @@ public final class HttpContextManager
         String id = createId(bundle, contextId);
         this.idMap.put(id, context);
         this.contextMap.put(context, id);
+    }
+
+    public synchronized Map<String, HttpContext> getHttpContexts()
+    {
+        return new HashMap<String, HttpContext>(this.idMap);
     }
 }
