@@ -18,6 +18,7 @@ package org.apache.felix.http.whiteboard.internal.manager;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -134,7 +135,7 @@ public final class ExtenderManagerImpl
             return;
         }
 
-        ServletMapping mapping = new ServletMapping(getHttpContext(ref), service, alias); 
+        ServletMapping mapping = new ServletMapping(getHttpContext(ref), service, alias);
         addInitParams(ref, mapping);
         addMapping(service, mapping);
     }
@@ -211,6 +212,18 @@ public final class ExtenderManagerImpl
         AbstractMapping mapping = this.mapping.remove(key);
         if ((mapping != null) && (this.httpService != null)) {
             mapping.unregister(this.httpService);
+        }
+    }
+
+    Map<String, HttpContext> getHttpContexts() {
+        return this.contextManager.getHttpContexts();
+    }
+
+    Map<Object, AbstractMapping> getMappings()
+    {
+        synchronized (this)
+        {
+            return new HashMap<Object, AbstractMapping>(this.mapping);
         }
     }
 }
