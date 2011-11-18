@@ -131,6 +131,12 @@ public final class ObrRemoteClean extends AbstractMojo
     private String obrDeploymentRepository;
 
     /**
+     * @parameter default-value="${settings.interactiveMode}"
+     * @readonly
+     */
+    private boolean interactive;
+
+    /**
      * The Maven project.
      * 
      * @parameter expression="${project}"
@@ -325,18 +331,21 @@ public final class ObrRemoteClean extends AbstractMojo
         Date d = new Date();
         if ( toRemove.size() > 0 )
         {
-            System.out.println( "Do you want to remove these bundles from the repository file [y/N]:" );
-            BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
-            String answer = null;
+            String answer = "y";
+            if ( interactive )
+            {
+                System.out.println( "Do you want to remove these bundles from the repository file [y/N]:" );
+                BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
 
-            try
-            {
-                answer = br.readLine();
-            }
-            catch ( IOException ioe )
-            {
-                getLog().error( "IO error trying to read the user confirmation" );
-                return null;
+                try
+                {
+                    answer = br.readLine();
+                }
+                catch ( IOException ioe )
+                {
+                    getLog().error( "IO error trying to read the user confirmation" );
+                    return null;
+                }
             }
 
             if ( answer != null && answer.trim().equalsIgnoreCase( "y" ) )
