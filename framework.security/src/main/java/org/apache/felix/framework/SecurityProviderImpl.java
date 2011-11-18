@@ -59,7 +59,7 @@ public final class SecurityProviderImpl implements SecurityProvider
      */
     public void checkBundle(Bundle bundle) throws Exception
     {
-        BundleRevisionImpl module = (BundleRevisionImpl) bundle.adapt(BundleRevision.class);
+        BundleRevisionImpl module = (BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class);
         m_parser.checkDNChains(module, module.getContent(),
             Bundle.SIGNERS_TRUSTED);
     }
@@ -69,7 +69,7 @@ public final class SecurityProviderImpl implements SecurityProvider
      */
     public Object getSignerMatcher(final Bundle bundle, int signersType)
     {
-        BundleRevisionImpl module = (BundleRevisionImpl) bundle.adapt(BundleRevision.class);
+        BundleRevisionImpl module = (BundleRevisionImpl) bundle.adapt(BundleRevisionImpl.class);
         return m_parser.getDNChains(module, module.getContent(), signersType);
     }
 
