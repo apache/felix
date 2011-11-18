@@ -38,9 +38,24 @@ public final class FilterMapping
         this.ranking = ranking;
     }
 
+    Filter getFilter()
+    {
+        return filter;
+    }
+
+    int getRanking()
+    {
+        return ranking;
+    }
+
+    String getPattern()
+    {
+        return pattern;
+    }
+
     public void register(HttpService httpService)
-    {    
-        if (httpService instanceof ExtHttpService) {
+    {
+       if (httpService instanceof ExtHttpService) {
             register((ExtHttpService)httpService);
         }
     }

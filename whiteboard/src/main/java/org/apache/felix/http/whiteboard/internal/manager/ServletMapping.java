@@ -35,6 +35,16 @@ public final class ServletMapping
         this.alias = alias;
     }
 
+    String getAlias()
+    {
+        return this.alias;
+    }
+
+    Servlet getServlet()
+    {
+        return this.servlet;
+    }
+
     public void register(HttpService httpService)
     {
         try {

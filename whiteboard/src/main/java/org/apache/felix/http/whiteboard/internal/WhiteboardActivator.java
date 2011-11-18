@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.whiteboard.internal;
 
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.FilterTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.HttpContextTracker;
@@ -23,16 +25,18 @@ import org.apache.felix.http.whiteboard.internal.tracker.ServletTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.HttpServiceTracker;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManagerImpl;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
+import org.apache.felix.http.whiteboard.internal.manager.HttpWhiteboardWebConsolePlugin;
 import org.apache.felix.http.base.internal.AbstractActivator;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 public final class WhiteboardActivator
     extends AbstractActivator
 {
     private final ArrayList<ServiceTracker> trackers;
     private ExtenderManager manager;
+    private ServiceRegistration httpPlugin;
 
     public WhiteboardActivator()
     {
@@ -47,6 +51,14 @@ public final class WhiteboardActivator
         addTracker(new FilterTracker(getBundleContext(), this.manager));
         addTracker(new ServletTracker(getBundleContext(), this.manager));
         addTracker(new HttpServiceTracker(getBundleContext(), this.manager));
+
+        HttpWhiteboardWebConsolePlugin plugin = new HttpWhiteboardWebConsolePlugin((ExtenderManagerImpl) this.manager);
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
+        props.put("felix.webconsole.label", plugin.getLabel());
+        props.put("felix.webconsole.title", plugin.getTitle());
+        props.put(Constants.SERVICE_DESCRIPTION, "Felix Http Whiteboard WebConsole Plugin");
+        httpPlugin = getBundleContext().registerService("javax.servlet.Servlet", plugin, props);
+
         SystemLogger.info("Http service whiteboard started");
     }
 
@@ -59,6 +71,8 @@ public final class WhiteboardActivator
     protected void doStop()
         throws Exception
     {
+        this.httpPlugin.unregister();
+
         for (ServiceTracker tracker : this.trackers) {
             tracker.close();
         }
