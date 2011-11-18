@@ -257,7 +257,7 @@ class Candidates
         }
 
         // If we have requirements remaining, then find candidates for them.
-        while (remainingReqs.size() > 0)
+        while (!remainingReqs.isEmpty())
         {
             BundleRequirement req = remainingReqs.remove(0);
 
@@ -276,10 +276,16 @@ class Candidates
                 state.getCandidates((BundleRequirementImpl) req, true);
             ResolveException rethrow = processCandidates(state, revision, candidates);
 
-            // If there are no candidates for the current requirement
-            // and it is not optional, then create, cache, and throw
-            // a resolve exception.
-            if (candidates.isEmpty() && !((BundleRequirementImpl) req).isOptional())
+            // First, due to cycles, makes sure we haven't already failed in
+            // a deeper recursion.
+            Object result = m_populateResultCache.get(revision);
+            if (result instanceof ResolveException)
+            {
+                throw (ResolveException) result;
+            }
+            // Next, if are no candidates remaining and the requirement is not
+            // not optional, then record and throw a resolve exception.
+            else if (candidates.isEmpty() && !((BundleRequirementImpl) req).isOptional())
             {
                 String msg = "Unable to resolve " + revision
                     + ": missing requirement " + req;
@@ -291,7 +297,7 @@ class Candidates
                 m_populateResultCache.put(revision, rethrow);
                 throw rethrow;
             }
-            // If we actually have candidates for the requirement, then
+            // Otherwise, if we actually have candidates for the requirement, then
             // add them to the local candidate map.
             else if (candidates.size() > 0)
             {
@@ -455,9 +461,8 @@ class Candidates
             // since we effectively chain exception messages for each level
             // of recursion; thus, any avoided recursion results in fewer
             // exceptions to chain when an error does occur.
-            if (isFragment
-                || ((candCap.getRevision().getWiring() == null)
-                    && !candCap.getRevision().equals(revision)))
+            if ((isFragment || (candCap.getRevision().getWiring() == null))
+                && !candCap.getRevision().equals(revision))
             {
                 try
                 {

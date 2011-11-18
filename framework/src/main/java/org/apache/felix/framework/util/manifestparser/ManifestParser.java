@@ -229,11 +229,11 @@ public class ManifestParser
 
         // Combine all requirements.
         m_requirements = new ArrayList(
-            importReqs.size() + rbReqs.size() + hostReqs.size()
+            hostReqs.size() + importReqs.size() + rbReqs.size()
             + requireReqs.size() + dynamicReqs.size());
+        m_requirements.addAll(hostReqs);
         m_requirements.addAll(importReqs);
         m_requirements.addAll(rbReqs);
-        m_requirements.addAll(hostReqs);
         m_requirements.addAll(requireReqs);
         m_requirements.addAll(dynamicReqs);
 
