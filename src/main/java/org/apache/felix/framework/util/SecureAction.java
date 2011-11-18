@@ -1132,7 +1132,7 @@ public class SecureAction
         if (System.getSecurityManager() != null)
         {
             Actions actions = (Actions) m_actions.get();
-            actions.set(Actions.INVOKE_SERVICE_EVENT_HOOK, eh, contexts);
+            actions.set(Actions.INVOKE_SERVICE_EVENT_HOOK, eh, event, contexts);
             try
             {
                 AccessController.doPrivileged(actions, m_acc);
@@ -1158,7 +1158,7 @@ public class SecureAction
         {
             Actions actions = (Actions) m_actions.get();
             actions.set(
-                Actions.INVOKE_SERVICE_EVENT_HOOK, fh, context, name, filter,
+                Actions.INVOKE_SERVICE_FIND_HOOK, fh, context, name, filter,
                 (allServices) ? Boolean.TRUE : Boolean.FALSE, references);
             try
             {
@@ -1232,7 +1232,7 @@ public class SecureAction
         if (System.getSecurityManager() != null)
         {
             Actions actions = (Actions) m_actions.get();
-            actions.set(Actions.INVOKE_SERVICE_EVENT_LISTENER_HOOK, elh, listeners);
+            actions.set(Actions.INVOKE_SERVICE_EVENT_LISTENER_HOOK, elh, event, listeners);
             try
             {
                 AccessController.doPrivileged(actions, m_acc);
