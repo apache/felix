@@ -1,0 +1,147 @@
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-->
+<header>
+    <script type="text/javascript" src="/servicegraph/js/raphael-min.js"></script>
+    <script type="text/javascript" src="/servicegraph/js/graffle.js"></script>
+    <script type="text/javascript" src="/servicegraph/js/graph.js"></script>
+    <script type="text/javascript" src="/servicegraph/js/jquery.js"></script>
+    <script type="text/javascript">
+<!--
+
+var _redraw;
+var height = 600;
+var width = 1000;
+
+DEBUG = false;
+debug = function (obj) { if(DEBUG && console) console.debug(obj); }
+
+var services;
+
+// from graph demo @ http://blog.ameisenbar.de/en/2010/03/02/dracula/
+function graphUnavail(json) {
+  var g = new Graph();
+
+  var empty = true;
+  for (s in json) {
+    empty = false;
+    for (i = 0; i < json[s].length; i++) {
+      // point unregistered service to dependency name
+      g.addEdge(s, json[s][i], { directed : true } );
+    }
+  }
+
+  if (empty) {
+    $("#canvas").empty().append($("<h1>").html("Service Registry status OK: No unresolved service found."));
+  } 
+  else showGraph(g)
+}
+
+function graphAllServices(json) {
+  var g = new Graph();
+
+  var empty = true;
+  for (s in json) {
+    empty = false;
+    for (i = 0; i < json[s].length; i++) {
+      // point using bundle to service name
+      g.addEdge(json[s][i], s, { directed : true } );
+    }
+  }
+
+  if (empty) {
+    $("#canvas").empty().append($("<h1>").html("Service Registry empty: no service found."));
+  }
+  else showGraph(g)
+}
+
+function showGraph(g) {
+    debug(g);
+
+    /* layout the graph using the Spring layout implementation */
+    var layouter = new Graph.Layout.Spring(g);
+    layouter.layout();
+    
+    /* draw the graph using the RaphaelJS draw implementation */
+    $("#canvas").empty();
+    var renderer = new Graph.Renderer.Raphael('canvas', g, width, height);
+    renderer.draw();
+    
+    _redraw = function() {
+        layouter.layout();
+        renderer.draw();
+    };
+}
+
+function redraw() {
+  var filter = $("#filter").val();
+  if (filter) {
+    var grep = {}; 
+    for (s in services) if (s.indexOf(filter) >= 0) grep[s] = services[s]; 
+    graphAllServices(grep);
+  } else {
+    graphAllServices(services);
+  }
+}
+
+function loadUnavail() {
+  $("#canvas").html("Loading data. Please wait...");
+  $.ajax({
+    url: "/servicegraph/json/notavail",
+    dataType: "json",
+    success: function(json){
+      services = json;
+      debug("Got services");
+      debug(json);
+      graphUnavail(json);
+    }
+  });
+}
+
+function loadAllServices() {
+  $("#canvas").html("Loading data. Please wait...");
+  $.ajax({
+    url: "/servicegraph/json/all",
+    dataType: "json",
+    success: function(json){
+      services = json;
+      debug("Got services");
+      debug(json);
+      graphAllServices(json);
+    }
+  });
+}
+
+/* only do all this when document has finished loading (needed for RaphaelJS) */
+$(document).ready(function(){
+  $("#actions")
+  	.append($("<a>").attr("href", "javascript:loadAllServices()").html("All"))
+  	.append($("<span>").html("|"))
+  	.append($("<a>").attr("href", "javascript:loadUnavail()").html("Unavail"))
+});
+
+-->
+    </script>
+</header>
+<body>
+Filter:&nbsp;<input type="text" id="filter"/><button id="redraw" onclick="redraw();">redraw</button>
+&nbsp;&nbsp;<span id="actions"></span>
+<div id="canvas"></div>
+</body>

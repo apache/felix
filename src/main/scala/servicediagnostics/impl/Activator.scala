@@ -1,0 +1,86 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.felix.servicediagnostics.impl
+
+import scala.collection.mutable.Map
+import scala.collection.JavaConversions._
+
+import javax.servlet.http.HttpServlet
+
+import org.osgi.framework.BundleContext
+import org.osgi.service.http.HttpService
+
+import org.apache.felix.dm.DependencyActivatorBase
+import org.apache.felix.dm.DependencyManager
+
+import org.apache.felix.servicediagnostics._
+import org.apache.felix.servicediagnostics.webconsole.Servlet
+import org.apache.felix.servicediagnostics.webconsole.WebConsolePlugin
+
+/**
+ * Activator class for the service diagnostics core implementation
+ *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+class Activator extends DependencyActivatorBase
+{
+    override def init(bc:BundleContext, dm:DependencyManager) =
+    {
+        // register our diagnostics service and its plugins
+        dm.add(createComponent
+            .setInterface(classOf[ServiceDiagnosticsPlugin].getName, null)
+            .setImplementation(new DMNotAvail(bc)))
+
+        dm.add(createComponent
+            .setInterface(classOf[ServiceDiagnosticsPlugin].getName, null)
+            .setImplementation(classOf[DSNotAvail])
+            .add(createServiceDependency
+                .setService(classOf[org.apache.felix.scr.ScrService])
+                .setAutoConfig("scrService")
+                setRequired(true)))
+
+        dm.add(createComponent
+            .setInterface(classOf[ServiceDiagnostics].getName, null)
+            .setImplementation(new ServiceDiagnosticsImpl(bc))
+            .add(createServiceDependency
+                .setService(classOf[ServiceDiagnosticsPlugin])
+                .setCallbacks("addPlugin", null, null)
+                .setRequired(false)))
+
+        // register the servlet used by webconsole plugin
+        dm.add(createComponent
+            .setInterface(classOf[HttpServlet].getName, null)
+            .setImplementation(classOf[Servlet])
+            .add(createServiceDependency
+                .setService(classOf[ServiceDiagnostics])
+                .setRequired(true)
+                .setAutoConfig("engine"))
+            .add(createServiceDependency
+                .setService(classOf[HttpService])
+                .setRequired(true)
+                .setCallbacks("setHttpService", null, null)))
+
+        // and the webconsole plugin itself
+        dm.add(createComponent
+            .setInterface(classOf[javax.servlet.Servlet].getName, Map("felix.webconsole.label" -> "servicegraph"))
+            .setImplementation(classOf[WebConsolePlugin]))
+    }
+
+    override def destroy(bc:BundleContext, dm:DependencyManager) = {}
+}
