@@ -50,7 +50,7 @@ public class BundleProtectionDomain extends ProtectionDomain
             null);
         m_felix = new WeakReference(felix);
         m_bundle = new WeakReference(bundle);
-        m_revision = new WeakReference(bundle.adapt(BundleRevision.class));
+        m_revision = new WeakReference(bundle.adapt(BundleRevisionImpl.class));
         m_hashCode = bundle.hashCode();
         m_toString = "[" + bundle + "]";
     }
