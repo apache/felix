@@ -275,7 +275,11 @@ $(document).ready(function() {
 		function() { $(this).find('.flags').show('blind') },
 		function() { $(this).find('.flags').hide('blind') });
 	langSelect.find('.flags img').click(function() {
-		$.cookies.set('felix.webconsole.locale', $(this).attr('alt'));
+	        var date = new Date();
+	        date.setFullYear(date.getFullYear() + 20);
+		$.cookies.set('felix.webconsole.locale',
+			$(this).attr('alt'),
+			{ expiresAt: date });
 		location.reload();
 	});
 	var locale = $.cookies.get('felix.webconsole.locale');
