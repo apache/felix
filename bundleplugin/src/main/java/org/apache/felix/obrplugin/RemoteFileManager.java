@@ -25,7 +25,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 
-import org.apache.maven.artifact.manager.WagonConfigurationException;
 import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -36,6 +35,7 @@ import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.UnsupportedProtocolException;
 import org.apache.maven.wagon.Wagon;
+import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authorization.AuthorizationException;
 import org.apache.maven.wagon.proxy.ProxyInfo;
@@ -121,7 +121,7 @@ public class RemoteFileManager
         {
             throw new MojoExecutionException( "Unsupported protocol: '" + repository.getProtocol() + "'", e );
         }
-        catch ( WagonConfigurationException e )
+        catch ( WagonException e )
         {
             throw new MojoExecutionException( "Unable to configure Wagon: '" + repository.getProtocol() + "'", e );
         }
