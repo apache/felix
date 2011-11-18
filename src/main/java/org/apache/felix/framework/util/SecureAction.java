@@ -1084,7 +1084,7 @@ public class SecureAction
         if (System.getSecurityManager() != null)
         {
             Actions actions = (Actions) m_actions.get();
-            actions.set(Actions.INVOKE_BUNDLE_EVENT_HOOK, eh, contexts);
+            actions.set(Actions.INVOKE_BUNDLE_EVENT_HOOK, eh, event, contexts);
             try
             {
                 AccessController.doPrivileged(actions, m_acc);
