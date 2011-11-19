@@ -56,7 +56,9 @@ public final class WhiteboardActivator
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("felix.webconsole.label", plugin.getLabel());
         props.put("felix.webconsole.title", plugin.getTitle());
-        props.put(Constants.SERVICE_DESCRIPTION, "Felix Http Whiteboard WebConsole Plugin");
+        props.put("felix.webconsole.configprinter.modes", new String[]
+            { "txt", "zip" });
+        props.put(Constants.SERVICE_DESCRIPTION, "Felix Http Whiteboard WebConsole Plugin and Configuration Printer");
         httpPlugin = getBundleContext().registerService("javax.servlet.Servlet", plugin, props);
 
         SystemLogger.info("Http service whiteboard started");
