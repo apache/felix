@@ -1,3 +1,9 @@
+Changes from 4.0.1 to 4.0.2
+---------------------------
+
+** Improvement
+    * Update to latest framework version 4.0.2
+
 Changes from 4.0.0 to 4.0.1
 ---------------------------
 
