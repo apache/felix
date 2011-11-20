@@ -1,3 +1,20 @@
+Changes from 4.0.1 to 4.0.2
+---------------------------
+
+** Bug
+    * [FELIX-3178] - NPE in ResolverImpl
+    * [FELIX-3194] - [Framework] Manifest parser is not correctly handling escapes
+    * [FELIX-3205] - Error resolving system.bundle dependencies
+    * [FELIX-3207] - Improper handling of nulls and substring matching at CapabilitySet/SimpleFilter
+    * [FELIX-3211] - org.apache.felix.framework.cache.BundleCache.deleteDirectoryTreeRecursive throws NPE
+    * [FELIX-3220] - Multiple ClassCastException(s) when invoking OSGi Service-Hooks (EventHook, FindHook)
+
+** Improvement
+    * [FELIX-3166] - Make Felix compile within Eclipse
+
+** New Feature
+    * [FELIX-3156] - Implement Bundle::getDataFile and Bundle::compareTo
+
 Changes from 4.0.0 to 4.0.1
 ---------------------------
 
