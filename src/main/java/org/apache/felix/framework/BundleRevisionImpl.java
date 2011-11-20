@@ -636,12 +636,7 @@ public class BundleRevisionImpl implements BundleRevision
             ((BundleImpl) m_bundle).getFramework().getLogger().log(
                 Logger.LOG_ERROR, "Error releasing revision: " + ex.getMessage(), ex);
         }
-        
-        if (m_content != null)
-        {
-            m_content.close();
-        }
-        
+        m_content.close();
         m_content = null;
         for (int i = 0; (m_contentPath != null) && (i < m_contentPath.size()); i++)
         {
