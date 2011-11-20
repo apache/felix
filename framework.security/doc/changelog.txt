@@ -1,3 +1,10 @@
+Changes from 2.0.0 to 2.0.1
+---------------------------
+
+** Bug
+    * [FELIX-3196] - Security Problem: Getting full file access within the cache directory from one Bundle
+    * [FELIX-3221] - NPE when uninstall a bundle on enabled OSGi security
+
 Changes from 1.4.2 to 2.0.0
 ---------------------------
 ** Bug
