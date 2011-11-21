@@ -27,7 +27,7 @@
 	<packaging>bundle</packaging>
 	<name>Apache Felix Lightweight HTTP Server</name>
 	<description>A minimal HTTP Service implementation.</description>
-	<version>0.1.1-SNAPSHOT</version>
+	<version>0.1.1</version>
 	<artifactId>org.apache.felix.httplite</artifactId>
 	<dependencies>
 		<dependency>
@@ -55,7 +55,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Export-Package></Export-Package>
+						<Export-Package />
 						<Private-Package>org.apache.felix.httplite.osgi, org.apache.felix.httplite.server, org.apache.felix.httplite.servlet</Private-Package>
 						<Export-Service>org.osgi.service.http.HttpService</Export-Service>
 						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
@@ -71,9 +71,16 @@
 						<Import-Service>
                             org.osgi.service.log.LogService;availability:=optional;multiple:=false
                         </Import-Service>
+                        <Bundle-DocURL>http://felix.apache.org/site/apache-felix-light-http-service.html</Bundle-DocURL>
 					</instructions>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite-0.1.1</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite-0.1.1</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite-0.1.1</url>
+  </scm>
 </project>
