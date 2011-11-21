@@ -27,7 +27,7 @@
 	<packaging>bundle</packaging>
 	<name>Apache Felix Lightweight HTTP Server</name>
 	<description>A minimal HTTP Service implementation.</description>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.1.1-SNAPSHOT</version>
 	<artifactId>org.apache.felix.httplite</artifactId>
 	<dependencies>
 		<dependency>
@@ -55,12 +55,22 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Private-Package>org.apache.felix.httplite.*
-						</Private-Package>
+						<Export-Package></Export-Package>
+						<Private-Package>org.apache.felix.httplite.osgi, org.apache.felix.httplite.server, org.apache.felix.httplite.servlet</Private-Package>
+						<Export-Service>org.osgi.service.http.HttpService</Export-Service>
 						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
+						<Bundle-Activator>${pom.artifactId}.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE</Include-Resource>
+						<Import-Package>
+							javax.servlet;version="2.4",
+							javax.servlet.http;version="2.4",
+							org.osgi.service.http;version="1.2",
+							*
+						</Import-Package>
+						<Import-Service>
+                            org.osgi.service.log.LogService;availability:=optional;multiple:=false
+                        </Import-Service>
 					</instructions>
 				</configuration>
 			</plugin>
