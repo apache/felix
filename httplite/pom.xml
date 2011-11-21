@@ -27,7 +27,7 @@
 	<packaging>bundle</packaging>
 	<name>Apache Felix Lightweight HTTP Server</name>
 	<description>A minimal HTTP Service implementation.</description>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.1.1-SNAPSHOT</version>
 	<artifactId>org.apache.felix.httplite</artifactId>
 	<dependencies>
 		<dependency>
@@ -55,7 +55,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Private-Package>org.apache.felix.http.lightweight.*
+						<Private-Package>org.apache.felix.httplite.*
 						</Private-Package>
 						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
 						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
