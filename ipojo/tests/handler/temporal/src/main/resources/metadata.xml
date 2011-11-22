@@ -42,7 +42,7 @@
 	</component>
 
 	<component classname="org.apache.felix.ipojo.test.scenarios.component.MultipleCheckServiceProvider" name="TEMPORAL-MultipleCheckServiceProvider">
-		<temp:requires field="fs"/>
+		<temp:requires field="fs" id="foo"/>
 		<provides/>
 	</component>
 

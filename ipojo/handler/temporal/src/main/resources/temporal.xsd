@@ -33,6 +33,10 @@
         	<xs:annotation>
         		<xs:documentation>The implementation field supporting the dependency.</xs:documentation>
         	</xs:annotation></xs:attribute>
+        <xs:attribute name="id" type="xs:string" use="optional">
+        	<xs:annotation>
+        		<xs:documentation>The dependency id</xs:documentation>
+        	</xs:annotation></xs:attribute>
 		<xs:attribute name="filter" type="xs:string" use="optional">
 			<xs:annotation>
 				<xs:documentation>Filter use to discover matching filter.</xs:documentation></xs:annotation></xs:attribute>

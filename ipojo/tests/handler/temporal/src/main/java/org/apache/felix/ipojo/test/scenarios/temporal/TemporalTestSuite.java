@@ -35,6 +35,7 @@ public class TemporalTestSuite extends TestSuite {
         ots.addTestSuite(NullTest.class);
         ots.addTestSuite(EmptyTest.class);
         ots.addTestSuite(TemporalTest.class);
+        ots.addTestSuite(FilterTest.class);
         return ots;
     }
 

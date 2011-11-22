@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.handler.temporal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.felix.ipojo.ConfigurationException;
@@ -114,6 +115,20 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
         if (deps == null || deps.length == 0) {
         	deps = meta.getElements("temporal", NAMESPACE);
         }
+        
+        // Get instance filters.
+        Dictionary filtersConfiguration = getRequiresFilters(dictionary.get("temporal.filters"));
+        if(filtersConfiguration == null || filtersConfiguration.isEmpty()) {
+        	// Fall back on the Requires handler configuration, if any
+        	filtersConfiguration = getRequiresFilters(dictionary.get("requires.filters"));
+        }
+        // Get from filters if any.
+        Dictionary fromConfiguration = getRequiresFilters(dictionary.get("temporal.from"));
+        if(fromConfiguration == null || fromConfiguration.isEmpty()) {
+        	// Fall back on the Requires handler configuration, if any
+        	fromConfiguration = getRequiresFilters(dictionary.get("requires.from"));
+        }
+
 
         for (int i = 0; i < deps.length; i++) {
             if (!deps[i].containsAttribute("field") || m_dependencies.contains(deps[i].getAttribute("field"))) {
@@ -122,21 +137,15 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
             }
             String field = deps[i].getAttribute("field");
 
+            String id = field;
+            if (deps[i].containsAttribute("id")) {
+                id = deps[i].getAttribute("id");
+            }
+
             FieldMetadata fieldmeta = manipulation.getField(field);
             if (fieldmeta == null) {
                 error("The field " + field + " does not exist in the class " + getInstanceManager().getClassName());
                 return;
-            }
-
-            String fil = deps[i].getAttribute("filter");
-            Filter filter = null;
-            if (fil != null) {
-                try {
-                    filter = getInstanceManager().getContext().createFilter(fil);
-                } catch (InvalidSyntaxException e) {
-                    error("Cannot create the field from " + fil + ": " + e.getMessage());
-                    return;
-                }
             }
 
             boolean agg = false;
@@ -155,8 +164,42 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                 }
             }
 
+            // Determine the filter
+            String fil = deps[i].getAttribute("filter");
+            // Override the filter if filter configuration if available in the instance configuration
+            if (filtersConfiguration != null && id != null && filtersConfiguration.get(id) != null) {
+                fil = (String) filtersConfiguration.get(id);
+            }
+
+            // Check the from attribute
+            String from = deps[i].getAttribute("from");
+            if (fromConfiguration != null && id != null && fromConfiguration.get(id) != null) {
+                from = (String) fromConfiguration.get(id);
+            }
+
+            if (from != null) {
+                String fromFilter = "(|(instance.name=" + from + ")(service.pid=" + from + "))";
+                if (agg) {
+                    warn("The 'from' attribute is incompatible with aggregate requirements: only one provider will " +
+                            "match : " + fromFilter);
+                }
+                if (fil != null) {
+                    fil = "(&" + fromFilter + fil + ")"; // Append the two filters
+                } else {
+                    fil = fromFilter;
+                }
+            }
+
+            Filter filter = null;
+            if (fil != null) {
+                try {
+                    filter = getInstanceManager().getContext().createFilter(fil);
+                } catch (InvalidSyntaxException e) {
+                    throw new ConfigurationException("A requirement filter is invalid : " + filter + " - " + e.getMessage());
+                }
+            }
+
             String prox = deps[i].getAttribute("proxy");
-            //boolean proxy = prox != null && prox.equals("true");
             // Use proxy by default except for array:
             boolean proxy = prox == null  || prox.equals("true");
 
@@ -216,6 +259,41 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
             getInstanceManager().register(fieldmeta, dep);
         }
     }
+    
+    /**
+	 * Gets the requires filter configuration from the given object.
+	 * The given object must come from the instance configuration.
+	 * This method was made to fix FELIX-2688. It supports filter configuration using
+	 * an array:
+	 * <code>{"myFirstDep", "(property1=value1)", "mySecondDep", "(property2=value2)"});</code>
+	 * 
+	 * Copied from DependencyHandler#getRequiresFilters(Object)
+	 * 
+	 * @param requiresFiltersValue the value contained in the instance
+	 * configuration.
+	 * @return the dictionary. If the object in already a dictionary, just returns it,
+	 * if it's an array, builds the dictionary.
+	 * @throws ConfigurationException the dictionary cannot be built
+	 */
+	private Dictionary getRequiresFilters(Object requiresFiltersValue)
+			throws ConfigurationException {
+		if (requiresFiltersValue != null
+				&& requiresFiltersValue.getClass().isArray()) {
+			String[] filtersArray = (String[]) requiresFiltersValue;
+			if (filtersArray.length % 2 != 0) {
+				throw new ConfigurationException(
+						"A requirement filter is invalid : "
+								+ requiresFiltersValue);
+			}
+			Dictionary requiresFilters = new Hashtable();
+			for (int i = 0; i < filtersArray.length; i += 2) {
+				requiresFilters.put(filtersArray[i], filtersArray[i + 1]);
+			}
+			return requiresFilters;
+		}
+
+		return (Dictionary) requiresFiltersValue;
+	}
 
     /**
      * Nothing to do.
