@@ -402,11 +402,9 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * @param componentMetadata : the component type metadata
      * @param configuration : the instance configuration
      * @throws ConfigurationException : one dependency metadata is not correct.
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager, org.apache.felix.ipojo.metadata.Element,
-     *      java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element componentMetadata, Dictionary configuration) throws ConfigurationException {
-        // getPojoMetadata();
         PojoMetadata manipulation = getFactory().getPojoMetadata();
         boolean atLeastOneField = false;
 
@@ -638,7 +636,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     /**
      * Handler createInstance method. This method is override to allow delayed callback invocation.
      * @param instance : the created object
-     * @see org.apache.felix.ipojo.Handler#onCreation(java.lang.Object)
+     * @see org.apache.felix.ipojo.PrimitiveHandler#onCreation(Object)
      */
     public void onCreation(Object instance) {
         for (int i = 0; i < m_dependencies.length; i++) {
