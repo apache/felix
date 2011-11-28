@@ -281,13 +281,13 @@
 <a name="271" href="#271">271</a>                     childProject.setDependencyArtifacts( childProject.createArtifacts( m_factory, <strong class="jxr_keyword">null</strong>, <strong class="jxr_keyword">null</strong> ) );
 <a name="272" href="#272">272</a>                 }
 <a name="273" href="#273">273</a>             }
-<a name="274" href="#274">274</a>             <strong class="jxr_keyword">catch</strong> ( ProjectBuildingException e )
+<a name="274" href="#274">274</a>             <strong class="jxr_keyword">catch</strong> ( InvalidDependencyVersionException e )
 <a name="275" href="#275">275</a>             {
-<a name="276" href="#276">276</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to build project object for artifact "</span> + artifact, e );
+<a name="276" href="#276">276</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Invalid dependency version for artifact "</span> + artifact );
 <a name="277" href="#277">277</a>             }
-<a name="278" href="#278">278</a>             <strong class="jxr_keyword">catch</strong> ( InvalidDependencyVersionException e )
+<a name="278" href="#278">278</a>             <strong class="jxr_keyword">catch</strong> ( ProjectBuildingException e )
 <a name="279" href="#279">279</a>             {
-<a name="280" href="#280">280</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Invalid dependency version for artifact "</span> + artifact );
+<a name="280" href="#280">280</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to build project object for artifact "</span> + artifact, e );
 <a name="281" href="#281">281</a>             }
 <a name="282" href="#282">282</a> 
 <a name="283" href="#283">283</a>             childProject.setArtifact( artifact );
