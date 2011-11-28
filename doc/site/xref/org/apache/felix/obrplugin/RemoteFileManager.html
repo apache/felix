@@ -35,17 +35,17 @@
 <a name="25" href="#25">25</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
 <a name="26" href="#26">26</a>  <strong class="jxr_keyword">import</strong> java.io.Writer;
 <a name="27" href="#27">27</a>  
-<a name="28" href="#28">28</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.artifact.manager.WagonConfigurationException;
-<a name="29" href="#29">29</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.artifact.manager.WagonManager;
-<a name="30" href="#30">30</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.MojoExecutionException;
-<a name="31" href="#31">31</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.logging.Log;
-<a name="32" href="#32">32</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.settings.Proxy;
-<a name="33" href="#33">33</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.settings.Settings;
-<a name="34" href="#34">34</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.ConnectionException;
-<a name="35" href="#35">35</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.ResourceDoesNotExistException;
-<a name="36" href="#36">36</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.TransferFailedException;
-<a name="37" href="#37">37</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.UnsupportedProtocolException;
-<a name="38" href="#38">38</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.Wagon;
+<a name="28" href="#28">28</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.artifact.manager.WagonManager;
+<a name="29" href="#29">29</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.MojoExecutionException;
+<a name="30" href="#30">30</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.logging.Log;
+<a name="31" href="#31">31</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.settings.Proxy;
+<a name="32" href="#32">32</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.settings.Settings;
+<a name="33" href="#33">33</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.ConnectionException;
+<a name="34" href="#34">34</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.ResourceDoesNotExistException;
+<a name="35" href="#35">35</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.TransferFailedException;
+<a name="36" href="#36">36</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.UnsupportedProtocolException;
+<a name="37" href="#37">37</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.Wagon;
+<a name="38" href="#38">38</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.WagonException;
 <a name="39" href="#39">39</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.authentication.AuthenticationException;
 <a name="40" href="#40">40</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.authorization.AuthorizationException;
 <a name="41" href="#41">41</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.wagon.proxy.ProxyInfo;
@@ -131,7 +131,7 @@
 <a name="121" href="#121">121</a>         {
 <a name="122" href="#122">122</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unsupported protocol: '"</span> + repository.getProtocol() + <span class="jxr_string">"'"</span>, e );
 <a name="123" href="#123">123</a>         }
-<a name="124" href="#124">124</a>         <strong class="jxr_keyword">catch</strong> ( WagonConfigurationException e )
+<a name="124" href="#124">124</a>         <strong class="jxr_keyword">catch</strong> ( WagonException e )
 <a name="125" href="#125">125</a>         {
 <a name="126" href="#126">126</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoExecutionException( <span class="jxr_string">"Unable to configure Wagon: '"</span> + repository.getProtocol() + <span class="jxr_string">"'"</span>, e );
 <a name="127" href="#127">127</a>         }

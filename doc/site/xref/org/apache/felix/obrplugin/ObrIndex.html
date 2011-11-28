@@ -219,58 +219,69 @@
 <a name="209" href="#209">209</a>         }
 <a name="210" href="#210">210</a>         <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( urlTemplate != <strong class="jxr_keyword">null</strong> )
 <a name="211" href="#211">211</a>         {
-<a name="212" href="#212">212</a>             String dir = path.getParentFile().toURI().toURL().toString();
-<a name="213" href="#213">213</a>             <strong class="jxr_keyword">if</strong> ( dir.endsWith( <span class="jxr_string">"/"</span> ) )
-<a name="214" href="#214">214</a>                 dir = dir.substring( 0, dir.length() - 1 );
-<a name="215" href="#215">215</a> 
-<a name="216" href="#216">216</a>             <strong class="jxr_keyword">if</strong> ( dir.startsWith( root.toString() ) )
-<a name="217" href="#217">217</a>                 dir = dir.substring( root.toString().length() );
-<a name="218" href="#218">218</a> 
-<a name="219" href="#219">219</a>             String url = urlTemplate.replaceAll( <span class="jxr_string">"%v"</span>, <span class="jxr_string">""</span> + resource.getVersion() );
-<a name="220" href="#220">220</a>             url = url.replaceAll( <span class="jxr_string">"%s"</span>, resource.getSymbolicName() );
-<a name="221" href="#221">221</a>             url = url.replaceAll( <span class="jxr_string">"%f"</span>, path.getName() );
-<a name="222" href="#222">222</a>             url = url.replaceAll( <span class="jxr_string">"%p"</span>, dir );
-<a name="223" href="#223">223</a>             finalUri = url;
-<a name="224" href="#224">224</a>         }
-<a name="225" href="#225">225</a>         resource.put( Resource.URI, finalUri, Property.URI );
-<a name="226" href="#226">226</a>     }
+<a name="212" href="#212">212</a>             URI parentDir = path.getParentFile().toURI();
+<a name="213" href="#213">213</a> 
+<a name="214" href="#214">214</a>             String absoluteDir = trim( root.toString(), parentDir.toURL().toString() );
+<a name="215" href="#215">215</a>             String relativeDir = trim( root.toString(), root.relativize( parentDir ).toString() );
+<a name="216" href="#216">216</a> 
+<a name="217" href="#217">217</a>             String url = urlTemplate.replaceAll( <span class="jxr_string">"%v"</span>, <span class="jxr_string">""</span> + resource.getVersion() );
+<a name="218" href="#218">218</a>             url = url.replaceAll( <span class="jxr_string">"%s"</span>, resource.getSymbolicName() );
+<a name="219" href="#219">219</a>             url = url.replaceAll( <span class="jxr_string">"%f"</span>, path.getName() );
+<a name="220" href="#220">220</a>             url = url.replaceAll( <span class="jxr_string">"%p"</span>, absoluteDir );
+<a name="221" href="#221">221</a>             url = url.replaceAll( <span class="jxr_string">"%rp"</span>, relativeDir );
+<a name="222" href="#222">222</a>             finalUri = url;
+<a name="223" href="#223">223</a>         }
+<a name="224" href="#224">224</a>         resource.put( Resource.URI, finalUri, Property.URI );
+<a name="225" href="#225">225</a>     }
+<a name="226" href="#226">226</a> 
 <a name="227" href="#227">227</a> 
-<a name="228" href="#228">228</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> FileFilter filter = <strong class="jxr_keyword">new</strong> FileFilter()
+<a name="228" href="#228">228</a>     <strong class="jxr_keyword">private</strong> String trim( String prefix, String path )
 <a name="229" href="#229">229</a>     {
-<a name="230" href="#230">230</a> 
-<a name="231" href="#231">231</a>         <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> accept( File pathname )
-<a name="232" href="#232">232</a>         {
-<a name="233" href="#233">233</a>             <strong class="jxr_keyword">return</strong> pathname.getName().endsWith( <span class="jxr_string">"ar"</span> );
-<a name="234" href="#234">234</a>         }
-<a name="235" href="#235">235</a>     };
-<a name="236" href="#236">236</a> 
-<a name="237" href="#237">237</a> 
-<a name="238" href="#238">238</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> findAllJars( File mainRoot, List&lt;File&gt; files )
-<a name="239" href="#239">239</a>     {
-<a name="240" href="#240">240</a>         List&lt;File&gt; roots = <strong class="jxr_keyword">new</strong> ArrayList&lt;File&gt;();
-<a name="241" href="#241">241</a>         roots.add( mainRoot );
-<a name="242" href="#242">242</a>         <strong class="jxr_keyword">while</strong> ( !roots.isEmpty() )
+<a name="230" href="#230">230</a>         <strong class="jxr_keyword">if</strong> ( path.endsWith( <span class="jxr_string">"/"</span> ) )
+<a name="231" href="#231">231</a>             path = path.substring( 0, path.length() - 1 );
+<a name="232" href="#232">232</a> 
+<a name="233" href="#233">233</a>         <strong class="jxr_keyword">if</strong> ( path.startsWith( prefix ) )
+<a name="234" href="#234">234</a>             path = path.substring( prefix.length() );
+<a name="235" href="#235">235</a> 
+<a name="236" href="#236">236</a>         <strong class="jxr_keyword">return</strong> path;
+<a name="237" href="#237">237</a>     }
+<a name="238" href="#238">238</a> 
+<a name="239" href="#239">239</a> 
+<a name="240" href="#240">240</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> FileFilter filter = <strong class="jxr_keyword">new</strong> FileFilter()
+<a name="241" href="#241">241</a>     {
+<a name="242" href="#242">242</a>         <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> accept( File pathname )
 <a name="243" href="#243">243</a>         {
-<a name="244" href="#244">244</a>             File root = roots.remove( 0 );
-<a name="245" href="#245">245</a>             File[] children = root.listFiles();
-<a name="246" href="#246">246</a>             <strong class="jxr_keyword">if</strong> ( children != <strong class="jxr_keyword">null</strong> )
-<a name="247" href="#247">247</a>             {
-<a name="248" href="#248">248</a>                 <strong class="jxr_keyword">for</strong> ( File child : children )
-<a name="249" href="#249">249</a>                 {
-<a name="250" href="#250">250</a>                     <strong class="jxr_keyword">if</strong> ( child.isFile() &amp;&amp; filter.accept( child ) )
-<a name="251" href="#251">251</a>                     {
-<a name="252" href="#252">252</a>                         files.add( child );
-<a name="253" href="#253">253</a>                     }
-<a name="254" href="#254">254</a>                     <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( child.isDirectory() )
-<a name="255" href="#255">255</a>                     {
-<a name="256" href="#256">256</a>                         roots.add( child );
-<a name="257" href="#257">257</a>                     }
-<a name="258" href="#258">258</a>                 }
-<a name="259" href="#259">259</a>             }
-<a name="260" href="#260">260</a>         }
-<a name="261" href="#261">261</a>     }
-<a name="262" href="#262">262</a> 
-<a name="263" href="#263">263</a> }
+<a name="244" href="#244">244</a>             <strong class="jxr_keyword">return</strong> pathname.getName().endsWith( <span class="jxr_string">"ar"</span> );
+<a name="245" href="#245">245</a>         }
+<a name="246" href="#246">246</a>     };
+<a name="247" href="#247">247</a> 
+<a name="248" href="#248">248</a> 
+<a name="249" href="#249">249</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> findAllJars( File mainRoot, List&lt;File&gt; files )
+<a name="250" href="#250">250</a>     {
+<a name="251" href="#251">251</a>         List&lt;File&gt; roots = <strong class="jxr_keyword">new</strong> ArrayList&lt;File&gt;();
+<a name="252" href="#252">252</a>         roots.add( mainRoot );
+<a name="253" href="#253">253</a>         <strong class="jxr_keyword">while</strong> ( !roots.isEmpty() )
+<a name="254" href="#254">254</a>         {
+<a name="255" href="#255">255</a>             File root = roots.remove( 0 );
+<a name="256" href="#256">256</a>             File[] children = root.listFiles();
+<a name="257" href="#257">257</a>             <strong class="jxr_keyword">if</strong> ( children != <strong class="jxr_keyword">null</strong> )
+<a name="258" href="#258">258</a>             {
+<a name="259" href="#259">259</a>                 <strong class="jxr_keyword">for</strong> ( File child : children )
+<a name="260" href="#260">260</a>                 {
+<a name="261" href="#261">261</a>                     <strong class="jxr_keyword">if</strong> ( child.isFile() &amp;&amp; filter.accept( child ) )
+<a name="262" href="#262">262</a>                     {
+<a name="263" href="#263">263</a>                         files.add( child );
+<a name="264" href="#264">264</a>                     }
+<a name="265" href="#265">265</a>                     <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( child.isDirectory() )
+<a name="266" href="#266">266</a>                     {
+<a name="267" href="#267">267</a>                         roots.add( child );
+<a name="268" href="#268">268</a>                     }
+<a name="269" href="#269">269</a>                 }
+<a name="270" href="#270">270</a>             }
+<a name="271" href="#271">271</a>         }
+<a name="272" href="#272">272</a>     }
+<a name="273" href="#273">273</a> 
+<a name="274" href="#274">274</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>
