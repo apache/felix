@@ -50,6 +50,14 @@ import aQute.lib.osgi.Resource;
  */
 public class ManifestPlugin extends BundlePlugin
 {
+    /**
+     * When true, generate the manifest by rebuilding the full bundle in memory 
+     *
+     * @parameter expression="${rebuildBundle}"
+     */
+    protected boolean rebuildBundle;
+
+
     @Override
     protected void execute( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
         throws MojoExecutionException
@@ -150,7 +158,7 @@ public class ManifestPlugin extends BundlePlugin
     protected Analyzer getAnalyzer( MavenProject project, Map instructions, Properties properties, Jar[] classpath )
         throws IOException, MojoExecutionException, Exception
     {
-        if ( supportedProjectTypes.contains( project.getArtifact().getType() ) )
+        if ( rebuildBundle && supportedProjectTypes.contains( project.getArtifact().getType() ) )
         {
             return buildOSGiBundle( project, instructions, properties, classpath );
         }
