@@ -1249,7 +1249,11 @@ public class BundlePlugin extends AbstractMojo
             String pkg = ( String ) i.next();
 
             // mark all source packages as private by default (can be overridden by export list)
-            privatePkgs.append( pkg ).append( ";-split-package:=merge-first," );
+            if ( privatePkgs.length() > 0 )
+            {
+                privatePkgs.append( ';' );
+            }
+            privatePkgs.append( pkg );
 
             // we can't export the default package (".") and we shouldn't export internal packages 
             if ( noprivatePackages || !( ".".equals( pkg ) || pkg.contains( ".internal" ) || pkg.contains( ".impl" ) ) )
@@ -1267,7 +1271,7 @@ public class BundlePlugin extends AbstractMojo
             if ( analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == null )
             {
                 // no -exportcontents overriding the exports, so use our computed list
-                analyzer.setProperty( Analyzer.EXPORT_PACKAGE, exportedPkgs.toString() );
+                analyzer.setProperty( Analyzer.EXPORT_PACKAGE, exportedPkgs + ";-split-package:=merge-first" );
             }
             else
             {
@@ -1286,10 +1290,23 @@ public class BundlePlugin extends AbstractMojo
             }
         }
 
-        if ( analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null )
+        String internal = analyzer.getProperty( Analyzer.PRIVATE_PACKAGE );
+        if ( internal == null )
         {
-            // if there are really no private packages then use "!*" as this will keep the Bnd Tool happy
-            analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, privatePkgs.length() == 0 ? "!*" : privatePkgs.toString() );
+            if ( privatePkgs.length() > 0 )
+            {
+                analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, privatePkgs + ";-split-package:=merge-first" );
+            }
+            else
+            {
+                // if there are really no private packages then use "!*" as this will keep the Bnd Tool happy
+                analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, "!*" );
+            }
+        }
+        else if ( internal.indexOf( LOCAL_PACKAGES ) >= 0 )
+        {
+            String newInternal = StringUtils.replace( internal, LOCAL_PACKAGES, privatePkgs.toString() );
+            analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, newInternal );
         }
     }
 
