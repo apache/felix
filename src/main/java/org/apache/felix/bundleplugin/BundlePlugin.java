@@ -207,6 +207,7 @@ public class BundlePlugin extends AbstractMojo
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
     private static final String LOCAL_PACKAGES = "{local-packages}";
+    private static final String MAVEN_SOURCES = "{maven-sources}";
 
     private static final String[] EMPTY_STRING_ARRAY =
         {};
@@ -500,6 +501,9 @@ public class BundlePlugin extends AbstractMojo
 
             // calculate default export/private settings based on sources
             addLocalPackages( outputDirectory, builder );
+
+            // tell BND where the current project source resides
+            addMavenSourcePath( currentProject, builder, getLog() );
         }
 
         // update BND instructions to embed selected Maven dependencies
@@ -1453,5 +1457,59 @@ public class BundlePlugin extends AbstractMojo
         }
 
         return getSelectedDependencies( artifacts );
+    }
+
+
+    protected static void addMavenSourcePath( MavenProject currentProject, Analyzer analyzer, Log log )
+    {
+        // pass maven source paths onto BND analyzer
+        StringBuilder mavenSourcePaths = new StringBuilder();
+        if ( currentProject.getCompileSourceRoots() != null )
+        {
+            for ( Iterator i = currentProject.getCompileSourceRoots().iterator(); i.hasNext(); )
+            {
+                if ( mavenSourcePaths.length() > 0 )
+                {
+                    mavenSourcePaths.append( ',' );
+                }
+                mavenSourcePaths.append( ( String ) i.next() );
+            }
+        }
+        final String sourcePath = ( String ) analyzer.getProperty( Analyzer.SOURCEPATH );
+        if ( sourcePath != null )
+        {
+            if ( sourcePath.indexOf( MAVEN_SOURCES ) >= 0 )
+            {
+                // if there is no maven source path, we do a special treatment and replace
+                // every occurance of MAVEN_SOURCES and a following comma with an empty string
+                if ( mavenSourcePaths.length() == 0 )
+                {
+                    String cleanedSource = removeTagFromInstruction( sourcePath, MAVEN_SOURCES );
+                    if ( cleanedSource.length() > 0 )
+                    {
+                        analyzer.setProperty( Analyzer.SOURCEPATH, cleanedSource );
+                    }
+                    else
+                    {
+                        analyzer.unsetProperty( Analyzer.SOURCEPATH );
+                    }
+                }
+                else
+                {
+                    String combinedSource = StringUtils
+                        .replace( sourcePath, MAVEN_SOURCES, mavenSourcePaths.toString() );
+                    analyzer.setProperty( Analyzer.SOURCEPATH, combinedSource );
+                }
+            }
+            else if ( mavenSourcePaths.length() > 0 )
+            {
+                log.warn( Analyzer.SOURCEPATH + ": overriding " + mavenSourcePaths + " with " + sourcePath + " (add "
+                    + MAVEN_SOURCES + " if you want to include the maven sources)" );
+            }
+        }
+        else if ( mavenSourcePaths.length() > 0 )
+        {
+            analyzer.setProperty( Analyzer.SOURCEPATH, mavenSourcePaths.toString() );
+        }
     }
 }
