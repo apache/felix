@@ -1,3 +1,29 @@
+Changes from 2.3.5 to 2.3.6
+---------------------------
+
+** Bug
+    * [FELIX-3031] - maven3 deployment fails where maven2 works
+    * [FELIX-3037] - Plugin does not work with Java 5
+    * [FELIX-3058] - maven-bundle-plugin 2.3.5 incompatible with maven-source-plugin (regression)
+    * [FELIX-3073] - can't deploy snapshot bundle to remote OBR
+    * [FELIX-3173] - Local OBR install failes when there is a space in the full path
+    * [FELIX-3185] - Negative Embed-Dependency clauses aren't handled correctly
+    * [FELIX-3188] - [PATCH] exception org.apache.maven.project.artifact.InvalidDependencyVersionException has already been caught
+    * [FELIX-3206] - Restore the BND analyzer approach which creates a MANIFEST.MF based on the contents of the jar
+    * [FELIX-3209] - Make sure the properties passed to BND only include string values
+    * [FELIX-3222] - [PATCH] build fails with "unreported exception"
+    * [FELIX-3238] - Unable to filter out classes from identical package in a dependency
+
+** Improvement
+    * [FELIX-2872] - Provide a way to have an easier to read manifest
+    * [FELIX-3061] - improvements to Embed-Dependency logic to allow better m2e integration
+    * [FELIX-3092] - Support relative paths in "urlTemplate" parameter of "bundle:index" goal in maven bundle plugin
+
+** New Feature
+    * [FELIX-3165] - Add an option to the manifest goal that will copy any BND generated resources to the target folder
+    * [FELIX-3208] - Provide default value for sourcepath when using BND -sources=true
+    * [FELIX-3210] - Maven bundle plugin remote-clean goal without user confirmation
+
 Changes from 2.3.4 to 2.3.5
 ---------------------------
 
