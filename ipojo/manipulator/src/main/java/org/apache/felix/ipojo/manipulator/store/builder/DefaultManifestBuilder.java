@@ -175,7 +175,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
      * @param value String to parse.
      * @return parsed map.
      */
-    private Map<String, Map<String, String>> parseHeader(String value) {
+    protected Map<String, Map<String, String>> parseHeader(String value) {
         if (value == null || value.trim().length() == 0) {
             return new HashMap<String, Map<String, String>>();
         }
