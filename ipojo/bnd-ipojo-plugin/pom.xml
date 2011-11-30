@@ -17,59 +17,56 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>felix-parent</artifactId>
-    <version>1.2.1</version>
-    <relativePath>../../pom/pom.xml</relativePath>
-  </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>1.2.1</version>
+        <relativePath>../../pom/pom.xml</relativePath>
+    </parent>
 
-  <artifactId>bnd-ipojo-plugin</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+    <artifactId>bnd-ipojo-plugin</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <name>Apache Felix iPOJO Bnd Plugin</name>
 
-  <developers>
-    <developer>
-      <name>Guillaume Sauthier</name>
-      <organization>OW2 Consortium</organization>
-      <roles>
-        <role>developer</role>
-      </roles>
-    </developer>
-  </developers>
+    <dependencies>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.43.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+            <version>1.9.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+            <version>1.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.5</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-  <dependencies>
-    <dependency>
-      <groupId>biz.aQute</groupId>
-      <artifactId>bndlib</artifactId>
-      <version>1.43.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-      <version>1.9.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-      <version>1.8.0</version>
-    </dependency>
-  </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-    
 </project>

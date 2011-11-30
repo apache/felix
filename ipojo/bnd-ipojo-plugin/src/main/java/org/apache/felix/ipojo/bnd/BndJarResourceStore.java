@@ -44,9 +44,10 @@ public class BndJarResourceStore implements ResourceStore {
 
     private MetadataRenderer m_renderer = new MetadataRenderer();
 
-    private Element m_metadata;
+    private List<Element> m_metadata;
 
     public BndJarResourceStore(Analyzer analyzer, Reporter reporter) {
+        m_metadata = new ArrayList<Element>();
         m_analyzer = analyzer;
         m_reporter = reporter;
     }
@@ -86,7 +87,7 @@ public class BndJarResourceStore implements ResourceStore {
     }
 
     public void writeMetadata(Element metadata) {
-        m_metadata = metadata;
+        m_metadata.add(metadata);
 
         // Find referred packages and add them into Bnd
         for (String referred : Metadatas.findReferredPackages(metadata)) {
@@ -97,7 +98,6 @@ public class BndJarResourceStore implements ResourceStore {
         }
 
         // IPOJO-Components will be written during the close method.
-
     }
 
     public void write(String resourcePath, byte[] resource) throws IOException {
@@ -107,13 +107,10 @@ public class BndJarResourceStore implements ResourceStore {
 
     public void close() throws IOException {
         // Write the iPOJO header (including manipulation metadata)
-        String components = m_analyzer.getProperty("IPOJO-Components");
         StringBuilder builder = new StringBuilder();
-
-        if (components != null) {
-            builder.append(components);
+        for (Element metadata : m_metadata) {
+            builder.append(m_renderer.render(metadata));
         }
-        builder.append(m_renderer.render(m_metadata));
 
         if (builder.length() != 0) {
             m_analyzer.setProperty("IPOJO-Components", builder.toString());
