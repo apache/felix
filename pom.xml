@@ -77,10 +77,9 @@
 			</plugin>
 		</plugins>
 	</build>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite-0.1.2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite-0.1.2</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.httplite-0.1.2</url>
-  </scm>
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite</developerConnection>
+		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite</url>
+	</scm>  
 </project>
