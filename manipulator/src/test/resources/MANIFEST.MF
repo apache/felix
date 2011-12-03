@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Export-Package: org.apache.felix.ipojo.test.scenarios.manipulation.ser
+ vice
+Test-Suite: org.apache.felix.ipojo.test.scenarios.manipulation.Manipul
+ ationTestSuite
+Built-By: clement
+Tool: Bnd-0.0.357
+Bundle-Name: iPOJO Manipulation Test Suite For Java 5
+Created-By: Apache Maven Bundle Plugin
+Build-Jdk: 1.6.0_22
+Bundle-Version: 1.5.0.SNAPSHOT
+Bnd-LastModified: 1292008458378
+Bundle-ManifestVersion: 2
+Import-Package: junit.framework,org.apache.felix.ipojo;version="1.6",o
+ rg.apache.felix.ipojo.junit4osgi,org.apache.felix.ipojo.junit4osgi.he
+ lpers,org.apache.felix.ipojo.test.scenarios.manipulation.service,org.
+ osgi.framework;version="1.5"
+Bundle-SymbolicName: tests.manipulation.java5
+
