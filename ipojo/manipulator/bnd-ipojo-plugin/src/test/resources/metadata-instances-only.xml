@@ -1,0 +1,3 @@
+<ipojo>
+    <instance component="com.acme.Thermometer"/>
+</ipojo>
