@@ -1,0 +1,5 @@
+<ipojo>
+  <component class="com.acme.Thermometer" />
+  <instance component="com.acme.Thermometer" />
+  <instance component="com.acme.Thermometer" />
+</ipojo>
