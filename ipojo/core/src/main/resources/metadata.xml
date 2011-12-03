@@ -17,31 +17,41 @@
 	under the License.
 -->
 <ipojo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/CURRENT/core.xsd" 
-    xmlns="org.apache.felix.ipojo">
-	<!-- Primitives handler -->
-	<handler
-		classname="org.apache.felix.ipojo.handlers.lifecycle.controller.ControllerHandler"
-		name="controller" architecture="false"/>
-	<handler
-		classname="org.apache.felix.ipojo.handlers.lifecycle.callback.LifecycleCallbackHandler"
-		name="callback" level="2" architecture="false" />
-	<handler
-		classname="org.apache.felix.ipojo.handlers.dependency.DependencyHandler"
-		name="requires" level="0" architecture="false">
-		<!-- <controller field="m_state"/>  -->
-	</handler>
-	<handler
-		classname="org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceHandler"
-		name="provides" level="3" architecture="false" />
-	<handler
-		classname="org.apache.felix.ipojo.handlers.configuration.ConfigurationHandler"
-		name="properties" level="1" architecture="false" />
-	<handler
-		classname="org.apache.felix.ipojo.handlers.architecture.ArchitectureHandler"
-		name="architecture" architecture="false">
-		<provides specifications="org.apache.felix.ipojo.architecture.Architecture">
-			<property field="m_name" name="architecture.instance"/>
-		</provides>
-	</handler>
+       xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/CURRENT/core.xsd"
+       xmlns="org.apache.felix.ipojo">
+    <!-- Primitives handler -->
+    <handler
+            classname="org.apache.felix.ipojo.handlers.lifecycle.controller.ControllerHandler"
+            name="controller" architecture="false"/>
+    <handler
+            classname="org.apache.felix.ipojo.handlers.lifecycle.callback.LifecycleCallbackHandler"
+            name="callback" level="2" architecture="false"/>
+    <handler
+            classname="org.apache.felix.ipojo.handlers.dependency.DependencyHandler"
+            name="requires" level="0" architecture="false">
+        <!-- <controller field="m_state"/>  -->
+    </handler>
+    <handler
+            classname="org.apache.felix.ipojo.handlers.providedservice.ProvidedServiceHandler"
+            name="provides" level="3" architecture="false"/>
+    <handler
+            classname="org.apache.felix.ipojo.handlers.configuration.ConfigurationHandler"
+            name="properties" level="1" architecture="false"/>
+    <handler
+            classname="org.apache.felix.ipojo.handlers.architecture.ArchitectureHandler"
+            name="architecture" architecture="false">
+        <provides specifications="org.apache.felix.ipojo.architecture.Architecture">
+            <property field="m_name" name="architecture.instance"/>
+        </provides>
+    </handler>
+    <!-- iPOJO Online Manipulator -->
+    <component classname="org.apache.felix.ipojo.IPOJOURLHandler"
+               public="false"
+               immediate="true">
+        <provides>
+            <property name="url.handler.protocol" type="java.lang.String" value="ipojo"/>
+        </provides>
+        <callback transition="invalidate" method="stop"/>
+    </component>
+    <instance component="org.apache.felix.ipojo.IPOJOURLHandler"/>
 </ipojo>

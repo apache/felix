@@ -16,7 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo.online.manipulator;
+package org.apache.felix.ipojo;
+
+import org.apache.felix.ipojo.manipulator.Pojoization;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.url.URLStreamHandlerService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,10 +31,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
-import org.apache.felix.ipojo.manipulator.Pojoization;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.url.URLStreamHandlerService;
 
 /**
 * iPOJO URL Handler allowing installation time manipulation.
@@ -87,7 +87,7 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
      * This methods parses the URL and manipulate the given bundle.
      * @param url the url.
      * @return the URL connection on the manipulated bundle
-     * @throws IOException  occurs when the bundle cannot be either downloaded, or manipulated or
+     * @throws java.io.IOException  occurs when the bundle cannot be either downloaded, or manipulated or
      * installed correctly.
      * @see org.osgi.service.url.AbstractURLStreamHandlerService#openConnection(java.net.URL)
      */
@@ -104,9 +104,9 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
         while (full.startsWith("/")) {
             full = full.substring(1);
         }
-        
+
         full = full.trim();
-        
+
         // Now full is like : URL,URL or URL
         String[] urls = full.split("!");
         URL bundleURL = null;
@@ -122,19 +122,19 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
         } else {
             throw new MalformedURLException("The iPOJO url is not formatted correctly, ipojo:bundle_url[!metadata_url] expected");
         }
-        
+
         File bundle = File.createTempFile("ipojo_", ".jar", m_temp);
         save(bundleURL, bundle);
         File metadata = null;
         if (metadataURL != null) {
             metadata = File.createTempFile("ipojo_", ".xml", m_temp);
-            save(metadataURL, metadata);   
+            save(metadataURL, metadata);
         } else {
             // Check that the metadata are in the jar file
             JarFile jar = new JarFile(bundle);
-            metadata = findMetadata(jar); 
+            metadata = findMetadata(jar);
         }
-        
+
         // Pojoization
         Pojoization pojoizator = new Pojoization();
         File out =  new File(m_temp, bundle.getName() + "-ipojo.jar");
@@ -148,7 +148,7 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
-        
+
         if (! pojoizator.getErrors().isEmpty()) {
             throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
         }
@@ -157,7 +157,7 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
         }
 
         System.out.println("Manipulation done : " + out.exists());
-        
+
         // Cleanup
         bundle.delete();
         if (metadata != null) {
@@ -166,8 +166,8 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
         out.deleteOnExit();
         // Returns the URL Connection
         return out.toURI().toURL().openConnection();
-        
-        
+
+
     }
 
     /**
@@ -175,20 +175,20 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
      * the given file.
      * @param url   the url
      * @param file  the file
-     * @throws IOException occurs if the content cannot be read 
-     * and save inside the file 
+     * @throws java.io.IOException occurs if the content cannot be read
+     * and save inside the file
      */
     private void save(URL url, File file) throws IOException {
         InputStream is = url.openStream();
         save(is, file);
     }
-    
+
     /**
      * Saves the content of the input stream to the given file.
      * @param is    the input stream to read
      * @param file  the file
-     * @throws IOException  occurs if the content cannot be read 
-     * and save inside the file  
+     * @throws java.io.IOException  occurs if the content cannot be read
+     * and save inside the file
      */
     private void save(InputStream is, File file) throws IOException {
         FileOutputStream writer = new FileOutputStream(file);
@@ -203,9 +203,9 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
         } while (true);
         System.out.println(cc + " bytes copied");
         is.close();
-        writer.close();        
+        writer.close();
     }
-    
+
     /**
      * Looks for the metadata.xml file in the jar file.
      * Two locations are checked:
@@ -215,7 +215,7 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
      * </ol>
      * @param jar   the jar file
      * @return  the founded file or <code>null</code> if not found.
-     * @throws IOException  occurs when the Jar file cannot be read.
+     * @throws java.io.IOException  occurs when the Jar file cannot be read.
      */
     private File findMetadata(JarFile jar) throws IOException {
         JarEntry je = jar.getJarEntry("metadata.xml");
