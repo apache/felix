@@ -132,12 +132,15 @@ class BundleImpl implements Bundle, BundleRevisions
 // for last case.
     synchronized void closeAndDelete() throws Exception
     {
-        // Mark the bundle as stale, since it is being deleted.
-        m_stale = true;
-        // Close all revisions.
-        closeRevisions();
-        // Delete bundle archive, which will close revisions.
-        m_archive.closeAndDelete();
+        if (!m_stale)
+        {
+            // Mark the bundle as stale, since it is being deleted.
+            m_stale = true;
+            // Close all revisions.
+            closeRevisions();
+            // Delete bundle archive, which will close revisions.
+            m_archive.closeAndDelete();
+        }
     }
 
 // Called from BundleImpl.close(), BundleImpl.closeAndDelete(), and BundleImpl.refresh()
