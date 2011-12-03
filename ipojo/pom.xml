@@ -34,12 +34,9 @@
     <modules>
     <module>metadata</module>
     <module>manipulator</module>
-    <module>plugin</module>
-    <module>bnd-ipojo-plugin</module>
     <module>core</module>
     <module>composite</module>
     <module>arch</module>
-    <module>ant</module>
     <module>handler/extender</module>
     <module>handler/temporal</module>
     <module>handler/eventadmin</module>
