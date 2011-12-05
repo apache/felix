@@ -39,12 +39,12 @@ public final class ServletTracker
 
     protected void modified(Servlet service, ServiceReference ref)
     {
-        removed(service);
+        removed(service, ref);
         added(service, ref);
     }
-    
-    protected void removed(Servlet service)
+
+    protected void removed(Servlet service, ServiceReference ref)
     {
-        this.manager.remove(service);
+        this.manager.remove(ref);
     }
 }

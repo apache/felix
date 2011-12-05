@@ -16,30 +16,290 @@
  */
 package org.apache.felix.http.whiteboard.internal.manager;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+
+import org.apache.felix.http.api.ExtHttpService;
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
+import org.apache.felix.http.whiteboard.internal.manager.HttpContextManager.HttpContextHolder;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.log.LogService;
-import org.osgi.framework.ServiceReference;
-import javax.servlet.Servlet;
-import javax.servlet.Filter;
 
-public interface ExtenderManager
+public final class ExtenderManager
 {
-    public void add(HttpContext service, ServiceReference ref);
+    private HttpService httpService;
+    private final HashMap<ServiceReference, AbstractMapping> mapping;
+    private final HttpContextManager contextManager;
 
-    public void remove(HttpContext service);
+    public ExtenderManager()
+    {
+        this.mapping = new HashMap<ServiceReference, AbstractMapping>();
+        this.contextManager = new HttpContextManager();
+    }
 
-    public void add(Filter service, ServiceReference ref);
+    static boolean isEmpty(final String value)
+    {
+        return value == null || value.length() == 0;
+    }
 
-    public void remove(Filter service);
+    private String getStringProperty(ServiceReference ref, String key)
+    {
+        Object value = ref.getProperty(key);
+        return (value instanceof String) ? (String)value : null;
+    }
 
-    public void add(Servlet service, ServiceReference ref);
+    private boolean getBooleanProperty(ServiceReference ref, String key)
+    {
+        Object value = ref.getProperty(key);
+        if (value instanceof String)
+        {
+            return Boolean.valueOf((String) value);
+        }
+        else if (value instanceof Boolean)
+        {
+            return ((Boolean) value).booleanValue();
+        }
+        return false;
+    }
 
-    public void remove(Servlet service);
+    private int getIntProperty(ServiceReference ref, String key, int defValue)
+    {
+        Object value = ref.getProperty(key);
+        if (value == null) {
+            return defValue;
+        }
 
-    public void setHttpService(HttpService service);
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (Exception e) {
+            return defValue;
+        }
+    }
 
-    public void unsetHttpService();
+    private void addInitParams(ServiceReference ref, AbstractMapping mapping)
+    {
+        for (String key : ref.getPropertyKeys()) {
+            if (key.startsWith(HttpWhiteboardConstants.INIT_PREFIX)) {
+                String paramKey = key.substring(HttpWhiteboardConstants.INIT_PREFIX.length());
+                String paramValue = getStringProperty(ref, key);
 
-    public void unregisterAll();
+                if (paramValue != null) {
+                    mapping.getInitParams().put(paramKey, paramValue);
+                }
+            }
+        }
+    }
+
+    public void add(HttpContext service, ServiceReference ref)
+    {
+        String contextId = getStringProperty(ref, HttpWhiteboardConstants.CONTEXT_ID);
+        if (!isEmpty(contextId))
+        {
+            boolean shared = getBooleanProperty(ref, HttpWhiteboardConstants.CONTEXT_SHARED);
+            Bundle bundle = shared ? null : ref.getBundle();
+            Collection<AbstractMapping> mappings = this.contextManager.addHttpContext(bundle, contextId, service);
+            for (AbstractMapping mapping : mappings)
+            {
+                registerMapping(mapping);
+            }
+        }
+        else
+        {
+            SystemLogger.debug("Ignoring HttpContext Service " + ref + ", " + HttpWhiteboardConstants.CONTEXT_ID
+                + " is missing or empty");
+        }
+    }
+
+    public void remove(HttpContext service)
+    {
+        Collection<AbstractMapping> mappings = this.contextManager.removeHttpContext(service);
+        if (mappings != null)
+        {
+            for (AbstractMapping mapping : mappings)
+            {
+                unregisterMapping(mapping);
+            }
+        }
+    }
+
+    private void getHttpContext(AbstractMapping mapping, ServiceReference ref)
+    {
+        Bundle bundle = ref.getBundle();
+        String contextId = getStringProperty(ref, HttpWhiteboardConstants.CONTEXT_ID);
+        this.contextManager.getHttpContext(bundle, contextId, mapping);
+    }
+
+    private void ungetHttpContext(AbstractMapping mapping, ServiceReference ref)
+    {
+        Bundle bundle = ref.getBundle();
+        String contextId = getStringProperty(ref, HttpWhiteboardConstants.CONTEXT_ID);
+        this.contextManager.ungetHttpContext(bundle, contextId, mapping);
+    }
+
+    public void add(Filter service, ServiceReference ref)
+    {
+        int ranking = getIntProperty(ref, Constants.SERVICE_RANKING, 0);
+        String pattern = getStringProperty(ref, HttpWhiteboardConstants.PATTERN);
+
+        if (isEmpty(pattern)) {
+            SystemLogger.debug("Ignoring Filter Service " + ref + ", " + HttpWhiteboardConstants.PATTERN
+                + " is missing or empty");
+            return;
+        }
+
+        FilterMapping mapping = new FilterMapping(ref.getBundle(), service, pattern, ranking);
+        getHttpContext(mapping, ref);
+        addInitParams(ref, mapping);
+        addMapping(ref, mapping);
+    }
+
+    public void add(Servlet service, ServiceReference ref)
+    {
+        String alias = getStringProperty(ref, HttpWhiteboardConstants.ALIAS);
+        if (isEmpty(alias))
+        {
+            SystemLogger.debug("Ignoring Servlet Service " + ref + ", " + HttpWhiteboardConstants.ALIAS
+                + " is missing or empty");
+            return;
+        }
+
+        ServletMapping mapping = new ServletMapping(ref.getBundle(), service, alias);
+        getHttpContext(mapping, ref);
+        addInitParams(ref, mapping);
+        addMapping(ref, mapping);
+    }
+
+    public void remove(ServiceReference ref)
+    {
+        removeMapping(ref);
+    }
+
+    public synchronized void setHttpService(HttpService service)
+    {
+        this.httpService = service;
+        if (this.httpService instanceof ExtHttpService) {
+            SystemLogger.info("Detected extended HttpService. Filters enabled.");
+        } else {
+            SystemLogger.info("Detected standard HttpService. Filters disabled.");
+        }
+
+        registerAll();
+    }
+
+    public synchronized void unsetHttpService()
+    {
+        unregisterAll();
+        this.httpService = null;
+    }
+
+    public synchronized void unregisterAll()
+    {
+    	AbstractMapping[] mappings = null;
+    	HttpService service;
+    	synchronized (this) {
+			service = this.httpService;
+			if (service != null) {
+    			Collection<AbstractMapping> values = this.mapping.values();
+    			mappings = values.toArray(new AbstractMapping[values.size()]);
+    		}
+    	}
+    	if (mappings != null) {
+    		for (AbstractMapping mapping : mappings) {
+    			mapping.unregister(service);
+    		}
+    	}
+    }
+
+    private synchronized void registerAll()
+    {
+    	AbstractMapping[] mappings = null;
+    	HttpService service;
+    	synchronized (this) {
+			service = this.httpService;
+			if (service != null) {
+    			Collection<AbstractMapping> values = this.mapping.values();
+    			mappings = values.toArray(new AbstractMapping[values.size()]);
+    		}
+    	}
+    	if (mappings != null) {
+    		for (AbstractMapping mapping : mappings) {
+    			mapping.register(service);
+    		}
+    	}
+    }
+
+    private synchronized void addMapping(ServiceReference ref, AbstractMapping mapping)
+    {
+        this.mapping.put(ref, mapping);
+        this.registerMapping(mapping);
+    }
+
+    private synchronized void removeMapping(ServiceReference ref)
+    {
+        AbstractMapping mapping = this.mapping.remove(ref);
+        if (mapping != null)
+        {
+            ungetHttpContext(mapping, ref);
+            unregisterMapping(mapping);
+        }
+    }
+
+    private void registerMapping(AbstractMapping mapping)
+    {
+        HttpService httpService = this.httpService;
+        if (httpService != null)
+        {
+            mapping.register(httpService);
+        }
+    }
+
+    private void unregisterMapping(AbstractMapping mapping)
+    {
+        HttpService httpService = this.httpService;
+        if (httpService != null)
+        {
+            mapping.unregister(httpService);
+        }
+    }
+
+    /**
+     * Returns
+     * {@link org.apache.felix.http.whiteboard.internal.manager.HttpContextManager.HttpContextHolder}
+     * instances of HttpContext services.
+     *
+     * @return
+     */
+    Map<String, HttpContextHolder> getHttpContexts()
+    {
+        return this.contextManager.getHttpContexts();
+    }
+
+    /**
+     * Returns {@link AbstractMapping} instances for which there is no
+     * registered HttpContext as desired by the context ID.
+     */
+    Map<String, Set<AbstractMapping>> getOrphanMappings()
+    {
+        return this.contextManager.getOrphanMappings();
+    }
+
+    /**
+     * Returns mappings indexed by there owning OSGi service.
+     */
+    Map<Object, AbstractMapping> getMappings()
+    {
+        synchronized (this)
+        {
+            return new HashMap<Object, AbstractMapping>(this.mapping);
+        }
+    }
 }
