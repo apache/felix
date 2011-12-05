@@ -16,11 +16,11 @@
  */
 package org.apache.felix.http.whiteboard.internal.manager;
 
-import org.osgi.service.http.HttpService;
-import org.osgi.service.http.HttpContext;
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-
 import javax.servlet.Servlet;
+
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpService;
 
 public final class ServletMapping
     extends AbstractMapping
@@ -28,9 +28,9 @@ public final class ServletMapping
     private final Servlet servlet;
     private final String alias;
 
-    public ServletMapping(HttpContext context, Servlet servlet, String alias)
+    public ServletMapping(Bundle bundle, Servlet servlet, String alias)
     {
-        super(context);
+        super(bundle);
         this.servlet = servlet;
         this.alias = alias;
     }
@@ -47,15 +47,26 @@ public final class ServletMapping
 
     public void register(HttpService httpService)
     {
-        try {
-            httpService.registerServlet(this.alias, this.servlet, getInitParams(), getContext());
-        } catch (Exception e) {
-            SystemLogger.error("Failed to register servlet", e);
+        if (!this.isRegistered() && getContext() != null)
+        {
+            try
+            {
+                httpService.registerServlet(this.alias, this.servlet, getInitParams(), getContext());
+                this.setRegistered(true);
+            }
+            catch (Exception e)
+            {
+                SystemLogger.error("Failed to register servlet", e);
+            }
         }
     }
 
     public void unregister(HttpService httpService)
     {
-        httpService.unregister(this.alias);
+        if (this.isRegistered())
+        {
+            httpService.unregister(this.alias);
+            this.setRegistered(false);
+        }
     }
 }

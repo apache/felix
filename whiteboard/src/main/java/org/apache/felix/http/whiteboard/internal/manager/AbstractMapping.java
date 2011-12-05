@@ -16,19 +16,35 @@
  */
 package org.apache.felix.http.whiteboard.internal.manager;
 
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
 import java.util.Hashtable;
 
-public abstract class AbstractMapping
-{
-    private final HttpContext context;
-    private final Hashtable<String, String> initParams;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.HttpService;
 
-    public AbstractMapping(HttpContext context)
+abstract class AbstractMapping
+{
+    private final Bundle bundle;
+    private HttpContext context;
+    private final Hashtable<String, String> initParams;
+    private boolean registered;
+
+    protected AbstractMapping(final Bundle bundle)
+    {
+        this.bundle = bundle;
+        this.context = null;
+        this.initParams = new Hashtable<String, String>();
+        this.registered = false;
+    }
+
+    public Bundle getBundle()
+    {
+        return bundle;
+    }
+
+    public void setContext(HttpContext context)
     {
         this.context = context;
-        this.initParams = new Hashtable<String, String>();
     }
 
     public final HttpContext getContext()
@@ -39,6 +55,16 @@ public abstract class AbstractMapping
     public final Hashtable<String, String> getInitParams()
     {
         return this.initParams;
+    }
+
+    boolean isRegistered()
+    {
+        return registered;
+    }
+
+    void setRegistered(boolean registered)
+    {
+        this.registered = registered;
     }
 
     public abstract void register(HttpService httpService);

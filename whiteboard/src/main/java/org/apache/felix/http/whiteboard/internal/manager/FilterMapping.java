@@ -16,12 +16,12 @@
  */
 package org.apache.felix.http.whiteboard.internal.manager;
 
-import org.osgi.service.http.HttpService;
-import org.osgi.service.http.HttpContext;
+import javax.servlet.Filter;
+
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-
-import javax.servlet.Filter;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpService;
 
 public final class FilterMapping
     extends AbstractMapping
@@ -30,9 +30,9 @@ public final class FilterMapping
     private final int ranking;
     private final String pattern;
 
-    public FilterMapping(HttpContext context, Filter filter, String pattern, int ranking)
+    public FilterMapping(Bundle bundle, Filter filter, String pattern, int ranking)
     {
-        super(context);
+        super(bundle);
         this.filter = filter;
         this.pattern = pattern;
         this.ranking = ranking;
@@ -62,17 +62,26 @@ public final class FilterMapping
 
     private void register(ExtHttpService httpService)
     {
-        try {
-            httpService.registerFilter(this.filter, this.pattern, getInitParams(), ranking, getContext());
-        } catch (Exception e) {
-            SystemLogger.error("Failed to register filter", e);
+        if (!this.isRegistered() && getContext() != null)
+        {
+            try
+            {
+                httpService.registerFilter(this.filter, this.pattern, getInitParams(), ranking, getContext());
+                setRegistered(true);
+            }
+            catch (Exception e)
+            {
+                SystemLogger.error("Failed to register filter", e);
+            }
         }
     }
 
     public void unregister(HttpService httpService)
     {
-        if (httpService instanceof ExtHttpService) {
-            unregister((ExtHttpService)httpService);
+        if (httpService instanceof ExtHttpService && this.isRegistered())
+        {
+            unregister((ExtHttpService) httpService);
+            setRegistered(false);
         }
     }
 

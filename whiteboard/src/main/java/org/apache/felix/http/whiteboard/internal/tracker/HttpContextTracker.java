@@ -25,7 +25,7 @@ public final class HttpContextTracker
     extends AbstractTracker<HttpContext>
 {
     private final ExtenderManager manager;
-    
+
     public HttpContextTracker(BundleContext context, ExtenderManager manager)
     {
         super(context, HttpContext.class);
@@ -39,11 +39,11 @@ public final class HttpContextTracker
 
     protected void modified(HttpContext service, ServiceReference ref)
     {
-        removed(service);
+        removed(service, ref);
         added(service, ref);
     }
-    
-    protected void removed(HttpContext service)
+
+    protected void removed(HttpContext service, ServiceReference ref)
     {
         this.manager.remove(service);
     }

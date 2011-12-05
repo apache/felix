@@ -42,7 +42,7 @@ public final class HttpServiceTracker
         // Do nothing
     }
 
-    protected void removed(HttpService service)
+    protected void removed(HttpService service, ServiceReference ref)
     {
         this.manager.unsetHttpService();
     }
