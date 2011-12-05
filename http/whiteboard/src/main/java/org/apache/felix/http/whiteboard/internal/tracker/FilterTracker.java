@@ -39,12 +39,12 @@ public final class FilterTracker
 
     protected void modified(Filter service, ServiceReference ref)
     {
-        removed(service);
+        removed(service, ref);
         added(service, ref);
     }
 
-    protected void removed(Filter service)
+    protected void removed(Filter service, ServiceReference ref)
     {
-        this.manager.remove(service);
+        this.manager.remove(ref);
     }
 }

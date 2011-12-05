@@ -23,7 +23,7 @@ import org.osgi.framework.ServiceReference;
 public abstract class AbstractTracker<T>
     extends ServiceTracker
 {
-    public AbstractTracker(BundleContext context, Class clz)
+    public AbstractTracker(BundleContext context, Class<T> clz)
     {
         super(context, clz.getName(), null);
     }
@@ -49,12 +49,12 @@ public abstract class AbstractTracker<T>
     public final void removedService(ServiceReference ref, Object service)
     {
         super.removedService(ref, service);
-        removed((T)service);
+        removed((T) service, ref);
     }
 
     protected abstract void modified(T service, ServiceReference ref);
 
     protected abstract void added(T service, ServiceReference ref);
 
-    protected abstract void removed(T service);
+    protected abstract void removed(T service, ServiceReference ref);
 }

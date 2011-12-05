@@ -27,13 +27,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.http.HttpContext;
+import org.apache.felix.http.whiteboard.internal.manager.HttpContextManager.HttpContextHolder;
 
 @SuppressWarnings("serial")
 public class HttpWhiteboardWebConsolePlugin extends HttpServlet
 {
 
-    private final ExtenderManagerImpl extMgr;
+    private final ExtenderManager extMgr;
 
     public String getLabel()
     {
@@ -45,7 +45,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         return "Http Whiteboard";
     }
 
-    public HttpWhiteboardWebConsolePlugin(final ExtenderManagerImpl extMgr)
+    public HttpWhiteboardWebConsolePlugin(final ExtenderManager extMgr)
     {
         this.extMgr = extMgr;
     }
@@ -92,12 +92,12 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println("<th class='content' colspan='3'>HttpContext</td>");
         pw.println("</tr>");
 
-        final Map<String, HttpContext> contexts = extMgr.getHttpContexts();
-        for (Map.Entry<String, HttpContext> handler : contexts.entrySet())
+        final Map<String, HttpContextHolder> contexts = extMgr.getHttpContexts();
+        for (Map.Entry<String, HttpContextHolder> handler : contexts.entrySet())
         {
             pw.println("<tr class='content'>");
             pw.println("<td class='content'>" + handler.getKey() + "</td>");
-            pw.println("<td class='content' colspan='3'>" + handler.getValue() + "</td>");
+            pw.println("<td class='content' colspan='3'>" + handler.getValue().getContext() + "</td>");
             pw.println("</tr>");
         }
     }
@@ -167,10 +167,10 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
     private void printHttpContextServicesTxt(PrintWriter pw)
     {
         pw.println("Registered HttpContext Services");
-        final Map<String, HttpContext> contexts = extMgr.getHttpContexts();
-        for (Map.Entry<String, HttpContext> handler : contexts.entrySet())
+        final Map<String, HttpContextHolder> contexts = extMgr.getHttpContexts();
+        for (Map.Entry<String, HttpContextHolder> handler : contexts.entrySet())
         {
-            pw.println("  " + handler.getKey() + " ==> " + handler.getValue() + "</td>");
+            pw.println("  " + handler.getKey() + " ==> " + handler.getValue().getContext() + "</td>");
         }
         pw.println();
     }
@@ -183,8 +183,8 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
             if (handler.getValue() instanceof ServletMapping)
             {
                 ServletMapping sm = (ServletMapping) handler.getValue();
-                pw.println("  " + sm.getAlias() + " ==> " + sm.getServlet() + " (" + sm.getInitParams() + ", "
-                    + sm.getContext() + ")");
+                pw.printf("  %s ==> %s (%s, %s, %s)%n", sm.getAlias(), sm.getServlet(),
+                    sm.isRegistered() ? "registered" : "unregistered", sm.getInitParams(), sm.getContext());
             }
         }
         pw.println();
@@ -198,8 +198,9 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
             if (handler.getValue() instanceof FilterMapping)
             {
                 FilterMapping fm = (FilterMapping) handler.getValue();
-                pw.println("  " + fm.getPattern() + " ==> " + fm.getFilter() + " (" + fm.getRanking() + ", "
-                    + fm.getInitParams() + ", " + fm.getContext() + ")");
+                pw.printf("  %s ==> %s (%s, %s, %s, %s)%n", fm.getPattern(), fm.getFilter(),
+                    fm.isRegistered() ? "registered" : "unregistered", fm.getRanking(), fm.getInitParams(),
+                    fm.getContext());
             }
         }
         pw.println();

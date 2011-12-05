@@ -23,7 +23,6 @@ import org.apache.felix.http.whiteboard.internal.tracker.FilterTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.HttpContextTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.ServletTracker;
 import org.apache.felix.http.whiteboard.internal.tracker.HttpServiceTracker;
-import org.apache.felix.http.whiteboard.internal.manager.ExtenderManagerImpl;
 import org.apache.felix.http.whiteboard.internal.manager.ExtenderManager;
 import org.apache.felix.http.whiteboard.internal.manager.HttpWhiteboardWebConsolePlugin;
 import org.apache.felix.http.base.internal.AbstractActivator;
@@ -46,13 +45,13 @@ public final class WhiteboardActivator
     protected void doStart()
         throws Exception
     {
-        this.manager = new ExtenderManagerImpl();
+        this.manager = new ExtenderManager();
         addTracker(new HttpContextTracker(getBundleContext(), this.manager));
         addTracker(new FilterTracker(getBundleContext(), this.manager));
         addTracker(new ServletTracker(getBundleContext(), this.manager));
         addTracker(new HttpServiceTracker(getBundleContext(), this.manager));
 
-        HttpWhiteboardWebConsolePlugin plugin = new HttpWhiteboardWebConsolePlugin((ExtenderManagerImpl) this.manager);
+        HttpWhiteboardWebConsolePlugin plugin = new HttpWhiteboardWebConsolePlugin(this.manager);
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("felix.webconsole.label", plugin.getLabel());
         props.put("felix.webconsole.title", plugin.getTitle());
