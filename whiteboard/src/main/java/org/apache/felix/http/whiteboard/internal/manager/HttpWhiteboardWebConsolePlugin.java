@@ -21,6 +21,9 @@ package org.apache.felix.http.whiteboard.internal.manager;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -72,12 +75,15 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
 
         pw.println("<tr><td colspan='2'>&nbsp;</td></tr>");
 
-        final Map<Object, AbstractMapping> mappings = extMgr.getMappings();
-        printServletMappings(pw, mappings);
+        printServletMappings(pw, this.getServlets());
 
         pw.println("<tr><td colspan='2'>&nbsp;</td></tr>");
 
-        printFilterMappings(pw, mappings);
+        printFilterMappings(pw, this.getFilters());
+
+        pw.println("<tr><td colspan='2'>&nbsp;</td></tr>");
+
+        printOrphanMappings(pw, this.getOrphanMappings());
 
         pw.println("</table>");
     }
@@ -92,7 +98,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println("<th class='content' colspan='3'>HttpContext</td>");
         pw.println("</tr>");
 
-        final Map<String, HttpContextHolder> contexts = extMgr.getHttpContexts();
+        final Map<String, HttpContextHolder> contexts = getHttpContexts();
         for (Map.Entry<String, HttpContextHolder> handler : contexts.entrySet())
         {
             pw.println("<tr class='content'>");
@@ -102,7 +108,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         }
     }
 
-    private void printServletMappings(PrintWriter pw, Map<Object, AbstractMapping> mappings)
+    private void printServletMappings(PrintWriter pw, Map<String, ServletMapping> mappings)
     {
         pw.println("<tr>");
         pw.println("<th class='content container' colspan='4'>Registered Servlet Services</td>");
@@ -114,22 +120,18 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println("<th class='content'>HttpContext</td>");
         pw.println("</tr>");
 
-        for (Map.Entry<Object, AbstractMapping> handler : mappings.entrySet())
+        for (ServletMapping sm : mappings.values())
         {
-            if (handler.getValue() instanceof ServletMapping)
-            {
-                ServletMapping sm = (ServletMapping) handler.getValue();
-                pw.println("<tr class='content'>");
-                pw.println("<td class='content'>" + sm.getAlias() + "</td>");
-                pw.println("<td class='content'>" + sm.getServlet() + "</td>");
-                pw.println("<td class='content'>" + sm.getInitParams() + "</td>");
-                pw.println("<td class='content'>" + sm.getContext() + "</td>");
-                pw.println("</tr>");
-            }
+            pw.println("<tr class='content'>");
+            pw.println("<td class='content'>" + sm.getAlias() + "</td>");
+            pw.println("<td class='content'>" + sm.getServlet() + "</td>");
+            pw.println("<td class='content'>" + sm.getInitParams() + "</td>");
+            pw.println("<td class='content'>" + sm.getContext() + "</td>");
+            pw.println("</tr>");
         }
     }
 
-    private void printFilterMappings(PrintWriter pw, Map<Object, AbstractMapping> mappings)
+    private void printFilterMappings(PrintWriter pw, Map<String, FilterMapping> mappings)
     {
         pw.println("<tr>");
         pw.println("<th class='content container' colspan='4'>Registered Filter Services</td>");
@@ -141,68 +143,158 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println("<th class='content'>HttpContext</td>");
         pw.println("</tr>");
 
-        for (Map.Entry<Object, AbstractMapping> handler : mappings.entrySet())
+        for (FilterMapping fm: mappings.values())
         {
-            if (handler.getValue() instanceof FilterMapping)
+            pw.println("<tr class='content'>");
+            pw.println("<td class='content'>" + fm.getPattern() + "</td>");
+            pw.println("<td class='content'>" + fm.getFilter() + " (" + fm.getRanking() + ")</td>");
+            pw.println("<td class='content'>" + fm.getInitParams() + "</td>");
+            pw.println("<td class='content'>" + fm.getContext() + "</td>");
+            pw.println("</tr>");
+        }
+    }
+
+    private void printOrphanMappings(PrintWriter pw, Map<String, Set<AbstractMapping>> mappings)
+    {
+        pw.println("<tr>");
+        pw.println("<th class='content container' colspan='4'>Orphan Servlets and Filters</td>");
+        pw.println("</tr>");
+        pw.println("<tr>");
+        pw.println("<th class='content'>Context ID</td>");
+        pw.println("<th class='content'>Servlets and Filters</td>");
+        pw.println("</tr>");
+
+        for (Entry<String, Set<AbstractMapping>> entry : mappings.entrySet())
+        {
+            pw.println("<tr class='content'>");
+            pw.println("<td class='content'>" + entry.getKey() + "</td>");
+            pw.println("<td class='content'>");
+            for (AbstractMapping mapping : entry.getValue())
             {
-                FilterMapping fm = (FilterMapping) handler.getValue();
-                pw.println("<tr class='content'>");
-                pw.println("<td class='content'>" + fm.getPattern() + "</td>");
-                pw.println("<td class='content'>" + fm.getFilter() + " (" + fm.getRanking() + ")</td>");
-                pw.println("<td class='content'>" + fm.getInitParams() + "</td>");
-                pw.println("<td class='content'>" + fm.getContext() + "</td>");
-                pw.println("</tr>");
+                if (mapping instanceof ServletMapping)
+                {
+                    pw.printf("Servlet %s (%s)", ((ServletMapping) mapping).getAlias(),
+                        ((ServletMapping) mapping).getServlet());
+                }
+                else if (mapping instanceof FilterMapping)
+                {
+                    pw.printf("Filter %s (%s)", ((FilterMapping) mapping).getPattern(),
+                        ((FilterMapping) mapping).getFilter());
+                }
+                pw.println("<br/>");
             }
+            pw.println("</td>");
+            pw.println("</tr>");
         }
     }
 
     public void printConfiguration(final PrintWriter pw)
     {
         printHttpContextServicesTxt(pw);
-        final Map<Object, AbstractMapping> mappings = extMgr.getMappings();
-        printServletMappingsTxt(pw, mappings);
-        printFilterMappingsTxt(pw, mappings);
+        printServletMappingsTxt(pw, getServlets());
+        printFilterMappingsTxt(pw, getFilters());
+        printOrphanMappingsTxt(pw, getOrphanMappings());
     }
 
     private void printHttpContextServicesTxt(PrintWriter pw)
     {
         pw.println("Registered HttpContext Services");
-        final Map<String, HttpContextHolder> contexts = extMgr.getHttpContexts();
+        final Map<String, HttpContextHolder> contexts = getHttpContexts();
         for (Map.Entry<String, HttpContextHolder> handler : contexts.entrySet())
         {
-            pw.println("  " + handler.getKey() + " ==> " + handler.getValue().getContext() + "</td>");
+            pw.println("  " + handler.getKey() + " ==> " + handler.getValue().getContext());
         }
         pw.println();
     }
 
-    private void printServletMappingsTxt(PrintWriter pw, Map<Object, AbstractMapping> mappings)
+    private void printServletMappingsTxt(PrintWriter pw, Map<String, ServletMapping> mappings)
     {
         pw.println("Registered Servlet Services");
-        for (Map.Entry<Object, AbstractMapping> handler : mappings.entrySet())
+        for (ServletMapping sm : mappings.values())
         {
-            if (handler.getValue() instanceof ServletMapping)
-            {
-                ServletMapping sm = (ServletMapping) handler.getValue();
-                pw.printf("  %s ==> %s (%s, %s, %s)%n", sm.getAlias(), sm.getServlet(),
-                    sm.isRegistered() ? "registered" : "unregistered", sm.getInitParams(), sm.getContext());
-            }
+            pw.printf("  %s ==> %s (%s, %s, %s)%n", sm.getAlias(), sm.getServlet(), sm.isRegistered() ? "registered"
+                : "unregistered", sm.getInitParams(), sm.getContext());
         }
         pw.println();
     }
 
-    private void printFilterMappingsTxt(PrintWriter pw, Map<Object, AbstractMapping> mappings)
+    private void printFilterMappingsTxt(PrintWriter pw, Map<String, FilterMapping> mappings)
     {
         pw.println("Registered Filter Services");
-        for (Map.Entry<Object, AbstractMapping> handler : mappings.entrySet())
+        for (FilterMapping fm : mappings.values())
         {
-            if (handler.getValue() instanceof FilterMapping)
-            {
-                FilterMapping fm = (FilterMapping) handler.getValue();
-                pw.printf("  %s ==> %s (%s, %s, %s, %s)%n", fm.getPattern(), fm.getFilter(),
-                    fm.isRegistered() ? "registered" : "unregistered", fm.getRanking(), fm.getInitParams(),
-                    fm.getContext());
-            }
+            pw.printf("  %s ==> %s (%s, %s, %s, %s)%n", fm.getPattern(), fm.getFilter(),
+                fm.isRegistered() ? "registered" : "unregistered", fm.getRanking(), fm.getInitParams(), fm.getContext());
         }
         pw.println();
+    }
+
+    private void printOrphanMappingsTxt(PrintWriter pw, Map<String, Set<AbstractMapping>> mappings)
+    {
+        pw.println("Orphan Servlets and Filters");
+        for (Entry<String, Set<AbstractMapping>> entry : mappings.entrySet())
+        {
+            pw.print(entry.getKey() + " ==> { ");
+            boolean cont = false;
+            for (AbstractMapping mapping : entry.getValue())
+            {
+                if (cont)
+                {
+                    pw.print(", ");
+                }
+                else
+                {
+                    cont = true;
+                }
+
+                if (mapping instanceof ServletMapping)
+                {
+                    pw.printf("Servlet %s (%s)", ((ServletMapping) mapping).getAlias(),
+                        ((ServletMapping) mapping).getServlet());
+                }
+                else if (mapping instanceof FilterMapping)
+                {
+                    pw.printf("Filter %s (%s)", ((FilterMapping) mapping).getPattern(),
+                        ((FilterMapping) mapping).getFilter());
+                }
+            }
+            pw.println(" }");
+        }
+    }
+
+    private Map<String, HttpContextHolder> getHttpContexts()
+    {
+        return new TreeMap<String, HttpContextManager.HttpContextHolder>(this.extMgr.getHttpContexts());
+    }
+
+    private Map<String, ServletMapping> getServlets()
+    {
+        Map<String, ServletMapping> mappings = new TreeMap<String, ServletMapping>();
+        for (AbstractMapping mapping : this.extMgr.getMappings().values())
+        {
+            if (mapping instanceof ServletMapping)
+            {
+                mappings.put(((ServletMapping) mapping).getAlias(), (ServletMapping) mapping);
+            }
+        }
+        return mappings;
+    }
+
+    private Map<String, FilterMapping> getFilters()
+    {
+        Map<String, FilterMapping> mappings = new TreeMap<String, FilterMapping>();
+        for (AbstractMapping mapping : this.extMgr.getMappings().values())
+        {
+            if (mapping instanceof FilterMapping)
+            {
+                mappings.put(((FilterMapping) mapping).getPattern(), (FilterMapping) mapping);
+            }
+        }
+        return mappings;
+    }
+
+    private Map<String, Set<AbstractMapping>> getOrphanMappings()
+    {
+        return new TreeMap<String, Set<AbstractMapping>>(this.extMgr.getOrphanMappings());
     }
 }
