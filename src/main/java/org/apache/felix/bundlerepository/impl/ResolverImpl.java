@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -453,17 +453,34 @@ public class ResolverImpl implements Resolver
                         bestVersion = (Version) v;
                     }
                     // If the current resource version is equal to the
-                    // best, then select the one with the greatest
-                    // number of capabilities.
-                    else if ((bestVersion != null) && (bestVersion.compareTo(v) == 0)
-                            && (best.getResource().getCapabilities().length
-                                < current.getResource().getCapabilities().length))
+                    // best
+                    else if ((bestVersion != null) && (bestVersion.compareTo(v) == 0))
                     {
-                        best = current;
-                        bestLocal = isCurrentLocal;
-                        bestVersion = (Version) v;
+                        // If the symbolic name is the same, use the highest
+                        // bundle version.
+                        if ((best.getResource().getSymbolicName() != null)
+                            && best.getResource().getSymbolicName().equals(
+                                current.getResource().getSymbolicName()))
+                        {
+                            if (best.getResource().getVersion().compareTo(
+                                current.getResource().getVersion()) < 0)
+                            {
+                                best = current;
+                                bestLocal = isCurrentLocal;
+                                bestVersion = (Version) v;
+                            }
+                        }
+                        // Otherwise select the one with the greatest
+                        // number of capabilities.
+                        else if (best.getResource().getCapabilities().length
+                            < current.getResource().getCapabilities().length)
+                        {
+                            best = current;
+                            bestLocal = isCurrentLocal;
+                            bestVersion = (Version) v;
+                        }
                     }
-                }   
+                }
             }
         }
 
@@ -559,7 +576,7 @@ public class ResolverImpl implements Resolver
                             doStartBundle = true;
                             localResource.getBundle().stop();
                         }
-                        
+
                         localResource.getBundle().update(FileUtil.openURL(new URL(deployResources[i].getURI())));
 
                         // If necessary, save the updated bundle to be
@@ -567,7 +584,7 @@ public class ResolverImpl implements Resolver
                         if (doStartBundle)
                         {
                             Bundle bundle = localResource.getBundle();
-                            if (!isFragmentBundle(bundle)) 
+                            if (!isFragmentBundle(bundle))
                             {
                                 startList.add(bundle);
                             }
@@ -605,9 +622,9 @@ public class ResolverImpl implements Resolver
                         // started later.
                         if ((flags & START) != 0)
                         {
-                            if (!isFragmentBundle(bundle)) 
+                            if (!isFragmentBundle(bundle))
                             {
-                                startList.add(bundle);    
+                                startList.add(bundle);
                             }
                         }
                     }
@@ -616,7 +633,7 @@ public class ResolverImpl implements Resolver
                 {
                     m_logger.log(
                         Logger.LOG_ERROR,
-                        "Resolver: Install error - " + deployResources[i].getSymbolicName(), 
+                        "Resolver: Install error - " + deployResources[i].getSymbolicName(),
                         ex);
                     return;
                 }
@@ -641,15 +658,15 @@ public class ResolverImpl implements Resolver
 
     /**
      * Determines if the given bundle is a fragement bundle.
-     * 
+     *
      * @param bundle bundle to check
      * @return flag indicating if the given bundle is a fragement
      */
-    private boolean isFragmentBundle(Bundle bundle) 
+    private boolean isFragmentBundle(Bundle bundle)
     {
         return bundle.getHeaders().get(Constants.FRAGMENT_HOST) != null;
     }
-    
+
     // TODO: OBR - Think about this again and make sure that deployment ordering
     // won't impact it...we need to update the local state too.
     private LocalResourceImpl findUpdatableLocalResource(Resource resource)
