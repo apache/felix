@@ -32,6 +32,7 @@ public interface ServiceRegistrationHandler
     /**
      * Process the request against the registered provider.  
      * 
+     * @param closeConnection if true close connection after handling request
      * @throws IOException on I/O error
      * @throws ServletException on Servlet error
      */
