@@ -1,0 +1,18 @@
+Changes in the 1.8.2
+--------------------
+
+** Bug
+    * [FELIX-2825] - The maven-ipojo-plugin does not replace component classes in WAR files
+    * [FELIX-3012] - "Duplicate name&signature" problem
+    * [FELIX-3098] - iPOJO new manipulator crashes when using a custom reporter
+    * [FELIX-3145] - VerifyError on Java 7
+    * [FELIX-3249] - iPOJO Bnd Plugin do not write all the metadatas in the manifest
+
+** Improvement
+    * [FELIX-3017] - The manipulator should return the original class if it's already manipulated
+    * [FELIX-3078] - Introduce resource abstraction in the iPOJO manipulator
+    * [FELIX-3079] - Adapt the Ant task and the maven plugin to use the new manipulator capabilities
+    * [FELIX-3080] - Implement a BND plugin for iPOJO
+    * [FELIX-3131] - Elements and attributes should conserve the insertion order
+    * [FELIX-3204] - @Temporal should handle instantiation-time properties
+    * [FELIX-3244] - Manipulator : DefaultManifestBuilder should be more extensible
