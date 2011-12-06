@@ -292,6 +292,9 @@ public class ServletContextImpl implements ServletContext
 	/* (non-Javadoc)
 	 * @see javax.servlet.ServletContext#getContextPath()
 	 */
+	/**
+	 * @return the context path.
+	 */
 	public String getContextPath() {	
 		return m_name;
 	}

@@ -34,23 +34,27 @@ import org.apache.felix.httplite.osgi.Logger;
 **/
 public class ThreadPool
 {
+    /**
+     * Default thread timeout
+     */
     public static final int DEFAULT_THREAD_TIMEOUT = 60000;
-    private int m_threadTimeout;
+    private final int m_threadTimeout;
 
-    private ThreadGroup m_group = new ThreadGroup("ThreadPoolGroup");
+    private final ThreadGroup m_group = new ThreadGroup("ThreadPoolGroup");
     private int m_state;
     private ThreadGate m_shutdownGate;
     private int m_threadName = 0;
     private int m_threadLimit = 0;
     private int m_threadCount = 0;
     private int m_threadAvailable = 0;
-    private List m_connectionList = new ArrayList();
+    private final List m_connectionList = new ArrayList();
     private final Logger m_logger;
 
     /**
      * Constructs a thread pool with the specified thread limit and with
      * the default inactivity timeout.
      * @param threadLimit The maximum number of threads in the pool.
+     * @param logger Logger instance.
     **/
     public ThreadPool(final int threadLimit, final Logger logger)
     {
@@ -62,6 +66,7 @@ public class ThreadPool
      * timeout.
      * @param threadLimit The maximum number of threads in the pool.
      * @param threadTimeout The inactivity timeout for threads in milliseconds.
+     * @param logger Logger instance.
     **/
     public ThreadPool(int threadLimit, int threadTimeout, Logger logger)
     {
