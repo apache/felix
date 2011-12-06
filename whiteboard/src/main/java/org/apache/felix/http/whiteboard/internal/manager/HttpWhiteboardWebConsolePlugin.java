@@ -159,32 +159,42 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println("<tr>");
         pw.println("<th class='content container' colspan='4'>Orphan Servlets and Filters</td>");
         pw.println("</tr>");
-        pw.println("<tr>");
-        pw.println("<th class='content'>Context ID</td>");
-        pw.println("<th class='content'>Servlets and Filters</td>");
-        pw.println("</tr>");
-
-        for (Entry<String, Set<AbstractMapping>> entry : mappings.entrySet())
+        if (mappings.isEmpty())
         {
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>" + entry.getKey() + "</td>");
-            pw.println("<td class='content'>");
-            for (AbstractMapping mapping : entry.getValue())
-            {
-                if (mapping instanceof ServletMapping)
-                {
-                    pw.printf("Servlet %s (%s)", ((ServletMapping) mapping).getAlias(),
-                        ((ServletMapping) mapping).getServlet());
-                }
-                else if (mapping instanceof FilterMapping)
-                {
-                    pw.printf("Filter %s (%s)", ((FilterMapping) mapping).getPattern(),
-                        ((FilterMapping) mapping).getFilter());
-                }
-                pw.println("<br/>");
-            }
-            pw.println("</td>");
+            pw.println("<tr>");
+            pw.println("<td class='content' colspan='4'><i>none</i></td>");
             pw.println("</tr>");
+            pw.println("");
+        }
+        else
+        {
+            pw.println("<tr>");
+            pw.println("<th class='content'>Context ID</td>");
+            pw.println("<th class='content' colspan='3'>Servlets and Filters</td>");
+            pw.println("</tr>");
+
+            for (Entry<String, Set<AbstractMapping>> entry : mappings.entrySet())
+            {
+                pw.println("<tr class='content'>");
+                pw.println("<td class='content'>" + entry.getKey() + "</td>");
+                pw.println("<td class='content' colspan='3'>");
+                for (AbstractMapping mapping : entry.getValue())
+                {
+                    if (mapping instanceof ServletMapping)
+                    {
+                        pw.printf("Servlet %s (%s)", ((ServletMapping) mapping).getAlias(),
+                            ((ServletMapping) mapping).getServlet());
+                    }
+                    else if (mapping instanceof FilterMapping)
+                    {
+                        pw.printf("Filter %s (%s)", ((FilterMapping) mapping).getPattern(),
+                            ((FilterMapping) mapping).getFilter());
+                    }
+                    pw.println("<br/>");
+                }
+                pw.println("</td>");
+                pw.println("</tr>");
+            }
         }
     }
 
@@ -232,33 +242,41 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
     private void printOrphanMappingsTxt(PrintWriter pw, Map<String, Set<AbstractMapping>> mappings)
     {
         pw.println("Orphan Servlets and Filters");
-        for (Entry<String, Set<AbstractMapping>> entry : mappings.entrySet())
+        if (mappings.isEmpty())
         {
-            pw.print(entry.getKey() + " ==> { ");
-            boolean cont = false;
-            for (AbstractMapping mapping : entry.getValue())
-            {
-                if (cont)
-                {
-                    pw.print(", ");
-                }
-                else
-                {
-                    cont = true;
-                }
+            pw.println("  none");
+        }
+        else
+        {
 
-                if (mapping instanceof ServletMapping)
+            for (Entry<String, Set<AbstractMapping>> entry : mappings.entrySet())
+            {
+                pw.printf("  %s ==> { ", entry.getKey());
+                boolean cont = false;
+                for (AbstractMapping mapping : entry.getValue())
                 {
-                    pw.printf("Servlet %s (%s)", ((ServletMapping) mapping).getAlias(),
-                        ((ServletMapping) mapping).getServlet());
+                    if (cont)
+                    {
+                        pw.print(", ");
+                    }
+                    else
+                    {
+                        cont = true;
+                    }
+
+                    if (mapping instanceof ServletMapping)
+                    {
+                        pw.printf("Servlet %s (%s)", ((ServletMapping) mapping).getAlias(),
+                            ((ServletMapping) mapping).getServlet());
+                    }
+                    else if (mapping instanceof FilterMapping)
+                    {
+                        pw.printf("Filter %s (%s)", ((FilterMapping) mapping).getPattern(),
+                            ((FilterMapping) mapping).getFilter());
+                    }
                 }
-                else if (mapping instanceof FilterMapping)
-                {
-                    pw.printf("Filter %s (%s)", ((FilterMapping) mapping).getPattern(),
-                        ((FilterMapping) mapping).getFilter());
-                }
+                pw.println(" }");
             }
-            pw.println(" }");
         }
     }
 
