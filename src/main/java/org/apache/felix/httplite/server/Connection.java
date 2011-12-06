@@ -43,7 +43,13 @@ import org.apache.felix.httplite.servlet.HttpServletResponseImpl;
 **/
 public class Connection
 {
+    /**
+     * Connection timeout
+     */
     public static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
+    /**
+     * Requests per request
+     */
     public static final int DEFAULT_CONNECTION_REQUESTLIMIT = 50;
 
     private final Socket m_socket;
@@ -70,11 +76,11 @@ public class Connection
 
     /**
      * Constructs a connection with the specified inactivity timeout and request limit.
-     * @param server The web server associated with the connection.
      * @param socket The client socket.
      * @param timeout The inactivity timeout of the connection in milliseconds.
      * @param requestLimit The maximum number of consecutive requests.
      * @param resolver resolves a request URI to a client or servlet registration via the HTTP Service.
+     * @param logger logger instance.
      * @throws java.io.IOException If any I/O error occurs.
      */
     public Connection(final Socket socket, final int timeout, final int requestLimit, final ServiceRegistrationResolver resolver, final Logger logger) throws IOException
@@ -169,7 +175,7 @@ public class Connection
                 }
                 m_requestCount++;
 
-                // Keep track of whether we have errored or not,
+                // Keep track of whether we have failed or not,
                 // because we still want to read the bytes to clear
                 // the input stream so we can service more requests.
                 boolean error = false;
@@ -207,8 +213,8 @@ public class Connection
                     response.setConnectionType("close");
                 }
 
-                // We only service GET and/or HEAD requests, so send
-                // a "not implemented" error otherwise.
+                // We do not support OPTIONS method so send
+                // a "not implemented" error in that case.
                 if (!HttpServletRequestImpl.isSupportedMethod(request.getMethod()))
                 {
                     error = true;
@@ -216,7 +222,7 @@ public class Connection
                     response.sendNotImplementedResponse();
                 }
 
-                // Ignore if we have already errored, otherwise send error message
+                // Ignore if we have already failed, otherwise send error message
                 // if an HTTP/1.1 client did not include HOST header.
                 if (!error && request.getProtocol().equals(HttpConstants.HTTP11_VERSION)
                     && (request.getHeader(HttpConstants.HOST_HEADER) == null))

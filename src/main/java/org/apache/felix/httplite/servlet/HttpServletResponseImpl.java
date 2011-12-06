@@ -68,8 +68,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
 
     /**
      * Constructs an HTTP response for the specified server and request.
-     * @param server The web server associated with the response.
-     * @param request The HTTP request associated with the response.
+     * @param outputStream The output stream for the client.
     **/
     public HttpServletResponseImpl(OutputStream outputStream)
     {
@@ -652,6 +651,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
      * Build a response given input parameters.
      * 
      * @param code HTTP code
+     * @param headers Map of HTTP headers
      * @param userMessage user message
      * @param htmlStartTag custom HTML document start
      * @return byte array of response.

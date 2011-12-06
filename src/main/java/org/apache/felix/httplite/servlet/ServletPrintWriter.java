@@ -34,7 +34,7 @@ public class ServletPrintWriter extends PrintWriter
     /**
      * @param outputStream OutputStream
      * @param characterEncoding character encoding
-     * @throws UnknownCharacterException if the character encoding is not supported.
+     * @throws CharConversionException if the character encoding is not supported.
      */
     public ServletPrintWriter(OutputStream outputStream, String characterEncoding) throws CharConversionException
     {
