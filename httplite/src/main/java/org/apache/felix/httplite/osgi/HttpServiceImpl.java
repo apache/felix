@@ -70,6 +70,7 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
      *            Bundle that registered with the service
      * @param logger
      *            instance of Logger
+     * @param servletMap Map of servlet instances.
      * @throws IOException
      */
     public HttpServiceImpl(final Bundle bundle, final Server server, final Logger logger, Map servletMap) throws IOException

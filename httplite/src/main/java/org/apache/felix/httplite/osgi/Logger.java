@@ -50,9 +50,21 @@ import org.osgi.framework.ServiceReference;
 **/
 public class Logger implements ServiceListener
 {
+    /**
+     * ERROR level
+     */
     public static final int LOG_ERROR = 1;
+    /**
+     * WARNING level
+     */
     public static final int LOG_WARNING = 2;
+    /**
+     * INFO level
+     */
     public static final int LOG_INFO = 3;
+    /**
+     * DEBUG level
+     */
     public static final int LOG_DEBUG = 4;
 
     private int m_logLevel = 1;
@@ -63,15 +75,24 @@ public class Logger implements ServiceListener
     private ServiceReference m_logRef = null;
     private Object[] m_logger = null;
 
+    /**
+     * 
+     */
     public Logger()
     {
     }
 
+    /**
+     * @param i log level
+     */
     public final synchronized void setLogLevel(int i)
     {
         m_logLevel = i;
     }
 
+    /**
+     * @return current log level
+     */
     public final synchronized int getLogLevel()
     {
         return m_logLevel;
@@ -83,31 +104,62 @@ public class Logger implements ServiceListener
         startListeningForLogService();
     }
 
+    /**
+     * @param level log level
+     * @param msg message to log
+     */
     public final void log(int level, String msg)
     {
         _log(null, null, level, msg, null);
     }
 
+    /**
+     * @param level log level
+     * @param msg message to log
+     * @param throwable error to log
+     */
     public final void log(int level, String msg, Throwable throwable)
     {
         _log(null, null, level, msg, throwable);
     }
 
+    /**
+     * @param sr service reference to log
+     * @param level level to log
+     * @param msg message to log
+     */
     public final void log(ServiceReference sr, int level, String msg)
     {
         _log(null, sr, level, msg, null);
     }
 
+    /**
+     * @param sr service reference to log
+     * @param level level to log
+     * @param msg message to log
+     * @param throwable error to log
+     */
     public final void log(ServiceReference sr, int level, String msg, Throwable throwable)
     {
         _log(null, sr, level, msg, throwable);
     }
 
+    /**
+     * @param bundle bundle to log
+     * @param level level to log
+     * @param msg message to log
+     */
     public final void log(Bundle bundle, int level, String msg)
     {
         _log(bundle, null, level, msg, null);
     }
 
+    /**
+     * @param bundle source of log event
+     * @param level level to log
+     * @param msg message to log
+     * @param throwable error to log
+     */
     public final void log(Bundle bundle, int level, String msg, Throwable throwable)
     {
         _log(bundle, null, level, msg, throwable);
