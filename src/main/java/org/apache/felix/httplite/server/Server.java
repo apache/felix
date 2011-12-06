@@ -37,17 +37,37 @@ import org.apache.felix.httplite.osgi.ServiceRegistrationResolver;
 **/
 public class Server
 {
+    /**
+     * Connection timeout property
+     */
     public static final String CONFIG_PROPERTY_CONNECTION_TIMEOUT_PROP = "org.apache.felix.http.connection.timeout";
+    /**
+     * Connection request limit property
+     */
     public static final String CONFIG_PROPERTY_CONNECTION_REQUESTLIMIT_PROP = "org.apache.felix.http.connection.requestlimit";
+    /**
+     * Thread pool timeout property
+     */
     public static final String CONFIG_PROPERTY_THREADPOOL_TIMEOUT_PROP = "org.apache.felix.http.threadpool.timeout";
+    /**
+     * Thread pool limit property
+     */
     public static final String CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP = "org.apache.felix.http.threadpool.limit";
-    //Flag to enable debugging for this service implementation. The default is false.
+     /**
+     * Flag to enable debugging for this service implementation. The default is false.
+     */
     public static final String CONFIG_PROPERTY_HTTP_DEBUG = "org.apache.felix.http.debug";
-    //  Flag to enable the user of HTTPS. The default is false.
+    /**
+     * Flag to enable the user of HTTPS. The default is false.
+     */
     public static final String CONFIG_PROPERTY_HTTPS_ENABLE = "org.apache.felix.https.enable";
-    // Flag to enable the use of HTTP. The default is true.
-    public static final String CONFIG_PROPERTY_HTTP_ENABLE = "org.apache.felix.http.enable";
-    // The port used for servlets and resources available via HTTP. The default is 8080. A negative port number has the same effect as setting org.apache.felix.http.enable to false.
+    /**
+     * Flag to enable the use of HTTP. The default is true.
+     */
+    public static final String CONFIG_PROPERTY_HTTP_ENABLE = "org.apache.felix.http.enable"; 
+    /**
+     * The port used for servlets and resources available via HTTP. The default is 8080. A negative port number has the same effect as setting org.apache.felix.http.enable to false.
+     */
     public static final String CONFIG_PROPERTY_HTTP_PORT = "org.osgi.service.http.port";
 
     /**
