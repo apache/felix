@@ -53,7 +53,6 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     protected List m_services = new ArrayList();
 	private String m_resourceFilter;
 	private URL m_trackedResource;
-    private boolean m_isStarted;
     private List m_resources = new ArrayList();
     private URL m_resourceInstance;
     private boolean m_propagate;
@@ -439,10 +438,6 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
             sb.append(m_trackedResource.toString());
         }
         return sb.toString();
-    }
-
-    public int getState() {
-        return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
     }
 
     public String getType() {
