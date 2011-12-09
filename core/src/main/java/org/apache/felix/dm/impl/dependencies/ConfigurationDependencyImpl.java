@@ -69,7 +69,6 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
     protected List m_services = new ArrayList();
 	private Dictionary m_settings;
     private String m_callback;
-    private boolean m_isStarted;
 	private final Set m_updateInvokedCache = new HashSet();
     private MetaTypeProviderImpl m_metaType;
     private boolean m_propagate;
@@ -285,10 +284,6 @@ public class ConfigurationDependencyImpl extends DependencyBase implements Confi
 
     public String getName() {
         return m_pid;
-    }
-
-    public int getState() {
-        return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
     }
 
     public String getType() {

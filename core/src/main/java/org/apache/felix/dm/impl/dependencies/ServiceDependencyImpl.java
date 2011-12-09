@@ -65,7 +65,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     private volatile String m_trackedServiceFilter;
     private volatile String m_trackedServiceFilterUnmodified;
     private volatile ServiceReference m_trackedServiceReference;
-    private volatile boolean m_isStarted;
     private Object m_callbackInstance;
     private String m_callbackAdded;
     private String m_callbackChanged;
@@ -1045,10 +1044,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             sb.append("{service.id=" + m_trackedServiceReference.getProperty(Constants.SERVICE_ID)+"}");
         }
         return sb.toString();
-    }
-
-    public int getState() {
-        return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
     }
 
     public String getType() {

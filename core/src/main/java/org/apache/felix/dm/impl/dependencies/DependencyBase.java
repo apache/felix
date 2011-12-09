@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.impl.dependencies;
 
+import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.Dependency;
 import org.apache.felix.dm.DependencyActivation;
 import org.apache.felix.dm.impl.Logger;
@@ -29,6 +30,7 @@ public abstract class DependencyBase implements Dependency, DependencyActivation
     private boolean m_isRequired;
     private boolean m_isInstanceBound;
     protected final Logger m_logger;
+    protected volatile boolean m_isStarted;
 
     public DependencyBase(Logger logger) {
         m_logger = logger;
@@ -55,4 +57,14 @@ public abstract class DependencyBase implements Dependency, DependencyActivation
     public final void setIsInstanceBound(boolean isInstanceBound) {
         m_isInstanceBound = isInstanceBound;
     }
+    
+    public int getState() {
+        if (m_isStarted) {
+            return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
+        }
+        else {
+            return isRequired() ? ComponentDependencyDeclaration.STATE_REQUIRED : ComponentDependencyDeclaration.STATE_OPTIONAL;
+        }
+    }
+
 }
