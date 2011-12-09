@@ -45,7 +45,6 @@ import org.osgi.service.log.LogService;
  */
 public class BundleDependencyImpl extends DependencyBase implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
 	private final BundleContext m_context;
-	private boolean m_isStarted;
 	private BundleTracker m_tracker;
 	private int m_stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
 	private List m_services = new ArrayList();
@@ -149,10 +148,6 @@ public class BundleDependencyImpl extends DependencyBase implements BundleDepend
             sb.append("bundle.id=" + m_bundleId);
         }
         return sb.toString();
-	}
-
-	public int getState() {
-        return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
 	}
 
 	public String getType() {
