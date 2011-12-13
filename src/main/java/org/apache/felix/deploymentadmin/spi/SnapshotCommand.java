@@ -95,7 +95,7 @@ public class SnapshotCommand extends Command {
             File[] children = source.listFiles();
             output = new ZipOutputStream(new FileOutputStream(target));
             for (int i = 0; i < children.length; i++) {
-                storeRecursive(target, new File(children[i].getName()), output);
+                storeRecursive(source, new File(children[i].getName()), output);
             }
         }
         finally {
