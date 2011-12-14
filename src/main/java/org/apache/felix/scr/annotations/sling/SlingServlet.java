@@ -25,7 +25,7 @@ import java.lang.annotation.*;
  * Sling's resource resolver mapping.
  */
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface SlingServlet {
 
