@@ -863,7 +863,7 @@ public class ProvidedService implements ServiceFactory {
         /**
          * A method is invoked on the proxy object.
          * If the method is the {@link IPOJOServiceFactory#getService(ComponentInstance)}
-         * method, this method creates a service object if no already created for the asking
+         * method, this method creates a service object if not already created for the asking
          * component instance.
          * If the method is {@link IPOJOServiceFactory#ungetService(ComponentInstance, Object)}
          * the service object is unget (i.e. removed from the map and deleted).
@@ -887,9 +887,18 @@ public class ProvidedService implements ServiceFactory {
                 return null;
             }
 
+            // Regular methods from java.lang.Object : equals and hashCode
+            if (arg1.getName().equals("equals")  && arg2 != null  && arg2.length == 1) {
+                return this.equals(arg2[0]);
+            }
+
+            if (arg1.getName().equals("hashCode")) {
+                return this.hashCode();
+            }
+
             throw new UnsupportedOperationException("This service requires an advanced creation policy. "
                     + "Before calling the service, call the getService(ComponentInstance) method to get "
-                    + "the service object. ");
+                    + "the service object. - Method called: " + arg1.getName());
         }
 
         /**
