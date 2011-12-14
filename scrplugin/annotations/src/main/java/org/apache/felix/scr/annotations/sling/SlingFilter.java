@@ -29,7 +29,7 @@ import java.lang.annotation.*;
  * but this generation can be overriden.
  */
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface SlingFilter {
 
