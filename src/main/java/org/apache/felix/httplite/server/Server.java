@@ -106,6 +106,11 @@ public class Server
     private final int m_connectionRequestLimit;
     private ServiceRegistrationResolver m_resolver;
     private final Logger m_logger;
+    
+	/**
+	 * Set to true when bundle is in a stopping state.  Socket errors will be ignored.
+	 */
+	private boolean m_stopping = false;
 
     /**
      * Construct a web server with the specified configuration. The configuration
@@ -344,8 +349,11 @@ public class Server
             }
             catch (IOException ex)
             {
-                m_logger.log(Logger.LOG_ERROR,
-                    "The call to accept() terminated with an exception.", ex);
+            	if (!m_stopping)
+            	{
+	                m_logger.log(Logger.LOG_ERROR,
+	                    "The call to accept() terminated with an exception.", ex);
+            	}
             }
         }
 
@@ -387,4 +395,16 @@ public class Server
         }
         m_logger.log(Logger.LOG_DEBUG, "Shutdown complete.");
     }
+
+	/**
+	 * Sets the stopping flag to true.  Socket exceptions will not be logged.  Method can only be called once.
+	 */
+	public void setStopping() {
+		if (m_stopping) 
+		{
+			throw new IllegalStateException("setStopping() called multiple times.");
+		}
+		
+		m_stopping  = true;
+	}
 }

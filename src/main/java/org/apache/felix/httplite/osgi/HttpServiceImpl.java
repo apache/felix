@@ -91,6 +91,8 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
     public void registerResources(final String alias, final String name,
         final HttpContext context) throws NamespaceException
     {
+        validateAlias(alias);
+        
         synchronized (m_servletMap)
         {
             if (m_servletMap.containsKey(alias))
@@ -160,6 +162,8 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
         final Dictionary initparams, final HttpContext context) throws ServletException,
         NamespaceException
     {
+        validateAlias(alias);
+        
         if (m_servletMap.containsKey(alias))
         {
             throw new NamespaceException("Alias " + alias
@@ -286,7 +290,7 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
             }
             else
             {
-                return new ResourceHandler(request, response, element);
+                return new ResourceHandler(request, response, element, m_logger);
             }
         }
 
@@ -316,4 +320,27 @@ public class HttpServiceImpl implements HttpService, ServiceRegistrationResolver
         return new HttpServletResponseImpl(output);
     }
 
+    /**
+     * Validate that a given alias is legal.
+     * 
+     * @param alias input alias
+     * @throws NamespaceException is thrown if alias is illegal
+     */
+    private void validateAlias( String alias ) throws NamespaceException
+    {
+        if (alias == null)
+        {
+            throw new NamespaceException( "Alias is null." );
+        }
+        
+        if (alias.trim().length() == 0)
+        {
+            throw new NamespaceException( "Alias is an empty string." );
+        }
+        
+        if (!alias.startsWith( "/" )) 
+        {
+            throw new NamespaceException( "Alias must begin with '/'." );
+        }
+    }
 }
