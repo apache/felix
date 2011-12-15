@@ -197,16 +197,6 @@ public class HttpServletRequestImpl implements HttpServletRequest
         m_uri = st.nextToken();
         m_version = st.nextToken();
 
-        // If the URI is absolute, break into host and path.
-        m_uriHost = "";
-        int hostIdx = m_uri.indexOf("//");
-        if (hostIdx > 0)
-        {
-            int pathIdx = m_uri.indexOf("/", hostIdx + 2);
-            m_uriHost = m_uri.substring(hostIdx + 2, pathIdx);
-            m_uri = m_uri.substring(pathIdx);
-        }
-
         // If the URI has query string, parse it.
         int qsIdx = m_uri.indexOf("?");
         if (qsIdx > 0)
@@ -214,6 +204,47 @@ public class HttpServletRequestImpl implements HttpServletRequest
             m_queryString = m_uri.substring(qsIdx + 1);
             m_uri = m_uri.substring(0, qsIdx);
         }
+        
+        // If path contains multiple successive path separators (a//b/c a/b////c, etc.), strip them.
+        if (m_uri.indexOf( "//" ) > -1)
+        {
+            // separator
+            
+            m_uri = stripRedundantSeparators(m_uri);         
+        }
+    }
+
+    /**
+     * Remove successive '/' characters.
+     * 
+     * @param in input string
+     * @return stripped string
+     */
+    private String stripRedundantSeparators( String in )
+    {
+        StringBuffer sb = new StringBuffer();
+        boolean lastIsSeparator = false;
+
+        for (int i = 0; i < in.length(); ++i) 
+        {
+            char c = in.charAt( i );
+            
+            if (lastIsSeparator && c == '/')
+            {
+                continue;
+            }
+            
+            sb.append( c );
+            
+            if (c == '/')
+            {
+                lastIsSeparator = true;
+            } else {
+                lastIsSeparator = false;
+            }
+        }
+        
+        return sb.toString();
     }
 
     /**
@@ -230,7 +261,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
      *             If any I/O error occurs.
      **/
     public void parseHeader(final ConcreteServletInputStream is) throws IOException
-    {
+    {              
         for (String s = is.readLine(); (s != null) && (s.length() != 0); s = is.readLine())
         {
             int idx = s.indexOf(":");
@@ -267,6 +298,11 @@ public class HttpServletRequestImpl implements HttpServletRequest
                     }
                 }
             }
+        }
+        
+        if (m_headers.containsKey( "Host" )) 
+        {          
+            m_uriHost = m_headers.get( "Host" ).toString();         
         }
     }
 
@@ -502,6 +538,19 @@ public class HttpServletRequestImpl implements HttpServletRequest
      */
     public Map getParameterMap()
     {
+        if (m_parameters == null)
+        {
+            try
+            {
+                m_parameters = parseParameters();
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                m_logger.log(Logger.LOG_ERROR, "Failed to parse request parameters.", e);
+                return null;
+            }
+        }
+        
         return m_parameters;
     }
 
@@ -512,6 +561,19 @@ public class HttpServletRequestImpl implements HttpServletRequest
      */
     public Enumeration getParameterNames()
     {
+        if (m_parameters == null)
+        {
+            try
+            {
+                m_parameters = parseParameters();
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                m_logger.log(Logger.LOG_ERROR, "Failed to parse request parameters.", e);
+                return null;
+            }
+        }
+        
         return Collections.enumeration(m_parameters.keySet());
     }
 
@@ -522,6 +584,19 @@ public class HttpServletRequestImpl implements HttpServletRequest
      */
     public String[] getParameterValues(String arg0)
     {
+        if (m_parameters == null)
+        {
+            try
+            {
+                m_parameters = parseParameters();
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                m_logger.log(Logger.LOG_ERROR, "Failed to parse request parameters.", e);
+                return null;
+            }
+        }
+        
         return (String[]) m_parameters.values().toArray(new String[m_parameters.size()]);
     }
 
@@ -810,7 +885,10 @@ public class HttpServletRequestImpl implements HttpServletRequest
     public StringBuffer getRequestURL()
     {
         StringBuffer sb = new StringBuffer();
-        sb.append(m_uriHost);
+        if (m_uriHost != null)
+        {
+            sb.append(m_uriHost);
+        }
         sb.append(m_uri);
 
         return sb;
@@ -903,12 +981,12 @@ public class HttpServletRequestImpl implements HttpServletRequest
             parseParameterString(queryString, params);
         }
 
-        if (m_requestBody != null)
+        if (m_requestBody != null && m_requestBody.length > 0)
         {
             parseParameterString(new String(m_requestBody), params);
         }
 
-        return params;
+        return Collections.unmodifiableMap( params );
     }
 
     /**
@@ -957,7 +1035,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
     {
         if (m_method != null && m_uri != null)
         {
-            return m_method + m_uri;
+            return m_method + " " + m_uri;
         }
 
         return super.toString();

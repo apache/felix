@@ -60,7 +60,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
     private boolean m_getOutputStreamCalled = false;
     private boolean m_getWriterCalled = false;
     private ServletOutputStreamImpl m_servletOutputStream;
-    private ServletPrintWriter m_servletPrintWriter;
+    private PrintWriter m_servletPrintWriter;
 
     private int m_statusCode = HttpURLConnection.HTTP_OK;
     private String m_customStatusMessage = null;
@@ -341,8 +341,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
         if (m_servletPrintWriter == null)
         {
             m_buffer = new ByteArrayOutputStream(m_bufferSize);
-            m_servletPrintWriter = new ServletPrintWriter(m_buffer,
-                getCharacterEncoding());
+            m_servletPrintWriter = new PrintWriter(m_buffer);
         }
 
         return m_servletPrintWriter;
@@ -665,8 +664,12 @@ public class HttpServletResponseImpl implements HttpServletResponse
         buffer.append(' ');
         buffer.append(code);
         buffer.append(' ');
-        buffer.append("HTTP Error ");
-        buffer.append(code);
+        
+        if (code > 399)
+        {
+	        buffer.append("HTTP Error ");
+	        buffer.append(code);
+        }
         buffer.append(HttpConstants.HEADER_DELEMITER);
         if (code == 100)
         {
@@ -698,6 +701,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
         //Only append error HTML messages if the return code is in the error range.
         if (code > 399)
         {
+        	//TODO: Consider disabling the HTML generation, optionally, so clients have full control of the response content.
             if (htmlStartTag == null)
             {
                 htmlStartTag = HttpConstants.DEFAULT_HTML_HEADER;

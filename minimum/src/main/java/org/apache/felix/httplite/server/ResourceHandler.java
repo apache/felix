@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.felix.httplite.osgi.Logger;
 import org.apache.felix.httplite.osgi.ServiceRegistration;
 import org.apache.felix.httplite.osgi.ServiceRegistrationHandler;
 import org.apache.felix.httplite.servlet.HttpConstants;
@@ -38,19 +41,22 @@ import org.osgi.service.http.HttpContext;
 public class ResourceHandler implements ServiceRegistrationHandler
 {
 
-    private final HttpServletRequestImpl m_request;
+    private static final String INDEX_HTML = "index.html";
+	private final HttpServletRequestImpl m_request;
     private final HttpServletResponseImpl m_response;
 
     private final HttpContext m_httpContext;
     private final String m_name;
     private final String m_alias;
+	private final Logger m_logger;
 
     /**
      * @param req HttpRequest
      * @param res HttpResponse
      * @param resource ServiceRegistration
+     * @param logger Log reference
      */
-    public ResourceHandler(final HttpServletRequestImpl req, final HttpServletResponseImpl res, final ServiceRegistration resource)
+    public ResourceHandler(final HttpServletRequestImpl req, final HttpServletResponseImpl res, final ServiceRegistration resource, final Logger logger)
     {
         if (resource.isServlet())
         {
@@ -62,7 +68,8 @@ public class ResourceHandler implements ServiceRegistrationHandler
         this.m_response = res;
         this.m_httpContext = resource.getContext();
         this.m_name = resource.getName();
-        this.m_alias = resource.getAlias();
+        this.m_alias = resource.getAlias();  
+        this.m_logger = logger;
     }
 
     /* (non-Javadoc)
@@ -75,18 +82,31 @@ public class ResourceHandler implements ServiceRegistrationHandler
         {
 
             //POST, PUT, DELETE operations not valid on resources.
+        	m_logger.log(Logger.LOG_WARNING, "Ignored client " + m_request.getMethod() + " on static resource.");
             return;
         }
 
         if (m_httpContext.handleSecurity(m_request, m_response))
         {
             String resourceName = getResourceName(m_request.getRequestURI());
-
-            URL resource = m_httpContext.getResource(resourceName);
-
+            
+            URL resource = null;
+            
+            if (resourceName.endsWith("/"))
+            {
+            	m_logger.log(Logger.LOG_DEBUG, "Appending " + INDEX_HTML + " to request " + resourceName);
+            	resource = m_httpContext.getResource(resourceName + INDEX_HTML);
+            } 
+            else 
+            {
+            	resource = m_httpContext.getResource(resourceName);	
+            }
+           
             if (resource == null)
             {
-                throw new IOException("Unable to find resource: " + resourceName);
+            	m_logger.log(Logger.LOG_INFO, "Returning HTTP 404 for request for " + resourceName);
+            	m_response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            	return;
             }
 
             InputStream inputStream = resource.openStream();
