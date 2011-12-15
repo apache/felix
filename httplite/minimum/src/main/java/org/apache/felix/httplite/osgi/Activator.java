@@ -148,6 +148,8 @@ public class Activator implements BundleActivator
      */
 	public void stop(final BundleContext context) throws Exception
     {
+		m_server.setStopping();
+		
         if (m_httpServiceReg != null)
         {
             m_httpServiceReg.unregister();

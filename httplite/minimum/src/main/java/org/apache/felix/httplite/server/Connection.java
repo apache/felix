@@ -181,8 +181,8 @@ public class Connection
                 boolean error = false;
 
                 m_logger.log(Logger.LOG_DEBUG,
-                    "Processing request (" + (m_requestLimit - m_requestCount)
-                        + " remaining) : " + request.getRequestURI());
+                    "Processing " + request.getRequestURI() + " (" + (m_requestLimit - m_requestCount)
+                        + " remaining)");
 
                 // If client is HTTP/1.1, then send continue message.
                 if (request.getProtocol().equals(HttpConstants.HTTP11_VERSION))
