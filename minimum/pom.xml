@@ -33,17 +33,36 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
-			<version>4.1.0</version>
+			<version>4.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
-			<version>4.1.0</version>
+			<version>4.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>2.4</version>
+		</dependency>				
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>	
+		<dependency>
+			<groupId>com.googlecode.pojosr</groupId>
+			<artifactId>de.kalpatec.pojosr.framework</artifactId>
+			<version>0.1.6</version>
+			<type>bundle</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.1</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
