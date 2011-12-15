@@ -1,0 +1,3 @@
+httplite is a minimal implementation of the OSGi HTTP Service specification.  It supports a subset of the features found in the bridge and jetty HTTP Service implementations.  See https://issues.apache.org/jira/browse/FELIX-538 for more details.
+
+This is the 'complete' target, which bundles all required dependencies: OSGi Compendium and Servlet API.
