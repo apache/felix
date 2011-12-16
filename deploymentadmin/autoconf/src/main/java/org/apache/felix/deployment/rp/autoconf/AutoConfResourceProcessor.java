@@ -516,7 +516,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     		result = typedContent;
     	}
     	else if (cardinality < 0) {
-    		if (typedContent.length == cardinality) {
+            if (typedContent.length <= Math.abs(cardinality)) {
     			result = new Vector(Arrays.asList(typedContent));
     		}
     		else {
@@ -524,7 +524,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     		}
     	}
     	else if (cardinality > 0) {
-    		if (typedContent.length == cardinality) {
+    		if (typedContent.length <= cardinality) {
     			result = typedContent;
     		}
     		else {
