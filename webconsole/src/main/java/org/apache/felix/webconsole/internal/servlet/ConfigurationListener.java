@@ -44,7 +44,7 @@ class ConfigurationListener implements ManagedService
     {
         final OsgiManager osgiManager = listener.osgiManager;
 
-        Dictionary props = new Hashtable();
+        Dictionary<String, String> props = new Hashtable<String, String>();
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
         props.put( Constants.SERVICE_DESCRIPTION, "OSGi Management Console Configuration Receiver" );
         props.put( Constants.SERVICE_PID, osgiManager.getConfigurationPid() );
@@ -61,7 +61,8 @@ class ConfigurationListener implements ManagedService
 
     //---------- ManagedService
 
-    public void updated( Dictionary config )
+    @SuppressWarnings("unchecked")
+    public void updated( @SuppressWarnings("rawtypes") Dictionary config )
     {
         osgiManager.updateConfiguration( config );
     }

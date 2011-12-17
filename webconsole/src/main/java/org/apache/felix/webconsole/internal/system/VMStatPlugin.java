@@ -43,6 +43,7 @@ import org.osgi.service.startlevel.StartLevel;
  * VMStatPlugin provides the System Information tab. This particular plugin uses
  * more than one templates.
  */
+@SuppressWarnings("serial")
 public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
 
@@ -166,8 +167,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
+    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         String body;
 

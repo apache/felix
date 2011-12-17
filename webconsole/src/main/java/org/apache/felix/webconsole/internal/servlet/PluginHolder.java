@@ -57,7 +57,7 @@ class PluginHolder implements ServiceListener
     private final BundleContext bundleContext;
 
     // registered plugins (Map<String label, Plugin plugin>)
-    private final Map plugins;
+    private final Map<String, Plugin> plugins;
 
     // The servlet context used to initialize plugin services
     private ServletContext servletContext;
@@ -69,7 +69,7 @@ class PluginHolder implements ServiceListener
     PluginHolder( final BundleContext context )
     {
         this.bundleContext = context;
-        this.plugins = new HashMap();
+        this.plugins = new HashMap<String, Plugin>();
     }
 
 
@@ -197,7 +197,7 @@ class PluginHolder implements ServiceListener
             final Plugin plugin;
             synchronized ( plugins )
             {
-                plugin = ( Plugin ) plugins.get( label );
+                plugin = plugins.get( label );
             }
 
             if ( plugin != null )
@@ -232,9 +232,9 @@ class PluginHolder implements ServiceListener
      *
      * @return The localized map of labels to titles
      */
-    Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
+    Map<String, String> getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
     {
-        final Map map = new HashMap();
+        final Map<String, String> map = new HashMap<String, String>();
         Plugin[] plugins = getPlugins();
         for ( int i = 0; i < plugins.length; i++ )
         {
@@ -386,7 +386,7 @@ class PluginHolder implements ServiceListener
         final Plugin oldPlugin;
         synchronized ( plugins )
         {
-            oldPlugin = ( Plugin ) plugins.remove( label );
+            oldPlugin = plugins.remove( label );
         }
 
         if ( oldPlugin != null )
@@ -400,7 +400,7 @@ class PluginHolder implements ServiceListener
     {
         synchronized ( plugins )
         {
-            return ( Plugin[] ) plugins.values().toArray( new Plugin[plugins.size()] );
+            return plugins.values().toArray( new Plugin[plugins.size()] );
         }
     }
 
@@ -562,7 +562,7 @@ class PluginHolder implements ServiceListener
         }
 
 
-        protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin )
+        protected void doUngetConsolePlugin( @SuppressWarnings("unused") AbstractWebConsolePlugin consolePlugin )
         {
         }
 
@@ -575,9 +575,9 @@ class PluginHolder implements ServiceListener
         }
 
 
-        public Enumeration getInitParameterNames()
+        public Enumeration<String> getInitParameterNames()
         {
-            return new Enumeration()
+            return new Enumeration<String>()
             {
                 public boolean hasMoreElements()
                 {
@@ -585,7 +585,7 @@ class PluginHolder implements ServiceListener
                 }
 
 
-                public Object nextElement()
+                public String nextElement()
                 {
                     throw new NoSuchElementException();
                 }
@@ -643,22 +643,6 @@ class PluginHolder implements ServiceListener
             return super.doGetTitle();
         }
 
-        /**
-         * If the plugin is registered as a regular OSGi service, this method
-         * behaves the same as {@link #dispose()}. If the plugin is built
-         * into the web console, this method does nothing.
-         * <p>
-         * After this method is called, the plugin may still be used because
-         * the {@link #getConsolePlugin()} method will re-acquire the service
-         * again on-demand.
-         */
-        final void ungetService()
-        {
-            // FIXME: this method is used by nobody!?!?
-            dispose();
-        }
-
-
         protected AbstractWebConsolePlugin doGetConsolePlugin()
         {
             Object service = getHolder().getBundleContext().getService( serviceReference );
@@ -698,10 +682,10 @@ class PluginHolder implements ServiceListener
         }
 
 
-        public Enumeration getInitParameterNames()
+        public Enumeration<String> getInitParameterNames()
         {
             final String[] keys = serviceReference.getPropertyKeys();
-            return new Enumeration()
+            return new Enumeration<String>()
             {
                 int idx = 0;
 
@@ -712,7 +696,7 @@ class PluginHolder implements ServiceListener
                 }
 
 
-                public Object nextElement()
+                public String nextElement()
                 {
                     if ( hasMoreElements() )
                     {
@@ -760,7 +744,7 @@ class PluginHolder implements ServiceListener
 
                 try
                 {
-                    Class pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
+                    Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
                     plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
 
                     if (plugin instanceof OsgiManagerPlugin)

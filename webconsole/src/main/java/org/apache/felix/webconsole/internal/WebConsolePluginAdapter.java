@@ -248,14 +248,14 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
         }
         else if ( value != null )
         {
-            final Collection cssListColl;
+            final Collection<?> cssListColl;
             if ( value.getClass().isArray() )
             {
                 cssListColl = Arrays.asList( ( Object[] ) value );
             }
             else if ( value instanceof Collection )
             {
-                cssListColl = ( Collection ) value;
+                cssListColl = ( Collection<?> ) value;
             }
             else
             {
@@ -266,7 +266,7 @@ public class WebConsolePluginAdapter extends AbstractWebConsolePlugin
             {
                 String[] entries = new String[cssListColl.size()];
                 int i = 0;
-                for ( Iterator cli = cssListColl.iterator(); cli.hasNext(); i++ )
+                for ( Iterator<?> cli = cssListColl.iterator(); cli.hasNext(); i++ )
                 {
                     entries[i] = String.valueOf( cli.next() );
                 }

@@ -31,7 +31,7 @@ import java.util.Map;
  * {@link WebConsoleUtil#getVariableResolver(javax.servlet.ServletRequest)}
  * as the variable resolver if none has yet been assigned to the request.
  */
-public class DefaultVariableResolver extends HashMap implements VariableResolver
+public class DefaultVariableResolver extends HashMap<String, String> implements VariableResolver
 {
 
     private static final long serialVersionUID = 4148807223433047780L;
@@ -48,7 +48,7 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
 
     /**
      * Creates a new variable resolver and initializes both - capacity & load factor
-     * 
+     *
      * @param initialCapacity  the initial capacity of the variable container
      * @param loadFactor the load factor of the variable container
      * @see HashMap#HashMap(int, float)
@@ -61,7 +61,7 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
 
     /**
      * Creates a new variable resolver with specified initial capacity
-     * 
+     *
      * @param initialCapacity  the initial capacity of the variable container
      * @see HashMap#HashMap(int)
      */
@@ -73,11 +73,11 @@ public class DefaultVariableResolver extends HashMap implements VariableResolver
 
     /**
      * Creates a new variable resolver copying the variables from the given map.
-     * 
+     *
      * @param source  the map whose variables are to be placed in this resolver.
      * @see HashMap#HashMap(Map)
      */
-    public DefaultVariableResolver( final Map source )
+    public DefaultVariableResolver( final Map<String, String> source )
     {
         super( source );
     }

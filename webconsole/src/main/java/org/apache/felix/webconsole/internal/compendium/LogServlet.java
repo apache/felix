@@ -39,6 +39,7 @@ import org.osgi.service.log.LogService;
 /**
  * LogServlet provides support for reading the log messages.
  */
+@SuppressWarnings("serial")
 public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     private static final String LABEL = "logs";
@@ -63,7 +64,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     /**
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException
+    protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws IOException
     {
         final int minLevel = WebConsoleUtil.getParameterInt( req, "minLevel", LogService.LOG_DEBUG );
 
@@ -94,7 +95,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
             if ( logReaderService != null )
             {
                 int index = 0;
-                for ( Enumeration logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
+                for ( Enumeration<?> logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
                     && index < MAX_LOGS; )
                 {
                     LogEntry nextLog = ( LogEntry ) logEntries.nextElement();
@@ -142,8 +143,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-        IOException
+    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         response.getWriter().print(TEMPLATE);
     }
@@ -173,9 +173,10 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     private static final String serviceDescription( ServiceReference serviceReference )
     {
         if ( serviceReference == null )
+        {
             return "";
-        else
-            return serviceReference.toString();
+        }
+        return serviceReference.toString();
     }
 
 
@@ -199,9 +200,10 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     private static final String exceptionMessage( Throwable e )
     {
         if ( e == null )
+        {
             return "";
-        else
-            return e.getClass().getName()+": "+e.getMessage();
+        }
+        return e.getClass().getName() + ": " + e.getMessage();
     }
 
 }
