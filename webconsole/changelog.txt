@@ -1,3 +1,46 @@
+Changes from 3.1.8 to 3.2.0
+---------------------------
+
+** Bug
+    * [FELIX-1865] - Metatype resolving mechanism does not seem to work correctly
+    * [FELIX-2707] - Webconsole does not resolve resource bundle properly
+    * [FELIX-2727] - WebConsole logs an error not being able to create the DepPackServlet
+    * [FELIX-2830] - Tablesorter loses it's styling if placed in JQuery TAB component
+    * [FELIX-2855] - WebConsole cannot read the list of enabled plugins when using FileInstall
+    * [FELIX-2879] - Metatype Service confuses the id of the OCD with the Designate.pid/factoryPid.
+    * [FELIX-2889] - Invalid JSON content in http response after starting or stopping a bundle.
+    * [FELIX-2971] - Configuration changes cannot be made via Felix Web Console in IE7
+    * [FELIX-2979] - Declarative Services Components page only displayed if Configuration Admin and Metatype Service API is available
+    * [FELIX-3010] - XSS in Felix Web Console
+    * [FELIX-3028] - Better handle configuration unbinding
+    * [FELIX-3116] - Saving configuration shows "AJAX error" dialog
+    * [FELIX-3132] - Extensions not properly supported
+    * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
+
+** Improvement
+    * [FELIX-2697] - Allow enable/disable internal plugins dynamically
+    * [FELIX-3014] - Have a way to "deep link" to a particular tab within Configuration Status
+    * [FELIX-3022] - Add Uptime indication to Status page
+    * [FELIX-3024] - Add Delete and Unbind buttons to Configuration Detail dialogs
+    * [FELIX-3025] - Add a configuration status list with a short bundle list
+    * [FELIX-3027] - Make download links for single configuration status file (or ZIP file) more prominent
+    * [FELIX-3040] - Configuration status dump should contain a timestamp when the dump has been taken
+    * [FELIX-3099] - Separate Deployment Admin plugin
+    * [FELIX-3100] - Separate SCR plugin
+    * [FELIX-3107] - Separate Shell Plugin
+    * [FELIX-3111] - Separate OBR Plugin
+    * [FELIX-3168] - Add support for new PASSWORD attribute type of Metatype service
+    * [FELIX-3236] - Make language selection cookie longer lasting
+    * [FELIX-3282] - Generate default fields for configurations without descriptor
+
+** Task
+    * [FELIX-2904] - Inlined required/embedded dependencies
+    * [FELIX-3279] - Drop default build and use bare profile as the single build
+    * [FELIX-3280] - Update to use parent POM 2.1
+    * [FELIX-3281] - Use bundle plugin 2.3.6 and BND annotations for package export
+    * [FELIX-3283] - Use generics in the Web Console
+
+
 Changes from 3.1.6 to 3.1.8
 ---------------------------
 
@@ -7,6 +50,7 @@ Changes from 3.1.6 to 3.1.8
     * [FELIX-2735] - ClassCastException in PermissionsConfigurationPrinter
     * [FELIX-2793] - Plugin request is not detected as html request if context path contains a dot
     * [FELIX-2795] - Parameters are not removed from symbolic name when installing a bundle
+
 
 Changes from 3.1.2 to 3.1.6
 ---------------------------
