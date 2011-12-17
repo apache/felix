@@ -107,13 +107,9 @@ function displayConfigForm(obj) {
         bodyEl.appendChild( trEl );
     }
     
-    if (obj.propertylist == 'properties')
+    if (obj.properties)
     {
-        printTextArea(bodyEl, obj.properties);
-    }
-    else
-    {
-        printForm(bodyEl, obj);
+        printForm(bodyEl, obj.properties);
     }
 
     printConfigurationInfo(parent, obj);
@@ -132,38 +128,11 @@ function displayConfigForm(obj) {
 		.dialog('open'));
 }
 
-function printTextArea(/* Element */ parent, props )
-{
-    
-    var propsValue = "";
-    for (var key in props)
-    {
-        propsValue += key + ' =  ' + props[key] + '\r\n';
-    }
-
-    parent.appendChild(
-        tr( null, null, [
-            td( null, null, [
-                text( i18n.props_title )
-            ]),
-            td( null, { style: { width: "99%" } }, [
-                createElement( "textarea", null, {
-                        name: "properties",
-                        style: { height: "20em", width: "99%" }
-                    }, [ text( propsValue ) ] ),
-                createElement( "br" ),
-                text( i18n.props_enter )
-            ])
-        ])
-    );        
-}
-
-function printForm( /* Element */ parent, obj ) {
+function printForm( /* Element */ parent, /* Object */ properties ) {
     var propList;
-    for (var idx in obj.propertylist)
+    for (var prop in properties)
     {
-        var prop = obj.propertylist[idx];
-        var attr = obj[prop];
+        var attr = properties[prop];
   
         var trEl = tr( null, null, [
                 td( null, null, [ text( attr.name ) ] )
@@ -215,6 +184,7 @@ function printForm( /* Element */ parent, obj ) {
             value: propList
         })
     );
+    
     // FIX for IE6 and above: checkbox can only be checked after it is in the DOM
     $(".checked_box").attr("checked", true).removeClass("checked_box");
 }

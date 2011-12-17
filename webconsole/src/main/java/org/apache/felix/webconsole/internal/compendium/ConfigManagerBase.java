@@ -244,23 +244,20 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
 
     protected Map getAttributeDefinitionMap( Configuration config, String locale )
     {
+        Map adMap = new HashMap();
         ObjectClassDefinition ocd = this.getObjectClassDefinition( config, locale );
         if ( ocd != null )
         {
             AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
             if ( ad != null )
             {
-                Map adMap = new HashMap();
                 for ( int i = 0; i < ad.length; i++ )
                 {
                     adMap.put( ad[i].getID(), ad[i] );
                 }
-                return adMap;
             }
         }
-
-        // fallback to nothing found
-        return null;
+        return adMap;
     }
 
 

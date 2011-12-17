@@ -648,15 +648,21 @@ public class ConfigManager extends ConfigManagerBase
             ocd = this.getObjectClassDefinition( pid, locale );
         }
 
-        props = this.mergeWithMetaType( props, ocd, json );
-
-        if ( props != null )
+        if ( props == null )
         {
+            props = new Hashtable();
+        }
 
+        if ( ocd != null )
+        {
+            this.mergeWithMetaType( props, ocd, json );
+        }
+        else
+        {
             json.key( "title" ).value( pid );
-            json.key( "description" ).value( "Please enter configuration properties for this configuration in the field below. This configuration has no associated description" );
-
-            json.key( "propertylist" ).value( "properties" );
+            json.key( "description" )
+                .value(
+                    "Please enter configuration properties for this configuration in the field below. This configuration has no associated description" );
 
             json.key( "properties" ).object();
             for ( Enumeration pe = props.keys(); pe.hasMoreElements(); )
@@ -665,16 +671,18 @@ public class ConfigManager extends ConfigManagerBase
 
                 // ignore well known special properties
                 if ( !key.equals( Constants.SERVICE_PID ) && !key.equals( Constants.SERVICE_DESCRIPTION )
-                    && !key.equals( Constants.SERVICE_ID ) && !key.equals( Constants.SERVICE_RANKING )
-                    && !key.equals( Constants.SERVICE_VENDOR )
+                    && !key.equals( Constants.SERVICE_ID ) && !key.equals( Constants.SERVICE_VENDOR )
                     && !key.equals( ConfigurationAdmin.SERVICE_BUNDLELOCATION )
                     && !key.equals( ConfigurationAdmin.SERVICE_FACTORYPID ) )
                 {
-                    json.key( String.valueOf( key ) ).value( props.get( key ) );
+                    final String id = ( String ) key;
+                    final Object value = props.get( key );
+                    final AttributeDefinition ad = getAttributeDefinition( id, value );
+                    json.key( id );
+                    attributeToJson( json, ad, value );
                 }
             }
             json.endObject();
-
         }
 
         if ( config != null )
@@ -684,50 +692,27 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private Dictionary mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json )
-        throws JSONException
+    private void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
     {
+        json.key( "title" ).value( ocd.getName() );
 
-        if ( props == null )
+        if ( ocd.getDescription() != null )
         {
-            props = new Hashtable();
+            json.key( "description" ).value( ocd.getDescription() );
         }
 
-        if ( ocd != null )
+        AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
+        if ( ad != null )
         {
-
-            json.key( "title" );
-            json.value( ocd.getName() );
-
-            if ( ocd.getDescription() != null )
+            json.key( "properties" ).object();
+            for ( AttributeDefinition adi : ad )
             {
-                json.key( "description" );
-                json.value( ocd.getDescription() );
+                final String attrId = adi.getID();
+                json.key( attrId );
+                attributeToJson( json, adi, props.get( attrId ) );
             }
-
-            AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
-            if ( ad != null )
-            {
-
-                JSONArray propertyList = new JSONArray();
-
-                for ( AttributeDefinition adi : ad )
-                {
-                    final String attrId = adi.getID();
-                    json.key( attrId );
-                    attributeToJson( json, adi, props.get( attrId ) );
-                    propertyList.put( attrId );
-                }
-
-                json.key( "propertylist" );
-                json.value( propertyList );
-            }
-
-            // nothing more to display
-            props = null;
+            json.endObject();
         }
-
-        return props;
     }
 
 
@@ -820,18 +805,7 @@ public class ConfigManager extends ConfigManagerBase
         String propertyList = request.getParameter( "propertylist" );
         if ( propertyList == null )
         {
-            String propertiesString = request.getParameter( "properties" );
-
-            if ( propertiesString != null )
-            {
-                byte[] propBytes = propertiesString.getBytes( "ISO-8859-1" );
-                ByteArrayInputStream bin = new ByteArrayInputStream( propBytes );
-                Properties props = new Properties();
-                props.load( bin );
-
-                config = getConfiguration( ca, pid, factoryPid );
-                config.update( props );
-            }
+            // FIXME: this would be a bug !!
         }
         else
         {
@@ -844,85 +818,91 @@ public class ConfigManager extends ConfigManagerBase
             }
 
             Map adMap = this.getAttributeDefinitionMap( config, null );
-            if ( adMap != null )
+            StringTokenizer propTokens = new StringTokenizer( propertyList, "," );
+            while ( propTokens.hasMoreTokens() )
             {
-                StringTokenizer propTokens = new StringTokenizer( propertyList, "," );
-                while ( propTokens.hasMoreTokens() )
+                String propName = propTokens.nextToken();
+                AttributeDefinition ad = ( AttributeDefinition ) adMap.get( propName );
+
+                // try to derive from current value
+                if (ad == null) {
+                    Object currentValue = props.get( propName );
+                    ad = getAttributeDefinition( propName, currentValue );
+                }
+
+                int attributeType = getAttributeType( ad );
+
+                if ( ad == null
+                    || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == ATTRIBUTE_TYPE_PASSWORD ) ) )
                 {
-                    String propName = propTokens.nextToken();
-                    AttributeDefinition ad = ( AttributeDefinition ) adMap.get( propName );
-                    if ( ad == null
-                        || ( ad.getCardinality() == 0 && ( ad.getType() == AttributeDefinition.STRING || ad.getType() == ATTRIBUTE_TYPE_PASSWORD ) ) )
+                    String prop = request.getParameter( propName );
+                    if ( prop != null
+                        && ( attributeType != ATTRIBUTE_TYPE_PASSWORD || !PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
                     {
-                        String prop = request.getParameter( propName );
-                        if ( prop != null
-                            && ( ad.getType() != ATTRIBUTE_TYPE_PASSWORD || !PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
+                        props.put( propName, prop );
+                    }
+                }
+                else if ( ad.getCardinality() == 0 )
+                {
+                    // scalar of non-string
+                    String prop = request.getParameter( propName );
+                    if ( prop != null )
+                    {
+                        try
                         {
-                            props.put( propName, prop );
+                            props.put( propName, toType( attributeType, prop ) );
+                        }
+                        catch ( NumberFormatException nfe )
+                        {
+                            // don't care
                         }
                     }
-                    else if ( ad.getCardinality() == 0 )
+                }
+                else
+                {
+                    // array or vector of any type
+                    Vector vec = new Vector();
+
+                    String[] properties = request.getParameterValues( propName );
+                    if ( properties != null )
                     {
-                        // scalar of non-string
-                        String prop = request.getParameter( propName );
-                        if ( prop != null )
+                        if ( attributeType == ATTRIBUTE_TYPE_PASSWORD )
                         {
-                            try
-                            {
-                                props.put( propName, toType( ad.getType(), prop ) );
-                            }
-                            catch ( NumberFormatException nfe )
-                            {
-                                // don't care
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // array or vector of any type
-                        Vector vec = new Vector();
-
-                        String[] properties = request.getParameterValues( propName );
-                        if ( properties != null )
-                        {
-                            if ( ad.getType() == ATTRIBUTE_TYPE_PASSWORD )
-                            {
-                                setPasswordProps( vec, properties, props.get( propName ) );
-                            }
-                            else
-                            {
-                                for ( int i = 0; i < properties.length; i++ )
-                                {
-                                    try
-                                    {
-                                        vec.add( toType( ad.getType(), properties[i] ) );
-                                    }
-                                    catch ( NumberFormatException nfe )
-                                    {
-                                        // don't care
-                                    }
-                                }
-                            }
-                        }
-
-                        // but ensure size (check for positive value since
-                        // abs(Integer.MIN_VALUE) is still INTEGER.MIN_VALUE)
-                        int maxSize = Math.abs( ad.getCardinality() );
-                        if ( vec.size() > maxSize && maxSize > 0 )
-                        {
-                            vec.setSize( maxSize );
-                        }
-
-                        if ( ad.getCardinality() < 0 )
-                        {
-                            // keep the vector
-                            props.put( propName, vec );
+                            setPasswordProps( vec, properties, props.get( propName ) );
                         }
                         else
                         {
-                            // convert to an array
-                            props.put( propName, toArray( ad.getType(), vec ) );
+                            for ( int i = 0; i < properties.length; i++ )
+                            {
+                                try
+                                {
+                                    vec.add( toType( attributeType, properties[i] ) );
+                                }
+                                catch ( NumberFormatException nfe )
+                                {
+                                    // don't care
+                                }
+                            }
                         }
+                    }
+
+                    // but ensure size (check for positive value since
+                    // abs(Integer.MIN_VALUE) is still INTEGER.MIN_VALUE)
+                    int maxSize = Math.abs( ad.getCardinality() );
+                    if ( vec.size() > maxSize && maxSize > 0 )
+                    {
+                        vec.setSize( maxSize );
+                    }
+
+                    if ( ad.getCardinality() < 0 )
+                    {
+                        // keep the vector
+                        props.put( propName, vec );
+                    }
+                    else
+                    {
+                        // convert to an array
+                        props.put( propName, toArray( attributeType, vec ) );
                     }
                 }
             }
@@ -1035,6 +1015,83 @@ public class ConfigManager extends ConfigManagerBase
 
         json.endObject();
     }
+
+
+    private static AttributeDefinition getAttributeDefinition( final String id, final Object value )
+    {
+        int attrType;
+        int attrCardinality;
+        Class type;
+
+        if ( value == null )
+        {
+            attrCardinality = 0;
+            type = String.class;
+        }
+        else if ( value instanceof Collection )
+        {
+            attrCardinality = Integer.MIN_VALUE;
+            Collection coll = ( Collection ) value;
+            if ( coll.isEmpty() )
+            {
+                type = String.class;
+            }
+            else
+            {
+                type = coll.iterator().next().getClass();
+            }
+        }
+        else if ( value.getClass().isArray() )
+        {
+            attrCardinality = Integer.MIN_VALUE;
+            type = value.getClass().getComponentType();
+        }
+        else
+        {
+            attrCardinality = 0;
+            type = value.getClass();
+        }
+
+        if ( type == Boolean.class || type == Boolean.TYPE )
+        {
+            attrType = AttributeDefinition.BOOLEAN;
+        }
+        else if ( type == Byte.class || type == Byte.TYPE )
+        {
+            attrType = AttributeDefinition.BYTE;
+        }
+        else if ( type == Character.class || type == Character.TYPE )
+        {
+            attrType = AttributeDefinition.CHARACTER;
+        }
+        else if ( type == Double.class || type == Double.TYPE )
+        {
+            attrType = AttributeDefinition.DOUBLE;
+        }
+        else if ( type == Float.class || type == Float.TYPE )
+        {
+            attrType = AttributeDefinition.FLOAT;
+        }
+        else if ( type == Long.class || type == Long.TYPE )
+        {
+            attrType = AttributeDefinition.LONG;
+        }
+        else if ( type == Integer.class || type == Integer.TYPE )
+        {
+            attrType = AttributeDefinition.INTEGER;
+        }
+        else if ( type == Short.class || type == Short.TYPE )
+        {
+            attrType = AttributeDefinition.SHORT;
+        }
+        else
+        {
+            attrType = AttributeDefinition.STRING;
+        }
+
+        return new PlaceholderAttributeDefinition( id, attrType, attrCardinality );
+   }
+
 
     private static int getAttributeType( final AttributeDefinition ad )
     {
@@ -1239,5 +1296,75 @@ public class ConfigManager extends ConfigManagerBase
 
     }
 
+    private static class PlaceholderAttributeDefinition implements AttributeDefinition
+    {
 
+        final String id;
+        final int type;
+        final int cardinality;
+
+
+        public PlaceholderAttributeDefinition( final String id, int type, int cardinality )
+        {
+            this.id = id;
+            this.type = type;
+            this.cardinality = cardinality;
+        }
+
+
+        public String getName()
+        {
+            return id;
+        }
+
+
+        public String getID()
+        {
+            return id;
+        }
+
+
+        public String getDescription()
+        {
+            // no description
+            return null;
+        }
+
+
+        public int getCardinality()
+        {
+            return cardinality;
+        }
+
+
+        public int getType()
+        {
+            return type;
+        }
+
+
+        public String[] getOptionValues()
+        {
+            return null;
+        }
+
+
+        public String[] getOptionLabels()
+        {
+            return null;
+        }
+
+
+        public String validate( String value )
+        {
+            // no validation
+            return null;
+        }
+
+
+        public String[] getDefaultValue()
+        {
+            return null;
+        }
+    }
 }
