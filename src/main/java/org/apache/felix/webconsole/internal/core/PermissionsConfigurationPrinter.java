@@ -20,6 +20,7 @@ package org.apache.felix.webconsole.internal.core;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.osgi.framework.BundleContext;
@@ -100,8 +101,8 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                 Method getAccessDecision = null;
                 try
                 {
-                    getAccessDecision = ConditionalPermissionInfo.class.getMethod(
-                        "getAccessDecision", null);
+                    getAccessDecision = ConditionalPermissionInfo.class.getMethod( "getAccessDecision",
+                        ( Class<?>[] ) null );
                 }
                 catch (Throwable t)
                 {
@@ -111,7 +112,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                 boolean hasPermissions = false;
                 //final java.util.List list = cpa.newConditionalPermissionUpdate().getConditionalPermissionInfos();
                 //for (int i = 0; list != null && i < list.size(); i++)
-                for (java.util.Enumeration e = cpa.getConditionalPermissionInfos(); e.hasMoreElements();)
+                for (Enumeration<?> e = cpa.getConditionalPermissionInfos(); e.hasMoreElements();)
                 {
                     hasPermissions = true;
                     //final ConditionalPermissionInfo info = (ConditionalPermissionInfo) list.get(i);
@@ -123,7 +124,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                     {
                         try
                         {
-                            final Object ad = getAccessDecision.invoke(info, null);
+                            final Object ad = getAccessDecision.invoke( info, ( Object[] ) null );
                             pw.print(" ("); //$NON-NLS-1$
                             pw.print(ad);
                             pw.print(")"); //$NON-NLS-1$

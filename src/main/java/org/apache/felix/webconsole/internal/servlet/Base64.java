@@ -1072,7 +1072,7 @@ public class Base64 {
         try {
             return new String(bytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("UTF-8", e);
+            throw new IllegalStateException("UTF-8");
         }
     }
 
@@ -1083,7 +1083,7 @@ public class Base64 {
         try {
             return string.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("UTF-8", e);
+            throw new IllegalStateException("UTF-8");
         }
     }
 

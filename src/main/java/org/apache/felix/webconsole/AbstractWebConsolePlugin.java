@@ -22,6 +22,7 @@ import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
+import java.util.Map.Entry;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -172,7 +173,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * @param request the original request passed from the HTTP server
      * @return <code>true</code> if the page should have headers and footers rendered
      */
-    protected boolean isHtmlRequest( final HttpServletRequest request )
+    protected boolean isHtmlRequest( @SuppressWarnings("unused") final HttpServletRequest request )
     {
         return true;
     }
@@ -335,7 +336,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         {
             try
             {
-                Class cl = resourceProvider.getClass();
+                Class<?> cl = resourceProvider.getClass();
                 while ( tmpGetResourceMethod == null && cl != Object.class )
                 {
                     Method[] methods = cl.getDeclaredMethods();
@@ -590,15 +591,14 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
         boolean disabled = false;
         String appRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT );
-        Map labelMap = ( Map ) request.getAttribute( WebConsoleConstants.ATTR_LABEL_MAP );
+        @SuppressWarnings("unchecked")
+        Map<String, String> labelMap = ( Map<String, String> ) request.getAttribute( WebConsoleConstants.ATTR_LABEL_MAP );
         if ( labelMap != null )
         {
 
             // prepare the navigation
-            SortedMap map = new TreeMap( String.CASE_INSENSITIVE_ORDER );
-            for ( Iterator ri = labelMap.entrySet().iterator(); ri.hasNext(); )
-            {
-                Map.Entry labelMapEntry = ( Map.Entry ) ri.next();
+            SortedMap<String, String> map = new TreeMap<String, String>( String.CASE_INSENSITIVE_ORDER );
+            for (Entry<String, String> labelMapEntry : labelMap.entrySet()) {
                 if ( labelMapEntry.getKey() == null )
                 {
                     // ignore renders without a label
@@ -625,7 +625,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
             // render the navigation
             pw.println("<div id='technav' class='ui-widget ui-widget-header'>"); //$NON-NLS-1$
-            for ( Iterator li = map.values().iterator(); li.hasNext(); )
+            for ( Iterator<String> li = map.values().iterator(); li.hasNext(); )
             {
                 pw.print(' ');
                 pw.println( li.next() );
@@ -635,7 +635,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         // render lang-box
-        Map langMap = (Map) request.getAttribute(WebConsoleConstants.ATTR_LANG_MAP);
+        @SuppressWarnings("unchecked")
+        Map<String, String> langMap = (Map<String, String>) request.getAttribute(WebConsoleConstants.ATTR_LANG_MAP);
         if (null != langMap && !langMap.isEmpty())
         {
             // determine the currently selected locale from the request and fail-back
@@ -658,7 +659,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             printLocaleElement(pw, appRoot, locale, langMap.get(locale));
             pw.println(" </span>"); //$NON-NLS-1$
             pw.println(" <span class='flags ui-helper-hidden'>"); //$NON-NLS-1$
-            for (Iterator li = langMap.keySet().iterator(); li.hasNext();)
+            for (Iterator<String> li = langMap.keySet().iterator(); li.hasNext();)
             {
                 // <img src="us.gif" alt="en" title="English"/>
                 final Object l = li.next();
@@ -838,7 +839,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return readTemplateFile( getClass(), templateFile );
     }
 
-    private final String readTemplateFile( final Class clazz, final String templateFile)
+    private final String readTemplateFile( final Class<?> clazz, final String templateFile)
     {
         InputStream templateStream = clazz.getResourceAsStream( templateFile );
         if ( templateStream != null )

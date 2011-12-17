@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -84,8 +83,8 @@ public final class WebConsoleUtil
 
         final DefaultVariableResolver resolver = new DefaultVariableResolver();
         // FIXME: don't we need a constant for the values below?
-        resolver.put( "appRoot", request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ); //$NON-NLS-1$
-        resolver.put( "pluginRoot", request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) ); //$NON-NLS-1$
+        resolver.put( "appRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT ) ); //$NON-NLS-1$
+        resolver.put( "pluginRoot", (String) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT ) ); //$NON-NLS-1$
         setVariableResolver( request, resolver );
         return resolver;
     }
@@ -131,7 +130,8 @@ public final class WebConsoleUtil
         }
 
         // check, whether we already have the parameters
-        Map params = ( Map ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
+        @SuppressWarnings("unchecked")
+        Map<String, FileItem[]> params = ( Map<String, FileItem[]> ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
         if ( params == null )
         {
             // parameters not read yet, read now
@@ -144,14 +144,13 @@ public final class WebConsoleUtil
             upload.setSizeMax( -1 );
 
             // Parse the request
-            params = new HashMap();
+            params = new HashMap<String, FileItem[]>();
             try
             {
-                List items = upload.parseRequest( request );
-                for ( Iterator fiter = items.iterator(); fiter.hasNext(); )
-                {
-                    FileItem fi = ( FileItem ) fiter.next();
-                    FileItem[] current = ( FileItem[] ) params.get( fi.getFieldName() );
+                @SuppressWarnings("unchecked")
+                List<FileItem> items = upload.parseRequest( request );
+                for (final FileItem fi : items) {
+                    FileItem[] current = params.get( fi.getFieldName() );
                     if ( current == null )
                     {
                         current = new FileItem[]
@@ -174,7 +173,7 @@ public final class WebConsoleUtil
             request.setAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD, params );
         }
 
-        FileItem[] param = ( FileItem[] ) params.get( name );
+        FileItem[] param = params.get( name );
         if ( param != null )
         {
             for ( int i = 0; i < param.length; i++ )
@@ -350,6 +349,7 @@ public final class WebConsoleUtil
      * @param value the value to decode
      * @return the decoded string
      */
+    @SuppressWarnings("deprecation")
     public static String urlDecode( final String value )
     {
         // shortcut for empty or missing values

@@ -133,21 +133,21 @@ public class Util
      * @param e the enumeration which to convert
      * @return the list containing all enumeration entries.
      */
-    public static final ArrayList list( Enumeration e )
+    public static final <T> ArrayList<T> list( Enumeration<T> e )
     {
-        ArrayList l = new ArrayList();
+        ArrayList<T> l = new ArrayList<T>();
         while ( e.hasMoreElements() )
         {
             l.add( e.nextElement() );
         }
         return l;
     }
-    
+
     /**
      * This method expects a locale string in format language_COUNTRY, or
      * language. The method will determine which is the correct form of locale
      * string and construct a <code>Locale</code> object.
-     * 
+     *
      * @param locale the locale string, if <code>null</code> - default locale is
      *          returned
      * @return a locale object
@@ -180,7 +180,7 @@ public class Util
         return new Locale(language, country);
     }
 
-    private static final class BundleNameComparator implements Comparator
+    private static final class BundleNameComparator implements Comparator<Bundle>
     {
         private final Locale locale;
 
@@ -188,12 +188,6 @@ public class Util
         BundleNameComparator( final Locale locale )
         {
             this.locale = locale;
-        }
-
-
-        public int compare( Object o1, Object o2 )
-        {
-            return compare( ( Bundle ) o1, ( Bundle ) o2 );
         }
 
 

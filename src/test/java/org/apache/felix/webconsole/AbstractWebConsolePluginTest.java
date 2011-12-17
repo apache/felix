@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import junit.framework.TestCase;
 
 
+@SuppressWarnings("serial")
 public class AbstractWebConsolePluginTest extends TestCase
 {
 
@@ -38,7 +39,8 @@ public class AbstractWebConsolePluginTest extends TestCase
     {
         super.setUp();
 
-        getGetResourceMethod = AbstractWebConsolePlugin.class.getDeclaredMethod( "getGetResourceMethod", null );
+        getGetResourceMethod = AbstractWebConsolePlugin.class.getDeclaredMethod( "getGetResourceMethod",
+            ( Class<?>[] ) null );
         getGetResourceMethod.setAccessible( true );
     }
 
@@ -55,12 +57,12 @@ public class AbstractWebConsolePluginTest extends TestCase
             }
         };
         assertNull( test.getResourceProvider() );
-        assertNull( getGetResourceMethod.invoke( test, null ) );
+        assertNull( getGetResourceMethod.invoke( test, (Object[]) null ) );
 
         // test with default resource provider but no method
         final TestPlugin test2 = new TestPlugin();
         assertEquals( test2, test2.getResourceProvider() );
-        assertNull( getGetResourceMethod.invoke( test2, null ) );
+        assertNull( getGetResourceMethod.invoke( test2, (Object[]) null ) );
     }
 
 
@@ -69,22 +71,22 @@ public class AbstractWebConsolePluginTest extends TestCase
         // test with default resource provider, public method
         final TestPlugin testPublic = new PublicTestPlugin();
         assertEquals( testPublic, testPublic.getResourceProvider() );
-        assertNotNull( getGetResourceMethod.invoke( testPublic, null ) );
+        assertNotNull( getGetResourceMethod.invoke( testPublic, (Object[]) null ) );
 
         // test with default resource provider, package private method
         final TestPlugin testDefault = new PackageTestPlugin();
         assertEquals( testDefault, testDefault.getResourceProvider() );
-        assertNull( getGetResourceMethod.invoke( testDefault, null ) );
+        assertNull( getGetResourceMethod.invoke( testDefault, (Object[]) null ) );
 
         // test with default resource provider, protected method
         final TestPlugin testProtected = new ProtectedTestPlugin();
         assertEquals( testProtected, testProtected.getResourceProvider() );
-        assertNotNull( getGetResourceMethod.invoke( testProtected, null ) );
+        assertNotNull( getGetResourceMethod.invoke( testProtected, (Object[]) null ) );
 
         // test with default resource provider, private method
         final TestPlugin testPrivate = new PrivateTestPlugin();
         assertEquals( testPrivate, testPrivate.getResourceProvider() );
-        assertNotNull( getGetResourceMethod.invoke( testPrivate, null ) );
+        assertNotNull( getGetResourceMethod.invoke( testPrivate, (Object[]) null ) );
     }
 
 
@@ -95,32 +97,33 @@ public class AbstractWebConsolePluginTest extends TestCase
         {
         };
         assertEquals( testPublic, testPublic.getResourceProvider() );
-        assertNotNull( getGetResourceMethod.invoke( testPublic, null ) );
+        assertNotNull( getGetResourceMethod.invoke( testPublic, (Object[]) null ) );
 
         // test with default resource provider, package private method
         final TestPlugin testDefault = new PackageTestPlugin()
         {
         };
         assertEquals( testDefault, testDefault.getResourceProvider() );
-        assertNull( getGetResourceMethod.invoke( testDefault, null ) );
+        assertNull( getGetResourceMethod.invoke( testDefault, (Object[]) null ) );
 
         // test with default resource provider, protected method
         final TestPlugin testProtected = new ProtectedTestPlugin()
         {
         };
         assertEquals( testProtected, testProtected.getResourceProvider() );
-        assertNotNull( getGetResourceMethod.invoke( testProtected, null ) );
+        assertNotNull( getGetResourceMethod.invoke( testProtected, (Object[]) null ) );
 
         // test with default resource provider, private method
         final TestPlugin testPrivate = new PrivateTestPlugin()
         {
         };
         assertEquals( testPrivate, testPrivate.getResourceProvider() );
-        assertNull( getGetResourceMethod.invoke( testPrivate, null ) );
+        assertNull( getGetResourceMethod.invoke( testPrivate, (Object[]) null ) );
     }
 
     private static class PrivateTestPlugin extends TestPlugin
     {
+        @SuppressWarnings("unused")
         private URL getResource( String name )
         {
             return null;
@@ -129,6 +132,7 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class ProtectedTestPlugin extends TestPlugin
     {
+        @SuppressWarnings("unused")
         protected URL getResource( String name )
         {
             return null;
@@ -137,6 +141,7 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class PackageTestPlugin extends TestPlugin
     {
+        @SuppressWarnings("unused")
         URL getResource( String name )
         {
             return null;
@@ -145,6 +150,7 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class PublicTestPlugin extends TestPlugin
     {
+        @SuppressWarnings("unused")
         public URL getResource( String name )
         {
             return null;

@@ -42,7 +42,7 @@ public class ResourceBundleManager implements BundleListener
 
     private final ResourceBundleCache consoleResourceBundleCache;
 
-    private final Map resourceBundleCaches;
+    private final Map<Long, ResourceBundleCache> resourceBundleCaches;
 
 
     /**
@@ -54,7 +54,7 @@ public class ResourceBundleManager implements BundleListener
     {
         this.bundleContext = bundleContext;
         this.consoleResourceBundleCache = new ResourceBundleCache( bundleContext.getBundle() );
-        this.resourceBundleCaches = new HashMap();
+        this.resourceBundleCaches = new HashMap<Long, ResourceBundleCache>();
 
         bundleContext.addBundleListener( this );
     }
@@ -75,7 +75,7 @@ public class ResourceBundleManager implements BundleListener
      *
      * @param provider the bundle, provider of the resources
      * @param locale the requested locale.
-     * @return the resource bundle - if not bundle with the requested locale exists, 
+     * @return the resource bundle - if not bundle with the requested locale exists,
      *   the default locale is used.
      */
     public ResourceBundle getResourceBundle( final Bundle provider, final Locale locale )
@@ -92,7 +92,7 @@ public class ResourceBundleManager implements BundleListener
         synchronized ( resourceBundleCaches )
         {
             Long key = new Long( provider.getBundleId() );
-            cache = ( ResourceBundleCache ) resourceBundleCaches.get( key );
+            cache = resourceBundleCaches.get( key );
             if ( cache == null )
             {
                 cache = new ResourceBundleCache( provider );

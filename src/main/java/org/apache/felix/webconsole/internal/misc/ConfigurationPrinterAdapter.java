@@ -41,7 +41,7 @@ public class ConfigurationPrinterAdapter
     private Method attachmentMethod;
     private boolean checkedAttachmentMethod = false;
 
-    private static final List CUSTOM_MODES = new ArrayList();
+    private static final List<String> CUSTOM_MODES = new ArrayList<String>();
     static
     {
         CUSTOM_MODES.add( ConfigurationPrinter.MODE_TXT );
@@ -49,6 +49,7 @@ public class ConfigurationPrinterAdapter
         CUSTOM_MODES.add( ConfigurationPrinter.MODE_ZIP );
     }
 
+    @SuppressWarnings("deprecation")
     public static ConfigurationPrinterAdapter createAdapter(
             final Object service,
             final ServiceReference ref)
@@ -258,7 +259,7 @@ public class ConfigurationPrinterAdapter
     /**
      * Search a method with the given name and signature
      */
-    private static Method searchMethod(final Object obj, final String mName, final Class[] params)
+    private static Method searchMethod(final Object obj, final String mName, final Class<?>[] params)
     {
         try
         {

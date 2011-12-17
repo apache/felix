@@ -20,7 +20,6 @@ package org.apache.felix.webconsole.internal.core;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.*;
-
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
 import org.osgi.framework.*;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -103,7 +102,7 @@ public class BundlesConfigurationPrinter
     {
         final Bundle[] bundles = this.getBundleContext().getBundles();
         // create a map for sorting first
-        final TreeMap bundlesMap = new TreeMap();
+        final TreeMap<String, String> bundlesMap = new TreeMap<String, String>();
         int active = 0, installed = 0, resolved = 0, fragments = 0;
         for( int i =0; i<bundles.length; i++)
         {
@@ -176,12 +175,9 @@ public class BundlesConfigurationPrinter
         }
         pw.println(buffer.toString());
         pw.println("-----------------------------------------------------------------------------");
-        final Iterator i = bundlesMap.entrySet().iterator();
-        while ( i.hasNext() )
+        for ( final String bundle : bundlesMap.values() )
         {
-            final Map.Entry entry = (Map.Entry)i.next();
-            pw.println(entry.getValue());
-
+            pw.println( bundle );
         }
     }
 

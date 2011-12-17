@@ -71,15 +71,15 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
                 Configuration[] configs = ca.listConfigurations( null );
                 if ( configs != null && configs.length > 0 )
                 {
-                    SortedMap sm = new TreeMap();
+                    SortedMap<String, Configuration> sm = new TreeMap<String, Configuration>();
                     for ( int i = 0; i < configs.length; i++ )
                     {
                         sm.put( configs[i].getPid(), configs[i] );
                     }
 
-                    for ( Iterator mi = sm.values().iterator(); mi.hasNext(); )
+                    for ( Iterator<Configuration> mi = sm.values().iterator(); mi.hasNext(); )
                     {
-                        this.printConfiguration( pw, ( Configuration ) mi.next() );
+                        this.printConfiguration( pw, mi.next() );
                     }
                 }
                 else
@@ -111,18 +111,18 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
         String loc = ( config.getBundleLocation() != null ) ? config.getBundleLocation() : "Unbound";
         ConfigurationRender.infoLine( pw, "  ", "BundleLocation", loc );
 
-        Dictionary props = config.getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, ?> props = config.getProperties();
         if ( props != null )
         {
-            SortedSet keys = new TreeSet();
-            for ( Enumeration ke = props.keys(); ke.hasMoreElements(); )
+            SortedSet<String> keys = new TreeSet<String>();
+            for ( Enumeration<String> ke = props.keys(); ke.hasMoreElements(); )
             {
                 keys.add( ke.nextElement() );
             }
 
-            for ( Iterator ki = keys.iterator(); ki.hasNext(); )
+            for ( String key : keys )
             {
-                String key = ( String ) ki.next();
                 ConfigurationRender.infoLine( pw, "  ", key, props.get( key ) );
             }
         }

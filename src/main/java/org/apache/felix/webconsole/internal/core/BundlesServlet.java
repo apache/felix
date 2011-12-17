@@ -49,6 +49,7 @@ import org.osgi.service.startlevel.StartLevel;
  * the list of bundles, installed on the framework. It also adds ability to control
  * the lifecycle of the bundles, like start, stop, uninstall, install.
  */
+@SuppressWarnings("serial")
 public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin, ConfigurationPrinter
 {
 
@@ -118,7 +119,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             bootPkgs[i] = bootDelegation;
         }
 
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put( WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] { ConfigurationPrinter.MODE_TXT,
             ConfigurationPrinter.MODE_ZIP } );
         configurationPrinter = bundleContext.registerService( ConfigurationPrinter.SERVICE, this, props );
@@ -455,7 +456,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException, ServletException
+    protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
         // get request info from request attribute
         final RequestInfo reqInfo = getRequestInfo(request);
@@ -465,7 +466,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         // prepare variables
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "startLevel", String.valueOf(startLevel));
-        vars.put( "drawDetails", reqInfo.bundleRequested ? Boolean.TRUE : Boolean.FALSE );
+        vars.put( "drawDetails", String.valueOf(reqInfo.bundleRequested));
         vars.put( "currentBundle", (reqInfo.bundleRequested && reqInfo.bundle != null ? String.valueOf(reqInfo.bundle.getBundleId()) : "null"));
 
         final String pluginRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_PLUGIN_ROOT );
@@ -518,7 +519,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         else if (filter != null)
         {
             Filter f = getBundleContext().createFilter(filter);
-            ArrayList list = new ArrayList(allBundles.length);
+            ArrayList<Bundle> list = new ArrayList<Bundle>(allBundles.length);
             final String localeString = locale.toString();
             for (int i = 0, size = allBundles.length; i < size; i++)
             {
@@ -718,7 +719,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private final void bundleDetails( JSONWriter jw, Bundle bundle, final String pluginRoot, final String servicesRoot, final Locale locale)
         throws JSONException
     {
-        Dictionary headers = bundle.getHeaders( locale == null ? null : locale.toString() );
+        @SuppressWarnings("unchecked")
+        Dictionary<String, String> headers = bundle.getHeaders( locale == null ? null : locale.toString() );
 
         jw.key( "props" );
         jw.array();
@@ -727,7 +729,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         WebConsoleUtil.keyVal( jw, "Bundle Location", bundle.getLocation() );
         WebConsoleUtil.keyVal( jw, "Last Modification", new Date( bundle.getLastModified() ) );
 
-        String docUrl = ( String ) headers.get( Constants.BUNDLE_DOCURL );
+        String docUrl = headers.get( Constants.BUNDLE_DOCURL );
         if ( docUrl != null )
         {
             WebConsoleUtil.keyVal( jw, "Bundle Documentation", docUrl );
@@ -787,23 +789,17 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             return;
         }
 
-        Map usingBundles = new TreeMap();
+        Map<String, Bundle> usingBundles = new TreeMap<String, Bundle>();
 
         ExportedPackage[] exports = packageAdmin.getExportedPackages( bundle );
         if ( exports != null && exports.length > 0 )
         {
             // do alphabetical sort
-            Arrays.sort( exports, new Comparator()
+            Arrays.sort( exports, new Comparator<ExportedPackage>()
             {
                 public int compare( ExportedPackage p1, ExportedPackage p2 )
                 {
                     return p1.getName().compareTo( p2.getName() );
-                }
-
-
-                public int compare( Object o1, Object o2 )
-                {
-                    return compare( ( ExportedPackage ) o1, ( ExportedPackage ) o2 );
                 }
             } );
 
@@ -835,7 +831,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         if ( exports != null && exports.length > 0 )
         {
             // collect import packages first
-            final List imports = new ArrayList();
+            final List<ExportedPackage> imports = new ArrayList<ExportedPackage>();
             for ( int i = 0; i < exports.length; i++ )
             {
                 final ExportedPackage ep = exports[i];
@@ -854,19 +850,13 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             JSONArray val = new JSONArray();
             if ( imports.size() > 0 )
             {
-                final ExportedPackage[] packages = ( ExportedPackage[] ) imports.toArray( new ExportedPackage[imports
+                final ExportedPackage[] packages = imports.toArray( new ExportedPackage[imports
                     .size()] );
-                Arrays.sort( packages, new Comparator()
+                Arrays.sort( packages, new Comparator<ExportedPackage>()
                 {
                     public int compare( ExportedPackage p1, ExportedPackage p2 )
                     {
                         return p1.getName().compareTo( p2.getName() );
-                    }
-
-
-                    public int compare( Object o1, Object o2 )
-                    {
-                        return compare( ( ExportedPackage ) o1, ( ExportedPackage ) o2 );
                     }
                 } );
                 // and finally print out
@@ -888,9 +878,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         if ( !usingBundles.isEmpty() )
         {
             JSONArray val = new JSONArray();
-            for ( Iterator ui = usingBundles.values().iterator(); ui.hasNext(); )
+            for ( final Bundle usingBundle : usingBundles.values() )
             {
-                Bundle usingBundle = ( Bundle ) ui.next();
                 val.put( getBundleDescriptor( usingBundle, pluginRoot ) );
             }
             WebConsoleUtil.keyVal( jw, "Importing Bundles", val );
@@ -900,26 +889,21 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
 
     private void listImportExportsUnresolved( JSONWriter jw, Bundle bundle, final String pluginRoot ) throws JSONException
     {
-        Dictionary dict = bundle.getHeaders();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, String> dict = bundle.getHeaders();
 
-        String target = ( String ) dict.get( Constants.EXPORT_PACKAGE );
+        String target = dict.get( Constants.EXPORT_PACKAGE );
         if ( target != null )
         {
             Clause[] pkgs = Parser.parseHeader( target );
             if ( pkgs != null && pkgs.length > 0 )
             {
                 // do alphabetical sort
-                Arrays.sort( pkgs, new Comparator()
+                Arrays.sort( pkgs, new Comparator<Clause>()
                 {
                     public int compare( Clause p1, Clause p2 )
                     {
                         return p1.getName().compareTo( p2.getName() );
-                    }
-
-
-                    public int compare( Object o1, Object o2 )
-                    {
-                        return compare( ( Clause) o1, ( Clause ) o2 );
                     }
                 } );
 
@@ -937,13 +921,13 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
         }
 
-        target = ( String ) dict.get( Constants.IMPORT_PACKAGE );
+        target = dict.get( Constants.IMPORT_PACKAGE );
         if ( target != null )
         {
             Clause[] pkgs = Parser.parseHeader( target );
             if ( pkgs != null && pkgs.length > 0 )
             {
-                Map imports = new TreeMap();
+                Map<String, Clause> imports = new TreeMap<String, Clause>();
                 for ( int i = 0; i < pkgs.length; i++ )
                 {
                     Clause pkg = pkgs[i];
@@ -951,7 +935,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 }
 
                 // collect import packages first
-                final Map candidates = new HashMap();
+                final Map<String, ExportedPackage> candidates = new HashMap<String, ExportedPackage>();
                 PackageAdmin packageAdmin = getPackageAdmin();
                 if ( packageAdmin != null )
                 {
@@ -963,7 +947,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                         {
                             final ExportedPackage ep = exports[i];
 
-                            Clause imp = ( Clause ) imports.get( ep.getName() );
+                            Clause imp = imports.get( ep.getName() );
                             if ( imp != null && isSatisfied( imp, ep ) )
                             {
                                 candidates.put( ep.getName(), ep );
@@ -976,10 +960,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 JSONArray val = new JSONArray();
                 if ( imports.size() > 0 )
                 {
-                    for ( Iterator ii = imports.values().iterator(); ii.hasNext(); )
-                    {
-                        Clause r4Import = ( Clause ) ii.next();
-                        ExportedPackage ep = ( ExportedPackage ) candidates.get( r4Import.getName() );
+                    for (final Clause r4Import : imports.values()) {
+                        ExportedPackage ep = candidates.get( r4Import.getName() );
 
                         // if there is no matching export, check whether this
                         // bundle has the package, ignore the entry in this case
@@ -1017,9 +999,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             val.append( id );
             val.append( "</a>" );
             return val.toString();
-        } else {
-            return id;
         }
+
+        return id;
     }
 
 
@@ -1058,8 +1040,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
         JSONArray val = new JSONArray();
 
-        Dictionary headers = bundle.getHeaders(""); // don't localize at all - raw headers
-        Enumeration he = headers.keys();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, String> headers = bundle.getHeaders(""); // don't localize at all - raw headers
+        Enumeration<String> he = headers.keys();
         while ( he.hasMoreElements() )
         {
             Object header = he.nextElement();
@@ -1413,7 +1396,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     {
 
         // get the uploaded data
-        final Map params = ( Map ) request.getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
+        @SuppressWarnings("unchecked")
+        final Map<String, FileItem[]> params = ( Map<String, FileItem[]> ) request
+            .getAttribute( AbstractWebConsolePlugin.ATTR_FILEUPLOAD );
         if ( params == null )
         {
             return;
@@ -1486,9 +1471,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private FileItem getParameter( Map params, String name )
+    private FileItem getParameter( Map<String, FileItem[]> params, String name )
     {
-        FileItem[] items = ( FileItem[] ) params.get( name );
+        FileItem[] items = params.get( name );
         if ( items != null )
         {
             for ( int i = 0; i < items.length; i++ )
@@ -1505,10 +1490,10 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     }
 
 
-    private FileItem[] getFileItems( Map params, String name )
+    private FileItem[] getFileItems( Map<String, FileItem[]> params, String name )
     {
-        final List files = new ArrayList();
-        FileItem[] items = ( FileItem[] ) params.get( name );
+        final List<FileItem> files = new ArrayList<FileItem>();
+        FileItem[] items = params.get( name );
         if ( items != null )
         {
             for ( int i = 0; i < items.length; i++ )
@@ -1520,7 +1505,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             }
         }
 
-        return ( FileItem[] ) files.toArray( new FileItem[files.size()] );
+        return files.toArray( new FileItem[files.size()] );
     }
 
 

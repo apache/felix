@@ -170,7 +170,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             }
         }
 
-        Class[] flavors = wire.getFlavors();
+        Class<?>[] flavors = wire.getFlavors();
         if (flavors == null)
         {
             pw.println("  Flavors: none");
@@ -187,7 +187,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             pw.println();
         }
 
-        Dictionary props = wire.getProperties();
+        Dictionary<?, ?> props = wire.getProperties();
         if (props == null)
         {
             pw.println("  Properties: none");
@@ -195,7 +195,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
         else
         {
             pw.println("  Properties: ");
-            for (Enumeration e = props.keys(); e.hasMoreElements();)
+            for (Enumeration<?> e = props.keys(); e.hasMoreElements();)
             {
                 final Object key = e.nextElement();
                 pw.print("    "); //$NON-NLS-1$

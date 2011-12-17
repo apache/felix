@@ -46,6 +46,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * ServicesServlet provides a plugin for inspecting the registered services.
  */
+@SuppressWarnings("serial")
 public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     // don't create empty reference array all the time, create it only once - it is immutable
@@ -379,7 +380,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         // prepare variables
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
-        vars.put( "drawDetails", reqInfo.serviceRequested ? Boolean.TRUE : Boolean.FALSE );
+        vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
 
         response.getWriter().print( TEMPLATE );

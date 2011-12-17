@@ -40,6 +40,7 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 /**
  * The <code>ConfigManager</code> TODO
  */
+@SuppressWarnings("serial")
 public class ConfigManager extends ConfigManagerBase
 {
     private static final String LABEL = "configMgr"; // was name

@@ -42,7 +42,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
     private String ocdLocale;
     private ObjectClassDefinition ocd;
     private final OsgiManager osgiManager;
-    
+
     private static final String[] CONF_PROPS = new String[] {
         OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT, //
         OsgiManager.PROP_HTTP_SERVICE_SELECTOR, OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR, //
@@ -79,7 +79,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         // there is no locale support here
         return null;
     }
-    
+
     static final String getString(ResourceBundle rb, String key, String def)
     {
         try
@@ -100,7 +100,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         }
 
         if (locale == null) locale = Locale.ENGLISH.getLanguage();
-        
+
         // check if OCD is already initialized and it's locale is the same as the requested one
         synchronized (ocdLock)
         {
@@ -115,7 +115,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), localeObj);
 
         // simple configuration properties
-        final ArrayList adList = new ArrayList();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
         for (int i = 0; i < CONF_PROPS.length; i++)
         {
             final String key = CONF_PROPS[i++];
@@ -124,15 +124,15 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             final String descr = getString(rb, "metadata." + key + ".description", key); //$NON-NLS-1$ //$NON-NLS-2$
             adList.add( new AttributeDefinitionImpl(key, name, descr, defaultValue) );
         }
-        
+
         // log level is select - so no simple default value; requires localized option labels
-        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL, 
+        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_LOG_LEVEL,
             getString(rb, "metadata.loglevel.name", OsgiManager.PROP_LOG_LEVEL), //$NON-NLS-1$
             getString(rb, "metadata.loglevel.description", OsgiManager.PROP_LOG_LEVEL), //$NON-NLS-1$
-            AttributeDefinition.INTEGER, // type 
-            new String[] { String.valueOf( OsgiManager.DEFAULT_LOG_LEVEL ) }, // default values 
-            0, // cardinality 
-            new String[] { // option labels 
+            AttributeDefinition.INTEGER, // type
+            new String[] { String.valueOf( OsgiManager.DEFAULT_LOG_LEVEL ) }, // default values
+            0, // cardinality
+            new String[] { // option labels
                 getString(rb, "log.level.debug", "Debug"), //$NON-NLS-1$ //$NON-NLS-2$
                 getString(rb, "log.level.info", "Information"), //$NON-NLS-1$ //$NON-NLS-2$
                 getString(rb, "log.level.warn", "Warn"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -141,7 +141,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             new String[] { "4", "3", "2", "1" } ) ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         // list plugins - requires localized plugin titles
-        final TreeMap namesByClassName = new TreeMap();
+        final TreeMap<String, String> namesByClassName = new TreeMap<String, String>();
         final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
         for ( int i = 0; i < defaultPluginsClasses.length; i++ )
         {
@@ -150,11 +150,11 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             final String name = getString(rb, label + ".pluginTitle", label); //$NON-NLS-1$
             namesByClassName.put(clazz, name);
         }
-        final String[] classes = ( String[] ) namesByClassName.keySet().toArray(
+        final String[] classes = namesByClassName.keySet().toArray(
             new String[namesByClassName.size()] );
-        final String[] names = ( String[] ) namesByClassName.values().toArray( new String[namesByClassName.size()] );
+        final String[] names = namesByClassName.values().toArray( new String[namesByClassName.size()] );
 
-        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_ENABLED_PLUGINS, 
+        adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_ENABLED_PLUGINS,
             getString(rb, "metadata.plugins.name", OsgiManager.PROP_ENABLED_PLUGINS), //$NON-NLS-1$
             getString(rb, "metadata.plugins.description", OsgiManager.PROP_ENABLED_PLUGINS), //$NON-NLS-1$
             AttributeDefinition.STRING, classes, Integer.MIN_VALUE, names, classes ) );
@@ -162,7 +162,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         xocd = new ObjectClassDefinition()
         {
 
-            private final AttributeDefinition[] attrs = ( AttributeDefinition[] ) adList
+            private final AttributeDefinition[] attrs = adList
                 .toArray( new AttributeDefinition[adList.size()] );
 
 

@@ -30,7 +30,7 @@
  * <dd>Service API to provide custom authentication and access control.</dd>
  * </dl>
  */
-@Version("3.1.2")
+@Version("3.1.4")
 @Export(optional = "provide:=true")
 package org.apache.felix.webconsole;
 

@@ -22,7 +22,10 @@ package org.apache.felix.webconsole.internal.i18n;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
@@ -32,14 +35,14 @@ import org.apache.commons.io.IOUtils;
 class ConsolePropertyResourceBundle extends ResourceBundle
 {
 
-    private final Properties props;
+    private final Dictionary<String, String> props;
 
 
     ConsolePropertyResourceBundle( final ResourceBundle parent, final URL source )
     {
         setParent( parent );
 
-        props = new Properties();
+        Properties props = new Properties();
         if ( source != null )
         {
             InputStream ins = null;
@@ -55,14 +58,19 @@ class ConsolePropertyResourceBundle extends ResourceBundle
             {
                 IOUtils.closeQuietly( ins );
             }
+        }
 
+        this.props = new Hashtable<String, String>();
+        for ( Entry<?, ?> entry : props.entrySet() )
+        {
+            this.props.put( ( String ) entry.getKey(), ( String ) entry.getValue() );
         }
     }
 
 
-    public Enumeration getKeys()
+    public Enumeration<String> getKeys()
     {
-        return new CombinedEnumeration( props.keys(), parent.getKeys() );
+        return new CombinedEnumeration<String>( props.keys(), parent.getKeys() );
     }
 
 
