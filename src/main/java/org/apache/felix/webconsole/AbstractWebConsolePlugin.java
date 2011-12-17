@@ -111,8 +111,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
 
     /**
-     * Renders the web console page for the request. This consist of the following
-     * five parts called in order:
+     * Renders the web console page for the request. This consist of the
+     * following five parts called in order:
      * <ol>
      * <li>Send back a requested resource
      * <li>{@link #startResponse(HttpServletRequest, HttpServletResponse)}</li>
@@ -124,9 +124,14 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * <b>Note</b>: If a resource is sent back for the request only the first
      * step is executed. Otherwise the first step is a null-operation actually
      * and the latter four steps are executed in order.
-     * @see javax.servlet.http.HttpServlet#doGet(
-     *  javax.servlet.http.HttpServletRequest,
-     *  javax.servlet.http.HttpServletResponse)
+     * <p>
+     * If the {@link #isHtmlRequest(HttpServletRequest)} method returns
+     * <code>false</code> only the
+     * {@link #renderContent(HttpServletRequest, HttpServletResponse)} method is
+     * called.
+     *
+     * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
      */
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
         IOException
@@ -160,8 +165,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     /**
      * Detects whether this request is intended to have the headers and
      * footers of this plugin be rendered or not. This method always returns
-     * <code>true</true> but has been overwritten in the
-     * {@link WebConsolePluginAdapter} for the plugins.
+     * <code>true</true> and may be overwritten by plugins to detect
+     * from the actual request, whether or not to render the header and
+     * footer.
      *
      * @param request the original request passed from the HTTP server
      * @return <code>true</code> if the page should have headers and footers rendered
