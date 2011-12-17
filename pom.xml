@@ -81,7 +81,8 @@
                             org.apache.felix.webconsole.plugins.event.*
                         </Private-Package>
                         <DynamicImport-Package>
-                            org.osgi.service.event,org.osgi.service.cm
+                            org.osgi.service.event,org.osgi.service.cm,
+                            javax.servlet,javax.servlet.http
                         </DynamicImport-Package>
                     </instructions>
                 </configuration>
