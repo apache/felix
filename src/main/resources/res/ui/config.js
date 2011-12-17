@@ -348,8 +348,10 @@ var spanCounter = 0;
     	return selectEl;
         
     } else { // Simple 
+	// Metatype 1.2: Attr type 12 is PASSWORD
+	var elType = (type == 12) ? "password" : "text";
         return createElement( "input", null, {
-                type: "text",
+                type: elType,
                 name: prop,
                 value: value,
                 style: { width: width }
