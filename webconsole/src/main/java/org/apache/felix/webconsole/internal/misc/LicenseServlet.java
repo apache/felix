@@ -295,30 +295,32 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
                 }
             }
         }
-
-        // license is in a nested JAR
-        final URL zipResource = bundle.getResource( pathInfo.innerJar );
-        if ( zipResource != null )
+        else
         {
-            final InputStream input = zipResource.openStream();
-            ZipInputStream zin = null;
-            try
+            // license is in a nested JAR
+            final URL zipResource = bundle.getResource( pathInfo.innerJar );
+            if ( zipResource != null )
             {
-                zin = new ZipInputStream( input );
-                for ( ZipEntry zentry = zin.getNextEntry(); zentry != null; zentry = zin.getNextEntry() )
+                final InputStream input = zipResource.openStream();
+                ZipInputStream zin = null;
+                try
                 {
-                    if ( pathInfo.licenseFile.equals( zentry.getName() ) )
+                    zin = new ZipInputStream( input );
+                    for ( ZipEntry zentry = zin.getNextEntry(); zentry != null; zentry = zin.getNextEntry() )
                     {
-                        IOUtils.copy( zin, response.getWriter() );
-                        return true;
+                        if ( pathInfo.licenseFile.equals( zentry.getName() ) )
+                        {
+                            IOUtils.copy( zin, response.getWriter() );
+                            return true;
+                        }
                     }
                 }
-            }
-            finally
-            {
+                finally
+                {
 
-                IOUtils.closeQuietly( zin );
-                IOUtils.closeQuietly( input );
+                    IOUtils.closeQuietly( zin );
+                    IOUtils.closeQuietly( input );
+                }
             }
         }
 
