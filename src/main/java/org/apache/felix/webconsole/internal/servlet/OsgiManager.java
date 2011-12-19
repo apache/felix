@@ -35,6 +35,8 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import javax.servlet.GenericServlet;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -59,6 +61,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpContext;
@@ -218,6 +221,7 @@ public class OsgiManager extends GenericServlet
 
     private int logLevel = DEFAULT_LOG_LEVEL;
 
+    @SuppressWarnings("serial")
     public OsgiManager(BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
@@ -314,23 +318,28 @@ public class OsgiManager extends GenericServlet
         // configure and start listening for configuration
         updateConfiguration(null);
 
-        try
-        {
-            this.configurationListener = ConfigurationListener2.create(this);
-        }
-        catch (Throwable t2)
-        {
-            // might be caused by Metatype API not available
-            // try without MetaTypeProvider
-            try
+        // register managed service as a service factory
+        this.configurationListener = bundleContext.registerService( "org.osgi.service.cm.ManagedService", //$NON-NLS-1$
+            new ServiceFactory()
             {
-                this.configurationListener = ConfigurationListener.create(this);
-            }
-            catch (Throwable t)
+                public Object getService( Bundle bundle, ServiceRegistration registration )
+                {
+                    return new ConfigurationSupport( OsgiManager.this );
+                }
+
+
+                public void ungetService( Bundle bundle, ServiceRegistration registration, Object service )
+                {
+                    // do nothing
+                }
+            }, new Hashtable<String, String>()
             {
-                // might be caused by CM API not available
-            }
-        }
+                {
+                    put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" ); //$NON-NLS-1$
+                    put( Constants.SERVICE_DESCRIPTION, "OSGi Management Console Configuration Receiver" ); //$NON-NLS-1$
+                    put( Constants.SERVICE_PID, getConfigurationPid() );
+                }
+            } );
     }
 
     public void dispose()
@@ -551,14 +560,18 @@ public class OsgiManager extends GenericServlet
         return getClass().getName();
     }
 
+
     /**
-     * Calls the <code>GenericServlet.log(String)</code> method if the
+     * Calls the <code>ServletContext.log(String)</code> method if the
      * configured log level is less than or equal to the given <code>level</code>.
      * <p>
      * Note, that the <code>level</code> parameter is only used to decide whether
      * the <code>GenericServlet.log(String)</code> method is called or not. The
      * actual implementation of the <code>GenericServlet.log</code> method is
      * outside of the control of this method.
+     * <p>
+     * If the servlet has not been initialized yet or has already been destroyed
+     * the message is printed to stderr.
      *
      * @param level The log level at which to log the message
      * @param message The message to log
@@ -567,12 +580,23 @@ public class OsgiManager extends GenericServlet
     {
         if (logLevel >= level)
         {
-            log(message);
+            ServletConfig config = getServletConfig();
+            if ( config != null )
+            {
+                ServletContext context = config.getServletContext();
+                if ( context != null )
+                {
+                    context.log( message );
+                    return;
+                }
+            }
+
+            System.err.println( message );
         }
     }
 
     /**
-     * Calls the <code>GenericServlet.log(String, Throwable)</code> method if
+     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
      * the configured log level is less than or equal to the given
      * <code>level</code>.
      * <p>
@@ -580,6 +604,9 @@ public class OsgiManager extends GenericServlet
      * the <code>GenericServlet.log(String, Throwable)</code> method is called
      * or not. The actual implementation of the <code>GenericServlet.log</code>
      * method is outside of the control of this method.
+     * <p>
+     * If the servlet has not been initialized yet or has already been destroyed
+     * the message is printed to stderr.
      *
      * @param level The log level at which to log the message
      * @param message The message to log
@@ -589,7 +616,22 @@ public class OsgiManager extends GenericServlet
     {
         if (logLevel >= level)
         {
-            log(message, t);
+            ServletConfig config = getServletConfig();
+            if ( config != null )
+            {
+                ServletContext context = config.getServletContext();
+                if ( context != null )
+                {
+                    context.log( message, t );
+                    return;
+                }
+            }
+
+            System.err.println( message );
+            if ( t != null )
+            {
+                t.printStackTrace( System.err );
+            }
         }
     }
 

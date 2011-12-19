@@ -130,22 +130,28 @@
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
                         </Bundle-Activator>
                         <Import-Package>
-                            org.osgi.service.http,
-                            org.apache.felix.shell;
-                            org.osgi.service.*;resolution:=optional,
+                            org.osgi.service.metatype;resolution:=optional,
                             javax.servlet.*;version=2.4,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
-                            org.apache.felix.bundlerepository,
-                            org.osgi.service.obr
+                            org.apache.felix.bundlerepository;version="[2.0,3)",
+                            org.osgi.service.obr;version="[1.0,2)",
+                            org.osgi.service.cm;version="[1.2,2)",
+                            org.osgi.service.condpermadmin;version="[1.0,2)",
+                            org.osgi.service.log;version="[1.3,2)",
+                            org.osgi.service.metatype;version="[1.1,2)",
+                            org.osgi.service.permissionadmin;version="[1.2,2)",
+                            org.osgi.service.prefs;version="[1.1,2)",
+                            org.osgi.service.wireadmin;version="[1.0,2)"
                         </DynamicImport-Package>
                         <Include-Resource>
                             {maven-resources},META-INF=src/main/bare-resources
                         </Include-Resource>
                         <Embed-Dependency>
                             org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
-                            org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**
+                            org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**,
+                            org.osgi.compendium;inline=org/osgi/service/metatype/**
                         </Embed-Dependency>
                         <_removeheaders>
                             Embed-Dependency,Private-Package,Include-Resource
@@ -199,7 +205,6 @@
             <artifactId>commons-fileupload</artifactId>
             <version>1.2.1</version>
             <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -207,7 +212,6 @@
             <artifactId>commons-io</artifactId>
             <version>1.4</version>
             <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
