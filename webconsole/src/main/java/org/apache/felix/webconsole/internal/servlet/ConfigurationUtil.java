@@ -51,6 +51,35 @@ public class ConfigurationUtil
         return ( value == null ) ? def : value;
     }
 
+    /**
+     * Returns the named property from the framework. If the property does
+     * not exist, the default value <code>def</code> is returned.
+     *
+     * @param context The BundleContext providing framework properties
+     * @param name The name of the property to return
+     * @param def The default value if the named property does not exist
+     * @return The value of the named property as a string or <code>def</code>
+     *         if the property does not exist
+     */
+    public static final int getProperty(BundleContext context, String name, int def)
+    {
+        String value = context.getProperty( name);
+        if (value != null)
+        {
+            try
+            {
+                return Integer.parseInt(value.toString());
+            }
+            catch (NumberFormatException nfe)
+            {
+                // don't care
+            }
+        }
+
+        // not a number, not convertible, not set, use default
+        return def;
+    }
+
 
     /**
      * Returns the named property from the configuration. If the property does

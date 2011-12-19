@@ -118,6 +118,10 @@ public class OsgiManager extends GenericServlet
 
     private static final String FRAMEWORK_PROP_PASSWORD = "felix.webconsole.password"; //$NON-NLS-1$
 
+    private static final String FRAMEWORK_PROP_LOG_LEVEL = "felix.webconsole.loglevel"; //$NON-NLS-1$
+
+    private static final String FRAMEWORK_PROP_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
+
     static final String PROP_MANAGER_ROOT = "manager.root"; //$NON-NLS-1$
 
     static final String PROP_DEFAULT_RENDER = "default.render"; //$NON-NLS-1$
@@ -200,7 +204,7 @@ public class OsgiManager extends GenericServlet
     private boolean httpResourcesRegistered;
 
     // default configuration from framework properties
-    private HashMap<String, String> defaultConfiguration;
+    private HashMap<String, Object> defaultConfiguration;
 
     // configuration from Configuration Admin
     private HashMap<String, ?> configuration;
@@ -293,7 +297,7 @@ public class OsgiManager extends GenericServlet
         securityProviderTracker.open();
 
         // load the default configuration from the framework
-        this.defaultConfiguration = new HashMap<String, String>();
+        this.defaultConfiguration = new HashMap<String, Object>();
         this.defaultConfiguration.put( PROP_MANAGER_ROOT,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT ) );
         this.defaultConfiguration.put( PROP_REALM,
@@ -302,6 +306,10 @@ public class OsgiManager extends GenericServlet
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_USER_NAME, DEFAULT_USER_NAME ) );
         this.defaultConfiguration.put( PROP_PASSWORD,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_PASSWORD, DEFAULT_PASSWORD ) );
+        this.defaultConfiguration.put( PROP_LOG_LEVEL,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL) );
+        this.defaultConfiguration.put( PROP_LOCALE,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOCALE, null ) );
 
         // configure and start listening for configuration
         updateConfiguration(null);
@@ -806,7 +814,7 @@ public class OsgiManager extends GenericServlet
     }
 
 
-    Map<String, String> getDefaultConfiguration()
+    Map<String, ?> getDefaultConfiguration()
     {
         return defaultConfiguration;
     }
