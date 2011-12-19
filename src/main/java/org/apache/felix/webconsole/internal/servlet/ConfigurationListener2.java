@@ -114,7 +114,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         ObjectClassDefinition xocd = null;
         final Locale localeObj = Util.parseLocaleString(locale);
         final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), localeObj);
-        final Map<String, String> defaultConfig = osgiManager.getDefaultConfiguration();
+        final Map<String, ?> defaultConfig = osgiManager.getDefaultConfiguration();
 
         // simple configuration properties
         final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
@@ -132,7 +132,9 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             getString(rb, "metadata.loglevel.name", OsgiManager.PROP_LOG_LEVEL), //$NON-NLS-1$
             getString(rb, "metadata.loglevel.description", OsgiManager.PROP_LOG_LEVEL), //$NON-NLS-1$
             AttributeDefinition.INTEGER, // type
-            new String[] { String.valueOf( OsgiManager.DEFAULT_LOG_LEVEL ) }, // default values
+            new String[]
+                { String.valueOf( ConfigurationUtil.getProperty( defaultConfig, OsgiManager.PROP_LOG_LEVEL,
+                    OsgiManager.DEFAULT_LOG_LEVEL ) ) }, // default values
             0, // cardinality
             new String[] { // option labels
                 getString(rb, "log.level.debug", "Debug"), //$NON-NLS-1$ //$NON-NLS-2$
