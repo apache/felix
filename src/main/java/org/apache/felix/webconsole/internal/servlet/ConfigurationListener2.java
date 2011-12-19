@@ -22,6 +22,7 @@ package org.apache.felix.webconsole.internal.servlet;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 
@@ -113,13 +114,14 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         ObjectClassDefinition xocd = null;
         final Locale localeObj = Util.parseLocaleString(locale);
         final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), localeObj);
+        final Map<String, String> defaultConfig = osgiManager.getDefaultConfiguration();
 
         // simple configuration properties
         final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
         for (int i = 0; i < CONF_PROPS.length; i++)
         {
             final String key = CONF_PROPS[i++];
-            final String defaultValue = CONF_PROPS[i];
+            final String defaultValue = ConfigurationUtil.getProperty( defaultConfig, key, CONF_PROPS[i] );
             final String name = getString(rb, "metadata." + key + ".name", key); //$NON-NLS-1$ //$NON-NLS-2$
             final String descr = getString(rb, "metadata." + key + ".description", key); //$NON-NLS-1$ //$NON-NLS-2$
             adList.add( new AttributeDefinitionImpl(key, name, descr, defaultValue) );

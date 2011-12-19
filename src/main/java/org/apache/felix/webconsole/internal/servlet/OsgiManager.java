@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -108,6 +109,14 @@ public class OsgiManager extends GenericServlet
      * See https://issues.apache.org/jira/browse/FELIX-2267
      */
     private static final String COOKIE_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
+
+    private final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root"; //$NON-NLS-1$
+
+    private static final String FRAMEWORK_PROP_REALM = "felix.webconsole.realm"; //$NON-NLS-1$
+
+    private static final String FRAMEWORK_PROP_USER_NAME = "felix.webconsole.username"; //$NON-NLS-1$
+
+    private static final String FRAMEWORK_PROP_PASSWORD = "felix.webconsole.password"; //$NON-NLS-1$
 
     static final String PROP_MANAGER_ROOT = "manager.root"; //$NON-NLS-1$
 
@@ -190,7 +199,11 @@ public class OsgiManager extends GenericServlet
     // true if the resources have been registered with the HttpService
     private boolean httpResourcesRegistered;
 
-    private Dictionary<String, ?> configuration;
+    // default configuration from framework properties
+    private HashMap<String, String> defaultConfiguration;
+
+    // configuration from Configuration Admin
+    private HashMap<String, ?> configuration;
 
     // See https://issues.apache.org/jira/browse/FELIX-2267
     private Locale configuredLocale;
@@ -278,6 +291,17 @@ public class OsgiManager extends GenericServlet
         securityProviderTracker = new ServiceTracker(bundleContext,
             WebConsoleSecurityProvider.class.getName(), null);
         securityProviderTracker.open();
+
+        // load the default configuration from the framework
+        this.defaultConfiguration = new HashMap<String, String>();
+        this.defaultConfiguration.put( PROP_MANAGER_ROOT,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT ) );
+        this.defaultConfiguration.put( PROP_REALM,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_REALM, DEFAULT_REALM ) );
+        this.defaultConfiguration.put( PROP_USER_NAME,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_USER_NAME, DEFAULT_USER_NAME ) );
+        this.defaultConfiguration.put( PROP_PASSWORD,
+            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_PASSWORD, DEFAULT_PASSWORD ) );
 
         // configure and start listening for configuration
         updateConfiguration(null);
@@ -701,7 +725,7 @@ public class OsgiManager extends GenericServlet
             return;
         }
 
-        Dictionary<String, ?> config = getConfiguration();
+        Map<String, ?> config = getConfiguration();
 
         // get authentication details
         String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
@@ -776,16 +800,29 @@ public class OsgiManager extends GenericServlet
         }
     }
 
-    private Dictionary<String, ?> getConfiguration()
+    private Map<String, ?> getConfiguration()
     {
         return configuration;
     }
 
-    synchronized void updateConfiguration(Dictionary<String, ?> config)
+
+    Map<String, String> getDefaultConfiguration()
     {
-        if (config == null)
+        return defaultConfiguration;
+    }
+
+
+    synchronized void updateConfiguration(Dictionary<String, ?> osgiConfig)
+    {
+        HashMap<String, Object> config = new HashMap<String, Object>(this.defaultConfiguration);
+
+        if ( osgiConfig != null )
         {
-            config = new Hashtable<String, Object>();
+            for ( Enumeration<String> keys = osgiConfig.keys(); keys.hasMoreElements(); )
+            {
+                final String key = keys.nextElement();
+                config.put( key, osgiConfig.get( key ) );
+            }
         }
 
         configuration = config;
@@ -886,13 +923,13 @@ public class OsgiManager extends GenericServlet
         return enabledPlugins != null && !enabledPlugins.contains(pluginClass);
     }
 
-    private Dictionary<String, String> toStringConfig(Dictionary<String, ?> config)
+
+    private Dictionary<String, String> toStringConfig( Map<String, ?> config )
     {
         Dictionary<String, String> stringConfig = new Hashtable<String, String>();
-        for (Enumeration<String> ke = config.keys(); ke.hasMoreElements();)
+        for ( Entry<String, ?> entry : config.entrySet() )
         {
-            String key = ke.nextElement();
-            stringConfig.put(key, String.valueOf(config.get(key)));
+            stringConfig.put( entry.getKey(), String.valueOf( entry.getValue() ) );
         }
         return stringConfig;
     }

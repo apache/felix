@@ -17,9 +17,11 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * A helper class to get configuration properties.
@@ -32,6 +34,24 @@ public class ConfigurationUtil
         // prevent instantiation
     }
 
+
+    /**
+     * Returns the named property from the framework. If the property does
+     * not exist, the default value <code>def</code> is returned.
+     *
+     * @param context The BundleContext providing framework properties
+     * @param name The name of the property to return
+     * @param def The default value if the named property does not exist
+     * @return The value of the named property or <code>def</code>
+     *         if the property does not exist
+     */
+    public static final String getProperty( BundleContext context, String name, String def )
+    {
+        String value = context.getProperty( name );
+        return ( value == null ) ? def : value;
+    }
+
+
     /**
      * Returns the named property from the configuration. If the property does
      * not exist, the default value <code>def</code> is returned.
@@ -42,7 +62,7 @@ public class ConfigurationUtil
      * @return The value of the named property as a string or <code>def</code>
      *         if the property does not exist
      */
-    public static final String getProperty(Dictionary<String, ?> config, String name, String def)
+    public static final String getProperty(Map<String, ?> config, String name, String def)
     {
         Object value = config.get(name);
         if (value instanceof String)
@@ -68,7 +88,7 @@ public class ConfigurationUtil
      * @return The value of the named property as a string or <code>def</code>
      *         if the property does not exist
      */
-    public static final int getProperty(Dictionary<String, ?> config, String name, int def)
+    public static final int getProperty(Map<String, ?> config, String name, int def)
     {
         Object value = config.get(name);
         if (value instanceof Number)
@@ -100,7 +120,7 @@ public class ConfigurationUtil
      * @param name The name of the property to return
      * @return the property value as string array - no matter if originally it was other kind of array, collection or comma-separated string. Returns <code>null</code> if the property is not set.
      */
-    public static final String[] getStringArrayProperty(Dictionary<String, ?> config, String name)
+    public static final String[] getStringArrayProperty(Map<String, ?> config, String name)
     {
         Object value = config.get(name);
         if (value == null)
