@@ -24,6 +24,8 @@ import java.net.URLConnection;
 import java.util.*;
 import java.util.Map.Entry;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
@@ -377,13 +379,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
 
     /**
-     * Calls the <code>GenericServlet.log(String)</code> method if the
+     * Calls the <code>ServletContext.log(String)</code> method if the
      * configured log level is less than or equal to the given <code>level</code>.
      * <p>
      * Note, that the <code>level</code> paramter is only used to decide whether
      * the <code>GenericServlet.log(String)</code> method is called or not. The
      * actual implementation of the <code>GenericServlet.log</code> method is
      * outside of the control of this method.
+     * <p>
+     * If the servlet has not been initialized yet or has already been destroyed
+     * the message is printed to stderr.
      *
      * @param level The log level at which to log the message
      * @param message The message to log
@@ -392,13 +397,24 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     {
         if ( logLevel >= level )
         {
-            log( message );
+            ServletConfig config = getServletConfig();
+            if ( config != null )
+            {
+                ServletContext context = config.getServletContext();
+                if ( context != null )
+                {
+                    context.log( message );
+                    return;
+                }
+            }
+
+            System.err.println( message );
         }
     }
 
 
     /**
-     * Calls the <code>GenericServlet.log(String, Throwable)</code> method if
+     * Calls the <code>ServletContext.log(String, Throwable)</code> method if
      * the configured log level is less than or equal to the given
      * <code>level</code>.
      * <p>
@@ -415,7 +431,22 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     {
         if ( logLevel >= level )
         {
-            log( message, t );
+            ServletConfig config = getServletConfig();
+            if ( config != null )
+            {
+                ServletContext context = config.getServletContext();
+                if ( context != null )
+                {
+                    context.log( message, t );
+                    return;
+                }
+            }
+
+            System.err.println( message );
+            if ( t != null )
+            {
+                t.printStackTrace( System.err );
+            }
         }
     }
 
