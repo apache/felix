@@ -21,29 +21,21 @@ package org.apache.felix.webconsole.internal.servlet;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 
 import org.apache.felix.webconsole.internal.Util;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
 
-class ConfigurationListener2 extends ConfigurationListener implements MetaTypeProvider
+class ConfigurationSupport implements ManagedService, MetaTypeProvider
 {
-
-    final String pid; // reduces visibility because access to this was made though synthetic accessor method
-
-    private final Object ocdLock = new Object();
-    private String ocdLocale;
-    private ObjectClassDefinition ocd;
-    private final OsgiManager osgiManager;
-
     private static final String[] CONF_PROPS = new String[] {
         OsgiManager.PROP_MANAGER_ROOT, OsgiManager.DEFAULT_MANAGER_ROOT, //
         OsgiManager.PROP_HTTP_SERVICE_SELECTOR, OsgiManager.DEFAULT_HTTP_SERVICE_SELECTOR, //
@@ -51,27 +43,29 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
         OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM, //
         OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME, //
         OsgiManager.PROP_PASSWORD, OsgiManager.DEFAULT_PASSWORD, //
-        OsgiManager.PROP_LOCALE, "", //$NON-NLS-1$
+        OsgiManager.PROP_LOCALE, "" , //$NON-NLS-1$
     };
 
+    // used by an inner class, to prevent synthetic methods
+    final OsgiManager osgiManager;
 
+    private final Object ocdLock = new Object();
+    private String ocdLocale;
+    private ObjectClassDefinition ocd;
 
-
-    static ServiceRegistration create( OsgiManager osgiManager )
+    ConfigurationSupport( OsgiManager osgiManager )
     {
-        ConfigurationListener2 cl = new ConfigurationListener2( osgiManager );
-        return registerService( cl, new String[]
-            { ManagedService.class.getName(), MetaTypeProvider.class.getName() } );
-    }
-
-
-    private ConfigurationListener2( OsgiManager osgiManager )
-    {
-        super( osgiManager );
-        this.pid = osgiManager.getConfigurationPid();
         this.osgiManager = osgiManager;
     }
 
+
+    //---------- ManagedService
+
+    @SuppressWarnings("unchecked")
+    public void updated( @SuppressWarnings("rawtypes") Dictionary config )
+    {
+        osgiManager.updateConfiguration( config );
+    }
 
     //---------- MetaTypeProvider
 
@@ -95,7 +89,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
 
     public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
     {
-        if ( !pid.equals( id ) )
+        if ( !osgiManager.getConfigurationPid().equals( id ) )
         {
             return null;
         }
@@ -184,7 +178,7 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
 
             public String getID()
             {
-                return pid;
+                return osgiManager.getConfigurationPid();
             }
 
 
@@ -296,4 +290,5 @@ class ConfigurationListener2 extends ConfigurationListener implements MetaTypePr
             return null;
         }
     }
+
 }

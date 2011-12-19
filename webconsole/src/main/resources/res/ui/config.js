@@ -541,10 +541,21 @@ $(document).ready(function() {
 		for(var i in configData.fpids) {
 			addFactoryConfig(configData.fpids[i]);
 
-			var confs = factories[ configData.fpids[i].id ];
-			if (confs) for (var j in confs) {
-				addConfig(confs[j]);
+			var fpid = configData.fpids[i].id;
+			var confs = factories[ fpid ];
+			if (confs) {
+			    for (var j in confs) {
+			        addConfig(confs[j]);
+			    }
+			    delete factories[ fpid ];
 			}
+		}
+		for(var fpid in factories) {
+		    var flist = factories[fpid];
+		    for(var i in flist) {
+		        delete flist[i].fpid; // render as regular config
+		        addConfig(flist[i]);
+		    }
 		}
 		initStaticWidgets(configTable);
 
