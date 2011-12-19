@@ -925,8 +925,15 @@ public class ConfigManager extends ConfigManagerBase
 
                     if ( ad.getCardinality() < 0 )
                     {
-                        // keep the vector
-                        props.put( propName, vec );
+                        // keep the vector, but only add if not empty
+                        if ( vec.isEmpty() )
+                        {
+                            props.remove( propName );
+                        }
+                        else
+                        {
+                            props.put( propName, vec );
+                        }
                     }
                     else
                     {
@@ -1072,7 +1079,7 @@ public class ConfigManager extends ConfigManagerBase
         }
         else if ( value.getClass().isArray() )
         {
-            attrCardinality = Integer.MIN_VALUE;
+            attrCardinality = Integer.MAX_VALUE;
             type = value.getClass().getComponentType();
         }
         else
