@@ -17,10 +17,23 @@
 package org.apache.felix.webconsole.internal.compendium;
 
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
@@ -30,9 +43,20 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.internal.Util;
-import org.json.*;
-import org.osgi.framework.*;
-import org.osgi.service.cm.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONWriter;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
