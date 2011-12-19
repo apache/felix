@@ -129,9 +129,21 @@ abstract class BaseUpdateInstallHelper implements Runnable
                     { bundle } );
             }
         }
-        catch ( Exception ioe )
+        catch ( Exception e )
         {
-            getLog().log( LogService.LOG_ERROR, "Cannot install or update bundle from " + bundleFile, ioe );
+            try
+            {
+                getLog().log( LogService.LOG_ERROR, "Cannot install or update bundle from " + bundleFile, e );
+            }
+            catch ( Exception secondary )
+            {
+                // at the time this exception happens the log used might have
+                // been destroyed and is not available to use any longer. So
+                // we only can write to stderr at this time to at least get
+                // some message out ...
+                System.err.println( "Cannot install or update bundle from " + bundleFile );
+                e.printStackTrace( System.err );
+            }
         }
         finally
         {
