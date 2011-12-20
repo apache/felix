@@ -397,14 +397,9 @@ public class Server
     }
 
 	/**
-	 * Sets the stopping flag to true.  Socket exceptions will not be logged.  Method can only be called once.
+	 * Sets the stopping flag to true, meaning that further socket exceptions will not be logged as errors.
 	 */
-	public void setStopping() {
-		if (m_stopping) 
-		{
-			throw new IllegalStateException("setStopping() called multiple times.");
-		}
-		
+	public void setStopping() {		
 		m_stopping  = true;
 	}
 }
