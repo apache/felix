@@ -63,7 +63,7 @@
 						<Private-Package>org.apache.felix.httplite.osgi, org.apache.felix.httplite.server, org.apache.felix.httplite.servlet</Private-Package>
 						<Export-Service>org.osgi.service.http.HttpService</Export-Service>
 						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-						<Bundle-Activator>${pom.artifactId}.osgi.Activator</Bundle-Activator>
+						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
 						<Export-Package>
