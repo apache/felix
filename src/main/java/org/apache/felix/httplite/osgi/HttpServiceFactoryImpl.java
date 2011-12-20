@@ -134,6 +134,7 @@ public class HttpServiceFactoryImpl implements ServiceFactory
             {
                 m_logger.log(Logger.LOG_INFO,
                     "Stopping http server since no clients are registered.");
+                m_server.setStopping();
                 m_server.stop();
             }
             catch (InterruptedException e)
