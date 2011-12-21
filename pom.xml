@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.httplite</artifactId>
-			<version>${pom.version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -62,7 +62,7 @@
 					<instructions>
 						<Private-Package>org.apache.felix.httplite.osgi, org.apache.felix.httplite.server, org.apache.felix.httplite.servlet</Private-Package>
 						<Export-Service>org.osgi.service.http.HttpService</Export-Service>
-						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
