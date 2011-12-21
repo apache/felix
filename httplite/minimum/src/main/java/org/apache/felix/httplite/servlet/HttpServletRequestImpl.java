@@ -1151,47 +1151,17 @@ public class HttpServletRequestImpl implements HttpServletRequest
      */
     private static String[] splitString( String instr, char separator )
     {
-        if ( instr == null )
+		if ( instr == null )
         {
             throw new IllegalArgumentException( "Input string must not be null." );
         }
 
-        if ( instr.length() == 0 )
+	    StringTokenizer tokenizer = new StringTokenizer(instr, Character.toString(separator));
+        int length = tokenizer.countTokens();
+		String[] str_array = new String[length];
+        for ( int i = 0; i < length; i++ )
         {
-            return ( new String[0] );
-        }
-
-        List tokens = new ArrayList();
-        String token;
-        int index_a = 0;
-        int index_b = 0;
-
-        while ( true )
-        {
-            index_b = instr.indexOf( separator, index_a );
-            if ( index_b == -1 )
-            {
-                token = instr.substring( index_a );
-
-                if ( token.length() > 0 )
-                {
-                    tokens.add( token );
-                }
-
-                break;
-            }
-            token = instr.substring( index_a, index_b );
-
-            if ( token.length() >= 0 )
-            {
-                tokens.add( token );
-            }
-            index_a = index_b + 1;
-        }
-        String[] str_array = new String[tokens.size()];
-        for ( int i = 0; i < str_array.length; i++ )
-        {
-            str_array[i] = ( String ) ( tokens.get( i ) );
+            str_array[i] = tokenizer.nextToken();
         }
         return str_array;
     }
