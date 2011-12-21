@@ -9,7 +9,7 @@
 	OF ANY KIND, either express or implied. See the License for the specific 
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
@@ -59,6 +59,17 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}</directory>
+				<targetPath>META-INF/</targetPath>
+				<includes>
+					<include>LICENSE</include>
+					<include>NOTICE</include>
+					<include>DEPENDENCIES</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -76,15 +87,15 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Export-Package />
+						<Export-Package/>
 						<Private-Package>org.apache.felix.httplite.osgi,
 							org.apache.felix.httplite.server,
-							org.apache.felix.httplite.servlet</Private-Package>
+							org.apache.felix.httplite.servlet
+						</Private-Package>
 						<Export-Service>org.osgi.service.http.HttpService</Export-Service>
-						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-						<Bundle-Activator>${pom.artifactId}.osgi.Activator</Bundle-Activator>
+						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Activator>${project.artifactId}.osgi.Activator</Bundle-Activator>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
 						<Import-Package>
 							javax.servlet;version="2.4",
 							javax.servlet.http;version="2.4",
