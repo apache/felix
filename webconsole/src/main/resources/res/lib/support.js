@@ -268,6 +268,30 @@ function Xdialog(text) {
 	return element;
 }
 
+/**
+ * Sets the name cookie at the appRoot (/system/console by default) path
+ * to last for 20 years.
+ * @param name The name of the cookie
+ * @param value The value for the cookie
+ */
+function setCookie( /* String */name, /* String */value) {
+    var date = new Date();
+    date.setFullYear(date.getFullYear() + 20);
+    $.cookies.set("felix-webconsole-" + name, value, {
+        expiresAt : date,
+        path : appRoot
+    });
+}
+
+/**
+ * Returns the value of the name cookie or nothing if the cookie does
+ * not exist or is not accessible.
+ * @param name The name of the cookie
+ */
+/* String */ function getCookie(/*String */name) {
+    $.cookies.get("felix-webconsole-" + name);
+}
+
 // language selection element
 var langSelect = false;
 $(document).ready(function() {
@@ -275,14 +299,10 @@ $(document).ready(function() {
 		function() { $(this).find('.flags').show('blind') },
 		function() { $(this).find('.flags').hide('blind') });
 	langSelect.find('.flags img').click(function() {
-	        var date = new Date();
-	        date.setFullYear(date.getFullYear() + 20);
-		$.cookies.set('felix.webconsole.locale',
-			$(this).attr('alt'),
-			{ expiresAt: date });
+        setCookie("locale", $(this).attr('alt'));
 		location.reload();
 	});
-	var locale = $.cookies.get('felix.webconsole.locale');
+	var locale = getCookie("locale");
 	if (locale) {
 		if ( !$.datepicker.regional[locale] ) locale = '';
 		$.datepicker.setDefaults($.datepicker.regional[locale]);
