@@ -41,8 +41,10 @@ function renderData( eventData, filter )  {
     }
     initStaticWidgets();
 
-	var cv = $.cookies.get("webconsolebundlelist");
-	if (cv) bundlesTable.trigger('sorton', [cv]);
+	var cv = getCookie("bundlelist");
+	if (cv) {
+	    bundlesTable.trigger('sorton', [cv]);
+	}
 
 	// show dialog on error
 	if (eventData.error) bundleOpError.dialog('open').find('pre').text(eventData.error)
@@ -261,9 +263,11 @@ $(document).ready(function(){
 		},
 		textExtraction:mixedLinksExtraction
 	}).bind("sortEnd", function() {
-		var t = bundlesTable.eq(0).attr("config");
-		if (t.sortList) $.cookies.set("webconsolebundlelist", t.sortList);
-	});
+        var t = bundlesTable.eq(0).attr("config");
+        if (t.sortList) {
+            setCookie("bundlelist", t.sortList);
+        }
+    });
 	bundlesBody     = bundlesTable.find('tbody');
 	bundlesTemplate = bundlesBody.find('tr').clone();
 
