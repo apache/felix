@@ -60,7 +60,8 @@ public class HttpServletResponseImpl implements HttpServletResponse
     private boolean m_getOutputStreamCalled = false;
     private boolean m_getWriterCalled = false;
     private ServletOutputStreamImpl m_servletOutputStream;
-    private PrintWriter m_servletPrintWriter;
+    private PrintWriter m_printWriter;
+    private List m_cookies = null;
 
     private int m_statusCode = HttpURLConnection.HTTP_OK;
     private String m_customStatusMessage = null;
@@ -97,6 +98,20 @@ public class HttpServletResponseImpl implements HttpServletResponse
         }
 
         m_out.write(buildResponse(m_statusCode, m_headers, m_customStatusMessage, null));
+        
+        if (m_cookies != null)
+        {
+            m_out.write( "Set-Cookie: ".getBytes() );
+            for (Iterator i = m_cookies.iterator(); i.hasNext();)
+            {
+                Cookie cookie = (Cookie) i.next();
+                m_out.write( cookieToHeader(cookie) );
+                
+                if (i.hasNext()) {
+                    m_out.write( ';' );
+                }
+            }
+        }
         m_out.write(HttpConstants.HEADER_DELEMITER.getBytes());
         m_out.flush();
 
@@ -248,7 +263,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
         }
         else if (m_getWriterCalled)
         {
-            m_servletPrintWriter.flush();
+            m_printWriter.flush();
         }
 
         if (!m_headersWritten)
@@ -338,13 +353,13 @@ public class HttpServletResponseImpl implements HttpServletResponse
             throw new IllegalStateException(
                 "getOutputStream method has already been called for this response object.");
 
-        if (m_servletPrintWriter == null)
+        if (m_printWriter == null)
         {
             m_buffer = new ByteArrayOutputStream(m_bufferSize);
-            m_servletPrintWriter = new PrintWriter(m_buffer);
+            m_printWriter = new PrintWriter(m_buffer);
         }
 
-        return m_servletPrintWriter;
+        return m_printWriter;
     }
 
     /* (non-Javadoc)
@@ -365,7 +380,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
             throw new IllegalStateException("Response has already been committed.");
         }
         m_buffer.reset();
-        m_servletPrintWriter = null;
+        m_printWriter = null;
         m_servletOutputStream = null;
         m_getOutputStreamCalled = false;
         m_getWriterCalled = false;
@@ -385,7 +400,7 @@ public class HttpServletResponseImpl implements HttpServletResponse
         }
 
         m_buffer.reset();
-        m_servletPrintWriter = null;
+        m_printWriter = null;
         m_servletOutputStream = null;
         m_getOutputStreamCalled = false;
         m_getWriterCalled = false;
@@ -450,7 +465,15 @@ public class HttpServletResponseImpl implements HttpServletResponse
      */
     public void addCookie(final Cookie cookie)
     {
-        throw new UnimplementedAPIException();
+        if (m_cookies == null)
+        {
+            m_cookies = new ArrayList();
+        }
+        
+        if (!m_cookies.contains( cookie ))
+        {
+            m_cookies.add( cookie );
+        }        
     }
 
     /* (non-Javadoc)
@@ -728,6 +751,30 @@ public class HttpServletResponseImpl implements HttpServletResponse
         }
 
         return buffer.toString().getBytes();
+    }
+    
+    /**
+     * Convert a cookie into the HTTP header in response.
+     * 
+     * @param cookie Cookie
+     * @return String as byte array of cookie as header
+     */
+    private byte[] cookieToHeader( Cookie cookie )
+    {
+        if (cookie == null || cookie.getName() == null || cookie.getValue() == null) 
+        {
+            throw new IllegalArgumentException( "Invalid cookie" );
+        }
+        
+        StringBuffer sb = new StringBuffer();
+                
+        sb.append( cookie.getName() );
+        sb.append( '=' );
+        sb.append( cookie.getValue() );
+        
+        //TODO: Implement all Cookie fields
+            
+        return sb.toString().getBytes();
     }
 
     /**
