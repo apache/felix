@@ -6,14 +6,14 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>servicediagnostics</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>org.apache.felix</groupId>
-  <artifactId>servicediagnostics.core</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <artifactId>${project.groupId}.servicediagnostics.plugin</artifactId>
   <packaging>bundle</packaging>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>Apache Felix Web Console Service Diagnostics Plugin</name>
 
   <dependencies>
     <dependency>
@@ -27,9 +27,16 @@
       <version>1.0.0</version>
     </dependency>
     <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>2.9.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20090211</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -40,24 +47,44 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <Bundle-Category>osgi</Bundle-Category>
-            <Bundle-SymbolicName>
-              ${project.artifactId}
-            </Bundle-SymbolicName>
+            <Bundle-Category>webconsole</Bundle-Category>
+            <Bundle-SymbolicName> ${project.artifactId} </Bundle-SymbolicName>
             <Bundle-Activator>
               org.apache.felix.servicediagnostics.impl.Activator
             </Bundle-Activator>
             <Export-Package>
-              org.apache.felix.servicediagnostics;version=1.0
+              org.apache.felix.servicediagnostics;version=0.1
             </Export-Package>
+            <Import-Package>
+              sun.misc*;resolution:=optional, *
+            </Import-Package>
             <Private-Package>
               org.apache.felix.servicediagnostics.impl,
               org.apache.felix.servicediagnostics.webconsole
             </Private-Package>
             <Include-Resource>
-              src/main/resources
+              {maven-resources}, json-20090211.jar, scala-library-2.9.1.jar
             </Include-Resource>
+            <Bundle-ClassPath>
+              ., json-20090211.jar, scala-library-2.9.1.jar
+            </Bundle-ClassPath>
           </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>src/**</include>
+          </includes>
+          <excludes>
+            <exclude>src/main/appended-resources/**</exclude>
+            <exclude>src/main/resources/html/js/jquery-1.7.1.min.js</exclude>
+            <exclude>src/main/resources/html/js/raphael-1.3.1.min.js</exclude>
+            <exclude>src/main/resources/html/js/graffle-1.3.1.js</exclude>
+            <exclude>src/main/resources/html/js/graph.js</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
