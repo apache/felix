@@ -29,18 +29,6 @@ How to build the project:
 How to run:
 ===========
 I'm providing a simple run script just to try out the service.
-Unfortunately, org.json and scala-library don't come readily packaged as OSGi bundles, so we need to wrap them ourselves and copy these runtime dependencies into a "lib" directory under the project root:
-lib/json-osgi.jar
-lib/scala-library-osgi.jar
-
-These libraries can be easily created using Bnd:
-> java -jar bnd.jar wrap $HOME/.m2/repository/org/scala-lang/scala-library/2.8.1/scala-library-2.8.1.jar
-> mv scala-library-2.8.1.bar lib/scala-library-osgi.jar
-
-> java -jar bnd.jar wrap $HOME/.m2/repository/org/json/json/20090211/json-20090211.jar
-> mv json-20090211.bar lib/json-osgi.jar
-
-Once this is done, you can simply run:
 > ./run.sh
 
 It should display:

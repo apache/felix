@@ -1,9 +1,9 @@
-This project is using third party javascript library, under core/src/main/resources/html/js
+This project is using third party javascript libraries, under core/src/main/resources/html/js
+- jquery.js
+- raphael.js
 - graffle.js
 - graph.js
-- jquery.js
-- raphael-min.js
 
 In my understanding, these are all MIT licences.
 
-This project also uses org.json, and the scala programming language. (Both need to be wrapped into OSGi bundles, see README file)
+This project also uses and embeds org.json, and the scala programming language. 

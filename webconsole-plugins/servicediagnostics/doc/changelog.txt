@@ -1,0 +1,10 @@
+Initial Release 0.1.0
+---------------------
+
+** Improvement
+    * use different node shapes for bundles, services and missing dependencies
+    * update license information
+
+** Task
+    * [FELIX-3128] - Move Service Diagnostics to Apache Felix
+
