@@ -21,7 +21,6 @@ package org.apache.felix.dm.impl;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -64,13 +63,12 @@ public abstract class AbstractDecorator  {
      * Set some service properties to all already instantiated services.
      */
     public void setServiceProperties(Dictionary serviceProperties) {
-        Map services = new HashMap();
-        synchronized (this) {
-            services.putAll(m_services);
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
         }
-        Iterator i = services.values().iterator();
-        while (i.hasNext()) {
-            ((Component) i.next()).setServiceProperties(serviceProperties);
+        for (int i = 0; i < components.length; i++) {
+            ((Component) components[i]).setServiceProperties(serviceProperties);
         }
     }
     
@@ -78,96 +76,93 @@ public abstract class AbstractDecorator  {
      * Remove a StateListener from all already instantiated services.
      */
     public void addStateListener(ComponentStateListener listener) {
-        Map services = new HashMap();
-        synchronized (this) {
-            services.putAll(m_services);
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
         }
-        Iterator i = services.values().iterator();
-        while (i.hasNext()) {
-            ((Component) i.next()).addStateListener(listener);
-        } 
+        for (int i = 0; i < components.length; i++) {
+            ((Component) components[i]).addStateListener(listener);
+        }
     }
 
     /**
      * Remove a StateListener from all already instantiated services.
      */
     public void removeStateListener(ComponentStateListener listener) {
-        Map services = new HashMap();
-        synchronized (this) {
-            services.putAll(m_services);
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
         }
-        Iterator i = services.values().iterator();
-        while (i.hasNext()) {
-            ((Component) i.next()).removeStateListener(listener);
-        } 
+        for (int i = 0; i < components.length; i++) {
+            ((Component) components[i]).removeStateListener(listener);
+        }
     }
     
     /**
      * Add a Dependency to all already instantiated services.
      */
     public void addDependency(Dependency d) {
-        Map services = new HashMap();
-        synchronized (this) {
-            services.putAll(m_services);
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
         }
-        Iterator i = services.values().iterator();
-        while (i.hasNext()) {
-            ((Component) i.next()).add(d);
-        } 
+        for (int i = 0; i < components.length; i++) {
+            ((Component) components[i]).add(d);
+        }
     }
     
     /**
      * Add a Dependency to all already instantiated services.
      */
     public void addDependencies(List dependencies) {
-        Map services = new HashMap();
-        synchronized (this) {
-            services.putAll(m_services);
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
         }
-        Iterator i = services.values().iterator();
-        while (i.hasNext()) {
-            ((Component) i.next()).add(dependencies);
-        } 
+        for (int i = 0; i < components.length; i++) {
+            ((Component) components[i]).add(dependencies);
+        }
     }
 
     /**
      * Remove a Dependency from all instantiated services.
      */
     public void removeDependency(Dependency d) {
-        Map services = new HashMap();
-        synchronized (this) {
-            services.putAll(m_services);
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
         }
-        Iterator i = services.values().iterator();
-        while (i.hasNext()) {
-            ((Component) i.next()).remove(d);
-        } 
+        for (int i = 0; i < components.length; i++) {
+            ((Component) components[i]).remove(d);
+        }
     }
     
     // callbacks for FactoryConfigurationAdapterImpl
     public void updated(String pid, Dictionary properties) throws ConfigurationException {
         try {
             Component service;
-            synchronized (this) {
+            synchronized (m_services) {
                 service = (Component) m_services.get(pid);
             }
             if (service == null) { 
                 service = createService(new Object[] { properties });
-                synchronized (this) {
+                synchronized (m_services) {
                     m_services.put(pid, service);
                 }
                 m_manager.add(service);
-            } else {
+            }
+            else {
                 updateService(new Object[] { properties, service });
             }
         }
-        
         catch (Throwable t) {
             if (t instanceof ConfigurationException) {
                 throw (ConfigurationException) t;
-            } else if (t.getCause() instanceof ConfigurationException) {
+            }
+            else if (t.getCause() instanceof ConfigurationException) {
                 throw (ConfigurationException) t.getCause();
-            } else {
+            }
+            else {
                 throw new ConfigurationException(null, "Could not create service for ManagedServiceFactory Pid " + pid, t);
             }
         }
@@ -175,11 +170,10 @@ public abstract class AbstractDecorator  {
 
     public void deleted(String pid) {
         Component service = null;
-        synchronized (this) {
+        synchronized (m_services) {
             service = (Component) m_services.remove(pid);
         }
-        if (service != null)
-        {
+        if (service != null) {
             m_manager.remove(service);
         }
     }
@@ -187,60 +181,79 @@ public abstract class AbstractDecorator  {
     // callbacks for resources
     public void added(URL resource) {
         Component newService = createService(new Object[] { resource });
-        m_services.put(resource, newService);
+        synchronized (m_services) {
+            m_services.put(resource, newService);
+        }
         m_manager.add(newService);
     }
 
     public void removed(URL resource) {
-        Component newService = (Component) m_services.remove(resource);
+        Component newService;
+        synchronized (m_services) {
+            newService = (Component) m_services.remove(resource);
+        }
         if (newService == null) {
             throw new IllegalStateException("Service should not be null here.");
         }
-        else {
-            m_manager.remove(newService);
-        }
+        m_manager.remove(newService);
     }
     
     // callbacks for services
     public void added(ServiceReference ref, Object service) {
         Component newService = createService(new Object[] { ref, service });
-        m_services.put(ref, newService);
+        synchronized (m_services) {
+            m_services.put(ref, newService);
+        }
         m_manager.add(newService);
     }
     
     public void removed(ServiceReference ref, Object service) {
-        Component newService = (Component) m_services.remove(ref);
+        Component newService;
+        synchronized (m_services) {
+            newService = (Component) m_services.remove(ref);
+        }
         if (newService == null) {
             throw new IllegalStateException("Service should not be null here.");
         }
-        else {
-            m_manager.remove(newService);
+        m_manager.remove(newService);
+    }
+    
+    public void swapped(ServiceReference oldRef, Object oldService, ServiceReference newRef, Object newService) {
+        synchronized (m_services) {
+        	Component service = (Component) m_services.remove(oldRef);
+        	m_services.put(newRef, service);
         }
     }
     
     // callbacks for bundles
     public void added(Bundle bundle) {
         Component newService = createService(new Object[] { bundle });
-        m_services.put(bundle, newService);
+        synchronized (m_services) {
+            m_services.put(bundle, newService);
+        }
         m_manager.add(newService);
     }
     
     public void removed(Bundle bundle) {
-        Component newService = (Component) m_services.remove(bundle);
+        Component newService;
+        synchronized (m_services) {
+            newService = (Component) m_services.remove(bundle);
+        }
         if (newService == null) {
             throw new IllegalStateException("Service should not be null here.");
         }
-        else {
-            m_manager.remove(newService);
-        }
+        m_manager.remove(newService);
     }
-    
+      
     public void stop() { 
-        Iterator i = m_services.values().iterator();
-        while (i.hasNext()) {
-            m_manager.remove((Component) i.next());
+        Object[] components;
+        synchronized (m_services) {
+            components = m_services.values().toArray();
+            m_services.clear();
         }
-        m_services.clear();
+        for (int i = 0; i < components.length; i++) {
+            m_manager.remove((Component) components[i]);
+        }
     }    
     
     public void configureAutoConfigState(Component target, Component source) {

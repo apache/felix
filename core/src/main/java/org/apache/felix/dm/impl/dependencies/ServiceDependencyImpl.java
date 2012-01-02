@@ -538,7 +538,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         	// when a changed callback is specified we might not call the added callback just yet
         	if (m_callbackSwapped != null) {
         		handleAspectAwareAdded(dependencyService, reference, service);
-        	} else {
+        	}
+        	else {
         		invoke(dependencyService, reference, service, m_callbackAdded);
         	}
         }
@@ -553,7 +554,6 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 		Integer ranking = ServiceUtil.getRankingAsInteger(reference);
 		Tuple highestRankedService = null;
 		synchronized (m_componentByRank) {
-		    // TODO would be nicer if there was a ServiceUtil method for this...
 			Long originalServiceId = ServiceUtil.getServiceIdAsLong(reference);
 			Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
 			if (componentMap == null) {
@@ -581,11 +581,16 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 		}    	
     }
     
-	private boolean componentIsDependencyManagerFactory(DependencyService dependencyService) {
-	    // TODO review if we can be a bit smarter with these package name checks
-		return dependencyService.getService() != null && dependencyService.getService().getClass().getName().startsWith("org.apache.felix.dm")
-			&& !dependencyService.getService().getClass().getName().startsWith("org.apache.felix.dm.test");
-	}
+    private boolean componentIsDependencyManagerFactory(DependencyService dependencyService) {
+        Object component = dependencyService.getService();
+        if (component != null) {
+            String className = component.getClass().getName();
+            return className.startsWith("org.apache.felix.dm")
+                && !className.startsWith("org.apache.felix.dm.impl.AdapterServiceImpl$AdapterImpl")
+                && !className.startsWith("org.apache.felix.dm.test");
+        }
+        return false;
+    }
     
 	private Tuple swapHighestRankedService(DependencyService dependencyService, Long serviceId, ServiceReference newReference, Object newService, Integer newRanking) {
 		// does a component with a higher ranking exists
@@ -655,7 +660,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         if (removed) {
         	if (m_callbackSwapped != null) {
         		handleAspectAwareRemoved(dependencyService, reference, service);
-        	} else {
+        	}
+        	else {
         		invoke(dependencyService, reference, service, m_callbackRemoved);
         	}
         }

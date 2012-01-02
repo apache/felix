@@ -46,13 +46,22 @@ public class AdapterServiceImpl extends FilterService {
      * @param change
      * @param remove
      */
-    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
+    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove, String swap) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove))
+        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove, swap))
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
-                      .setCallbacks("added", "removed"));
+                      .setCallbacks("added", null, "removed", "swapped"));
+    }	
+	
+    public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
+        super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
+        m_component.setImplementation(new AdapterImpl(adapteeInterface, adapteeFilter, autoConfig, add, change, remove, null))
+                 .add(dm.createServiceDependency()
+                      .setService(adapteeInterface, adapteeFilter)
+                      .setAutoConfig(false)
+                      .setCallbacks("added", null, "removed", "swapped"));
     }
     
     public class AdapterImpl extends AbstractDecorator {
@@ -61,14 +70,16 @@ public class AdapterServiceImpl extends FilterService {
         private final String m_add;
         private final String m_change;
         private final String m_remove;
+        private final String m_swap;
         private final String m_autoConfig;
         
-        public AdapterImpl(Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
+        public AdapterImpl(Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove, String swap) {
             m_adapteeInterface = adapteeInterface;
             m_adapteeFilter = adapteeFilter;
             m_autoConfig = autoConfig;
             m_add = add;
             m_change = change;
+            m_swap = swap;
             m_remove = remove;
         }
         
@@ -95,13 +106,15 @@ public class AdapterServiceImpl extends FilterService {
             List dependencies = m_component.getDependencies();
             dependencies.remove(0);
             ServiceDependency dependency = m_manager.createServiceDependency()
-                 .setService(m_adapteeInterface, ref)
+            	 // create a dependency on both the service id we're adapting and possible aspects for this given service id
+            	 .setService(m_adapteeInterface, "(|(" + Constants.SERVICE_ID + "=" + ref.getProperty(Constants.SERVICE_ID) 
+            			 	+ ")(" + DependencyManager.ASPECT + "=" + ref.getProperty(Constants.SERVICE_ID) + "))")
                  .setRequired(true);
             if (m_autoConfig != null) {
                 dependency.setAutoConfig(m_autoConfig);
             }
-            if (m_add != null || m_change != null || m_remove != null) {
-                dependency.setCallbacks(m_add, m_change, m_remove);
+            if (m_add != null || m_change != null || m_remove != null || m_swap != null) {
+                dependency.setCallbacks(m_add, m_change, m_remove, m_swap);
             }
             
             Component service = m_manager.createComponent()
