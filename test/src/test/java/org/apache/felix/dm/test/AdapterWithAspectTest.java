@@ -24,7 +24,6 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.ServiceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -41,7 +40,9 @@ public class AdapterWithAspectTest extends Base {
             provision(
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            )
+            ) // ,
+//          new VMOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
+//          new TimeoutOption(0)
         );
     }
     
@@ -64,15 +65,15 @@ public class AdapterWithAspectTest extends Base {
             .setImplementation(new ServiceConsumer(e))
             .add(m.createServiceDependency()
                 .setService(AdaptedService.class)
-                .setCallbacks("add", "remove")
+                .setCallbacks("add", null, "remove", "swap")
             );
-        Component adapter = m.createAdapterService(OriginalService.class, null)
+        Component adapter = m.createAdapterService(OriginalService.class, null, "add", null, "remove", "swap")
             .setInterface(AdaptedService.class.getName(), null)
-            .setImplementation(ServiceAdapter.class);
+            .setImplementation(new ServiceAdapter(e,1));
         
-        Component adapter2 = m.createAdapterService(OriginalService.class, null)
+        Component adapter2 = m.createAdapterService(OriginalService.class, null, "add", null, "remove", "swap")
             .setInterface(AdaptedService.class.getName(), null)
-            .setImplementation(ServiceAdapter.class);
+            .setImplementation(new ServiceAdapter(e,2));
         
         Component aspect = m.createAspectService(OriginalService.class, null, 10, null)
             .setImplementation(ServiceAspect.class);
@@ -84,16 +85,20 @@ public class AdapterWithAspectTest extends Base {
         for (int loop = 0; loop < loops; loop++) {
             int offset = stepsInLoop * loop;
             
+            System.out.println("add adapter");
             m.add(adapter);
+            System.out.println("add consumer");
             m.add(consumer);
             e.waitForStep(1 + offset, 5000);
+            System.out.println("add aspect");
             m.add(aspect);
-            // the aspect adapter will appear
-            // the original adapter will disappear
-            e.waitForStep(3 + offset, 5000);
+            // a swap is expected on the adapter
+            e.waitForStep(2 + offset, 5000);
+            System.out.println("add adapter2");
             m.add(adapter2);
             // another aspect adapter will appear
             e.waitForStep(4 + offset, 5000);
+            System.out.println("remove provider");
             m.remove(provider);
             // two times:
             // the aspect adapter will disappear
@@ -103,16 +108,18 @@ public class AdapterWithAspectTest extends Base {
             // TODO the test will fail somewhere here most of the time
             
             e.waitForStep(8 + offset, 5000);
+            System.out.println("remove consumer");
             m.remove(consumer);
             
             // nothing should happen, all consumed services were already gone
-            e.step(9 + offset);
-            
+            System.out.println("add provider");
             m.add(provider);
             // still nothing should happen
-            e.step(10 + offset);
+            System.out.println("remove adapter");
             m.remove(adapter);
+            System.out.println("remove adapter2");
             m.remove(adapter2);
+            System.out.println("remove aspect");
             m.remove(aspect);
         }
         m.remove(provider);
@@ -142,8 +149,12 @@ public class AdapterWithAspectTest extends Base {
     
     public static class ServiceAdapter implements AdaptedService {
         private volatile OriginalService m_originalService;
+		private final Ensure m_ensure;
+		private final int m_nr;
         
-        public ServiceAdapter() {
+        public ServiceAdapter(Ensure e, int nr) {
+			this.m_ensure = e;
+			this.m_nr = nr;
         }
         public void init() {
         }
@@ -155,6 +166,24 @@ public class AdapterWithAspectTest extends Base {
         }
         public void stop() {
         }
+        
+        void add(ServiceReference ref, OriginalService originalService) {
+        	m_originalService = originalService;
+        	m_ensure.step();
+        	System.out.println("adapter" + m_nr + " add: " + originalService);
+        }
+        
+        void remove(ServiceReference ref, OriginalService originalService) {
+        	System.out.println("adapter" + m_nr + " rem: " + originalService);
+        	m_originalService = null;
+        }
+        
+        void swap(ServiceReference oldRef, OriginalService oldService, ServiceReference newRef, OriginalService newService) {
+        	m_originalService = newService;
+        	m_ensure.step();
+        	System.out.println("adapter" + m_nr + " swp: " + newService);
+        }
+        
         @Override
         public String toString() {
             return "Adapter on " + m_originalService;
@@ -196,13 +225,17 @@ public class AdapterWithAspectTest extends Base {
         int counter = 0;
         public void add(ServiceReference ref, AdaptedService service) {
             counter++;
-            System.out.println("add: " + counter + " " + service + " " + ServiceUtil.toString(ref));
+            System.out.println("consumer add: " + counter + " " + service);
             m_ensure.step();
         }
         public void remove(ServiceReference ref, AdaptedService service) {
             counter--;
-            System.out.println("rem: " + counter + " " + service + " " + ServiceUtil.toString(ref));
+            System.out.println("consumer rem: " + counter + " " + service);
             m_ensure.step();
+        }
+        public void swap(ServiceReference oldRef, AdaptedService oldService, ServiceReference newRef, AdaptedService newService) {
+        	System.out.println("consumer swp: " + counter + " " + newService);
+        	m_ensure.step();
         }
         
 //        public void run() {
