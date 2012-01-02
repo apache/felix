@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
@@ -54,7 +55,9 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	private String m_resourceFilter;
 	private URL m_trackedResource;
     private List m_resources = new ArrayList();
+    private List m_resourceProperties = new ArrayList();
     private URL m_resourceInstance;
+    private Dictionary m_resourcePropertiesInstance;
     private boolean m_propagate;
     private Object m_propagateCallbackInstance;
     private String m_propagateCallbackMethod;
@@ -102,9 +105,11 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
                 props = new Properties();
                 props.put(ResourceHandler.URL, m_trackedResource);
 	        }
-	        else if (m_resourceFilter != null) {
-	            props = new Properties();
-	            props.put(ResourceHandler.FILTER, m_resourceFilter);
+	        else { 
+	        	if (m_resourceFilter != null) {
+		            props = new Properties();
+		            props.put(ResourceHandler.FILTER, m_resourceFilter);
+	        	}
 	        }
 	        m_registration = m_context.registerService(ResourceHandler.class.getName(), this, props);
 	    }
@@ -126,11 +131,20 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 	}
 
 	public void added(URL resource) {
+		handleResourceAdded(resource, null);
+	}
+	
+	public void added(URL resource, Dictionary resourceProperties) {
+		handleResourceAdded(resource, resourceProperties);
+	}
+	
+	private void handleResourceAdded(URL resource, Dictionary resourceProperties) {
 	    if (m_trackedResource == null || m_trackedResource.equals(resource)) {
     		long counter;
     		Object[] services;
     		synchronized (this) {
     		    m_resources.add(resource);
+    		    m_resourceProperties.add(resourceProperties);
     			counter = m_resources.size();
     			services = m_services.toArray();
     		}
@@ -139,35 +153,54 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
                 if (counter == 1) {
                     ds.dependencyAvailable(this);
                     if (!isRequired()) {
-                        invokeAdded(ds, resource);
+                        invokeAdded(ds, resource, resourceProperties);
                     }
                 }
                 else {
                     ds.dependencyChanged(this);
-                    invokeAdded(ds, resource);
+                    invokeAdded(ds, resource, resourceProperties);
                 }
             }
 	    }
 	}
-
+	
 	public void changed(URL resource) {
+		handleResourceChanged(resource, null);
+	}
+	
+	public void changed(URL resource, Dictionary resourceProperties) {
+		handleResourceChanged(resource, resourceProperties);
+	}
+
+	private void handleResourceChanged(URL resource, Dictionary resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
             Object[] services;
             synchronized (this) {
+            	// change the resource properties for the resource
+            	m_resourceProperties.set(m_resources.indexOf(resource), resourceProperties);
                 services = m_services.toArray();
             }
             for (int i = 0; i < services.length; i++) {
                 DependencyService ds = (DependencyService) services[i];
-                invokeChanged(ds, resource);
+                invokeChanged(ds, resource, resourceProperties);
             }
         }
 	}
-
+	
 	public void removed(URL resource) {
+		handleResourceRemoved(resource, null);
+	}
+	
+	public void removed(URL resource, Dictionary resourceProperties) {
+		handleResourceRemoved(resource, resourceProperties);
+	}
+
+	public void handleResourceRemoved(URL resource, Dictionary resourceProperties) {
         if (m_trackedResource == null || m_trackedResource.equals(resource)) {
     		long counter;
     		Object[] services;
     		synchronized (this) {
+    			m_resourceProperties.remove(m_resources.indexOf(resource));
     		    m_resources.remove(resource);
     			counter = m_resources.size();
     			services = m_services.toArray();
@@ -177,36 +210,50 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
                 if (counter == 0) {
                     ds.dependencyUnavailable(this);
                     if (!isRequired()) {
-                        invokeRemoved(ds, resource);
+                        invokeRemoved(ds, resource, resourceProperties);
                     }
                 }
                 else {
                     ds.dependencyChanged(this);
-                    invokeRemoved(ds, resource);
+                    invokeRemoved(ds, resource, resourceProperties);
                 }
             }
         }
 	}
 	
-    public void invokeAdded(DependencyService ds, URL serviceInstance) {
-        invoke(ds, serviceInstance, m_callbackAdded);
+    public void invokeAdded(DependencyService ds, URL serviceInstance, Dictionary resourceProperties) {
+        invoke(ds, serviceInstance, resourceProperties, m_callbackAdded);
     }
 
-    public void invokeChanged(DependencyService ds, URL serviceInstance) {
-        invoke(ds, serviceInstance, m_callbackChanged);
+    public void invokeChanged(DependencyService ds, URL serviceInstance, Dictionary resourceProperties) {
+    	invoke(ds, serviceInstance, resourceProperties, m_callbackChanged);
     }
 
-    public void invokeRemoved(DependencyService ds, URL serviceInstance) {
-        invoke(ds, serviceInstance, m_callbackRemoved);
+    public void invokeRemoved(DependencyService ds, URL serviceInstance, Dictionary resourceProperties) {
+    	invoke(ds, serviceInstance, resourceProperties, m_callbackRemoved);
     }
     
-    private void invoke(DependencyService ds, URL serviceInstance, String name) {
-        if (name != null) {
-            ds.invokeCallbackMethod(getCallbackInstances(ds), name,
-                new Class[][] {{ Component.class, URL.class }, { Component.class, Object.class }, { Component.class },  { URL.class }, { Object.class }, {}},
-                new Object[][] {{ ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface(), serviceInstance }, { ds.getServiceInterface() }, { serviceInstance }, { serviceInstance }, {}}
-            );
-        }
+    private void invoke(DependencyService ds, URL serviceInstance, Dictionary resourceProperties, String name) {
+    	if (name != null) {
+	        ds.invokeCallbackMethod(getCallbackInstances(ds), name,
+	                new Class[][] {
+	        				{ Component.class, URL.class, Dictionary.class }, 
+	        				{ Component.class, URL.class },
+	        				{ Component.class },  
+	        				{ URL.class, Dictionary.class }, 
+	        				{ URL.class },
+	        				{ Object.class }, 
+	        				{}},
+	                new Object[][] {
+	        				{ ds.getServiceInterface(), serviceInstance, resourceProperties }, 
+	        				{ ds.getServiceInterface(), serviceInstance }, 
+	        				{ ds.getServiceInterface() }, 
+	        				{ serviceInstance, resourceProperties },
+	        				{ serviceInstance },
+	        				{ serviceInstance }, 
+	        				{}}
+	            );
+    	}
     }
     
     /**
@@ -338,6 +385,17 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
 		m_resourceFilter = resourceFilter;
 		return this;
 	}
+	
+	public ResourceDependency setFilter(String resourceFilter, String resourcePropertiesFilter) {
+        ensureNotActive();
+        m_resourceFilter = resourceFilter;
+		return this;
+	}
+	
+	public void setResourcePropertiesConfigurationMember() {
+		
+	}
+	
     public synchronized boolean isAutoConfig() {
         return m_autoConfig;
     }
@@ -355,6 +413,15 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
         }
     }
     
+    private Dictionary lookupResourceProperties() {
+    	try {
+    		return (Dictionary) m_resourceProperties.get(0);
+    	}
+        catch (IndexOutOfBoundsException e) {
+            return null;
+        }    	
+    }
+    
     public Object getAutoConfigInstance() {
         return lookupResource();
     }
@@ -370,12 +437,14 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     public void invokeAdded(DependencyService service) {
         // we remember these for future reference, needed for required callbacks
         m_resourceInstance = lookupResource();
-        invokeAdded(service, m_resourceInstance);
+        m_resourcePropertiesInstance = lookupResourceProperties();
+        invokeAdded(service, m_resourceInstance, m_resourcePropertiesInstance);
     }
 
     public void invokeRemoved(DependencyService service) {
-        invokeRemoved(service, m_resourceInstance);
+        invokeRemoved(service, m_resourceInstance, m_resourcePropertiesInstance);
         m_resourceInstance = null;
+        m_resourcePropertiesInstance = null;
     }
 
     public ResourceDependency setPropagate(boolean propagate) {
@@ -393,6 +462,7 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     
     public Dictionary getProperties() {
         URL resource = lookupResource();
+        Dictionary resourceProperties = lookupResourceProperties();
         if (resource != null) {
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
@@ -412,6 +482,21 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
                 props.setProperty(ResourceHandler.PATH, resource.getPath());
                 props.setProperty(ResourceHandler.PROTOCOL, resource.getProtocol());
                 props.setProperty(ResourceHandler.PORT, Integer.toString(resource.getPort()));
+                // add the custom resource properties
+                if (resourceProperties != null) {
+                	Enumeration properyKeysEnum = resourceProperties.keys(); 
+                	while (properyKeysEnum.hasMoreElements()) {
+                		String key = (String) properyKeysEnum.nextElement();
+                		if (!key.equals(ResourceHandler.HOST) &&
+                				!key.equals(ResourceHandler.PATH) &&
+                				!key.equals(ResourceHandler.PROTOCOL) &&
+                				!key.equals(ResourceHandler.PORT)) {
+                			props.setProperty(key, resourceProperties.get(key).toString());
+                		} else {
+                			m_logger.log(LogService.LOG_WARNING, "Custom resource property is overlapping with the default resource property for key: " + key);
+                		}
+                	}
+                }
                 return props;
             }
         }
