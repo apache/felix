@@ -18,8 +18,6 @@
  */
 package org.apache.felix.dm;
 
-import java.util.List;
-
 import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -243,7 +241,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
         return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove);
     }
-
+    
     /**
      * Creates a new resource adapter service.
      * 
@@ -258,8 +256,26 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * 
      * @return the resource adapter service
      */
+    public Component createResourceAdapter(String resourceFilter, boolean propagate, Object callbackInstance, String callbackSet, String callbackChanged) {
+        return m_manager.createResourceAdapterService(resourceFilter, propagate, callbackInstance, callbackSet, callbackChanged);
+    }
+    
+    /**
+     * Creates a new resource adapter service.
+     * 
+     * @return the resource adapter service
+     */
     public Component createResourceAdapter(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
-        return m_manager.createResourceAdapterService(resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackChanged);
+        return m_manager.createResourceAdapterService(resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, null, callbackChanged);
+    }
+    
+    /**
+     * Creates a new resource adapter service.
+     * 
+     * @return the resource adapter service
+     */
+    public Component createResourceAdapter(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
+        return m_manager.createResourceAdapterService(resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackSet, callbackChanged);
     }
     
     /**
