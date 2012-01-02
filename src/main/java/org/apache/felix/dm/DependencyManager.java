@@ -391,8 +391,13 @@ public class DependencyManager {
      * @param add name of the callback method to invoke on add
      * @param change name of the callback method to invoke on change
      * @param remove name of the callback method to invoke on remove
+     * @param swap name of the callback method to invoke on swap
      * @return a service that acts as a factory for generating adapters
      */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove, String swap) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove, swap);
+    }
+    
     public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
     }

@@ -243,6 +243,15 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     }
     
     /**
+     * Creates a new adapter service.
+     * @return the adapter service
+     * @see DependencyManager#createAdapterService(Class, String, String, String, String, String)
+     */
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove, String swap) {
+        return m_manager.createAdapterService(serviceInterface, serviceFilter, add, change, remove, swap);
+    }  
+    
+    /**
      * Creates a new resource adapter service.
      * 
      * @return the resource adapter service
