@@ -38,49 +38,50 @@ import org.apache.felix.dm.ResourceDependency;
 public class ResourceAdapterServiceImpl extends FilterService {
     private Object m_callbackInstance = null;
     private String m_callbackChanged = "changed";
+    private String m_callbackAdded = "setResource";
     
     /**
      * Creates a new Resource Adapter Service implementation.
      * @param dm the dependency manager used to create our internal adapter service
      */
-    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
+    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, boolean propagate, Object callbackInstance, String callbackSet, String callbackChanged) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_callbackInstance = callbackInstance;
+        m_callbackAdded = callbackSet;
         m_callbackChanged = callbackChanged;
-        m_component.setImplementation(new ResourceAdapterImpl(resourceFilter, propagate))
+        m_component.setImplementation(new ResourceAdapterImpl(propagate))
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
                  .setAutoConfig(false)
                  .setCallbacks("added", "removed"));
     }
-
-    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
+    
+    public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
         m_callbackInstance = callbackInstance;
+        m_callbackAdded = callbackSet;
         m_callbackChanged = callbackChanged;
-        m_component.setImplementation(new ResourceAdapterImpl(resourceFilter, propagateCallbackInstance, propagateCallbackMethod))
+        m_component.setImplementation(new ResourceAdapterImpl(propagateCallbackInstance, propagateCallbackMethod))
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
                  .setAutoConfig(false)
                  .setCallbacks("added", "removed"));
-    }
+    }   
 
     public class ResourceAdapterImpl extends AbstractDecorator {
-        private final String m_resourceFilter;
         private final boolean m_propagate;
         private final Object m_propagateCallbackInstance;
         private final String m_propagateCallbackMethod;
 
-        public ResourceAdapterImpl(String resourceFilter, boolean propagate) {
-            this(resourceFilter, propagate, null, null);
+        public ResourceAdapterImpl(boolean propagate) {
+            this(propagate, null, null);
         }
 
-        public ResourceAdapterImpl(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod) {
-            this(resourceFilter, true, propagateCallbackInstance, propagateCallbackMethod);
+        public ResourceAdapterImpl(Object propagateCallbackInstance, String propagateCallbackMethod) {
+            this(true, propagateCallbackInstance, propagateCallbackMethod);
         }
         
-        private ResourceAdapterImpl(String resourceFilter, boolean propagate, Object propagateCallbackInstance, String propagateCallbackMethod) {
-            m_resourceFilter = resourceFilter;
+        private ResourceAdapterImpl(boolean propagate, Object propagateCallbackInstance, String propagateCallbackMethod) {
             m_propagate = propagate;
             m_propagateCallbackInstance = propagateCallbackInstance;
             m_propagateCallbackMethod = propagateCallbackMethod;
@@ -102,8 +103,8 @@ public class ResourceAdapterServiceImpl extends FilterService {
             dependencies.remove(0);
             ResourceDependency resourceDependency = m_manager.createResourceDependency()
                  .setResource(resource)
-                 .setCallbacks(m_callbackInstance, null, m_callbackChanged, null)
-                 .setAutoConfig(true)
+                 .setCallbacks(m_callbackInstance, m_callbackAdded, m_callbackChanged, null)
+                 .setAutoConfig(m_callbackAdded == null)
                  .setRequired(true);
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 resourceDependency.setPropagate(m_propagateCallbackInstance, m_propagateCallbackMethod);

@@ -417,6 +417,7 @@ public class DependencyManager {
      * </pre></blockquote>
      *
      * @param resourceFilter the filter condition to use with the resource
+     * @param resourcePropertiesFilter the filter condition on the resource properties to use with the resource
      * @param propagate <code>true</code> if properties from the resource should be propagated to the service
      * @param callbackInstance 
      * @param callbackChanged 
@@ -424,11 +425,19 @@ public class DependencyManager {
      * @see Resource
      */
     public Component createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance, String callbackChanged) {
-        return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, callbackChanged);
+        return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, null, callbackChanged);
+    }
+    
+    public Component createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance, String callbackSet, String callbackChanged) {
+        return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, callbackSet, callbackChanged);
     }
     
     public Component createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
-        return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackChanged);
+    	return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, null, callbackChanged);
+    }
+    
+    public Component createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
+        return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackSet, callbackChanged);
     }
     
     /**
