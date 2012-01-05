@@ -89,7 +89,10 @@ public final class JettyConfig
     public static final String FELIX_JETTY_RESPONSE_BUFFER_SIZE = "org.apache.felix.http.jetty.responseBufferSize";
 
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
-    public static final String  FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
+    public static final String FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
+
+    /** Felix specific property to set the servlet context path of the Http Service */
+    public static final String FELIX_HTTP_CONTEXT_PATH = "org.apache.felix.http.context_path";
 
     private final BundleContext context;
     private boolean debug;
@@ -112,6 +115,7 @@ public final class JettyConfig
     private int headerBufferSize;
     private int requestBufferSize;
     private int responseBufferSize;
+    private String contextPath;
 
     /**
      * Properties from the configuration not matching any of the
@@ -243,6 +247,11 @@ public final class JettyConfig
         return this.responseBufferSize;
     }
 
+    public String getContextPath()
+    {
+        return contextPath;
+    }
+
     public void reset()
     {
         update(null);
@@ -274,6 +283,7 @@ public final class JettyConfig
         this.headerBufferSize = getIntProperty(FELIX_JETTY_HEADER_BUFFER_SIZE, 16 * 1024);
         this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 014);
         this.responseBufferSize = getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
+        this.contextPath = validateContextPath(getProperty(props, FELIX_HTTP_CONTEXT_PATH, null));
 
         // copy rest of the properties
         Enumeration keys = props.keys();
@@ -313,6 +323,27 @@ public final class JettyConfig
         } catch (Exception e) {
             return defValue;
         }
+    }
+
+    private static String validateContextPath(String ctxPath)
+    {
+        // undefined, empty, or root context path
+        if (ctxPath == null || ctxPath.length() == 0 || "/".equals(ctxPath))
+        {
+            return "/";
+        }
+
+        // ensure leading but no trailing slash
+        if (!ctxPath.startsWith("/"))
+        {
+            ctxPath = "/".concat(ctxPath);
+        }
+        while (ctxPath.endsWith("/"))
+        {
+            ctxPath = ctxPath.substring(0, ctxPath.length() - 1);
+        }
+
+        return ctxPath;
     }
 
     /**
