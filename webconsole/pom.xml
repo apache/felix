@@ -81,14 +81,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Allow certain Java 5 features, generate Java 1.4 class files -->
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>5</source>
-                    <target>jsr14</target>
-                </configuration>
-            </plugin>
             <!-- Make sure to not use non Java 1.4 API -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -129,6 +121,9 @@
                         <Bundle-Activator>
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
                         </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.felix.webconsole;version=3.1.2;provide:=true
+                        </Export-Package>
                         <Import-Package>
                             org.osgi.service.metatype;resolution:=optional,
                             javax.servlet.*;version=2.4,
@@ -274,14 +269,6 @@
             <version>1.6.0</version>
             <scope>provided</scope>
             <optional>true</optional>
-        </dependency>
-        
-        <!-- BND annotations -->
-        <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
-            <version>1.50.0</version>
-            <scope>provided</scope>
         </dependency>
         
     </dependencies>

@@ -51,7 +51,6 @@ import org.osgi.framework.Bundle;
  *
  * TODO: add support for 'Bundle-License' manifest header
  */
-@SuppressWarnings("serial")
 public final class LicenseServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     // common names (without extension) of the license files.
@@ -192,13 +191,12 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
 
         for ( int i = 0; i < patterns.length; i++ )
         {
-            @SuppressWarnings("unchecked")
-            Enumeration<URL> entries = bundle.findEntries( "/", patterns[i] + "*", true );
+            Enumeration entries = bundle.findEntries( "/", patterns[i] + "*", true );
             if ( entries != null )
             {
                 while ( entries.hasMoreElements() )
                 {
-                    URL url = entries.nextElement();
+                    URL url = ( URL ) entries.nextElement();
                     JSONObject entry = new JSONObject();
                     entry.put( "path", url.getPath() );
                     entry.put( "url", getName( url.getPath() ) );
@@ -207,13 +205,12 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
             }
         }
 
-        @SuppressWarnings("unchecked")
-        Enumeration<URL> entries = bundle.findEntries( "/", "*.jar", true );
+        Enumeration entries = bundle.findEntries( "/", "*.jar", true );
         if ( entries != null )
         {
             while ( entries.hasMoreElements() )
             {
-                URL url = entries.nextElement();
+                URL url = ( URL ) entries.nextElement();
                 final String resName = getName( url.getPath() );
 
                 InputStream ins = null;

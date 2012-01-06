@@ -22,6 +22,7 @@ package org.apache.felix.webconsole;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
@@ -56,7 +57,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
     private ServiceRegistration reg;
 
     // used to obtain services. Structure is: service name -> ServiceTracker
-    private final Map<String, ServiceTracker> services = new HashMap<String, ServiceTracker>();
+    private final Map services = new HashMap();
 
 
     /**
@@ -150,7 +151,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
         {
             activate( bc ); // don't know why this is needed!
 
-            Hashtable<String, String> props = new Hashtable<String, String>();
+            Hashtable props = new Hashtable();
             props.put( WebConsoleConstants.PLUGIN_LABEL, label );
             props.put( WebConsoleConstants.PLUGIN_TITLE, title );
             reg = bc.registerService( "javax.servlet.Servlet", this, props ); //$NON-NLS-1$
@@ -189,7 +190,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      */
     public final Object getService( String serviceName )
     {
-        ServiceTracker serviceTracker = services.get( serviceName );
+        ServiceTracker serviceTracker = ( ServiceTracker ) services.get( serviceName );
         if ( serviceTracker == null )
         {
             serviceTracker = new ServiceTracker( getBundleContext(), serviceName, null );
@@ -211,11 +212,12 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      */
     public void deactivate()
     {
-        for ( ServiceTracker tracker : services.values() )
+        for ( Iterator ti = services.values().iterator(); ti.hasNext(); )
         {
+            ServiceTracker tracker = ( ServiceTracker ) ti.next();
             tracker.close();
+            ti.remove();
         }
-        services.clear();
         super.deactivate();
     }
 

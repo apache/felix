@@ -61,8 +61,7 @@ class ConfigurationSupport implements ManagedService, MetaTypeProvider
 
     //---------- ManagedService
 
-    @SuppressWarnings("unchecked")
-    public void updated( @SuppressWarnings("rawtypes") Dictionary config )
+    public void updated( Dictionary config )
     {
         osgiManager.updateConfiguration( config );
     }
@@ -108,10 +107,10 @@ class ConfigurationSupport implements ManagedService, MetaTypeProvider
         ObjectClassDefinition xocd = null;
         final Locale localeObj = Util.parseLocaleString(locale);
         final ResourceBundle rb = osgiManager.resourceBundleManager.getResourceBundle(osgiManager.getBundleContext().getBundle(), localeObj);
-        final Map<String, ?> defaultConfig = osgiManager.getDefaultConfiguration();
+        final Map defaultConfig = osgiManager.getDefaultConfiguration();
 
         // simple configuration properties
-        final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
+        final ArrayList adList = new ArrayList();
         for (int i = 0; i < CONF_PROPS.length; i++)
         {
             final String key = CONF_PROPS[i++];
@@ -139,7 +138,7 @@ class ConfigurationSupport implements ManagedService, MetaTypeProvider
             new String[] { "4", "3", "2", "1" } ) ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         // list plugins - requires localized plugin titles
-        final TreeMap<String, String> namesByClassName = new TreeMap<String, String>();
+        final TreeMap namesByClassName = new TreeMap();
         final String[] defaultPluginsClasses = OsgiManager.PLUGIN_MAP;
         for ( int i = 0; i < defaultPluginsClasses.length; i++ )
         {
@@ -148,9 +147,8 @@ class ConfigurationSupport implements ManagedService, MetaTypeProvider
             final String name = getString(rb, label + ".pluginTitle", label); //$NON-NLS-1$
             namesByClassName.put(clazz, name);
         }
-        final String[] classes = namesByClassName.keySet().toArray(
-            new String[namesByClassName.size()] );
-        final String[] names = namesByClassName.values().toArray( new String[namesByClassName.size()] );
+        final String[] classes = ( String[] ) namesByClassName.keySet().toArray( new String[namesByClassName.size()] );
+        final String[] names = ( String[] ) namesByClassName.values().toArray( new String[namesByClassName.size()] );
 
         adList.add( new AttributeDefinitionImpl( OsgiManager.PROP_ENABLED_PLUGINS,
             getString(rb, "metadata.plugins.name", OsgiManager.PROP_ENABLED_PLUGINS), //$NON-NLS-1$
@@ -160,7 +158,7 @@ class ConfigurationSupport implements ManagedService, MetaTypeProvider
         xocd = new ObjectClassDefinition()
         {
 
-            private final AttributeDefinition[] attrs = adList
+            private final AttributeDefinition[] attrs = ( AttributeDefinition[] ) adList
                 .toArray( new AttributeDefinition[adList.size()] );
 
 

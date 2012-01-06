@@ -48,9 +48,9 @@ class CombinedResourceBundle extends ResourceBundle
     }
 
 
-    public Enumeration<String> getKeys()
+    public Enumeration getKeys()
     {
-        return new CombinedEnumeration<String>( resourceBundle.getKeys(), defaultResourceBundle.getKeys() );
+        return new CombinedEnumeration( resourceBundle.getKeys(), defaultResourceBundle.getKeys() );
     }
 
 

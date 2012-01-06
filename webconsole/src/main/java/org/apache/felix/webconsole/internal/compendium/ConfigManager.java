@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -64,7 +65,6 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 /**
  * The <code>ConfigManager</code> TODO
  */
-@SuppressWarnings("serial")
 public class ConfigManager extends ConfigManagerBase
 {
     private static final String LABEL = "configMgr"; // was name
@@ -286,10 +286,11 @@ public class ConfigManager extends ConfigManagerBase
             try
             {
                 pw.write( "[" );
-                final Map<String, String> services = this.getServices( pid, pidFilter, locale, false );
+                final Map services = this.getServices( pid, pidFilter, locale, false );
                 boolean printColon = false;
-                for ( final String servicePid : services.keySet() )
+                for ( Iterator spi = services.keySet().iterator(); spi.hasNext(); )
                 {
+                    final String servicePid = ( String ) spi.next();
                     final Configuration config = getConfiguration( ca, servicePid );
                     if ( config != null )
                     {
@@ -438,12 +439,13 @@ public class ConfigManager extends ConfigManagerBase
     {
         try
         {
-            Map<String, String> optionsFactory = getServices(ManagedServiceFactory.class.getName(),
+            Map optionsFactory = getServices(ManagedServiceFactory.class.getName(),
                 pidFilter, locale, true);
             addMetaTypeNames(optionsFactory, getFactoryPidObjectClasses(locale),
                 pidFilter, ConfigurationAdmin.SERVICE_FACTORYPID);
-            for ( String id : optionsFactory.keySet() )
+            for ( Iterator ii = optionsFactory.keySet().iterator(); ii.hasNext(); )
             {
+                String id = ( String ) ii.next();
                 Object name = optionsFactory.get( id );
                 json.append( "fpids", new JSONObject().put( "id", id ).put( "name", name ) );
             }
@@ -460,7 +462,7 @@ public class ConfigManager extends ConfigManagerBase
         try
         {
             // start with ManagedService instances
-            Map<String, String> optionsPlain = getServices(ManagedService.class.getName(), pidFilter,
+            Map optionsPlain = getServices(ManagedService.class.getName(), pidFilter,
                 locale, true);
 
             // next are the MetaType informations without ManagedService
@@ -504,8 +506,9 @@ public class ConfigManager extends ConfigManagerBase
                 }
             }
 
-            for ( String id : optionsPlain.keySet() )
+            for ( Iterator ii = optionsPlain.keySet().iterator(); ii.hasNext(); )
             {
+                String id = ( String ) ii.next();
                 Object name = optionsPlain.get( id );
 
                 final Configuration config = getConfiguration( ca, id );
@@ -554,11 +557,11 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private SortedMap<String, String> getServices( String serviceClass, String serviceFilter, String locale,
+    private SortedMap getServices( String serviceClass, String serviceFilter, String locale,
         boolean ocdRequired ) throws InvalidSyntaxException
     {
         // sorted map of options
-        SortedMap<String, String> optionsFactory = new TreeMap<String, String>( String.CASE_INSENSITIVE_ORDER );
+        SortedMap optionsFactory = new TreeMap( String.CASE_INSENSITIVE_ORDER );
 
         // find all ManagedServiceFactories to get the factoryPIDs
         ServiceReference[] refs = this.getBundleContext().getServiceReferences( serviceClass, serviceFilter );
@@ -590,7 +593,7 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private void addMetaTypeNames( final Map<String, String> pidMap, final Map<String, ObjectClassDefinition> ocdCollection, final String filterSpec, final String type )
+    private void addMetaTypeNames( final Map pidMap, final Map ocdCollection, final String filterSpec, final String type )
     {
         Filter filter = null;
         if ( filterSpec != null )
@@ -605,17 +608,18 @@ public class ConfigManager extends ConfigManagerBase
             }
         }
 
-        for ( Entry<String, ObjectClassDefinition> ociEntry : ocdCollection.entrySet() )
+        for ( Iterator ei = ocdCollection.entrySet().iterator(); ei.hasNext(); )
         {
-            final String pid = ociEntry.getKey();
-            final ObjectClassDefinition ocd = ociEntry.getValue();
+            Entry ociEntry = ( Entry ) ei.next();
+            final String pid = ( String ) ociEntry.getKey();
+            final ObjectClassDefinition ocd = ( ObjectClassDefinition ) ociEntry.getValue();
             if ( filter == null )
             {
                 pidMap.put( pid, ocd.getName() );
             }
             else
             {
-                final Dictionary<String, String> props = new Hashtable<String, String>();
+                final Dictionary props = new Hashtable();
                 props.put( type, pid );
                 if ( filter.match( props ) )
                 {
@@ -649,7 +653,6 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    @SuppressWarnings("unchecked")
     private void configForm( JSONWriter json, String pid, Configuration config, String pidFilter, String locale )
         throws JSONException
     {
@@ -663,7 +666,7 @@ public class ConfigManager extends ConfigManagerBase
             json.value( pidFilter );
         }
 
-        Dictionary<String, ?> props = null;
+        Dictionary props = null;
         ObjectClassDefinition ocd;
         if ( config != null )
         {
@@ -677,7 +680,7 @@ public class ConfigManager extends ConfigManagerBase
 
         if ( props == null )
         {
-            props = new Hashtable<String, Object>();
+            props = new Hashtable();
         }
 
         if ( ocd != null )
@@ -693,9 +696,9 @@ public class ConfigManager extends ConfigManagerBase
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
             json.key( "properties" ).object();
-            for ( Enumeration<String> pe = props.keys(); pe.hasMoreElements(); )
+            for ( Enumeration pe = props.keys(); pe.hasMoreElements(); )
             {
-                final String id = pe.nextElement();
+                final String id = ( String ) pe.nextElement();
 
                 // ignore well known special properties
                 if ( !id.equals( Constants.SERVICE_PID ) && !id.equals( Constants.SERVICE_DESCRIPTION )
@@ -719,7 +722,7 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private void mergeWithMetaType( Dictionary<String, ?> props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
+    private void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
     {
         json.key( "title" ).value( ocd.getName() );
 
@@ -732,8 +735,9 @@ public class ConfigManager extends ConfigManagerBase
         if ( ad != null )
         {
             json.key( "properties" ).object();
-            for ( AttributeDefinition adi : ad )
+            for ( int i = 0; i < ad.length; i++ )
             {
+                final AttributeDefinition adi = ad[i];
                 final String attrId = adi.getID();
                 json.key( attrId );
                 attributeToJson( json, adi, props.get( attrId ) );
@@ -769,8 +773,7 @@ public class ConfigManager extends ConfigManagerBase
             }
             else
             {
-                @SuppressWarnings("unchecked")
-                Dictionary<String, ?> headers = bundle.getHeaders( locale );
+                Dictionary headers = bundle.getHeaders( locale );
                 String name = ( String ) headers.get( Constants.BUNDLE_NAME );
                 if ( name == null )
                 {
@@ -839,19 +842,18 @@ public class ConfigManager extends ConfigManagerBase
         {
             config = getConfiguration( ca, pid, factoryPid );
 
-            @SuppressWarnings("unchecked")
-            Dictionary<String, Object> props = config.getProperties();
+            Dictionary props = config.getProperties();
             if ( props == null )
             {
-                props = new Hashtable<String, Object>();
+                props = new Hashtable();
             }
 
-            Map<String, AttributeDefinition> adMap = this.getAttributeDefinitionMap( config, null );
+            Map adMap = this.getAttributeDefinitionMap( config, null );
             StringTokenizer propTokens = new StringTokenizer( propertyList, "," );
             while ( propTokens.hasMoreTokens() )
             {
                 String propName = propTokens.nextToken();
-                AttributeDefinition ad = adMap.get( propName );
+                AttributeDefinition ad = (AttributeDefinition) adMap.get( propName );
 
                 // try to derive from current value
                 if (ad == null) {
@@ -890,7 +892,7 @@ public class ConfigManager extends ConfigManagerBase
                 else
                 {
                     // array or vector of any type
-                    Vector<Object> vec = new Vector<Object>();
+                    Vector vec = new Vector();
 
                     String[] properties = request.getParameterValues( propName );
                     if ( properties != null )
@@ -1019,7 +1021,7 @@ public class ConfigManager extends ConfigManagerBase
             }
             else if ( value instanceof Vector )
             {
-                value = ( ( Vector<?> ) value ).get( 0 );
+                value = ( ( Vector ) value ).get( 0 );
             }
             else if ( value.getClass().isArray() )
             {
@@ -1057,7 +1059,7 @@ public class ConfigManager extends ConfigManagerBase
     {
         int attrType;
         int attrCardinality;
-        Class<?> type;
+        Class type;
 
         if ( value == null )
         {
@@ -1067,7 +1069,7 @@ public class ConfigManager extends ConfigManagerBase
         else if ( value instanceof Collection )
         {
             attrCardinality = Integer.MIN_VALUE;
-            Collection<?> coll = ( Collection<?> ) value;
+            Collection coll = ( Collection ) value;
             if ( coll.isEmpty() )
             {
                 type = String.class;
@@ -1172,11 +1174,11 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private static List<?> toList( Object value )
+    private static List toList( Object value )
     {
         if ( value instanceof Vector )
         {
-            return ( Vector<?> ) value;
+            return ( Vector ) value;
         }
         else if ( value.getClass().isArray() )
         {
@@ -1199,9 +1201,9 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private static void setPasswordProps( final Vector<Object> vec, final String[] properties, Object props )
+    private static void setPasswordProps( final Vector vec, final String[] properties, Object props )
     {
-        List<?> propList = toList( props );
+        List propList = toList( props );
         for ( int i = 0; i < properties.length; i++ )
         {
             if ( PASSWORD_PLACEHOLDER_VALUE.equals( properties[i] ) )
@@ -1219,7 +1221,7 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private static final Object toArray( int type, Vector<?> values )
+    private static final Object toArray( int type, Vector values )
     {
         int size = values.size();
 
@@ -1306,7 +1308,6 @@ public class ConfigManager extends ConfigManagerBase
         }
 
 
-        @SuppressWarnings("rawtypes")
         public Dictionary getProperties()
         {
             // dummy configuration has no properties
@@ -1320,7 +1321,7 @@ public class ConfigManager extends ConfigManagerBase
         }
 
 
-        public void update( @SuppressWarnings("rawtypes") Dictionary properties )
+        public void update( Dictionary properties )
         {
             // dummy configuration cannot be updated
         }

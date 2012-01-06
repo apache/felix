@@ -39,7 +39,6 @@ import org.osgi.service.log.LogService;
 /**
  * LogServlet provides support for reading the log messages.
  */
-@SuppressWarnings("serial")
 public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     private static final String LABEL = "logs";
@@ -95,7 +94,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
             if ( logReaderService != null )
             {
                 int index = 0;
-                for ( Enumeration<?> logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
+                for ( Enumeration logEntries = logReaderService.getLog(); logEntries.hasMoreElements()
                     && index < MAX_LOGS; )
                 {
                     LogEntry nextLog = ( LogEntry ) logEntries.nextElement();

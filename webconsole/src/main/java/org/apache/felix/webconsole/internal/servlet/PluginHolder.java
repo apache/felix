@@ -57,7 +57,7 @@ class PluginHolder implements ServiceListener
     private final BundleContext bundleContext;
 
     // registered plugins (Map<String label, Plugin plugin>)
-    private final Map<String, Plugin> plugins;
+    private final Map plugins;
 
     // The servlet context used to initialize plugin services
     private ServletContext servletContext;
@@ -69,7 +69,7 @@ class PluginHolder implements ServiceListener
     PluginHolder( final BundleContext context )
     {
         this.bundleContext = context;
-        this.plugins = new HashMap<String, Plugin>();
+        this.plugins = new HashMap();
     }
 
 
@@ -197,7 +197,7 @@ class PluginHolder implements ServiceListener
             final Plugin plugin;
             synchronized ( plugins )
             {
-                plugin = plugins.get( label );
+                plugin = ( Plugin ) plugins.get( label );
             }
 
             if ( plugin != null )
@@ -232,9 +232,9 @@ class PluginHolder implements ServiceListener
      *
      * @return The localized map of labels to titles
      */
-    Map<String, String> getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
+    Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
     {
-        final Map<String, String> map = new HashMap<String, String>();
+        final Map map = new HashMap();
         Plugin[] plugins = getPlugins();
         for ( int i = 0; i < plugins.length; i++ )
         {
@@ -386,7 +386,7 @@ class PluginHolder implements ServiceListener
         final Plugin oldPlugin;
         synchronized ( plugins )
         {
-            oldPlugin = plugins.remove( label );
+            oldPlugin = ( Plugin ) plugins.remove( label );
         }
 
         if ( oldPlugin != null )
@@ -400,7 +400,7 @@ class PluginHolder implements ServiceListener
     {
         synchronized ( plugins )
         {
-            return plugins.values().toArray( new Plugin[plugins.size()] );
+            return ( Plugin[] ) plugins.values().toArray( new Plugin[plugins.size()] );
         }
     }
 
@@ -562,7 +562,7 @@ class PluginHolder implements ServiceListener
         }
 
 
-        protected void doUngetConsolePlugin( @SuppressWarnings("unused") AbstractWebConsolePlugin consolePlugin )
+        protected void doUngetConsolePlugin( AbstractWebConsolePlugin consolePlugin )
         {
         }
 
@@ -575,9 +575,9 @@ class PluginHolder implements ServiceListener
         }
 
 
-        public Enumeration<String> getInitParameterNames()
+        public Enumeration getInitParameterNames()
         {
-            return new Enumeration<String>()
+            return new Enumeration()
             {
                 public boolean hasMoreElements()
                 {
@@ -585,7 +585,7 @@ class PluginHolder implements ServiceListener
                 }
 
 
-                public String nextElement()
+                public Object nextElement()
                 {
                     throw new NoSuchElementException();
                 }
@@ -682,10 +682,10 @@ class PluginHolder implements ServiceListener
         }
 
 
-        public Enumeration<String> getInitParameterNames()
+        public Enumeration getInitParameterNames()
         {
             final String[] keys = serviceReference.getPropertyKeys();
-            return new Enumeration<String>()
+            return new Enumeration()
             {
                 int idx = 0;
 
@@ -696,7 +696,7 @@ class PluginHolder implements ServiceListener
                 }
 
 
-                public String nextElement()
+                public Object nextElement()
                 {
                     if ( hasMoreElements() )
                     {
@@ -744,7 +744,7 @@ class PluginHolder implements ServiceListener
 
                 try
                 {
-                    Class<?> pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
+                    Class pluginClass = getClass().getClassLoader().loadClass(pluginClassName);
                     plugin = (AbstractWebConsolePlugin) pluginClass.newInstance();
 
                     if (plugin instanceof OsgiManagerPlugin)

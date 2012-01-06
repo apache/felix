@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import junit.framework.TestCase;
 
 
-@SuppressWarnings("serial")
 public class AbstractWebConsolePluginTest extends TestCase
 {
 
@@ -40,7 +39,7 @@ public class AbstractWebConsolePluginTest extends TestCase
         super.setUp();
 
         getGetResourceMethod = AbstractWebConsolePlugin.class.getDeclaredMethod( "getGetResourceMethod",
-            ( Class<?>[] ) null );
+            ( Class[] ) null );
         getGetResourceMethod.setAccessible( true );
     }
 
@@ -123,7 +122,6 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class PrivateTestPlugin extends TestPlugin
     {
-        @SuppressWarnings("unused")
         private URL getResource( String name )
         {
             return null;
@@ -132,7 +130,6 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class ProtectedTestPlugin extends TestPlugin
     {
-        @SuppressWarnings("unused")
         protected URL getResource( String name )
         {
             return null;
@@ -141,7 +138,6 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class PackageTestPlugin extends TestPlugin
     {
-        @SuppressWarnings("unused")
         URL getResource( String name )
         {
             return null;
@@ -150,7 +146,6 @@ public class AbstractWebConsolePluginTest extends TestCase
 
     private static class PublicTestPlugin extends TestPlugin
     {
-        @SuppressWarnings("unused")
         public URL getResource( String name )
         {
             return null;

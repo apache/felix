@@ -196,7 +196,7 @@ public class OsgiManager extends GenericServlet
 
     // list of OsgiManagerPlugin instances activated during init. All these
     // instances will have to be deactivated during destroy
-    private List<OsgiManagerPlugin> osgiManagerPlugins = new ArrayList<OsgiManagerPlugin>();
+    private List osgiManagerPlugins = new ArrayList();
 
     private String webManagerRoot;
 
@@ -207,21 +207,20 @@ public class OsgiManager extends GenericServlet
     private boolean httpResourcesRegistered;
 
     // default configuration from framework properties
-    private HashMap<String, Object> defaultConfiguration;
+    private HashMap defaultConfiguration;
 
     // configuration from Configuration Admin
-    private HashMap<String, ?> configuration;
+    private HashMap configuration;
 
     // See https://issues.apache.org/jira/browse/FELIX-2267
     private Locale configuredLocale;
 
-    private Set<String> enabledPlugins;
+    private Set enabledPlugins;
 
     ResourceBundleManager resourceBundleManager;
 
     private int logLevel = DEFAULT_LOG_LEVEL;
 
-    @SuppressWarnings("serial")
     public OsgiManager(BundleContext bundleContext)
     {
         this.bundleContext = bundleContext;
@@ -243,13 +242,13 @@ public class OsgiManager extends GenericServlet
 
             try
             {
-                Class<?> pluginClass = classLoader.loadClass(pluginClassName);
+                Class pluginClass = classLoader.loadClass(pluginClassName);
                 Object plugin = pluginClass.newInstance();
 
                 if (plugin instanceof OsgiManagerPlugin)
                 {
                     ((OsgiManagerPlugin) plugin).activate(bundleContext);
-                    osgiManagerPlugins.add((OsgiManagerPlugin) plugin);
+                    osgiManagerPlugins.add(plugin);
                 }
                 if (plugin instanceof BrandingPlugin)
                 {
@@ -301,7 +300,7 @@ public class OsgiManager extends GenericServlet
         securityProviderTracker.open();
 
         // load the default configuration from the framework
-        this.defaultConfiguration = new HashMap<String, Object>();
+        this.defaultConfiguration = new HashMap();
         this.defaultConfiguration.put( PROP_MANAGER_ROOT,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_MANAGER_ROOT, DEFAULT_MANAGER_ROOT ) );
         this.defaultConfiguration.put( PROP_REALM,
@@ -311,7 +310,7 @@ public class OsgiManager extends GenericServlet
         this.defaultConfiguration.put( PROP_PASSWORD,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_PASSWORD, DEFAULT_PASSWORD ) );
         this.defaultConfiguration.put( PROP_LOG_LEVEL,
-            ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL) );
+            new Integer( ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOG_LEVEL, DEFAULT_LOG_LEVEL ) ) );
         this.defaultConfiguration.put( PROP_LOCALE,
             ConfigurationUtil.getProperty( bundleContext, FRAMEWORK_PROP_LOCALE, null ) );
 
@@ -332,7 +331,7 @@ public class OsgiManager extends GenericServlet
                 {
                     // do nothing
                 }
-            }, new Hashtable<String, String>()
+            }, new Hashtable()
             {
                 {
                     put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" ); //$NON-NLS-1$
@@ -362,9 +361,10 @@ public class OsgiManager extends GenericServlet
         }
 
         // deactivate any remaining plugins
-        for ( Iterator<OsgiManagerPlugin> pi = osgiManagerPlugins.iterator(); pi.hasNext(); )
+        for (Iterator pi = osgiManagerPlugins.iterator(); pi.hasNext();)
         {
-            pi.next().deactivate();
+            Object plugin = pi.next();
+            ((OsgiManagerPlugin) plugin).deactivate();
         }
 
         // simply remove all operations, we should not be used anymore
@@ -450,7 +450,8 @@ public class OsgiManager extends GenericServlet
         AbstractWebConsolePlugin plugin = getConsolePlugin(label);
         if (plugin != null)
         {
-            final Map<String, String> labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale );
+            final Map labelMap = holder.getLocalizedLabelMap(resourceBundleManager,
+                locale);
 
             // the official request attributes
             request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
@@ -775,7 +776,7 @@ public class OsgiManager extends GenericServlet
             return;
         }
 
-        Map<String, ?> config = getConfiguration();
+        Map config = getConfiguration();
 
         // get authentication details
         String realm = ConfigurationUtil.getProperty(config, PROP_REALM, DEFAULT_REALM);
@@ -788,7 +789,7 @@ public class OsgiManager extends GenericServlet
             HttpContext httpContext = new OsgiManagerHttpContext(httpService,
                 securityProviderTracker, userId, password, realm);
 
-            Dictionary<String, String> servletConfig = toStringConfig(config);
+            Dictionary servletConfig = toStringConfig(config);
 
             // register this servlet and take note of this
             httpService.registerServlet(this.webManagerRoot, this, servletConfig,
@@ -850,27 +851,28 @@ public class OsgiManager extends GenericServlet
         }
     }
 
-    private Map<String, ?> getConfiguration()
+
+    private Map getConfiguration()
     {
         return configuration;
     }
 
 
-    Map<String, ?> getDefaultConfiguration()
+    Map getDefaultConfiguration()
     {
         return defaultConfiguration;
     }
 
 
-    synchronized void updateConfiguration(Dictionary<String, ?> osgiConfig)
+    synchronized void updateConfiguration( Dictionary osgiConfig )
     {
-        HashMap<String, Object> config = new HashMap<String, Object>(this.defaultConfiguration);
+        HashMap config = new HashMap( this.defaultConfiguration );
 
         if ( osgiConfig != null )
         {
-            for ( Enumeration<String> keys = osgiConfig.keys(); keys.hasMoreElements(); )
+            for ( Enumeration keys = osgiConfig.keys(); keys.hasMoreElements(); )
             {
-                final String key = keys.nextElement();
+                final Object key = keys.nextElement();
                 config.put( key, osgiConfig.get( key ) );
             }
         }
@@ -907,7 +909,7 @@ public class OsgiManager extends GenericServlet
 
         // get enabled plugins
         String[] plugins = ConfigurationUtil.getStringArrayProperty(config, PROP_ENABLED_PLUGINS);
-        enabledPlugins = null == plugins ? null : new HashSet<String>(Arrays.asList(plugins));
+        enabledPlugins = null == plugins ? null : new HashSet(Arrays.asList(plugins));
         initInternalPlugins();
 
         // might update HTTP service registration
@@ -970,44 +972,41 @@ public class OsgiManager extends GenericServlet
      */
     boolean isPluginDisabled(String pluginClass)
     {
-        return enabledPlugins != null && !enabledPlugins.contains(pluginClass);
+        return enabledPlugins != null && !enabledPlugins.contains( pluginClass );
     }
 
 
-    private Dictionary<String, String> toStringConfig( Map<String, ?> config )
+    private Dictionary toStringConfig( Map config )
     {
-        Dictionary<String, String> stringConfig = new Hashtable<String, String>();
-        for ( Entry<String, ?> entry : config.entrySet() )
+        Dictionary stringConfig = new Hashtable();
+        for ( Iterator ei = config.entrySet().iterator(); ei.hasNext(); )
         {
+            Entry entry = ( Entry ) ei.next();
             stringConfig.put( entry.getKey(), String.valueOf( entry.getValue() ) );
         }
         return stringConfig;
     }
 
-    private Map<String, String> langMap;
+    private Map langMap;
 
 
-    private final Map<String, String> getLangMap()
+    private final Map getLangMap()
     {
-        if ( null != langMap )
-        {
+        if (null != langMap)
             return langMap;
-        }
-
-        final Map<String, String> map = new HashMap<String, String>();
+        final Map map = new HashMap();
         final Bundle bundle = bundleContext.getBundle();
-        @SuppressWarnings("unchecked")
-        final Enumeration<URL> e = bundle.findEntries( "res/flags", null, false ); //$NON-NLS-1$
-        while ( e != null && e.hasMoreElements() )
+        final Enumeration e = bundle.findEntries("res/flags", null, false); //$NON-NLS-1$
+        while (e != null && e.hasMoreElements())
         {
-            final URL img = e.nextElement();
-            final String name = FilenameUtils.getBaseName( img.getFile() );
+            final URL img = (URL) e.nextElement();
+            final String name = FilenameUtils.getBaseName(img.getFile());
             try
             {
-                final String locale = new Locale( name, "" ).getDisplayLanguage(); //$NON-NLS-1$
-                map.put( name, null != locale ? locale : name );
+                final String locale = new Locale(name, "").getDisplayLanguage(); //$NON-NLS-1$
+                map.put(name, null != locale ? locale : name);
             }
-            catch ( Throwable t )
+            catch (Throwable t)
             {
                 t.printStackTrace();
                 /* ignore invalid locale? */

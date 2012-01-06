@@ -33,7 +33,6 @@ public class SystemPropertiesPrinter extends AbstractConfigurationPrinter
 
     private static final String TITLE = "System Properties";
 
-    @SuppressWarnings("unused")
     private static final String LABEL = "_systemproperties";
 
 
@@ -46,12 +45,13 @@ public class SystemPropertiesPrinter extends AbstractConfigurationPrinter
     public void printConfiguration( PrintWriter printWriter )
     {
         Properties props = System.getProperties();
-        SortedSet<Object> keys = new TreeSet<Object>( props.keySet() );
-        for ( Iterator<Object> ki = keys.iterator(); ki.hasNext(); )
+        SortedSet keys = new TreeSet( props.keySet() );
+        for ( Iterator ki = keys.iterator(); ki.hasNext(); )
         {
             Object key = ki.next();
             ConfigurationRender.infoLine( printWriter, null, ( String ) key, props.get( key ) );
         }
+
     }
 
 }
