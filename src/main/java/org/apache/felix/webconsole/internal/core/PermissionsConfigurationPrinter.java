@@ -102,7 +102,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                 try
                 {
                     getAccessDecision = ConditionalPermissionInfo.class.getMethod( "getAccessDecision",
-                        ( Class<?>[] ) null );
+                        ( Class[] ) null );
                 }
                 catch (Throwable t)
                 {
@@ -112,7 +112,7 @@ public final class PermissionsConfigurationPrinter extends AbstractConfiguration
                 boolean hasPermissions = false;
                 //final java.util.List list = cpa.newConditionalPermissionUpdate().getConditionalPermissionInfos();
                 //for (int i = 0; list != null && i < list.size(); i++)
-                for (Enumeration<?> e = cpa.getConditionalPermissionInfos(); e.hasMoreElements();)
+                for (Enumeration e = cpa.getConditionalPermissionInfos(); e.hasMoreElements();)
                 {
                     hasPermissions = true;
                     //final ConditionalPermissionInfo info = (ConditionalPermissionInfo) list.get(i);

@@ -43,7 +43,6 @@ import org.osgi.service.startlevel.StartLevel;
  * VMStatPlugin provides the System Information tab. This particular plugin uses
  * more than one templates.
  */
-@SuppressWarnings("serial")
 public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
 

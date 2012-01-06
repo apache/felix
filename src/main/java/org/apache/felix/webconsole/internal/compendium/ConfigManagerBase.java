@@ -75,7 +75,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * @param locale The name of the locale to get the meta data for.
      * @return see the method description
      */
-    protected Map<String, ObjectClassDefinition> getPidObjectClasses( final String locale )
+    protected Map getPidObjectClasses( final String locale )
     {
         return getObjectClassDefinitions( PID_GETTER, locale );
     }
@@ -90,7 +90,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * @param locale The name of the locale to get the meta data for.
      * @return see the method description
      */
-    protected Map<String, ObjectClassDefinition> getFactoryPidObjectClasses( final String locale )
+    protected Map getFactoryPidObjectClasses( final String locale )
     {
         return getObjectClassDefinitions( FACTORY_PID_GETTER, locale );
     }
@@ -109,9 +109,9 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * @return Map of <code>ObjectClassDefinition</code> objects indexed by the
      *      PID (or factory PID) to which they pertain
      */
-    private Map<String, ObjectClassDefinition> getObjectClassDefinitions( final IdGetter idGetter, final String locale )
+    private Map getObjectClassDefinitions( final IdGetter idGetter, final String locale )
     {
-        final Map<String, ObjectClassDefinition> objectClassesDefinitions = new HashMap<String, ObjectClassDefinition>();
+        final Map objectClassesDefinitions = new HashMap();
         final MetaTypeService mts = this.getMetaTypeService();
         if ( mts != null )
         {
@@ -242,9 +242,9 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected Map<String, AttributeDefinition> getAttributeDefinitionMap( Configuration config, String locale )
+    protected Map getAttributeDefinitionMap( Configuration config, String locale )
     {
-        Map<String, AttributeDefinition> adMap = new HashMap<String, AttributeDefinition>();
+        Map adMap = new HashMap();
         ObjectClassDefinition ocd = this.getObjectClassDefinition( config, locale );
         if ( ocd != null )
         {

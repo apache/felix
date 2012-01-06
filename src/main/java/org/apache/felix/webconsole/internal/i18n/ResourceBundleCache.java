@@ -46,15 +46,15 @@ class ResourceBundleCache
 
     private final Bundle bundle;
 
-    private final Map<Locale, ResourceBundle> resourceBundles;
+    private final Map resourceBundles;
 
-    private Map<String, URL> resourceBundleEntries;
+    private Map resourceBundleEntries;
 
 
     ResourceBundleCache( final Bundle bundle )
     {
         this.bundle = bundle;
-        this.resourceBundles = new HashMap<Locale, ResourceBundle>();
+        this.resourceBundles = new HashMap();
     }
 
 
@@ -78,7 +78,7 @@ class ResourceBundleCache
 
         synchronized ( resourceBundles )
         {
-            ResourceBundle bundle = resourceBundles.get( locale );
+            ResourceBundle bundle = ( ResourceBundle ) resourceBundles.get( locale );
             if ( bundle != null )
             {
                 return bundle;
@@ -99,12 +99,12 @@ class ResourceBundleCache
     private ResourceBundle loadResourceBundle( final ResourceBundle parent, final Locale locale )
     {
         final String path = "_" + locale.toString(); //$NON-NLS-1$
-        final URL source = getResourceBundleEntries().get( path );
+        final URL source = ( URL ) getResourceBundleEntries().get( path );
         return new ConsolePropertyResourceBundle( parent, source );
     }
 
 
-    private synchronized Map<String, URL> getResourceBundleEntries()
+    private synchronized Map getResourceBundleEntries()
     {
         if ( this.resourceBundleEntries == null )
         {
@@ -125,15 +125,14 @@ class ResourceBundleCache
             String fileName = file.substring( slash + 1 );
             String path = ( slash <= 0 ) ? "/" : file.substring( 0, slash ); //$NON-NLS-1$
 
-            HashMap<String, URL> resourceBundleEntries = new HashMap<String, URL>();
+            HashMap resourceBundleEntries = new HashMap();
 
-            @SuppressWarnings("unchecked")
-            Enumeration<URL> locales = bundle.findEntries( path, fileName + "*.properties", false ); //$NON-NLS-1$
+            Enumeration locales = bundle.findEntries( path, fileName + "*.properties", false ); //$NON-NLS-1$
             if ( locales != null )
             {
                 while ( locales.hasMoreElements() )
                 {
-                    URL entry = locales.nextElement();
+                    URL entry = ( URL ) locales.nextElement();
 
                     // calculate the key
                     String entryPath = entry.getPath();

@@ -29,7 +29,6 @@ public class ThreadPrinter extends AbstractConfigurationPrinter
 
     private static final String TITLE = "Threads";
 
-    @SuppressWarnings("unused")
     private static final String LABEL = "_threads";
 
 

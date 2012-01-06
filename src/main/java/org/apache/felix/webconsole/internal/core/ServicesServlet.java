@@ -46,7 +46,6 @@ import org.osgi.framework.ServiceReference;
 /**
  * ServicesServlet provides a plugin for inspecting the registered services.
  */
-@SuppressWarnings("serial")
 public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
     // don't create empty reference array all the time, create it only once - it is immutable
