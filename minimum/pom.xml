@@ -95,7 +95,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Export-Package/>
+						<Export-Package />
 						<Private-Package>org.apache.felix.httplite.osgi,
 							org.apache.felix.httplite.server,
 							org.apache.felix.httplite.servlet
