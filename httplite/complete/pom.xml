@@ -82,4 +82,5 @@
 		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite</developerConnection>
 		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite</url>
 	</scm>  
+	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
 </project>
