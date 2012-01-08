@@ -49,6 +49,7 @@ public class ResourceHandler implements ServiceRegistrationHandler
     private final String m_name;
     private final String m_alias;
 	private final Logger m_logger;
+    private final int m_aliasIndex;
 
     /**
      * @param req HttpRequest
@@ -69,6 +70,7 @@ public class ResourceHandler implements ServiceRegistrationHandler
         this.m_httpContext = resource.getContext();
         this.m_name = resource.getName();
         this.m_alias = resource.getAlias();  
+        this.m_aliasIndex = m_alias.length() + 1;
         this.m_logger = logger;
     }
 
@@ -122,6 +124,13 @@ public class ResourceHandler implements ServiceRegistrationHandler
      */
     private String getResourceName(final String path)
     {
-        return m_name + "/" + path.substring(m_alias.length());
+        //Ensure that the path begins at root.
+        String rpath = path;
+        if (!path.startsWith( "/" ))
+        {
+            rpath = "/" + path;
+        }
+        
+        return m_name + "/" + rpath.substring(m_aliasIndex);
     }
 }
