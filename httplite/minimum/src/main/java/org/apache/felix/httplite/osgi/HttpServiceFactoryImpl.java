@@ -138,7 +138,7 @@ public class HttpServiceFactoryImpl implements ServiceFactory
                     {
                         Thread.sleep( 1000 * 30 );
                         
-                        if (m_registrations == null || m_server == null)
+                        if (m_registrations == null || m_server == null || Thread.interrupted())
                         {
                             return;
                         }
