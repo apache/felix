@@ -28,7 +28,7 @@
 	</parent>
 
 	<name>Apache Felix Lightweight HTTP Service Reactor</name>
-	<artifactId>org.apache.felix.httplite</artifactId>
+	<artifactId>org.apache.felix.httplite.reactor</artifactId>
 	<version>1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
