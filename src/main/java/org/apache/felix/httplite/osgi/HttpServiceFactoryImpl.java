@@ -130,17 +130,34 @@ public class HttpServiceFactoryImpl implements ServiceFactory
 
         if (m_registrations.size() == 0 && m_server.getState() == Server.ACTIVE_STATE)
         {
-            try
-            {
-                m_logger.log(Logger.LOG_INFO,
-                    "Stopping http server since no clients are registered.");
-                m_server.setStopping();
-                m_server.stop();
-            }
-            catch (InterruptedException e)
-            {
-                return;
-            }
+            (new Thread(new Runnable()
+            {                
+                public void run()
+                {
+                    try
+                    {
+                        Thread.sleep( 1000 * 30 );
+                        
+                        if (m_registrations == null || m_server == null)
+                        {
+                            return;
+                        }
+                        
+                        if (m_registrations.size() == 0 && m_server.getState() == Server.ACTIVE_STATE) 
+                        {
+                            m_logger.log(Logger.LOG_INFO,
+                                "Stopping http server since no clients are registered.");
+                            m_server.setStopping();
+                            m_server.stop();
+                        }
+                    }
+                    catch (InterruptedException e)
+                    {
+                        return;
+                    }
+                    
+                }
+            })).start();            
         }
     }
 }

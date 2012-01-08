@@ -288,6 +288,8 @@ public class ThreadPool
                         m_shutdownGate.open();
                         m_shutdownGate = null;
                         m_state = Server.INACTIVE_STATE;
+                        m_logger.log(Logger.LOG_DEBUG,
+                            "Server shutdown complete.");
                     }
                     // Return to kill the thread by exiting our run method.
                     return;
