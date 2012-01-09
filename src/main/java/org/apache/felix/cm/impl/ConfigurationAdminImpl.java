@@ -116,7 +116,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             {
                 configurationManager.log( LogService.LOG_DEBUG, "Binding configuration {0} (isNew: {1}) to bundle {2}",
                     new Object[]
-                        { config.getPid(), Boolean.valueOf( config.isNew() ), this.getBundle().getLocation() } );
+                        { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
+                            this.getBundle().getLocation() } );
 
                 config.setStaticBundleLocation( this.getBundle().getLocation() );
             }
