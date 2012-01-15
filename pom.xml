@@ -5,13 +5,13 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>servicediagnostics</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>${project.groupId}.servicediagnostics.plugin</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.0</version>
+  <version>0.1.0-SNAPSHOT</version>
   <name>Apache Felix Web Console Service Diagnostics Plugin</name>
 
   <scm>
@@ -94,11 +94,4 @@
       </plugin>
     </plugins>
   </build>
-  
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.servicediagnostics.plugin-0.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.servicediagnostics.plugin-0.1.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.servicediagnostics.plugin-0.1.0</url>
-  </scm>
 </project>
