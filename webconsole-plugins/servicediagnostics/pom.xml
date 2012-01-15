@@ -37,11 +37,11 @@
     This is a plugin for the Apache Felix OSGi web console providing a graphical representation of services and missing required dependencies.
   </description>
 
-  <scm>
+  <!--scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/servicediagnostics</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/servicediagnostics</developerConnection>
     <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/servicediagnostics</url>
-  </scm>
+  </scm-->
 
   <modules>
     <module>core</module>
