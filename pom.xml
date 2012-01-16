@@ -9,16 +9,10 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>${project.groupId}.servicediagnostics.plugin</artifactId>
+  <artifactId>org.apache.felix.servicediagnostics.plugin</artifactId>
   <packaging>bundle</packaging>
   <version>0.1.0-SNAPSHOT</version>
   <name>Apache Felix Web Console Service Diagnostics Plugin</name>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/servicediagnostics/core</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/servicediagnostics/core</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/servicediagnostics/core</url>
-  </scm>
 
   <dependencies>
     <dependency>
