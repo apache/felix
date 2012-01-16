@@ -5,13 +5,13 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>servicediagnostics</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>org.apache.felix.servicediagnostics.plugin</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <name>Apache Felix Web Console Service Diagnostics Plugin</name>
 
   <dependencies>
