@@ -2164,19 +2164,23 @@ public class BundleWiringImpl implements BundleWiring
                         && (deferredList.size() > 0)
                         && ((Object[]) deferredList.get(0))[0].equals(name))
                     {
-                        for (int i = deferredList.size() - 1; i >= 0; i--)
+                        // Null the deferred list.
+                        m_deferredActivation.set(null);
+                        while (!deferredList.isEmpty())
                         {
+                            // Lazy bundles should be activated in the reverse order
+                            // of when they were added to the deferred list, so grab
+                            // them from the end of the deferred list.
+                            Object[] lazy = (Object[]) deferredList.remove(deferredList.size() - 1);
                             try
                             {
-                                felix.getFramework().activateBundle(
-                                    (BundleImpl) ((Object[]) deferredList.get(i))[1], true);
+                                felix.getFramework().activateBundle((BundleImpl) (lazy)[1], true);
                             }
                             catch (BundleException ex)
                             {
                                 ex.printStackTrace();
                             }
                         }
-                        deferredList.clear();
                     }
                 }
             }
