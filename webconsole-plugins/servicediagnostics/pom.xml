@@ -28,7 +28,7 @@
 
   <groupId>org.apache.felix</groupId>
   <artifactId>servicediagnostics</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Service Diagnostics Plugin - Parent</name>
@@ -37,9 +37,9 @@
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/servicediagnostics-0.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/servicediagnostics-0.1.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/servicediagnostics-0.1.0</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/servicediagnostics</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/servicediagnostics</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/servicediagnostics</url>
   </scm>
 
   <modules>
