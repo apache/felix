@@ -78,9 +78,9 @@
 		</plugins>
 	</build>
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite</developerConnection>
-		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/httplite/complete</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/httplite/complete</developerConnection>
+		<url>http://svn.apache.org/repos/asf/felix/trunk/httplite/complete</url>
 	</scm>  
 	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
 </project>
