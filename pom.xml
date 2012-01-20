@@ -54,6 +54,26 @@
 	<build>
 		<plugins>
 			<plugin>
+		        <groupId>org.codehaus.mojo</groupId>
+		        <artifactId>animal-sniffer-maven-plugin</artifactId>
+		        <version>1.7</version>
+		        <configuration>
+		            <signature>
+		                <groupId>org.codehaus.mojo.signature</groupId>
+		                <artifactId>java13-sun</artifactId>
+		                <version>1.0</version>
+		            </signature>
+		        </configuration>
+		        <executions>
+		            <execution>
+		                <phase>test</phase>
+		                <goals>
+		                    <goal>check</goal>
+		                </goals>
+		            </execution>
+		        </executions>
+		    </plugin>
+			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
 				<version>2.3.6</version>
