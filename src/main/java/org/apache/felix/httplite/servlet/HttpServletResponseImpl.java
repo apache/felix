@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -56,7 +55,8 @@ public class HttpServletResponseImpl implements HttpServletResponse
     private ByteArrayOutputStream m_buffer;
     private final Map m_headers = new HashMap();
     private String m_characterEncoding = "UTF-8";
-    private Locale m_locale = new Locale(System.getProperty("user.language"));
+    //TODO: Make locale static and perhaps global to the service.
+    private Locale m_locale = new Locale(System.getProperty("user.language"), System.getProperty( "user.country" ));
     private boolean m_getOutputStreamCalled = false;
     private boolean m_getWriterCalled = false;
     private ServletOutputStreamImpl m_servletOutputStream;
@@ -505,15 +505,9 @@ public class HttpServletResponseImpl implements HttpServletResponse
      * @see javax.servlet.http.HttpServletResponse#encodeUrl(java.lang.String)
      */
     public String encodeUrl(final String url)
-    {
-        try
-        {
-            return URLEncoder.encode(url, m_characterEncoding);
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            return url;
-        }
+    {      
+        //Deprecated method used for Java 1.3 compatibility.
+        return URLEncoder.encode(url);       
     }
 
     /* (non-Javadoc)

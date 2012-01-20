@@ -82,7 +82,8 @@ public class HttpServletRequestImpl implements HttpServletRequest
     private final Map m_headers = new HashMap();
     private final Socket m_socket;
     private Cookie[] m_cookies;
-    private final Locale m_locale = new Locale( System.getProperty( "user.language" ) );
+    //TODO: Make locale static and perhaps global to the service.
+    private final Locale m_locale = new Locale( System.getProperty( "user.language" ), System.getProperty( "user.country" ) );
     private Map m_attributes;
     private final ServiceRegistrationResolver m_resolver;
     private String m_servletPath;
@@ -97,7 +98,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * the body.
      */
     private byte[] m_requestBody = null;
-    private final static String m_encoding = "UTF-8";
+    //private final static String m_encoding = "UTF-8";
     private final Logger m_logger;
     private String m_queryString;
     /**
@@ -658,7 +659,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
      */
     public String getRemoteAddr()
     {
-        return getSocket().getRemoteSocketAddress().toString();
+        return getSocket().getInetAddress().getHostAddress();
     }
 
 
@@ -668,7 +669,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
     public String getRemoteHost()
     {
-        return getSocket().getRemoteSocketAddress().toString();
+        return getSocket().getInetAddress().getHostName();
     }
 
 
@@ -783,9 +784,9 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
             List cookieList = new ArrayList();
 
-            for ( Iterator i = Arrays.asList( splitString( cookieHeader, ';' ) ).iterator(); i.hasNext(); )
+            for ( Iterator i = Arrays.asList( splitString( cookieHeader, ";" ) ).iterator(); i.hasNext(); )
             {
-                String[] nvp = splitString( i.next().toString(), '=' );
+                String[] nvp = splitString( i.next().toString(), "=" );
 
                 if ( nvp.length != 2 )
                 {
@@ -1062,14 +1063,16 @@ public class HttpServletRequestImpl implements HttpServletRequest
      */
     private void parseParameterString( final String queryString, final Map params ) throws UnsupportedEncodingException
     {
-        String[] parameters = splitString( queryString, '&' );
+        String[] parameters = splitString( queryString, "&" );
+        
         for ( Iterator i = Arrays.asList( parameters ).iterator(); i.hasNext(); )
         {
-            String[] nva = splitString( i.next().toString(), '=' );
+            String[] nva = splitString( i.next().toString(), "=" );
 
             if ( nva.length == 2 )
             {
-                params.put( URLDecoder.decode( nva[0].trim(), m_encoding ), nva[1].trim() );
+                //Deprecated method decode() intentionally used for Java 1.3 compatibility.
+                params.put( URLDecoder.decode( nva[0].trim() ), nva[1].trim() );
             }
         }
     }
@@ -1149,14 +1152,14 @@ public class HttpServletRequestImpl implements HttpServletRequest
      * @return array of substrings
      * @throws IllegalArgumentException if instr parameter is null.
      */
-    private static String[] splitString( String instr, char separator )
+    private static String[] splitString( String instr, String separator )
     {
 		if ( instr == null )
         {
             throw new IllegalArgumentException( "Input string must not be null." );
         }
 
-	    StringTokenizer tokenizer = new StringTokenizer(instr, Character.toString(separator));
+	    StringTokenizer tokenizer = new StringTokenizer(instr, separator);
         int length = tokenizer.countTokens();
 		String[] str_array = new String[length];
         for ( int i = 0; i < length; i++ )

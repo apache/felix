@@ -323,9 +323,10 @@ public class Server
         Socket socket;
 
         m_logger.log(Logger.LOG_DEBUG, "Waiting for connections.");
+        boolean socketConnected = true;
 
         // Now listen for connections until interrupted.
-        while (m_serverSocket.isBound() && !m_serverSocket.isClosed())
+        while (socketConnected)
         {
             try
             {
@@ -349,6 +350,7 @@ public class Server
             }
             catch (IOException ex)
             {
+                socketConnected = false;
             	if (!m_stopping)
             	{
 	                m_logger.log(Logger.LOG_ERROR,
