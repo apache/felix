@@ -32,7 +32,7 @@
 	<dependencies>		
 		<dependency>
 			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.httplite</artifactId>
+			<artifactId>org.apache.felix.httplite.core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
