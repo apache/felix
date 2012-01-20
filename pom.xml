@@ -30,32 +30,7 @@
 	<name>Apache Felix Lightweight HTTP Service Reactor</name>
 	<artifactId>org.apache.felix.httplite.reactor</artifactId>
 	<version>1-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	
-	<build>
-		<plugins>
-			<plugin>
-		        <groupId>org.codehaus.mojo</groupId>
-		        <artifactId>animal-sniffer-maven-plugin</artifactId>
-		        <version>1.7</version>
-		        <configuration>
-		            <signature>
-		                <groupId>org.codehaus.mojo.signature</groupId>
-		                <artifactId>java13-sun</artifactId>
-		                <version>1.0</version>
-		            </signature>
-		        </configuration>
-		        <executions>
-		            <execution>
-		                <phase>test</phase>
-		                <goals>
-		                    <goal>check</goal>
-		                </goals>
-		            </execution>
-		        </executions>
-		    </plugin>
-	    </plugins>
-    </build>
+	<packaging>pom</packaging>	
 
 	<modules>
 		<module>core</module>
