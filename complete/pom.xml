@@ -1,0 +1,106 @@
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+	    <groupId>org.apache.felix</groupId>
+	    <artifactId>felix-parent</artifactId>
+	    <version>2.1</version>
+	    <relativePath>../../pom/pom.xml</relativePath>
+ 	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<packaging>bundle</packaging>
+	<name>Apache Felix Lightweight HTTP Service Complete</name>
+	<description>A minimal HTTP Service implementation, complete bundle.</description>
+	<version>0.1.4</version>
+	<artifactId>org.apache.felix.httplite.complete</artifactId>
+	<dependencies>		
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.httplite.core</artifactId>
+			<version>0.1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>4.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+			<version>4.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.4</version>
+		</dependency>		
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+		        <groupId>org.codehaus.mojo</groupId>
+		        <artifactId>animal-sniffer-maven-plugin</artifactId>
+		        <version>1.7</version>
+		        <configuration>
+		            <signature>
+		                <groupId>org.codehaus.mojo.signature</groupId>
+		                <artifactId>java13-sun</artifactId>
+		                <version>1.0</version>
+		            </signature>
+		        </configuration>
+		        <executions>
+		            <execution>
+		                <phase>test</phase>
+		                <goals>
+		                    <goal>check</goal>
+		                </goals>
+		            </execution>
+		        </executions>
+		    </plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.6</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Private-Package>org.apache.felix.httplite.osgi, org.apache.felix.httplite.server, org.apache.felix.httplite.servlet</Private-Package>
+						<Export-Service>org.osgi.service.http.HttpService</Export-Service>
+						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Activator>org.apache.felix.httplite.osgi.Activator</Bundle-Activator>
+						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+						<Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES</Include-Resource>
+						<Export-Package>
+							javax.servlet;version="2.4",
+							javax.servlet.http;version="2.4",
+							org.osgi.service.http;version="1.2"																					
+						</Export-Package>						
+                        <Bundle-DocURL>http://felix.apache.org/site/apache-felix-light-http-service.html</Bundle-DocURL>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite.complete-0.1.4</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite.complete-0.1.4</developerConnection>
+		<url>http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.httplite.complete-0.1.4</url>
+	</scm>  
+	<url>http://felix.apache.org/site/apache-felix-lightweight-http-service.html</url>
+</project>
