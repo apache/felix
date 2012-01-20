@@ -93,9 +93,8 @@ public class Activator implements BundleActivator
     {
         Dictionary props = new Properties();
 
-        props.put(HttpConstants.SERVICE_PROPERTY_KEY_HTTP_ENABLE, Boolean.toString(true));
-        props.put(HttpConstants.SERVICE_PROPERTY_KEY_HTTPS_ENABLE,
-            Boolean.toString(false));
+        props.put(HttpConstants.SERVICE_PROPERTY_KEY_HTTP_ENABLE, "true");
+        props.put(HttpConstants.SERVICE_PROPERTY_KEY_HTTPS_ENABLE, "false");
         props.put(HttpConstants.SERVICE_PROPERTY_KEY_HTTP_PORT, Integer.toString(port));
 
         return props;
