@@ -5,14 +5,14 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.felix</groupId>
-    <artifactId>servicediagnostics</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <artifactId>servicediagnostics.parent</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <groupId>org.apache.felix</groupId>
   <artifactId>servicediagnostics.sample</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <name>Sample Services and Launcher for Service Diagnostics</name>
 
