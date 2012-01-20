@@ -69,7 +69,7 @@
 		<resources>
 			<resource>
 				<directory>${project.basedir}</directory>
-				<targetPath>META-INF/</targetPath>
+				<targetPath>META-INF</targetPath>
 				<includes>
 					<include>LICENSE</include>
 					<include>NOTICE</include>
