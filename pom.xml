@@ -58,7 +58,7 @@
     </build>
 
 	<modules>
-		<module>minimum</module>
+		<module>core</module>
 		<module>complete</module>
 	</modules>
 </project>
