@@ -35,6 +35,9 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
  * Command that processes all the processed resources in the source deployment package
  * of a deployment session by finding their Resource Processors and having those process
  * the resources.
+ * System property <code>org.apache.felix.deploymentadmin.allowforeigncustomizers</code> allows
+ * you to skip the source handling of resource processors, allowing the use of processors already on
+ * the system. Defaults to <code>false</code>.
  */
 public class ProcessResourceCommand extends Command {
 
@@ -82,7 +85,8 @@ public class ProcessResourceCommand extends Command {
                 ServiceReference ref = source.getResourceProcessor(name);
                 if (ref != null) {
                     String serviceOwnerSymName = ref.getBundle().getSymbolicName();
-                    if (source.getBundleInfoByName(serviceOwnerSymName) != null) {
+                    String allowForeignCustomerizers = System.getProperty("org.apache.felix.deploymentadmin.allowforeigncustomizers", "false");
+                    if (source.getBundleInfoByName(serviceOwnerSymName) != null || allowForeignCustomerizers.equals("true")) {
                         ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
                         if (resourceProcessor != null) {
                             try {
