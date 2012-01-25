@@ -20,6 +20,11 @@ var i18n = {
 <!-- buttons top -->
 <form method="post" enctype="multipart/form-data" action="">
 	<div class="ui-widget-header ui-corner-top buttonGroup">
+		<label>${log.traces}</label>
+		<select class="enableTraces">
+			<option value="false">${log.traces.min}</option>
+			<option value="true">${log.traces.full}</option>
+		</select>
 		<label>${log.severity.label}</label>
 		<select class="minLevel">
 			<option value="1">${log.level.error}</option>
@@ -39,17 +44,23 @@ var i18n = {
 			<th class="col_Level">${log.level}</th>
 			<th class="col_Message">${log.message}</th>
 			<th class="col_Service">${log.service}</th>
+			<th class="col_Bundle">${bundle}</th>
 			<th class="col_Exception">${log.exception}</th>
 		</tr>
 	</thead>
 	<tbody>
-		<tr><td colspan="5">&nbsp;</td></tr>
+		<tr><td colspan="6">&nbsp;</td></tr>
 	</tbody>
 </table>
 
 <!-- buttons bottom -->
 <form method="post" enctype="multipart/form-data" action="">
 	<div class="ui-widget-header ui-corner-bottom buttonGroup">
+		<label>${log.traces}</label>
+		<select class="enableTraces">
+			<option value="false">${log.traces.min}</option>
+			<option value="true">${log.traces.full}</option>
+		</select>
 		<label>${log.severity.label}</label>
 		<select class="minLevel">
 			<option value="1">${log.level.error}</option>

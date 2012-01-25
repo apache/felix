@@ -22,3 +22,8 @@
 th.col_Level  { width: 6em }
 th.col_Received,
 th.col_Exception { min-width: 10em }
+td.ex {
+	font-size: smaller;
+	font-family: monospace;
+	white-space: pre
+}
