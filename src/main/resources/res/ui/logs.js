@@ -47,6 +47,7 @@ function entryInternal( /* Element */ parent, /* Object */ dataEntry ) {
     var message = dataEntry.message;
     var level = dataEntry.level;
     var exception = dataEntry.exception;
+	var exceptionClass = $(".enableTraces").val() == 'true' ? 'ex' : null;
     var service = dataEntry.service;
 	switch (dataEntry.raw_level) { // i18n
 		case 1: level = i18n.error; break;
@@ -54,11 +55,16 @@ function entryInternal( /* Element */ parent, /* Object */ dataEntry ) {
 		case 3: level = i18n.info; break;
 		case 4: level = i18n.debug; break;
 	}
+	var bundle = text('');
+	if (dataEntry.bundleId) {
+		bundle = createElement( 'a', null, {href : appRoot + '/bundles/' + dataEntry.bundleId}, [ text (dataEntry.bundleName) ] )
+	}
     parent.appendChild( td( null, null, [ text( printDate(dataEntry.received) ) ] ) );
     parent.appendChild( td( null, { lvl:dataEntry.raw_level }, [ text( level ) ] ) );    
     parent.appendChild( td( null, null, [ text( wordWrap(message) ) ] ) );
     parent.appendChild( td( null, null, [ text( wordWrap(service) ) ] ) );
-    parent.appendChild( td( null, null, [ text( exception ) ] ) );
+    parent.appendChild( td( null, null, [ bundle ] ) );
+    parent.appendChild( td( exceptionClass, null, [ text( exception ) ] ) );
 }
 
 /* displays a date in the user's local timezone */
@@ -68,28 +74,34 @@ function printDate(time) {
 }
 
 function loadData() {
-	$.get(pluginRoot + "/data.json", { "minLevel":$(".minLevel").val()}, renderData, "json");
+	$.post(pluginRoot, {
+		"minLevel" : $(".minLevel").val(),
+		"traces"   : $(".enableTraces").val()
+	}, renderData, "json");
 	return false; // for button
 }
 
 $(document).ready(function() {
 	// install user interaction handlers
     $(".reloadButton").click(loadData);
+	$(".enableTraces").change(function() {
+		var val = $(this).val();
+		$(".enableTraces").val(val); // same values for both select boxes
+		loadData();
+	})
     $(".minLevel").change(function() {
 		var value = $(this).val();
 		$(".minLevel").val(value); // same values for both select boxes
-    	$.post(pluginRoot, {"minLevel":value}, function(data) {
-    	    renderData(data);
-    	}, "json");
+		loadData();
     });
-		// init tablesorte
+	// init tablesorte
 	$('#plugin_table').tablesorter({
 		textExtraction: function(node) {
 			var _ = $(node);
 			return _.attr('lvl') ? _.attr('lvl') : _.text();
 		}
 	});
-	
+
 	logsElem  = $("#logs");
     logs2Elem = $("#logs2");
 	tableElem = $("#plugin_table");
