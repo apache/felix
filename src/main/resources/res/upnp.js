@@ -256,6 +256,7 @@ function listDevices() {
 	
 	$.post(pluginRoot, { 'action': 'listDevices' }, function(data) {
 		if (data && data.devices) {
+			data.devices.sort(function(a,b){ return a.props['UPnP.device.friendlyName'] > b.props['UPnP.device.friendlyName']});
 			$.each(data.devices, function(index) {
 				var html = addDevice(this);
 				browser.treeview( { add: html.appendTo(browser) } );
