@@ -73,14 +73,14 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
 
         resp.setContentType( "application/json" ); //$NON-NLS-1$
         resp.setCharacterEncoding( "utf-8" ); //$NON-NLS-1$
-        
+
         renderJSON( resp.getWriter(), minLevel, trasesEnabled(req) );
     }
-    
+
     private static boolean trasesEnabled( final HttpServletRequest req )
     {
         String traces = req.getParameter("traces"); //$NON-NLS-1$
-        return null == traces ? false : Boolean.parseBoolean(traces);
+        return null == traces ? false : Boolean.valueOf( traces ).booleanValue();
     }
 
     private final void renderJSON( final PrintWriter pw, int minLogLevel, boolean traces ) throws IOException
