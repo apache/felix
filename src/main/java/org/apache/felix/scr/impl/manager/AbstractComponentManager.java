@@ -437,6 +437,12 @@ public abstract class AbstractComponentManager implements Component
     }
 
 
+    /**
+     * Registers the service on behalf of the component.
+     *
+     * @return The <code>ServiceRegistration</code> for the registered
+     *      service or <code>null</code> if no service is registered.
+     */
     protected ServiceRegistration registerService()
     {
         if ( getComponentMetadata().getServiceMetadata() != null )
@@ -454,21 +460,97 @@ public abstract class AbstractComponentManager implements Component
         return null;
     }
 
-    // 5. Register provided services
-    protected void registerComponentService()
+    /**
+     * Registers the service on behalf of the component using the
+     * {@link #registerService()} method. Also records the service
+     * registration for later {@link #unregisterComponentService()}.
+     * <p>
+     * If the component's state changes during service registration,
+     * the service is unregistered again and a WARN message is logged.
+     * This situation may happen as described in FELIX-3317.
+     *
+     * @param preRegistrationState The component state before service
+     *      registration. This is the expected state after service
+     *      registration.
+     */
+    final void registerComponentService(final State preRegistrationState)
     {
-        m_serviceRegistration = registerService();
+
+        /*
+         * Problem: If the component is being activated and a configuration
+         * is updated a race condition may happen:
+         *
+         *  1-T1 Unsatisfied.activate has set the state to Active already
+         *  2-T1 registerService is called but field is not assigned yet
+         *       during registerService ServiceListeners are called
+         *  3-T2 A Configuration update comes in an Satisfied(Active).deactivate
+         *       is called
+         *  4-T2 calls unregisterComponentService; does nothing because
+         *       field is not assigned
+         *  5-T2 destroys component
+         *  6-T1 assigns field from service registration
+         *
+         * Now all consumers are bound to a service object which has been
+         * deactivated already.
+         *
+         * Simplest thing to do would be to compare the states before
+         * and after service registration: If they are equal and the
+         * field is still null, everything is fine. If they are not
+         * equal or the field is set (maybe T2 is so fast registering
+         * service that it passed by T1), the current registration must
+         * be unregistered again and the field not be assigned. This
+         * will unbind consumers from the unusable instance.
+         *
+         * See also FELIX-3317
+         */
+
+        final ServiceRegistration sr = registerService();
+        if ( sr != null )
+        {
+            final State currentState = state();
+
+            synchronized ( this )
+            {
+                if ( currentState == preRegistrationState && this.m_serviceRegistration == null )
+                {
+                    this.m_serviceRegistration = sr;
+                    return;
+                }
+            }
+
+            // Get here if:
+            // - state changed during service registration
+            // - state is the same (again) but field is already set
+            // both situations indicate the current registration is not to
+            // be used
+
+            log( LogService.LOG_WARNING, "State changed from " + preRegistrationState + " to " + currentState
+                + " during service registration; unregistering service " + sr, null );
+
+            try
+            {
+                sr.unregister();
+            }
+            catch ( IllegalStateException ise )
+            {
+                // ignore
+            }
+        }
     }
 
-    protected final void unregisterComponentService()
+    final void unregisterComponentService()
     {
+        final ServiceRegistration sr;
+        synchronized ( this )
+        {
+            sr = this.m_serviceRegistration;
+            this.m_serviceRegistration = null;
+        }
 
-        if ( m_serviceRegistration != null )
+        if ( sr != null )
         {
             log( LogService.LOG_DEBUG, "Unregistering the services", null );
-
-            m_serviceRegistration.unregister();
-            m_serviceRegistration = null;
+            sr.unregister();
         }
     }
 
@@ -1053,9 +1135,14 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
-            acm.changeState( acm.getSatisfiedState() );
+            // set satisifed state before registering the service because
+            // during service registration a listener may try to get the
+            // service from the service reference which may cause a
+            // delayed service object instantiation through the State
+            final State satisfiedState = acm.getSatisfiedState();
+            acm.changeState( satisfiedState );
 
-            acm.registerComponentService();
+            acm.registerComponentService( satisfiedState );
         }
 
 
