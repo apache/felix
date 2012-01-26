@@ -35,6 +35,7 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
@@ -511,7 +512,7 @@ public abstract class AbstractComponentManager implements Component
 
             synchronized ( this )
             {
-                if ( currentState == preRegistrationState && this.m_serviceRegistration == null )
+                if ( (currentState == preRegistrationState || currentState == Active.getInstance()) && this.m_serviceRegistration == null )
                 {
                     this.m_serviceRegistration = sr;
                     return;
@@ -524,8 +525,19 @@ public abstract class AbstractComponentManager implements Component
             // both situations indicate the current registration is not to
             // be used
 
-            log( LogService.LOG_WARNING, "State changed from " + preRegistrationState + " to " + currentState
-                + " during service registration; unregistering service " + sr, null );
+            if ( isLogEnabled( LogService.LOG_WARNING ) )
+            {
+                StringBuffer msg = new StringBuffer();
+                msg.append( "State changed from " ).append( preRegistrationState );
+                msg.append( " to " ).append( currentState );
+                msg.append( " during service registration; unregistering service [" );
+                ServiceReference ref = sr.getReference();
+                msg.append( Arrays.asList( ( String[] ) ref.getProperty( Constants.OBJECTCLASS ) ) );
+                msg.append( ',' );
+                msg.append( ref.getProperty( Constants.SERVICE_ID ) );
+                msg.append( ']' );
+                log( LogService.LOG_WARNING, msg.toString(), null );
+            }
 
             try
             {
