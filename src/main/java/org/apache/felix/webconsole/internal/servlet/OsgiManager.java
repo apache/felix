@@ -111,7 +111,7 @@ public class OsgiManager extends GenericServlet
      * The name of the cookie storing user-configured locale
      * See https://issues.apache.org/jira/browse/FELIX-2267
      */
-    private static final String COOKIE_LOCALE = "felix.webconsole.locale"; //$NON-NLS-1$
+    private static final String COOKIE_LOCALE = "felix-webconsole-locale"; //$NON-NLS-1$
 
     private final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root"; //$NON-NLS-1$
 
