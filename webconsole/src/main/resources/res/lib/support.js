@@ -275,12 +275,13 @@ function Xdialog(text) {
  * @param value The value for the cookie
  */
 function setCookie( /* String */name, /* String */value) {
-    var date = new Date();
-    date.setFullYear(date.getFullYear() + 20);
-    $.cookies.set("felix-webconsole-" + name, value, {
-        expiresAt : date,
-        path : appRoot
-    });
+	var date = new Date();
+	date.setFullYear(date.getFullYear() + 20);
+	$.cookies.del("felix-webconsole-" + name);
+	$.cookies.set("felix-webconsole-" + name, value, {
+		expiresAt : date,
+		path : appRoot
+	});
 }
 
 /**
@@ -289,7 +290,7 @@ function setCookie( /* String */name, /* String */value) {
  * @param name The name of the cookie
  */
 /* String */ function getCookie(/*String */name) {
-    $.cookies.get("felix-webconsole-" + name);
+    return $.cookies.get("felix-webconsole-" + name);
 }
 
 // language selection element
@@ -299,7 +300,7 @@ $(document).ready(function() {
 		function() { $(this).find('.flags').show('blind') },
 		function() { $(this).find('.flags').hide('blind') });
 	langSelect.find('.flags img').click(function() {
-        setCookie("locale", $(this).attr('alt'));
+		setCookie("locale", $(this).attr('alt'));
 		location.reload();
 	});
 	var locale = getCookie("locale");
