@@ -16,13 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.eventadmin.impl;
+package org.apache.felix.eventadmin.impl.handler;
 
-import java.util.List;
-
-import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
-import org.apache.felix.eventadmin.impl.handler.HandlerTasks;
 import org.apache.felix.eventadmin.impl.tasks.*;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -41,43 +38,50 @@ import org.osgi.service.event.EventAdmin;
  */
 public class EventAdminImpl implements EventAdmin
 {
-    // The factory used to determine applicable EventHandlers - this will be replaced
-    // by a null object in stop() that subsequently throws an IllegalStateException
-    private volatile HandlerTasks m_managers;
+    /** The tracker for the event handlers. */
+    private volatile EventHandlerTracker tracker;
 
     // The asynchronous event dispatcher
-    private final DeliverTask m_postManager;
+    private final AsyncDeliverTasks m_postManager;
 
     // The synchronous event dispatcher
     private final SyncDeliverTasks m_sendManager;
 
     /**
-     * The constructor of the <tt>EventAdmin</tt> implementation. The
-     * <tt>HandlerTasks</tt> factory is used to determine applicable
-     * <tt>EventHandler</tt> for a given event. Additionally, the two
-     * <tt>DeliverTasks</tt> are used to dispatch the event.
+     * The constructor of the <tt>EventAdmin</tt> implementation.
      *
-     * @param managers The factory used to determine applicable <tt>EventHandler</tt>
      * @param syncPool The synchronous thread pool
      * @param asyncPool The asynchronous thread pool
      */
-    public EventAdminImpl(final HandlerTasks managers,
+    public EventAdminImpl(
+            final BundleContext bundleContext,
             final DefaultThreadPool syncPool,
             final DefaultThreadPool asyncPool,
             final int timeout,
-            final String[] ignoreTimeout)
+            final String[] ignoreTimeout,
+            final boolean requireTopic)
     {
-        checkNull(managers, "Managers");
         checkNull(syncPool, "syncPool");
         checkNull(asyncPool, "asyncPool");
 
-        m_managers = managers;
-
-        m_sendManager = new SyncDeliverTasks(syncPool,
-                (timeout > 100 ? timeout : 0),
-                ignoreTimeout);
-
+        this.tracker = new EventHandlerTracker(bundleContext);
+        this.tracker.update(ignoreTimeout, requireTopic);
+        this.tracker.open();
+        m_sendManager = new SyncDeliverTasks(syncPool, timeout);
         m_postManager = new AsyncDeliverTasks(asyncPool, m_sendManager);
+    }
+
+    /**
+     * Check if the event admin is active and return the tracker
+     * @return The tracker
+     * @throws IllegalArgumentException if the event admin has been stopped
+     */
+    private EventHandlerTracker getTracker() {
+        final EventHandlerTracker localTracker = tracker;
+        if ( localTracker == null ) {
+            throw new IllegalStateException("The EventAdmin is stopped");
+        }
+        return localTracker;
     }
 
     /**
@@ -91,7 +95,7 @@ public class EventAdminImpl implements EventAdmin
      */
     public void postEvent(final Event event)
     {
-        handleEvent(m_managers.createHandlerTasks(event), m_postManager);
+        m_postManager.execute(this.getTracker().getHandlers(event), event);
     }
 
     /**
@@ -105,65 +109,29 @@ public class EventAdminImpl implements EventAdmin
      */
     public void sendEvent(final Event event)
     {
-        handleEvent(m_managers.createHandlerTasks(event), m_sendManager);
+        m_sendManager.execute(this.getTracker().getHandlers(event), event);
     }
 
     /**
-     * This method can be used to stop the delivery of events. The m_managers is
-     * replaced with a null object that throws an IllegalStateException on a call
-     * to <tt>createHandlerTasks()</tt>.
+     * This method can be used to stop the delivery of events.
      */
     public void stop()
     {
-        // replace the HandlerTasks with a null object that will throw an
-        // IllegalStateException on a call to createHandlerTasks
-        m_managers = new HandlerTasks()
-        {
-            /**
-             * This is a null object and this method will throw an
-             * IllegalStateException due to the bundle being stopped.
-             *
-             * @param event An event that is not used.
-             *
-             * @return This method does not return normally
-             *
-             * @throws IllegalStateException - This is a null object and this method
-             *          will always throw an IllegalStateException
-             */
-            public List createHandlerTasks(final Event event)
-            {
-                throw new IllegalStateException("The EventAdmin is stopped");
-            }
-        };
+        this.tracker.close();
+        this.tracker = null;
     }
 
     /**
      * Update the event admin with new configuration.
      */
-    public void update(final HandlerTasks managers, final int timeout,
-            final String[] ignoreTimeout)
+    public void update(final int timeout,
+            final String[] ignoreTimeout,
+            final boolean requireTopic)
     {
-        m_managers = managers;
-        m_sendManager.update(timeout, ignoreTimeout);
-    }
-
-    /**
-     * This is a utility method that uses the given DeliverTasks to create a
-     * dispatch tasks that subsequently is used to dispatch the given HandlerTasks.
-     */
-    private void handleEvent(List managers,
-        final DeliverTask manager)
-    {
-        if (managers != null && managers.size() > 0 )
-        {
-            // This might throw an IllegalStateException in case that we are stopped
-            // and the null object for m_managers was not fast enough established
-            // This is needed in the adapter/* classes due to them sending
-            // events whenever they receive an event from their source.
-            // Service importers that call us regardless of the fact that we are
-            // stopped deserve an exception anyways
-            manager.execute(managers);
-        }
+        this.tracker.close();
+        this.tracker.update(ignoreTimeout, requireTopic);
+        this.m_sendManager.update(timeout);
+        this.tracker.open();
     }
 
     /**
@@ -173,7 +141,7 @@ public class EventAdminImpl implements EventAdmin
      */
     private void checkNull(final Object object, final String name)
     {
-        if(null == object)
+        if (null == object)
         {
             throw new NullPointerException(name + " may not be null");
         }

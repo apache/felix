@@ -18,6 +18,8 @@
  */
 package org.apache.felix.eventadmin.impl.security;
 
+import java.security.Permission;
+
 import org.osgi.framework.Bundle;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -128,7 +130,7 @@ public class EventAdminSecurityDecorator implements EventAdmin
         return m_admin.equals(o);
     }
 
-    /*
+    /**
      * This is a utility method that will throw a <tt>SecurityExcepiton</tt> in case
      * that the given bundle (i.e, the caller) has not appropriate permissions to
      * publish to this topic. This method uses Bundle.hasPermission() and the given
@@ -136,7 +138,8 @@ public class EventAdminSecurityDecorator implements EventAdmin
      */
     private void checkPermission(final String topic)
     {
-        if(!m_bundle.hasPermission(PermissionsUtil.createPublishPermission(topic)))
+        final Permission p = PermissionsUtil.createPublishPermission(topic);
+        if(p != null && !m_bundle.hasPermission(p))
         {
             throw new SecurityException("Bundle[" + m_bundle +
                 "] has no PUBLISH permission for topic [" + topic + "]");

@@ -22,10 +22,9 @@ package org.apache.felix.eventadmin.impl;
 import java.util.*;
 
 import org.apache.felix.eventadmin.impl.adapter.*;
-import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
-import org.apache.felix.eventadmin.impl.handler.*;
+import org.apache.felix.eventadmin.impl.handler.EventAdminImpl;
 import org.apache.felix.eventadmin.impl.security.SecureEventAdminFactory;
-import org.apache.felix.eventadmin.impl.util.LeastRecentlyUsedCacheMap;
+import org.apache.felix.eventadmin.impl.tasks.DefaultThreadPool;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
 import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationException;
@@ -39,14 +38,6 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * configuration for the event admin.
  *
  * The service knows about the following properties which are read at bundle startup:
- * <p>
- * <p>
- *      <tt>org.apache.felix.eventadmin.CacheSize</tt> - The size of various internal
- *          caches.
- * </p>
- * The default value is 30. Increase in case of a large number (more then 100) of
- * <tt>EventHandler</tt> services. A value less then 10 triggers the default value.
- * </p>
  * <p>
  * <p>
  *      <tt>org.apache.felix.eventadmin.ThreadPoolSize</tt> - The size of the thread
@@ -96,13 +87,14 @@ import org.osgi.service.metatype.MetaTypeProvider;
  * These properties are read at startup and serve as a default configuration.
  * If a configuration admin is configured, the event admin can be configured
  * through the config admin.
+ *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Configuration
 {
     /** The PID for the event admin. */
     static final String PID = "org.apache.felix.eventadmin.impl.EventAdmin";
 
-    static final String PROP_CACHE_SIZE = "org.apache.felix.eventadmin.CacheSize";
     static final String PROP_THREAD_POOL_SIZE = "org.apache.felix.eventadmin.ThreadPoolSize";
     static final String PROP_TIMEOUT = "org.apache.felix.eventadmin.Timeout";
     static final String PROP_REQUIRE_TOPIC = "org.apache.felix.eventadmin.RequireTopic";
@@ -111,8 +103,6 @@ public class Configuration
 
     /** The bundle context. */
     private final BundleContext m_bundleContext;
-
-    private int m_cacheSize;
 
     private int m_threadPoolSize;
 
@@ -207,14 +197,6 @@ public class Configuration
     {
         if ( config == null )
         {
-            // The size of various internal caches. At the moment there are 4
-            // internal caches affected. Each will cache the determined amount of
-            // small but frequently used objects (i.e., in case of the default value
-            // we end-up with a total of 120 small objects being cached). A value of less
-            // then 10 triggers the default value.
-            m_cacheSize = getIntProperty(PROP_CACHE_SIZE,
-                m_bundleContext.getProperty(PROP_CACHE_SIZE), 30, 10);
-
             // The size of the internal thread pool. Note that we must execute
             // each synchronous event dispatch that happens in the synchronous event
             // dispatching thread in a new thread, hence a small thread pool is o.k.
@@ -260,7 +242,6 @@ public class Configuration
         }
         else
         {
-            m_cacheSize = getIntProperty(PROP_CACHE_SIZE, config.get(PROP_CACHE_SIZE), 30, 10);
             m_threadPoolSize = getIntProperty(PROP_THREAD_POOL_SIZE, config.get(PROP_THREAD_POOL_SIZE), 20, 2);
             m_timeout = getIntProperty(PROP_TIMEOUT, config.get(PROP_TIMEOUT), 5000, Integer.MIN_VALUE);
             m_requireTopic = getBooleanProperty(config.get(PROP_REQUIRE_TOPIC), true);
@@ -297,20 +278,11 @@ public class Configuration
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
                 PROP_LOG_LEVEL + "=" + m_logLevel);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
-                PROP_CACHE_SIZE + "=" + m_cacheSize);
-        LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
             PROP_THREAD_POOL_SIZE + "=" + m_threadPoolSize);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
             PROP_TIMEOUT + "=" + m_timeout);
         LogWrapper.getLogger().log(LogWrapper.LOG_DEBUG,
             PROP_REQUIRE_TOPIC + "=" + m_requireTopic);
-
-        final TopicHandlerFilters topicHandlerFilters =
-            new CacheTopicHandlerFilters(new LeastRecentlyUsedCacheMap(m_cacheSize),
-            m_requireTopic);
-
-        final Filters filters = new CacheFilters(
-            new LeastRecentlyUsedCacheMap(m_cacheSize), m_bundleContext);
 
         // Note that this uses a lazy thread pool that will create new threads on
         // demand - in case none of its cached threads is free - until threadPoolSize
@@ -334,16 +306,14 @@ public class Configuration
             m_async_pool.configure(asyncThreadPoolSize);
         }
 
-        // The handlerTasks object is responsible to determine concerned EventHandler
-        // for a given event. Additionally, it keeps a list of blacklisted handlers.
-        // Note that blacklisting is deactivated by selecting a different scheduler
-        // below (and not in this HandlerTasks object!)
-        final HandlerTasks handlerTasks = new BlacklistingHandlerTasks(m_bundleContext,
-            new CleanBlackList(), topicHandlerFilters, filters);
-
         if ( m_admin == null )
         {
-            m_admin = new EventAdminImpl(handlerTasks, m_sync_pool, m_async_pool, m_timeout, m_ignoreTimeout);
+            m_admin = new EventAdminImpl(m_bundleContext,
+                    m_sync_pool,
+                    m_async_pool,
+                    m_timeout,
+                    m_ignoreTimeout,
+                    m_requireTopic);
 
             // Finally, adapt the outside events to our kind of events as per spec
             adaptEvents(m_admin);
@@ -356,7 +326,7 @@ public class Configuration
         }
         else
         {
-            m_admin.update(handlerTasks, m_timeout, m_ignoreTimeout);
+            m_admin.update(m_timeout, m_ignoreTimeout, m_requireTopic);
         }
 
     }
@@ -426,10 +396,10 @@ public class Configuration
         try
         {
             return new MetaTypeProviderImpl((ManagedService)managedService,
-                    m_cacheSize, m_threadPoolSize, m_timeout, m_requireTopic,
+                    m_threadPoolSize, m_timeout, m_requireTopic,
                     m_ignoreTimeout);
         }
-        catch (Throwable t)
+        catch (final Throwable t)
         {
             // we simply ignore this
         }

@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.eventadmin.impl.dispatch;
+package org.apache.felix.eventadmin.impl.tasks;
 
-import org.apache.felix.eventadmin.impl.tasks.SyncThread;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
 
 import EDU.oswego.cs.dl.util.concurrent.*;
@@ -95,13 +94,13 @@ public class DefaultThreadPool
      * Execute the task in a free thread or create a new one.
      * @param task The task to execute
      */
-    public void executeTask(Runnable task)
+    public void executeTask(final Runnable task)
     {
         try
         {
             super.execute(task);
         }
-        catch (Throwable t)
+        catch (final Throwable t)
         {
             LogWrapper.getLogger().log(
                     LogWrapper.LOG_WARNING,

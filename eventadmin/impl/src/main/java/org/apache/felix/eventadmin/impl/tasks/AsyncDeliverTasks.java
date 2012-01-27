@@ -20,14 +20,14 @@ package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.*;
 
-import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
+import org.osgi.service.event.Event;
 
 /**
  * This class does the actual work of the asynchronous event dispatch.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class AsyncDeliverTasks implements DeliverTask
+public class AsyncDeliverTasks
 {
     /** The thread pool to use to spin-off new threads. */
     private final DefaultThreadPool m_pool;
@@ -36,7 +36,7 @@ public class AsyncDeliverTasks implements DeliverTask
      * is the sync deliver tasks as this has all the code for timeout
      * handling etc.
      */
-    private final DeliverTask m_deliver_task;
+    private final SyncDeliverTasks m_deliver_task;
 
     /** A map of running threads currently delivering async events. */
     private final Map m_running_threads = new HashMap();
@@ -49,7 +49,7 @@ public class AsyncDeliverTasks implements DeliverTask
      *      dispatching thread is used to send a synchronous event
      * @param deliverTask The deliver tasks for dispatching the event.
      */
-    public AsyncDeliverTasks(final DefaultThreadPool pool, final DeliverTask deliverTask)
+    public AsyncDeliverTasks(final DefaultThreadPool pool, final SyncDeliverTasks deliverTask)
     {
         m_pool = pool;
         m_deliver_task = deliverTask;
@@ -60,9 +60,8 @@ public class AsyncDeliverTasks implements DeliverTask
      *
      * @param tasks The event handler dispatch tasks to execute
      *
-     * @see org.apache.felix.eventadmin.impl.tasks.DeliverTask#execute(org.apache.felix.eventadmin.impl.tasks.HandlerTask[])
      */
-    public void execute(final List tasks)
+    public void execute(final Collection tasks, final Event event)
     {
         final Thread currentThread = Thread.currentThread();
         TaskExecuter executer = null;
@@ -71,11 +70,11 @@ public class AsyncDeliverTasks implements DeliverTask
             TaskExecuter runningExecutor = (TaskExecuter)m_running_threads.get(currentThread);
             if ( runningExecutor != null )
             {
-                runningExecutor.add(tasks);
+                runningExecutor.add(tasks, event);
             }
             else
             {
-                executer = new TaskExecuter( tasks, currentThread );
+                executer = new TaskExecuter( tasks, event, currentThread );
                 m_running_threads.put(currentThread, executer);
             }
         }
@@ -91,10 +90,10 @@ public class AsyncDeliverTasks implements DeliverTask
 
         private final Object m_key;
 
-        public TaskExecuter(final List tasks, final Object key)
+        public TaskExecuter(final Collection tasks, final Event event, final Object key)
         {
             m_key = key;
-            m_tasks.add(tasks);
+            m_tasks.add(new Object[] {tasks, event});
         }
 
         public void run()
@@ -102,12 +101,12 @@ public class AsyncDeliverTasks implements DeliverTask
             boolean running;
             do
             {
-                List tasks = null;
+                Object[] tasks = null;
                 synchronized ( m_tasks )
                 {
-                    tasks = (List) m_tasks.remove(0);
+                    tasks = (Object[]) m_tasks.remove(0);
                 }
-                m_deliver_task.execute(tasks);
+                m_deliver_task.execute((Collection)tasks[0], (Event)tasks[1]);
                 synchronized ( m_running_threads )
                 {
                     running = m_tasks.size() > 0;
@@ -119,11 +118,11 @@ public class AsyncDeliverTasks implements DeliverTask
             } while ( running );
         }
 
-        public void add(final List tasks)
+        public void add(final Collection tasks, final Event event)
         {
             synchronized ( m_tasks )
             {
-                m_tasks.add(tasks);
+                m_tasks.add(new Object[] {tasks, event});
             }
         }
     }
