@@ -18,6 +18,8 @@
  */
 package org.apache.felix.eventadmin.impl.security;
 
+import java.security.Permission;
+
 import org.osgi.service.event.TopicPermission;
 
 /**
@@ -27,74 +29,61 @@ import org.osgi.service.event.TopicPermission;
  */
 public abstract class PermissionsUtil
 {
+    /** Marker if permission created failed. */
+    private static volatile boolean createPermissions = true;
+
     /**
      * Creates a <tt>TopicPermission</tt> for the given topic and the type PUBLISH
-     * Note that a
-     * <tt>java.lang.Object</tt> is returned in case creating a new TopicPermission
-     * fails. This assumes that Bundle.hasPermission is used in order to evaluate the
-     * created Permission which in turn will return true if security is not supported
-     * by the framework. Otherwise, it will return false due to receiving something
-     * that is not a subclass of <tt>java.lang.SecurityPermission</tt> hence, this
-     * combination ensures that access is granted in case a topic permission could
-     * not be created due to missing security support by the framework.
      *
      * @param topic The target topic
      *
-     * @return The created permission or a <tt>java.lang.Object</tt> in case the
-     *      permission could not be created.
+     * @return The created permission or <tt>null</tt> in case the
+     *         permission could not be created.
      *
      * @see org.osgi.service.event.TopicPermission
      */
-    public static Object createPublishPermission(final String topic)
+    public static Permission createPublishPermission(final String topic)
     {
-        Object result;
-        try
+        if ( createPermissions )
         {
-            result = new org.osgi.service.event.TopicPermission(topic, TopicPermission.PUBLISH);
-        } catch (Throwable t)
-        {
-            // This might happen in case security is not supported
-            // Bundle.hasPermission will return true in this case
-            // hence topicPermission = new Object() is o.k.
-
-            result = new Object();
+            try
+            {
+                return new org.osgi.service.event.TopicPermission(topic, TopicPermission.PUBLISH);
+            }
+            catch (Throwable t)
+            {
+                // This might happen in case security is not supported
+                createPermissions = false;
+            }
         }
-        return result;
+        return null;
     }
 
     /**
      * Creates a <tt>TopicPermission</tt> for the given topic and the type SUBSCRIBE
      * Note that a
-     * <tt>java.lang.Object</tt> is returned in case creating a new TopicPermission
-     * fails. This assumes that Bundle.hasPermission is used in order to evaluate the
-     * created Permission which in turn will return true if security is not supported
-     * by the framework. Otherwise, it will return false due to receiving something
-     * that is not a subclass of <tt>java.lang.SecurityPermission</tt> hence, this
-     * combination ensures that access is granted in case a topic permission could
-     * not be created due to missing security support by the framework.
      *
      * @param topic The target topic
      *
-     * @return The created permission or a <tt>java.lang.Object</tt> in case the
+     * @return The created permission or a <tt>null</tt> in case the
      *      permission could not be created.
      *
      * @see org.osgi.service.event.TopicPermission
      */
-    public static Object createSubscribePermission(final String topic)
+    public static Permission createSubscribePermission(final String topic)
     {
-        Object result;
-        try
+        if ( createPermissions )
         {
-            result = new org.osgi.service.event.TopicPermission(topic, TopicPermission.SUBSCRIBE);
-        } catch (Throwable t)
-        {
-            // This might happen in case security is not supported
-            // Bundle.hasPermission will return true in this case
-            // hence topicPermission = new Object() is o.k.
-
-            result = new Object();
+            try
+            {
+                return new org.osgi.service.event.TopicPermission(topic, TopicPermission.SUBSCRIBE);
+            }
+            catch (Throwable t)
+            {
+                // This might happen in case security is not supported
+                createPermissions = false;
+            }
         }
-        return result;
+        return null;
     }
-
 }

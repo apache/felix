@@ -28,11 +28,12 @@ import org.osgi.service.metatype.*;
 
 /**
  * The optional meta type provider for the event admin config.
+ *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MetaTypeProviderImpl
     implements MetaTypeProvider, ManagedService
 {
-    private final int m_cacheSize;
     private final int m_threadPoolSize;
     private final int m_timeout;
     private final boolean m_requireTopic;
@@ -41,11 +42,10 @@ public class MetaTypeProviderImpl
     private final ManagedService m_delegatee;
 
     public MetaTypeProviderImpl(final ManagedService delegatee,
-            final int cacheSize, final int threadPoolSize,
+            final int threadPoolSize,
             final int timeout, final boolean requireTopic,
             final String[] ignoreTimeout)
     {
-        m_cacheSize = cacheSize;
         m_threadPoolSize = threadPoolSize;
         m_timeout = timeout;
         m_requireTopic = requireTopic;
@@ -84,11 +84,6 @@ public class MetaTypeProviderImpl
         if ( ocd == null )
         {
             final ArrayList adList = new ArrayList();
-
-            adList.add( new AttributeDefinitionImpl( Configuration.PROP_CACHE_SIZE, "Cache Size",
-                    "The size of various internal caches. The default value is 30. Increase in case " +
-                    "of a large number (more then 100) of services. A value less then 10 triggers the " +
-                    "default value.", m_cacheSize) );
 
             adList.add( new AttributeDefinitionImpl( Configuration.PROP_THREAD_POOL_SIZE, "Thread Pool Size",
                 "The size of the thread pool. The default value is 10. Increase in case of a large amount " +

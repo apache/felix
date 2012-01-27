@@ -18,10 +18,11 @@
  */
 package org.apache.felix.eventadmin.impl.tasks;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.felix.eventadmin.impl.dispatch.DefaultThreadPool;
+import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
+import org.osgi.service.event.Event;
 
 import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
 
@@ -52,119 +53,30 @@ import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class SyncDeliverTasks implements DeliverTask
+public class SyncDeliverTasks
 {
+
     /** The thread pool used to spin-off new threads. */
-    final DefaultThreadPool m_pool;
+    private final DefaultThreadPool pool;
 
-    /** The timeout for event handlers, 0 = disabled. */
-    long m_timeout;
-
-    /**
-     * The matcher interface for checking if timeout handling
-     * is disabled for the handler.
-     * Matching is based on the class name of the event handler.
-     */
-    private static interface Matcher
-    {
-        boolean match(String className);
-    }
-
-    /** Match a package. */
-    private static final class PackageMatcher implements Matcher
-    {
-        private final String m_packageName;
-
-        public PackageMatcher(final String name)
-        {
-            m_packageName = name;
-        }
-        public boolean match(String className)
-        {
-            final int pos = className.lastIndexOf('.');
-            return pos > -1 && className.substring(0, pos).equals(m_packageName);
-        }
-    }
-
-    /** Match a package or sub package. */
-    private static final class SubPackageMatcher implements Matcher
-    {
-        private final String m_packageName;
-
-        public SubPackageMatcher(final String name)
-        {
-            m_packageName = name + '.';
-        }
-        public boolean match(String className)
-        {
-            final int pos = className.lastIndexOf('.');
-            return pos > -1 && className.substring(0, pos + 1).startsWith(m_packageName);
-        }
-    }
-
-    /** Match a class name. */
-    private static final class ClassMatcher implements Matcher
-    {
-        private final String m_className;
-
-        public ClassMatcher(final String name)
-        {
-            m_className = name;
-        }
-        public boolean match(String className)
-        {
-            return m_className.equals(className);
-        }
-    }
-
-    /** The matchers for ignore timeout handling. */
-    private Matcher[] m_ignoreTimeoutMatcher;
+    private long timeout;
 
     /**
      * Construct a new sync deliver tasks.
      * @param pool The thread pool used to spin-off new threads.
-     * @param timeout The timeout for an event handler, 0 = disabled
      */
-    public SyncDeliverTasks(final DefaultThreadPool pool, final long timeout, final String[] ignoreTimeout)
+    public SyncDeliverTasks(final DefaultThreadPool pool, final long timeout)
     {
-        m_pool = pool;
-        update(timeout, ignoreTimeout);
+        this.pool = pool;
+        this.update(timeout);
     }
 
-    public void update(final long timeout, final String[] ignoreTimeout) {
-        m_timeout = timeout;
-        if ( ignoreTimeout == null || ignoreTimeout.length == 0 )
-        {
-            m_ignoreTimeoutMatcher = null;
-        }
-        else
-        {
-            Matcher[] ignoreTimeoutMatcher = new Matcher[ignoreTimeout.length];
-            for(int i=0;i<ignoreTimeout.length;i++)
-            {
-                String value = ignoreTimeout[i];
-                if ( value != null )
-                {
-                    value = value.trim();
-                }
-                if ( value != null && value.length() > 0 )
-                {
-                    if ( value.endsWith(".") )
-                    {
-                        ignoreTimeoutMatcher[i] = new PackageMatcher(value.substring(0, value.length() - 1));
-                    }
-                    else if ( value.endsWith("*") )
-                    {
-                        ignoreTimeoutMatcher[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
-                    }
-                    else
-                    {
-                        ignoreTimeoutMatcher[i] = new ClassMatcher(value);
-                    }
-                }
-            }
-            m_ignoreTimeoutMatcher = ignoreTimeoutMatcher;
-        }
+    /**
+     * Update the timeout configuration
+     */
+    public void update(final long timeout)
+    {
+        this.timeout = timeout;
     }
 
     /**
@@ -172,27 +84,12 @@ public class SyncDeliverTasks implements DeliverTask
      * task.
      * @param tasks The event handler dispatch tasks to execute
      */
-    private boolean useTimeout(final HandlerTask task)
+    private boolean useTimeout(final EventHandlerProxy proxy)
     {
-        // we only check the classname if a timeout is configured
-        if ( m_timeout > 0)
+        // we only check the proxy if a timeout is configured
+        if ( this.timeout > 0)
         {
-            final Matcher[] ignoreTimeoutMatcher = m_ignoreTimeoutMatcher;
-            if ( ignoreTimeoutMatcher != null )
-            {
-                final String className = task.getHandlerClassName();
-                for(int i=0;i<ignoreTimeoutMatcher.length;i++)
-                {
-                    if ( ignoreTimeoutMatcher[i] != null)
-                    {
-                        if ( ignoreTimeoutMatcher[i].match(className) )
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
+            return proxy.useTimeout();
         }
         return false;
     }
@@ -203,9 +100,8 @@ public class SyncDeliverTasks implements DeliverTask
      *
      * @param tasks The event handler dispatch tasks to execute
      *
-     * @see org.apache.felix.eventadmin.impl.tasks.DeliverTask#execute(List)
      */
-    public void execute(final List tasks)
+    public void execute(final Collection tasks, final Event event)
     {
         final Thread sleepingThread = Thread.currentThread();
         final SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
@@ -213,20 +109,20 @@ public class SyncDeliverTasks implements DeliverTask
         final Iterator i = tasks.iterator();
         while ( i.hasNext() )
         {
-            final HandlerTask task = (HandlerTask)i.next();
+            final EventHandlerProxy task = (EventHandlerProxy)i.next();
 
             if ( !useTimeout(task) )
             {
                 // no timeout, we can directly execute
-                task.execute();
+                task.sendEvent(event);
             }
             else if ( syncThread != null )
             {
                 // if this is a cascaded event, we directly use this thread
                 // otherwise we could end up in a starvation
                 final long startTime = System.currentTimeMillis();
-                task.execute();
-                if ( System.currentTimeMillis() - startTime > m_timeout )
+                task.sendEvent(event);
+                if ( System.currentTimeMillis() - startTime > this.timeout )
                 {
                     task.blackListHandler();
                 }
@@ -235,7 +131,7 @@ public class SyncDeliverTasks implements DeliverTask
             {
                 final Rendezvous startBarrier = new Rendezvous();
                 final Rendezvous timerBarrier = new Rendezvous();
-                m_pool.executeTask(new Runnable()
+                this.pool.executeTask(new Runnable()
                 {
                     public void run()
                     {
@@ -244,7 +140,7 @@ public class SyncDeliverTasks implements DeliverTask
                             // notify the outer thread to start the timer
                             startBarrier.waitForRendezvous();
                             // execute the task
-                            task.execute();
+                            task.sendEvent(event);
                             // stop the timer
                             timerBarrier.waitForRendezvous();
                         }
@@ -262,7 +158,7 @@ public class SyncDeliverTasks implements DeliverTask
                 // if someone wakes us up it's the finished inner task
                 try
                 {
-                    timerBarrier.waitAttemptForRendezvous(m_timeout);
+                    timerBarrier.waitAttemptForRendezvous(this.timeout);
                 }
                 catch (final TimeoutException ie)
                 {

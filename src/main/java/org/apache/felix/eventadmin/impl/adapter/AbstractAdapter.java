@@ -24,6 +24,7 @@ import org.osgi.service.event.EventAdmin;
 /**
  * Abstract base class for all adapters.
  * This class allows to exchange the event admin at runtime
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class AbstractAdapter
