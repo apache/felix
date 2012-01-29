@@ -71,10 +71,10 @@ public class ConfigurationAdapter implements Configuration
      */
     public String getBundleLocation()
     {
-        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation()", ( Throwable ) null );
-
         // CM 1.4 / 104.13.2.4
         final String bundleLocation = delegatee.getBundleLocation();
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
+            { bundleLocation } );
         configurationAdmin.checkPermission( ( bundleLocation == null ) ? "*" : bundleLocation );
         checkDeleted();
         return bundleLocation;

@@ -708,6 +708,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( pids != null )
         {
+            if ( isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                log( LogService.LOG_DEBUG, "configure(ManagedService {0})", new Object[]
+                    { toString( sr ) } );
+            }
+
             for ( int i = 0; i < pids.length; i++ )
             {
                 ManagedServiceUpdate update = new ManagedServiceUpdate( pids[i], sr, service );
@@ -728,6 +734,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( pids != null )
         {
+            if ( isLogEnabled( LogService.LOG_DEBUG ) )
+            {
+                log( LogService.LOG_DEBUG, "configure(ManagedServiceFactory {0})", new Object[]
+                    { toString( sr ) } );
+            }
+
             for ( int i = 0; i < pids.length; i++ )
             {
                 ManagedServiceFactoryUpdate update = new ManagedServiceFactoryUpdate( pids[i], sr, service );
@@ -1558,47 +1570,56 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 return;
             }
 
-            for ( Iterator ci=configs.entrySet().iterator(); ci.hasNext(); )
+            if ( configs == null || configs.isEmpty() )
             {
-                final Map.Entry entry = (Map.Entry) ci.next();
-                final ConfigurationImpl cfg = (ConfigurationImpl) entry.getKey();
-                final Dictionary properties = (Dictionary) entry.getValue();
-                final long revision = ( ( Long ) revisions.get( cfg ) ).longValue();
-
-                log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                    { cfg.getPid(), new Long( revision ) } );
-
-                // CM 1.4 / 104.13.2.1
-                if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
+                log( LogService.LOG_DEBUG, "No configuration with factory PID {0}; not updating ManagedServiceFactory",
+                    new Object[]
+                        { factoryPid } );
+            }
+            else
+            {
+                for ( Iterator ci = configs.entrySet().iterator(); ci.hasNext(); )
                 {
-                    log( LogService.LOG_ERROR,
-                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
-                        new Object[]
-                            { cfg.getPid(), ConfigurationManager.toString( sr ), cfg.getBundleLocation() } );
-                    continue;
-                }
+                    final Map.Entry entry = ( Map.Entry ) ci.next();
+                    final ConfigurationImpl cfg = ( ConfigurationImpl ) entry.getKey();
+                    final Dictionary properties = ( Dictionary ) entry.getValue();
+                    final long revision = ( ( Long ) revisions.get( cfg ) ).longValue();
 
-                // 104.4.2 Dynamic Binding
-                cfg.tryBindLocation( serviceBundle.getLocation() );
+                    log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
+                        { cfg.getPid(), new Long( revision ) } );
 
-                // prepare the configuration for the service (call plugins)
-                // call the plugins with cm.target set to the service's factory PID
-                // (clarification in Section 104.9.1 of Compendium 4.2)
-                callPlugins( properties, factoryPid, sr, cfg );
-
-                // update the service with the configuration (if non-null)
-                if ( properties != null )
-                {
-                    log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
-                        { ConfigurationManager.toString( sr ), cfg.getPid() } );
-
-                    try
+                    // CM 1.4 / 104.13.2.1
+                    if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
                     {
-                        service.updated( cfg.getPid(), properties );
+                        log( LogService.LOG_ERROR,
+                            "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
+                            new Object[]
+                                { cfg.getPid(), ConfigurationManager.toString( sr ), cfg.getBundleLocation() } );
+                        continue;
                     }
-                    catch ( Throwable t )
+
+                    // 104.4.2 Dynamic Binding
+                    cfg.tryBindLocation( serviceBundle.getLocation() );
+
+                    // prepare the configuration for the service (call plugins)
+                    // call the plugins with cm.target set to the service's factory PID
+                    // (clarification in Section 104.9.1 of Compendium 4.2)
+                    callPlugins( properties, factoryPid, sr, cfg );
+
+                    // update the service with the configuration (if non-null)
+                    if ( properties != null )
                     {
-                        handleCallBackError( t, sr, cfg );
+                        log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
+                            { ConfigurationManager.toString( sr ), cfg.getPid() } );
+
+                        try
+                        {
+                            service.updated( cfg.getPid(), properties );
+                        }
+                        catch ( Throwable t )
+                        {
+                            handleCallBackError( t, sr, cfg );
+                        }
                     }
                 }
             }
