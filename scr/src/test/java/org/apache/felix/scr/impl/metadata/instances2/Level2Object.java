@@ -52,4 +52,14 @@ public class Level2Object extends Level1Object
     {
         setCalledMethod( "activate_suitable" );
     }
+
+    private void activate_comp_unsuitable( ComponentContext ctx )
+    {
+        setCalledMethod( "activate_comp_unsuitable" );
+    }
+
+    protected void activate_comp_unsuitable( Map map )
+    {
+        setCalledMethod( "activate_comp_unsuitable" );
+    }
 }

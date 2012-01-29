@@ -87,7 +87,10 @@ public class ActivateMethod extends BaseMethod
                 try
                 {
                     // find the declared method in this class
-                    return getMethod( targetClass, getMethodName(), null, acceptPrivate, acceptPackage );
+                    Method m = getMethod( targetClass, getMethodName(), null, acceptPrivate, acceptPackage );
+                    if ( m != null ) {
+                        return m;
+                    }
                 }
                 catch ( SuitableMethodNotAccessibleException smnae )
                 {
@@ -188,7 +191,7 @@ public class ActivateMethod extends BaseMethod
 
         // rethrow if we looked for all method signatures and only found
         // one or more which would be suitable but not accessible
-        if ( ex != null )
+        if ( singleParameterMethod == null && ex != null )
         {
             throw ex;
         }

@@ -351,6 +351,10 @@ abstract class BaseMethod
                 getComponentManager().log( LogService.LOG_WARNING, buf.toString(), cdfe );
             }
         }
+        catch ( SuitableMethodNotAccessibleException e)
+        {
+            throw e;
+        }
         catch ( Throwable throwable )
         {
             // unexpected problem accessing the method, don't let everything
@@ -358,7 +362,7 @@ abstract class BaseMethod
             throw new InvocationTargetException( throwable, "Unexpected problem trying to get method " + name );
         }
 
-        // cuaght and ignored exception, assume no method and continue search
+        // caught and ignored exception, assume no method and continue search
         return null;
     }
 
