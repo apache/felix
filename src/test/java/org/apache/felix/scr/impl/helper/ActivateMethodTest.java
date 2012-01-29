@@ -208,6 +208,34 @@ public class ActivateMethodTest extends TestCase
         ensureMethodNotFoundMethod( level3, "activate_suitable" );
     }
 
+    public void test_unsuitable_method_selection() throws Exception
+    {
+        //check that finding an unsuitable method does not prevent finding
+        // a lower precedence suitable method.
+
+        checkMethod( level2, "activate_comp_unsuitable" );
+
+        checkMethod( level3, "activate_comp_unsuitable" );
+    }
+
+    public void test_precedence() throws Exception
+    {
+        //All tested methods are only in base.  They differ in argurments and visibility.
+        //R4.2 compendium  112.5.8
+        //private method, arg ComponentContext
+        checkMethod( base, "activate_precedence_1", "activate_precedence_1_comp" );
+        //package method, arg BundleContext
+        checkMethod( level1, "activate_precedence_1", "activate_precedence_1_bundleContext" );
+        //protected method, arg Map
+        checkMethod( level2, "activate_precedence_1", "activate_precedence_1_map" );
+
+        //private method, arg Map
+        checkMethod( base, "activate_precedence_2", "activate_precedence_2_map" );
+        //package method, args ComponentContext and Map
+        checkMethod( level1, "activate_precedence_2", "activate_precedence_2_comp_bundleContext" );
+        //protected method, no args
+        checkMethod( level2, "activate_precedence_2", "activate_precedence_2_empty" );
+    }
 
     //---------- internal
 
@@ -220,6 +248,20 @@ public class ActivateMethodTest extends TestCase
      * @param methodName
      */
     private void checkMethod( BaseObject obj, String methodName )
+    {
+        checkMethod( obj, methodName, methodName );
+    }
+
+    /**
+     * Checks whether a method with the given name can be found for the
+     * activate/deactivate method parameter list and whether the method returns
+     * the expected description when called.
+     *
+     * @param obj
+     * @param methodName
+     * @param methodDesc
+     */
+    private void checkMethod( BaseObject obj, String methodName, String methodDesc )
     {
         ComponentMetadata metadata = new ComponentMetadata( 0 )
         {
@@ -234,7 +276,7 @@ public class ActivateMethodTest extends TestCase
         Method m = get(am, "m_method");
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
-        assertEquals( methodName, obj.getCalledMethod() );
+        assertEquals( methodDesc, obj.getCalledMethod() );
     }
 
 

@@ -428,6 +428,8 @@ public class ReferenceMetadata
                     null );
             m_updated = null;
         }
+
+        m_validated = true;
     }
 
 }

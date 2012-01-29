@@ -19,6 +19,8 @@
 package org.apache.felix.scr.impl.metadata.instances;
 
 
+import java.util.Map;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
@@ -68,4 +70,38 @@ public class BaseObject
     {
         setCalledMethod( "activate_suitable" );
     }
+
+    //precedence rules
+
+    private void activate_precedence_1( ComponentContext ctx )
+    {
+        setCalledMethod("activate_precedence_1_comp");
+    }
+
+    void activate_precedence_1( BundleContext bundleContext )
+    {
+        setCalledMethod("activate_precedence_1_bundleContext");
+    }
+
+    protected void activate_precedence_1( Map map)
+    {
+        setCalledMethod("activate_precedence_1_map");
+    }
+
+    private void activate_precedence_2( Map map )
+    {
+        setCalledMethod("activate_precedence_2_map");
+    }
+
+    void activate_precedence_2( ComponentContext ctx, BundleContext bundle )
+    {
+        setCalledMethod("activate_precedence_2_comp_bundleContext");
+    }
+
+    protected void activate_precedence_2()
+    {
+        setCalledMethod("activate_precedence_2_empty");
+    }
+
+
 }
