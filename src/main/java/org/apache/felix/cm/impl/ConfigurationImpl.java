@@ -290,6 +290,8 @@ class ConfigurationImpl extends ConfigurationBase
     {
         if ( this.getBundleLocation() == null )
         {
+            getConfigurationManager().log( LogService.LOG_DEBUG, "Dynamically binding config {0} to {1}", new Object[]
+                { getPid(), bundleLocation } );
             setDynamicBundleLocation( bundleLocation, true );
         }
 
