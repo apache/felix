@@ -68,7 +68,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager im
     /* (non-Javadoc)
      * @see org.apache.felix.scr.AbstractComponentManager#deleteComponent()
      */
-    protected void deleteComponent()
+    protected void deleteComponent( int reason )
     {
         // nothing to do, this is handled by ungetService
     }
