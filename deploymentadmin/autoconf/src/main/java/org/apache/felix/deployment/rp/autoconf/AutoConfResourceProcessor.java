@@ -399,7 +399,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
 
     private boolean isFactoryConfig(Designate designate) {
     	String factoryPid = designate.getFactoryPid();
-    	return (factoryPid != null || !"".equals(factoryPid));
+    	return (factoryPid != null && !"".equals(factoryPid));
     }
 
     private Bundle getBundle(String bundleLocation, boolean isFactory) throws ResourceProcessorException {
