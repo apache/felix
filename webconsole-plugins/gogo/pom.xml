@@ -1,0 +1,180 @@
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	you under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>2.1</version>
+		<relativePath>../../../pom/pom.xml</relativePath>
+	</parent>
+
+	<artifactId>org.apache.felix.webconsole.plugins.gogo</artifactId>
+	<packaging>bundle</packaging>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<name>Apache Felix Web Gogo Shell Plugin</name>
+	<description>
+        This is a plugin for the Apache Felix OSGi web console that provides access to Gogo shell commands.
+    </description>
+
+    <properties>
+        <dollar>$</dollar>
+    </properties>
+    
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/gogo</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/gogo</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/gogo</url>
+	</scm>
+
+	<build>
+		<plugins>
+			<!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>native2ascii-maven-plugin</artifactId>
+                <version>1.0-beta-1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>native2ascii</goal>
+						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+            
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <version>1.7.2</version>
+                <!-- As QDox is trying to inspect/load the classes
+                     we have to add a slf4j implementation to the
+                     class path of the plugin - we usually use
+                     a static field for the logger and during class
+                     loading this field requires an slf4j implementation!
+                 -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                        <version>1.5.2</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>generate-scr-scrdescriptor</id>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <service.vendor>The Apache Software Foundation</service.vendor>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.6</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Bundle-SymbolicName>
+							${project.artifactId}
+                        </Bundle-SymbolicName>
+						<Bundle-Activator>
+							org.apache.felix.webconsole.plugins.gogo.impl.Activator
+                        </Bundle-Activator>
+                        <Embed-Dependency>
+                            jline;inline=true
+                        </Embed-Dependency>
+                        <Bundle-NativeCode>
+                            META-INF/native/windows32/jansi.dll;osname=Win32;processor=x86,
+                            META-INF/native/windows64/jansi.dll;osname=Win32;processor=x86-64,
+                            META-INF/native/linux32/libjansi.so;osname=Linux;processor=x86,
+                            META-INF/native/linux64/libjansi.so;osname=Linux;processor=x86-64,
+                            META-INF/native/osx/libjansi.jnilib;osname=MacOSX,
+                            *
+                        </Bundle-NativeCode>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.gogo.runtime</artifactId>
+            <version>0.6.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.6.0</version>
+            <scope>provided</scope>
+        </dependency>
+ 	</dependencies>
+</project>
