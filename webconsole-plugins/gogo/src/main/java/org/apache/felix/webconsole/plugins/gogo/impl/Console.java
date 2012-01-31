@@ -45,8 +45,6 @@ import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
 import org.fusesource.jansi.Ansi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Console implements Runnable {
 
@@ -61,8 +59,6 @@ public class Console implements Runnable {
     public static final String LAST_EXCEPTION = "karaf.lastException";
 
     public static final String IGNORE_INTERRUPTS = "karaf.ignoreInterrupts";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Console.class);
 
     protected CommandSession session;
 
@@ -160,7 +156,6 @@ public class Console implements Runnable {
                 }
                 session.execute(new String(w.toCharArray()));
             } catch (Exception e) {
-                LOGGER.debug("Error in initialization script", e);
                 System.err.println("Error in initialization script: " + e.getMessage());
             } finally {
                 if (r != null) {
@@ -216,7 +211,6 @@ public class Console implements Runnable {
                 break;
             } catch (Exception t) {
                 try {
-                    LOGGER.info("Exception caught while executing command", t);
                     session.put(LAST_EXCEPTION, t);
                     session.getConsole().print(Ansi.ansi().fg(Ansi.Color.RED).toString());
                     session.getConsole().println(

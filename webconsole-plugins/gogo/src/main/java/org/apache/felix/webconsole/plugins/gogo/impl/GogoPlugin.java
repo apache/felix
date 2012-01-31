@@ -24,6 +24,7 @@ package org.apache.felix.webconsole.plugins.gogo.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.PipedInputStream;
@@ -32,42 +33,29 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.zip.GZIPOutputStream;
 
-import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.osgi.framework.BundleContext;
 
 /**
  * The <code>GogoPlugin</code>
  */
-@Component
-@Service(Servlet.class)
 public class GogoPlugin extends SimpleWebConsolePlugin {
 
     /** Pseudo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
 
-    @Property(name=WebConsoleConstants.PLUGIN_LABEL)
     public static final String LABEL = "gogo";
 
-    @Property(name=WebConsoleConstants.PLUGIN_TITLE)
     public static final String TITLE = "Gogo";
 
     public static final int TERM_WIDTH = 120;
     public static final int TERM_HEIGHT = 39;
 
-    @Reference
     private CommandProcessor commandProcessor;
 
     public GogoPlugin() {
@@ -75,14 +63,18 @@ public class GogoPlugin extends SimpleWebConsolePlugin {
     }
 
     @Override
-    @Activate
     public void activate(BundleContext bundleContext) {
         super.activate(bundleContext);
+        this.commandProcessor = new CommandProcessor() {
+            public CommandSession createSession(InputStream in, PrintStream out, PrintStream err) {
+                return ((CommandProcessor) getService(CommandProcessor.class.getName())).createSession(in, out, err);
+            }
+        };
     }
 
     @Override
-    @Deactivate
     public void deactivate() {
+        this.commandProcessor = null;
         super.deactivate();
     }
 

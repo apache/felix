@@ -24,11 +24,21 @@ import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
 
+    private GogoPlugin plugin;
+
     public void start(BundleContext context) throws Exception {
         AnsiConsole.systemInstall();
+
+        this.plugin = new GogoPlugin();
+        this.plugin.register(context);
     }
 
     public void stop(BundleContext context) throws Exception {
+        if (this.plugin != null) {
+            this.plugin.unregister();
+            this.plugin = null;
+        }
+
         AnsiConsole.systemUninstall();
     }
 
