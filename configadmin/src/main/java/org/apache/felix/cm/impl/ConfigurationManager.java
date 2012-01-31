@@ -1105,20 +1105,20 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             final ConfigurationException ce = ( ConfigurationException ) error;
             if ( ce.getProperty() != null )
             {
-                log( LogService.LOG_ERROR, "{0}: Updating configuration property {1} caused a problem: {2}",
+                log( LogService.LOG_ERROR, "{0}: Updating property {1} of configuration {2} caused a problem: {3}",
                     new Object[]
-                        { toString( target ), ce.getProperty(), ce.getReason(), ce } );
+                        { toString( target ), ce.getProperty(), config.getPid(), ce.getReason(), ce } );
             }
             else
             {
-                log( LogService.LOG_ERROR, "{0}: Updating configuration caused a problem: {1}", new Object[]
-                    { toString( target ), ce.getReason(), ce } );
+                log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}", new Object[]
+                    { toString( target ), config.getPid(), ce.getReason(), ce } );
             }
         }
         else
         {
             {
-                log( LogService.LOG_ERROR, "{0}: Unexpected problem updating {1}", new Object[]
+                log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
                     { toString( target ), config, error } );
             }
 
