@@ -161,6 +161,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // flag indicating whether BundleChange events should be consumed (FELIX-979)
     private volatile boolean handleBundleEvents;
 
+    // flag indicating whether the manager is considered alive
+    private volatile boolean isActive;
+
     public void start( BundleContext bundleContext )
     {
         // track the log service using a ServiceTracker
@@ -231,6 +234,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         persistenceManagerTracker = new ServiceTracker( bundleContext, PersistenceManager.class.getName(), null );
         persistenceManagerTracker.open();
 
+        // consider alive now (before clients use Configuration Admin
+        // service registered in the next step)
+        isActive = true;
+
         // create and register configuration admin - start after PM tracker ...
         ConfigurationAdminFactory caf = new ConfigurationAdminFactory( this );
         Hashtable props = new Hashtable();
@@ -277,6 +284,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             reg.unregister();
         }
 
+        // consider inactive after unregistering such that during
+        // unregistration the manager is still alive and can react
+        isActive = false;
+
         // stop handling ManagedService[Factory] services
         managedServiceFactoryTracker.close();
         managedServiceTracker.close();
@@ -310,6 +321,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
         this.bundleContext = null;
+    }
+
+
+    /**
+     * Returns <code>true</code> if this manager is considered active.
+     */
+    boolean isActive()
+    {
+        return isActive;
     }
 
 

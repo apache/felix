@@ -21,6 +21,7 @@ package org.apache.felix.cm.integration;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
@@ -45,6 +46,343 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         // uncomment to enable debugging of this test class
         // paxRunnerVmOption = DEBUG_VM_OPTION;
     }
+
+
+    @Test
+    public void test_configuration_getFacotryPid_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.getFactoryPid();
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_equals_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.equals( config );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_hashCode_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.hashCode();
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_toString_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.toString();
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    public void test_configuration_getPid_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.getPid();
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_after_getProperties_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.getProperties();
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_delete_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.delete();
+            TestCase.fail( "Expected IllegalStateException for config.delete" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for config.delete" );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_after_getBundleLocation_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.getBundleLocation();
+            TestCase.fail( "Expected IllegalStateException for config.getBundleLocation" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for config.getBundleLocation" );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_setBundleLocation_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.setBundleLocation( "?*" );
+            TestCase.fail( "Expected IllegalStateException for config.setBundleLocation" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for config.setBundleLocation" );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_update_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.update();
+            TestCase.fail( "Expected IllegalStateException for config.update" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for config.update" );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    @Test
+    public void test_configuration_update_with_Dictionary_after_config_admin_stop() throws BundleException
+    {
+        final String pid = "test_configuration_after_config_admin_stop";
+        final Configuration config = configure( pid, null, true );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            config.update( new Hashtable<String, Object>()
+            {
+                {
+                    put( "sample", "sample" );
+                }
+            } );
+            TestCase.fail( "Expected IllegalStateException for config.update" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for config.update" );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
 
     @Test
     public void test_basic_configuration_configure_then_start() throws BundleException, IOException
