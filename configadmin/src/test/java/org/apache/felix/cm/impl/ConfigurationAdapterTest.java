@@ -51,7 +51,13 @@ public class ConfigurationAdapterTest extends TestCase
     private static final String TEST_LOCATION = "test:location";
 
     private final PersistenceManager pm = new MockPersistenceManager();
-    private final MockConfigurationManager configMgr = new MockConfigurationManager();
+    private final MockConfigurationManager configMgr = new MockConfigurationManager()
+    {
+        boolean isActive()
+        {
+            return true;
+        }
+    };
 
     {
         ARRAY_VALUE = new String[]

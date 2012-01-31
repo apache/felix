@@ -77,6 +77,16 @@ abstract class ConfigurationBase
     }
 
 
+    /**
+     * Returns <code>true</code> if the ConfigurationManager of this
+     * configuration is still active.
+     */
+    boolean isActive()
+    {
+        return configurationManager.isActive();
+    }
+
+
     abstract void store() throws IOException;
 
 
