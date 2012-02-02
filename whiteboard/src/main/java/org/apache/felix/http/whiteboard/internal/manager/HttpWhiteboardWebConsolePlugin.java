@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -131,7 +133,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         }
     }
 
-    private void printFilterMappings(PrintWriter pw, Map<String, FilterMapping> mappings)
+    private void printFilterMappings(PrintWriter pw, Set<FilterMapping> mappings)
     {
         pw.println("<tr>");
         pw.println("<th class='content container' colspan='4'>Registered Filter Services</td>");
@@ -143,7 +145,7 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println("<th class='content'>HttpContext</td>");
         pw.println("</tr>");
 
-        for (FilterMapping fm: mappings.values())
+        for (FilterMapping fm : mappings)
         {
             pw.println("<tr class='content'>");
             pw.println("<td class='content'>" + fm.getPattern() + "</td>");
@@ -228,10 +230,10 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         pw.println();
     }
 
-    private void printFilterMappingsTxt(PrintWriter pw, Map<String, FilterMapping> mappings)
+    private void printFilterMappingsTxt(PrintWriter pw, Set<FilterMapping> mappings)
     {
         pw.println("Registered Filter Services");
-        for (FilterMapping fm : mappings.values())
+        for (FilterMapping fm : mappings)
         {
             pw.printf("  %s ==> %s (%s, %s, %s, %s)%n", fm.getPattern(), fm.getFilter(),
                 fm.isRegistered() ? "registered" : "unregistered", fm.getRanking(), fm.getInitParams(), fm.getContext());
@@ -298,14 +300,40 @@ public class HttpWhiteboardWebConsolePlugin extends HttpServlet
         return mappings;
     }
 
-    private Map<String, FilterMapping> getFilters()
+    private Set<FilterMapping> getFilters()
     {
-        Map<String, FilterMapping> mappings = new TreeMap<String, FilterMapping>();
+        Set<FilterMapping> mappings = new TreeSet<FilterMapping>(new Comparator<FilterMapping>()
+        {
+            public int compare(FilterMapping o1, FilterMapping o2)
+            {
+                if (o1 == o2)
+                {
+                    return 0;
+                }
+                int res = o1.getPattern().compareTo(o2.getPattern());
+                if (res == 0)
+                {
+                    if (o1.getRanking() > o2.getRanking())
+                    {
+                        res = -1;
+                    }
+                    else if (o1.getRanking() < o2.getRanking())
+                    {
+                        res = 1;
+                    }
+                    else
+                    {
+                        res = o1.getFilter().toString().compareTo(o2.getFilter().toString());
+                    }
+                }
+                return res;
+            }
+        });
         for (AbstractMapping mapping : this.extMgr.getMappings().values())
         {
             if (mapping instanceof FilterMapping)
             {
-                mappings.put(((FilterMapping) mapping).getPattern(), (FilterMapping) mapping);
+                mappings.add((FilterMapping) mapping);
             }
         }
         return mappings;
