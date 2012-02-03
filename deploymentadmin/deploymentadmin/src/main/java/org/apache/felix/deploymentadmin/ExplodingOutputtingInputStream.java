@@ -34,8 +34,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 import java.util.jar.Attributes.Name;
+import java.util.jar.Manifest;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -73,7 +73,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         super(inputStream, output);
         m_contentDir = root;
         m_indexFile = index;
-        m_input = new PipedInputStream(output);
+        m_input = new PipedInputStream(output /*, 8 FELIX-3336: if you provide such a small buffer, the error is reproducible (see below) */);
         m_task = new Thread(this, "Apache Felix DeploymentAdmin - ExplodingOutputtingInputStream");
         m_task.start();
     }
@@ -123,17 +123,21 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
             // TODO: log this
         }
         finally {
-            if (input != null) {
-                try {
-                    input.close();
-                }
-                catch (IOException e) {
-                    // Not much we can do
-                }
-            }
+            // FELIX 3336: removed closing of the input stream here, I'm quite sure that was plain wrong
             if (writer != null) {
                 writer.close();
             }
+        }
+        // FELIX-3336: if you include this code, the issue is gone
+        try {
+            byte[] bb = new byte[512];
+            int c = m_input.read(bb);
+            while (c != -1) {
+                c = m_input.read(bb);
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
