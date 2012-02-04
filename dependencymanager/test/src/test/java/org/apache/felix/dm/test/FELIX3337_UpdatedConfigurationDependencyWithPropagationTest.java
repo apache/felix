@@ -46,11 +46,9 @@ import org.osgi.service.cm.ManagedService;
  * - Service S1 depends on a ConfigurationDependency with propagate = true
  * - Service S2 depends on S1 (and has access to the S1 configuration using the S1 service 
  *   properties (because the ConfigurationDependency is propagated)
- * - then the ConfigurationDependency is updated
+ * - then the S1 PID is updated from ConfigAdmin
  * - S1 is then called in its updated callback
- * - but S2 is not called in its "change" callback.
- * 
- * this test is related to the issue FELIX3337 
+ * - S2 is called in its "change" callback.
  */
 @RunWith(JUnit4TestRunner.class)
 public class FELIX3337_UpdatedConfigurationDependencyWithPropagationTest
@@ -88,7 +86,8 @@ public class FELIX3337_UpdatedConfigurationDependencyWithPropagationTest
         public void update() {
             try {
                 Properties props = new Properties();
-                props.put("testkey", "testmodifiedvalue");
+                props.put("testkey", "testvalue");
+                props.put("testkey2", "testvalue2");
                 m_conf.update(props);
             } catch (IOException e) {
                 Assert.fail("Could not update the configured property: " + e.toString());
@@ -164,6 +163,5 @@ public class FELIX3337_UpdatedConfigurationDependencyWithPropagationTest
         m.remove(s1);
         m.remove(s2);
         m.remove(s3);
-        // ensure we executed all steps inside the component instance
     }
 }
