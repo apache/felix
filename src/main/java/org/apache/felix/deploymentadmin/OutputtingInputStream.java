@@ -77,9 +77,8 @@ public class OutputtingInputStream extends InputStream {
                 m_outputStream.close();
             }
             catch (Exception e) {
-                // not much we can do
+                // TODO: review the implications of this
             }
         }
     }
-
 }
