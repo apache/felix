@@ -19,7 +19,10 @@
 package org.apache.felix.metatype;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.metatype.internal.Activator;
 import org.osgi.service.log.LogService;
@@ -32,7 +35,7 @@ import org.osgi.service.metatype.AttributeDefinition;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class AD
+public class AD extends OptionalAttributes
 {
 
     /**

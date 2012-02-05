@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class OCD
+public class OCD extends OptionalAttributes
 {
 
     private String id;

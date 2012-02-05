@@ -31,14 +31,13 @@ import java.util.Map;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MetaData
+public class MetaData extends OptionalAttributes
 {
 
     private String localePrefix;
     private Map objectClassDefinitions;
     private Map designates;
     private URL source;
-
 
     public String getLocalePrefix()
     {
