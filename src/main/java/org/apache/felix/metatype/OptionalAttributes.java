@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,51 +18,22 @@
  */
 package org.apache.felix.metatype;
 
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
-/**
- * The <code>DesignateObject</code> class represents the <code>Object</code> element of
- * the meta type descriptor.
- * 
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- */
-public class DesignateObject extends OptionalAttributes
-{
-
-    private String ocdRef;
-    private List attributes;
-
-
-    public String getOcdRef()
+public class OptionalAttributes {
+    private Map optionalAttributes;
+    
+    public void addOptionalAttribute(String name, String value)
     {
-        return ocdRef;
-    }
-
-
-    public void setOcdRef( String ocdRef )
-    {
-        this.ocdRef = ocdRef;
-    }
-
-
-    public List getAttributes()
-    {
-        return attributes;
-    }
-
-
-    public void addAttribute( Attribute attribute )
-    {
-        if ( attribute != null )
+        if (optionalAttributes == null)
         {
-            if ( attributes == null )
-            {
-                attributes = new ArrayList();
-            }
-            attributes.add( attribute );
+            optionalAttributes = new HashMap();
         }
+        optionalAttributes.put(name, value);
+    }
+    
+    public Map getOptionalAttributes() {
+        return optionalAttributes;
     }
 }

@@ -25,7 +25,7 @@ package org.apache.felix.metatype;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Designate
+public class Designate extends OptionalAttributes
 {
 
     private String pid;
