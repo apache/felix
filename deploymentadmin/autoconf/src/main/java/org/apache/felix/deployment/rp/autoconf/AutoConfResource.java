@@ -31,12 +31,15 @@ public class AutoConfResource implements Serializable {
 	private final String m_bundleLoc;
 	private final boolean m_merge;
 	private final String m_name;
+	private final String m_filter;
 
 	private String m_alias = null;
+
 	
-	public AutoConfResource(String name, String pid, String factoryPid, String bundleLocation, boolean merge, Dictionary properties) {
+	public AutoConfResource(String name, String pid, String factoryPid, String bundleLocation, boolean merge, Dictionary properties, String filter) {
 		m_name = name;
 		m_pid = pid;
+        m_filter = filter;
 		m_factoryPid = (factoryPid == null) ? "" : factoryPid;
 		m_bundleLoc = bundleLocation;
 		m_merge = merge;
@@ -50,6 +53,10 @@ public class AutoConfResource implements Serializable {
 	public String getPid() {
 		return m_pid;
 	}
+	
+	public String getFilter() {
+        return m_filter;
+    }
 
 	/**
 	 * Returns empty string if this configuration is not a factory configuration, otherwise the factory
