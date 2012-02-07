@@ -28,7 +28,7 @@ import java.lang.reflect.Proxy;
 /**
  * Utility class that injects dependencies. Can be used to unit test service implementations.
  */
-public class TestUtils {
+public class Utils {
     /**
      * Configures an object to use a null object for the specified service interface.
      *

@@ -55,10 +55,10 @@ public class AutoConfResourceProcessorTest extends TestCase {
     /** Go through a simple session, containing two empty configurations. */
     public void testSimpleSession() throws Exception {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
-        TestUtils.configureObject(p, LogService.class);
-        TestUtils.configureObject(p, Component.class, TestUtils.createMockObjectAdapter(Component.class, new Object() {
+        Utils.configureObject(p, LogService.class);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
             public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) TestUtils.createNullObject(BundleContext.class));
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
             }
         }));
         File tempDir = File.createTempFile("persistence", "dir");
@@ -67,7 +67,7 @@ public class AutoConfResourceProcessorTest extends TestCase {
         
         System.out.println("Temporary dir: " + tempDir);
         
-        TestUtils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
         p.process("a", new ByteArrayInputStream("<MetaData />".getBytes()));
@@ -75,27 +75,27 @@ public class AutoConfResourceProcessorTest extends TestCase {
         p.prepare();
         p.commit();
         p.postcommit();
-        TestUtils.removeDirectoryWithContent(tempDir);
+        Utils.removeDirectoryWithContent(tempDir);
     }
 
     /** Go through a simple session, containing two empty configurations. */
     public void testSimpleInstallAndUninstallSession() throws Throwable {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
-        TestUtils.configureObject(p, LogService.class);
-        TestUtils.configureObject(p, Component.class, TestUtils.createMockObjectAdapter(Component.class, new Object() {
+        Utils.configureObject(p, LogService.class);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
             public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) TestUtils.createNullObject(BundleContext.class));
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
             }
         }));
         Logger logger = new Logger();
-        TestUtils.configureObject(p, LogService.class, logger);
+        Utils.configureObject(p, LogService.class, logger);
         File tempDir = File.createTempFile("persistence", "dir");
         tempDir.delete();
         tempDir.mkdirs();
         
         System.out.println("Temporary dir: " + tempDir);
         
-        TestUtils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
         p.process("a", new ByteArrayInputStream("<MetaData />".getBytes()));
@@ -110,17 +110,17 @@ public class AutoConfResourceProcessorTest extends TestCase {
         p.commit();
         p.postcommit();
         logger.failOnException();
-        TestUtils.removeDirectoryWithContent(tempDir);
+        Utils.removeDirectoryWithContent(tempDir);
     }
     
     /** Go through a simple session, containing two empty configurations. */
     public void testBasicConfigurationSession() throws Throwable {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
         Logger logger = new Logger();
-        TestUtils.configureObject(p, LogService.class, logger);
-        TestUtils.configureObject(p, Component.class, TestUtils.createMockObjectAdapter(Component.class, new Object() {
+        Utils.configureObject(p, LogService.class, logger);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
             public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) TestUtils.createNullObject(BundleContext.class));
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
             }
         }));
         File tempDir = File.createTempFile("persistence", "dir");
@@ -129,7 +129,7 @@ public class AutoConfResourceProcessorTest extends TestCase {
         
         System.out.println("Temporary dir: " + tempDir);
         
-        TestUtils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
         String config =
@@ -171,22 +171,22 @@ public class AutoConfResourceProcessorTest extends TestCase {
         });
         p.postcommit();
         logger.failOnException();
-        TestUtils.removeDirectoryWithContent(tempDir);
+        Utils.removeDirectoryWithContent(tempDir);
     }
 
     /** Go through a simple session, containing two empty configurations. */
     public void testFilteredConfigurationSession() throws Throwable {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
         Logger logger = new Logger();
-        TestUtils.configureObject(p, LogService.class, logger);
-        TestUtils.configureObject(p, Component.class, TestUtils.createMockObjectAdapter(Component.class, new Object() {
+        Utils.configureObject(p, LogService.class, logger);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
             public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) TestUtils.createNullObject(BundleContext.class));
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
             }
         }));
-        TestUtils.configureObject(p, BundleContext.class, TestUtils.createMockObjectAdapter(BundleContext.class, new Object() {
+        Utils.configureObject(p, BundleContext.class, Utils.createMockObjectAdapter(BundleContext.class, new Object() {
             public Filter createFilter(String condition) {
-                return (Filter) TestUtils.createMockObjectAdapter(Filter.class, new Object() {
+                return (Filter) Utils.createMockObjectAdapter(Filter.class, new Object() {
                     public boolean match(ServiceReference ref) {
                         Object id = ref.getProperty("id");
                         if (id != null && id.equals(Integer.valueOf(42))) {
@@ -203,7 +203,7 @@ public class AutoConfResourceProcessorTest extends TestCase {
         
         System.out.println("Temporary dir: " + tempDir);
         
-        TestUtils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
+        Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
         String config =
@@ -273,7 +273,7 @@ public class AutoConfResourceProcessorTest extends TestCase {
         logger.failOnException();
         assertEquals("test", configuration.getProperties().get("name"));
         assertNull(emptyConfiguration.getProperties());
-        TestUtils.removeDirectoryWithContent(tempDir);
+        Utils.removeDirectoryWithContent(tempDir);
     }
 
     private static class ConfigurationImpl implements Configuration {

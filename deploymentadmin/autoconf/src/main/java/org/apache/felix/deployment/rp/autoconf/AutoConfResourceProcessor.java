@@ -92,6 +92,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 	}
 	
     public void begin(DeploymentSession session) {
+        m_log.log(LogService.LOG_DEBUG, "beginning session " + session);
         synchronized (LOCK) {
             if (m_session != null) {
                 throw new IllegalArgumentException("Trying to begin new deployment session while already in one.");
@@ -99,13 +100,15 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
             if (session == null) {
                 throw new IllegalArgumentException("Trying to begin new deployment session with a null session.");
             }
+            if (m_toBeInstalled.size() > 0 || m_toBeDeleted.size() > 0 || m_configurationAdminTasks.size() > 0 || m_postCommitTasks.size() > 0) {
+                throw new IllegalStateException("State not reset correctly at start of session.");
+            }
             m_session = session;
-            m_toBeInstalled.clear();
-            m_toBeDeleted.clear();
         }
     }
  
     public void process(String name, InputStream stream) throws ResourceProcessorException {
+        m_log.log(LogService.LOG_DEBUG, "processing " + name);
         // initial validation
         synchronized (LOCK) {
             if (m_session == null) {
@@ -167,9 +170,11 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
             List resources = (List) m_toBeInstalled.get(name);
             resources.add(new AutoConfResource(name, designate.getPid(), designate.getFactoryPid(), designate.getBundleLocation(), designate.isMerge(), dict, filter));
         }
+        m_log.log(LogService.LOG_DEBUG, "processing " + name + " done");
     }
 
     public void dropped(String name) throws ResourceProcessorException {
+        m_log.log(LogService.LOG_DEBUG, "dropped " + name);
         synchronized (LOCK) {
         	if (m_session == null) {
         		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
@@ -185,9 +190,11 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     	catch (IOException ioe) {
     		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to drop resource: " + name, ioe);
     	}
+        m_log.log(LogService.LOG_DEBUG, "dropped " + name + " done");
     }
 
     public void dropAllResources() throws ResourceProcessorException {
+        m_log.log(LogService.LOG_DEBUG, "drop all resources");
         synchronized (LOCK) {
         	if (m_session == null) {
         		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not drop all resources without a Deployment Session");
@@ -214,18 +221,21 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     	else {
     		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to drop resources, data area is not accessible");
     	}
+        m_log.log(LogService.LOG_DEBUG, "drop all resources done");
     }
     
     private List m_configurationAdminTasks = new ArrayList();
     private List m_postCommitTasks = new ArrayList();
 
     public void prepare() throws ResourceProcessorException {
+        m_log.log(LogService.LOG_DEBUG, "prepare");
         synchronized (LOCK) {
         	if (m_session == null) {
         		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
         	}
         }
     	try {
+            m_log.log(LogService.LOG_DEBUG, "prepare delete");
     		// delete dropped resources
     		for (Iterator i = m_toBeDeleted.keySet().iterator(); i.hasNext();) {
     			String name = (String) i.next();
@@ -237,6 +247,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     			m_postCommitTasks.add(new DeleteResourceTask(name));
     		}
 
+            m_log.log(LogService.LOG_DEBUG, "prepare install/update");
     		// install new/updated resources
     		for (Iterator j = m_toBeInstalled.keySet().iterator(); j.hasNext();) {
     			String name = (String) j.next();
@@ -250,9 +261,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     			List resources = (List) m_toBeInstalled.get(name);
     			for (Iterator iterator = resources.iterator(); iterator.hasNext();) {
     				AutoConfResource resource = (AutoConfResource) iterator.next();
-    				
     				m_configurationAdminTasks.add(new InstallOrUpdateResourceTask(resource));
-
     			}
     			// remove existing configurations that were not in the new version of the resource
     			for (Iterator i = existingResources.iterator(); i.hasNext();) {
@@ -272,18 +281,22 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     		m_toBeInstalled.clear();
     		throw new ResourceProcessorException(ResourceProcessorException.CODE_PREPARE, "Unable to prepare for commit for resource", ioe);
     	}
+        m_log.log(LogService.LOG_DEBUG, "prepare done");
     }
 
     public synchronized void commit() {
+        m_log.log(LogService.LOG_DEBUG, "commit");
         DependencyManager dm = m_component.getDependencyManager();
         m_configurationAdminDependency = dm.createServiceDependency()
             .setService(ConfigurationAdmin.class)
             .setCallbacks("addConfigurationAdmin", null)
             .setRequired(false);
         m_component.add(m_configurationAdminDependency);
+        m_log.log(LogService.LOG_DEBUG, "commit done");
     }
     
     public void addConfigurationAdmin(ServiceReference ref, ConfigurationAdmin ca) {
+        m_log.log(LogService.LOG_DEBUG, "found configuration admin " + ref);
         Iterator iterator = m_configurationAdminTasks.iterator();
         while (iterator.hasNext()) {
             ConfigurationAdminTask task = (ConfigurationAdminTask) iterator.next();
@@ -306,9 +319,11 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
                 m_log.log(LogService.LOG_ERROR, "Exception during configuration to " + ca + ". Trying to continue.", e);
             }
         }
+        m_log.log(LogService.LOG_DEBUG, "found configuration admin " + ref + " done");
     }
     
     public void postcommit() {
+        m_log.log(LogService.LOG_DEBUG, "post commit");
         m_component.remove(m_configurationAdminDependency);
         Iterator iterator = m_postCommitTasks.iterator();
         while (iterator.hasNext()) {
@@ -320,15 +335,20 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
                 m_log.log(LogService.LOG_ERROR, "Exception during post commit wrap-up. Trying to continue.", e);
             }
         }
+        endSession();
+        m_log.log(LogService.LOG_DEBUG, "post commit done");
+    }
+
+    private void endSession() {
         m_toBeInstalled.clear();
         m_toBeDeleted.clear();
         m_postCommitTasks.clear();
         m_configurationAdminTasks.clear();
         m_session = null;
-        m_component.remove(m_configurationAdminDependency);
     }
 
     public void rollback() {
+        m_log.log(LogService.LOG_DEBUG, "rollback");
     	Set keys = m_toBeInstalled.keySet();
     	for (Iterator i = keys.iterator(); i.hasNext();) {
     		List configs = (List) m_toBeInstalled.get(i.next());
@@ -337,19 +357,20 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     			String name = resource.getName();
     			try {
     				dropped(name);
-    			} catch (ResourceProcessorException e) {
+    			}
+    			catch (ResourceProcessorException e) {
     				m_log.log(LogService.LOG_ERROR, "Unable to roll back resource '" + name + "', reason: " + e.getMessage() + ", caused by: " + e.getCause().getMessage());
     			}
     			break;
     		}
     	}
-    	m_toBeInstalled.clear();
-    	m_session = null;
+    	endSession();
+        m_log.log(LogService.LOG_DEBUG, "rollback done");
     }
 
     public void cancel() {
+        m_log.log(LogService.LOG_DEBUG, "cancel");
     	rollback();
-    	m_session = null;
     }
 
     /**
