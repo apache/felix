@@ -25,8 +25,9 @@ import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeService;
 
@@ -38,13 +39,11 @@ public class Activator extends DependencyActivatorBase {
     public void init(BundleContext context, DependencyManager manager) throws Exception {
     	Dictionary properties = new Properties();
         properties.put(Constants.SERVICE_PID, "org.osgi.deployment.rp.autoconf");
+        properties.put(EventConstants.EVENT_TOPIC, org.apache.felix.deploymentadmin.Constants.EVENTTOPIC_COMPLETE);
         
         manager.add(createComponent()
-            .setInterface(ResourceProcessor.class.getName(), properties)
+            .setInterface(new String[] { ResourceProcessor.class.getName(), EventHandler.class.getName() }, properties)
             .setImplementation(AutoConfResourceProcessor.class)
-            .add(createServiceDependency()
-                .setService(ConfigurationAdmin.class)
-                .setRequired(true))
             .add(createServiceDependency()
                 .setService(MetaTypeService.class)
                 .setRequired(false))

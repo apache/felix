@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -33,6 +34,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.felix.deploymentadmin.Constants;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.metatype.Attribute;
 import org.apache.felix.metatype.Designate;
 import org.apache.felix.metatype.MetaData;
@@ -40,11 +45,16 @@ import org.apache.felix.metatype.MetaDataReader;
 import org.apache.felix.metatype.OCD;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.deploymentadmin.spi.DeploymentSession;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeInformation;
@@ -52,20 +62,26 @@ import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
 import org.xmlpull.v1.XmlPullParserException;
 
-public class AutoConfResourceProcessor implements ResourceProcessor {
+public class AutoConfResourceProcessor implements ResourceProcessor, EventHandler {
+    private static final String LOCATION_PREFIX = "osgi-dp:";
+    public static final String CONFIGURATION_ADMIN_FILTER_ATTRIBUTE = "filter";
 
-	private static final String LOCATION_PREFIX = "osgi-dp:";
+	// dependencies injected by Dependency Manager
+	private volatile LogService m_log;
+	private volatile ConfigurationAdmin m_configAdmin;
+	private volatile MetaTypeService m_metaService;
+	private volatile BundleContext m_bc;
+	private volatile Component m_component;
 	
-	private volatile LogService m_log;					// injected by dependency manager
-	private volatile ConfigurationAdmin m_configAdmin;	// injected by dependency manager
-	private volatile MetaTypeService m_metaService;		// injected by dependency manager
-	private volatile BundleContext m_bc;				// injected by dependency manager
-	
+	private final Object LOCK = new Object(); // protects the members below
+
 	private DeploymentSession m_session = null;
-	private Map m_toBeInstalled = new HashMap(); // Map<String, List<AutoConfResource>>
-	private Map m_toBeDeleted = new HashMap();
+	private final Map m_toBeInstalled = new HashMap(); // Map<String, List<AutoConfResource>>
+	private final Map m_toBeDeleted = new HashMap();
 	
 	private PersistencyManager m_persistencyManager;
+
+    private ServiceDependency m_configurationAdminDependency;
 
 	public void start() throws IOException {
 		File root = m_bc.getDataFile("");
@@ -76,70 +92,89 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
 	}
 	
     public void begin(DeploymentSession session) {
-	    m_session = session;
+        synchronized (LOCK) {
+            if (m_session != null) {
+                throw new IllegalArgumentException("Trying to begin new deployment session while already in one.");
+            }
+            if (session == null) {
+                throw new IllegalArgumentException("Trying to begin new deployment session with a null session.");
+            }
+            m_session = session;
+            m_toBeInstalled.clear();
+            m_toBeDeleted.clear();
+        }
     }
  
     public void process(String name, InputStream stream) throws ResourceProcessorException {
-	   
-	   // initial validation
-	   if (m_session == null) {
-		   throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
-	   }
-	   MetaDataReader reader = new MetaDataReader();
-	   MetaData data = null;
-	   try {
-		   data = reader.parse(stream);
-	   } catch (IOException e) {
-		   throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to process resource.", e);
-	   } catch (XmlPullParserException e) {
-		   throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.", e);
-	   }
-	   if (data == null) {
-		   throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.");
-	   }
-
-	   // process resources
-	   Map designates = data.getDesignates();
-	   if (designates == null) {
-	       // if there are no designates, there's nothing to process
-	       m_log.log(LogService.LOG_INFO, "No designates found in the resource, so there's nothing to process.");
-	       return;
-	   }
-	   Map localOcds = data.getObjectClassDefinitions();
-	   Iterator i = designates.keySet().iterator();
-	   while (i.hasNext()) {
-		   Designate designate = (Designate) designates.get(i.next());
-		   
-		   // determine OCD
-		   ObjectClassDefinition ocd = null;
-		   String ocdRef = designate.getObject().getOcdRef();
-		   OCD localOcd = (OCD) localOcds.get(ocdRef);
-		   // ask meta type service for matching OCD if no local OCD has been defined
-		   ocd = (localOcd != null) ? new ObjectClassDefinitionImpl(localOcd) : getMetaTypeOCD(data, designate);
-		   if (ocd == null) {
-			   throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "No Object Class Definition found with id=" + ocdRef);
-		   }
-		   
-		   // determine configuration data based on the values and their type definition
-		   Dictionary dict = getProperties(designate, ocd);
-		   if (dict == null) {
-			   // designate does not match it's definition, but was marked optional, ignore it
-			   continue;
-		   }
-		   
-		   // add to session data
-		   if (!m_toBeInstalled.containsKey(name)) {
-			   m_toBeInstalled.put(name, new ArrayList());
-		   }
-		   List resources = (List) m_toBeInstalled.get(name);
-		   resources.add(new AutoConfResource(name, designate.getPid(), designate.getFactoryPid(), designate.getBundleLocation(), designate.isMerge(), dict));
-	   }
+        // initial validation
+        synchronized (LOCK) {
+            if (m_session == null) {
+                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
+            }
+        }
+        MetaDataReader reader = new MetaDataReader();
+        MetaData data = null;
+        try {
+            data = reader.parse(stream);
+        }
+        catch (IOException e) {
+            throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to process resource.", e);
+        }
+        catch (XmlPullParserException e) {
+            throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.", e);
+        }
+        if (data == null) {
+            throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.");
+        }
+        // process resources
+        String filter = null;
+        Map optionalAttributes = data.getOptionalAttributes();
+        if (optionalAttributes != null) {
+            filter = (String) optionalAttributes.get(AutoConfResourceProcessor.CONFIGURATION_ADMIN_FILTER_ATTRIBUTE);
+        }
+        // add to session data
+        if (!m_toBeInstalled.containsKey(name)) {
+            m_toBeInstalled.put(name, new ArrayList());
+        }
+        Map designates = data.getDesignates();
+        if (designates == null) {
+            // if there are no designates, there's nothing to process
+            m_log.log(LogService.LOG_INFO, "No designates found in the resource, so there's nothing to process.");
+            return;
+        }
+        Map localOcds = data.getObjectClassDefinitions();
+        if (localOcds == null) {
+            localOcds = Collections.EMPTY_MAP;
+        }
+        Iterator i = designates.keySet().iterator();
+        while (i.hasNext()) {
+            Designate designate = (Designate) designates.get(i.next());
+            // determine OCD
+            ObjectClassDefinition ocd = null;
+            String ocdRef = designate.getObject().getOcdRef();
+            OCD localOcd = (OCD) localOcds.get(ocdRef);
+            // ask meta type service for matching OCD if no local OCD has been defined
+            ocd = (localOcd != null) ? new ObjectClassDefinitionImpl(localOcd) : getMetaTypeOCD(data, designate);
+            if (ocd == null) {
+                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "No Object Class Definition found with id=" + ocdRef);
+            }
+            // determine configuration data based on the values and their type definition
+            Dictionary dict = getProperties(designate, ocd);
+            if (dict == null) {
+                // designate does not match it's definition, but was marked optional, ignore it
+                continue;
+            }
+            List resources = (List) m_toBeInstalled.get(name);
+            resources.add(new AutoConfResource(name, designate.getPid(), designate.getFactoryPid(), designate.getBundleLocation(), designate.isMerge(), dict, filter));
+        }
     }
 
     public void dropped(String name) throws ResourceProcessorException {
-    	if (m_session == null) {
-    		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
-    	}
+        synchronized (LOCK) {
+        	if (m_session == null) {
+        		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
+        	}
+        }
     	try {
     		List resources = m_persistencyManager.load(name);
     		if (!m_toBeDeleted.containsKey(name)) {
@@ -153,9 +188,11 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     }
 
     public void dropAllResources() throws ResourceProcessorException {
-    	if (m_session == null) {
-    		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not drop all resources without a Deployment Session");
-    	}
+        synchronized (LOCK) {
+        	if (m_session == null) {
+        		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not drop all resources without a Deployment Session");
+        	}
+        }
     	try {
     		Map loadAll = m_persistencyManager.loadAll();
     		for (Iterator i = loadAll.keySet().iterator(); i.hasNext();) {
@@ -178,12 +215,16 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to drop resources, data area is not accessible");
     	}
     }
+    
+    private List m_configurationAdminTasks = new ArrayList();
+    private List m_postCommitTasks = new ArrayList();
 
     public void prepare() throws ResourceProcessorException {
-    	if (m_session == null) {
-    		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
-    	}
-
+        synchronized (LOCK) {
+        	if (m_session == null) {
+        		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not process resource without a Deployment Session");
+        	}
+        }
     	try {
     		// delete dropped resources
     		for (Iterator i = m_toBeDeleted.keySet().iterator(); i.hasNext();) {
@@ -191,15 +232,9 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     			List resources = (List) m_toBeDeleted.get(name);
     			for (Iterator j = resources.iterator(); j.hasNext();) {
     				AutoConfResource resource = (AutoConfResource) j.next();
-    				if (resource.isFactoryConfig()) {
-    					Configuration configuration = m_configAdmin.getConfiguration(resource.getGeneratedPid(), resource.getBundleLocation());
-    					configuration.delete();
-    				} else {
-    					Configuration configuration = m_configAdmin.getConfiguration(resource.getPid(), resource.getBundleLocation());
-    					configuration.delete();
-    				}
+    				m_configurationAdminTasks.add(new DropResourceTask(resource));
     			}
-    			m_persistencyManager.delete(name);
+    			m_postCommitTasks.add(new DeleteResourceTask(name));
     		}
 
     		// install new/updated resources
@@ -208,63 +243,17 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     			List existingResources = null;
     			try {
     				existingResources = m_persistencyManager.load(name);
-    			} catch (IOException ioe) {
+    			}
+    			catch (IOException ioe) {
     				throw new ResourceProcessorException(ResourceProcessorException.CODE_PREPARE, "Unable to read existing resources for resource " + name, ioe);
     			}
     			List resources = (List) m_toBeInstalled.get(name);
     			for (Iterator iterator = resources.iterator(); iterator.hasNext();) {
     				AutoConfResource resource = (AutoConfResource) iterator.next();
+    				
+    				m_configurationAdminTasks.add(new InstallOrUpdateResourceTask(resource));
 
-    				Dictionary properties = resource.getProperties();
-    				String bundleLocation = resource.getBundleLocation();
-    				Configuration configuration = null;
-
-    				// update configuration
-    				if (resource.isFactoryConfig()) {
-    					// check if this is an factory config instance update
-    					for (Iterator i = existingResources.iterator(); i.hasNext();) {
-    						AutoConfResource existingResource = (AutoConfResource) i.next();
-    						if (resource.equalsTargetConfiguration(existingResource)) {
-    							// existing instance found
-    							configuration = m_configAdmin.getConfiguration(existingResource.getGeneratedPid(), bundleLocation);
-    							existingResources.remove(existingResource);
-    							break;
-    						}
-    					}
-    					if (configuration == null) {
-    						// no existing instance, create new
-    						configuration = m_configAdmin.createFactoryConfiguration(resource.getFactoryPid(), bundleLocation);
-    					}
-    					resource.setGeneratedPid(configuration.getPid());
-    				}
-    				else {
-    					for (Iterator i = existingResources.iterator(); i.hasNext();) {
-    						AutoConfResource existingResource = (AutoConfResource) i.next();
-    						if (resource.getPid().equals(existingResource.getPid())) {
-    							// existing resource found
-    							existingResources.remove(existingResource);
-    							break;
-    						}
-    					}
-    					configuration = m_configAdmin.getConfiguration(resource.getPid(), bundleLocation);
-    					if (!bundleLocation.equals(configuration.getBundleLocation())) {
-    						// an existing configuration exists that is bound to a different location, which is not allowed
-    						throw new ResourceProcessorException(ResourceProcessorException.CODE_PREPARE, "Existing configuration was not unbound and not bound to the specified bundlelocation");
-    					}
-    				}
-    				if (resource.isMerge()) {
-    					Dictionary existingProperties = configuration.getProperties();
-    					if (existingProperties != null) {
-    						Enumeration keys = existingProperties.keys();
-    						while (keys.hasMoreElements()) {
-    							Object key = keys.nextElement();
-    							properties.put(key, existingProperties.get(key));
-    						}
-    					}
-    				}
-    				configuration.update(properties);
     			}
-
     			// remove existing configurations that were not in the new version of the resource
     			for (Iterator i = existingResources.iterator(); i.hasNext();) {
     				AutoConfResource existingResource = (AutoConfResource) i.next();
@@ -276,7 +265,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     				}
     				configuration.delete();
     			}
-    			m_persistencyManager.store(name, resources);
+    			m_postCommitTasks.add(new StoreResourceTask(name, resources));
     		}
     	}
     	catch (IOException ioe) {
@@ -286,9 +275,57 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     }
 
     public synchronized void commit() {
-    	m_toBeInstalled.clear();
-    	m_toBeDeleted.clear();
-    	m_session = null;
+        DependencyManager dm = m_component.getDependencyManager();
+        m_configurationAdminDependency = dm.createServiceDependency()
+            .setService(ConfigurationAdmin.class)
+            .setCallbacks("addConfigurationAdmin", null)
+            .setRequired(false);
+        m_component.add(m_configurationAdminDependency);
+    }
+    
+    public void addConfigurationAdmin(ServiceReference ref, ConfigurationAdmin ca) {
+        Iterator iterator = m_configurationAdminTasks.iterator();
+        while (iterator.hasNext()) {
+            ConfigurationAdminTask task = (ConfigurationAdminTask) iterator.next();
+            try {
+                Filter filter = null;
+                String filterString = task.getFilter();
+                if (filterString != null) {
+                    try {
+                        filter = m_bc.createFilter(filterString);
+                    }
+                    catch (InvalidSyntaxException e) {
+                        m_log.log(LogService.LOG_ERROR, "Could not parse filter, ignoring it: " + filterString, e);
+                    }
+                }
+                if (filter == null || filter != null && filter.match(ref)) {
+                    task.run(m_persistencyManager, ca);
+                }
+            }
+            catch (Exception e) {
+                m_log.log(LogService.LOG_ERROR, "Exception during configuration to " + ca + ". Trying to continue.", e);
+            }
+        }
+    }
+    
+    public void postcommit() {
+        m_component.remove(m_configurationAdminDependency);
+        Iterator iterator = m_postCommitTasks.iterator();
+        while (iterator.hasNext()) {
+            PostCommitTask task = (PostCommitTask) iterator.next();
+            try {
+                task.run(m_persistencyManager);
+            }
+            catch (Exception e) {
+                m_log.log(LogService.LOG_ERROR, "Exception during post commit wrap-up. Trying to continue.", e);
+            }
+        }
+        m_toBeInstalled.clear();
+        m_toBeDeleted.clear();
+        m_postCommitTasks.clear();
+        m_configurationAdminTasks.clear();
+        m_session = null;
+        m_component.remove(m_configurationAdminDependency);
     }
 
     public void rollback() {
@@ -532,5 +569,147 @@ public class AutoConfResourceProcessor implements ResourceProcessor {
     		}
     	}
     	return result;
+    }
+
+    public void handleEvent(Event event) {
+        Boolean result = (Boolean) event.getProperty(Constants.EVENTPROPERTY_SUCCESSFUL);
+        // check if successful
+        if (result.booleanValue()) {
+            postcommit();
+        }
+        else {
+            postcommit();
+        }
+    }
+}
+
+interface ConfigurationAdminTask {
+    public String getFilter();
+    public void run(PersistencyManager persistencyManager, ConfigurationAdmin configAdmin) throws Exception;
+}
+
+interface PostCommitTask {
+    public void run(PersistencyManager manager) throws Exception;
+}
+
+class DropResourceTask implements ConfigurationAdminTask {
+    private final AutoConfResource m_resource;
+
+    public DropResourceTask(AutoConfResource resource) {
+        m_resource = resource;
+    }
+    
+    public String getFilter() {
+        return m_resource.getFilter();
+    }
+
+    public void run(PersistencyManager persistencyManager, ConfigurationAdmin configAdmin) throws Exception {
+        String pid;
+        if (m_resource.isFactoryConfig()) {
+            pid = m_resource.getGeneratedPid();
+        }
+        else {
+            pid = m_resource.getPid();
+        }
+        Configuration configuration = configAdmin.getConfiguration(pid, m_resource.getBundleLocation());
+        configuration.delete();
+    }
+}
+
+class InstallOrUpdateResourceTask implements ConfigurationAdminTask {
+    private final AutoConfResource m_resource;
+
+    public InstallOrUpdateResourceTask(AutoConfResource resource) {
+        m_resource = resource;
+    }
+
+    public String getFilter() {
+        return m_resource.getFilter();
+    }
+
+    public void run(PersistencyManager persistencyManager, ConfigurationAdmin configAdmin) throws Exception {
+        String name = m_resource.getName();
+        Dictionary properties = m_resource.getProperties();
+        String bundleLocation = m_resource.getBundleLocation();
+        Configuration configuration = null;
+
+        List existingResources = null;
+        try {
+            existingResources = persistencyManager.load(name);
+        }
+        catch (IOException ioe) {
+            throw new ResourceProcessorException(ResourceProcessorException.CODE_PREPARE, "Unable to read existing resources for resource " + name, ioe);
+        }
+        
+        // update configuration
+        if (m_resource.isFactoryConfig()) {
+            // check if this is an factory config instance update
+            for (Iterator i = existingResources.iterator(); i.hasNext();) {
+                AutoConfResource existingResource = (AutoConfResource) i.next();
+                if (m_resource.equalsTargetConfiguration(existingResource)) {
+                    // existing instance found
+                    configuration = configAdmin.getConfiguration(existingResource.getGeneratedPid(), bundleLocation);
+                    existingResources.remove(existingResource);
+                    break;
+                }
+            }
+            if (configuration == null) {
+                // no existing instance, create new
+                configuration = configAdmin.createFactoryConfiguration(m_resource.getFactoryPid(), bundleLocation);
+            }
+            m_resource.setGeneratedPid(configuration.getPid());
+        }
+        else {
+            for (Iterator i = existingResources.iterator(); i.hasNext();) {
+                AutoConfResource existingResource = (AutoConfResource) i.next();
+                if (m_resource.getPid().equals(existingResource.getPid())) {
+                    // existing resource found
+                    existingResources.remove(existingResource);
+                    break;
+                }
+            }
+            configuration = configAdmin.getConfiguration(m_resource.getPid(), bundleLocation);
+            if (!bundleLocation.equals(configuration.getBundleLocation())) {
+                // an existing configuration exists that is bound to a different location, which is not allowed
+                throw new ResourceProcessorException(ResourceProcessorException.CODE_PREPARE, "Existing configuration was bound to " + configuration.getBundleLocation() + " instead of " + bundleLocation);
+            }
+        }
+        if (m_resource.isMerge()) {
+            Dictionary existingProperties = configuration.getProperties();
+            if (existingProperties != null) {
+                Enumeration keys = existingProperties.keys();
+                while (keys.hasMoreElements()) {
+                    Object key = keys.nextElement();
+                    properties.put(key, existingProperties.get(key));
+                }
+            }
+        }
+        configuration.update(properties);
+    }
+}
+
+class DeleteResourceTask implements PostCommitTask {
+    private final String m_name;
+
+    public DeleteResourceTask(String name) {
+        m_name = name;
+    }
+
+    public void run(PersistencyManager manager) throws Exception {
+        manager.delete(m_name);
+    }
+}
+
+class StoreResourceTask implements PostCommitTask {
+    private final String m_name;
+    private final List m_resources;
+
+    public StoreResourceTask(String name, List resources) {
+        m_name = name;
+        m_resources = resources;
+    }
+
+    public void run(PersistencyManager manager) throws Exception {
+        manager.store(m_name, m_resources);
     }
 }

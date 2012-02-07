@@ -46,9 +46,6 @@ public class PersistencyManager {
 	 * @throws IOException If the resource could not be stored.
 	 */
 	public void store(String name, List configs) throws IOException {
-		if (configs.isEmpty()) {
-			return;
-		}
 		File targetDir = m_root;
 		name = name.replace('/', File.separatorChar);
 		
@@ -67,7 +64,8 @@ public class PersistencyManager {
 		try {
 			out = new ObjectOutputStream(new FileOutputStream(target));
 			out.writeObject(configs);
-		} finally {
+		}
+		finally {
 			if (out != null) {
 				try {
 					out.close();
