@@ -30,15 +30,15 @@ import org.osgi.util.tracker.ServiceTracker;
 /**
  * This activator registers itself as a service factory for the
  * preferences service.
- *
  */
 public class PreferencesManager
     implements BundleActivator,
-               BundleListener,
-               ServiceFactory,
-               BackingStoreManager {
+    BundleListener,
+    ServiceFactory,
+    BackingStoreManager {
 
-    /** The map of already created services. For each client bundle
+    /**
+     * The map of already created services. For each client bundle
      * a new service is created.
      */
     protected final Map services = new HashMap();
@@ -61,13 +61,18 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
-    public void bundleChanged(BundleEvent event) {
+    public void bundleChanged(final BundleEvent event) {
         if (event.getType() == BundleEvent.UNINSTALLED) {
             final Long bundleId = new Long(event.getBundle().getBundleId());
-            synchronized ( this.services ) {
+            synchronized (this.services) {
                 try {
-                    this.getStore().remove(bundleId);
-                } catch (BackingStoreException ignore) {
+                    final BackingStore store = this.getStore();
+                    // Only in the case we're already being stopped, this situation could occur, see FELIX-3334
+                    if (store != null) {
+                        store.remove(bundleId);
+                    }
+                }
+                catch (final BackingStoreException ignore) {
                     // we ignore this for now
                 }
                 this.services.remove(bundleId);
@@ -78,15 +83,15 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         this.context = context;
 
         // track the log service using a ServiceTracker
-        this.logTracker = new ServiceTracker( context, LogService.class.getName(), null );
+        this.logTracker = new ServiceTracker(context, LogService.class.getName(), null);
         this.logTracker.open();
 
         // create the tracker for our backing store
-        this.storeTracker = new ServiceTracker( context, BackingStore.class.getName(), null);
+        this.storeTracker = new ServiceTracker(context, BackingStore.class.getName(), null);
         this.storeTracker.open();
 
         // register this activator as a bundle lister
@@ -99,25 +104,25 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(BundleContext context) throws Exception {
+    public void stop(final BundleContext context) throws Exception {
         // if we get stopped, we should save all in memory representations
         synchronized (this.services) {
             final Iterator i = this.services.values().iterator();
-            while ( i.hasNext() ) {
-                final PreferencesServiceImpl service = (PreferencesServiceImpl)i.next();
+            while (i.hasNext()) {
+                final PreferencesServiceImpl service = (PreferencesServiceImpl) i.next();
                 this.save(service);
             }
             this.services.clear();
         }
         // stop tracking store service
-        if ( this.storeTracker != null ) {
+        if (this.storeTracker != null) {
             this.storeTracker.close();
             this.storeTracker = null;
         }
         this.defaultStore = null;
 
         // stop tracking log service
-        if ( this.logTracker != null ) {
+        if (this.logTracker != null) {
             this.logTracker.close();
             this.logTracker = null;
         }
@@ -128,7 +133,7 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
-    public Object getService(Bundle bundle, ServiceRegistration reg) {
+    public Object getService(final Bundle bundle, final ServiceRegistration reg) {
         final Long bundleId = new Long(bundle.getBundleId());
 
         synchronized (this.services) {
@@ -148,12 +153,12 @@ public class PreferencesManager
     /**
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
-    public void ungetService(Bundle bundle, ServiceRegistration reg, Object s) {
+    public void ungetService(final Bundle bundle, final ServiceRegistration reg, final Object s) {
         final Long bundleId = new Long(bundle.getBundleId());
         // we save all the preferences
-        synchronized ( this.services ) {
+        synchronized (this.services) {
             final PreferencesServiceImpl service = (PreferencesServiceImpl) this.services.get(bundleId);
-            if ( service != null ) {
+            if (service != null) {
                 this.save(service);
             }
         }
@@ -161,24 +166,26 @@ public class PreferencesManager
 
     /**
      * Save all preferences for this service.
+     *
      * @param service
      */
-    protected void save(PreferencesServiceImpl service) {
+    protected void save(final PreferencesServiceImpl service) {
         final Iterator i = service.getAllPreferences().iterator();
-        while ( i.hasNext() ) {
-            final PreferencesImpl prefs = (PreferencesImpl)i.next();
+        while (i.hasNext()) {
+            final PreferencesImpl prefs = (PreferencesImpl) i.next();
             try {
                 this.getStore().store(prefs);
-            } catch (BackingStoreException ignore) {
+            }
+            catch (final BackingStoreException ignore) {
                 // we ignore this
             }
         }
     }
 
-    protected void log( int level, String message, Throwable t ) {
-        final LogService log = ( LogService ) this.logTracker.getService();
-        if ( log != null ) {
-            log.log( level, message, t );
+    protected void log(final int level, final String message, final Throwable t) {
+        final LogService log = (LogService) this.logTracker.getService();
+        if (log != null) {
+            log.log(level, message, t);
             return;
         }
     }
@@ -187,18 +194,23 @@ public class PreferencesManager
      * @see org.apache.felix.prefs.BackingStoreManager#getStore()
      */
     public BackingStore getStore() {
+        if (this.storeTracker == null) {
+            // We're being stopped already...
+            return null;
+        }
+
         // has the service changed?
         int currentCount = this.storeTracker.getTrackingCount();
         BackingStore service = (BackingStore) this.storeTracker.getService();
-        if ( service != null && this.storeTrackingCount < currentCount ) {
+        if (service != null && this.storeTrackingCount < currentCount) {
             this.storeTrackingCount = currentCount;
             this.cleanupStore(service);
         }
-        if ( service == null ) {
+        if (service == null) {
             // no service available use default store
-            if ( this.defaultStore == null ) {
-                synchronized ( this ) {
-                    if ( this.defaultStore == null ) {
+            if (this.defaultStore == null) {
+                synchronized (this) {
+                    if (this.defaultStore == null) {
                         this.defaultStore = new DataFileBackingStoreImpl(this.context);
                         this.cleanupStore(this.defaultStore);
                     }
@@ -212,23 +224,25 @@ public class PreferencesManager
 
     /**
      * Clean up the store and remove preferences for deleted bundles.
+     *
      * @param store
      */
-    protected void cleanupStore(BackingStore store) {
+    protected void cleanupStore(final BackingStore store) {
         // check which bundles are available
         final Long[] availableBundleIds = store.availableBundles();
 
         // now check the bundles, for which we have preferences, if they are still
         // in service and delete the preferences where the bundles are out of service.
         // we synchronize on services in order to get not disturbed by a bundle event
-        synchronized ( this.services ) {
-            for(int i=0; i<availableBundleIds.length; i++) {
+        synchronized (this.services) {
+            for (int i = 0; i < availableBundleIds.length; i++) {
                 final Long bundleId = availableBundleIds[i];
                 final Bundle bundle = this.context.getBundle(bundleId.longValue());
                 if (bundle == null || bundle.getState() == Bundle.UNINSTALLED) {
                     try {
                         store.remove(bundleId);
-                    } catch (BackingStoreException ignore) {
+                    }
+                    catch (final BackingStoreException ignore) {
                         // we ignore this for now
                     }
                 }
