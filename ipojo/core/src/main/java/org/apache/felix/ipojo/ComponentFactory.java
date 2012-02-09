@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.metadata.Attribute;
@@ -508,12 +510,35 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      */
     private final class PrimitiveTypeDescription extends ComponentTypeDescription {
 
+    	/*
+    	 * Set to keep component's all super-class class-names.
+    	 */
+    	private Set m_superClasses = new HashSet();
+    	
+    	/*
+    	 * Set to keep component's all interface class-names.
+    	 */
+    	private Set m_interfaces = new HashSet();
+    	
         /**
          * Creates a PrimitiveTypeDescription object.
          * @param factory the factory attached to this component type description.
          */
         public PrimitiveTypeDescription(IPojoFactory factory) {
             super(factory);
+            
+            try 
+            {
+            	// Read inherited classes and interfaces into given Sets.
+				new InheritanceInspector(getPojoMetadata(), getBundleContext().getBundle()).
+						computeInterfacesAndSuperClasses(m_interfaces, m_superClasses);
+			} 
+            catch (ClassNotFoundException e) 
+			{
+				m_interfaces.clear();
+				m_superClasses.clear();				
+			}
+            
         }
 
         /**
@@ -538,7 +563,126 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         public Element getDescription() {
             Element elem = super.getDescription();
             elem.addAttribute(new Attribute("Implementation-Class", m_classname));
+            
+            /* Adding interfaces and super-classes of component into description */
+            Element inheritance = new Element("Inherited", "");
+            
+            inheritance.addAttribute(new Attribute("Interfaces",m_interfaces.toString()));
+            inheritance.addAttribute(new Attribute("SuperClasses",m_superClasses.toString()));
+
+            elem.addElement(inheritance);
+
             return elem;
+        }
+        
+        /**
+         * This class is used to collect interfaces and super-classes of given component in specified Sets.
+         * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+         */
+        private final class InheritanceInspector{
+        	/*
+        	 * PojoMetadata of target Component.
+        	 */
+        	private PojoMetadata m_pojoMetadata;        	
+        	
+        	/*
+        	 * Bundle exposing target component.
+        	 */
+        	private Bundle m_bundle;
+        	
+        	
+        	/**
+        	 * Creates a TypeCollector object
+        	 * @param pojoMetadata PojoMetadata describing Component.
+        	 * @param bundle Bundle which has been exposed the intended Component. 
+        	 */
+        	public InheritanceInspector(PojoMetadata pojoMetadata,Bundle bundle)
+        	{
+        		m_pojoMetadata = pojoMetadata;
+        		m_bundle = bundle;
+        	}
+        	
+        	/**
+             * Collect interfaces implemented by the POJO into given Sets.
+             * @param interfaces : the set of implemented interfaces
+             * @param classes : the set of extended classes
+             * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
+             */
+            public void computeInterfacesAndSuperClasses(Set interfaces, Set classes) throws ClassNotFoundException {
+            	
+            	String[] immediateInterfaces = m_pojoMetadata.getInterfaces();
+            	String parentClass = m_pojoMetadata.getSuperClass();
+            	
+                // First iterate on found specification in manipulation metadata
+                for (int i = 0; i < immediateInterfaces.length; i++) {
+                    interfaces.add(immediateInterfaces[i]);
+                    // Iterate on interfaces implemented by the current interface
+                    Class clazz = m_bundle.loadClass(immediateInterfaces[i]);
+                    collectInterfaces(clazz, interfaces, m_bundle);
+                }
+
+                // Look for parent class.
+                if (parentClass != null) {
+                    Class clazz = m_bundle.loadClass(parentClass);
+                    collectInterfacesFromClass(clazz, interfaces, m_bundle);
+                    classes.add(parentClass);
+                    collectParentClassesFromClass(clazz, classes, m_bundle);
+                }
+                
+                // Removing Object Class from the inherited classes list.
+                classes.remove(Object.class.getName());
+            }
+
+            /**
+             * Look for inherited interfaces.
+             * @param clazz : interface name to explore (class object)
+             * @param acc : set (accumulator)
+             * @param bundle : bundle
+             * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
+             */
+            private void collectInterfaces(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+                Class[] clazzes = clazz.getInterfaces();
+                for (int i = 0; i < clazzes.length; i++) {
+                    acc.add(clazzes[i].getName());
+                    collectInterfaces(clazzes[i], acc, bundle);
+                }
+            }
+
+            /**
+             * Collect interfaces for the given class.
+             * This method explores super class to.
+             * @param clazz : class object.
+             * @param acc : set of implemented interface (accumulator)
+             * @param bundle : bundle.
+             * @throws ClassNotFoundException : occurs if an interface cannot be load.
+             */
+            private void collectInterfacesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+                Class[] clazzes = clazz.getInterfaces();
+                for (int i = 0; i < clazzes.length; i++) {
+                    acc.add(clazzes[i].getName());
+                    collectInterfaces(clazzes[i], acc, bundle);
+                }
+                // Iterate on parent classes
+                Class sup = clazz.getSuperclass();
+                if (sup != null) {
+                    collectInterfacesFromClass(sup, acc, bundle);
+                }
+            }
+
+            /**
+             * Collect parent classes for the given class.
+             * @param clazz : class object.
+             * @param acc : set of extended classes (accumulator)
+             * @param bundle : bundle.
+             * @throws ClassNotFoundException : occurs if an interface cannot be load.
+             */
+            private void collectParentClassesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+                Class parent = clazz.getSuperclass();
+                if (parent != null) {
+                    acc.add(parent.getName());
+                    collectParentClassesFromClass(parent, acc, bundle);
+                }
+            }
         }
     }
 }
