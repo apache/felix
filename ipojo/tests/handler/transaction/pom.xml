@@ -45,8 +45,8 @@
       <version>${ipojo.core.release}</version>
     </dependency>
     <dependency>
-      <groupId>org.ow2.chameleon</groupId>
-      <artifactId>transaction-geronimo</artifactId>
+      <groupId>org.ow2.chameleon.transaction</groupId>
+      <artifactId>geronimo-transaction-service</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>

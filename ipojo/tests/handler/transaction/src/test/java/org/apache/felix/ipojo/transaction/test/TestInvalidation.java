@@ -97,7 +97,7 @@ public class TestInvalidation {
                         mavenBundle().groupId("org.ops4j.pax.logging").artifactId("pax-logging-api").version(asInProject()),
                         mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.ipojo").version(asInProject()),
                         mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.ipojo.handler.transaction").version(asInProject()),
-                        mavenBundle().groupId("org.ow2.chameleon").artifactId("transaction-geronimo").version(asInProject()),
+                        mavenBundle().groupId("org.ow2.chameleon.transaction").artifactId("geronimo-transaction-service").version(asInProject()),
                         mavenBundle().groupId("org.ow2.chameleon.testing").artifactId("osgi-helpers").versionAsInProject()
                 ),
                 provision(
