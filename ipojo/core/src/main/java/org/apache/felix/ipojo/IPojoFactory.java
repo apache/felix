@@ -631,9 +631,9 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * @see org.osgi.service.cm.ManagedServiceFactory#updated(java.lang.String, java.util.Dictionary)
      */
     public void updated(String name, Dictionary properties) throws org.osgi.service.cm.ConfigurationException {
-        InstanceManager instance;
+        ComponentInstance instance;
         synchronized (this) {
-            instance = (InstanceManager) m_componentInstances.get(name);
+            instance = (ComponentInstance) m_componentInstances.get(name);
         }
 
         if (instance == null) {

@@ -157,17 +157,20 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
      * @see org.apache.felix.ipojo.Factory#reconfigure(java.util.Dictionary)
      */
     public synchronized void reconfigure(Dictionary properties) throws UnacceptableConfiguration, MissingHandlerException {
-        if (properties == null || properties.get("name") == null) {
-            throw new UnacceptableConfiguration("The configuration does not contains the \"name\" property");
+        if (properties == null || (properties.get("instance.name") == null && properties.get("name") == null)) { // Support both instance.name and name
+            throw new UnacceptableConfiguration("The configuration does not contains the \"instance.name\" property");
         }
-        String name = (String) properties.get("name");
-        
-        ComponentInstance instance = (CompositeManager) m_componentInstances.get(name);
-        
-        if (instance == null) {
-            return; // The instance does not exist.
+
+        String name = (String) properties.get("instance.name");
+        if (name == null) {
+            name = (String) properties.get("name");
         }
-        
+
+        ComponentInstance instance = (ComponentInstance) m_componentInstances.get(name);
+        if (instance == null) { // The instance does not exists.
+            return;
+        }
+
         instance.reconfigure(properties); // re-configure the component
     }
 

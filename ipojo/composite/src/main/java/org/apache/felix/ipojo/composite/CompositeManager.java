@@ -33,6 +33,7 @@ import org.apache.felix.ipojo.InstanceStateListener;
 import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.Logger;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -85,6 +86,11 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
     private int m_state = STOPPED;
 
     /**
+     * Logger.
+     */
+    private Logger m_logger;
+
+    /**
      * Construct a new Component Manager.
      * @param factory : the factory managing the instance manager
      * @param context : the bundle context to give to the instance
@@ -97,6 +103,7 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
         m_internalContext = new CompositeServiceContext(m_context, this);
         m_handlers = handlers;
         m_description = new CompositeInstanceDescription(m_factory.getComponentDescription(), this);
+        m_logger = new Logger(m_context, this);
 
     }
 
@@ -279,8 +286,10 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
      * @see org.apache.felix.ipojo.ComponentInstance#reconfigure(java.util.Dictionary)
      */
     public void reconfigure(Dictionary configuration) {
+        m_logger.log(Logger.INFO, "Reconfiguring composite with " + configuration);
         for (int i = 0; i < m_handlers.length; i++) {
-            m_handlers[i].reconfigure(configuration);
+            m_logger.log(Logger.INFO, "Delegating reconfiguration to " + m_handlers[i].getClassName());
+            m_handlers[i].getHandler().reconfigure(configuration);
         }
     }
 

@@ -230,7 +230,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
      * @param metadata : component type metadata.
      * @param configuration : instance configuration.
      * @throws ConfigurationException : occurs an instance cannot be parsed correctly.
-     * @see org.apache.felix.ipojo.CompositeHandler#configure(org.apache.felix.ipojo.CompositeManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         m_scope = getCompositeManager().getServiceContext();
@@ -323,7 +323,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
     /**
      * Start method.
-     * @see org.apache.felix.ipojo.CompositeHandler#start()
+     * @see org.apache.felix.ipojo.Handler#start()
      */
     public void start() {
         for (int j = 0; j < m_factories.length; j++) {
@@ -403,7 +403,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
     /**
      * Return the handler description, i.e. the state of created instances.
      * @return the handler description.
-     * @see org.apache.felix.ipojo.CompositeHandler#getDescription()
+     * @see org.apache.felix.ipojo.Handler#getDescription()
      */
     public HandlerDescription getDescription() {
         return m_description;
@@ -421,4 +421,18 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         return result;
     }
 
+    /**
+     * The composite is reconfigured, we check if we have a property to change.
+     * We reconfigure all contained instances.
+     * @param configuration the new instance configuration
+     */
+    public void reconfigure(Dictionary configuration) {
+        for (int i = 0; i < m_configurations.length; i++) {
+            if (m_configurations[i].getInstance() != null) {
+                info("Reconfiguring " + m_configurations[i].getInstance().getInstanceName());
+                m_configurations[i].getInstance().reconfigure(configuration);
+            }
+        }
+
+    }
 }
