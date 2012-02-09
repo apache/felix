@@ -557,9 +557,12 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
             super(factory);
 
             try {
-                // Read inherited classes and interfaces into given Sets.
-                new InheritanceInspector(getPojoMetadata(), getBundleContext().getBundle()).
-                        computeInterfacesAndSuperClasses(m_interfaces, m_superClasses);
+                // The inspection can be done only for primitive components
+                if (m_classname != null) {
+                    // Read inherited classes and interfaces into given Sets.
+                    new InheritanceInspector(getPojoMetadata(), getBundleContext().getBundle()).
+                            computeInterfacesAndSuperClasses(m_interfaces, m_superClasses);
+                }
             } catch (ClassNotFoundException e) {
                 m_interfaces.clear();
                 m_superClasses.clear();
@@ -639,7 +642,6 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
              * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
              */
             public void computeInterfacesAndSuperClasses(Set interfaces, Set classes) throws ClassNotFoundException {
-
                 String[] immediateInterfaces = m_pojoMetadata.getInterfaces();
                 String parentClass = m_pojoMetadata.getSuperClass();
 
