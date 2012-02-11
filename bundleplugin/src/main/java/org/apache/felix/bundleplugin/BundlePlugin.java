@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -1239,7 +1240,7 @@ public class BundlePlugin extends AbstractMojo
 
     private static void addLocalPackages( File outputDirectory, Analyzer analyzer )
     {
-        Collection packages = new LinkedHashSet();
+        Collection packages = new TreeSet();
 
         if ( outputDirectory != null && outputDirectory.isDirectory() )
         {
