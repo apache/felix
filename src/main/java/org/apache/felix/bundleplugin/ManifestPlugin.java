@@ -183,10 +183,11 @@ public class ManifestPlugin extends BundlePlugin
         // the contents of the bundle *and* we are not analyzing the output directory,
         // otherwise fall-back to addMavenInstructions approach
 
+        boolean isOutputDirectory = file.equals( getOutputDirectory() );
+
         if ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == null
             && analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == null
-            && analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null
-            && !file.equals( getOutputDirectory() ) )
+            && analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null && !isOutputDirectory )
         {
             String export = calculateExportsFromContents( analyzer.getJar() );
             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );
@@ -194,8 +195,16 @@ public class ManifestPlugin extends BundlePlugin
 
         addMavenInstructions( project, analyzer );
 
-        analyzer.mergeManifest( analyzer.getJar().getManifest() );
-        analyzer.calcManifest();
+        // if we spot Embed-Dependency and the bundle is "target/classes", assume we need to rebuild
+        if ( analyzer.getProperty( DependencyEmbedder.EMBED_DEPENDENCY ) != null && isOutputDirectory )
+        {
+            analyzer.build();
+        }
+        else
+        {
+            analyzer.mergeManifest( analyzer.getJar().getManifest() );
+            analyzer.calcManifest();
+        }
 
         mergeMavenManifest( project, analyzer );
 
