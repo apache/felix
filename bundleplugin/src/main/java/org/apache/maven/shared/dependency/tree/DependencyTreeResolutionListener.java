@@ -575,4 +575,10 @@ public class DependencyTreeResolutionListener implements ResolutionListener, Res
     {
         return artifact.getDependencyConflictId() + ":" + artifact.getVersionRange();
     }
+
+
+    public void manageArtifactSystemPath( Artifact artifact, Artifact replacement )
+    {
+        // NO-OP
+    }
 }
