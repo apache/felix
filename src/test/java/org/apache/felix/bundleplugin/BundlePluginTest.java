@@ -32,7 +32,6 @@ import java.util.TreeMap;
 import java.util.jar.Manifest;
 
 import org.apache.maven.model.Organization;
-import org.apache.maven.plugin.testing.ArtifactStubFactory;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
@@ -268,11 +267,11 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         Manifest manifest = builder.getJar().getManifest();
 
         String bcp = manifest.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
-        assertEquals( ".," + "e-1.0.rar," + "a-1.0.war," + "d-1.0.zip", bcp );
+        assertEquals( ".," + "a-1.0.war," + "d-1.0.zip," + "e-1.0.rar", bcp );
 
         String eas = manifest.getMainAttributes().getValue( "Embedded-Artifacts" );
-        assertEquals( "e-1.0.rar;g=\"g\";a=\"e\";v=\"1.0\"," + "a-1.0.war;g=\"g\";a=\"a\";v=\"1.0\","
-            + "d-1.0.zip;g=\"g\";a=\"d\";v=\"1.0\"", eas );
+        assertEquals( "a-1.0.war;g=\"g\";a=\"a\";v=\"1.0\"," + "d-1.0.zip;g=\"g\";a=\"d\";v=\"1.0\","
+            + "e-1.0.rar;g=\"g\";a=\"e\";v=\"1.0\"", eas );
     }
 
 
@@ -360,11 +359,11 @@ public class BundlePluginTest extends AbstractBundlePluginTest
         Manifest manifest2 = builder2.getJar().getManifest();
 
         String bcp1 = manifest1.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
-        assertEquals( ".," + "test-1.0.jar," + "provided-1.0.jar," + "runtime-1.0.jar," + "system-1.0.jar", bcp1 );
+        assertEquals( ".," + "provided-1.0.jar," + "test-1.0.jar," + "runtime-1.0.jar," + "system-1.0.jar", bcp1 );
 
         String eas1 = manifest1.getMainAttributes().getValue( "Embedded-Artifacts" );
-        assertEquals( "test-1.0.jar;g=\"g\";a=\"test\";v=\"1.0\","
-            + "provided-1.0.jar;g=\"g\";a=\"provided\";v=\"1.0\"," + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\","
+        assertEquals( "provided-1.0.jar;g=\"g\";a=\"provided\";v=\"1.0\","
+            + "test-1.0.jar;g=\"g\";a=\"test\";v=\"1.0\"," + "runtime-1.0.jar;g=\"g\";a=\"runtime\";v=\"1.0\","
             + "system-1.0.jar;g=\"g\";a=\"system\";v=\"1.0\"", eas1 );
 
         String bcp2 = manifest2.getMainAttributes().getValue( Constants.BUNDLE_CLASSPATH );
