@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -178,11 +179,16 @@ public class ManifestPlugin extends BundlePlugin
 
         analyzer.setJar( file );
 
+        // calculateExportsFromContents when we have no explicit instructions defining
+        // the contents of the bundle *and* we are not analyzing the output directory,
+        // otherwise fall-back to addMavenInstructions approach
+
         if ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == null
             && analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == null
-            && analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null )
+            && analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == null
+            && !file.equals( getOutputDirectory() ) )
         {
-            String export = analyzer.calculateExportsFromContents( analyzer.getJar() );
+            String export = calculateExportsFromContents( analyzer.getJar() );
             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );
         }
 
@@ -218,5 +224,42 @@ public class ManifestPlugin extends BundlePlugin
                 // nothing we can do here
             }
         }
+    }
+
+
+    /*
+     * Patched version of bnd's Analyzer.calculateExportsFromContents
+     */
+    public static String calculateExportsFromContents( Jar bundle )
+    {
+        String ddel = "";
+        StringBuffer sb = new StringBuffer();
+        Map<String, Map<String, Resource>> map = bundle.getDirectories();
+        for ( Iterator<Entry<String, Map<String, Resource>>> i = map.entrySet().iterator(); i.hasNext(); )
+        {
+            //----------------------------------------------------
+            // should also ignore directories with no resources
+            //----------------------------------------------------
+            Entry<String, Map<String, Resource>> entry = i.next();
+            if ( entry.getValue() == null || entry.getValue().isEmpty() )
+                continue;
+            //----------------------------------------------------
+            String directory = entry.getKey();
+            if ( directory.equals( "META-INF" ) || directory.startsWith( "META-INF/" ) )
+                continue;
+            if ( directory.equals( "OSGI-OPT" ) || directory.startsWith( "OSGI-OPT/" ) )
+                continue;
+            if ( directory.equals( "/" ) )
+                continue;
+
+            if ( directory.endsWith( "/" ) )
+                directory = directory.substring( 0, directory.length() - 1 );
+
+            directory = directory.replace( '/', '.' );
+            sb.append( ddel );
+            sb.append( directory );
+            ddel = ",";
+        }
+        return sb.toString();
     }
 }
