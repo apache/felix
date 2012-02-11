@@ -1183,7 +1183,23 @@ public class BundlePlugin extends AbstractMojo
         properties.putAll( currentProject.getModel().getProperties() );
         if ( m_mavenSession != null )
         {
-            properties.putAll( m_mavenSession.getExecutionProperties() );
+            try
+            {
+                Properties sessionProperties = m_mavenSession.getExecutionProperties();
+                for ( Enumeration e = sessionProperties.propertyNames(); e.hasMoreElements(); )
+                {
+                    // don't pass upper-case settings to bnd
+                    String key = ( String ) e.nextElement();
+                    if ( key.length() > 0 && !Character.isUpperCase( key.charAt( 0 ) ) )
+                    {
+                        properties.put( key, sessionProperties.getProperty( key ) );
+                    }
+                }
+            }
+            catch ( Exception e )
+            {
+                getLog().warn( "Problem with Maven session properties: " + e.getLocalizedMessage() );
+            }
         }
 
         properties.putAll( getProperties( currentProject.getModel(), "project.build." ) );
