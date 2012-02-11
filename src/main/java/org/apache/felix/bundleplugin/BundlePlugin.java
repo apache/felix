@@ -1185,10 +1185,10 @@ public class BundlePlugin extends AbstractMojo
         {
             try
             {
+                // don't pass upper-case session settings to bnd as they end up in the manifest
                 Properties sessionProperties = m_mavenSession.getExecutionProperties();
                 for ( Enumeration e = sessionProperties.propertyNames(); e.hasMoreElements(); )
                 {
-                    // don't pass upper-case settings to bnd
                     String key = ( String ) e.nextElement();
                     if ( key.length() > 0 && !Character.isUpperCase( key.charAt( 0 ) ) )
                     {
