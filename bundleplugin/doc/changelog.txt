@@ -1,3 +1,17 @@
+Changes from 2.3.6 to 2.3.7
+---------------------------
+
+** Bug
+    * [FELIX-3347] - Upper-case environment variables end up in final manifest
+    * [FELIX-3310] - [patch] maven-bundle-plugin build fails with maven3 (manageArtifactSystemPath is missing)
+    * [FELIX-3254] - manifest goal generates wrong Export-Package when Embed-Dependency
+
+** Improvement
+    * [FELIX-3300] - Avoid warning about superfluous export-package instructions for empty directories
+
+** Task
+    * [FELIX-3299] - Fix instable tests in BundlePluginTest
+
 Changes from 2.3.5 to 2.3.6
 ---------------------------
 
