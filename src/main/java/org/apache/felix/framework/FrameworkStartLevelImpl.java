@@ -292,7 +292,24 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
             if (request instanceof Integer)
             {
                 // Set the new framework start level.
-                m_felix.setActiveStartLevel(((Integer) request).intValue(), listeners);
+                try
+                {
+                    m_felix.setActiveStartLevel(((Integer) request).intValue(), listeners);
+                }
+                catch (IllegalStateException ise)
+                {
+                    // Thrown if global lock cannot be acquired, in which case
+                    // just retry.
+                    synchronized (m_requests)
+                    {
+                        m_requests.add(0, request);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    m_felix.getLogger().log(Logger.LOG_ERROR,
+                        "Unexpected problem setting active start level to " + request, ex);
+                }
             }
             else
             {
