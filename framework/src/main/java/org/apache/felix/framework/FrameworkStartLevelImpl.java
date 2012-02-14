@@ -252,6 +252,7 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
     {
         // This thread loops forever, thus it should
         // be a daemon thread.
+        Object previousRequest = null;
         while (true)
         {
             Object request = null;
@@ -299,10 +300,19 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
                 catch (IllegalStateException ise)
                 {
                     // Thrown if global lock cannot be acquired, in which case
-                    // just retry.
-                    synchronized (m_requests)
+                    // just retry (unless we already did)
+                    if (previousRequest == request)
                     {
-                        m_requests.add(0, request);
+                        m_felix.getLogger().log(Logger.LOG_ERROR,
+                            "Unexpected problem setting active start level to " + request, ise);
+                    }
+                    else
+                    {
+                        synchronized (m_requests)
+                        {
+                            m_requests.add(0, request);
+                            previousRequest = request;
+                        }
                     }
                 }
                 catch (Exception ex)
