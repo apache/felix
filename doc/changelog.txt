@@ -1,5 +1,18 @@
-Changes 1.0.0 to 1.1.0
-----------------------
+Changes from 1.1.2 to 1.1.0
+---------------------------
+
+** Bug
+    * Access to system properties should be done in a priviledged
+      block.
+    * The manifest parser does not correctly handle empty strings.
+
+** Improvement
+    * Add java.util.Properties backward compatibility methods
+    * Allow the substitution methods to receive a callback to 
+      obtain custom values
+
+Changes from 1.0.0 to 1.1.0
+---------------------------
 
 ** New Feature
     * New org.apache.felix.utils.collections.DictionaryAsMap class 
