@@ -33,6 +33,7 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -833,4 +834,67 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         TestCase.assertEquals( 1, tester.numManagedServiceFactoryDeleteCalls );
     }
 
+    @Test
+    public void test_factory_configuration_collision() throws IOException, InvalidSyntaxException, BundleException {
+        final String factoryPid = "test_factory_configuration_collision";
+
+        final Configuration cf = getConfigurationAdmin().createFactoryConfiguration( factoryPid, null );
+        TestCase.assertNotNull( cf );
+        final String pid = cf.getPid();
+
+        try
+        {
+            bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator.class );
+            bundle.start();
+            delay();
+
+            final ManagedServiceFactoryTestActivator tester = ManagedServiceFactoryTestActivator.INSTANCE;
+            TestCase.assertEquals( "MSF must not be updated with new configuration", 0, tester.numManagedServiceFactoryUpdatedCalls );
+
+            TestCase.assertNotNull( "Configuration must have PID", pid );
+            TestCase.assertEquals( "Factory configuration must have requested factory PID", factoryPid, cf.getFactoryPid() );
+
+            // assert getConfiguration returns the same configurtion
+            final Configuration c1 = getConfigurationAdmin().getConfiguration( pid, null );
+            TestCase.assertEquals( "getConfiguration must retrieve required PID", pid, c1.getPid() );
+            TestCase.assertEquals( "getConfiguration must retrieve new factory configuration", factoryPid, c1.getFactoryPid() );
+            TestCase.assertNull( "Configuration must not have properties", c1.getProperties() );
+
+            TestCase.assertEquals( "MSF must not be updated with new configuration", 0, tester.numManagedServiceFactoryUpdatedCalls );
+
+            // restart config admin and verify getConfiguration persisted
+            // the new factory configuration as such
+            final Bundle cmBundle = getCmBundle();
+            TestCase.assertNotNull( "Config Admin Bundle missing", cmBundle );
+            cmBundle.stop();
+            delay();
+            cmBundle.start();
+            delay();
+
+            TestCase.assertEquals( "MSF must not be updated with new configuration even after CM restart", 0, tester.numManagedServiceFactoryUpdatedCalls );
+
+            final Configuration c2 = getConfigurationAdmin().getConfiguration( pid, null );
+            TestCase.assertEquals( "getConfiguration must retrieve required PID", pid, c2.getPid() );
+            TestCase.assertEquals( "getConfiguration must retrieve new factory configuration from persistence", factoryPid, c2.getFactoryPid() );
+            TestCase.assertNull( "Configuration must not have properties", c2.getProperties() );
+
+            c2.update( theConfig );
+            delay();
+
+            TestCase.assertEquals( 1, tester.numManagedServiceFactoryUpdatedCalls );
+            TestCase.assertEquals( theConfig.get( PROP_NAME ), tester.configs.get( cf.getPid() ).get( PROP_NAME ) );
+
+            final Configuration[] cfs = getConfigurationAdmin().listConfigurations( "(" + ConfigurationAdmin.SERVICE_FACTORYPID + "="
+                + factoryPid + ")" );
+            TestCase.assertNotNull( "Expect at least one configuration", cfs );
+            TestCase.assertEquals( "Expect exactly one configuration", 1, cfs.length );
+            TestCase.assertEquals( cf.getPid(), cfs[0].getPid() );
+            TestCase.assertEquals( cf.getFactoryPid(), cfs[0].getFactoryPid() );
+        }
+        finally
+        {
+            // make sure no configuration survives ...
+            getConfigurationAdmin().getConfiguration( pid, null ).delete();
+        }
+    }
 }
