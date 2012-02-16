@@ -438,7 +438,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     ConfigurationImpl createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
-        return createConfiguration( createPid( factoryPid ), factoryPid, location );
+        return cacheConfiguration( createConfiguration( createPid( factoryPid ), factoryPid, location ) );
     }
 
 
@@ -459,6 +459,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         {
             log( LogService.LOG_DEBUG, "Found cached configuration {0} bound to {1}", new Object[]
                 { pid, config.getBundleLocation() } );
+
+            config.ensureFactoryConfigPersisted();
+
             return config;
         }
 

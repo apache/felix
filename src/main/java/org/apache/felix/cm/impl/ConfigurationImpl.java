@@ -178,10 +178,7 @@ class ConfigurationImpl extends ConfigurationBase
         // case the configuration is only stored when first updated
         if ( factoryPid == null )
         {
-            Dictionary props = new Hashtable();
-            setAutoProperties( props, true );
-            props.put( CONFIGURATION_NEW, Boolean.TRUE );
-            persistenceManager.store( pid, props );
+            storeNewConfiguration();
         }
     }
 
@@ -381,13 +378,6 @@ class ConfigurationImpl extends ConfigurationBase
             String factoryPid = getFactoryPid();
             if ( factoryPid != null )
             {
-                // If this is a new factory configuration, we also have to add
-                // it to the configuration manager cache
-                if ( isNew() )
-                {
-                    getConfigurationManager().cacheConfiguration( this );
-                }
-
                 Factory factory = getConfigurationManager().getFactory( factoryPid );
                 if ( factory.addPID( getPid() ) )
                 {
@@ -446,6 +436,36 @@ class ConfigurationImpl extends ConfigurationBase
 
 
     // ---------- private helper -----------------------------------------------
+
+    /**
+     * Stores the configuration if it is a newly factory configuration
+     * which has not been persisted yet.
+     * <p>
+     * This is used to ensure a configuration c as in
+     * <pre>
+     * Configuration cf = cm.createFactoryConfiguration(factoryPid);
+     * Configuration c = cm.getConfiguration(cf.getPid());
+     * </pre>
+     * is persisted after <code>getConfiguration</code> while
+     * <code>createConfiguration</code> alone does not persist yet.
+     */
+    void ensureFactoryConfigPersisted() throws IOException
+    {
+        if ( this.factoryPID != null && isNew() && !getPersistenceManager().exists( getPid() ) )
+        {
+            storeNewConfiguration();
+        }
+    }
+
+
+    private void storeNewConfiguration() throws IOException
+    {
+        Dictionary props = new Hashtable();
+        setAutoProperties( props, true );
+        props.put( CONFIGURATION_NEW, Boolean.TRUE );
+        getPersistenceManager().store( getPid(), props );
+    }
+
 
     void store() throws IOException
     {
