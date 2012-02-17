@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
+import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -487,5 +488,193 @@ public class ComponentFactoryTest extends ComponentTestBase
                 TestCase.fail( "Unexpected Component " + c );
             }
         }
+    }
+
+
+    @Test
+    public void test_component_factory_reference() throws InvalidSyntaxException
+    {
+        final String componentname = "factory.component.reference";
+        final String componentfactory = "factory.component.factory.reference";
+
+        SimpleServiceImpl.create( bundleContext, "ignored" ).setFilterProperty( "ignored" );
+
+        final Component component = findComponentByName( componentname );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        component.enable();
+        delay();
+
+        // missing reference -> unsatisfied
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        // register a service : filterprop=match
+        SimpleServiceImpl match = SimpleServiceImpl.create( bundleContext, "required" ).setFilterProperty( "required" );
+        delay();
+
+        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNotNull( refs );
+        TestCase.assertEquals( 1, refs.length );
+        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        TestCase.assertNotNull( factory );
+
+        // non-overwrite filterprop
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
+        final ComponentInstance instance = factory.newInstance( props );
+        TestCase.assertNotNull( instance );
+
+        TestCase.assertNotNull( instance.getInstance() );
+        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
+        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
+        TestCase.assertEquals( 1, SimpleComponent.INSTANCE.m_multiRef.size() );
+        TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( match ) );
+
+        final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
+        TestCase.assertNotNull( instanceMap );
+        TestCase.assertEquals( 1, instanceMap.size() );
+
+        final Object instanceManager = getFieldValue( instance, "m_componentManager" );
+        TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
+
+        // check registered components
+        final Component[] allFactoryComponents = findComponentsByName( componentname );
+        TestCase.assertNotNull( allFactoryComponents );
+        TestCase.assertEquals( 2, allFactoryComponents.length );
+        for ( int i = 0; i < allFactoryComponents.length; i++ )
+        {
+            final Component c = allFactoryComponents[i];
+            if ( c.getId() == component.getId() )
+            {
+                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
+            }
+            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
+            {
+                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
+            }
+            else
+            {
+                TestCase.fail( "Unexpected Component " + c );
+            }
+        }
+
+        instance.dispose();
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+        TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
+
+        TestCase.assertEquals( 0, instanceMap.size() );
+        TestCase.assertFalse( instanceMap.containsValue( instanceManager ) );
+
+        // overwritten filterprop
+        Hashtable<String, String> propsNonMatch = new Hashtable<String, String>();
+        propsNonMatch.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
+        propsNonMatch.put( "ref.target", "(filterprop=nomatch)" );
+        try
+        {
+            factory.newInstance( propsNonMatch );
+            TestCase.fail( "Missing reference must fail instance creation" );
+        }
+        catch ( ComponentException ce )
+        {
+            // expected
+        }
+
+        final SimpleServiceImpl noMatch = SimpleServiceImpl.create( bundleContext, "nomatch" ).setFilterProperty(
+            "nomatch" );
+        delay();
+
+        final ComponentInstance instanceNonMatch = factory.newInstance( propsNonMatch );
+
+        TestCase.assertNotNull( instanceNonMatch );
+
+        TestCase.assertNotNull( instanceNonMatch.getInstance() );
+        TestCase.assertEquals( SimpleComponent.INSTANCE, instanceNonMatch.getInstance() );
+        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
+
+        TestCase.assertEquals( 1, SimpleComponent.INSTANCE.m_multiRef.size() );
+        TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( noMatch ) );
+
+        // check registered components
+        final Component[] allFactoryComponents2 = findComponentsByName( componentname );
+        TestCase.assertNotNull( allFactoryComponents2 );
+        TestCase.assertEquals( 2, allFactoryComponents2.length );
+        for ( int i = 0; i < allFactoryComponents2.length; i++ )
+        {
+            final Component c = allFactoryComponents2[i];
+            if ( c.getId() == component.getId() )
+            {
+                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
+            }
+            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
+            {
+                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
+            }
+            else
+            {
+                TestCase.fail( "Unexpected Component " + c );
+            }
+        }
+
+        match.getRegistration().unregister();
+        delay();
+
+        // check registered components (ComponentFactory aint no longer)
+        final Component[] allFactoryComponents3 = findComponentsByName( componentname );
+        TestCase.assertNotNull( allFactoryComponents3 );
+        TestCase.assertEquals( 2, allFactoryComponents3.length );
+        for ( int i = 0; i < allFactoryComponents3.length; i++ )
+        {
+            final Component c = allFactoryComponents3[i];
+            if ( c.getId() == component.getId() )
+            {
+                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
+            }
+            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
+            {
+                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
+            }
+            else
+            {
+                TestCase.fail( "Unexpected Component " + c );
+            }
+        }
+
+        noMatch.getRegistration().unregister();
+        delay();
+
+        // check registered components (ComponentFactory aint no longer)
+        final Component[] allFactoryComponents4 = findComponentsByName( componentname );
+        TestCase.assertNotNull( allFactoryComponents4 );
+        TestCase.assertEquals( 1, allFactoryComponents4.length );
+        for ( int i = 0; i < allFactoryComponents4.length; i++ )
+        {
+            final Component c = allFactoryComponents4[i];
+            if ( c.getId() == component.getId() )
+            {
+                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
+            }
+            else
+            {
+                TestCase.fail( "Unexpected Component " + c );
+            }
+        }
+
+        // deactivated due to unsatisfied reference
+        TestCase.assertNull( instanceNonMatch.getInstance() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        instanceNonMatch.dispose();
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+        TestCase.assertNull( instanceNonMatch.getInstance() ); // SCR 112.12.6.2
     }
 }
