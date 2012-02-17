@@ -22,12 +22,15 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
@@ -169,7 +172,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     {
         log( LogService.LOG_DEBUG, "registering component factory", null );
 
-        Dictionary serviceProperties = getProperties();
+        Dictionary serviceProperties = getServiceProperties();
         return getActivator().getBundleContext().registerService( new String[]
             { ComponentFactory.class.getName() }, getService(), serviceProperties );
     }
@@ -189,6 +192,25 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
 
     public Dictionary getProperties()
+    {
+        Dictionary props = getServiceProperties();
+
+        // add target properties of references
+        List depMetaData = getComponentMetadata().getDependencies();
+        for ( Iterator di = depMetaData.iterator(); di.hasNext(); )
+        {
+            ReferenceMetadata rm = ( ReferenceMetadata ) di.next();
+            if ( rm.getTarget() != null )
+            {
+                props.put( rm.getTargetPropertyName(), rm.getTarget() );
+            }
+        }
+
+        return props;
+    }
+
+
+    public Dictionary getServiceProperties()
     {
         Dictionary props = new Hashtable();
 
@@ -403,6 +425,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
 
     //---------- internal
+
 
     /**
      * Creates an {@link ImmediateComponentManager} instance with the

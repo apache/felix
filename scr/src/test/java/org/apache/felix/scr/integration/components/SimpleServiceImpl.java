@@ -74,27 +74,29 @@ public class SimpleServiceImpl implements SimpleService
     }
 
 
-    public void update( String value )
+    public SimpleService update( String value )
     {
         if ( this.m_registration != null )
         {
             this.m_value = value;
             this.m_registration.setProperties( getProperties() );
         }
+        return this;
     }
 
 
-    public void setFilterProperty( String filterProp )
+    public SimpleServiceImpl setFilterProperty( String filterProp )
     {
         if ( this.m_registration != null )
         {
             this.m_filterProp = filterProp;
             this.m_registration.setProperties( getProperties() );
         }
+        return this;
     }
 
 
-    public void drop()
+    public SimpleServiceImpl drop()
     {
         ServiceRegistration sr = getRegistration();
         if ( sr != null )
@@ -102,6 +104,7 @@ public class SimpleServiceImpl implements SimpleService
             setRegistration( null );
             sr.unregister();
         }
+        return this;
     }
 
 
@@ -111,9 +114,10 @@ public class SimpleServiceImpl implements SimpleService
     }
 
 
-    public void setRegistration( ServiceRegistration registration )
+    public SimpleServiceImpl setRegistration( ServiceRegistration registration )
     {
         m_registration = registration;
+        return this;
     }
 
 
