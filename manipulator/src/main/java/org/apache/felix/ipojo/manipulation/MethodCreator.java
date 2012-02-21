@@ -547,8 +547,16 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         } else {
             itfs = interfaces;
         }
+        
+        // If version = 1.7, use 1.6 if the ipojo.downgrade.classes system property is either
+        // not set of set to true.
+        int theVersion = version;
+        String downgrade = System.getProperty("ipojo.downgrade.classes");
+        if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
+            theVersion = Opcodes.V1_6;
+        }
 
-        cv.visit(version, access, name, signature, superName, itfs);
+        cv.visit(theVersion, access, name, signature, superName, itfs);
     }
 
     /**
