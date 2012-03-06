@@ -18,11 +18,13 @@
  */
 package org.apache.felix.example.servicebased.host;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.SwingUtilities;
 
 import org.apache.felix.example.servicebased.host.service.SimpleShape;
-import org.osgi.framework.*;
-import org.osgi.util.tracker.*;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Extends the <tt>ServiceTracker</tt> to create a tracker for
@@ -35,16 +37,10 @@ import org.osgi.util.tracker.*;
 **/
 public class ShapeTracker extends ServiceTracker
 {
-    // Flag indicating an added shape.
-    private static final int ADDED = 1;
-    // Flag indicating a modified shape.
-    private static final int MODIFIED = 2;
-    // Flag indicating a removed shape.
-    private static final int REMOVED = 3;
     // The bundle context used for tracking.
-    private BundleContext m_context;
+    private final BundleContext m_context;
     // The application object to notify.
-    private DrawingFrame m_frame;
+    private final DrawingFrame m_frame;
 
     /**
      * Constructs a tracker that uses the specified bundle context to
@@ -66,10 +62,11 @@ public class ShapeTracker extends ServiceTracker
      * @param ref The service reference of the added service.
      * @return The service object to be used by the tracker.
     **/
+    @Override
     public Object addingService(ServiceReference ref)
     {
         SimpleShape shape = new DefaultShape(m_context, ref);
-        processShapeOnEventThread(ADDED, ref, shape);
+        processShapeOnEventThread(ShapeEvent.ADDED, ref, shape);
         return shape;
     }
 
@@ -79,9 +76,10 @@ public class ShapeTracker extends ServiceTracker
      * @param ref The service reference of the modified service.
      * @param svc The service object of the modified service.
     **/
+    @Override
     public void modifiedService(ServiceReference ref, Object svc)
     {
-        processShapeOnEventThread(MODIFIED, ref, (SimpleShape) svc);
+        processShapeOnEventThread(ShapeEvent.MODIFIED, ref, (SimpleShape) svc);
     }
 
     /**
@@ -90,9 +88,10 @@ public class ShapeTracker extends ServiceTracker
      * @param ref The service reference of the removed service.
      * @param svc The service object of the removed service.
     **/
+    @Override
     public void removedService(ServiceReference ref, Object svc)
     {
-        processShapeOnEventThread(REMOVED, ref, (SimpleShape) svc);
+        processShapeOnEventThread(ShapeEvent.REMOVED, ref, (SimpleShape) svc);
         ((DefaultShape) svc).dispose();
     }
 
@@ -100,22 +99,22 @@ public class ShapeTracker extends ServiceTracker
      * Processes a received service notification from the <tt>ServiceTracker</tt>,
      * forcing the processing of the notification onto the Swing event thread
      * if it is not already on it.
-     * @param action The type of action associated with the notification.
+     * @param event The type of action associated with the notification.
      * @param ref The service reference of the corresponding service.
      * @param shape The service object of the corresponding service.
     **/
     private void processShapeOnEventThread(
-        int action, ServiceReference ref, SimpleShape shape)
+        ShapeEvent event, ServiceReference ref, SimpleShape shape)
     {
         try
         {
             if (SwingUtilities.isEventDispatchThread())
             {
-                processShape(action, ref, shape);
+                processShape(event, ref, shape);
             }
             else
             {
-                SwingUtilities.invokeAndWait(new ShapeRunnable(action, ref, shape));
+                SwingUtilities.invokeAndWait(new ShapeRunnable(event, ref, shape));
             }
         }
         catch (Exception ex)
@@ -128,15 +127,15 @@ public class ShapeTracker extends ServiceTracker
      * Actually performs the processing of the service notification. Invokes
      * the appropriate callback method on the application object depending on
      * the action type of the notification.
-     * @param action The type of action associated with the notification.
+     * @param event The type of action associated with the notification.
      * @param ref The service reference of the corresponding service.
      * @param shape The service object of the corresponding service.
     **/
-    private void processShape(int action, ServiceReference ref, SimpleShape shape)
+    private void processShape(ShapeEvent event, ServiceReference ref, SimpleShape shape)
     {
         String name = (String) ref.getProperty(SimpleShape.NAME_PROPERTY);
 
-        switch (action)
+        switch (event)
         {
             case MODIFIED:
                 m_frame.removeShape(name);
@@ -160,20 +159,20 @@ public class ShapeTracker extends ServiceTracker
     **/
     private class ShapeRunnable implements Runnable
     {
-        private int m_action;
-        private ServiceReference m_ref;
-        private SimpleShape m_shape;
+        private final ShapeEvent m_event;
+        private final ServiceReference m_ref;
+        private final SimpleShape m_shape;
 
         /**
          * Constructs an object with the specified action, service reference,
          * and service object for processing on the Swing event thread.
-         * @param action The type of action associated with the notification.
+         * @param event The type of action associated with the notification.
          * @param ref The service reference of the corresponding service.
          * @param shape The service object of the corresponding service.
         **/
-        public ShapeRunnable(int action, ServiceReference ref, SimpleShape shape)
+        public ShapeRunnable(ShapeEvent event, ServiceReference ref, SimpleShape shape)
         {
-            m_action = action;
+            m_event = event;
             m_ref = ref;
             m_shape = shape;
         }
@@ -183,7 +182,14 @@ public class ShapeTracker extends ServiceTracker
         **/
         public void run()
         {
-            processShape(m_action, m_ref, m_shape);
+            processShape(m_event, m_ref, m_shape);
         }
+    }
+
+    private static enum ShapeEvent
+    {
+        ADDED,
+        MODIFIED,
+        REMOVED
     }
 }

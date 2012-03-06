@@ -23,11 +23,13 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.geom.*;
+import java.awt.geom.Ellipse2D;
+import java.util.Dictionary;
 import java.util.Hashtable;
 import javax.swing.ImageIcon;
 import org.apache.felix.example.servicebased.host.service.SimpleShape;
-import org.osgi.framework.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 /**
  * This class implements a simple bundle activator for the circle
@@ -47,7 +49,7 @@ public class Activator implements BundleActivator
     public void start(BundleContext context)
     {
         m_context = context;
-        Hashtable dict = new Hashtable();
+        Dictionary<String, Object> dict = new Hashtable<String, Object>();
         dict.put(SimpleShape.NAME_PROPERTY, "Circle");
         dict.put(SimpleShape.ICON_PROPERTY,
             new ImageIcon(this.getClass().getResource("circle.png")));

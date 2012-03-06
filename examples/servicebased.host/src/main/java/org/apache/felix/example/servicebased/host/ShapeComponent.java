@@ -18,10 +18,11 @@
  */
 package org.apache.felix.example.servicebased.host;
 
-import java.awt.*;
-
-import javax.swing.*;
-
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import javax.swing.JComponent;
 import org.apache.felix.example.servicebased.host.service.SimpleShape;
 
 /**
@@ -31,8 +32,8 @@ import org.apache.felix.example.servicebased.host.service.SimpleShape;
 public class ShapeComponent extends JComponent
 {
     private static final long serialVersionUID = 1L;
-    private DrawingFrame m_frame;
-    private String m_shapeName;
+    private final DrawingFrame m_frame;
+    private final String m_shapeName;
 
     /**
      * Construct a component for the specified drawing frame with the specified
@@ -54,7 +55,8 @@ public class ShapeComponent extends JComponent
      * to account for service dynamism.
      * @param g The graphics object to use for painting.
     **/
-    protected void paintComponent(Graphics g)
+    @Override
+	protected void paintComponent(Graphics g)
     {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;

@@ -18,11 +18,23 @@
  */
 package org.apache.felix.example.servicebased.host;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
 
 import org.apache.felix.example.servicebased.host.service.SimpleShape;
 
@@ -38,13 +50,13 @@ public class DrawingFrame extends JFrame
 {
     private static final long serialVersionUID = 1L;
     private static final int BOX = 54;
-    private JToolBar m_toolbar;
+    private final JToolBar m_toolbar;
     private String m_selected;
-    private JPanel m_panel;
+    private final JPanel m_panel;
     private ShapeComponent m_selectedComponent;
-    private Map m_shapes = new HashMap();
-    private SimpleShape m_defaultShape = new DefaultShape();
-    private ActionListener m_reusableActionListener = new ShapeActionListener();
+    private final Map<String, ShapeInfo> m_shapes = new HashMap<String, ShapeInfo>();
+    private final SimpleShape m_defaultShape = new DefaultShape();
+    private final ActionListener m_reusableActionListener = new ShapeActionListener();
 
     /**
      * Default constructor that populates the main window.
@@ -83,7 +95,7 @@ public class DrawingFrame extends JFrame
     **/
     public SimpleShape getShape(String name)
     {
-        ShapeInfo info = (ShapeInfo) m_shapes.get(name);
+        ShapeInfo info = m_shapes.get(name);
         if (info == null)
         {
             return m_defaultShape;
@@ -261,9 +273,9 @@ public class DrawingFrame extends JFrame
     **/
     private static class ShapeInfo
     {
-        public String m_name;
-        public Icon m_icon;
-        public SimpleShape m_shape;
+        private final String m_name;
+        private final Icon m_icon;
+        private final SimpleShape m_shape;
         public ShapeInfo(String name, Icon icon, SimpleShape shape)
         {
             m_name = name;
