@@ -1,3 +1,13 @@
+Changes from 1.4.2 to 1.4.3
+---------------------------
+
+** Bug
+    * [FELIX-2378] - Deadlock in Felix Shell implementation
+
+** Improvement
+    * [FELIX-2379] - Use service tracker in shell to track commands
+
+
 Changes from 1.4.1 to 1.4.2
 ---------------------------
 
