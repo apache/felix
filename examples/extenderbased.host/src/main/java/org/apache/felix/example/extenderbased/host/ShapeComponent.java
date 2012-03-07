@@ -18,10 +18,11 @@
  */
 package org.apache.felix.example.extenderbased.host;
 
-import java.awt.*;
-
-import javax.swing.*;
-
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import javax.swing.JComponent;
 import org.apache.felix.example.extenderbased.host.extension.SimpleShape;
 
 /**

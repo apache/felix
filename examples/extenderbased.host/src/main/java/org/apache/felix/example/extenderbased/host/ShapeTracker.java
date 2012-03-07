@@ -19,7 +19,9 @@
 package org.apache.felix.example.extenderbased.host;
 
 import java.util.Dictionary;
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.SwingUtilities;
 import org.apache.felix.example.extenderbased.host.extension.SimpleShape;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -34,14 +36,8 @@ import org.osgi.framework.BundleContext;
 **/
 public class ShapeTracker extends BundleTracker
 {
-    // Flag indicating an added shape.
-    private static final int ADDED = 1;
-    // Flag indicating a removed shape.
-    private static final int REMOVED = 2;
-    // The bundle context used for tracking.
-    private BundleContext m_context;
     // The application object to notify.
-    private DrawingFrame m_frame;
+    private final DrawingFrame m_frame;
 
     /**
      * Constructs a tracker that uses the specified bundle context to
@@ -53,7 +49,6 @@ public class ShapeTracker extends BundleTracker
     public ShapeTracker(BundleContext context, DrawingFrame frame)
     {
         super(context);
-        m_context = context;
         m_frame = frame;
     }
 
@@ -62,9 +57,10 @@ public class ShapeTracker extends BundleTracker
      * the application object about the added extensions.
      * @param bundle The activated bundle.
     **/
+    @Override
     protected void addedBundle(Bundle bundle)
     {
-        processBundleOnEventThread(ADDED, bundle);
+        processBundleOnEventThread(ShapeEvent.ADDED, bundle);
     }
 
     /**
@@ -72,29 +68,30 @@ public class ShapeTracker extends BundleTracker
      * the application object about removed extensions.
      * @param bundle The inactivated bundle.
     **/
+    @Override
     protected void removedBundle(Bundle bundle)
     {
-        processBundleOnEventThread(REMOVED, bundle);
+        processBundleOnEventThread(ShapeEvent.REMOVED, bundle);
     }
 
     /**
      * Processes a received bundle notification from the <tt>BundleTracker</tt>,
      * forcing the processing of the notification onto the Swing event thread
      * if it is not already on it.
-     * @param action The type of action associated with the notification.
+     * @param event The type of action associated with the notification.
      * @param bundle The bundle of the corresponding extension.
     **/
-    private void processBundleOnEventThread(int action, Bundle bundle)
+    private void processBundleOnEventThread(ShapeEvent event, Bundle bundle)
     {
         try
         {
             if (SwingUtilities.isEventDispatchThread())
             {
-                processBundle(action, bundle);
+                processBundle(event, bundle);
             }
             else
             {
-                SwingUtilities.invokeAndWait(new BundleRunnable(action, bundle));
+                SwingUtilities.invokeAndWait(new BundleRunnable(event, bundle));
             }
         }
         catch (Exception ex)
@@ -107,29 +104,31 @@ public class ShapeTracker extends BundleTracker
      * Actually performs the processing of the bundle notification. Invokes
      * the appropriate callback method on the application object depending on
      * the action type of the notification.
-     * @param action The type of action associated with the notification.
+     * @param event The type of action associated with the notification.
      * @param bundle The bundle of the corresponding extension.
     **/
-    private void processBundle(int action, Bundle bundle)
+    private void processBundle(ShapeEvent event, Bundle bundle)
     {
-        Dictionary dict = bundle.getHeaders();
+        // see http://www.osgi.org/javadoc/r4v43/org/osgi/framework/Bundle.html#getHeaders()
+        @SuppressWarnings("unchecked")
+        Dictionary<String, String> dict = bundle.getHeaders();
 
         // Try to get the name of the extension.
-        String name = (String) dict.get(SimpleShape.NAME_PROPERTY);
+        String name = dict.get(SimpleShape.NAME_PROPERTY);
         // Return immediately if the bundle is not an extension.
         if (name == null)
         {
             return;
         }
 
-        switch (action)
+        switch (event)
         {
             case ADDED:
                 // Get the icon resource of the extension.
-                String iconPath = (String) dict.get(SimpleShape.ICON_PROPERTY);
+                String iconPath = dict.get(SimpleShape.ICON_PROPERTY);
                 Icon icon = new ImageIcon(bundle.getResource(iconPath));
                 // Get the class of the extension.
-                String className = (String) dict.get(SimpleShape.CLASS_PROPERTY);
+                String className = dict.get(SimpleShape.CLASS_PROPERTY);
                 m_frame.addShape(
                     name,
                     icon,
@@ -148,18 +147,18 @@ public class ShapeTracker extends BundleTracker
     **/
     private class BundleRunnable implements Runnable
     {
-        private int m_action;
-        private Bundle m_bundle;
+        private final ShapeEvent m_event;
+        private final Bundle m_bundle;
 
         /**
          * Constructs an object with the specified action and bundle
          * object for processing on the Swing event thread.
-         * @param action The type of action associated with the notification.
+         * @param event The type of action associated with the notification.
          * @param bundle The bundle of the corresponding extension.
         **/
-        public BundleRunnable(int action, Bundle bundle)
+        public BundleRunnable(ShapeEvent event, Bundle bundle)
         {
-            m_action = action;
+            m_event = event;
             m_bundle = bundle;
         }
 
@@ -168,7 +167,13 @@ public class ShapeTracker extends BundleTracker
         **/
         public void run()
         {
-            processBundle(m_action, m_bundle);
+            processBundle(m_event, m_bundle);
         }
+    }
+
+    private static enum ShapeEvent
+    {
+        ADDED,
+        REMOVED
     }
 }

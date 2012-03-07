@@ -22,17 +22,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.*;
-
-import org.osgi.framework.*;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.StringMap;
-import org.apache.felix.framework.cache.BundleCache;
 import org.apache.felix.main.AutoActivator;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 
 /**
  * The activator of the host application bundle. The activator creates the
@@ -62,13 +63,15 @@ public class Activator implements BundleActivator
     **/
     public void start(final BundleContext context)
     {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             // This creates of the application window.
             public void run()
             {
                 m_frame = new DrawingFrame();
                 m_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                m_frame.addWindowListener(new WindowAdapter() {
+                m_frame.addWindowListener(new WindowAdapter()
+                {
+                    @Override
                     public void windowClosing(WindowEvent evt)
                     {
                         try
@@ -140,13 +143,14 @@ public class Activator implements BundleActivator
         final File cachedir = File.createTempFile("felix.example.extenderbased", null);
         cachedir.delete();
         Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
             public void run()
             {
                 deleteFileOrDir(cachedir);
             }
         });
 
-        Map configMap = new StringMap(false);
+        Map<String, Object> configMap = new HashMap<String, Object>();
         configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA,
             "org.apache.felix.example.extenderbased.host.extension; version=1.0.0");
         configMap.put(AutoActivator.AUTO_START_PROP + ".1",
@@ -157,7 +161,7 @@ public class Activator implements BundleActivator
         configMap.put(Constants.FRAMEWORK_STORAGE, cachedir.getAbsolutePath());
 
         // Create list to hold custom framework activators.
-        List list = new ArrayList();
+        List<BundleActivator> list = new ArrayList<BundleActivator>();
         // Add activator to process auto-start/install properties.
         list.add(new AutoActivator(configMap));
         // Add our own activator.

@@ -16,7 +16,7 @@
  specific language governing permissions and limitations
  under the License.
 -->
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <parent>
     <groupId>org.apache.felix</groupId>
@@ -57,6 +57,14 @@
             <Bundle-Activator>org.apache.felix.example.extenderbased.host.Activator</Bundle-Activator>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
           </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
         </configuration>
       </plugin>
     </plugins>

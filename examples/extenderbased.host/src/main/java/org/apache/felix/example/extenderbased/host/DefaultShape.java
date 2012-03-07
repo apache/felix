@@ -90,7 +90,7 @@ class DefaultShape implements SimpleShape
                     // Get the bundle.
                     Bundle bundle = m_context.getBundle(m_bundleId);
                     // Load the class and instantiate it.
-                    Class clazz = bundle.loadClass(m_className);
+                    Class<?> clazz = bundle.loadClass(m_className);
                     m_shape = (SimpleShape) clazz.newInstance();
                 }
                 // Draw the shape.

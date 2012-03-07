@@ -23,9 +23,8 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.geom.*;
+import java.awt.geom.GeneralPath;
 import org.apache.felix.example.extenderbased.host.extension.SimpleShape;
-import org.osgi.framework.*;
 
 /**
  * This inner class implements the triangle <tt>SimpleShape</tt> service.

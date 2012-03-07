@@ -19,6 +19,7 @@
 package org.apache.felix.example.extenderbased.host;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -41,8 +42,8 @@ import org.osgi.framework.SynchronousBundleListener;
 **/
 public abstract class BundleTracker
 {
-    final Set m_bundleSet = new HashSet();
-    final BundleContext m_context;
+    final Set<Bundle> m_bundles = new HashSet<Bundle>();
+    protected final BundleContext m_context;
     final SynchronousBundleListener m_listener;
     boolean m_open;
 
@@ -66,17 +67,17 @@ public abstract class BundleTracker
 
                     if (evt.getType() == BundleEvent.STARTED)
                     {
-                        if (!m_bundleSet.contains(evt.getBundle()))
+                        if (!m_bundles.contains(evt.getBundle()))
                         {
-                            m_bundleSet.add(evt.getBundle());
+                            m_bundles.add(evt.getBundle());
                             addedBundle(evt.getBundle());
                         }
                     }
                     else if (evt.getType() == BundleEvent.STOPPED)
                     {
-                        if (m_bundleSet.contains(evt.getBundle()))
+                        if (m_bundles.contains(evt.getBundle()))
                         {
-                            m_bundleSet.remove(evt.getBundle());
+                            m_bundles.remove(evt.getBundle());
                             removedBundle(evt.getBundle());
                         }
                     }
@@ -91,7 +92,7 @@ public abstract class BundleTracker
     **/
     public synchronized Bundle[] getBundles()
     {
-        return (Bundle[]) m_bundleSet.toArray(new Bundle[m_bundleSet.size()]);
+        return m_bundles.toArray(new Bundle[m_bundles.size()]);
     }
 
     /**
@@ -106,12 +107,12 @@ public abstract class BundleTracker
             m_context.addBundleListener(m_listener);
 
             Bundle[] bundles = m_context.getBundles();
-            for (int i = 0; i < bundles.length; i++)
+            for (Bundle bundle : bundles)
             {
-                if (bundles[i].getState() == Bundle.ACTIVE)
+                if (bundle.getState() == Bundle.ACTIVE)
                 {
-                    m_bundleSet.add(bundles[i]);
-                    addedBundle(bundles[i]);
+                    m_bundles.add(bundle);
+                    addedBundle(bundle);
                 }
             }
         }
@@ -128,13 +129,11 @@ public abstract class BundleTracker
 
             m_context.removeBundleListener(m_listener);
 
-            Bundle[] bundles = (Bundle[]) m_bundleSet.toArray(new Bundle[m_bundleSet.size()]);
-            for (int i = 0; i < bundles.length; i++)
+            for (Iterator<Bundle> itr = m_bundles.iterator(); itr.hasNext();)
             {
-                if (m_bundleSet.remove(bundles[i]))
-                {
-                    removedBundle(bundles[i]);
-                }
+                Bundle bundle = itr.next();
+                itr.remove();
+                removedBundle(bundle);
             }
         }
     }
