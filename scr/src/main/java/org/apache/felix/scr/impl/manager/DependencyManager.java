@@ -816,17 +816,25 @@ public class DependencyManager implements ServiceListener, Reference
         Object service = m_bound.remove( serviceReference );
         if ( service != null && service != BOUND_SERVICE_SENTINEL )
         {
-            try
+            BundleComponentActivator activator = m_componentManager.getActivator();
+            if ( activator != null )
             {
-                m_componentManager.getActivator().getBundleContext().ungetService( serviceReference );
-            }
-            catch ( IllegalStateException e )
-            {
-                m_componentManager.log( LogService.LOG_INFO,
-                    "For dependency {0}, trying to unget ServiceReference {1} on invalid bundle context {2}",
-                    new Object[]
-                        { m_dependencyMetadata.getName(), serviceReference.getProperty( Constants.SERVICE_ID ),
-                            serviceReference }, null );
+                BundleContext bundleContext = activator.getBundleContext();
+                if ( bundleContext != null )
+                {
+                    try
+                    {
+                        bundleContext.ungetService( serviceReference );
+                    }
+                    catch ( IllegalStateException e )
+                    {
+                        m_componentManager.log( LogService.LOG_INFO,
+                            "For dependency {0}, trying to unget ServiceReference {1} on invalid bundle context {2}",
+                            new Object[]
+                                { m_dependencyMetadata.getName(), serviceReference.getProperty( Constants.SERVICE_ID ),
+                                    serviceReference }, null );
+                    }
+                }
             }
         }
     }
