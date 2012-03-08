@@ -73,22 +73,22 @@ public class DependencyManager implements ServiceListener, Reference
     private int m_size;
 
     // the object on which the bind/undind methods are to be called
-    private transient Object m_componentInstance;
+    private volatile Object m_componentInstance;
 
     // the bind method
-    private BindMethod m_bind;
+    private volatile BindMethod m_bind;
 
     // the updated method
-    private UpdatedMethod m_updated;
+    private volatile UpdatedMethod m_updated;
 
     // the unbind method
-    private UnbindMethod m_unbind;
+    private volatile UnbindMethod m_unbind;
 
     // the target service filter string
-    private String m_target;
+    private volatile String m_target;
 
     // the target service filter
-    private Filter m_targetFilter;
+    private volatile Filter m_targetFilter;
 
 
     /**
@@ -121,23 +121,23 @@ public class DependencyManager implements ServiceListener, Reference
     /**
      * Initialize binding methods.
      */
-    private void initBindingMethods()
+    private void initBindingMethods(Class instanceClass)
     {
         m_bind = new BindMethod( m_componentManager,
                                  m_dependencyMetadata.getBind(),
-                                 m_componentInstance.getClass(),
+                                 instanceClass,
                                  m_dependencyMetadata.getName(),
                                  m_dependencyMetadata.getInterface()
         );
         m_updated = new UpdatedMethod( m_componentManager,
                 m_dependencyMetadata.getUpdated(),
-                m_componentInstance.getClass(),
+                instanceClass,
                 m_dependencyMetadata.getName(),
                 m_dependencyMetadata.getInterface()
         );
         m_unbind = new UnbindMethod( m_componentManager,
             m_dependencyMetadata.getUnbind(),
-            m_componentInstance.getClass(),
+            instanceClass,
             m_dependencyMetadata.getName(),
             m_dependencyMetadata.getInterface()
         );
@@ -816,7 +816,18 @@ public class DependencyManager implements ServiceListener, Reference
         Object service = m_bound.remove( serviceReference );
         if ( service != null && service != BOUND_SERVICE_SENTINEL )
         {
-            m_componentManager.getActivator().getBundleContext().ungetService( serviceReference );
+            try
+            {
+                m_componentManager.getActivator().getBundleContext().ungetService( serviceReference );
+            }
+            catch ( IllegalStateException e )
+            {
+                m_componentManager.log( LogService.LOG_INFO,
+                    "For dependency {0}, trying to unget ServiceReference {1} on invalid bundle context {2}",
+                    new Object[]
+                        { m_dependencyMetadata.getName(), serviceReference.getProperty( Constants.SERVICE_ID ),
+                            serviceReference }, null );
+            }
         }
     }
 
@@ -863,8 +874,8 @@ public class DependencyManager implements ServiceListener, Reference
 
     boolean open( Object instance )
     {
+        initBindingMethods( instance.getClass() );
         m_componentInstance = instance;
-        initBindingMethods();
         return bind();
     }
 
@@ -1025,20 +1036,30 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if( m_componentInstance != null )
         {
-            return m_bind.invoke( m_componentInstance, new BindMethod.Service()
+            if ( m_bind != null )
             {
-                public ServiceReference getReference()
+                return m_bind.invoke( m_componentInstance, new BindMethod.Service()
                 {
-                    bindService( ref );
-                    return ref;
-                }
+                    public ServiceReference getReference()
+                    {
+                        bindService( ref );
+                        return ref;
+                    }
 
 
-                public Object getInstance()
-                {
-                    return getService( ref );
-                }
-            }, true );
+                    public Object getInstance()
+                    {
+                        return getService( ref );
+                    }
+                }, true );
+            }
+
+            // Concurrency Issue: The component instance still exists but
+            // but the defined bind method field is null, fail binding
+            m_componentManager.log( LogService.LOG_INFO,
+                "DependencyManager : Component instance present, but DependencyManager shut down (no bind method)",
+                null );
+            return false;
         }
         else if ( !m_componentManager.getComponentMetadata().isImmediate() )
         {
