@@ -465,7 +465,7 @@ public class BundleComponentActivator implements Logger
 
 
     /**
-     * Returns an array of {@link ComponentManager} instances which match the
+     * Returns an array of {@link ComponentHolder} instances which match the
      * <code>name</code>. If the <code>name</code> is <code>null</code> an
      * array of all currently known component managers is returned. Otherwise
      * an array containing a single component manager matching the name is
@@ -611,14 +611,23 @@ public class BundleComponentActivator implements Logger
                 message = "[" + metadata.getName() + "] " + message;
             }
 
-            Object logger = m_logService.getService();
-            if ( logger == null )
+            ServiceTracker logService = m_logService;
+            if ( logService != null )
             {
-                Activator.log( level, getBundleContext().getBundle(), message, ex );
+                Object logger = logService.getService();
+                if ( logger == null )
+                {
+                    Activator.log( level, getBundleContext().getBundle(), message, ex );
+                }
+                else
+                {
+                    ( ( LogService ) logger ).log( level, message, ex );
+                }
             }
             else
             {
-                ( ( LogService ) logger ).log( level, message, ex );
+                // BCA has been disposed off, bundle context is probably invalid. Try to log something.
+                Activator.log( level, null, message, ex );
             }
         }
     }

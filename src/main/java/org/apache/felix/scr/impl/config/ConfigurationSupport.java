@@ -109,7 +109,14 @@ public class ConfigurationSupport implements ConfigurationListener
                     }
                     finally
                     {
-                        bundleContext.ungetService(caRef);
+                        try
+                        {
+                            bundleContext.ungetService( caRef );
+                        }
+                        catch ( IllegalStateException e )
+                        {
+                            // ignore, bundle context was shut down during the above.
+                        }
                     }
                 }
             }

@@ -352,15 +352,22 @@ public class Activator implements BundleActivator, SynchronousBundleListener
             if ( activators[i] instanceof BundleComponentActivator )
             {
                 final BundleComponentActivator ga = ( BundleComponentActivator ) activators[i];
-                final Bundle bundle = ga.getBundleContext().getBundle();
                 try
                 {
-                    ga.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+                    final Bundle bundle = ga.getBundleContext().getBundle();
+                    try
+                    {
+                        ga.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+                    }
+                    catch ( Exception e )
+                    {
+                        log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle "
+                            + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
+                    }
                 }
-                catch ( Exception e )
+                catch ( IllegalStateException e )
                 {
-                    log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle "
-                        + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
+                    //bundle context was already shut down in another thread, bundle is not available.
                 }
             }
         }
