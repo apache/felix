@@ -225,6 +225,8 @@
                         </Bundle-Activator>
                         <Export-Package>
                             org.apache.felix.scr;version=1.6,
+                            org.apache.felix.scr.component;version=1.0;
+                                mandatory:="status"; status="provisional",
                             org.osgi.service.component
                         </Export-Package>
                         <Private-Package>
@@ -389,7 +391,7 @@
                         <exclude>**/components/**</exclude>
                     </excludes>
                     <includes>
-                        <include>**/integration/*</include>
+                        <include>**/integration/**</include>
                     </includes>
                 </configuration>
             </plugin>

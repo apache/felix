@@ -97,6 +97,8 @@ public abstract class ComponentTestBase
     @ProbeBuilder
     public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
         builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature");
+        builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
+        builder.setHeader("Bundle-ManifestVersion", "2");
         return builder;
     }
 
