@@ -19,11 +19,13 @@
 package org.apache.felix.scr.integration;
 
 
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.swissbox.tinybundles.core.TinyBundles.withBnd;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,19 +33,20 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import javax.inject.Inject;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
-import org.apache.felix.scr.integration.components.MyTinyBundle;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.CoreOptions;
-import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
-import org.ops4j.pax.exam.container.def.PaxRunnerOptions;
+import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.junit.Configuration;
+import org.ops4j.pax.exam.junit.ProbeBuilder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -91,6 +94,11 @@ public abstract class ComponentTestBase
         theConfig.put( PROP_NAME, PROP_NAME );
     }
 
+    @ProbeBuilder
+    public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
+        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature");
+        return builder;
+    }
 
     @Configuration
     public static Option[] configuration()
@@ -106,12 +114,14 @@ public abstract class ComponentTestBase
         final Option[] base = options(
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
-                mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.1.0" ),
+                mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
                 mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" )
              ),
+             junitBundles(),
              systemProperty( "ds.factory.enabled" ).value( "true" )
+
         );
-        final Option vmOption = ( paxRunnerVmOption != null ) ? PaxRunnerOptions.vmOption( paxRunnerVmOption ) : null;
+        final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
         return OptionUtils.combine( base, vmOption );
     }
 
@@ -319,17 +329,15 @@ public abstract class ComponentTestBase
 
     protected Bundle installBundle( final String descriptorFile ) throws BundleException
     {
-        final InputStream bundleStream = new MyTinyBundle()
-            .add( "OSGI-INF/components.xml", getClass().getResource( descriptorFile ) )
-            .prepare(
-                withBnd()
-                .set( Constants.BUNDLE_SYMBOLICNAME, "simplecomponent" )
-                .set( Constants.BUNDLE_VERSION, "0.0.11" )
-                .set( Constants.IMPORT_PACKAGE,
-                    "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature" )
-                .set( "Service-Component", "OSGI-INF/components.xml" )
-            )
-            .build();
+        final InputStream bundleStream = bundle()
+            .add("OSGI-INF/components.xml", getClass().getResource(descriptorFile))
+
+                .set(Constants.BUNDLE_SYMBOLICNAME, "simplecomponent")
+                .set(Constants.BUNDLE_VERSION, "0.0.11")
+                .set(Constants.IMPORT_PACKAGE,
+                        "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature")
+                .set("Service-Component", "OSGI-INF/components.xml")
+            .build(withBnd());
 
         try
         {

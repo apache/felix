@@ -21,7 +21,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>2.1</version>
-        <relativePath>../pom/pom.xml</relativePath>
+        <relativePath/>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
@@ -113,33 +113,92 @@
         
         <!-- Integration Testing with Pax Exam -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.6</version>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>2.4.0.RC1</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam</artifactId>
-            <version>0.6.0</version>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>2.4.0.RC1</version>
             <scope>test</scope>
         </dependency>
+    
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam-junit</artifactId>
-            <version>0.6.0</version>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>2.4.0.RC1</version>
+            <scope>test</scope>
+        </dependency>
+    
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-aether</artifactId>
+            <version>1.4.0.RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam-container-default</artifactId>
-            <version>0.6.0</version>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-wrap</artifactId>
+            <version>1.4.0.RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.ops4j.pax.swissbox</groupId>
-            <artifactId>pax-swissbox-tinybundles</artifactId>
-            <version>1.1.0</version>
+            <groupId>org.ops4j.pax.logging</groupId>
+            <artifactId>pax-logging-api</artifactId>
+            <version>1.6.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.logging</groupId>
+            <artifactId>pax-logging-service</artifactId>
+            <version>1.6.3</version>
+            <scope>test</scope>
+        </dependency>
+    
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>0.9.29</version>
+            <scope>test</scope>
+        </dependency>
+    
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>0.9.29</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-atinject_1.0_spec</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit</groupId>
+            <artifactId>com.springsource.org.junit</artifactId>
+            <version>4.9.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.base</groupId>
+            <artifactId>ops4j-base-lang</artifactId>
+            <version>1.2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.base</groupId>
+            <artifactId>ops4j-base-net</artifactId>
+            <version>1.2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.tinybundles</groupId>
+            <artifactId>tinybundles</artifactId>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -149,7 +208,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.4</version>
+                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -295,36 +354,9 @@
                 </configuration>
             </plugin>
 
-            <!--
-                Exclude Integration tests in (default) unit tests and
-                conversely enable integration tests for integration testing
-                only. Helper classes are completely excluded from testing. 
-            -->
+            <!-- plain unit tests -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>surefire-it</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <systemProperties>
-                                <property>
-                                    <name>project.bundle.file</name>
-                                    <value>${bundle.file.name}</value>
-                                </property>
-                            </systemProperties>
-                            <excludes>
-                                <exclude>**/components/**</exclude>
-                            </excludes>
-                            <includes>
-                                <include>**/integration/*</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
                 <configuration>
                     <excludes>
                         <exclude>**/integration/**</exclude>
@@ -332,6 +364,33 @@
                         <exclude>**/instances/**</exclude>
                         <exclude>**/instances2/**</exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <!-- integration tests run with pax-exam -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.12</version>
+                <executions>
+                  <execution>
+                    <goals>
+                      <goal>integration-test</goal>
+                      <goal>verify</goal>
+                    </goals>
+                  </execution>
+                </executions>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>project.bundle.file</name>
+                            <value>${bundle.file.name}</value>
+                        </property>
+                    </systemProperties>
+                    <excludes>
+                        <exclude>**/components/**</exclude>
+                    </excludes>
+                    <includes>
+                        <include>**/integration/*</include>
+                    </includes>
                 </configuration>
             </plugin>
             <plugin>
@@ -374,17 +433,40 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>felix</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.framework</artifactId>
+                    <version>4.0.2</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>equinox</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse</groupId>
+                    <artifactId>osgi</artifactId>
+                    <version>3.7.1.R37x_v20110808-1106</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
         
-    <!-- repositories for Pax Exam and BND tool -->
     <repositories>
-    	<repository>
-    		<id>ops4j</id>
-    		<name>ops4j</name>
-    		<url>http://repository.ops4j.org/maven2</url>
-    		<snapshots>
-    			<enabled>false</enabled>
-    		</snapshots>
-    	</repository>
+        <!-- springsource junit wrapping -->
+        <repository>
+            <id>com.springsource.repository.bundles.external</id>
+            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+            <url>http://repository.springsource.com/maven/bundles/external</url>
+        </repository>
     </repositories>
 </project>
