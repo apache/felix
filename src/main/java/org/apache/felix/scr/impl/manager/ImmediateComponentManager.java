@@ -69,6 +69,10 @@ public class ImmediateComponentManager extends AbstractComponentManager
     // the component properties, also used as service properties
     private Dictionary m_properties;
 
+    // properties supplied ot ExtComponentContext.updateProperties
+    // null if properties are not to be overwritten
+    private Dictionary m_propertiesOverwrite;
+
     // the component properties from the Configuration Admin Service
     // this is null, if none exist or none are provided
     private Dictionary m_configurationProperties;
@@ -136,6 +140,8 @@ public class ImmediateComponentManager extends AbstractComponentManager
         m_implementationObject = null;
         m_componentContext = null;
         m_properties = null;
+        m_propertiesOverwrite = null;
+        m_configurationProperties = null;
     }
 
 
@@ -343,13 +349,16 @@ public class ImmediateComponentManager extends AbstractComponentManager
                 }
             }
 
-            // 3. overlay with Configuration Admin properties
+            // 3. overwrite as per ExtComponentContext.updateProperties
+            copyTo( props, m_propertiesOverwrite );
+
+            // 4. overlay with Configuration Admin properties
             copyTo( props, m_configurationProperties );
 
-            // 4. copy any component factory properties, not supported yet
+            // 5. copy any component factory properties, not supported yet
             copyTo( props, m_factoryProperties );
 
-            // 5. set component.name and component.id
+            // 6. set component.name and component.id
             props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
             props.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
 
@@ -357,6 +366,18 @@ public class ImmediateComponentManager extends AbstractComponentManager
         }
 
         return m_properties;
+    }
+
+
+    public void resetComponentProperties( Dictionary properties )
+    {
+        m_propertiesOverwrite = copyTo( null, properties );
+        m_properties = null;
+        Dictionary serviceProperties = getServiceProperties();
+        if ( getServiceRegistration() != null )
+        {
+            getServiceRegistration().setProperties( serviceProperties );
+        }
     }
 
 

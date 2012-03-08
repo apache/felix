@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.Dictionary;
 
+import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
@@ -34,8 +35,7 @@ import org.osgi.service.component.ComponentInstance;
  * Implementation for the ComponentContext interface
  *
  */
-public class ComponentContextImpl implements ComponentContext, ComponentInstance
-{
+public class ComponentContextImpl implements ExtComponentContext, ComponentInstance {
 
     private AbstractComponentManager m_componentManager;
 
@@ -132,4 +132,12 @@ public class ComponentContextImpl implements ComponentContext, ComponentInstance
     {
         getComponentManager().dispose();
     }
+
+    //---------- Speculative MutableProperties interface ------------------------------
+
+    public void updateProperties(Dictionary properties)
+    {
+        getComponentManager().resetComponentProperties(properties);
+    }
+
 }
