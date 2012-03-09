@@ -34,19 +34,19 @@ public @interface Temporal {
 
     /**
      * Set the dependency id.
-     * Default : empty, will use the field name.
+     * Default: empty, will use the field name.
      */
     String id() default "";
 
     /**
      * Set the LDAP filter of the dependency.
-     * Default : no filter
+     * Default: no filter
      */
     String filter() default "";
 
     /**
      * Timeout of the dependency.
-     * Default : true
+     * Default: 3000 ms.
      */
     long timeout() default 3000;
 
