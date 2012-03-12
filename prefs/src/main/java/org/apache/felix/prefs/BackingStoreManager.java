@@ -18,6 +18,8 @@
  */
 package org.apache.felix.prefs;
 
+import org.osgi.service.prefs.BackingStoreException;
+
 
 /**
  * Get the backing store.
@@ -27,5 +29,5 @@ public interface BackingStoreManager {
     /**
      * Return the current backing store.
      */
-    BackingStore getStore();
+    BackingStore getStore() throws BackingStoreException;
 }

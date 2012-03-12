@@ -193,30 +193,36 @@ public class PreferencesManager
     /**
      * @see org.apache.felix.prefs.BackingStoreManager#getStore()
      */
-    public BackingStore getStore() {
-        if (this.storeTracker == null) {
-            // We're being stopped already...
-            return null;
+    public BackingStore getStore() throws BackingStoreException {
+        BackingStore service = null;
+        ServiceTracker storeTracker = this.storeTracker;
+
+        // Only possible if we're not stopped already...
+        if (storeTracker != null) {
+	        // has the service changed?
+	        int currentCount = storeTracker.getTrackingCount();
+	        service = (BackingStore) storeTracker.getService();
+	        if (service != null && this.storeTrackingCount < currentCount) {
+	            this.storeTrackingCount = currentCount;
+	            this.cleanupStore(service);
+	        }
+	        if (service == null) {
+	            // no service available use default store
+	            if (this.defaultStore == null) {
+	                synchronized (this) {
+	                    if (this.defaultStore == null) {
+	                        this.defaultStore = new DataFileBackingStoreImpl(this.context);
+	                        this.cleanupStore(this.defaultStore);
+	                    }
+	                }
+	            }
+	            service = this.defaultStore;
+	        }
         }
 
-        // has the service changed?
-        int currentCount = this.storeTracker.getTrackingCount();
-        BackingStore service = (BackingStore) this.storeTracker.getService();
-        if (service != null && this.storeTrackingCount < currentCount) {
-            this.storeTrackingCount = currentCount;
-            this.cleanupStore(service);
-        }
         if (service == null) {
-            // no service available use default store
-            if (this.defaultStore == null) {
-                synchronized (this) {
-                    if (this.defaultStore == null) {
-                        this.defaultStore = new DataFileBackingStoreImpl(this.context);
-                        this.cleanupStore(this.defaultStore);
-                    }
-                }
-            }
-            service = this.defaultStore;
+            // (still) no service available; cannot fulfill this request...
+            throw new BackingStoreException("No backing store!");
         }
 
         return service;
