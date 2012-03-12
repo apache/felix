@@ -41,6 +41,7 @@ import org.apache.maven.project.MavenProjectHelper;
  * @phase package
  * @requiresDependencyResolution runtime
  * @description manipulate an OSGi bundle jar to build an iPOJO bundle
+ * @threadSafe
  */
 public class ManipulatorMojo extends AbstractMojo {
 
