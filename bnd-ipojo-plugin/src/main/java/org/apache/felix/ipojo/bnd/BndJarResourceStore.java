@@ -24,7 +24,6 @@ import aQute.lib.osgi.Jar;
 import aQute.lib.osgi.Resource;
 import aQute.libg.reporter.Reporter;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Handler;
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
@@ -67,7 +66,7 @@ public class BndJarResourceStore implements ResourceStore {
 
         try {
             // Only visit classes annotated with @Component or @Handler
-            String annotations = Component.class.getName() + "|" + Handler.class.getName();
+            String annotations = Component.class.getPackage().getName() + ".*";
 
             Collection<Clazz> classes = m_analyzer.getClasses("",
                     Clazz.QUERY.ANNOTATION.name(), annotations,
