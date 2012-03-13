@@ -20,7 +20,6 @@ package org.apache.felix.example.servicebased.host;
 
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
-
 import org.apache.felix.example.servicebased.host.service.SimpleShape;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -35,7 +34,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * on the Swing event thread to avoid synchronization and redraw
  * issues.
 **/
-public class ShapeTracker extends ServiceTracker
+public class ShapeTracker extends ServiceTracker<SimpleShape, SimpleShape>
 {
     // The bundle context used for tracking.
     private final BundleContext m_context;
@@ -63,7 +62,7 @@ public class ShapeTracker extends ServiceTracker
      * @return The service object to be used by the tracker.
     **/
     @Override
-    public Object addingService(ServiceReference ref)
+    public SimpleShape addingService(ServiceReference<SimpleShape> ref)
     {
         SimpleShape shape = new DefaultShape(m_context, ref);
         processShapeOnEventThread(ShapeEvent.ADDED, ref, shape);
@@ -77,9 +76,9 @@ public class ShapeTracker extends ServiceTracker
      * @param svc The service object of the modified service.
     **/
     @Override
-    public void modifiedService(ServiceReference ref, Object svc)
+    public void modifiedService(ServiceReference<SimpleShape> ref, SimpleShape svc)
     {
-        processShapeOnEventThread(ShapeEvent.MODIFIED, ref, (SimpleShape) svc);
+        processShapeOnEventThread(ShapeEvent.MODIFIED, ref, svc);
     }
 
     /**
@@ -89,9 +88,9 @@ public class ShapeTracker extends ServiceTracker
      * @param svc The service object of the removed service.
     **/
     @Override
-    public void removedService(ServiceReference ref, Object svc)
+    public void removedService(ServiceReference<SimpleShape> ref, SimpleShape svc)
     {
-        processShapeOnEventThread(ShapeEvent.REMOVED, ref, (SimpleShape) svc);
+        processShapeOnEventThread(ShapeEvent.REMOVED, ref, svc);
         ((DefaultShape) svc).dispose();
     }
 
@@ -104,7 +103,7 @@ public class ShapeTracker extends ServiceTracker
      * @param shape The service object of the corresponding service.
     **/
     private void processShapeOnEventThread(
-        ShapeEvent event, ServiceReference ref, SimpleShape shape)
+        ShapeEvent event, ServiceReference<SimpleShape> ref, SimpleShape shape)
     {
         try
         {
@@ -131,7 +130,7 @@ public class ShapeTracker extends ServiceTracker
      * @param ref The service reference of the corresponding service.
      * @param shape The service object of the corresponding service.
     **/
-    private void processShape(ShapeEvent event, ServiceReference ref, SimpleShape shape)
+    private void processShape(ShapeEvent event, ServiceReference<SimpleShape> ref, SimpleShape shape)
     {
         String name = (String) ref.getProperty(SimpleShape.NAME_PROPERTY);
 
@@ -160,7 +159,7 @@ public class ShapeTracker extends ServiceTracker
     private class ShapeRunnable implements Runnable
     {
         private final ShapeEvent m_event;
-        private final ServiceReference m_ref;
+        private final ServiceReference<SimpleShape> m_ref;
         private final SimpleShape m_shape;
 
         /**
@@ -170,7 +169,7 @@ public class ShapeTracker extends ServiceTracker
          * @param ref The service reference of the corresponding service.
          * @param shape The service object of the corresponding service.
         **/
-        public ShapeRunnable(ShapeEvent event, ServiceReference ref, SimpleShape shape)
+        public ShapeRunnable(ShapeEvent event, ServiceReference<SimpleShape> ref, SimpleShape shape)
         {
             m_event = event;
             m_ref = ref;
@@ -180,6 +179,7 @@ public class ShapeTracker extends ServiceTracker
         /**
          * Calls the <tt>processShape()</tt> method.
         **/
+        @Override
         public void run()
         {
             processShape(m_event, m_ref, m_shape);

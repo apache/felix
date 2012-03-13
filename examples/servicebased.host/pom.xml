@@ -36,7 +36,9 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.main</artifactId>
-      <version>1.8.0</version>
+      <version>4.0.2</version>
+      <type>zip</type>
+      <classifier>source-release</classifier>
     </dependency>
   </dependencies>
   <build>
@@ -49,7 +51,7 @@
         <configuration>
           <instructions>
             <_donotcopy>(CVS|.svn|config.properties)</_donotcopy>
-            <Main-Class>org.apache.felix.example.servicebased.host.Activator</Main-Class>
+            <Main-Class>org.apache.felix.example.servicebased.host.launch.Application</Main-Class>
             <Import-Package>!android.*,!dalvik.*,org.osgi.framework,org.osgi.service.packageadmin,org.osgi.service.url,org.osgi.service.startlevel,org.osgi.util.tracker,*</Import-Package>
             <Export-Package>org.apache.felix.example.servicebased.host.service.*</Export-Package>
             <Private-Package>org.apache.felix.example.servicebased.host.*</Private-Package>
@@ -63,8 +65,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
+          <source>1.6</source>
+          <target>1.6</target>
         </configuration>
       </plugin>
     </plugins>

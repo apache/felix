@@ -50,7 +50,7 @@ class DefaultShape implements SimpleShape
     private SimpleShape m_shape;
     private ImageIcon m_icon;
     private BundleContext m_context;
-    private ServiceReference m_ref;
+    private ServiceReference<SimpleShape> m_ref;
 
     /**
      * This constructs a placeholder shape that draws a default
@@ -67,7 +67,7 @@ class DefaultShape implements SimpleShape
      * @param context The bundle context to use for retrieving the shape service.
      * @param ref The service reference of the service.
     **/
-    public DefaultShape(BundleContext context, ServiceReference ref)
+    public DefaultShape(BundleContext context, ServiceReference<SimpleShape> ref)
     {
         m_context = context;
         m_ref = ref;
@@ -96,6 +96,7 @@ class DefaultShape implements SimpleShape
      * @param g2 The graphics object used for painting.
      * @param p The position to paint the triangle.
     **/
+    @Override
     public void draw(Graphics2D g2, Point p)
     {
         // If this is a proxy shape, instantiate the shape class
@@ -107,7 +108,7 @@ class DefaultShape implements SimpleShape
                 if (m_shape == null)
                 {
                     // Get the shape service.
-                    m_shape = (SimpleShape) m_context.getService(m_ref);
+                    m_shape = m_context.getService(m_ref);
                 }
                 // Draw the shape.
                 m_shape.draw(g2, p);

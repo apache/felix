@@ -35,7 +35,6 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
-
 import org.apache.felix.example.servicebased.host.service.SimpleShape;
 
 /**
@@ -166,6 +165,7 @@ public class DrawingFrame extends JFrame
      * draw the selected shape into the drawing canvas.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mouseClicked(MouseEvent evt)
     {
         if (m_selected == null)
@@ -187,6 +187,7 @@ public class DrawingFrame extends JFrame
      * Implements an empty method for the <tt>MouseListener</tt> interface.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mouseEntered(MouseEvent evt)
     {
     }
@@ -195,6 +196,7 @@ public class DrawingFrame extends JFrame
      * Implements an empty method for the <tt>MouseListener</tt> interface.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mouseExited(MouseEvent evt)
     {
     }
@@ -204,6 +206,7 @@ public class DrawingFrame extends JFrame
      * shape dragging.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mousePressed(MouseEvent evt)
     {
         Component c = m_panel.getComponentAt(evt.getPoint());
@@ -221,6 +224,7 @@ public class DrawingFrame extends JFrame
      * shape dragging.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mouseReleased(MouseEvent evt)
     {
         if (m_selectedComponent != null)
@@ -239,6 +243,7 @@ public class DrawingFrame extends JFrame
      * move a dragged shape.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mouseDragged(MouseEvent evt)
     {
         m_selectedComponent.setBounds(
@@ -250,6 +255,7 @@ public class DrawingFrame extends JFrame
      * interface.
      * @param evt The associated mouse event.
     **/
+    @Override
     public void mouseMoved(MouseEvent evt)
     {
     }
@@ -261,6 +267,7 @@ public class DrawingFrame extends JFrame
     **/
     private class ShapeActionListener implements ActionListener
     {
+        @Override
         public void actionPerformed(ActionEvent evt)
         {
             selectShape(evt.getActionCommand());

@@ -20,20 +20,11 @@ package org.apache.felix.example.servicebased.host;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import org.apache.felix.framework.Felix;
-import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.main.AutoActivator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 
 /**
  * The activator of the host application bundle. The activator creates the
@@ -42,13 +33,6 @@ import org.osgi.framework.Constants;
  * synchronization and repainting issues. Closing the application window
  * will result in <tt>Bundle.stop()</tt> being called on the system bundle,
  * which will cause the framework to shutdown and the JVM to exit.
- * <p>
- * This class also provides a static <tt>main()</tt> method so that it can be
- * run as a stand-alone host application. In such a scenario, the application
- * creates its own embedded Felix framework instance and interacts with the
- * internal services to providing drawing functionality. To successfully
- * launch the stand-alone application, it must be run from this bundle's
- * installation directory using "<tt>java -jar</tt>".
 **/
 public class Activator implements BundleActivator
 {
@@ -61,10 +45,12 @@ public class Activator implements BundleActivator
      * and repainting issues.
      * @param context The context of the bundle.
     **/
+    @Override
     public void start(final BundleContext context)
     {
         SwingUtilities.invokeLater(new Runnable() {
             // This creates of the application window.
+            @Override
             public void run()
             {
                 m_frame = new DrawingFrame();
@@ -96,10 +82,12 @@ public class Activator implements BundleActivator
      * Stops service tracking and disposes of the application window.
      * @param context The context of the bundle.
     **/
+    @Override
     public void stop(BundleContext context)
     {
         Runnable runner = new Runnable() {
             // This disposes of the application window.
+            @Override
             public void run()
             {
                 m_shapetracker.close();
@@ -123,80 +111,5 @@ public class Activator implements BundleActivator
                 ex.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Enables the bundle to run as a stand-alone application. When this
-     * static <tt>main()</tt> method is invoked, the application creates
-     * its own embedded Felix framework instance and interacts with the
-     * internal services to provide drawing functionality. To successfully
-     * launch as a stand-alone application, this method should be invoked from
-     * the bundle's installation directory using "<tt>java -jar</tt>".
-     * @param argv The command-line arguments.
-     * @throws Exception If anything goes wrong.
-    **/
-    public static void main(String[] argv) throws Exception
-    {
-        // Create a temporary bundle cache directory and
-        // make sure to clean it up on exit.
-        final File cachedir = File.createTempFile("felix.example.servicebased", null);
-        cachedir.delete();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run()
-            {
-                deleteFileOrDir(cachedir);
-            }
-        });
-
-        Map<String, Object> configMap = new HashMap<String, Object>();
-        configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA,
-            "org.apache.felix.example.servicebased.host.service; version=1.0.0");
-        configMap.put(AutoActivator.AUTO_START_PROP + ".1",
-            "file:../servicebased.circle/target/servicebased.circle-1.0.0.jar " +
-            "file:../servicebased.square/target/servicebased.square-1.0.0.jar " +
-            "file:../servicebased.triangle/target/servicebased.triangle-1.0.0.jar");
-        configMap.put(FelixConstants.LOG_LEVEL_PROP, "4");
-        configMap.put(Constants.FRAMEWORK_STORAGE, cachedir.getAbsolutePath());
-
-        // Create list to hold custom framework activators.
-        List<BundleActivator> list = new ArrayList<BundleActivator>();
-        // Add activator to process auto-start/install properties.
-        list.add(new AutoActivator(configMap));
-        // Add our own activator.
-        list.add(new Activator());
-        // Add our custom framework activators to the configuration map.
-        configMap.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, list);
-
-        try
-        {
-            // Now create an instance of the framework.
-            Felix felix = new Felix(configMap);
-            felix.start();
-        }
-        catch (Exception ex)
-        {
-            System.err.println("Could not create framework: " + ex);
-            ex.printStackTrace();
-            System.exit(-1);
-        }
-    }
-
-    /**
-     * Utility method used to delete the profile directory when run as
-     * a stand-alone application.
-     * @param file The file to recursively delete.
-    **/
-    private static void deleteFileOrDir(File file)
-    {
-        if (file.isDirectory())
-        {
-            File[] childs = file.listFiles();
-            for (int i = 0;i < childs.length;i++)
-            {
-                deleteFileOrDir(childs[i]);
-            }
-        }
-        file.delete();
     }
 }
