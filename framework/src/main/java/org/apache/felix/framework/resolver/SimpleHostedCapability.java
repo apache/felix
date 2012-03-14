@@ -18,17 +18,43 @@
  */
 package org.apache.felix.framework.resolver;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
 import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
-public interface Resolver
+class SimpleHostedCapability implements HostedCapability
 {
-    Map<BundleRevision, List<ResolverWire>> resolve(ResolveContext rc);
-    Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolveContext rc, BundleRevision revision, String pkgName);
+    private final BundleRevision m_host;
+    private final BundleCapability m_cap;
+
+    SimpleHostedCapability(BundleRevision host, BundleCapability cap)
+    {
+        m_host = host;
+        m_cap = cap;
+    }
+
+    public BundleRevision getRevision()
+    {
+        return m_host;
+    }
+
+    public BundleCapability getDeclaredCapability()
+    {
+        return m_cap;
+    }
+
+    public String getNamespace()
+    {
+        return m_cap.getNamespace();
+    }
+
+    public Map<String, String> getDirectives()
+    {
+        return m_cap.getDirectives();
+    }
+
+    public Map<String, Object> getAttributes()
+    {
+        return m_cap.getAttributes();
+    }
 }
