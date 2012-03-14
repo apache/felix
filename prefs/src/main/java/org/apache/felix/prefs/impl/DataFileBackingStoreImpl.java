@@ -39,6 +39,11 @@ public class DataFileBackingStoreImpl extends StreamBackingStoreImpl {
         this.rootDirectory = context.getDataFile("");
     }
 
+    public DataFileBackingStoreImpl(BundleContext context, File rootDirectory) {
+        super(context);
+        this.rootDirectory = rootDirectory;
+    }
+
     /**
      * @see org.apache.felix.sandbox.preferences.impl.StreamBackingStoreImpl#checkAccess()
      */
