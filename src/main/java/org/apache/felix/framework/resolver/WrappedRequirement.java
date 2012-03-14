@@ -23,12 +23,12 @@ import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.wiring.BundleRevision;
 
-public class HostedRequirement extends BundleRequirementImpl
+public class WrappedRequirement extends BundleRequirementImpl
 {
     private final BundleRevision m_host;
     private final BundleRequirementImpl m_req;
 
-    public HostedRequirement(BundleRevision host, BundleRequirementImpl req)
+    public WrappedRequirement(BundleRevision host, BundleRequirementImpl req)
     {
         super(host, req.getNamespace(), req.getDirectives(), req.getAttributes());
         m_host = host;
@@ -46,7 +46,7 @@ public class HostedRequirement extends BundleRequirementImpl
         {
             return false;
         }
-        final HostedRequirement other = (HostedRequirement) obj;
+        final WrappedRequirement other = (WrappedRequirement) obj;
         if (m_host != other.m_host && (m_host == null || !m_host.equals(other.m_host)))
         {
             return false;

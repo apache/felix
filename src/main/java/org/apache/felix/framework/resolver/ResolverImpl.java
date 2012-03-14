@@ -19,6 +19,7 @@
 package org.apache.felix.framework.resolver;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import org.apache.felix.framework.BundleWiringImpl;
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.ResolveContextImpl;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.Util;
@@ -57,17 +59,17 @@ public class ResolverImpl implements Resolver
         m_logger = logger;
     }
 
-    public Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state,
-        Set<BundleRevision> mandatoryRevisions,
-        Set<BundleRevision> optionalRevisions,
-        Set<BundleRevision> ondemandFragments)
+    public Map<BundleRevision, List<ResolverWire>> resolve(ResolveContext rc)
     {
         Map<BundleRevision, List<ResolverWire>> wireMap =
             new HashMap<BundleRevision, List<ResolverWire>>();
         Map<BundleRevision, Packages> revisionPkgMap =
             new HashMap<BundleRevision, Packages>();
 
+        Collection<BundleRevision> mandatoryRevisions = rc.getMandatoryRevisions();
+        Collection<BundleRevision> optionalRevisions = rc.getOptionalRevisions();
+        Collection<BundleRevision> ondemandFragments = (rc instanceof ResolveContextImpl)
+            ? ((ResolveContextImpl) rc).getOndemandRevisions() : Collections.EMPTY_LIST;
         boolean retry;
         do
         {
@@ -86,7 +88,7 @@ public class ResolverImpl implements Resolver
                     BundleRevision br = it.next();
                     if (Util.isFragment(br) || (br.getWiring() == null))
                     {
-                        allCandidates.populate(state, br, Candidates.MANDATORY);
+                        allCandidates.populate(rc, br, Candidates.MANDATORY);
                     }
                     else
                     {
@@ -101,7 +103,7 @@ public class ResolverImpl implements Resolver
                     boolean isFragment = Util.isFragment(br);
                     if (isFragment || (br.getWiring() == null))
                     {
-                        allCandidates.populate(state, br, Candidates.OPTIONAL);
+                        allCandidates.populate(rc, br, Candidates.OPTIONAL);
                     }
                 }
 
@@ -112,12 +114,12 @@ public class ResolverImpl implements Resolver
                     boolean isFragment = Util.isFragment(br);
                     if (isFragment)
                     {
-                        allCandidates.populate(state, br, Candidates.ON_DEMAND);
+                        allCandidates.populate(rc, br, Candidates.ON_DEMAND);
                     }
                 }
 
                 // Merge any fragments into hosts.
-                allCandidates.prepare();
+                allCandidates.prepare(rc);
 
                 // Create a combined list of populated revisions; for
                 // optional revisions. We do not need to consider ondemand
@@ -207,11 +209,11 @@ public class ResolverImpl implements Resolver
                 if (rethrow != null)
                 {
                     BundleRevision faultyRevision =
-                        getActualBundleRevision(rethrow.getRevision());
-                    if (rethrow.getRequirement() instanceof HostedRequirement)
+                        getDeclaringBundleRevision(rethrow.getRevision());
+                    if (rethrow.getRequirement() instanceof WrappedRequirement)
                     {
                         faultyRevision =
-                            ((HostedRequirement) rethrow.getRequirement())
+                            ((WrappedRequirement) rethrow.getRequirement())
                                 .getOriginalRequirement().getRevision();
                     }
                     if (optionalRevisions.remove(faultyRevision))
@@ -267,8 +269,7 @@ public class ResolverImpl implements Resolver
     }
 
     public Map<BundleRevision, List<ResolverWire>> resolve(
-        ResolverState state, BundleRevision revision, String pkgName,
-        Set<BundleRevision> ondemandFragments)
+        ResolveContext rc, BundleRevision revision, String pkgName)
     {
         // We can only create a dynamic import if the following
         // conditions are met:
@@ -280,11 +281,16 @@ public class ResolverImpl implements Resolver
         // The following call checks all of these conditions and returns
         // the associated dynamic import and matching capabilities.
         Candidates allCandidates =
-            getDynamicImportCandidates(state, revision, pkgName);
+            getDynamicImportCandidates(rc, revision, pkgName);
         if (allCandidates != null)
         {
-            Map<BundleRevision, List<ResolverWire>> wireMap = new HashMap<BundleRevision, List<ResolverWire>>();
-            Map<BundleRevision, Packages> revisionPkgMap = new HashMap<BundleRevision, Packages>();
+            Collection<BundleRevision> ondemandFragments = (rc instanceof ResolveContextImpl)
+                ? ((ResolveContextImpl) rc).getOndemandRevisions() : Collections.EMPTY_LIST;
+
+            Map<BundleRevision, List<ResolverWire>> wireMap =
+                new HashMap<BundleRevision, List<ResolverWire>>();
+            Map<BundleRevision, Packages> revisionPkgMap =
+                new HashMap<BundleRevision, Packages>();
 
             boolean retry;
             do
@@ -298,12 +304,12 @@ public class ResolverImpl implements Resolver
                     {
                         if (Util.isFragment(br))
                         {
-                            allCandidates.populate(state, br, Candidates.ON_DEMAND);
+                            allCandidates.populate(rc, br, Candidates.ON_DEMAND);
                         }
                     }
 
                     // Merge any fragments into hosts.
-                    allCandidates.prepare();
+                    allCandidates.prepare(rc);
 
                     // Record the initial candidate permutation.
                     m_usesPermutations.add(allCandidates);
@@ -355,11 +361,11 @@ public class ResolverImpl implements Resolver
                     if (rethrow != null)
                     {
                         BundleRevision faultyRevision =
-                            getActualBundleRevision(rethrow.getRevision());
-                        if (rethrow.getRequirement() instanceof HostedRequirement)
+                            getDeclaringBundleRevision(rethrow.getRevision());
+                        if (rethrow.getRequirement() instanceof WrappedRequirement)
                         {
                             faultyRevision =
-                                ((HostedRequirement) rethrow.getRequirement())
+                                ((WrappedRequirement) rethrow.getRequirement())
                                     .getOriginalRequirement().getRevision();
                         }
                         if (ondemandFragments.remove(faultyRevision))
@@ -394,7 +400,7 @@ public class ResolverImpl implements Resolver
     }
 
     private static Candidates getDynamicImportCandidates(
-        ResolverState state, BundleRevision revision, String pkgName)
+        ResolveContext rc, BundleRevision revision, String pkgName)
     {
         // Unresolved revisions cannot dynamically import, nor can the default
         // package be dynamically imported.
@@ -438,7 +444,7 @@ public class ResolverImpl implements Resolver
             BundleRevision.PACKAGE_NAMESPACE,
             Collections.EMPTY_MAP,
             attrs);
-        SortedSet<BundleCapability> candidates = state.getCandidates(req, false);
+        List<BundleCapability> candidates = rc.findProviders(req, false);
 
         // Try to find a dynamic requirement that matches the capabilities.
         BundleRequirementImpl dynReq = null;
@@ -484,7 +490,7 @@ public class ResolverImpl implements Resolver
         if (candidates.size() > 0)
         {
             allCandidates = new Candidates();
-            allCandidates.populateDynamic(state, revision, dynReq, candidates);
+            allCandidates.populateDynamic(rc, revision, dynReq, candidates);
         }
 
         return allCandidates;
@@ -523,7 +529,7 @@ public class ResolverImpl implements Resolver
                     || ((r.getDirectives().get(Constants.RESOLUTION_DIRECTIVE) != null)
                         && r.getDirectives().get(Constants.RESOLUTION_DIRECTIVE).equals("dynamic")))
                 {
-                    r = new HostedRequirement(
+                    r = new WrappedRequirement(
                         wire.getRequirerWiring().getRevision(),
                         (BundleRequirementImpl) r);
                 }
@@ -532,7 +538,7 @@ public class ResolverImpl implements Resolver
                 BundleCapability c = wire.getCapability();
                 if (!c.getRevision().equals(wire.getProviderWiring().getRevision()))
                 {
-                    c = new HostedCapability(
+                    c = new WrappedCapability(
                         wire.getProviderWiring().getRevision(),
                         (BundleCapabilityImpl) c);
                 }
@@ -547,15 +553,15 @@ public class ResolverImpl implements Resolver
                 : Util.getDynamicRequirements(revision.getWiring().getRequirements(null)))
             {
                 // Get the candidates for the current requirement.
-                SortedSet<BundleCapability> candCaps =
-                    allCandidates.getCandidates((BundleRequirementImpl) req);
+                List<BundleCapability> candCaps = allCandidates.getCandidates(req);
                 // Optional requirements may not have any candidates.
                 if (candCaps == null)
                 {
                     continue;
                 }
 
-                BundleCapability cap = candCaps.iterator().next();
+                // Grab first (i.e., highest priority) candidate.
+                BundleCapability cap = candCaps.get(0);
                 reqs.add(req);
                 caps.add(cap);
                 isDynamicImporting = true;
@@ -573,15 +579,15 @@ public class ResolverImpl implements Resolver
                     || !resolution.equals(FelixConstants.RESOLUTION_DYNAMIC))
                 {
                     // Get the candidates for the current requirement.
-                    SortedSet<BundleCapability> candCaps =
-                        allCandidates.getCandidates((BundleRequirementImpl) req);
+                    List<BundleCapability> candCaps = allCandidates.getCandidates(req);
                     // Optional requirements may not have any candidates.
                     if (candCaps == null)
                     {
                         continue;
                     }
 
-                    BundleCapability cap = candCaps.iterator().next();
+                    // Grab first (i.e., highest priority) candidate.
+                    BundleCapability cap = candCaps.get(0);
                     reqs.add(req);
                     caps.add(cap);
                 }
@@ -974,6 +980,7 @@ public class ResolverImpl implements Resolver
             }
         }
 
+        // Check if there are any uses conflicts with exported packages.
         for (Entry<String, Blame> entry : pkgs.m_exportedPkgs.entrySet())
         {
             String pkgName = entry.getKey();
@@ -1026,14 +1033,12 @@ public class ResolverImpl implements Resolver
                         // See if we can permutate the candidates for blamed
                         // requirement; there may be no candidates if the revision
                         // associated with the requirement is already resolved.
-                        SortedSet<BundleCapability> candidates =
-                            permutation.getCandidates(req);
+                        List<BundleCapability> candidates = permutation.getCandidates(req);
                         if ((candidates != null) && (candidates.size() > 1))
                         {
                             mutated.add(req);
-                            Iterator it = candidates.iterator();
-                            it.next();
-                            it.remove();
+                            // Remove the conflicting candidate.
+                            candidates.remove(0);
                             // Continue with the next uses constraint.
                             break;
                         }
@@ -1115,14 +1120,12 @@ public class ResolverImpl implements Resolver
                             // See if we can permutate the candidates for blamed
                             // requirement; there may be no candidates if the revision
                             // associated with the requirement is already resolved.
-                            SortedSet<BundleCapability> candidates =
-                                permutation.getCandidates(req);
+                            List<BundleCapability> candidates = permutation.getCandidates(req);
                             if ((candidates != null) && (candidates.size() > 1))
                             {
                                 mutated.add(req);
-                                Iterator it = candidates.iterator();
-                                it.next();
-                                it.remove();
+                                // Remove the conflicting candidate.
+                                candidates.remove(0);
                                 // Continue with the next uses constraint.
                                 break;
                             }
@@ -1207,14 +1210,12 @@ public class ResolverImpl implements Resolver
     private static void permutate(
         Candidates allCandidates, BundleRequirement req, List<Candidates> permutations)
     {
-        SortedSet<BundleCapability> candidates = allCandidates.getCandidates(req);
+        List<BundleCapability> candidates = allCandidates.getCandidates(req);
         if (candidates.size() > 1)
         {
             Candidates perm = allCandidates.copy();
             candidates = perm.getCandidates(req);
-            Iterator it = candidates.iterator();
-            it.next();
-            it.remove();
+            candidates.remove(0);
             permutations.add(perm);
         }
     }
@@ -1222,7 +1223,7 @@ public class ResolverImpl implements Resolver
     private static void permutateIfNeeded(
         Candidates allCandidates, BundleRequirement req, List<Candidates> permutations)
     {
-        SortedSet<BundleCapability> candidates = allCandidates.getCandidates(req);
+        List<BundleCapability> candidates = allCandidates.getCandidates(req);
         if (candidates.size() > 1)
         {
             // Check existing permutations to make sure we haven't
@@ -1234,8 +1235,8 @@ public class ResolverImpl implements Resolver
             boolean permutated = false;
             for (Candidates existingPerm : permutations)
             {
-                Set<BundleCapability> existingPermCands = existingPerm.getCandidates(req);
-                if (!existingPermCands.iterator().next().equals(candidates.iterator().next()))
+                List<BundleCapability> existingPermCands = existingPerm.getCandidates(req);
+                if (!existingPermCands.get(0).equals(candidates.get(0)))
                 {
                     permutated = true;
                 }
@@ -1273,7 +1274,7 @@ public class ResolverImpl implements Resolver
             {
                 if (!cap.getRevision().equals(revision))
                 {
-                    cap = new HostedCapability(revision, (BundleCapabilityImpl) cap);
+                    cap = new WrappedCapability(revision, (BundleCapabilityImpl) cap);
                 }
                 exports.put(
                     (String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
@@ -1293,11 +1294,10 @@ public class ResolverImpl implements Resolver
                 {
                     if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
-                        Set<BundleCapability> cands =
-                            allCandidates.getCandidates((BundleRequirementImpl) req);
+                        List<BundleCapability> cands = allCandidates.getCandidates(req);
                         if ((cands != null) && !cands.isEmpty())
                         {
-                            String pkgName = (String) cands.iterator().next()
+                            String pkgName = (String) cands.get(0)
                                 .getAttributes().get(BundleRevision.PACKAGE_NAMESPACE);
                             exports.remove(pkgName);
                         }
@@ -1401,7 +1401,7 @@ public class ResolverImpl implements Resolver
                     if (!cap.getRevision().equals(sourceCap.getRevision()))
                     {
                         sources.add(
-                            new HostedCapability(cap.getRevision(), (BundleCapabilityImpl) sourceCap));
+                            new WrappedCapability(cap.getRevision(), (BundleCapabilityImpl) sourceCap));
                     }
                     else
                     {
@@ -1425,29 +1425,29 @@ public class ResolverImpl implements Resolver
         return sources;
     }
 
-    private static BundleRevision getActualBundleRevision(BundleRevision br)
+    private static BundleRevision getDeclaringBundleRevision(BundleRevision br)
     {
-        if (br instanceof HostBundleRevision)
+        if (br instanceof WrappedRevision)
         {
-            return ((HostBundleRevision) br).getHost();
+            return ((WrappedRevision) br).getHost();
         }
         return br;
     }
 
-    private static BundleCapability getActualCapability(BundleCapability c)
+    private static BundleCapability getDeclaredCapability(BundleCapability c)
     {
         if (c instanceof HostedCapability)
         {
-            return ((HostedCapability) c).getOriginalCapability();
+            return ((HostedCapability) c).getDeclaredCapability();
         }
         return c;
     }
 
-    private static BundleRequirement getActualRequirement(BundleRequirement r)
+    private static BundleRequirement getDeclaredRequirement(BundleRequirement r)
     {
-        if (r instanceof HostedRequirement)
+        if (r instanceof WrappedRequirement)
         {
-            return ((HostedRequirement) r).getOriginalRequirement();
+            return ((WrappedRequirement) r).getOriginalRequirement();
         }
         return r;
     }
@@ -1457,7 +1457,7 @@ public class ResolverImpl implements Resolver
         Map<BundleRevision, List<ResolverWire>> wireMap,
         Candidates allCandidates)
     {
-        BundleRevision unwrappedRevision = getActualBundleRevision(revision);
+        BundleRevision unwrappedRevision = getDeclaringBundleRevision(revision);
         if ((unwrappedRevision.getWiring() == null)
             && !wireMap.containsKey(unwrappedRevision))
         {
@@ -1469,10 +1469,10 @@ public class ResolverImpl implements Resolver
 
             for (BundleRequirement req : revision.getDeclaredRequirements(null))
             {
-                SortedSet<BundleCapability> cands = allCandidates.getCandidates(req);
+                List<BundleCapability> cands = allCandidates.getCandidates(req);
                 if ((cands != null) && (cands.size() > 0))
                 {
-                    BundleCapability cand = cands.iterator().next();
+                    BundleCapability cand = cands.get(0);
                     // Ignore revisions that import themselves.
                     if (!revision.equals(cand.getRevision()))
                     {
@@ -1484,9 +1484,9 @@ public class ResolverImpl implements Resolver
                         Packages candPkgs = revisionPkgMap.get(cand.getRevision());
                         ResolverWire wire = new ResolverWireImpl(
                             unwrappedRevision,
-                            getActualRequirement(req),
-                            getActualBundleRevision(cand.getRevision()),
-                            getActualCapability(cand));
+                            getDeclaredRequirement(req),
+                            getDeclaringBundleRevision(cand.getRevision()),
+                            getDeclaredCapability(cand));
                         if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                         {
                             packageWires.add(wire);
@@ -1509,9 +1509,9 @@ public class ResolverImpl implements Resolver
             wireMap.put(unwrappedRevision, packageWires);
 
             // Add host wire for any fragments.
-            if (revision instanceof HostBundleRevision)
+            if (revision instanceof WrappedRevision)
             {
-                List<BundleRevision> fragments = ((HostBundleRevision) revision).getFragments();
+                List<BundleRevision> fragments = ((WrappedRevision) revision).getFragments();
                 for (BundleRevision fragment : fragments)
                 {
                     List<ResolverWire> hostWires = wireMap.get(fragment);
@@ -1522,7 +1522,7 @@ public class ResolverImpl implements Resolver
                     }
                     hostWires.add(
                         new ResolverWireImpl(
-                            getActualBundleRevision(fragment),
+                            getDeclaringBundleRevision(fragment),
                             fragment.getDeclaredRequirements(
                                 BundleRevision.HOST_NAMESPACE).get(0),
                             unwrappedRevision,
@@ -1549,8 +1549,7 @@ public class ResolverImpl implements Resolver
             : Util.getDynamicRequirements(revision.getWiring().getRequirements(null)))
         {
             // Get the candidates for the current dynamic requirement.
-            SortedSet<BundleCapability> candCaps =
-                allCandidates.getCandidates((BundleRequirementImpl) req);
+            List<BundleCapability> candCaps = allCandidates.getCandidates(req);
             // Optional requirements may not have any candidates.
             if ((candCaps == null) || candCaps.isEmpty())
             {
@@ -1559,7 +1558,7 @@ public class ResolverImpl implements Resolver
 
             // Record the dynamic requirement.
             dynReq = req;
-            dynCand = candCaps.first();
+            dynCand = candCaps.get(0);
 
             // Can only dynamically import one at a time, so break
             // out of the loop after the first.
@@ -1580,8 +1579,8 @@ public class ResolverImpl implements Resolver
                 new ResolverWireImpl(
                     revision,
                     dynReq,
-                    getActualBundleRevision(dynCand.getRevision()),
-                    getActualCapability(dynCand)));
+                    getDeclaringBundleRevision(dynCand.getRevision()),
+                    getDeclaredCapability(dynCand)));
         }
 
         wireMap.put(revision, packageWires);

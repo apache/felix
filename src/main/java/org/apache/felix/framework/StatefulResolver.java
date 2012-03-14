@@ -28,9 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.resolver.CandidateComparator;
@@ -64,33 +62,265 @@ class StatefulResolver
     private final Logger m_logger;
     private final Felix m_felix;
     private final Resolver m_resolver;
-    private final ResolverStateImpl m_resolverState;
     private final List<ResolverHook> m_hooks = new ArrayList<ResolverHook>();
     private boolean m_isResolving = false;
     private Collection<BundleRevision> m_whitelist = null;
+
+    // Set of all revisions.
+    private final Set<BundleRevision> m_revisions;
+    // Set of all fragments.
+    private final Set<BundleRevision> m_fragments;
+    // Capability sets.
+    private final Map<String, CapabilitySet> m_capSets;
+    // Maps singleton symbolic names to list of bundle revisions sorted by version.
+    private final Map<String, List<BundleRevision>> m_singletons;
+    // Selected singleton bundle revisions.
+    private final Set<BundleRevision> m_selectedSingletons;
+    // Execution environment.
+    private final String m_fwkExecEnvStr;
+    // Parsed framework environments
+    private final Set<String> m_fwkExecEnvSet;
 
     StatefulResolver(Felix felix)
     {
         m_felix = felix;
         m_logger = m_felix.getLogger();
         m_resolver = new ResolverImpl(m_logger);
-        m_resolverState = new ResolverStateImpl(
-            (String) m_felix.getConfig().get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT));
+
+        m_revisions = new HashSet<BundleRevision>();
+        m_fragments = new HashSet<BundleRevision>();
+        m_capSets = new HashMap<String, CapabilitySet>();
+        m_singletons = new HashMap<String, List<BundleRevision>>();
+        m_selectedSingletons = new HashSet<BundleRevision>();
+
+        String fwkExecEnvStr =
+            (String) m_felix.getConfig().get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
+        m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
+        m_fwkExecEnvSet = parseExecutionEnvironments(fwkExecEnvStr);
+
+        List<String> indices = new ArrayList<String>();
+        indices.add(BundleRevision.BUNDLE_NAMESPACE);
+        m_capSets.put(BundleRevision.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
+
+        indices = new ArrayList<String>();
+        indices.add(BundleRevision.PACKAGE_NAMESPACE);
+        m_capSets.put(BundleRevision.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
+
+        indices = new ArrayList<String>();
+        indices.add(BundleRevision.HOST_NAMESPACE);
+        m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
     }
 
-    void addRevision(BundleRevision br)
+    synchronized void addRevision(BundleRevision br)
     {
-        m_resolverState.addRevision(br);
+        // Always attempt to remove the revision, since
+        // this method can be used for re-indexing a revision
+        // after it has been resolved.
+        removeRevision(br);
+
+        m_revisions.add(br);
+
+        // Add singletons to the singleton map.
+        boolean isSingleton = Util.isSingleton(br);
+        if (isSingleton)
+        {
+            // Index the new singleton.
+            addToSingletonMap(m_singletons, br);
+        }
+
+        // We always need to index non-singleton bundle capabilities, but
+        // singleton bundles only need to be index if they are resolved.
+        // Unresolved singleton capabilities are only indexed before a
+        // resolve operation when singleton selection is performed.
+        if (!isSingleton || (br.getWiring() != null))
+        {
+            if (Util.isFragment(br))
+            {
+                m_fragments.add(br);
+            }
+            indexCapabilities(br);
+        }
     }
 
-    void removeRevision(BundleRevision br)
+    synchronized void removeRevision(BundleRevision br)
     {
-        m_resolverState.removeRevision(br);
+        if (m_revisions.remove(br))
+        {
+            m_fragments.remove(br);
+            deindexCapabilities(br);
+
+            // If this module is a singleton, then remove it from the
+            // singleton map.
+            List<BundleRevision> revisions = m_singletons.get(br.getSymbolicName());
+            if (revisions != null)
+            {
+                revisions.remove(br);
+                if (revisions.isEmpty())
+                {
+                    m_singletons.remove(br.getSymbolicName());
+                }
+            }
+        }
     }
 
-    Set<BundleCapability> getCandidates(BundleRequirementImpl req, boolean obeyMandatory)
+    boolean isEffective(BundleRequirement req)
     {
-        return m_resolverState.getCandidates(req, obeyMandatory);
+        String effective = req.getDirectives().get(Constants.EFFECTIVE_DIRECTIVE);
+        return ((effective == null) || effective.equals(Constants.EFFECTIVE_RESOLVE));
+    }
+
+    synchronized List<BundleCapability> findProviders(
+        BundleRequirement req, boolean obeyMandatory)
+    {
+        BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
+        List<BundleCapability> result = new ArrayList<BundleCapability>();
+
+        CapabilitySet capSet = m_capSets.get(req.getNamespace());
+        if (capSet != null)
+        {
+            // Get the requirement's filter; if this is our own impl we
+            // have a shortcut to get the already parsed filter, otherwise
+            // we must parse it from the directive.
+            SimpleFilter sf = null;
+            if (req instanceof BundleRequirementImpl)
+            {
+                sf = ((BundleRequirementImpl) req).getFilter();
+            }
+            else
+            {
+                String filter = req.getDirectives().get(Constants.FILTER_DIRECTIVE);
+                if (filter == null)
+                {
+                    sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
+                }
+                else
+                {
+                    sf = SimpleFilter.parse(filter);
+                }
+            }
+
+            // Find the matching candidates.
+            Set<BundleCapability> matches = capSet.match(sf, obeyMandatory);
+            // Filter matching candidates.
+            for (BundleCapability cap : matches)
+            {
+                // Filter according to security.
+                if (filteredBySecurity(req, cap))
+                {
+                    continue;
+                }
+                // Filter already resolved hosts, since we don't support
+                // dynamic attachment of fragments.
+                if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
+                    && (cap.getRevision().getWiring() != null))
+                {
+                    continue;
+                }
+
+                result.add(cap);
+            }
+        }
+
+        // If we have resolver hooks, then we may need to filter our results
+        // based on a whitelist and/or fine-grained candidate filtering.
+        if (!result.isEmpty() && !m_hooks.isEmpty())
+        {
+            // It we have a whitelist, then first filter out candidates
+            // from disallowed revisions.
+            if (m_whitelist != null)
+            {
+                for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
+                {
+                    if (!m_whitelist.contains(it.next().getRevision()))
+                    {
+                        it.remove();
+                    }
+                }
+            }
+
+            // Now give the hooks a chance to do fine-grained filtering.
+            ShrinkableCollection<BundleCapability> shrinkable =
+                new ShrinkableCollection<BundleCapability>(result);
+            for (ResolverHook hook : m_hooks)
+            {
+                try
+                {
+                    Felix.m_secureAction
+                        .invokeResolverHookMatches(hook, req, shrinkable);
+                }
+                catch (Throwable th)
+                {
+                    m_logger.log(Logger.LOG_WARNING, "Resolver hook exception.", th);
+                }
+            }
+        }
+
+        Collections.sort(result, new CandidateComparator());
+
+        return result;
+    }
+
+    private boolean filteredBySecurity(BundleRequirement req, BundleCapability cap)
+    {
+        if (System.getSecurityManager() != null)
+        {
+            BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
+
+            if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
+            {
+                if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                    new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                    PackagePermission.EXPORTONLY)) ||
+                    !((reqRevision == null) ||
+                        ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                            new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
+                            cap.getRevision().getBundle(),PackagePermission.IMPORT))
+                    ))
+                {
+                    if (reqRevision != cap.getRevision())
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
+            {   if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                    new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
+                    !((reqRevision == null) ||
+                        ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                            new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
+                    ))
+                {
+                    return true;
+                }
+            }
+            else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
+            {
+                if (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
+                    .impliesDirect(new BundlePermission(
+                        reqRevision.getSymbolicName(),
+                        BundlePermission.FRAGMENT))
+                || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
+                    .impliesDirect(new BundlePermission(
+                        cap.getRevision().getSymbolicName(),
+                        BundlePermission.HOST)))
+                {
+                    return true;
+                }
+            }
+            else  if (!req.getNamespace().equals("osgi.ee"))
+            {
+                if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
+                    new CapabilityPermission(req.getNamespace(), CapabilityPermission.PROVIDE))
+                    ||
+                    !((reqRevision == null) || ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
+                    new CapabilityPermission(req.getNamespace(), cap.getAttributes(), cap.getRevision().getBundle(), CapabilityPermission.REQUIRE))))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     void resolve(
@@ -129,7 +359,7 @@ class StatefulResolver
                 prepareResolverHooks(mandatory, optional);
 
             // Select any singletons in the resolver state.
-            m_resolverState.selectSingletons();
+            selectSingletons();
 
             // Extensions are resolved differently.
             for (Iterator<BundleRevision> it = mandatory.iterator(); it.hasNext(); )
@@ -140,7 +370,7 @@ class StatefulResolver
                 {
                     it.remove();
                 }
-                else if (Util.isSingleton(br) && !m_resolverState.isSelectedSingleton(br))
+                else if (Util.isSingleton(br) && !isSelectedSingleton(br))
                 {
                     throw new ResolveException("Singleton conflict.", br, null);
                 }
@@ -153,7 +383,7 @@ class StatefulResolver
                 {
                     it.remove();
                 }
-                else if (Util.isSingleton(br) && !m_resolverState.isSelectedSingleton(br))
+                else if (Util.isSingleton(br) && !isSelectedSingleton(br))
                 {
                     it.remove();
                 }
@@ -166,10 +396,12 @@ class StatefulResolver
             {
                 // Resolve the revision.
                 wireMap = m_resolver.resolve(
-                    m_resolverState,
-                    mandatory,
-                    optional,
-                    m_resolverState.getFragments());
+                    new ResolveContextImpl(
+                        this,
+                        getWirings(),
+                        mandatory,
+                        optional,
+                        getFragments()));
             }
             catch (ResolveException ex)
             {
@@ -249,7 +481,7 @@ class StatefulResolver
                             Collections.singleton(revision), Collections.EMPTY_SET);
 
                     // Select any singletons in the resolver state.
-                    m_resolverState.selectSingletons();
+                    selectSingletons();
 
                     // Catch any resolve exception to rethrow later because
                     // we may need to call end() on resolver hooks.
@@ -257,8 +489,13 @@ class StatefulResolver
                     try
                     {
                         wireMap = m_resolver.resolve(
-                            m_resolverState, revision, pkgName,
-                            m_resolverState.getFragments());
+                            new ResolveContextImpl(
+                                this,
+                                getWirings(),
+                                Collections.EMPTY_LIST,
+                                Collections.EMPTY_LIST,
+                                getFragments()),
+                            revision, pkgName);
                     }
                     catch (ResolveException ex)
                     {
@@ -373,9 +610,7 @@ class StatefulResolver
             }
 
             // Ask hooks to indicate which revisions should not be resolved.
-            m_whitelist =
-                new ShrinkableCollection<BundleRevision>(
-                    m_resolverState.getUnresolvedRevisions());
+            m_whitelist = new ShrinkableCollection<BundleRevision>(getUnresolvedRevisions());
             int originalSize = m_whitelist.size();
             for (ResolverHook hook : m_hooks)
             {
@@ -518,7 +753,7 @@ class StatefulResolver
             BundleRevision.PACKAGE_NAMESPACE,
             Collections.EMPTY_MAP,
             attrs);
-        Set<BundleCapability> candidates = m_resolverState.getCandidates(req, false);
+        List<BundleCapability> candidates = findProviders(req, false);
 
         return !candidates.isEmpty();
     }
@@ -713,7 +948,7 @@ class StatefulResolver
                 // Reindex the revision's capabilities since its resolved
                 // capabilities could be different than its declared ones
                 // (e.g., due to substitutable exports).
-                m_resolverState.addRevision(revision);
+                addRevision(revision);
 
                 // Update the state of the revision's bundle to resolved as well.
                 markBundleResolved(revision);
@@ -855,635 +1090,378 @@ class StatefulResolver
         return pkgs;
     }
 
-    class ResolverStateImpl implements Resolver.ResolverState
+    private synchronized void indexCapabilities(BundleRevision br)
     {
-        // Set of all revisions.
-        private final Set<BundleRevision> m_revisions;
-        // Set of all fragments.
-        private final Set<BundleRevision> m_fragments;
-        // Capability sets.
-        private final Map<String, CapabilitySet> m_capSets;
-        // Maps singleton symbolic names to list of bundle revisions sorted by version.
-        private final Map<String, List<BundleRevision>> m_singletons;
-        // Selected singleton bundle revisions.
-        private final Set<BundleRevision> m_selectedSingletons;
-        // Execution environment.
-        private final String m_fwkExecEnvStr;
-        // Parsed framework environments
-        private final Set<String> m_fwkExecEnvSet;
-
-//    void dump()
-//    {
-//        for (Entry<String, CapabilitySet> entry : m_capSets.entrySet())
-//        {
-//            System.out.println("+++ START CAPSET " + entry.getKey());
-//            entry.getValue().dump();
-//            System.out.println("+++ END CAPSET " + entry.getKey());
-//        }
-//    }
-
-        ResolverStateImpl(String fwkExecEnvStr)
+        List<BundleCapability> caps =
+            (Util.isFragment(br) || (br.getWiring() == null))
+                ? br.getDeclaredCapabilities(null)
+                : br.getWiring().getCapabilities(null);
+        if (caps != null)
         {
-            m_revisions = new HashSet<BundleRevision>();
-            m_fragments = new HashSet<BundleRevision>();
-            m_capSets = new HashMap<String, CapabilitySet>();
-            m_singletons = new HashMap<String, List<BundleRevision>>();
-            m_selectedSingletons = new HashSet<BundleRevision>();
-
-            m_fwkExecEnvStr = (fwkExecEnvStr != null) ? fwkExecEnvStr.trim() : null;
-            m_fwkExecEnvSet = parseExecutionEnvironments(fwkExecEnvStr);
-
-            List<String> indices = new ArrayList<String>();
-            indices.add(BundleRevision.BUNDLE_NAMESPACE);
-            m_capSets.put(BundleRevision.BUNDLE_NAMESPACE, new CapabilitySet(indices, true));
-
-            indices = new ArrayList<String>();
-            indices.add(BundleRevision.PACKAGE_NAMESPACE);
-            m_capSets.put(BundleRevision.PACKAGE_NAMESPACE, new CapabilitySet(indices, true));
-
-            indices = new ArrayList<String>();
-            indices.add(BundleRevision.HOST_NAMESPACE);
-            m_capSets.put(BundleRevision.HOST_NAMESPACE,  new CapabilitySet(indices, true));
-        }
-
-        synchronized Set<BundleRevision> getUnresolvedRevisions()
-        {
-            Set<BundleRevision> unresolved = new HashSet<BundleRevision>();
-            for (BundleRevision revision : m_revisions)
+            for (BundleCapability cap : caps)
             {
-                if (revision.getWiring() == null)
-                {
-                    unresolved.add(revision);
-                }
-            }
-            return unresolved;
-        }
-
-        synchronized void addRevision(BundleRevision br)
-        {
-            // Always attempt to remove the revision, since
-            // this method can be used for re-indexing a revision
-            // after it has been resolved.
-            removeRevision(br);
-
-            m_revisions.add(br);
-
-            // Add singletons to the singleton map.
-            boolean isSingleton = Util.isSingleton(br);
-            if (isSingleton)
-            {
-                // Index the new singleton.
-                addToSingletonMap(m_singletons, br);
-            }
-
-            // We always need to index non-singleton bundle capabilities, but
-            // singleton bundles only need to be index if they are resolved.
-            // Unresolved singleton capabilities are only indexed before a
-            // resolve operation when singleton selection is performed.
-            if (!isSingleton || (br.getWiring() != null))
-            {
-                if (Util.isFragment(br))
-                {
-                    m_fragments.add(br);
-                }
-                indexCapabilities(br);
-            }
-        }
-
-        private synchronized void indexCapabilities(BundleRevision br)
-        {
-            List<BundleCapability> caps =
-                (Util.isFragment(br) || (br.getWiring() == null))
-                    ? br.getDeclaredCapabilities(null)
-                    : br.getWiring().getCapabilities(null);
-            if (caps != null)
-            {
-                for (BundleCapability cap : caps)
-                {
-                    // If the capability is from a different revision, then
-                    // don't index it since it is a capability from a fragment.
-                    // In that case, the fragment capability is still indexed.
-                    // It will be the resolver's responsibility to find all
-                    // attached hosts for fragments.
-                    if (cap.getRevision() == br)
-                    {
-                        CapabilitySet capSet = m_capSets.get(cap.getNamespace());
-                        if (capSet == null)
-                        {
-                            capSet = new CapabilitySet(null, true);
-                            m_capSets.put(cap.getNamespace(), capSet);
-                        }
-                        capSet.addCapability(cap);
-                    }
-                }
-            }
-        }
-
-        private synchronized void deindexCapabilities(BundleRevision br)
-        {
-            // We only need be concerned with declared capabilities here,
-            // because resolved capabilities will be a subset, since fragment
-            // capabilities are not considered to be part of the host.
-            List<BundleCapability> caps = br.getDeclaredCapabilities(null);
-            if (caps != null)
-            {
-                for (BundleCapability cap : caps)
+                // If the capability is from a different revision, then
+                // don't index it since it is a capability from a fragment.
+                // In that case, the fragment capability is still indexed.
+                // It will be the resolver's responsibility to find all
+                // attached hosts for fragments.
+                if (cap.getRevision() == br)
                 {
                     CapabilitySet capSet = m_capSets.get(cap.getNamespace());
-                    if (capSet != null)
+                    if (capSet == null)
                     {
-                        capSet.removeCapability(cap);
+                        capSet = new CapabilitySet(null, true);
+                        m_capSets.put(cap.getNamespace(), capSet);
                     }
-                }
-            }
-        }
-
-        synchronized void removeRevision(BundleRevision br)
-        {
-            if (m_revisions.remove(br))
-            {
-                m_fragments.remove(br);
-                deindexCapabilities(br);
-
-                // If this module is a singleton, then remove it from the
-                // singleton map.
-                List<BundleRevision> revisions = m_singletons.get(br.getSymbolicName());
-                if (revisions != null)
-                {
-                    revisions.remove(br);
-                    if (revisions.isEmpty())
-                    {
-                        m_singletons.remove(br.getSymbolicName());
-                    }
-                }
-            }
-        }
-
-        synchronized Set<BundleRevision> getFragments()
-        {
-            Set<BundleRevision> fragments = new HashSet(m_fragments);
-            // Filter out any fragments that are not the current revision.
-            for (Iterator<BundleRevision> it = fragments.iterator(); it.hasNext(); )
-            {
-                BundleRevision fragment = it.next();
-                BundleRevision currentFragmentRevision =
-                    fragment.getBundle().adapt(BundleRevision.class);
-                if (fragment != currentFragmentRevision)
-                {
-                    it.remove();
-                }
-            }
-            return fragments;
-        }
-
-        synchronized boolean isSelectedSingleton(BundleRevision br)
-        {
-            return m_selectedSingletons.contains(br);
-        }
-
-        synchronized void selectSingletons()
-            throws BundleException
-        {
-            // First deindex any unresolved singletons to make sure
-            // there aren't any available from previous resolves.
-            // Also remove them from the fragment list, for the same
-            // reason.
-            m_selectedSingletons.clear();
-            for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
-            {
-                for (BundleRevision singleton : entry.getValue())
-                {
-                    if (singleton.getWiring() == null)
-                    {
-                        deindexCapabilities(singleton);
-                        m_fragments.remove(singleton);
-                    }
-                }
-            }
-
-            // If no resolver hooks, then use default singleton selection
-            // algorithm, otherwise defer to the resolver hooks.
-            if (m_hooks.isEmpty())
-            {
-                selectDefaultSingletons();
-            }
-            else
-            {
-                selectSingletonsUsingHooks();
-            }
-        }
-
-        /*
-         * Selects the singleton with the highest version from groupings
-         * based on the symbolic name. No selection is made if the group
-         * already has a resolved singleton.
-         */
-        private void selectDefaultSingletons()
-        {
-            // Now select the singletons available for this resolve operation.
-            for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
-            {
-                selectSingleton(entry.getValue());
-            }
-        }
-
-        /*
-         * Groups singletons based on resolver hook filtering and then selects
-         * the singleton from each group with the highest version that is in
-         * the resolver hook whitelist. No selection is made if a group already
-         * has a resolved singleton in it.
-         */
-        private void selectSingletonsUsingHooks()
-            throws BundleException
-        {
-            // Convert singleton bundle revision map into a map using
-            // bundle capabilities instead, since this is what the resolver
-            // hooks require.
-            Map<BundleCapability, Collection<BundleCapability>> allCollisions
-                = new HashMap<BundleCapability, Collection<BundleCapability>>();
-            for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
-            {
-                Collection<BundleCapability> bundleCaps =
-                    new ArrayList<BundleCapability>();
-                for (BundleRevision br : entry.getValue())
-                {
-                    List<BundleCapability> caps =
-                        br.getDeclaredCapabilities(BundleRevision.BUNDLE_NAMESPACE);
-                    if (!caps.isEmpty())
-                    {
-                        bundleCaps.add(caps.get(0));
-                    }
-                }
-
-                for (BundleCapability bc : bundleCaps)
-                {
-                    Collection<BundleCapability> capCopy =
-                        new ShrinkableCollection<BundleCapability>(
-                            new ArrayList<BundleCapability>(bundleCaps));
-                    capCopy.remove(bc);
-                    allCollisions.put(bc, capCopy);
-                }
-            }
-
-            // Invoke hooks to allow them to filter singleton collisions.
-            for (ResolverHook hook : m_hooks)
-            {
-                for (Entry<BundleCapability, Collection<BundleCapability>> entry
-                    : allCollisions.entrySet())
-                {
-                    try
-                    {
-                        Felix.m_secureAction
-                            .invokeResolverHookSingleton(hook, entry.getKey(), entry.getValue());
-                    }
-                    catch (Throwable ex)
-                    {
-                        throw new BundleException(
-                            "Resolver hook exception: " + ex.getMessage(),
-                            BundleException.REJECTED_BY_HOOK,
-                            ex);
-                    }
-                }
-            }
-
-            // Create groups according to how the resolver hooks filtered the
-            // collisions.
-            List<List<BundleRevision>> groups = new ArrayList<List<BundleRevision>>();
-            while (!allCollisions.isEmpty())
-            {
-                BundleCapability target = allCollisions.entrySet().iterator().next().getKey();
-                groups.add(groupSingletons(allCollisions, target, new ArrayList<BundleRevision>()));
-            }
-
-            // Now select the singletons available for this resolve operation.
-            for (List<BundleRevision> group : groups)
-            {
-                selectSingleton(group);
-            }
-        }
-
-        private List<BundleRevision> groupSingletons(
-            Map<BundleCapability, Collection<BundleCapability>> allCollisions,
-            BundleCapability target, List<BundleRevision> group)
-        {
-            if (!group.contains(target.getRevision()))
-            {
-                // Add the target since it is implicitly part of the group.
-                group.add(target.getRevision());
-
-                // Recursively add the revisions of any singleton's in the
-                // target's collisions.
-                Collection<BundleCapability> collisions = allCollisions.remove(target);
-                for (BundleCapability collision : collisions)
-                {
-                    groupSingletons(allCollisions, collision, group);
-                }
-
-                // Need to check the values of other collisions for this target
-                // and add those to the target's group too, since collisions are
-                // treated as two-way relationships. Repeat until there are no
-                // collision groups left that contain the target capability.
-                boolean repeat;
-                do
-                {
-                    repeat = false;
-                    for (Entry<BundleCapability, Collection<BundleCapability>> entry:
-                        allCollisions.entrySet())
-                    {
-                        if (entry.getValue().contains(target))
-                        {
-                            repeat = true;
-                            groupSingletons(allCollisions, entry.getKey(), group);
-                            break;
-                        }
-                    }
-                }
-                while (repeat);
-            }
-            return group;
-        }
-
-        /*
-         * Selects the highest bundle revision from the group that is
-         * in the resolver hook whitelist (if there are hooks). No
-         * selection is made if there is an already resolved singleton
-         * in the group, since it is already indexed.
-         */
-        private void selectSingleton(List<BundleRevision> singletons)
-        {
-            BundleRevision selected = null;
-            for (BundleRevision singleton : singletons)
-            {
-                // If a singleton is already resolved,
-                // then there is nothing to do.
-                if (singleton.getWiring() != null)
-                {
-                    selected = null;
-                    break;
-                }
-                // If this singleton is not in the whitelist, then it cannot
-                // be selected. If it is, in can only be selected if it has
-                // a higher version than the currently selected singleton, if
-                // there is one.
-                if (((m_whitelist == null) || m_whitelist.contains(singleton))
-                    && ((selected == null)
-                        || (selected.getVersion().compareTo(singleton.getVersion()) > 0)))
-                {
-                    selected = singleton;
-                }
-            }
-            if (selected != null)
-            {
-                // Record the selected singleton.
-                m_selectedSingletons.add(selected);
-                // Index its capabilities.
-                indexCapabilities(selected);
-                // If the selected singleton is a fragment, then
-                // add it to the list of fragments.
-                if (Util.isFragment(selected))
-                {
-                    m_fragments.add(selected);
-                }
-            }
-        }
-
-        //
-        // ResolverState methods.
-        //
-
-        public boolean isEffective(BundleRequirement req)
-        {
-            String effective = req.getDirectives().get(Constants.EFFECTIVE_DIRECTIVE);
-            return ((effective == null) || effective.equals(Constants.EFFECTIVE_RESOLVE));
-        }
-
-        public synchronized SortedSet<BundleCapability> getCandidates(
-            BundleRequirement req, boolean obeyMandatory)
-        {
-            BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
-            SortedSet<BundleCapability> result =
-                new TreeSet<BundleCapability>(new CandidateComparator());
-
-            CapabilitySet capSet = m_capSets.get(req.getNamespace());
-            if (capSet != null)
-            {
-                // Get the requirement's filter; if this is our own impl we
-                // have a shortcut to get the already parsed filter, otherwise
-                // we must parse it from the directive.
-                SimpleFilter sf = null;
-                if (req instanceof BundleRequirementImpl)
-                {
-                    sf = ((BundleRequirementImpl) req).getFilter();
-                }
-                else
-                {
-                    String filter = req.getDirectives().get(Constants.FILTER_DIRECTIVE);
-                    if (filter == null)
-                    {
-                        sf = new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
-                    }
-                    else
-                    {
-                        sf = SimpleFilter.parse(filter);
-                    }
-                }
-
-                // Find the matching candidates.
-                Set<BundleCapability> matches = capSet.match(sf, obeyMandatory);
-                // Filter matching candidates.
-                for (BundleCapability cap : matches)
-                {
-                    // Filter according to security.
-                    if (filteredBySecurity(req, cap))
-                    {
-                        continue;
-                    }
-                    // Filter already resolved hosts, since we don't support
-                    // dynamic attachment of fragments.
-                    if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE)
-                        && (cap.getRevision().getWiring() != null))
-                    {
-                        continue;
-                    }
-
-                    result.add(cap);
-                }
-            }
-
-            // If we have resolver hooks, then we may need to filter our results
-            // based on a whitelist and/or fine-grained candidate filtering.
-            if (!result.isEmpty() && !m_hooks.isEmpty())
-            {
-                // It we have a whitelist, then first filter out candidates
-                // from disallowed revisions.
-                if (m_whitelist != null)
-                {
-                    for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
-                    {
-                        if (!m_whitelist.contains(it.next().getRevision()))
-                        {
-                            it.remove();
-                        }
-                    }
-                }
-
-                // Now give the hooks a chance to do fine-grained filtering.
-                ShrinkableCollection<BundleCapability> shrinkable =
-                    new ShrinkableCollection<BundleCapability>(result);
-                for (ResolverHook hook : m_hooks)
-                {
-                    try
-                    {
-                        Felix.m_secureAction
-                            .invokeResolverHookMatches(hook, req, shrinkable);
-                    }
-                    catch (Throwable th)
-                    {
-                        m_logger.log(Logger.LOG_WARNING, "Resolver hook exception.", th);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        private boolean filteredBySecurity(BundleRequirement req, BundleCapability cap)
-        {
-            if (System.getSecurityManager() != null)
-            {
-                BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
-
-                if (req.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
-                {
-                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                        new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                        PackagePermission.EXPORTONLY)) ||
-                        !((reqRevision == null) ||
-                            ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                                new PackagePermission((String) cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE),
-                                cap.getRevision().getBundle(),PackagePermission.IMPORT))
-                        ))
-                    {
-                        if (reqRevision != cap.getRevision())
-                        {
-                            return true;
-                        }
-                    }
-                }
-                else if (req.getNamespace().equals(BundleRevision.BUNDLE_NAMESPACE))
-                {   if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                        new BundlePermission(cap.getRevision().getSymbolicName(), BundlePermission.PROVIDE)) ||
-                        !((reqRevision == null) ||
-                            ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                                new BundlePermission(reqRevision.getSymbolicName(), BundlePermission.REQUIRE))
-                        ))
-                    {
-                        return true;
-                    }
-                }
-                else if (req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
-                {
-                    if (!((BundleProtectionDomain) reqRevision.getProtectionDomain())
-                        .impliesDirect(new BundlePermission(
-                            reqRevision.getSymbolicName(),
-                            BundlePermission.FRAGMENT))
-                    || !((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain())
-                        .impliesDirect(new BundlePermission(
-                            cap.getRevision().getSymbolicName(),
-                            BundlePermission.HOST)))
-                    {
-                        return true;
-                    }
-                }
-                else  if (!req.getNamespace().equals("osgi.ee"))
-                {
-                    if (!((BundleProtectionDomain) ((BundleRevisionImpl) cap.getRevision()).getProtectionDomain()).impliesDirect(
-                        new CapabilityPermission(req.getNamespace(), CapabilityPermission.PROVIDE))
-                        ||
-                        !((reqRevision == null) || ((BundleProtectionDomain) reqRevision.getProtectionDomain()).impliesDirect(
-                        new CapabilityPermission(req.getNamespace(), cap.getAttributes(), cap.getRevision().getBundle(), CapabilityPermission.REQUIRE))))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public void checkExecutionEnvironment(BundleRevision revision) throws ResolveException
-        {
-            String bundleExecEnvStr = (String)
-                ((BundleRevisionImpl) revision).getHeaders().get(
-                    Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
-            if (bundleExecEnvStr != null)
-            {
-                bundleExecEnvStr = bundleExecEnvStr.trim();
-
-                // If the bundle has specified an execution environment and the
-                // framework has an execution environment specified, then we must
-                // check for a match.
-                if (!bundleExecEnvStr.equals("")
-                    && (m_fwkExecEnvStr != null)
-                    && (m_fwkExecEnvStr.length() > 0))
-                {
-                    StringTokenizer tokens = new StringTokenizer(bundleExecEnvStr, ",");
-                    boolean found = false;
-                    while (tokens.hasMoreTokens() && !found)
-                    {
-                        if (m_fwkExecEnvSet.contains(tokens.nextToken().trim()))
-                        {
-                            found = true;
-                        }
-                    }
-                    if (!found)
-                    {
-                        throw new ResolveException(
-                            "Execution environment not supported: "
-                            + bundleExecEnvStr, revision, null);
-                    }
-                }
-            }
-        }
-
-        public void checkNativeLibraries(BundleRevision revision) throws ResolveException
-        {
-            // Next, try to resolve any native code, since the revision is
-            // not resolvable if its native code cannot be loaded.
-            List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
-            if (libs != null)
-            {
-                String msg = null;
-                // Verify that all native libraries exist in advance; this will
-                // throw an exception if the native library does not exist.
-                for (int libIdx = 0; (msg == null) && (libIdx < libs.size()); libIdx++)
-                {
-                    String entryName = libs.get(libIdx).getEntryName();
-                    if (entryName != null)
-                    {
-                        if (!((BundleRevisionImpl) revision).getContent().hasEntry(entryName))
-                        {
-                            msg = "Native library does not exist: " + entryName;
-                        }
-                    }
-                }
-                // If we have a zero-length native library array, then
-                // this means no native library class could be selected
-                // so we should fail to resolve.
-                if (libs.isEmpty())
-                {
-                    msg = "No matching native libraries found.";
-                }
-                if (msg != null)
-                {
-                    throw new ResolveException(msg, revision, null);
+                    capSet.addCapability(cap);
                 }
             }
         }
     }
 
-    //
-    // Utility methods.
-    //
+    private synchronized void deindexCapabilities(BundleRevision br)
+    {
+        // We only need be concerned with declared capabilities here,
+        // because resolved capabilities will be a subset, since fragment
+        // capabilities are not considered to be part of the host.
+        List<BundleCapability> caps = br.getDeclaredCapabilities(null);
+        if (caps != null)
+        {
+            for (BundleCapability cap : caps)
+            {
+                CapabilitySet capSet = m_capSets.get(cap.getNamespace());
+                if (capSet != null)
+                {
+                    capSet.removeCapability(cap);
+                }
+            }
+        }
+    }
+
+    private synchronized boolean isSelectedSingleton(BundleRevision br)
+    {
+        return m_selectedSingletons.contains(br);
+    }
+
+    private synchronized void selectSingletons()
+        throws BundleException
+    {
+        // First deindex any unresolved singletons to make sure
+        // there aren't any available from previous resolves.
+        // Also remove them from the fragment list, for the same
+        // reason.
+        m_selectedSingletons.clear();
+        for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
+        {
+            for (BundleRevision singleton : entry.getValue())
+            {
+                if (singleton.getWiring() == null)
+                {
+                    deindexCapabilities(singleton);
+                    m_fragments.remove(singleton);
+                }
+            }
+        }
+
+        // If no resolver hooks, then use default singleton selection
+        // algorithm, otherwise defer to the resolver hooks.
+        if (m_hooks.isEmpty())
+        {
+            selectDefaultSingletons();
+        }
+        else
+        {
+            selectSingletonsUsingHooks();
+        }
+    }
+
+    /*
+     * Selects the singleton with the highest version from groupings
+     * based on the symbolic name. No selection is made if the group
+     * already has a resolved singleton.
+     */
+    private void selectDefaultSingletons()
+    {
+        // Now select the singletons available for this resolve operation.
+        for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
+        {
+            selectSingleton(entry.getValue());
+        }
+    }
+
+    /*
+     * Groups singletons based on resolver hook filtering and then selects
+     * the singleton from each group with the highest version that is in
+     * the resolver hook whitelist. No selection is made if a group already
+     * has a resolved singleton in it.
+     */
+    private void selectSingletonsUsingHooks()
+        throws BundleException
+    {
+        // Convert singleton bundle revision map into a map using
+        // bundle capabilities instead, since this is what the resolver
+        // hooks require.
+        Map<BundleCapability, Collection<BundleCapability>> allCollisions
+            = new HashMap<BundleCapability, Collection<BundleCapability>>();
+        for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
+        {
+            Collection<BundleCapability> bundleCaps =
+                new ArrayList<BundleCapability>();
+            for (BundleRevision br : entry.getValue())
+            {
+                List<BundleCapability> caps =
+                    br.getDeclaredCapabilities(BundleRevision.BUNDLE_NAMESPACE);
+                if (!caps.isEmpty())
+                {
+                    bundleCaps.add(caps.get(0));
+                }
+            }
+
+            for (BundleCapability bc : bundleCaps)
+            {
+                Collection<BundleCapability> capCopy =
+                    new ShrinkableCollection<BundleCapability>(
+                        new ArrayList<BundleCapability>(bundleCaps));
+                capCopy.remove(bc);
+                allCollisions.put(bc, capCopy);
+            }
+        }
+
+        // Invoke hooks to allow them to filter singleton collisions.
+        for (ResolverHook hook : m_hooks)
+        {
+            for (Entry<BundleCapability, Collection<BundleCapability>> entry
+                : allCollisions.entrySet())
+            {
+                try
+                {
+                    Felix.m_secureAction
+                        .invokeResolverHookSingleton(hook, entry.getKey(), entry.getValue());
+                }
+                catch (Throwable ex)
+                {
+                    throw new BundleException(
+                        "Resolver hook exception: " + ex.getMessage(),
+                        BundleException.REJECTED_BY_HOOK,
+                        ex);
+                }
+            }
+        }
+
+        // Create groups according to how the resolver hooks filtered the
+        // collisions.
+        List<List<BundleRevision>> groups = new ArrayList<List<BundleRevision>>();
+        while (!allCollisions.isEmpty())
+        {
+            BundleCapability target = allCollisions.entrySet().iterator().next().getKey();
+            groups.add(groupSingletons(allCollisions, target, new ArrayList<BundleRevision>()));
+        }
+
+        // Now select the singletons available for this resolve operation.
+        for (List<BundleRevision> group : groups)
+        {
+            selectSingleton(group);
+        }
+    }
+
+    private List<BundleRevision> groupSingletons(
+        Map<BundleCapability, Collection<BundleCapability>> allCollisions,
+        BundleCapability target, List<BundleRevision> group)
+    {
+        if (!group.contains(target.getRevision()))
+        {
+            // Add the target since it is implicitly part of the group.
+            group.add(target.getRevision());
+
+            // Recursively add the revisions of any singleton's in the
+            // target's collisions.
+            Collection<BundleCapability> collisions = allCollisions.remove(target);
+            for (BundleCapability collision : collisions)
+            {
+                groupSingletons(allCollisions, collision, group);
+            }
+
+            // Need to check the values of other collisions for this target
+            // and add those to the target's group too, since collisions are
+            // treated as two-way relationships. Repeat until there are no
+            // collision groups left that contain the target capability.
+            boolean repeat;
+            do
+            {
+                repeat = false;
+                for (Entry<BundleCapability, Collection<BundleCapability>> entry:
+                    allCollisions.entrySet())
+                {
+                    if (entry.getValue().contains(target))
+                    {
+                        repeat = true;
+                        groupSingletons(allCollisions, entry.getKey(), group);
+                        break;
+                    }
+                }
+            }
+            while (repeat);
+        }
+        return group;
+    }
+
+    /*
+     * Selects the highest bundle revision from the group that is
+     * in the resolver hook whitelist (if there are hooks). No
+     * selection is made if there is an already resolved singleton
+     * in the group, since it is already indexed.
+     */
+    private void selectSingleton(List<BundleRevision> singletons)
+    {
+        BundleRevision selected = null;
+        for (BundleRevision singleton : singletons)
+        {
+            // If a singleton is already resolved,
+            // then there is nothing to do.
+            if (singleton.getWiring() != null)
+            {
+                selected = null;
+                break;
+            }
+            // If this singleton is not in the whitelist, then it cannot
+            // be selected. If it is, in can only be selected if it has
+            // a higher version than the currently selected singleton, if
+            // there is one.
+            if (((m_whitelist == null) || m_whitelist.contains(singleton))
+                && ((selected == null)
+                    || (selected.getVersion().compareTo(singleton.getVersion()) > 0)))
+            {
+                selected = singleton;
+            }
+        }
+        if (selected != null)
+        {
+            // Record the selected singleton.
+            m_selectedSingletons.add(selected);
+            // Index its capabilities.
+            indexCapabilities(selected);
+            // If the selected singleton is a fragment, then
+            // add it to the list of fragments.
+            if (Util.isFragment(selected))
+            {
+                m_fragments.add(selected);
+            }
+        }
+    }
+
+    private synchronized Set<BundleRevision> getFragments()
+    {
+        Set<BundleRevision> fragments = new HashSet(m_fragments);
+        // Filter out any fragments that are not the current revision.
+        for (Iterator<BundleRevision> it = fragments.iterator(); it.hasNext(); )
+        {
+            BundleRevision fragment = it.next();
+            BundleRevision currentFragmentRevision =
+                fragment.getBundle().adapt(BundleRevision.class);
+            if (fragment != currentFragmentRevision)
+            {
+                it.remove();
+            }
+        }
+        return fragments;
+    }
+
+    void checkExecutionEnvironment(BundleRevision revision) throws ResolveException
+    {
+        String bundleExecEnvStr = (String)
+            ((BundleRevisionImpl) revision).getHeaders().get(
+                Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
+        if (bundleExecEnvStr != null)
+        {
+            bundleExecEnvStr = bundleExecEnvStr.trim();
+
+            // If the bundle has specified an execution environment and the
+            // framework has an execution environment specified, then we must
+            // check for a match.
+            if (!bundleExecEnvStr.equals("")
+                && (m_fwkExecEnvStr != null)
+                && (m_fwkExecEnvStr.length() > 0))
+            {
+                StringTokenizer tokens = new StringTokenizer(bundleExecEnvStr, ",");
+                boolean found = false;
+                while (tokens.hasMoreTokens() && !found)
+                {
+                    if (m_fwkExecEnvSet.contains(tokens.nextToken().trim()))
+                    {
+                        found = true;
+                    }
+                }
+                if (!found)
+                {
+                    throw new ResolveException(
+                        "Execution environment not supported: "
+                        + bundleExecEnvStr, revision, null);
+                }
+            }
+        }
+    }
+
+    void checkNativeLibraries(BundleRevision revision) throws ResolveException
+    {
+        // Next, try to resolve any native code, since the revision is
+        // not resolvable if its native code cannot be loaded.
+        List<R4Library> libs = ((BundleRevisionImpl) revision).getDeclaredNativeLibraries();
+        if (libs != null)
+        {
+            String msg = null;
+            // Verify that all native libraries exist in advance; this will
+            // throw an exception if the native library does not exist.
+            for (int libIdx = 0; (msg == null) && (libIdx < libs.size()); libIdx++)
+            {
+                String entryName = libs.get(libIdx).getEntryName();
+                if (entryName != null)
+                {
+                    if (!((BundleRevisionImpl) revision).getContent().hasEntry(entryName))
+                    {
+                        msg = "Native library does not exist: " + entryName;
+                    }
+                }
+            }
+            // If we have a zero-length native library array, then
+            // this means no native library class could be selected
+            // so we should fail to resolve.
+            if (libs.isEmpty())
+            {
+                msg = "No matching native libraries found.";
+            }
+            if (msg != null)
+            {
+                throw new ResolveException(msg, revision, null);
+            }
+        }
+    }
+
+    private synchronized Set<BundleRevision> getUnresolvedRevisions()
+    {
+        Set<BundleRevision> unresolved = new HashSet<BundleRevision>();
+        for (BundleRevision revision : m_revisions)
+        {
+            if (revision.getWiring() == null)
+            {
+                unresolved.add(revision);
+            }
+        }
+        return unresolved;
+    }
+
+    private synchronized Map<BundleRevision, BundleWiring> getWirings()
+    {
+        Map<BundleRevision, BundleWiring> wirings = new HashMap<BundleRevision, BundleWiring>();
+
+        for (BundleRevision revision : m_revisions)
+        {
+            if (revision.getWiring() != null)
+            {
+                wirings.put(revision, revision.getWiring());
+            }
+        }
+        return wirings;
+    }
 
     /**
      * Updates the framework wide execution environment string and a cached Set of
