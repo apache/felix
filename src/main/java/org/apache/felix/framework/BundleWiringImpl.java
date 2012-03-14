@@ -1928,7 +1928,7 @@ public class BundleWiringImpl implements BundleWiring
                                 {
                                     try
                                     {
-                                        m_revision.getSecureAction()
+                                        BundleRevisionImpl.getSecureAction()
                                             .invokeWeavingHook(wh, wci);
                                     }
                                     catch (Throwable th)
@@ -2531,7 +2531,7 @@ public class BundleWiringImpl implements BundleWiring
                 BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
             BundleRequirementImpl req = new BundleRequirementImpl(
                 revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
-            Set<BundleCapability> exporters = resolver.getCandidates(req, false);
+            List<BundleCapability> exporters = resolver.findProviders(req, false);
 
             BundleRevision provider = null;
             try
@@ -2570,7 +2570,7 @@ public class BundleWiringImpl implements BundleWiring
             BundleRevision.PACKAGE_NAMESPACE, (Object) pkgName);
         BundleRequirementImpl req = new BundleRequirementImpl(
             revision, BundleRevision.PACKAGE_NAMESPACE, dirs, attrs);
-        Set<BundleCapability> exports = resolver.getCandidates(req, false);
+        List<BundleCapability> exports = resolver.findProviders(req, false);
         if (exports.size() > 0)
         {
             boolean classpath = false;

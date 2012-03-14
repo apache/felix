@@ -30,14 +30,14 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 
-class HostBundleRevision implements BundleRevision
+class WrappedRevision implements BundleRevision
 {
     private final BundleRevision m_host;
     private final List<BundleRevision> m_fragments;
     private List<BundleCapability> m_cachedCapabilities = null;
     private List<BundleRequirement> m_cachedRequirements = null;
 
-    public HostBundleRevision(BundleRevision host, List<BundleRevision> fragments)
+    public WrappedRevision(BundleRevision host, List<BundleRevision> fragments)
     {
         m_host = host;
         m_fragments = fragments;
@@ -72,7 +72,7 @@ class HostBundleRevision implements BundleRevision
             // Wrap host capabilities.
             for (BundleCapability cap : m_host.getDeclaredCapabilities(null))
             {
-                caps.add(new HostedCapability(this, (BundleCapabilityImpl) cap));
+                caps.add(new WrappedCapability(this, (BundleCapabilityImpl) cap));
             }
 
             // Wrap fragment capabilities.
@@ -84,7 +84,7 @@ class HostBundleRevision implements BundleRevision
                     {
 // TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
 //       that will need to be excluded from here.
-                        caps.add(new HostedCapability(this, (BundleCapabilityImpl) cap));
+                        caps.add(new WrappedCapability(this, (BundleCapabilityImpl) cap));
                     }
                 }
             }
@@ -102,7 +102,7 @@ class HostBundleRevision implements BundleRevision
             // Wrap host requirements.
             for (BundleRequirement req : m_host.getDeclaredRequirements(null))
             {
-                reqs.add(new HostedRequirement(this, (BundleRequirementImpl) req));
+                reqs.add(new WrappedRequirement(this, (BundleRequirementImpl) req));
             }
 
             // Wrap fragment requirements.
@@ -114,7 +114,7 @@ class HostBundleRevision implements BundleRevision
                     {
                         if (!req.getNamespace().equals(BundleRevision.HOST_NAMESPACE))
                         {
-                            reqs.add(new HostedRequirement(this, (BundleRequirementImpl) req));
+                            reqs.add(new WrappedRequirement(this, (BundleRequirementImpl) req));
                         }
                     }
                 }

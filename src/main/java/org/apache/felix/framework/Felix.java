@@ -3564,7 +3564,7 @@ public class Felix extends BundleImpl implements Framework
             BundleRevision.PACKAGE_NAMESPACE,
             Collections.EMPTY_MAP,
             attrs);
-        Set<BundleCapability> exports = m_resolver.getCandidates(req, false);
+        List<BundleCapability> exports = m_resolver.findProviders(req, false);
 
         // We only want resolved capabilities.
         for (Iterator<BundleCapability> it = exports.iterator(); it.hasNext(); )
