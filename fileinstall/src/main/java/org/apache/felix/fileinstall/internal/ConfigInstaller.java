@@ -39,12 +39,14 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 {
     private final BundleContext context;
     private final ConfigurationAdmin configAdmin;
+    private final FileInstall fileInstall;
     private ServiceRegistration registration;
 
-    ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin)
+    ConfigInstaller(BundleContext context, ConfigurationAdmin configAdmin, FileInstall fileInstall)
     {
         this.context = context;
         this.configAdmin = configAdmin;
+        this.fileInstall = fileInstall;
     }
 
     public void init()
@@ -156,6 +158,9 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                             fos.close();
                         }
                     }
+                    // we're just writing out what's already loaded into ConfigAdmin, so
+                    // update file checksum since lastModified gets updated when writing
+                    fileInstall.updateChecksum(file);
                 }
             }
             catch (Exception e)

@@ -21,7 +21,6 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -154,6 +153,20 @@ public class Scanner {
     {
         Long c = (Long) storedChecksums.get(file);
         return c != null ? c.longValue() : 0;
+    }
+
+    /**
+      * Update the checksum of a file if that file is already known locally.
+      *
+      * @param file
+      */
+    public void updateChecksum(File file)
+    {
+        if (file != null && storedChecksums.containsKey(file))
+        {
+            long newChecksum = checksum(file);
+            storedChecksums.put(file, new Long(newChecksum));
+        }
     }
 
     /**

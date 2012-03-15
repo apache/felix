@@ -18,14 +18,33 @@
  */
 package org.apache.felix.fileinstall.internal;
 
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
-import org.apache.felix.fileinstall.*;
+import org.apache.felix.fileinstall.ArtifactInstaller;
+import org.apache.felix.fileinstall.ArtifactListener;
+import org.apache.felix.fileinstall.ArtifactTransformer;
+import org.apache.felix.fileinstall.ArtifactUrlTransformer;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
-import org.osgi.framework.*;
-import org.osgi.service.cm.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
@@ -227,6 +246,20 @@ public class FileInstall implements BundleActivator
         watcher.start();
     }
 
+    public void updateChecksum(File file)
+    {
+        List /*<DirectoryWatcher>*/ toUpdate = new ArrayList /*<DirectoryWatcher>*/();
+        synchronized (watchers)
+        {
+            toUpdate.addAll(watchers.values());
+        }
+        for (Iterator w = toUpdate.iterator(); w.hasNext();)
+        {
+            DirectoryWatcher watcher = (DirectoryWatcher) w.next();
+            watcher.scanner.updateChecksum(file);
+        }
+    }
+
     private void addListener(ServiceReference reference, ArtifactListener listener)
     {
         synchronized (listeners)
@@ -356,7 +389,7 @@ public class FileInstall implements BundleActivator
             public Object addingService(ServiceReference serviceReference)
             {
                 ConfigurationAdmin cm = (ConfigurationAdmin) super.addingService(serviceReference);
-                configInstaller = new ConfigInstaller(context, cm);
+                configInstaller = new ConfigInstaller(context, cm, fileInstall);
                 configInstaller.init();
                 return cm;
             }

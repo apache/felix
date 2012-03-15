@@ -19,18 +19,16 @@
 package org.apache.felix.fileinstall.internal;
 
 import java.io.File;
-import java.util.Hashtable;
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 import junit.framework.TestCase;
-import org.easymock.MockControl;
 import org.easymock.ArgumentsMatcher;
-import org.osgi.framework.BundleContext;
+import org.easymock.MockControl;
 import org.osgi.framework.Bundle;
-import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
-import org.apache.felix.fileinstall.internal.ConfigInstaller;
-import org.apache.felix.fileinstall.internal.FileInstall;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Tests for ConfigInstaller
@@ -63,7 +61,7 @@ public class ConfigInstallerTest extends TestCase {
     public void testParsePidWithoutFactoryPid()
     {
         mockBundleContextControl.replay();
-        ConfigInstaller ci = new ConfigInstaller(null, null);
+        ConfigInstaller ci = new ConfigInstaller(null, null, null);
 
         String path = "pid.cfg";
         assertEquals( "Pid without Factory Pid calculated", "pid", ci.parsePid( path )[0] );
@@ -74,7 +72,7 @@ public class ConfigInstallerTest extends TestCase {
     public void testParsePidWithFactoryPid()
     {
         mockBundleContextControl.replay();
-        ConfigInstaller ci = new ConfigInstaller(null, null);
+        ConfigInstaller ci = new ConfigInstaller(null, null, null);
 
         String path = "factory-pid.cfg";
         assertEquals( "Pid with Factory Pid calculated", "factory", ci.parsePid( path )[0] );
@@ -92,7 +90,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfigurationAdminControl.replay();
         mockBundleContextControl.replay();
 
-        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid-factoryPid.cfg", "pid", "factoryPid" ) );
 
@@ -113,7 +111,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfigurationAdminControl.replay();
         mockBundleContextControl.replay();
 
-        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid-factoryPid.cfg","pid", "factoryPid" ) );
 
@@ -134,7 +132,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfigurationAdminControl.replay();
         mockBundleContextControl.replay();
 
-        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid.cfg", "pid", null ) );
 
@@ -156,7 +154,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfigurationAdminControl.replay();
         mockBundleContextControl.replay();
 
-        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertTrue( ci.deleteConfig( new File( "pid.cfg" ) ) );
 
@@ -195,7 +193,7 @@ public class ConfigInstallerTest extends TestCase {
         mockConfigurationAdminControl.replay();
         mockBundleContextControl.replay();
 
-        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin );
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertTrue( ci.setConfig( new File( "src/test/resources/watched/firstcfg.cfg" ) ) );
 
