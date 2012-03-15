@@ -23,8 +23,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
-import org.easymock.ArgumentsMatcher;
-import org.easymock.MockControl;
+import org.easymock.EasyMock;
+import org.easymock.IArgumentMatcher;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
@@ -35,32 +35,23 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public class ConfigInstallerTest extends TestCase {
 
-    MockControl mockBundleContextControl;
     BundleContext mockBundleContext;
-    MockControl mockBundleControl;
     Bundle mockBundle;
-    MockControl mockConfigurationAdminControl;
     ConfigurationAdmin mockConfigurationAdmin;
-    MockControl mockConfigurationControl;
     Configuration mockConfiguration;
 
     protected void setUp() throws Exception
     {
         super.setUp();
-        mockBundleContextControl = MockControl.createControl( BundleContext.class );
-        mockBundleContext = ( BundleContext ) mockBundleContextControl.getMock();
-        mockBundleControl = MockControl.createControl( Bundle.class );
-        mockBundle = ( Bundle ) mockBundleControl.getMock();
-        mockConfigurationAdminControl = MockControl.createControl( ConfigurationAdmin.class );
-        mockConfigurationAdmin = ( ConfigurationAdmin ) mockConfigurationAdminControl.getMock();
-        mockConfigurationControl = MockControl.createControl( Configuration.class );
-        mockConfiguration = ( Configuration ) mockConfigurationControl.getMock();
+        mockBundleContext = (BundleContext) EasyMock.createMock(BundleContext.class);
+        mockBundle = ( Bundle ) EasyMock.createMock(Bundle.class);
+        mockConfigurationAdmin = ( ConfigurationAdmin ) EasyMock.createMock(ConfigurationAdmin.class);
+        mockConfiguration = ( Configuration ) EasyMock.createMock(Configuration.class);
     }
 
 
     public void testParsePidWithoutFactoryPid()
     {
-        mockBundleContextControl.replay();
         ConfigInstaller ci = new ConfigInstaller(null, null, null);
 
         String path = "pid.cfg";
@@ -71,7 +62,6 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testParsePidWithFactoryPid()
     {
-        mockBundleContextControl.replay();
         ConfigInstaller ci = new ConfigInstaller(null, null, null);
 
         String path = "factory-pid.cfg";
@@ -81,125 +71,97 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testGetNewFactoryConfiguration() throws Exception
     {
-        mockConfigurationControl.replay();
-        mockConfigurationAdmin.listConfigurations( null );
-        mockConfigurationAdminControl.setMatcher( MockControl.ALWAYS_MATCHER );
-        mockConfigurationAdminControl.setReturnValue( null );
-        mockConfigurationAdmin.createFactoryConfiguration( "pid", null );
-        mockConfigurationAdminControl.setReturnValue( mockConfiguration );
-        mockConfigurationAdminControl.replay();
-        mockBundleContextControl.replay();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                    .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", null ))
+                    .andReturn(mockConfiguration);
+        EasyMock.replay(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid-factoryPid.cfg", "pid", "factoryPid" ) );
 
-        mockConfigurationAdminControl.verify();
-        mockConfigurationControl.verify();
-        mockBundleContextControl.verify();
+        EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
     }
 
 
     public void testGetExistentFactoryConfiguration() throws Exception
     {
-        mockConfigurationControl.replay();
-        mockConfigurationAdmin.listConfigurations( null );
-        mockConfigurationAdminControl.setMatcher( MockControl.ALWAYS_MATCHER );
-        mockConfigurationAdminControl.setReturnValue( null );
-        mockConfigurationAdmin.createFactoryConfiguration( "pid", null );
-        mockConfigurationAdminControl.setReturnValue( mockConfiguration );
-        mockConfigurationAdminControl.replay();
-        mockBundleContextControl.replay();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                        .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.createFactoryConfiguration( "pid", null ))
+                        .andReturn(mockConfiguration);
+        EasyMock.replay(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid-factoryPid.cfg","pid", "factoryPid" ) );
 
-        mockConfigurationAdminControl.verify();
-        mockConfigurationControl.verify();
-        mockBundleContextControl.verify();
+        EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
     }
 
 
     public void testGetExistentNoFactoryConfiguration() throws Exception
     {
-        mockConfigurationControl.replay();
-        mockConfigurationAdmin.listConfigurations( null );
-        mockConfigurationAdminControl.setMatcher( MockControl.ALWAYS_MATCHER );
-        mockConfigurationAdminControl.setReturnValue( null );
-        mockConfigurationAdmin.getConfiguration( "pid", null );
-        mockConfigurationAdminControl.setReturnValue( mockConfiguration );
-        mockConfigurationAdminControl.replay();
-        mockBundleContextControl.replay();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                        .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration( "pid", null ))
+                        .andReturn(mockConfiguration);
+        EasyMock.replay(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertEquals( "Factory configuration retrieved", mockConfiguration, ci.getConfiguration( "pid.cfg", "pid", null ) );
 
-        mockConfigurationAdminControl.verify();
-        mockConfigurationControl.verify();
-        mockBundleContextControl.verify();
+        EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
     }
 
 
     public void testDeleteConfig() throws Exception
     {
         mockConfiguration.delete();
-        mockConfigurationControl.replay();
-        mockConfigurationAdmin.listConfigurations( null );
-        mockConfigurationAdminControl.setMatcher( MockControl.ALWAYS_MATCHER );
-        mockConfigurationAdminControl.setReturnValue( null );
-        mockConfigurationAdmin.getConfiguration( "pid", null );
-        mockConfigurationAdminControl.setReturnValue( mockConfiguration );
-        mockConfigurationAdminControl.replay();
-        mockBundleContextControl.replay();
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                        .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", null ))
+                        .andReturn(mockConfiguration);
+        EasyMock.replay(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertTrue( ci.deleteConfig( new File( "pid.cfg" ) ) );
 
-        mockConfigurationAdminControl.verify();
-        mockConfigurationControl.verify();
-        mockBundleContextControl.verify();
+        EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
     }
 
 
     public void testSetConfiguration() throws Exception
     {
-        mockConfiguration.getBundleLocation();
-        mockConfigurationControl.setReturnValue( null );
-        mockConfiguration.getProperties();
-        mockConfigurationControl.setReturnValue( new Hashtable() );
-        mockConfiguration.update( new Hashtable() );
-        mockConfigurationControl.setMatcher( new ArgumentsMatcher()
+        EasyMock.expect(mockConfiguration.getBundleLocation()).andReturn(null);
+        EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable());
+        EasyMock.reportMatcher(new IArgumentMatcher()
         {
-            public boolean matches( Object[] expected, Object[] actual )
+            public boolean matches( Object argument )
             {
-                return ( actual.length == 1 ) && ( (Dictionary) actual[0] ).get( "testkey" ).equals( "testvalue" );
+                return ((Dictionary) argument).get("testkey").equals("testvalue");
             }
 
-
-            public String toString( Object[] arg0 )
+            public void appendTo(StringBuffer buffer)
             {
-                return arg0.toString();
+                buffer.append("<Dictionary check: testkey present?>");
             }
         } );
-        mockConfigurationControl.replay();
-        mockConfigurationAdmin.listConfigurations( null );
-        mockConfigurationAdminControl.setMatcher( MockControl.ALWAYS_MATCHER );
-        mockConfigurationAdminControl.setReturnValue( null );
-        mockConfigurationAdmin.getConfiguration( "firstcfg", null );
-        mockConfigurationAdminControl.setReturnValue( mockConfiguration );
-        mockConfigurationAdminControl.replay();
-        mockBundleContextControl.replay();
+        mockConfiguration.update(new Hashtable());
+        EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
+                        .andReturn(null);
+        EasyMock.expect(mockConfigurationAdmin.getConfiguration("firstcfg", null))
+                        .andReturn(mockConfiguration);
+        EasyMock.replay(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
 
         ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
 
         assertTrue( ci.setConfig( new File( "src/test/resources/watched/firstcfg.cfg" ) ) );
 
-        mockConfigurationAdminControl.verify();
-        mockConfigurationControl.verify();
-        mockBundleContextControl.verify();
+        EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
     }
 
 
