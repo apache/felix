@@ -315,6 +315,9 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     Configuration findExistingConfiguration(String fileName) throws Exception
     {
+        // escape the special character in the filename
+        fileName = fileName.replace("(", "\\(");
+        fileName = fileName.replace(")", "\\)");
         String filter = "(" + DirectoryWatcher.FILENAME + "=" + fileName + ")";
         Configuration[] configurations = getConfigurationAdmin().listConfigurations(filter);
         if (configurations != null && configurations.length > 0)
