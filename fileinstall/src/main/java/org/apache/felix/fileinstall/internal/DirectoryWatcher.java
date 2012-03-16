@@ -97,7 +97,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     static final SecureRandom random = new SecureRandom();
 
-    static final File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
+    final File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
 
     Dictionary properties;
     File watchedDirectory;
@@ -560,6 +560,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         if (tmpDir == null)
         {
+            if (!javaIoTmpdir.exists() && !javaIoTmpdir.mkdirs()) {
+                throw new IllegalStateException("Unable to create temporary directory " + javaIoTmpdir);
+            }
             for (;;)
             {
                 File f = new File(javaIoTmpdir, "fileinstall-" + Long.toString(random.nextLong()));
