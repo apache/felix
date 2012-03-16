@@ -21,9 +21,11 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
+import org.easymock.IAnswer;
 import org.easymock.IArgumentMatcher;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -163,6 +165,67 @@ public class ConfigInstallerTest extends TestCase {
 
         EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
     }
+    
+    public void testShouldSaveConfig() 
+    {
+        final AtomicReference<Boolean> disable = new AtomicReference<Boolean>();
+        final AtomicReference<Boolean> enable = new AtomicReference<Boolean>();
+        
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.DISABLE_CONFIG_SAVE)).andAnswer(
+                new IAnswer<String>() {
+                    public String answer() throws Throwable {
+                        return disable.get() != null ? disable.get().toString() : null;
+                    }
+                }
+        ).anyTimes();
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.ENABLE_CONFIG_SAVE)).andAnswer(
+                new IAnswer<String>() {
+                    public String answer() throws Throwable {
+                        return enable.get() != null ? enable.get().toString() : null;
+                    }
+                }
+        ).anyTimes();
+        EasyMock.replay(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
 
+        ConfigInstaller ci = new ConfigInstaller( mockBundleContext, mockConfigurationAdmin, new FileInstall() );
+
+        disable.set(null);
+        enable.set(null);
+        assertTrue( ci.shouldSaveConfig() );
+
+        disable.set(false);
+        enable.set(null);
+        assertFalse( ci.shouldSaveConfig() );
+
+        disable.set(true);
+        enable.set(null);
+        assertTrue( ci.shouldSaveConfig() );
+
+        disable.set(null);
+        enable.set(false);
+        assertFalse( ci.shouldSaveConfig() );
+
+        disable.set(false);
+        enable.set(false);
+        assertFalse( ci.shouldSaveConfig() );
+
+        disable.set(true);
+        enable.set(false);
+        assertFalse( ci.shouldSaveConfig() );
+
+        disable.set(null);
+        enable.set(true);
+        assertTrue( ci.shouldSaveConfig() );
+
+        disable.set(false);
+        enable.set(true);
+        assertTrue( ci.shouldSaveConfig() );
+
+        disable.set(true);
+        enable.set(true);
+        assertTrue( ci.shouldSaveConfig() );
+
+        EasyMock.verify(new Object[]{mockConfiguration, mockConfigurationAdmin, mockBundleContext});
+    }
 
 }
