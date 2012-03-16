@@ -239,6 +239,7 @@ public class FileInstall implements BundleActivator
             watcher.close();
         }
         watcher = new DirectoryWatcher(properties, context);
+        watcher.setDaemon(true);
         synchronized (watchers)
         {
             watchers.put(pid, watcher);
