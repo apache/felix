@@ -71,7 +71,9 @@
             </Export-Package>
             <Private-Package>
                 org.apache.felix.fileinstall.internal,
+                org.apache.felix.utils.manifest,
                 org.apache.felix.utils.properties,
+                org.apache.felix.utils.version,
             </Private-Package>
             <Import-Package>
                 org.osgi.service.log;resolution:=optional,
