@@ -320,10 +320,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     Configuration findExistingConfiguration(String fileName) throws Exception
     {
-        // escape the special character in the filename
-        fileName = fileName.replace("(", "\\(");
-        fileName = fileName.replace(")", "\\)");
-        String filter = "(" + DirectoryWatcher.FILENAME + "=" + fileName + ")";
+        String filter = "(" + DirectoryWatcher.FILENAME + "=" + escapeFilterValue(fileName) + ")";
         Configuration[] configurations = getConfigurationAdmin().listConfigurations(filter);
         if (configurations != null && configurations.length > 0)
         {
@@ -333,6 +330,13 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         {
             return null;
         }
+    }
+
+    private String escapeFilterValue(String s) {
+        return s.replaceAll("[(]", "\\\\(").
+                replaceAll("[)]", "\\\\)").
+                replaceAll("[=]", "\\\\=").
+                replaceAll("[\\*]", "\\\\*");
     }
 
 }
