@@ -27,10 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -47,6 +43,11 @@ public class Util
 {
     private static final String CHECKSUM_SUFFIX = ".checksum";
 
+    /**
+     * Returns the log level as defined in the BundleContext or System properties.
+     * @param context {@link BundleContext} of the FileInstall bundle.
+     * @return the global log level, or {@link Logger#LOG_ERROR}.
+     */
     public static int getGlobalLogLevel(BundleContext context)
     {
         String s = (String) context.getProperty(DirectoryWatcher.LOG_LEVEL);
@@ -54,7 +55,7 @@ public class Util
             ? System.getProperty(DirectoryWatcher.LOG_LEVEL.toUpperCase().replace('.', '_'))
             : s;
         s = (s == null) ? "1" : s;
-        int logLevel = 1;
+        int logLevel = Logger.LOG_ERROR;
         try
         {
             logLevel = Integer.parseInt(s);
