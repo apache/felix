@@ -54,6 +54,7 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 
 /**
  * -DirectoryWatcher-
@@ -92,6 +93,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String NO_INITIAL_DELAY = "felix.fileinstall.noInitialDelay";
     public final static String DISABLE_CONFIG_SAVE = "felix.fileinstall.disableConfigSave";
     public final static String START_LEVEL = "felix.fileinstall.start.level";
+    public final static String ACTIVE_LEVEL = "felix.fileinstall.active.level";
 
     static final SecureRandom random = new SecureRandom();
 
@@ -110,6 +112,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     String originatingFileName;
     boolean noInitialDelay;
     int startLevel;
+    int activeLevel;
 
     // Map of all installed artifacts
     Map/* <File, Artifact> */ currentManagedArtifacts = new HashMap/* <File, Artifact> */();
@@ -119,6 +122,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     // Represents files that could not be processed because of a missing artifact listener
     Set/* <File> */ processingFailures = new HashSet/* <File> */();
+    
+    // Represents installed artifacts which need to be started later because they failed to start
+    Set/* <Artifact> */ delayedStart = new HashSet/* <Artifact> */();
 
     // Represents artifacts that could not be installed
     Map/* <File, Artifact> */ installationFailures = new HashMap/* <File, Artifact> */();
@@ -141,6 +147,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         filter = (String) properties.get(FILTER);
         noInitialDelay = getBoolean(properties, NO_INITIAL_DELAY, false);
         startLevel = getInt(properties, START_LEVEL, 0);    // by default, do not touch start level
+        activeLevel = getInt(properties, ACTIVE_LEVEL, 0);    // by default, always scan
         this.context.addBundleListener(this);
 
         FilenameFilter flt;
@@ -259,8 +266,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             try
             {
-                // Waiting for start level
-                if (FileInstall.getStartLevel().getStartLevel() >= startLevel)
+                // Don't access the disk when the framework is still in a startup phase.
+                if (FileInstall.getStartLevel().getStartLevel() >= activeLevel)
                 {
                     Set/*<File>*/ files = scanner.scan(false);
                     // Check that there is a result.  If not, this means that the directory can not be listed,
@@ -306,10 +313,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 Artifact artifact = (Artifact) entry.getValue();
                 if (artifact.getBundleId() == bundleEvent.getBundle().getBundleId())
                 {
-                    log(Logger.LOG_DEBUG,
-                        "Bundle " + bundleEvent.getBundle().getBundleId()
+                    log(Logger.LOG_DEBUG, "Bundle " + bundleEvent.getBundle().getBundleId()
                             + " has been uninstalled", null);
-                    currentManagedArtifacts.remove(entry.getKey());
+                    it.remove();
                     break;
                 }
             }
@@ -459,12 +465,15 @@ public class DirectoryWatcher extends Thread implements BundleListener
             refresh();
         }
 
-        if (startBundles || startLevel != 0)
+        if (startBundles)
         {
             // Try to start all the bundles that are not persistently stopped
-            processAllBundles();
-            // Try to start newly installed bundles
-            process(installedBundles);
+            startAllBundles();
+            
+            delayedStart.addAll(installedBundles);
+            delayedStart.removeAll(uninstalledBundles);
+            // Try to start newly installed bundles, or bundles which we missed on a previous round
+            startBundles(delayedStart);
         }
     }
 
@@ -989,6 +998,13 @@ public class DirectoryWatcher extends Thread implements BundleListener
         is.reset();
         Bundle b = context.installBundle(bundleLocation, is);
         Util.storeChecksum(b, checksum, context);
+        
+        // Set default start level at install time, the user can override it if he wants
+        if (startLevel != 0)
+        {
+            FileInstall.getStartLevel().setBundleStartLevel(b, startLevel);
+        }
+        
         return b;
     }
 
@@ -1132,7 +1148,13 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
     }
 
-    private void processAllBundles()
+    /**
+     * Tries to start all the bundles which somehow got stopped transiently.
+     * The File Install component will only retry the start When {@link #USE_START_TRANSIENT}
+     * is set to true or when a bundle is persistently started. Persistently stopped bundles
+     * are ignored.
+     */
+    private void startAllBundles()
     {
         List bundles = new ArrayList();
         for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext();)
@@ -1152,30 +1174,38 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 }
             }
         }
-        process(bundles);
+        startBundles(bundles);
     }
 
-    private void process(Collection/* <Bundle> */ bundles)
+     /**
+      * Starts a bundle and removes it from the Collection when successfully started.
+      * @param bundles
+      */
+    private void startBundles(Collection/* <Bundle> */ bundles)
     {
         for (Iterator b = bundles.iterator(); b.hasNext(); )
         {
-            process((Bundle) b.next());
+            if (startBundle((Bundle) b.next()))
+            {
+                b.remove();
+            }
         }
     }
 
-    private void process(Bundle bundle)
+     /**
+      * Start a bundle, if the framework's startlevel allows it.
+      * @param bundle the bundle to start.
+      * @return whether the bundle was started.
+      */
+    private boolean startBundle(Bundle bundle)
     {
-        // Change startLevel for bundle
-        if (startLevel != 0)
-        {
-            FileInstall.getStartLevel().setBundleStartLevel(bundle, startLevel);
-        }
-
-        // Fragments can not be started.
-        // No need to check status of bundles
-        // before starting, because OSGi treats this
-        // as a noop when the bundle is already started
-        if (!isFragment(bundle) && startBundles)
+        StartLevel startLevelSvc = FileInstall.getStartLevel();
+        // Fragments can never be started.
+        // Bundles can only be started transient when the start level of the framework is high
+        // enough. Persistent (i.e. non-transient) starts will simply make the framework start the
+        // bundle when the start level is high enough.
+        if (!isFragment(bundle) && startBundles
+                && startLevelSvc.getStartLevel() >= startLevelSvc.getBundleStartLevel(bundle))
         {
             try
             {
@@ -1183,6 +1213,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 options |= useStartActivationPolicy ? Bundle.START_ACTIVATION_POLICY : 0;
                 bundle.start(options);
                 log(Logger.LOG_INFO, "Started bundle: " + bundle.getLocation(), null);
+                return true;
             }
             catch (BundleException e)
             {
@@ -1190,5 +1221,6 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 log(Logger.LOG_WARNING, "Error while starting bundle: " + bundle.getLocation(), e);
             }
         }
+        return false;
     }
 }
