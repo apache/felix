@@ -168,11 +168,11 @@ public class DirectoryWatcherTest extends TestCase
 
         assertEquals( "POLL parameter correctly read", 500l, dw.poll );
         assertEquals( "LOG_LEVEL parameter correctly read", 1, dw.logLevel );
-        assertTrue( "DIR parameter correctly read", dw.watchedDirectory.getAbsolutePath().endsWith(
-            "src" + File.separatorChar + "test" + File.separatorChar + "resources" ) );
+        assertTrue("DIR parameter correctly read", dw.watchedDirectory.getAbsolutePath().endsWith(
+                "src" + File.separatorChar + "test" + File.separatorChar + "resources"));
         assertTrue( "TMPDIR parameter correctly read", dw.tmpDir.getAbsolutePath().endsWith(
             "src" + File.separatorChar + "test" + File.separatorChar + "resources" ) );
-        assertEquals( "START_NEW_BUNDLES parameter correctly read", false, dw.startBundles );
+        assertEquals("START_NEW_BUNDLES parameter correctly read", false, dw.startBundles);
         assertEquals( "FILTER parameter correctly read", ".*\\.cfg", dw.filter );
         EasyMock.verify(new Object[]{mockBundleContext});
     }
@@ -189,11 +189,11 @@ public class DirectoryWatcherTest extends TestCase
 
         assertTrue( "DIR parameter correctly read", dw.watchedDirectory.getAbsolutePath().endsWith(
             "src" + File.separatorChar + "test" + File.separatorChar + "resources" ) );
-        assertEquals( "Default POLL parameter correctly read", 2000l, dw.poll );
+        assertEquals("Default POLL parameter correctly read", 2000l, dw.poll);
         assertEquals( "Default LOG_LEVEL parameter correctly read", 1, dw.logLevel );
-        assertTrue( "Default TMPDIR parameter correctly read", dw.tmpDir.getAbsolutePath().startsWith(
-                new File(System.getProperty("java.io.tmpdir")).getAbsolutePath()) );
-        assertEquals( "Default START_NEW_BUNDLES parameter correctly read", true, dw.startBundles );
+        assertTrue("Default TMPDIR parameter correctly read", dw.tmpDir.getAbsolutePath().startsWith(
+                new File(System.getProperty("java.io.tmpdir")).getAbsolutePath()));
+        assertEquals("Default START_NEW_BUNDLES parameter correctly read", true, dw.startBundles);
         assertEquals( "Default FILTER parameter correctly read", null, dw.filter );
         EasyMock.verify(new Object[]{mockBundleContext});
     }
@@ -205,7 +205,7 @@ public class DirectoryWatcherTest extends TestCase
         EasyMock.expect(mockBundleContext.createFilter((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(Long.valueOf(mockPackageAdmin.getBundleType(mockBundle)))
-                        .andReturn(new Long(PackageAdmin.BUNDLE_TYPE_FRAGMENT) );
+                        .andReturn(new Long(PackageAdmin.BUNDLE_TYPE_FRAGMENT));
         EasyMock.replay(new Object[]{mockBundleContext, mockPackageAdmin, mockBundle});
 
         FileInstall.padmin = new MockServiceTracker( mockBundleContext, mockPackageAdmin );
@@ -214,6 +214,43 @@ public class DirectoryWatcherTest extends TestCase
         assertTrue( "Fragment type correctly retrieved from Package Admin service", dw.isFragment( mockBundle ) );
 
         EasyMock.verify(new Object[]{mockBundleContext});
+    }
+    
+    public void testInvalidTempDir() throws Exception
+    {
+        String oldTmpDir = System.getProperty("java.io.tmpdir");
+        
+        try 
+        {
+            File parent = new File("target/tmp");
+            parent.mkdirs();
+            parent.setWritable(false, false);
+            File tmp = new File(parent, "tmp");
+            System.setProperty("java.io.tmpdir", tmp.toString());
+
+            mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+            EasyMock.expect(mockBundleContext.createFilter((String) EasyMock.anyObject()))
+                    .andReturn(null);
+            EasyMock.expect(Long.valueOf(mockPackageAdmin.getBundleType(mockBundle)))
+                    .andReturn(new Long(PackageAdmin.BUNDLE_TYPE_FRAGMENT));
+            EasyMock.replay(new Object[]{mockBundleContext, mockPackageAdmin, mockBundle});
+    
+            FileInstall.padmin = new MockServiceTracker( mockBundleContext, mockPackageAdmin );
+            
+            try 
+            {
+                dw = new DirectoryWatcher( props, mockBundleContext );
+                fail("Expected an IllegalStateException");
+            } 
+            catch (IllegalStateException e)
+            {
+                // expected
+            }
+        }
+        finally
+        {
+            System.setProperty("java.io.tmpdir", oldTmpDir);
+        }
     }
 
 
