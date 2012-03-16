@@ -129,7 +129,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         this.properties = properties;
         this.context = context;
         poll = getLong(properties, POLL, 2000);
-        logLevel = getInt(properties, LOG_LEVEL, 0);
+        logLevel = getInt(properties, LOG_LEVEL, Util.getGlobalLogLevel(context));
         originatingFileName = (String) properties.get(FILENAME);
         watchedDirectory = getFile(properties, DIR, new File("./load"));
         verifyWatchedDir();
@@ -368,7 +368,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     }
                     catch (IOException e)
                     {
-                        log(Logger.LOG_WARNING,
+                        // Notify user of problem, won't retry until the dir is updated.
+                        log(Logger.LOG_ERROR,
                             "Unable to create jar for: " + file.getAbsolutePath(), e);
                         continue;
                     }
@@ -935,7 +936,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
         catch (Exception e)
         {
-            log(Logger.LOG_WARNING, "Failed to install artifact: " + path, e);
+            log(Logger.LOG_ERROR, "Failed to install artifact: " + path, e);
 
             // Add it our bad jars list, so that we don't
             // attempt to install it again and again until the underlying
@@ -1185,6 +1186,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
             catch (BundleException e)
             {
+                // Don't log this as an error, instead we start the bundle repeatedly.
                 log(Logger.LOG_WARNING, "Error while starting bundle: " + bundle.getLocation(), e);
             }
         }

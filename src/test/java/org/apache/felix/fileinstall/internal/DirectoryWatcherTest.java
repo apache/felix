@@ -190,7 +190,7 @@ public class DirectoryWatcherTest extends TestCase
         assertTrue( "DIR parameter correctly read", dw.watchedDirectory.getAbsolutePath().endsWith(
             "src" + File.separatorChar + "test" + File.separatorChar + "resources" ) );
         assertEquals( "Default POLL parameter correctly read", 2000l, dw.poll );
-        assertEquals( "Default LOG_LEVEL parameter correctly read", 0, dw.logLevel );
+        assertEquals( "Default LOG_LEVEL parameter correctly read", 1, dw.logLevel );
         assertTrue( "Default TMPDIR parameter correctly read", dw.tmpDir.getAbsolutePath().startsWith(
                 new File(System.getProperty("java.io.tmpdir")).getAbsolutePath()) );
         assertEquals( "Default START_NEW_BUNDLES parameter correctly read", true, dw.startBundles );
