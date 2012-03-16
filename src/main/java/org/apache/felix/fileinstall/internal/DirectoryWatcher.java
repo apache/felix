@@ -30,11 +30,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +48,10 @@ import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.ArtifactTransformer;
 import org.apache.felix.fileinstall.ArtifactUrlTransformer;
 import org.apache.felix.fileinstall.internal.Util.Logger;
+import org.apache.felix.utils.manifest.Clause;
+import org.apache.felix.utils.manifest.Parser;
+import org.apache.felix.utils.version.VersionRange;
+import org.apache.felix.utils.version.VersionTable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -460,10 +466,17 @@ public class DirectoryWatcher extends Thread implements BundleListener
         Collection uninstalledBundles = uninstall(deleted);
         Collection updatedBundles = update(modified);
         Collection installedBundles = install(created);
-        if (uninstalledBundles.size() > 0 || updatedBundles.size() > 0)
+        
+        Set toRefresh = new HashSet();
+        toRefresh.addAll( uninstalledBundles );
+        toRefresh.addAll(updatedBundles);
+        toRefresh.addAll( installedBundles );
+        findBundlesWithFragmentsToRefresh( toRefresh );
+        findBundlesWithOptionalPackagesToRefresh( toRefresh );
+        if (toRefresh.size() > 0)
         {
             // Refresh if any bundle got uninstalled or updated.
-            refresh();
+            refresh((Bundle[]) toRefresh.toArray(new Bundle[toRefresh.size()]));
         }
 
         if (startBundles)
@@ -644,12 +657,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
     /**
      * Convenience to refresh the packages
      */
-    void refresh()
+    void refresh(Bundle[] bundles)
     {
         PackageAdmin padmin = FileInstall.getPackageAdmin();
         if (padmin != null)
         {
-            padmin.refreshPackages(null);
+            padmin.refreshPackages(bundles);
         }
     }
 
@@ -1226,5 +1239,118 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
         }
         return false;
+    }
+
+    protected void findBundlesWithFragmentsToRefresh(Set toRefresh) {
+        for (Iterator iterator = toRefresh.iterator(); iterator.hasNext();) {
+            Bundle b = (Bundle) iterator.next();
+            if (b.getState() != Bundle.UNINSTALLED) {
+                String hostHeader = (String) b.getHeaders().get(Constants.FRAGMENT_HOST);
+                if (hostHeader != null) {
+                    Clause[] clauses = Parser.parseHeader(hostHeader);
+                    if (clauses != null && clauses.length > 0) {
+                        Clause path = clauses[0];
+                        Bundle[] bundles = context.getBundles();
+                        for (int i = 0; i < bundles.length; i++) {
+                            Bundle hostBundle = bundles[i];
+                            if (hostBundle.getSymbolicName().equals(path.getName())) {
+                                String ver = path.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE);
+                                if (ver != null) {
+                                    VersionRange v = VersionRange.parseVersionRange(ver);
+                                    if (v.contains(VersionTable.getVersion((String) hostBundle.getHeaders().get(Constants.BUNDLE_VERSION)))) {
+                                        toRefresh.add(hostBundle);
+                                    }
+                                } else {
+                                    toRefresh.add(hostBundle);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    protected void findBundlesWithOptionalPackagesToRefresh(Set toRefresh) {
+        // First pass: include all bundles contained in these features
+        Set bundles = new HashSet(Arrays.asList(context.getBundles()));
+        bundles.removeAll(toRefresh);
+        if (bundles.isEmpty()) {
+            return;
+        }
+        // Second pass: for each bundle, check if there is any unresolved optional package that could be resolved
+        Map imports = new HashMap();
+        for (Iterator it = bundles.iterator(); it.hasNext(); ) {
+            Bundle b = (Bundle) it.next();
+            String importsStr = (String) b.getHeaders().get(Constants.IMPORT_PACKAGE);
+            List importsList = getOptionalImports(importsStr);
+            if (importsList.isEmpty()) {
+                it.remove();
+            } else {
+                imports.put(b, importsList);
+            }
+        }
+        if (bundles.isEmpty()) {
+            return;
+        }
+        // Third pass: compute a list of packages that are exported by our bundles and see if
+        //             some exported packages can be wired to the optional imports
+        List exports = new ArrayList();
+        for (Iterator iterator = toRefresh.iterator(); iterator.hasNext();) {
+            Bundle b = (Bundle) iterator.next();
+            if (b.getState() != Bundle.UNINSTALLED) {
+                String exportsStr = (String) b.getHeaders().get(Constants.EXPORT_PACKAGE);
+                if (exportsStr != null) {
+                    Clause[] exportsList = Parser.parseHeader(exportsStr);
+                    exports.addAll(Arrays.asList(exportsList));
+                }
+            }
+        }
+        for (Iterator it = bundles.iterator(); it.hasNext(); ) {
+            Bundle b = (Bundle) it.next();
+            List importsList = (List) imports.get(b);
+            for (Iterator itpi = importsList.iterator(); itpi.hasNext(); ) {
+                Clause pi = (Clause) itpi.next();
+                boolean matching = false;
+                for (Iterator itcl = exports.iterator(); itcl.hasNext(); ) {
+                    Clause pe = (Clause) itcl.next();
+                    if (pi.getName().equals(pe.getName())) {
+                        String evStr = pe.getAttribute(Constants.VERSION_ATTRIBUTE);
+                        String ivStr = pi.getAttribute(Constants.VERSION_ATTRIBUTE);
+                        Version exported = evStr != null ? Version.parseVersion(evStr) : Version.emptyVersion;
+                        VersionRange imported = ivStr != null ? VersionRange.parseVersionRange(ivStr) : VersionRange.ANY_VERSION;
+                        if (imported.contains(exported)) {
+                            matching = true;
+                            break;
+                        }
+                    }
+                }
+                if (!matching) {
+                    itpi.remove();
+                }
+            }
+            if (importsList.isEmpty()) {
+                it.remove();
+//            } else {
+//                LOGGER.debug("Refreshing bundle {} ({}) to solve the following optional imports", b.getSymbolicName(), b.getBundleId());
+//                for (Clause p : importsList) {
+//                    LOGGER.debug("    {}", p);
+//                }
+//
+            }
+        }
+        toRefresh.addAll(bundles);
+    }
+
+    protected List getOptionalImports(String importsStr) {
+        Clause[] imports = Parser.parseHeader(importsStr);
+        List result = new LinkedList();
+        for (int i = 0; i < imports.length; i++) {
+            String resolution = imports[i].getDirective(Constants.RESOLUTION_DIRECTIVE);
+            if (Constants.RESOLUTION_OPTIONAL.equals(resolution)) {
+                result.add(imports[i]);
+            }
+        }
+        return result;
     }
 }
