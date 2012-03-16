@@ -98,11 +98,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     {
         // Check if writing back configurations has been disabled.
         {
-            Object obj = this.context.getProperty( DirectoryWatcher.DISABLE_CONFIG_SAVE );
-            if (obj instanceof String) {
-                obj = new Boolean((String) obj );
-            }
-            if( Boolean.FALSE.equals( obj ) )
+            if (shouldSaveConfig())
             {
                 return;
             }
@@ -168,6 +164,32 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 Util.log( context, Util.getGlobalLogLevel(context), Logger.LOG_INFO, "Unable to save configuration", e );
             }
         }
+    }
+
+    boolean shouldSaveConfig()
+    {
+        Object obj = this.context.getProperty( DirectoryWatcher.ENABLE_CONFIG_SAVE );
+        if (obj instanceof String)
+        {
+            obj = Boolean.valueOf((String) obj);
+        }
+        if (Boolean.FALSE.equals( obj ))
+        {
+            return false;
+        }
+        else if ( !Boolean.TRUE.equals( obj ))
+        {
+            obj = this.context.getProperty( DirectoryWatcher.DISABLE_CONFIG_SAVE );
+            if (obj instanceof String)
+            {
+                obj = Boolean.valueOf((String) obj);
+            }
+            if( Boolean.FALSE.equals( obj ) )
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     ConfigurationAdmin getConfigurationAdmin()
