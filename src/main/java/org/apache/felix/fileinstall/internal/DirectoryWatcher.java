@@ -274,7 +274,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
             try
             {
                 // Don't access the disk when the framework is still in a startup phase.
-                if (FileInstall.getStartLevel().getStartLevel() >= activeLevel)
+                if (FileInstall.getStartLevel().getStartLevel() >= activeLevel
+                        && context.getBundle(0).getState() == Bundle.ACTIVE)
                 {
                     Set/*<File>*/ files = scanner.scan(false);
                     // Check that there is a result.  If not, this means that the directory can not be listed,
@@ -1352,5 +1353,23 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
         }
         return result;
+    }
+
+    protected void checkRemovedListener()
+    {
+        List/*<ArtifactListener>*/ listeners = FileInstall.getListeners();
+        for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext(); )
+        {
+            Artifact artifact = (Artifact) it.next();
+            File file = artifact.getPath();
+            ArtifactListener listener = findListener(file, listeners);
+            // If no listener can handle this artifact, we need to defer the
+            // processing for this artifact until one is found
+            if (listener == null)
+            {
+                processingFailures.add(file);
+                artifact.setListener(null);
+            }
+        }
     }
 }
