@@ -1,3 +1,27 @@
+Version 3.2.0
+-------------
+** Bug
+    * [FELIX-2066] - File Install fails to move fragment bundle into RESOLVED state
+    * [FELIX-2763] - [FileInstall] disableConfigSave actually enables configuration save
+    * [FELIX-2794] - noInitialDelay is not correctly implemented
+    * [FELIX-2843] - Parsing PID assumes last 4 chars are file extension
+    * [FELIX-2852] - Infinite reloading of config file ending with .config
+    * [FELIX-2890] - FileInstall starts non-daemon threads
+    * [FELIX-2982] - noInitialDelay option does not work
+    * [FELIX-3047] - Infinite loop in File Install if java.io.tmpdir is non-writable
+    * [FELIX-3109] - FileInstall sorts artifact url handlers in the wrong order so that the ranking does not work correctly
+    * [FELIX-3112] - Default for felix.fileinstall.start.level documented incorrectly
+    * [FELIX-3346] - File Install doesn't scan when the framework start level is lower than felix.fileinstall.start.level setting
+    * [FELIX-3373] - File install logging doesn't notify user of important errors
+    * [FELIX-3396] - Fileinstall is not able to handle configuration file if in a path containing braces
+
+** Improvement
+    * [FELIX-2787] - [File Install] Do not perform management activities while framework is starting/stopping
+    * [FELIX-2848] - Saving config file to original location shouldn't add system properties
+    * [FELIX-3294] - file install dependencies on osgi artifacts should have "provided" scope
+    * [FELIX-3386] - File install tests use deprecated EasyMock API and fail on BundleContext.getProperty
+    * [FELIX-3398] - Track new versions of artifact listener and optionally update all bundles when a new version is detected
+
 Version 3.1.10
 --------------
 ** Bug
