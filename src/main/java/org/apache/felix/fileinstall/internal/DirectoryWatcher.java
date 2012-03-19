@@ -1355,21 +1355,4 @@ public class DirectoryWatcher extends Thread implements BundleListener
         return result;
     }
 
-    protected void checkRemovedListener()
-    {
-        List/*<ArtifactListener>*/ listeners = FileInstall.getListeners();
-        for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext(); )
-        {
-            Artifact artifact = (Artifact) it.next();
-            File file = artifact.getPath();
-            ArtifactListener listener = findListener(file, listeners);
-            // If no listener can handle this artifact, we need to defer the
-            // processing for this artifact until one is found
-            if (listener == null)
-            {
-                processingFailures.add(file);
-                artifact.setListener(null);
-            }
-        }
-    }
 }
