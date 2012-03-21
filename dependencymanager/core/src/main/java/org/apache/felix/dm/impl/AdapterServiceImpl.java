@@ -87,14 +87,23 @@ public class AdapterServiceImpl extends FilterService {
             ServiceReference ref = (ServiceReference) properties[0]; 
             Properties props = new Properties();
             String[] keys = ref.getPropertyKeys();
+            String serviceIdToTrack = null;
             for (int i = 0; i < keys.length; i++) {
                 String key = keys[i];
-                if (key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(DependencyManager.ASPECT) || key.equals(Constants.OBJECTCLASS)) {
-                    // do not copy these
+                if (key.equals(DependencyManager.ASPECT)) {
+                	// if we're handed an aspect fetch the aspect property as the service id to track, but do not copy it
+                	serviceIdToTrack = ref.getProperty(key).toString();
+                }
+                if (key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(Constants.OBJECTCLASS)) {
+                    // do not copy these either
                 }
                 else {
                     props.put(key, ref.getProperty(key));
                 }
+            }
+            if (serviceIdToTrack == null) {
+            	// we're not handed an aspect so we can use the service id to track
+            	serviceIdToTrack = ref.getProperty(Constants.SERVICE_ID).toString();
             }
             if (m_serviceProperties != null) {
                 Enumeration e = m_serviceProperties.keys();
@@ -107,8 +116,8 @@ public class AdapterServiceImpl extends FilterService {
             dependencies.remove(0);
             ServiceDependency dependency = m_manager.createServiceDependency()
             	 // create a dependency on both the service id we're adapting and possible aspects for this given service id
-            	 .setService(m_adapteeInterface, "(|(" + Constants.SERVICE_ID + "=" + ref.getProperty(Constants.SERVICE_ID) 
-            			 	+ ")(" + DependencyManager.ASPECT + "=" + ref.getProperty(Constants.SERVICE_ID) + "))")
+            	 .setService(m_adapteeInterface, "(|(" + Constants.SERVICE_ID + "=" + serviceIdToTrack 
+            			 	+ ")(" + DependencyManager.ASPECT + "=" + serviceIdToTrack + "))")
                  .setRequired(true);
             if (m_autoConfig != null) {
                 dependency.setAutoConfig(m_autoConfig);
@@ -116,7 +125,7 @@ public class AdapterServiceImpl extends FilterService {
             if (m_add != null || m_change != null || m_remove != null || m_swap != null) {
                 dependency.setCallbacks(m_add, m_change, m_remove, m_swap);
             }
-            
+
             Component service = m_manager.createComponent()
                 .setInterface(m_serviceInterfaces, props)
                 .setImplementation(m_serviceImpl)
