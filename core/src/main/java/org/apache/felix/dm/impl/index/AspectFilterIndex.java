@@ -129,7 +129,10 @@ public class AspectFilterIndex implements FilterIndex, ServiceTrackerCustomizer 
         List /* <ServiceReference> */ result = new ArrayList();
         FilterData data = getFilterData(clazz, filter);
         if (data != null) {
-            SortedSet /* <ServiceReference> */ list = (SortedSet) m_sidToServiceReferencesMap.get(Long.valueOf(data.serviceId));
+        	SortedSet /* <ServiceReference> */ list = null;
+        	synchronized (m_sidToServiceReferencesMap) {
+        		list = (SortedSet) m_sidToServiceReferencesMap.get(Long.valueOf(data.serviceId));
+			}
             if (list != null) {
                 Iterator iterator = list.iterator();
                 while (iterator.hasNext()) {
