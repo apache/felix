@@ -928,64 +928,78 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         
         private ServiceReference highestTrackedCache(long serviceId) {
             Long sid = Long.valueOf(serviceId);
-            TreeSet services = (TreeSet) m_highestTrackedCache.get(sid);
-            if (services != null && services.size() > 0) {
-                ServiceReference result = (ServiceReference) services.last();
-                return result;
-            }
+            synchronized (this) {
+            	TreeSet services = (TreeSet) m_highestTrackedCache.get(sid);
+            	if (services != null && services.size() > 0) {
+            		ServiceReference result = (ServiceReference) services.last();
+            		return result;
+            	}
+			}
             return null;
         }
         
         private void addHighestTrackedCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
-            TreeSet services = (TreeSet) m_highestTrackedCache.get(serviceId);
-            if (services == null) {
-                services = new TreeSet();
-                m_highestTrackedCache.put(serviceId, services);
-            }
-            services.add(reference);
+            synchronized (this) {
+            	TreeSet services = (TreeSet) m_highestTrackedCache.get(serviceId);
+            	if (services == null) {
+            		services = new TreeSet();
+            		m_highestTrackedCache.put(serviceId, services);
+            	}
+            	services.add(reference);
+			}
         }
         
         private void removeHighestTrackedCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
-            TreeSet services = (TreeSet) m_highestTrackedCache.get(serviceId);
-            if (services != null) {
-                services.remove(reference);
-            }
+            synchronized (this) {
+            	TreeSet services = (TreeSet) m_highestTrackedCache.get(serviceId);
+            	if (services != null) {
+            		services.remove(reference);
+            	}
+			}
         }
         
         private void clearHighestTrackedCache() {
-            m_highestTrackedCache.clear();
+        	synchronized (this) {
+        		m_highestTrackedCache.clear();
+			}
         }
         
         private final HashMap m_highestHiddenCache = new HashMap();
         
         private ServiceReference highestHiddenCache(long serviceId) {
             Long sid = Long.valueOf(serviceId);
-            TreeSet services = (TreeSet) m_highestHiddenCache.get(sid);
-            if (services != null && services.size() > 0) {
-                ServiceReference result = (ServiceReference) services.last();
-                return result;
+            synchronized (this) {
+            	TreeSet services = (TreeSet) m_highestHiddenCache.get(sid);
+	            if (services != null && services.size() > 0) {
+	                ServiceReference result = (ServiceReference) services.last();
+	                return result;
+	            }
             }
             return null;
         }
         
         private void addHighestHiddenCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
-            TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
-            if (services == null) {
-                services = new TreeSet();
-                m_highestHiddenCache.put(serviceId, services);
-            }
-            services.add(reference);
+            synchronized (this) {
+            	TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
+            	if (services == null) {
+            		services = new TreeSet();
+            		m_highestHiddenCache.put(serviceId, services);
+            	}
+            	services.add(reference);
+			}
         }
         
         private void removeHighestHiddenCache(ServiceReference reference) {
             Long serviceId = ServiceUtil.getServiceIdObject(reference);
-            TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
-            if (services != null) {
-                services.remove(reference);
-            }
+            synchronized (this) {
+            	TreeSet services = (TreeSet) m_highestHiddenCache.get(serviceId);
+            	if (services != null) {
+            		services.remove(reference);
+            	}
+			}
         }
 
         /**
