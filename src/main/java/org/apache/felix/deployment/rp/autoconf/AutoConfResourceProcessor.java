@@ -152,9 +152,25 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
         Iterator i = designates.keySet().iterator();
         while (i.hasNext()) {
             Designate designate = (Designate) designates.get(i.next());
+            
+            // check object
+            if (designate.getObject() == null) {
+                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Designate Object child missing or invalid");
+            }
+            
+            // check attributes
+            if (designate.getObject().getAttributes() == null || designate.getObject().getAttributes().size() == 0) {
+                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Object Attributes child missing or invalid");
+            }
+            
+            // check ocdRef
+            String ocdRef = designate.getObject().getOcdRef();
+            if (ocdRef == null || "".equals(ocdRef)) {
+                throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Object ocdRef attribute missing or invalid");
+            }
+
             // determine OCD
             ObjectClassDefinition ocd = null;
-            String ocdRef = designate.getObject().getOcdRef();
             OCD localOcd = (OCD) localOcds.get(ocdRef);
             // ask meta type service for matching OCD if no local OCD has been defined
             ocd = (localOcd != null) ? new ObjectClassDefinitionImpl(localOcd) : getMetaTypeOCD(data, designate);
