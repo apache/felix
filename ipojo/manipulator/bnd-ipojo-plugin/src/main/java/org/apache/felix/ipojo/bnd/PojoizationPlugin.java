@@ -110,6 +110,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         }
 
         Pojoization pojoization = new Pojoization(reporter);
+        pojoization.disableAnnotationProcessing();
         if (m_useLocalSchemas) {
             pojoization.setUseLocalXSD();
         }
