@@ -4,6 +4,7 @@ Changes from 3.1.8 to 3.2.0
 ** Bug
     * [FELIX-1865] - Metatype resolving mechanism does not seem to work correctly
     * [FELIX-2707] - Webconsole does not resolve resource bundle properly
+    * [FELIX-2708] - Webconsole causes NPE in Bundle.getResource(String)
     * [FELIX-2727] - WebConsole logs an error not being able to create the DepPackServlet
     * [FELIX-2830] - Tablesorter loses it's styling if placed in JQuery TAB component
     * [FELIX-2855] - WebConsole cannot read the list of enabled plugins when using FileInstall
@@ -16,8 +17,13 @@ Changes from 3.1.8 to 3.2.0
     * [FELIX-3116] - Saving configuration shows "AJAX error" dialog
     * [FELIX-3132] - Extensions not properly supported
     * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
+    * [FELIX-3284] - NullPointerException may be thrown if asynchronous bundle update fails
+    * [FELIX-3285] - Wrong vector and array handling in Configuration Admin plugin
+    * [FELIX-3311] - Cookie handling seems not to work anymore
+    * [FELIX-3320] - WebConsole UX: actions and status on bundle details don't update properly
 
 ** Improvement
+    * [FELIX-2117] - Use DynamicImport instead of Optional Packages
     * [FELIX-2697] - Allow enable/disable internal plugins dynamically
     * [FELIX-3014] - Have a way to "deep link" to a particular tab within Configuration Status
     * [FELIX-3022] - Add Uptime indication to Status page
@@ -32,13 +38,19 @@ Changes from 3.1.8 to 3.2.0
     * [FELIX-3168] - Add support for new PASSWORD attribute type of Metatype service
     * [FELIX-3236] - Make language selection cookie longer lasting
     * [FELIX-3282] - Generate default fields for configurations without descriptor
+    * [FELIX-3290] - Improve Cookie handling of the Web Console
+    * [FELIX-3298] - Add animal sniffer plugin to ensure no using any non-Java 1.4 API
+    * [FELIX-3315] - Log plugin does not show the bundle that has logged the event
+    * [FELIX-3316] - Log plugin should provide more detailed exception column
+
+** New Feature
+    * [FELIX-2709] - Allow webconsole context root be obtained from framework properties
 
 ** Task
     * [FELIX-2904] - Inlined required/embedded dependencies
     * [FELIX-3279] - Drop default build and use bare profile as the single build
     * [FELIX-3280] - Update to use parent POM 2.1
     * [FELIX-3281] - Use bundle plugin 2.3.6 and BND annotations for package export
-    * [FELIX-3283] - Use generics in the Web Console
 
 
 Changes from 3.1.6 to 3.1.8
