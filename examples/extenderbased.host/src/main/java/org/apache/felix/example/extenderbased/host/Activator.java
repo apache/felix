@@ -20,10 +20,8 @@ package org.apache.felix.example.extenderbased.host;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -39,7 +37,7 @@ import org.osgi.framework.BundleException;
 public class Activator implements BundleActivator
 {
     private DrawingFrame m_frame = null;
-    private ShapeTracker m_shapetracker = null;
+    private ShapeBundleTracker m_shapetracker = null;
 
     /**
      * Displays the applications window and starts extension tracking;
@@ -75,7 +73,7 @@ public class Activator implements BundleActivator
 
                 m_frame.setVisible(true);
 
-                m_shapetracker = new ShapeTracker(context, m_frame);
+                m_shapetracker = new ShapeBundleTracker(context, m_frame);
                 m_shapetracker.open();
             }
         });

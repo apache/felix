@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.osgi.framework.Constants;
 
 /**
@@ -32,21 +31,22 @@ final class ConfigUtil
 {
 
     /**
-     * Creates a configuration for the framework. Therefore this method attempts to create 
-     * a temporary cache dir. If creation of the cache dir is successful, it will be added 
+     * Creates a configuration for the framework. Therefore this method attempts to create
+     * a temporary cache dir. If creation of the cache dir is successful, it will be added
      * to the configuration.
-     * 
+     *
      * @return
      */
-    public static Map<String, Object> createConfig()
+    public static Map<String, String> createConfig()
     {
         final File cachedir = createCacheDir();
 
-        Map<String, Object> configMap = new HashMap<String, Object>();
-        // Tells the framework to export the extension package, making it accessible for the other shape bundels
+        Map<String, String> configMap = new HashMap<String, String>();
+        // Tells the framework to export the extension package, making it accessible
+        // for the other shape bundels
         configMap.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA,
             "org.apache.felix.example.extenderbased.host.extension; version=1.0.0");
-        
+
         // if we could create a cache dir, we use it. Otherwise the platform default will be used
         if (cachedir != null)
         {
@@ -57,8 +57,8 @@ final class ConfigUtil
     }
 
     /**
-     * Tries to create a temporay cache dir. If creation of the cache dir is successful, 
-     * it will be returned. If creation fails, null will be returned. 
+     * Tries to create a temporay cache dir. If creation of the cache dir is successful,
+     * it will be returned. If creation fails, null will be returned.
      *
      * @return a {@code File} object representing the cache dir
      */
@@ -80,7 +80,7 @@ final class ConfigUtil
     }
 
     /**
-     * Adds a shutdown hook to the runtime, that will make sure, that the cache dir will 
+     * Adds a shutdown hook to the runtime, that will make sure, that the cache dir will
      * be deleted after the application has been terminated.
      */
     private static void createShutdownHook(final File cachedir)

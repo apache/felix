@@ -36,7 +36,9 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.main</artifactId>
-      <version>1.8.0</version>
+      <version>4.0.2</version>
+      <type>zip</type>
+      <classifier>source-release</classifier>
     </dependency>
   </dependencies>
   <build>
