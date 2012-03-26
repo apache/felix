@@ -190,7 +190,7 @@ public class ResolverImpl implements Resolver
                         try
                         {
                             checkPackageSpaceConsistency(
-                                false, allCandidates.getWrappedHost(target),
+                                rc, false, allCandidates.getWrappedHost(target),
                                 allCandidates, revisionPkgMap, new HashMap());
                         }
                         catch (ResolveException ex)
@@ -343,7 +343,7 @@ public class ResolverImpl implements Resolver
                         try
                         {
                             checkPackageSpaceConsistency(
-                                false, allCandidates.getWrappedHost(revision),
+                                rc, false, allCandidates.getWrappedHost(revision),
                                 allCandidates, revisionPkgMap, new HashMap());
                         }
                         catch (ResolveException ex)
@@ -911,6 +911,7 @@ public class ResolverImpl implements Resolver
     }
 
     private void checkPackageSpaceConsistency(
+        ResolveContext rc,
         boolean isDynamicImporting,
         BundleRevision revision,
         Candidates allCandidates,
@@ -964,9 +965,9 @@ public class ResolverImpl implements Resolver
                             + blame.m_cap.getRevision().getSymbolicName()
                             + " [" + blame.m_cap.getRevision()
                             + "] via two dependency chains.\n\nChain 1:\n"
-                            + toStringBlame(sourceBlame)
+                            + toStringBlame(rc, allCandidates, sourceBlame)
                             + "\n\nChain 2:\n"
-                            + toStringBlame(blame),
+                            + toStringBlame(rc, allCandidates, blame),
                             revision,
                             blame.m_reqs.get(0));
                         m_logger.log(
@@ -1010,7 +1011,7 @@ public class ResolverImpl implements Resolver
                             + usedBlame.m_cap.getRevision().getSymbolicName()
                             + " [" + usedBlame.m_cap.getRevision()
                             + "] via the following dependency chain:\n\n"
-                            + toStringBlame(usedBlame),
+                            + toStringBlame(rc, allCandidates, usedBlame),
                             null,
                             null);
 
@@ -1095,9 +1096,9 @@ public class ResolverImpl implements Resolver
                                 + usedBlame.m_cap.getRevision().getSymbolicName()
                                 + " [" + usedBlame.m_cap.getRevision()
                                 + "] via two dependency chains.\n\nChain 1:\n"
-                                + toStringBlame(importBlame)
+                                + toStringBlame(rc, allCandidates, importBlame)
                                 + "\n\nChain 2:\n"
-                                + toStringBlame(usedBlame),
+                                + toStringBlame(rc, allCandidates, usedBlame),
                                 null,
                                 null);
 
@@ -1186,7 +1187,7 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            false, importBlame.m_cap.getRevision(),
+                            rc, false, importBlame.m_cap.getRevision(),
                             allCandidates, revisionPkgMap, resultCache);
                     }
                     catch (ResolveException ex)
@@ -1623,7 +1624,8 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private static String toStringBlame(Blame blame)
+    private static String toStringBlame(
+        ResolveContext rc, Candidates allCandidates, Blame blame)
     {
         StringBuffer sb = new StringBuffer();
         if ((blame.m_reqs != null) && !blame.m_reqs.isEmpty())
@@ -1656,27 +1658,20 @@ public class ResolverImpl implements Resolver
                 }
                 if ((i + 1) < blame.m_reqs.size())
                 {
-                    BundleCapability cap = Util.getSatisfyingCapability(
-                        blame.m_reqs.get(i + 1).getRevision(),
-                        (BundleRequirementImpl) blame.m_reqs.get(i));
+                    BundleCapability cap = getSatisfyingCapability(
+                        rc,
+                        allCandidates,
+                        blame.m_reqs.get(i));
                     if (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE))
                     {
                         sb.append(BundleRevision.PACKAGE_NAMESPACE);
                         sb.append("=");
                         sb.append(cap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).toString());
-                        BundleCapability usedCap;
-                        if ((i + 2) < blame.m_reqs.size())
-                        {
-                            usedCap = Util.getSatisfyingCapability(
-                                blame.m_reqs.get(i + 2).getRevision(),
-                                (BundleRequirementImpl) blame.m_reqs.get(i + 1));
-                        }
-                        else
-                        {
-                            usedCap = Util.getSatisfyingCapability(
-                                blame.m_cap.getRevision(),
-                                (BundleRequirementImpl) blame.m_reqs.get(i + 1));
-                        }
+                        BundleCapability usedCap =
+                            getSatisfyingCapability(
+                                rc,
+                                allCandidates,
+                                blame.m_reqs.get(i + 1));
                         sb.append("; uses:=");
                         sb.append(usedCap.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                     }
@@ -1688,9 +1683,10 @@ public class ResolverImpl implements Resolver
                 }
                 else
                 {
-                    BundleCapability export = Util.getSatisfyingCapability(
-                        blame.m_cap.getRevision(),
-                        (BundleRequirementImpl) blame.m_reqs.get(i));
+                    BundleCapability export = getSatisfyingCapability(
+                        rc,
+                        allCandidates,
+                        blame.m_reqs.get(i));
                     sb.append(export.getNamespace());
                     sb.append("=");
                     sb.append(export.getAttributes().get(export.getNamespace()).toString());
@@ -1719,6 +1715,42 @@ public class ResolverImpl implements Resolver
             sb.append(blame.m_cap.getRevision().toString());
         }
         return sb.toString();
+    }
+
+    private static BundleCapability getSatisfyingCapability(
+        ResolveContext rc, Candidates allCandidates, BundleRequirement req)
+    {
+        BundleCapability cap = null;
+
+        // If the requiring revision is not resolved, then check in the
+        // candidate map for its matching candidate.
+        List<BundleCapability> cands = allCandidates.getCandidates(req);
+        if (cands != null)
+        {
+            cap = cands.get(0);
+        }
+        // Otherwise, if the requiring revision is resolved then check
+        // in its wires for the capability satisfying the requirement.
+        else if (rc.getWirings().containsKey(req.getRevision()))
+        {
+            List<BundleWire> wires = rc.getWirings().get(req.getRevision()).getRequiredWires(null);
+            req = getDeclaredRequirement(req);
+            for (BundleWire w : wires)
+            {
+                if (w.getRequirement().equals(req))
+                {
+// TODO: RESOLVER - This is not 100% correct, since requirements for
+//       dynamic imports with wildcards will reside on many wires and
+//       this code only finds the first one, not necessarily the correct
+//       one. This is only used for the diagnostic message, but it still
+//       could confuse the user.
+                    cap = w.getCapability();
+                    break;
+                }
+            }
+        }
+
+        return cap;
     }
 
     private static class Packages
