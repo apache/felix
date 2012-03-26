@@ -1,4 +1,4 @@
-﻿<script type="text/javascript" src="${appRoot}/res/ui/logs.js"></script>
+<script type="text/javascript" src="${appRoot}/res/ui/logs.js"></script>
 <script type="text/javascript">
 // <![CDATA[
 // i18n
@@ -21,12 +21,12 @@ var i18n = {
 <form method="post" enctype="multipart/form-data" action="">
 	<div class="ui-widget-header ui-corner-top buttonGroup">
 		<label>${log.traces}</label>
-		<select class="enableTraces">
+		<select class="enableTraces ui-state-default ui-corner-all">
 			<option value="false">${log.traces.min}</option>
 			<option value="true">${log.traces.full}</option>
 		</select>
 		<label>${log.severity.label}</label>
-		<select class="minLevel">
+		<select class="minLevel ui-state-default ui-corner-all">
 			<option value="1">${log.level.error}</option>
 			<option value="2">${log.level.warn}</option>
 			<option value="3">${log.level.info}</option>
@@ -57,12 +57,12 @@ var i18n = {
 <form method="post" enctype="multipart/form-data" action="">
 	<div class="ui-widget-header ui-corner-bottom buttonGroup">
 		<label>${log.traces}</label>
-		<select class="enableTraces">
+		<select class="enableTraces ui-state-default ui-corner-all">
 			<option value="false">${log.traces.min}</option>
 			<option value="true">${log.traces.full}</option>
 		</select>
 		<label>${log.severity.label}</label>
-		<select class="minLevel">
+		<select class="minLevel ui-state-default ui-corner-all">
 			<option value="1">${log.level.error}</option>
 			<option value="2">${log.level.warn}</option>
 			<option value="3">${log.level.info}</option>
@@ -74,6 +74,3 @@ var i18n = {
 </div> <!-- logs2 -->
 
 </div> <!-- logs -->
-
-<!-- status line -->
-<p class="statline">&nbsp;</p>
