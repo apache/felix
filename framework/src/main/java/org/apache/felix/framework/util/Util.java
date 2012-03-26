@@ -285,26 +285,6 @@ public class Util
         return allow;
     }
 
-    public static BundleCapability getSatisfyingCapability(
-        BundleRevision br, BundleRequirementImpl req)
-    {
-        List<BundleCapability> caps = (br.getWiring() != null)
-            ? br.getWiring().getCapabilities(null)
-            : br.getDeclaredCapabilities(null);
-        if (caps != null)
-        {
-            for (BundleCapability cap : caps)
-            {
-                if (cap.getNamespace().equals(req.getNamespace())
-                    && CapabilitySet.matches((BundleCapabilityImpl) cap, req.getFilter()))
-                {
-                    return cap;
-                }
-            }
-        }
-        return null;
-    }
-
     /**
      * Returns all the capabilities from a module that has a specified namespace.
      *
