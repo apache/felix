@@ -73,25 +73,25 @@ function entryInternal( /* Object */ bundle ) {
     var name = bundle.name + '<span class="symName">' + bundle.symbolicName + '</span>';
 
 	tr.attr('id', 'entry'+id);
-	tr.find('td:eq(0)').text(id);
+	tr.children('td:eq(0)').text(id);
 	tr.find('.bIcon').attr('id', 'img'+id).click(function() {showDetails(id)});
 	tr.find('.bName').html( drawDetails ? name : '<a href="' + pluginRoot + '/' + id + '">' + name + '</a>' );
-	tr.find('td:eq(2)').text( bundle.version );
-	tr.find('td:eq(3)').text( bundle.category );
+	tr.children('td:eq(2)').text( bundle.version );
+	tr.children('td:eq(3)').text( bundle.category );
 	if (id == 0) { // system bundle has no actions
-		tr.find('td:eq(4)').text( stateString(bundle) );
-		tr.find('td:eq(5) ul').addClass('ui-helper-hidden');
+		tr.children('td:eq(4)').text( stateString(bundle) );
+		tr.children('td:eq(5)').find('ul').addClass('ui-helper-hidden');
 	} else {
 		entrySetupState( bundle, tr, id );
 	}
 	return tr;
 }
 function entrySetupState( /* Object */ bundle, tr, id) {
-	var start   = tr.find('td:eq(5) ul li:eq(0)').removeClass('ui-helper-hidden').unbind('click');
-	var stop    = tr.find('td:eq(5) ul li:eq(1)').removeClass('ui-helper-hidden').unbind('click');
-	var refresh = tr.find('td:eq(5) ul li:eq(2)').unbind('click').click(function() {return changeDataEntryState(id, 'refresh')});
-	var update  = tr.find('td:eq(5) ul li:eq(3)').unbind('click').click(function() {return changeDataEntryState(id, 'update')});
-	var remove  = tr.find('td:eq(5) ul li:eq(4)').removeClass('ui-helper-hidden').unbind('click');
+	var start   = tr.children('td:eq(5)').find('ul li:eq(0)').removeClass('ui-helper-hidden').unbind('click');
+	var stop    = tr.children('td:eq(5)').find('ul li:eq(1)').removeClass('ui-helper-hidden').unbind('click');
+	var refresh = tr.children('td:eq(5)').find('ul li:eq(2)').unbind('click').click(function() {return changeDataEntryState(id, 'refresh')});
+	var update  = tr.children('td:eq(5)').find('ul li:eq(3)').unbind('click').click(function() {return changeDataEntryState(id, 'update')});
+	var remove  = tr.children('td:eq(5)').find('ul li:eq(4)').removeClass('ui-helper-hidden').unbind('click');
 	start = hasStart(bundle) ?
 		start.click(function() {return changeDataEntryState(id, 'start')}) :
 		start.addClass('ui-helper-hidden');
@@ -101,7 +101,7 @@ function entrySetupState( /* Object */ bundle, tr, id) {
 	remove = hasUninstall(bundle) ?
 		remove.click(function() {return changeDataEntryState(id, 'uninstall')}) :
 		remove.addClass('ui-helper-hidden');
-	tr.find('td:eq(4)').text( stateString(bundle) );
+	tr.children('td:eq(4)').text( stateString(bundle) );
 }
 
 function loadData() {
