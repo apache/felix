@@ -77,7 +77,8 @@
                         <Bundle-Description>A bundle that implements the Deployment Admin.</Bundle-Description>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.deploymentadmin.*</Private-Package>
-                        <Export-Package>org.osgi.service.deploymentadmin.*;version="1.0"</Export-Package>
+                        <Export-Package>org.osgi.service.deploymentadmin;version="1.0",org.osgi.service.deploymentadmin.spi;version="1.0"</Export-Package>
+                        <Import-Package>org.osgi.service.deploymentadmin;version="[1,2)",org.osgi.service.deploymentadmin.spi;version="[1,2)",*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
