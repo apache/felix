@@ -152,10 +152,14 @@ function Xdialog(text) {
 
 
 /* String */ function wordWrap( /* String */ msg ) {
-	var userAgent = navigator.userAgent.toLowerCase();
-	var isMozilla = /mozilla/.test( userAgent ) && !/(compatible|webkit)/.test( userAgent );
-
-	return isMozilla ? msg.split('').join(String.fromCharCode('8203')) : msg;
+	if (msg) {
+		var userAgent = navigator.userAgent.toLowerCase();
+		var isMozilla = /mozilla/.test( userAgent ) && !/(compatible|webkit)/.test( userAgent );
+	
+		return isMozilla ? msg.split('').join(String.fromCharCode('8203')) : msg;
+	} else {
+		return '';
+	}
 }
 
 
