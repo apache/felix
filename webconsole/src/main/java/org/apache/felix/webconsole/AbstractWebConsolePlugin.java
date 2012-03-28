@@ -31,6 +31,7 @@ import javax.servlet.http.*;
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -898,7 +899,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
 
         // template file does not exist, return an empty string
-        log( "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
+        log( LogService.LOG_ERROR, "readTemplateFile: File '" + templateFile + "' not found through class " + clazz ); //$NON-NLS-1$ //$NON-NLS-2$
         return ""; //$NON-NLS-1$
     }
 
