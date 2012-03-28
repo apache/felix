@@ -421,6 +421,23 @@ public class OsgiManager extends GenericServlet
         // (we are authorative for our URL space and no other servlet should interfere)
         res.flushBuffer();
     }
+    
+    private void ensureLocaleCookieSet(HttpServletRequest request, HttpServletResponse response, Locale locale) {
+        Cookie[] cookies = request.getCookies();
+        boolean hasCookie = false;
+        for(int i=0; cookies != null && i<cookies.length;i++) {
+            if (COOKIE_LOCALE.equals(cookies[i].getName()) ) {
+                hasCookie = true;
+                break;
+            }
+        }
+        if (!hasCookie) {
+            Cookie cookie = new Cookie(COOKIE_LOCALE, locale.toString());
+            cookie.setPath((String)request.getAttribute(WebConsoleConstants.ATTR_APP_ROOT));
+            cookie.setMaxAge(20 * 365 * 24 * 60 * 60); // 20 years
+            response.addCookie(cookie);
+        }
+    }
 
     private void service(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
@@ -465,6 +482,9 @@ public class OsgiManager extends GenericServlet
             request.setAttribute(ATTR_LABEL_MAP_OLD, labelMap);
             request.setAttribute(ATTR_APP_ROOT_OLD,
                 request.getContextPath() + request.getServletPath());
+
+            // fix for https://issues.apache.org/jira/browse/FELIX-3408
+            ensureLocaleCookieSet(request, response, locale);
 
             // wrap the response for localization and template variable replacement
             request = wrapRequest(request, locale);
