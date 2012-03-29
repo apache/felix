@@ -3891,11 +3891,16 @@ public class Felix extends BundleImpl implements Framework
             bundles = new HashSet<Bundle>();
             for (Bundle target : newTargets)
             {
-                // Add the current target bundle to the map of
-                // bundles to be refreshed.
-                bundles.add(target);
-                // Add all importing bundles to map.
-                populateDependentGraph((BundleImpl) target, bundles);
+                // If anyone passes in a null bundle, then just
+                // ignore it.
+                if (target != null)
+                {
+                    // Add the current target bundle to the map of
+                    // bundles to be refreshed.
+                    bundles.add(target);
+                    // Add all importing bundles to map.
+                    populateDependentGraph((BundleImpl) target, bundles);
+                }
             }
         }
 
